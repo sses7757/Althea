@@ -1,0 +1,948 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="CudaCSharp.AbstractArray&lt;T&gt;" Collapsed="true">
+    <Position X="23" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAQQAAAACAAgAIEgAAAAABAAAAEAIAAABAAAAAGAjA=</HashCode>
+      <FileName>Basics\Abstracts.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.DenseMatrix&lt;T&gt;" Collapsed="true">
+    <Position X="24.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ZGQVFIgAgMAECAYEDwIwAQAxEIMQBIAAAIEACBwEEFA=</HashCode>
+      <FileName>ArraysPure\Matrices\DenseMatrix.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.1" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.MatrixBase&lt;T&gt;" Collapsed="true">
+    <Position X="26.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>JGAFEAiQAMAAAAQAa0cgA4AkAIMAAAEAAIGBAAgAEVA=</HashCode>
+      <FileName>ArraysPure\Matrices\MatrixBase.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Left" Position="0.1" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.SparseMatrix&lt;T&gt;" Collapsed="true">
+    <Position X="28" Y="7.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>JGQVFM4KkOwCCAbEi4AgAQkoAIkEAoQAAIMgADiMEVA=</HashCode>
+      <FileName>ArraysPure\Matrices\SparseMatrix.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.1" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.DenseVector&lt;T&gt;" Collapsed="true">
+    <Position X="18" Y="7.25" Width="1.5" />
+    <InheritanceLine Type="CudaCSharp.Arrays.VectorBase&lt;T&gt;" FixedToPoint="true">
+      <Path>
+        <Point X="20.25" Y="6.427" />
+        <Point X="20.25" Y="6.875" />
+        <Point X="18.75" Y="6.875" />
+        <Point X="18.75" Y="7.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>YAQQJEAggAAASgAACgAAAAIACAEQgQAAAQAAABAEABA=</HashCode>
+      <FileName>ArraysPure\Vectors\DenseVector.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.1" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.SparseVector&lt;T&gt;" Collapsed="true">
+    <Position X="21" Y="7.25" Width="1.75" />
+    <InheritanceLine Type="CudaCSharp.Arrays.VectorBase&lt;T&gt;" FixedToPoint="true">
+      <Path>
+        <Point X="20.25" Y="6.427" />
+        <Point X="20.25" Y="6.875" />
+        <Point X="21.938" Y="6.875" />
+        <Point X="21.938" Y="7.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>IAQQJEYihCwCSgIEioAAAAIgCAEUgIAAAQIgABAMABA=</HashCode>
+      <FileName>ArraysPure\Vectors\SparseVector.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.1" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.VectorBase&lt;T&gt;" Collapsed="true">
+    <Position X="19.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAIAAgAAAAQgAAegcAAAIACAMUgAAAAQCAAQAAABA=</HashCode>
+      <FileName>ArraysPure\Vectors\VectorBase.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Right" Position="0.477" />
+  </Class>
+  <Class Name="CudaCSharp.Arrays.PureArray&lt;T&gt;" Collapsed="true">
+    <Position X="23" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CgQSFAIAgCAQIAIEiCAUAAMAAABkAZACAAcAABAAAqQ=</HashCode>
+      <FileName>ArraysPure\Arrays.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Blas.Cuda.NativeMethods" Collapsed="true">
+    <Position X="14.5" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>f5ENNSyn9xDZoUi9CALDGEPZAZ2+WS4fGqn0wDi2UYU=</HashCode>
+      <FileName>BLAS\CudaBlas\CudaBlasNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Blas.Cuda.CudaBlas" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAGAECQSCAEAAACCAKAIAIWCgAAgAICAAACARAAEgQ=</HashCode>
+      <FileName>BLAS\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Blas.Cuda.Xt.NativeMethods" Collapsed="true">
+    <Position X="14.5" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAQAQAAAAAAAAAIEAAAACAAUBAACiAAI=</HashCode>
+      <FileName>BLAS\CudaBlas\CudaBlasXtNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Blas.Cuda.Customs.NativeMethods" Collapsed="true">
+    <Position X="14.5" Y="13" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>0ARYAABAoAKAAQABAAgADAQBhAhAIBAA0ASCAAggECA=</HashCode>
+      <FileName>BLAS\CudaBlas\CustomNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Blas.Mkl.Customs.NativeMethods" Collapsed="true">
+    <Position X="16.25" Y="13" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EARYAABAoAKAAQABAAgACAQBhABAIBAA0ACCAAgAACA=</HashCode>
+      <FileName>BLAS\MklBlas\CustomNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Blas.Mkl.NativeMethods" Collapsed="true">
+    <Position X="16.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ZMQMSIG4IQABAJAA5AIIsAKSjwM0BQbGggDBigEQjGU=</HashCode>
+      <FileName>BLAS\MklBlas\MklBlasNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Blas.Mkl.MklBlas" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAGAECRSCAEAAACCAKAIAIWCgAAgAICAAAAARAAEgQ=</HashCode>
+      <FileName>BLAS\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Blas.API">
+    <Position X="15" Y="9" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>BACAAQAQAIAFBQBoGAKIsgGOAAAAgIIIBAAIAAIgAAQ=</HashCode>
+      <FileName>BLAS\API_blas.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Runtime.API">
+    <Position X="10.5" Y="9" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Properties" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>EAAAAAAICACQB4RAgEIAsgCMAAAAAIgAhDACIQigIEA=</HashCode>
+      <FileName>Runtime\API_Runtime.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Runtime.Cuda.NativeMethods" Collapsed="true">
+    <Position X="11.5" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAKABAAIADAAIAgEIAAAgABAAAACAAAAgAQABAAAEA=</HashCode>
+      <FileName>Runtime\CudaRuntimeNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Runtime.Mkl.NativeMethods" Collapsed="true">
+    <Position X="9.75" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAABAKAAAABAIAQAAAAAAAAiBAwAAAACAAIAAIAAA=</HashCode>
+      <FileName>Runtime\MklRuntimeNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Solver.Cuda.Dense.NativeMethods" Collapsed="true">
+    <Position X="26.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AwqQAAAEVAIsASAhAiQAEgUKCEAAiACA1gIBAB1DBBw=</HashCode>
+      <FileName>Solver\CudaSolver\CudaSolveNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Solver.Cuda.Sparse.NativeMethods" Collapsed="true">
+    <Position X="26.25" Y="13" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAQAAEAAAIACAgAAAAAAAAAAAgAAAAAAEQBAAAACA=</HashCode>
+      <FileName>Solver\CudaSolver\CudaSolveNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Solver.Cuda.CudaSolver" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="26.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAQACAAAkAAACAAIAABAAAAAIAAAAAgEAAAQAA=</HashCode>
+      <FileName>Solver\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Solver.Mkl.NativeMethods" Collapsed="true">
+    <Position X="28" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABQAAAAIAIAAAABABIAgIAAAAAAAAAAAAAAAAIAAA=</HashCode>
+      <FileName>Solver\MklSolver\MklSolveNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Solver.Mkl.MklSolver" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="28" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAQACAAAkAAAAAAAAABAAAAAIAAAAAgEAAAQAA=</HashCode>
+      <FileName>Solver\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Solver.API">
+    <Position X="26.5" Y="9" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>gAAAAAAQAAAABQAAAAAgogCJAAIAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>Solver\API_solver.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.SparseBlas.Cuda.NativeMethods" Collapsed="true">
+    <Position X="22.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>oBYSEFgDJGAAYBQyoSIRggCiAAihALBEKgBCAHAEAQA=</HashCode>
+      <FileName>Sparse\CudaSparse\CudaSparseNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.SparseBlas.Cuda.CudaSparse" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="20.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAgIAIIKBIAAEAAREKIAAJAAELgAAQQgADMEMAApA=</HashCode>
+      <FileName>Sparse\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.SparseBlas.Cuda.Customs.NativeMethods" Collapsed="true">
+    <Position X="20.5" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IiAEwwAACQABAAAAAIIAAAESAQCAAQAoCTESAAAiACA=</HashCode>
+      <FileName>Sparse\CudaSparse\Customs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.SparseBlas.API">
+    <Position X="20.75" Y="9" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAgIAAUCBIBQQAAAEKsgCpAAEDAAAQRgAJOEMgAAA=</HashCode>
+      <FileName>Sparse\API_sparse.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.SparseBlas.Mkl.MklSparse" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAgIAAAKBIAAEAABEKIAAJAAEDgAAQQgABMEMAAhA=</HashCode>
+      <FileName>Sparse\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.General.LanczosSolver" Collapsed="true">
+    <Position X="18" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgEAAAAAAggAAAAAABAAAAAAAAAAAgAAAAAAAEAA=</HashCode>
+      <FileName>General\LanczosSolver.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Arrays.DenseTensor&lt;T&gt;" Collapsed="true">
+    <Position X="31.25" Y="7.25" Width="1.75" />
+    <InheritanceLine Type="CudaCSharp.Arrays.PureArray&lt;T&gt;" ManuallyRouted="true">
+      <Path>
+        <Point X="23.75" Y="4.927" />
+        <Point X="23.75" Y="5.365" />
+        <Point X="32.125" Y="5.365" />
+        <Point X="32.125" Y="7.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>QIYRBAEgkBAAAkAMepMCIAgBCAIRARABAAQIAREMABA=</HashCode>
+      <FileName>ArraysPure\Tensors\DenseTensor.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Bottom" Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Rng.Cuda.NativeMethods" Collapsed="true">
+    <Position X="36.5" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAiIJAAAAAAAAAAAAABEwEAAAAAAAAAAAAAAAAAACAA=</HashCode>
+      <FileName>RNG\CudaRng\CudaRandNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Rng.Cuda.CudaRand" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="36.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAgAAAAAAGAAAAAAgAAAAAAACAAAAAAAAAACAAAAEAQ=</HashCode>
+      <FileName>RNG\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Rng.Mkl.NativeMethods" Collapsed="true">
+    <Position X="38.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAIBAAABEAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>RNG\MklRng\MklRngNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Rng.Mkl.MklRand" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="38.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAGAAAQEAAAAAAAAACQAAAAAAABAAAAAAEAQ=</HashCode>
+      <FileName>RNG\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Rng.API">
+    <Position X="37" Y="9" Width="2" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABQAAAAAAogCIAAAgAAAAAAAAAgAgAAQ=</HashCode>
+      <FileName>RNG\API_rng.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Runtime.Cuda.CudaRuntime" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.75" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAQAIBCEAAAAAAAAEAAAAAAAAAAAAABEAAAAAAAA=</HashCode>
+      <FileName>Runtime\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Runtime.Mkl.MklRuntime" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="11.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAQAIBCEAAAAAAAAEAAAAAAAAAAAAABEAAAAAAAA=</HashCode>
+      <FileName>Runtime\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Tensor.Cuda.NativeMethods" Collapsed="true">
+    <Position X="31.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EDAAAAAgCgAAAAAISiEAEFAAQgEAAMAAAABAACABAAA=</HashCode>
+      <FileName>Tensor\CudaTensor\CudaTensorNativeMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Tensor.Cuda.CudaTensor" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="31.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QIAAAAAAACAAAAAAQAAAAAAAAAAAAAAAAQAKAAAAAAA=</HashCode>
+      <FileName>Tensor\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Tensor.API">
+    <Position X="31.75" Y="9" Width="2" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>QIAAAAAAAAAABQCIAAAAokCIAAAAAAAgBgAIAAAgAAA=</HashCode>
+      <FileName>Tensor\API_tensor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Tensor.Mkl.MklTensor" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="33" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QIAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAA=</HashCode>
+      <FileName>Tensor\Adapter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Memory.Storage&lt;T&gt;" Collapsed="true">
+    <Position X="42.25" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CIAAQAggQjACAAgEwAUAAgBgQAAEQcAABAACAAECAiA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.General.KrylovSolver" Collapsed="true">
+    <Position X="19.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAQAAAAAAAAgAAACACAAAAAAAAAAAAACAAAAAA=</HashCode>
+      <FileName>General\KrylovSolver.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CudaCSharp.Memory.ActualStorage&lt;T&gt;" Collapsed="true">
+    <Position X="40.75" Y="11.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>SAAAAAgEACAAAAAAAAAAAABAQAAAAAAAAAAAQAEAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="CudaCSharp.Memory.StorageView&lt;T&gt;" Collapsed="true">
+    <Position X="43.75" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAgAACAAACAAAAAAAABAQAAAAAAAAAAABAEAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Struct Name="CudaCSharp.Memory.DefaultStorageFactory" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="42.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgACAAAAAAAAAgAAAAAAAAEABAAAAAAAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Struct>
+  <Interface Name="CudaCSharp.Blas.IBlas">
+    <Position X="17.5" Y="9" Width="1.25" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateScale&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateRankKUpdate&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateMatrixCopyUpperToLowerPart&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateVectorGeneralAdd&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegatePointWiseMultiply&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateAbsSum&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateFillWithOnes&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateSum&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateSymmHermMatrixMultiplyGeneral&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegatePointWiseConjugate&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateDot&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateSymmHermRankOneUpdate&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateSymmHermMatrixMultiplyVector&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateSetArrayWithValue&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateMatrixKronecker&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateGeneralMatricesAdd&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegatePointWiseUpcast&lt;T, TOut&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegatePointWiseDivide&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateNorm&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateGeneralMatrixMultiplyVector&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateGenralRankOneUpdate&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateGeneralMatricesMultiply&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateAbsMax&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateTruncateArray&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegatePointWisePower&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateCopy&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateAbsMin&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Blas.IBlas.DelegateDiagonalMatrixMultiplyGeneral&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>BLAS\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAGAECQSAAEAAACCAKAIAIWCgAAgAICAAAAARAAEgQ=</HashCode>
+      <FileName>BLAS\Adapter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Solver.ISolver">
+    <Position X="29.25" Y="9" Width="1.25" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateEigenSpecialHermitianMatrix&lt;T, TReal&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateEigenGeneralHermitianMatrix&lt;T, TReal&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateEigenSpecialGeneralMatrix&lt;T, TComplex&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateEigenGeneralGeneralMatrix&lt;T, TComplex&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateSingularValues&lt;T, TReal&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateLinearSolve&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateOrthogonalFactorize&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Solver.ISolver.DelegateSchurDecomposition&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>BAAAAAAQAAAAAkAAAAAAAAABAAAAAIAAAAAAEAAAQAA=</HashCode>
+      <FileName>Solver\Adapter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.SparseBlas.ISparse">
+    <Position X="23.5" Y="9" Width="1.25" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseCompressedGetNEI&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseCSRToDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorSparseAddSparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseAddSparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorSparseDotDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateIndexFillWithRange" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateSparseMatrixKronecker&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixDenseToSparseCSR&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateIndexMax" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseCSCToDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorSparseOuterSparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorSparseToDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorGatherAtIndices&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixDenseMultiplySparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseMultiplySparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseFormatConvert&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixFillIdentity&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorDenseToSparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixVectorSparseMultiplyDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixDensePruneToSparseCSR&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixSparseMultiplyDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateIndexLowerUpperBound" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateIndexMinMax" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorSparseAddToDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateIndexAddScalar" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateIndexFind" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixCompressedPruneToCompressed&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixVectorDenseMultiplySparse&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixDenseToSparseCSC&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateVectorSparsePointWiseMultiplyDivideDense&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.SparseBlas.ISparse.DelegateMatrixVectorCOOToFromSparseIndex" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Sparse\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AACAgIAAAKBIAAEAABEKIAAJAAEDgAAQQgABMEMAAhA=</HashCode>
+      <FileName>Sparse\Adapter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.IVector&lt;T&gt;" Collapsed="true">
+    <Position X="15.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAGgIAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.IVector&lt;TVec, T&gt;" Collapsed="true">
+    <Position X="15.5" Y="5.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAIAAAAAgAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.IVector&lt;TVec, TMat, T&gt;" Collapsed="true">
+    <Position X="15.5" Y="7.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.IMatrix&lt;T&gt;" Collapsed="true">
+    <Position X="10.75" Y="2.5" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAABAACAAAAAAAAACAIAAAAAAAAAAAAAAAABAAAAAYA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.IMatrix&lt;TMat, T&gt;" Collapsed="true">
+    <Position X="10.5" Y="4" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAMAAAAQAAAAgAQAAAIAAAAAAAAAAAAgAEBA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.IMatrix&lt;TMat, TVec, T&gt;" Collapsed="true">
+    <Position X="10.25" Y="5.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AGAEAAgAAAAAAAAAAAAAAAAAAAAAAAAAAIEAAAAAAEA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.ITensor" Collapsed="true">
+    <Position X="13.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAEAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.ITensor&lt;T&gt;" Collapsed="true">
+    <Position X="13.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAACAAAAAAAAAAAAAACAAAAAABAAIQ=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.ITensor&lt;TTen, T&gt;" Collapsed="true">
+    <Position X="13" Y="5.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>QgAAAAAAABAAAAAIAIAAAAIAAAIAAAAAAAAIAAAIAAA=</HashCode>
+      <FileName>Basics\Interfaces.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.General.IKrylovVector&lt;TVec, T&gt;" Collapsed="true">
+    <Position X="15.5" Y="4" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAAgAAAAAAAAAACAAQAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>General\LanczosSolver.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Runtime.IRuntime">
+    <Position X="12.25" Y="9" Width="1.25" />
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="CudaCSharp.Runtime.IRuntime.DelegateSetMemoryValue&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Runtime\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Runtime.IRuntime.DelegateMemoryCopy&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Runtime\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Runtime.IRuntime.DelegateMemoryCopy2D&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Runtime\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AABAAQAIBAEAAAAAAAAEAAAAAAAAAAAAABEAAAAAAAA=</HashCode>
+      <FileName>Runtime\Adapter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Tensor.ITensor">
+    <Position X="34" Y="9" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="CudaCSharp.Tensor.ITensor.DelegatePermute&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Tensor\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Tensor.ITensor.DelegateReduce&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Tensor\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="CudaCSharp.Tensor.ITensor.DelegateContract&lt;T&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Tensor\Adapter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>QIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAA=</HashCode>
+      <FileName>Tensor\Adapter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Rng.IRand">
+    <Position X="39.25" Y="9" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAAAAAAAAAAAACAAAAAAAAAAAAAAAEAQ=</HashCode>
+      <FileName>RNG\Adapter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Memory.IPointer" Collapsed="true">
+    <Position X="47" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Memory.ISwappablePointer" Collapsed="true">
+    <Position X="45.75" Y="11.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Memory.IUnswappablePointer" Collapsed="true">
+    <Position X="48" Y="11.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAABAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CudaCSharp.Memory.IStorageFactory" Collapsed="true">
+    <Position X="44.75" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgACAAAAAAAAAgAAAAAAAAAABAAAAAAAAAA=</HashCode>
+      <FileName>Memory\Storage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Microsoft YaHei UI" Size="9" />
+</ClassDiagram>

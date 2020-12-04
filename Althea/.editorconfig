@@ -1,0 +1,22 @@
+﻿[*.cs]
+
+# CA1707: 标识符不应包含下划线
+dotnet_diagnostic.CA1707.severity = none
+
+# CA1814: 与多维数组相比，首选使用交错数组
+dotnet_diagnostic.CA1814.severity = none
+
+# CA1043: 将整型或字符串参数用于索引器
+dotnet_diagnostic.CA1043.severity = none
+
+# CA2225: 运算符重载具有命名的备用项
+dotnet_diagnostic.CA2225.severity = none
+
+# CA1720: 标识符包含类型名称
+dotnet_diagnostic.CA1720.severity = none
+
+# CA2000: 丢失范围之前释放对象
+dotnet_diagnostic.CA2000.severity = none
+
+# CA1810: 以内联方式初始化引用类型的静态字段
+dotnet_diagnostic.CA1810.severity = none
