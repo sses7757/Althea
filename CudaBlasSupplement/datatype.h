@@ -1,0 +1,155 @@
+#pragma once
+
+/// <summary>
+/// The general data types defined by flags and masks.
+/// </summary>
+enum DataType
+{
+	/// <summary>
+	/// The right-most bit that represents the real base type, equals to zero, cannot be used separately.
+	/// </summary>
+	Real = 0,
+	/// <summary>
+	/// The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
+	/// </summary>
+	Complex = 1 << 0,
+
+	/// <summary>
+	/// The type mask (from 1st bit to 2nd bit), cannot be used separately.<br/>
+	/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type used.<br/>
+	/// See <see cref="TypeFloat"/>, <see cref="TypeSignedInteger"/>, <see cref="TypeUnsignedInteger"/>.
+	/// </summary>
+	TypeMask = 0b0110,
+	/// <summary>
+	/// The start bit of <see cref="TypeMask"/>.
+	/// </summary>
+	TypeMaskStart = 1,
+
+	// actual types
+	/// <summary>
+	/// The float base type, cannot be used separately.
+	/// </summary>
+	TypeFloat = 1 << TypeMaskStart,
+	/// <summary>
+	/// The signed integer base type, cannot be used separately.
+	/// </summary>
+	TypeSignedInteger = 2 << TypeMaskStart,
+	/// <summary>
+	/// The unsigned integer base type, cannot be used separately.
+	/// </summary>
+	TypeUnsignedInteger = 3 << TypeMaskStart,
+
+	/// <summary>
+	/// The number of bytes mask (from 4th bit to 7th bit), cannot be used separately.<br/>
+	/// <c>(value &amp; <see cref="ByteMask"/>) &gt;&gt; <see cref="ByteMaskStart"/> = </c> the bytes used (only half of <see cref="Complex"/>'s bytes shall be counted).
+	/// </summary>
+	ByteMask = 0b11110000,
+	/// <summary>
+	/// The start bit of <see cref="ByteMask"/>.
+	/// </summary>
+	ByteMaskStart = 4,
+
+	// actual bytes
+	/// <summary>
+	/// The 1-byte base type, cannot be used separately.
+	/// </summary>
+	Byte1 = 1 << ByteMaskStart,
+	/// <summary>
+	/// The 2-byte base type, cannot be used separately.
+	/// </summary>
+	Byte2 = 2 << ByteMaskStart,
+	/// <summary>
+	/// The 4-byte base type, cannot be used separately.
+	/// </summary>
+	Byte4 = 4 << ByteMaskStart,
+	/// <summary>
+	/// The 8-byte base type, cannot be used separately.
+	/// </summary>
+	Byte8 = 8 << ByteMaskStart,
+
+	// concrete types
+	/// <summary>
+	/// <see cref="float"/> = <see cref="Real"/> + <see cref="TypeFloat"/> + <see cref="Byte4"/>
+	/// </summary>
+	RealSingle = Real | TypeFloat | Byte4,
+	/// <summary>
+	/// <see cref="double"/> = <see cref="Real"/> + <see cref="TypeFloat"/> + <see cref="Byte8"/>
+	/// </summary>
+	RealDouble = Real | TypeFloat | Byte8,
+	/// <summary>
+	/// <see cref="FloatComplex"/> = <see cref="Complex"/> + <see cref="TypeFloat"/> + <see cref="Byte4"/>
+	/// </summary>
+	ComplexSingle = Complex | TypeFloat | Byte4,
+	/// <summary>
+	/// <see cref="DoubleComplex"/> = <see cref="Complex"/> + <see cref="TypeFloat"/> + <see cref="Byte8"/>
+	/// </summary>
+	ComplexDouble = Complex | TypeFloat | Byte8,
+
+	/// <summary>
+	/// <see cref="sbyte"/> = <see cref="Real"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte1"/>
+	/// </summary>
+	RealInt8 = Real | TypeSignedInteger | Byte1,
+	/// <summary>
+	/// <see cref="short"/> = <see cref="Real"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte2"/>
+	/// </summary>
+	RealInt16 = Real | TypeSignedInteger | Byte2,
+	/// <summary>
+	/// <see cref="int"/> = <see cref="Real"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte4"/>
+	/// </summary>
+	RealInt32 = Real | TypeSignedInteger | Byte4,
+	/// <summary>
+	/// <see cref="long"/> = <see cref="Real"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte8"/>
+	/// </summary>
+	RealInt64 = Real | TypeSignedInteger | Byte8,
+
+	/// <summary>
+	/// <see cref="byte"/> = <see cref="Real"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte1"/>
+	/// </summary>
+	RealUInt8 = Real | TypeUnsignedInteger | Byte1,
+	/// <summary>
+	/// <see cref="ushort"/> = <see cref="Real"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte2"/>
+	/// </summary>
+	RealUInt16 = Real | TypeUnsignedInteger | Byte2,
+	/// <summary>
+	/// <see cref="uint"/> = <see cref="Real"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte4"/>
+	/// </summary>
+	RealUInt32 = Real | TypeUnsignedInteger | Byte4,
+	/// <summary>
+	/// <see cref="ulong"/> = <see cref="Real"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte8"/>
+	/// </summary>
+	RealUInt64 = Real | TypeUnsignedInteger | Byte8,
+
+	/// <summary>
+	/// <see cref="sbyte"/> = <see cref="Complex"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte1"/>
+	/// </summary>
+	ComplexInt8 = Complex | TypeSignedInteger | Byte1,
+	/// <summary>
+	/// <see cref="short"/> = <see cref="Complex"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte2"/>
+	/// </summary>
+	ComplexInt16 = Complex | TypeSignedInteger | Byte2,
+	/// <summary>
+	/// <see cref="int"/> = <see cref="Complex"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte4"/>
+	/// </summary>
+	ComplexInt32 = Complex | TypeSignedInteger | Byte4,
+	/// <summary>
+	/// <see cref="long"/> = <see cref="Complex"/> + <see cref="TypeSignedInteger"/> + <see cref="Byte8"/>
+	/// </summary>
+	ComplexInt64 = Complex | TypeSignedInteger | Byte8,
+
+	/// <summary>
+	/// <see cref="byte"/> = <see cref="Complex"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte1"/>
+	/// </summary>
+	ComplexUInt8 = Complex | TypeUnsignedInteger | Byte1,
+	/// <summary>
+	/// <see cref="ushort"/> = <see cref="Complex"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte2"/>
+	/// </summary>
+	ComplexUInt16 = Complex | TypeUnsignedInteger | Byte2,
+	/// <summary>
+	/// <see cref="uint"/> = <see cref="Complex"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte4"/>
+	/// </summary>
+	ComplexUInt32 = Complex | TypeUnsignedInteger | Byte4,
+	/// <summary>
+	/// <see cref="ulong"/> = <see cref="Complex"/> + <see cref="TypeUnsignedInteger"/> + <see cref="Byte8"/>
+	/// </summary>
+	ComplexUInt64 = Complex | TypeUnsignedInteger | Byte8,
+};

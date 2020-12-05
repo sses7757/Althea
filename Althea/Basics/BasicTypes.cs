@@ -107,9 +107,7 @@ namespace Althea
 		/// Parse the <see cref="string"/> to a new <see cref="FloatComplex"/>
 		/// </summary>
 		/// <param name="s">string to parse</param>
-#pragma warning disable CA1062 // Validate arguments of public methods
 		public static FloatComplex Parse(string s) => !string.IsNullOrWhiteSpace(s) ? new FloatComplex(CudaCSharpConverters.ParseComplex(s)) : throw new ArgumentNullException(nameof(s));
-#pragma warning restore CA1062 // Validate arguments of public methods
 
 		/// <summary>
 		/// Convert from int
@@ -476,9 +474,7 @@ namespace Althea
 		/// Parse the <see cref="string"/> to a new <see cref="DoubleComplex"/>
 		/// </summary>
 		/// <param name="s">string to parse</param>
-#pragma warning disable CA1062 // Validate arguments of public methods
 		public static DoubleComplex Parse(string s) => !string.IsNullOrWhiteSpace(s) ? new DoubleComplex(CudaCSharpConverters.ParseComplex(s)) : throw new ArgumentNullException(nameof(s));
-#pragma warning restore CA1062 // Validate arguments of public methods
 
 		/// <summary>
 		/// Convert from int
@@ -790,7 +786,6 @@ namespace Althea
 	/// The format specification enum of sparse matrix
 	/// </summary>
 	[Flags]
-#pragma warning disable CA2217
 	public enum SparseMatrixFormat
 	{
 		/// <summary>
@@ -844,7 +839,6 @@ namespace Althea
 		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
 		Any = ~0
 	}
-#pragma warning restore CA2217
 
 
 	/// <summary>
@@ -979,11 +973,11 @@ namespace Althea
 		public static int Bytes(this DataType dataType) => (int)(dataType & DataType.ByteMask) >> (int)DataType.ByteMaskStart;
 	}
 
+#pragma warning disable CA1069
 	/// <summary>
 	/// The general data types defined by flags and masks.
 	/// </summary>
 	[Flags]
-#pragma warning disable CA2217
 	public enum DataType
 	{
 		/// <summary>
@@ -1134,7 +1128,7 @@ namespace Althea
 		/// </summary>
 		ComplexUInt64 = Complex | TypeUnsignedInteger | Byte8,
 	}
-#pragma warning restore CA2217
+#pragma warning restore CA1069
 
 	/// <summary>
 	/// The <see cref="CudaDataType"/> type is an enum to specify the data precision. It is used when the data reference does not carry the type itself (e.g <see cref="IntPtr"/> alone).
@@ -2091,7 +2085,7 @@ namespace Althea
 		ErrorUnknown = 999,
 
 		/// <summary>
-		/// Any unhandled CUDA driver error is added to this value and returned via
+		/// Any not handled CUDA driver error is added to this value and returned via
 		/// the runtime. Production releases of CUDA should not return such errors.
 		/// </summary>
 		[Obsolete("deprecated as of CUDA 4.1")]

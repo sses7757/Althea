@@ -2,6 +2,7 @@
 
 
 #include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 #include <thrust/device_malloc.h>
 #include <thrust/device_free.h>
 
@@ -22,7 +23,7 @@
 template <typename T>
 __inline__ void vectorSetValuesAt(T* dst, const T value, const int* pos, const size_t posN)
 {
-	thrust::fill(thrust::cuda::par, thrust::make_permutation_iterator(dst, pos), thrust::make_permutation_iterator(dst, pos + posN), value);
+	thrust::fill(THRUST_PAR, thrust::make_permutation_iterator(dst, pos), thrust::make_permutation_iterator(dst, pos + posN), value);
 }
 
 EXTERN_C
@@ -46,611 +47,301 @@ END_EXTERN_C
 #pragma endregion
 
 
-#pragma region operators for thrust
-struct floatAxpy
+#pragma region dense vector prune to sparse vector
+template <typename T, typename U>
+struct floatAboveThreshold_functor
 {
-	const float alpha;
-	floatAxpy(float t) : alpha(t) {}
+	const U threshold;
+	floatAboveThreshold_functor(U t) : threshold(t) {}
 
-	__host__ __device__ float operator()(const float x, const float y) const
+	__host__ __device__ bool operator()(const T x) const
 	{
-		return x + alpha * y;
+		return std::abs(x) > threshold;
 	}
 };
 
-struct doubleAxpy
+// dense vector prune to sparse vector -- get buffer size
+extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const DataType type)
 {
-	const double alpha;
-	doubleAxpy(double t) : alpha(t) {}
+	size_t res = sizeof(int) * N * 2; // size for a 0-N sequence and possible indices
+	int sizeofType = (int)((type & DataType::ByteMask) >> DataType::ByteMaskStart);
+	res += sizeofType * N; // size for temporary values
+	return res;
+}
 
-	__host__ __device__ double operator()(const double x, const double y) const
-	{
-		return x + alpha * y;
-	}
-};
-
-struct floatComplexAxpy
-{
-	const cuFloatComplex alpha;
-	floatComplexAxpy(cuFloatComplex t) : alpha(t) {}
-
-	__host__ __device__ cuFloatComplex operator()(const cuFloatComplex x, const cuFloatComplex y) const
-	{
-		return cuCaddf(x, cuCmulf(alpha, y));
-	}
-};
-
-struct doubleComplexAxpy
-{
-	const cuDoubleComplex alpha;
-	doubleComplexAxpy(cuDoubleComplex t) : alpha(t) {}
-
-	__host__ __device__ cuDoubleComplex operator()(const cuDoubleComplex x, const cuDoubleComplex y) const
-	{
-		return cuCadd(x, cuCmul(alpha, y));
-	}
-};
-
-struct intNotZero
-{
-	__host__ __device__ bool operator()(const int x) const
-	{
-		return x != 0;
-	}
-};
-intNotZero notZero;
-
-struct intNegative
-{
-	__host__ __device__ bool operator()(const int x) const
-	{
-		return x < 0;
-	}
-};
-intNegative intNeg;
-
-struct floatAboveThreshold
-{
-	const float threshold;
-	floatAboveThreshold(float t) : threshold(t) {}
-
-	__host__ __device__ bool operator()(const float x) const
-	{
-		return fabsf(x) > threshold;
-	}
-};
-
-struct doubleAboveThreshold
-{
-	const double threshold;
-	doubleAboveThreshold(double t) : threshold(t) {}
-
-	__host__ __device__ bool operator()(const double x) const
-	{
-		return abs(x) > threshold;
-	}
-};
-
-struct floatComplexAboveThreshold
-{
-	const float threshold;
-	floatComplexAboveThreshold(float t) : threshold(t) {}
-
-	__host__ __device__ bool operator()(const cuFloatComplex x) const
-	{
-		return cuCabsf(x) > threshold;
-	}
-};
-
-struct doubleComplexAboveThreshold
-{
-	const double threshold;
-	doubleComplexAboveThreshold(double t) : threshold(t) {}
-
-	__host__ __device__ bool operator()(const cuDoubleComplex x) const
-	{
-		return cuCabs(x) > threshold;
-	}
-};
-
-struct floatComplexDotC
-{
-	__host__ __device__ cuFloatComplex operator()(const cuFloatComplex x, const cuFloatComplex y) const
-	{
-		return cuCmulf(cuConjf(x), y);
-	}
-};
-floatComplexDotC dotC;
-
-struct doubleComplexDotZ
-{
-	__host__ __device__ cuDoubleComplex operator()(const cuDoubleComplex x, const cuDoubleComplex y) const
-	{
-		return cuCmul(cuConj(x), y);
-	}
-};
-doubleComplexDotZ dotZ;
-#pragma endregion
-
-
-#pragma region dense vector prune to sparse vecPrune
-// TODO: split to buffer, non-zeros, calculate
-template <typename T, typename Predicate>
-cudaError vecPrune(const T* v, const size_t N, const Predicate threshold, void* buffer, size_t& nnz, int*& indexOut, T*& valueOut)
+// dense vector prune to sparse vector -- get non-zeros
+template <typename T, typename U>
+size_t vecPruneNonZeros(const T* v, const U threshold, const size_t N, void* buffer)
 {
 	// create range sequence
 	int* index = (int*)buffer;
-	thrust::sequence(thrust::cuda::par, index, index + N);
+	thrust::sequence(THRUST_PAR, index, index + N);
 
 	// create result container
 	int* idxOut = N + (int*)buffer;
 	T* valOut = (T*)(2 * N + (int*)buffer);
-	
+
 	// make zip
 	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(index, v));
 	auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(index + N, v + N));
 	auto resultBegin = thrust::make_zip_iterator(thrust::make_tuple(idxOut, valOut));
 
 	// copy_if to get sparse indexes
-	auto resultEnd = thrust::copy_if(thrust::cuda::par, zipBegin, zipEnd, v, resultBegin, threshold);
-	nnz = resultEnd - resultBegin;
-
-	// resize and get out arrays
-	cudaError err = cudaMalloc(&indexOut, sizeof(int) * nnz);
-	if (err != 0) return err;
-	err = cudaMemcpy(indexOut, idxOut, sizeof(int) * nnz, cudaMemcpyDeviceToDevice);
-	if (err != 0) return err;
-	err = cudaMalloc(&valueOut, sizeof(T) * nnz);
-	if (err != 0) return err;
-	err = cudaMemcpy(valueOut, valOut, sizeof(T) * nnz, cudaMemcpyDeviceToDevice);
-	if (err != 0) return err;
-
-	// return
-	return err;
+	auto resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipEnd, v, resultBegin, floatAboveThreshold_functor<T, U>(threshold));
+	return resultEnd - resultBegin;
 }
 
 EXTERN_C
-DLLEXP cudaError vecPruneBuffer(const size_t N, const cudaDataType type, size_t& bufferSize)
+DLLEXP size_t vecPruneNnzS(const float* v, const float threshold, const size_t N, void* buffer)
 {
-	size_t res;
-	switch (type)
-	{
-	case CUDA_R_32F:
-		res = sizeof(float) * N + sizeof(int) * N * 2;
-		break;
-	case CUDA_C_32F:
-		res = sizeof(cuFloatComplex) * N + sizeof(int) * N * 2;
-		break;
-	case CUDA_R_64F:
-		res = sizeof(double) * N + sizeof(int) * N * 2;
-		break;
-	case CUDA_C_64F:
-		res = sizeof(cuDoubleComplex) * N + sizeof(int) * N * 2;
-		break;
-	default:
-		return cudaErrorNotSupported;
-	}
-	bufferSize = res;
-	return cudaSuccess;
+	return vecPruneNonZeros(v, threshold, N, buffer);
+}
+DLLEXP size_t vecPruneNnzD(const double* v, const float threshold, const size_t N, void* buffer)
+{
+	return vecPruneNonZeros(v, (double)threshold, N, buffer);
+}
+DLLEXP size_t vecPruneNnzC(const cuFloatComplex* v, const float threshold, const size_t N, void* buffer)
+{
+	return vecPruneNonZeros(v, threshold, N, buffer);
+}
+DLLEXP size_t vecPruneNnzZ(const cuDoubleComplex* v, const float threshold, const size_t N, void* buffer)
+{
+	return vecPruneNonZeros(v, (double)threshold, N, buffer);
+}
+END_EXTERN_C
+
+// dense vector prune to sparse vector -- calculate
+template <typename T>
+ERROR_RETURN vecPruneCalculate(const size_t N, const void* buffer, size_t nnz, int* indexOut, T* valueOut)
+{
+	// get result container from buffer
+	int* idxOut = N + (int*)buffer;
+	T* valOut = (T*)(2 * N + (int*)buffer);
+
+	// copy to output arrays
+#ifdef CPU
+	memcpy(indexOut, idxOut, sizeof(int) * nnz);
+	memcpy(valueOut, valOut, sizeof(T) * nnz);
+#else
+	cudaError err = cudaMemcpy(indexOut, idxOut, sizeof(int) * nnz, cudaMemcpyDeviceToDevice);
+	if (err != 0) return err;
+	err = cudaMemcpy(valueOut, valOut, sizeof(T) * nnz, cudaMemcpyDeviceToDevice);
+	if (err != 0) return err;
+	// return
+	return err;
+#endif // CPU
 }
 
-DLLEXP cudaError vecPruneS (const float* v, const size_t N, const float threshold, void* buffer,
-							size_t& nnz, int*& indexOut, float*& valueOut)
+EXTERN_C
+DLLEXP ERROR_RETURN vecPruneCalS(const size_t N, void* buffer, size_t nnz, int* indexOut, float* valueOut)
 {
-	return vecPrune(v, N, floatAboveThreshold(threshold), buffer, nnz, indexOut, valueOut);
+	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
-DLLEXP cudaError vecPruneD (const double* v, const size_t N, const float threshold, void* buffer,
-							size_t& nnz, int*& indexOut, double*& valueOut)
+DLLEXP ERROR_RETURN vecPruneCalD(const size_t N, void* buffer, size_t nnz, int* indexOut, double* valueOut)
 {
-	return vecPrune(v, N, doubleAboveThreshold(threshold), buffer, nnz, indexOut, valueOut);
+	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
-DLLEXP cudaError vecPruneC (const cuFloatComplex* v, const size_t N, const float threshold, void* buffer,
-							size_t& nnz, int*& indexOut, cuFloatComplex*& valueOut)
+DLLEXP ERROR_RETURN vecPruneCalC(const size_t N, void* buffer, size_t nnz, int* indexOut, cuFloatComplex* valueOut)
 {
-	return vecPrune<cuFloatComplex>(v, N, floatComplexAboveThreshold(threshold), buffer, nnz, indexOut, valueOut);
+	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
-DLLEXP cudaError vecPruneZ (const cuDoubleComplex* v, const size_t N, const float threshold, void* buffer,
-							size_t& nnz, int*& indexOut, cuDoubleComplex*& valueOut)
+DLLEXP ERROR_RETURN vecPruneCalZ(const size_t N, void* buffer, size_t nnz, int* indexOut, cuDoubleComplex* valueOut)
 {
-	return vecPrune<cuDoubleComplex>(v, N, doubleComplexAboveThreshold(threshold), buffer, nnz, indexOut, valueOut);
+	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
 END_EXTERN_C
 #pragma endregion
 
 
-#pragma region dense sparse vector element-wise vecSpDivMulDn
-__global__ void KerSpVecDivDnS(const float* dense, const size_t nnz, float* sparse, const int* index)
+#pragma region sparse vector element-wise multipilied or divided by dense vector
+template<typename T>
+void vectorSparseMultipliedDividedByDense(T* sparse, const int* index, const size_t nnz, const T* dense, bool multiply)
 {
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
+	if (multiply)
 	{
-		sparse[idx] /= dense[index[idx]];
+		thrust::transform(THRUST_PAR, sparse, sparse + nnz, thrust::make_permutation_iterator(dense, index), sparse, thrust::multiplies<T>());
 	}
-}
-__global__ void KerSpVecDivDnD(const double* dense, const size_t nnz, double* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
+	else
 	{
-		sparse[idx] /= dense[index[idx]];
+		thrust::transform(THRUST_PAR, sparse, sparse + nnz, thrust::make_permutation_iterator(dense, index), sparse, thrust::divides<T>());
 	}
-}
-__global__ void KerSpVecDivDnC(const cuFloatComplex* dense, const size_t nnz, cuFloatComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		sparse[idx] = cuCdivf(sparse[idx], dense[index[idx]]);
-	}
-}
-__global__ void KerSpVecDivDnZ(const cuDoubleComplex* dense, const size_t nnz, cuDoubleComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		sparse[idx] = cuCdiv(sparse[idx], dense[index[idx]]);
-	}
-}
-
-__global__ void KerSpVecMulDnS(const float* dense, const size_t nnz, float* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		sparse[idx] *= dense[index[idx]];
-	}
-}
-__global__ void KerSpVecMulDnD(const double* dense, const size_t nnz, double* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		sparse[idx] *= dense[index[idx]];
-	}
-}
-__global__ void KerSpVecMulDnC(const cuFloatComplex* dense, const size_t nnz, cuFloatComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		sparse[idx] = cuCmulf(sparse[idx], dense[index[idx]]);
-	}
-}
-__global__ void KerSpVecMulDnZ(const cuDoubleComplex* dense, const size_t nnz, cuDoubleComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		sparse[idx] = cuCmul(sparse[idx], dense[index[idx]]);
-	}
-}
-
-template<typename T, typename Kernel>
-cudaError vecSpDivMulDn(const T* dense, const size_t nnz, T* sparse, const int* index, Kernel ker)
-{
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, ker, 0, nnz);
-	if (err != 0) return err;
-	// Round up according to array size
-	gridSize = (nnz + blockSize - 1) / blockSize;
-	ker<<<gridSize, blockSize>>>(dense, nnz, sparse, index);
-	err = cudaDeviceSynchronize();
-	return err;
 }
 
 EXTERN_C
-DLLEXP cudaError vecSpDivMulDnS(const float* dense, const size_t nnz, float* sparse, const int* index, const bool mul)
+DLLEXP void vecSpMulDivDnS(float* sparse, const int* index, const size_t nnz, const float* dense, bool multiply)
 {
-	return  mul ? vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecMulDnS) :
-				  vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecDivDnS);
+	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
-DLLEXP cudaError vecSpDivMulDnD(const double* dense, const size_t nnz, double* sparse, const int* index, const bool mul)
+DLLEXP void vecSpMulDivDnD(double* sparse, const int* index, const size_t nnz, const double* dense, bool multiply)
 {
-	return  mul ? vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecMulDnD) :
-				  vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecDivDnD);
+	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
-DLLEXP cudaError vecSpDivMulDnC(const cuFloatComplex* dense, const size_t nnz, cuFloatComplex* sparse, const int* index, const bool mul)
+DLLEXP void vecSpMulDivDnC(cuFloatComplex* sparse, const int* index, const size_t nnz, const cuFloatComplex* dense, bool multiply)
 {
-	return  mul ? vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecMulDnC) :
-				  vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecDivDnC);
+	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
-DLLEXP cudaError vecSpDivMulDnZ(const cuDoubleComplex* dense, const size_t nnz, cuDoubleComplex* sparse, const int* index, const bool mul)
+DLLEXP void vecSpMulDivDnZ(cuDoubleComplex* sparse, const int* index, const size_t nnz, const cuDoubleComplex* dense, bool multiply)
 {
-	return  mul ? vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecMulDnZ) :
-				  vecSpDivMulDn(dense, nnz, sparse, index, KerSpVecDivDnZ);
+	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
 END_EXTERN_C
 #pragma endregion
 
 
 #pragma region sparse vector add sparse vector vecSpAdd
-// TODO: split to buffer, non-zeros, calculate
-template <typename T, typename BinaryFunction>
-cudaError vecSpAdd (const int* A_index, const T* A_value, const size_t nnzA,
-					const int* B_index, const T* B_value, const size_t nnzB,
-					void* buffer, BinaryFunction func, size_t& nnzC, int*& C_index, T*& C_value)
+// sparse vector add another sparse vector -- get buffer size
+extern "C" DLLEXP size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const DataType type)
 {
-	int nnz = nnzA + nnzB;
+	size_t N = nnzA + nnzB;
+	size_t res = sizeof(int) * N; // size for temporary indices
+	int sizeofType = (int)((type & DataType::ByteMask) >> DataType::ByteMaskStart);
+	res += sizeofType * N; // size for temporary values
+	return res;
+}
+
+template <typename T>
+struct floatMultiplyScalar_functor
+{
+	T scalar;
+	floatMultiplyScalar_functor(T s) : scalar(s) {}
+
+	__host__ __device__ T operator()(const T x) const
+	{
+		return x * scalar;
+	}
+};
+
+template<typename T>
+struct notEqualAsInt_functor
+{
+	__host__ __device__ int operator()(const T& lhs, const T& rhs) const { return lhs == rhs ? 0 : 1; }
+};
+
+// sparse vector add another sparse vector -- get non-zeros, 'alpha' is the number to multiply to each value of B
+template <typename T>
+size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nnzA, const int* indB, const T* valB, const size_t nnzB, const T alpha, bool alphaIsOne, void* buffer)
+{
+	size_t nnz = nnzA + nnzB;
 	// get storage from buffer for the combined contents of sparse vectors A and B
 	int* temp_index = (int*)buffer;
 	T* temp_value = (T*)(nnz + (int*)buffer);
 
 	// merge A and B by index
-	thrust::merge_by_key(thrust::cuda::par, A_index, A_index + nnzA, B_index, B_index + nnzB, A_value, B_value, temp_index, temp_value);
+	if (alphaIsOne)
+	{
+		thrust::merge_by_key(THRUST_PAR, indA, indA + nnzA, indB, indB + nnzB, valA, valB, temp_index, temp_value);
+	}
+	else
+	{
+		auto alphaMultiplyB = thrust::make_transform_iterator(valB, floatMultiplyScalar_functor<T>(alpha));
+		thrust::merge_by_key(THRUST_PAR, indA, indA + nnzA, indB, indB + nnzB, valA, alphaMultiplyB, temp_index, temp_value);
+	}
 
 	// compute number of unique indices, must larger than 0
-	nnzC = thrust::inner_product(thrust::cuda::par, temp_index, temp_index + nnz - 1, temp_index + 1,
-		int(0), thrust::plus<int>(), thrust::not_equal_to<int>()) + 1;
+	size_t nnzC = thrust::inner_product(THRUST_PAR, temp_index, temp_index + nnz - 1, temp_index + 1, int(0), thrust::plus<int>(), notEqualAsInt_functor<int>());
+	nnzC += 1;
 
-	// allocate space for output
-	cudaError err = cudaMalloc(&C_index, sizeof(int) * nnzC);
-	if (err != 0) return err;
-	err = cudaMalloc(&C_value, sizeof(T) * nnzC);
-	if (err != 0) return err;
-
-	// sum values with the same index
-	thrust::reduce_by_key(thrust::cuda::par, temp_index, temp_index + nnz, temp_value, C_index, C_value,
-						  thrust::equal_to<int>(), func);
-
-	return err;
+	// return
+	return nnzC;
 }
 
 EXTERN_C
-DLLEXP cudaError vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const cudaDataType type, size_t& bufferSize)
+DLLEXP size_t vecSpAddNnzS(const int* indA, const float* valA, const size_t nnzA, const int* indB, const float* valB, const size_t nnzB, const float alpha, void* buffer)
 {
-	size_t N = nnzA + nnzB;
-	size_t res;
-	switch (type)
-	{
-	case CUDA_R_32F:
-		res = sizeof(float) * N + sizeof(int) * N;
-		break;
-	case CUDA_C_32F:
-		res = sizeof(cuFloatComplex) * N + sizeof(int) * N;
-		break;
-	case CUDA_R_64F:
-		res = sizeof(double) * N + sizeof(int) * N;
-		break;
-	case CUDA_C_64F:
-		res = sizeof(cuDoubleComplex) * N + sizeof(int) * N;
-		break;
-	default:
-		return cudaErrorNotSupported;
-	}
-	bufferSize = res;
-	return cudaSuccess;
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha == 1.0f, buffer);
+}
+DLLEXP size_t vecSpAddNnzD(const int* indA, const double* valA, const size_t nnzA, const int* indB, const double* valB, const size_t nnzB, const double alpha, void* buffer)
+{
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha == 1.0, buffer);
+}
+DLLEXP size_t vecSpAddNnzC(const int* indA, const cuFloatComplex* valA, const size_t nnzA, const int* indB, const cuFloatComplex* valB, const size_t nnzB, const cuFloatComplex alpha, void* buffer)
+{
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha.x == 1.0f && alpha.y == 0.0f, buffer);
+}
+DLLEXP size_t vecSpAddNnzZ(const int* indA, const cuDoubleComplex* valA, const size_t nnzA, const int* indB, const cuDoubleComplex* valB, const size_t nnzB, const cuDoubleComplex alpha, void* buffer)
+{
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha.x == 1.0 && alpha.y == 0.0, buffer);
+}
+END_EXTERN_C
+
+// sparse vector add another sparse vector -- calculate
+template <typename T>
+void vectorSparseAddCalculate(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, T* C_value)
+{
+	// get storage from buffer for the combined contents of sparse vectors A and B
+	int* temp_index = (int*)buffer;
+	T* temp_value = (T*)(nnzAB + (int*)buffer);
+
+	// sum values with the same index
+	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_index, C_value, thrust::equal_to<int>(), thrust::plus<T>());
 }
 
-DLLEXP cudaError vecSpAddS (const int* A_index, const float* A_value, const size_t nnzA,
-							const int* B_index, const float* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, float*& C_value)
+EXTERN_C
+DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
 {
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, thrust::plus<float>(), nnzC, C_index, C_value);
+	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
 }
-DLLEXP cudaError vecSpAddD (const int* A_index, const double* A_value, const size_t nnzA,
-							const int* B_index, const double* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, double*& C_value)
+DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
 {
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, thrust::plus<double>(), nnzC, C_index, C_value);
+	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
 }
-DLLEXP cudaError vecSpAddC (const int* A_index, const cuFloatComplex* A_value, const size_t nnzA,
-							const int* B_index, const cuFloatComplex* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, cuFloatComplex*& C_value)
+DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
 {
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, addC, nnzC, C_index, C_value);
+	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
 }
-DLLEXP cudaError vecSpAddZ (const int* A_index, const cuDoubleComplex* A_value, const size_t nnzA,
-							const int* B_index, const cuDoubleComplex* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, cuDoubleComplex*& C_value)
+DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
 {
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, addZ, nnzC, C_index, C_value);
-}
-
-DLLEXP cudaError vecSpAxpyS(const int* A_index, const float* A_value, const size_t nnzA,
-							const float alpha, const int* B_index, const float* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, float*& C_value)
-{
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, floatAxpy(alpha), nnzC, C_index, C_value);
-}
-DLLEXP cudaError vecSpAxpyD(const int* A_index, const double* A_value, const size_t nnzA,
-							const double alpha, const int* B_index, const double* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, double*& C_value)
-{
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, doubleAxpy(alpha), nnzC, C_index, C_value);
-}
-DLLEXP cudaError vecSpAxpyC(const int* A_index, const cuFloatComplex* A_value, const size_t nnzA,
-							const cuFloatComplex alpha, const int* B_index, const cuFloatComplex* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, cuFloatComplex*& C_value)
-{
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, floatComplexAxpy(alpha), nnzC, C_index, C_value);
-}
-DLLEXP cudaError vecSpAxpyZ(const int* A_index, const cuDoubleComplex* A_value, const size_t nnzA,
-							const cuDoubleComplex alpha, const int* B_index, const cuDoubleComplex* B_value, const size_t nnzB,
-							void* buffer, size_t& nnzC, int*& C_index, cuDoubleComplex*& C_value)
-{
-	return vecSpAdd(A_index, A_value, nnzA, B_index, B_value, nnzB, buffer, doubleComplexAxpy(alpha), nnzC, C_index, C_value);
+	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
 }
 END_EXTERN_C
 #pragma endregion
 
 
 #pragma region dense vector added by sparse
-__global__ void KerDnVecAddSpS(float* dense, const size_t nnz, const float* sparse, const int* index)
+// return alpha * x + y
+template <typename T>
+struct floatFMA_functor
 {
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		dense[index[idx]] += sparse[idx];
-	}
-}
-__global__ void KerDnVecAddSpD(double* dense, const size_t nnz, const double* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		dense[index[idx]] += sparse[idx];
-	}
-}
-__global__ void KerDnVecAddSpC(cuFloatComplex* dense, const size_t nnz, const cuFloatComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		size_t pos = index[idx];
-		dense[pos] = cuCaddf(dense[pos], sparse[idx]);
-	}
-}
-__global__ void KerDnVecAddSpZ(cuDoubleComplex* dense, const size_t nnz, const cuDoubleComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		size_t pos = index[idx];
-		dense[pos] = cuCadd(dense[pos], sparse[idx]);
-	}
-}
+	T alpha;
+	floatFMA_functor(T a) : alpha(a) {}
 
-__global__ void KerAxpyiS(float* dense, const size_t nnz, const float a, const float* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
+	__host__ __device__ T operator()(const T x, const T y) const
 	{
-		dense[index[idx]] += a * sparse[idx];
+		return std::fma(alpha, x, y);
 	}
-}
-__global__ void KerAxpyiD(double* dense, const size_t nnz, const double a, const double* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		dense[index[idx]] += a * sparse[idx];
-	}
-}
-__global__ void KerAxpyiC(cuFloatComplex* dense, const size_t nnz, const cuFloatComplex a,
-					const cuFloatComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		size_t pos = index[idx];
-		dense[pos] = cuCaddf(dense[pos], cuCmulf(a, sparse[idx]));
-	}
-}
-__global__ void KerAxpyiZ(cuDoubleComplex* dense, const size_t nnz, const cuDoubleComplex a,
-					const cuDoubleComplex* sparse, const int* index)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-	{
-		size_t pos = index[idx];
-		dense[pos] = cuCadd(dense[pos], cuCmul(a, sparse[idx]));
-	}
-}
+};
 
-template <typename T, typename Kernel>
-cudaError vecDnAddSp(T* dense, const size_t nnz, const T* sparse, const int* index, Kernel ker)
+// dense[index[i]] = sparse[i] * alpha + dense[index[i]]
+template <typename T>
+void vectorDenseAddBySparse(T* dense, const T* sparse, const int* index, const size_t nnz, const T alpha, const bool alphaIsOne)
 {
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, ker, 0, nnz);
-	if (err != 0) return err;
-	// Round up according to array size
-	gridSize = (nnz + blockSize - 1) / blockSize;
-	ker<<<gridSize, blockSize>>>(dense, nnz, sparse, index);
-	err = cudaDeviceSynchronize();
-	return err;
-}
-
-template <typename T, typename Kernel>
-cudaError vecAxpyi(T* dense, const size_t nnz, const T alpha, const T* sparse, const int* index, Kernel ker)
-{
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, ker, 0, nnz);
-	if (err != 0) return err;
-	// Round up according to array size
-	gridSize = (nnz + blockSize - 1) / blockSize;
-	ker<<<gridSize, blockSize>>>(dense, nnz, alpha, sparse, index);
-	err = cudaDeviceSynchronize();
-	return err;
+	auto densePerm = thrust::make_permutation_iterator(dense, index);
+	if (alphaIsOne)
+	{
+		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, thrust::plus<T>());
+	}
+	else
+	{
+		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, floatFMA_functor<T>(alpha));
+	}
 }
 
 EXTERN_C
-DLLEXP cudaError vecDnAddSpS(float* dense, const size_t nnz, const float* sparse, const int* index)
+DLLEXP void vecDnAddSpS(float* dense, const float* sparse, const int* index, const size_t nnz, const float alpha)
 {
-	return vecDnAddSp(dense, nnz, sparse, index, KerDnVecAddSpS);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha == 1.0f);
 }
-DLLEXP cudaError vecDnAddSpD(double* dense, const size_t nnz, const double* sparse, const int* index)
+DLLEXP void vecDnAddSpD(double* dense, const double* sparse, const int* index, const size_t nnz, const double alpha)
 {
-	return vecDnAddSp(dense, nnz, sparse, index, KerDnVecAddSpD);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha == 1.0);
 }
-DLLEXP cudaError vecDnAddSpC(cuFloatComplex* dense, const size_t nnz, const cuFloatComplex* sparse, const int* index)
+DLLEXP void vecDnAddSpC(cuFloatComplex* dense, const cuFloatComplex* sparse, const int* index, const size_t nnz, const cuFloatComplex alpha)
 {
-	return vecDnAddSp(dense, nnz, sparse, index, KerDnVecAddSpC);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha.x == 1.0f);
 }
-DLLEXP cudaError vecDnAddSpZ(cuDoubleComplex* dense, const size_t nnz, const cuDoubleComplex* sparse, const int* index)
+DLLEXP void vecDnAddSpZ(cuDoubleComplex* dense, const cuDoubleComplex* sparse, const int* index, const size_t nnz, const cuDoubleComplex alpha)
 {
-	return vecDnAddSp(dense, nnz, sparse, index, KerDnVecAddSpZ);
-}
-
-DLLEXP cudaError vecAxpyiS(float* dense, const size_t nnz, const float a, const float* sparse, const int* index)
-{
-	return vecAxpyi(dense, nnz, a, sparse, index, KerAxpyiS);
-}
-DLLEXP cudaError vecAxpyiD(double* dense, const size_t nnz, const double a, const double* sparse, const int* index)
-{
-	return vecAxpyi(dense, nnz, a, sparse, index, KerAxpyiD);
-}
-DLLEXP cudaError vecAxpyiC(cuFloatComplex* dense, const size_t nnz, const cuFloatComplex a,
-					const cuFloatComplex* sparse, const int* index)
-{
-	return vecAxpyi(dense, nnz, a, sparse, index, KerAxpyiC);
-}
-DLLEXP cudaError vecAxpyiZ(cuDoubleComplex* dense, const size_t nnz, const cuDoubleComplex a,
-					const cuDoubleComplex* sparse, const int* index)
-{
-	return vecAxpyi(dense, nnz, a, sparse, index, KerAxpyiZ);
-}
-END_EXTERN_C
-#pragma endregion
-
-
-
-#pragma region size_t array to or from int array
-__global__ void Kerlong2int(const long long* index, int* outIdx, const size_t nnz)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-		outIdx[idx] = (int)index[idx];
-}
-
-__global__ void Kerint2long(long long* outIdx, const int* index, const size_t nnz)
-{
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < nnz)
-		outIdx[idx] = index[idx];
-}
-
-EXTERN_C
-DLLEXP cudaError long2int(const long long* sizeTIdx, int* intIdx, const size_t N)
-{
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, Kerlong2int, 0, N);
-	if (err != 0) return err;
-	// Round up according to array size
-	gridSize = (N + blockSize - 1) / blockSize;
-	Kerlong2int << <gridSize, blockSize >> > (sizeTIdx, intIdx, N);
-	err = cudaDeviceSynchronize();
-	return err;
-}
-DLLEXP cudaError int2long(long long* sizeTIdx, const int* intIdx, const size_t N)
-{
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, Kerint2long, 0, N);
-	if (err != 0) return err;
-	// Round up according to array size
-	gridSize = (N + blockSize - 1) / blockSize;
-	Kerint2long << <gridSize, blockSize >> > (sizeTIdx, intIdx, N);
-	err = cudaDeviceSynchronize();
-	return err;
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha.x == 1.0);
 }
 END_EXTERN_C
 #pragma endregion

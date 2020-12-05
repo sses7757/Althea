@@ -16,6 +16,7 @@
     <CudaCompile Include="SparseVector.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="datatype.h" />
     <ClInclude Include="macro.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

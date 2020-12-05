@@ -23,5 +23,8 @@
     <ClInclude Include="macro.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="datatype.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

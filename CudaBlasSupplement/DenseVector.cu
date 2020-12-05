@@ -1,5 +1,3 @@
-// nvcc -o kernels.dll -lcublas --shared DenseVector.cu --shared Matrix.cu --shared SparseVector.cu
-
 // self defined macro
 #include "macro.h"
 
@@ -21,7 +19,7 @@ END_EXTERN_C
 #pragma region stride range
 // stride range iterator class from NVIDIA/thrust/examples/strided_range.cu
 template <typename Iterator>
-class strided_range
+class StridedRange
 {
 public:
 
@@ -48,7 +46,7 @@ public:
 	typedef PermutationIterator iterator;
 
 	// construct strided_range for the range [first,last)
-	strided_range(Iterator first, Iterator last, difference_type stride)
+	StridedRange(Iterator first, Iterator last, difference_type stride)
 		: first(first), last(last), stride(stride) {}
 
 	iterator begin(void) const
@@ -71,40 +69,23 @@ protected:
 
 #pragma region element-wise multiply and divide
 template<typename T>
-struct multiplyTwo_functor
-{
-	__host__ __device__ T operator()(const T x, const T y) const
-	{
-		return x * y;
-	}
-};
-template<typename T>
-struct divideTwo_functor
-{
-	__host__ __device__ T operator()(const T x, const T y) const
-	{
-		return x / y;
-	}
-};
-
-template<typename T>
 __inline__ void vectorsElementWiseMultiplyDivide(T* a, const T* b, const size_t N, const unsigned int stride, bool multiply)
 {
 	if (stride == 1)
 	{
 		if (multiply)
-			thrust::transform(thrust::cuda::par, a, a + N, b, a, multiplyTwo_functor<T>());
+			thrust::transform(THRUST_PAR, a, a + N, b, a, thrust::multiplies<T>());
 		else
-			thrust::transform(thrust::cuda::par, a, a + N, b, a, divideTwo_functor<T>());
+			thrust::transform(THRUST_PAR, a, a + N, b, a, thrust::divides<T>());
 	}
 	else
 	{
-		strided_range<const T*> strideA(a, a + N * stride, stride);
-		strided_range<const T*> strideB(b, b + N * stride, stride);
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		StridedRange<const T*> strideB(b, b + N * stride, stride);
 		if (multiply)
-			thrust::transform(thrust::cuda::par, strideA.begin(), strideA.end(), strideB.begin(), strideA.begin(), multiplyTwo_functor<T>());
+			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), strideA.begin(), thrust::multiplies<T>());
 		else
-			thrust::transform(thrust::cuda::par, strideA.begin(), strideA.end(), strideB.begin(), strideA.begin(), divideTwo_functor<T>());
+			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), strideA.begin(), thrust::divides<T>());
 	}
 }
 
@@ -148,12 +129,12 @@ void vectorElementWisePower(T* a, const P p, const size_t N, const unsigned int 
 {
 	if (stride == 1)
 	{
-		thrust::transform(thrust::cuda::par, a, a + N, a, floatPower_functor<T, P>(p));
+		thrust::transform(THRUST_PAR, a, a + N, a, floatPower_functor<T, P>(p));
 	}
 	else
 	{
-		strided_range<const T*> strideA(a, a + N * stride, stride);
-		thrust::transform(thrust::cuda::par, strideA.begin(), strideA.end(), strideA.begin(), floatPower_functor<T, P>(p));
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatPower_functor<T, P>(p));
 	}
 }
 
@@ -184,12 +165,12 @@ void vectorFillWith(T* a, const T val, const size_t N, const unsigned int stride
 {
 	if (stride == 1)
 	{
-		thrust::fill_n(thrust::cuda::par, a, N, val);
+		thrust::fill_n(THRUST_PAR, a, N, val);
 	}
 	else
 	{
-		strided_range<const T*> strideA(a, a + N * stride, stride);
-		thrust::fill(thrust::cuda::par, strideA.begin(), strideA.end(), val);
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		thrust::fill(THRUST_PAR, strideA.begin(), strideA.end(), val);
 	}
 }
 
@@ -230,12 +211,12 @@ void vecConjugate(T* a, const size_t N, const unsigned int stride)
 {
 	if (stride == 1)
 	{
-		thrust::transform(thrust::cuda::par, a, a + N, a, floatConjugate_functor<T>());
+		thrust::transform(THRUST_PAR, a, a + N, a, floatConjugate_functor<T>());
 	}
 	else
 	{
-		strided_range<const T*> strideA(a, a + N * stride, stride);
-		thrust::transform(thrust::cuda::par, strideA.begin(), strideA.end(), strideA.begin(), floatConjugate_functor<T>());
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatConjugate_functor<T>());
 	}
 }
 
@@ -252,35 +233,66 @@ END_EXTERN_C
 #pragma endregion
 
 
-#pragma region float to double up-cast and float from double down-cast
-struct floatToDouble_functor
+#pragma region up-cast and down-cast
+struct singleToDouble_functor
 {
 	__host__ __device__ double operator()(const float x) const
 	{
 		return x;
 	}
 };
-struct doubleToFloat_functor
+struct doubleToSingle_functor
 {
 	__host__ __device__ float operator()(const double x) const
 	{
 		return (float)x;
 	}
 };
+template <typename Complex, typename Real>
+struct complexToRealPart_functor
+{
+	__host__ __device__ Real operator()(const Complex x) const
+	{
+		return x.x;
+	}
+};
+template <typename Complex, typename Real>
+struct complexToRealAbs_functor
+{
+	__host__ __device__ Real operator()(const Complex x) const
+	{
+		return std::abs(x);
+	}
+};
+// real to complex can be done by strided copies
 
+template <typename Complex, typename Real>
+void vecComplexToReal(Real* dest, const Complex* src, const size_t N, const unsigned int stride)
+{
+	if (stride == 1)
+	{
+		thrust::transform(THRUST_PAR, src, src + N, dest, complexToRealAbs_functor<Complex, Real>());
+	}
+	else
+	{
+		StridedRange<const Complex*> strideSrc(src, src + N * stride, stride);
+		StridedRange<const Real*> strideDst(dest, dest + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), complexToRealAbs_functor<Complex, Real>());
+	}
+}
 
 EXTERN_C
 DLLEXP void vecSingleToDouble(double* dest, const float* src, const size_t N, const unsigned int stride)
 {
 	if (stride == 1)
 	{
-		thrust::transform(thrust::cuda::par, src, src + N, dest, floatToDouble_functor());
+		thrust::transform(THRUST_PAR, src, src + N, dest, singleToDouble_functor());
 	}
 	else
 	{
-		strided_range<const float*> strideSrc(src, src + N * stride, stride);
-		strided_range<const double*> strideDst(dest, dest + N * stride, stride);
-		thrust::transform(thrust::cuda::par, strideSrc.begin(), strideSrc.end(), strideDst.begin(), floatToDouble_functor());
+		StridedRange<const float*> strideSrc(src, src + N * stride, stride);
+		StridedRange<const double*> strideDst(dest, dest + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), singleToDouble_functor());
 	}
 }
 
@@ -288,14 +300,23 @@ DLLEXP void vecDoubleToSingle(float* dest, const double* src, const size_t N, co
 {
 	if (stride == 1)
 	{
-		thrust::transform(thrust::cuda::par, src, src + N, dest, doubleToFloat_functor());
+		thrust::transform(THRUST_PAR, src, src + N, dest, doubleToSingle_functor());
 	}
 	else
 	{
-		strided_range<const double*> strideSrc(src, src + N * stride, stride);
-		strided_range<const float*> strideDst(dest, dest + N * stride, stride);
-		thrust::transform(thrust::cuda::par, strideSrc.begin(), strideSrc.end(), strideDst.begin(), doubleToFloat_functor());
+		StridedRange<const double*> strideSrc(src, src + N * stride, stride);
+		StridedRange<const float*> strideDst(dest, dest + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), doubleToSingle_functor());
 	}
+}
+
+DLLEXP void vecComplexDoubleToReal(double* dest, const cuDoubleComplex* src, const size_t N, const unsigned int stride)
+{
+	vecComplexToReal(dest, src, N, stride);
+}
+DLLEXP void vecComplexSingleToReal(float* dest, const cuFloatComplex* src, const size_t N, const unsigned int stride)
+{
+	vecComplexToReal(dest, src, N, stride);
 }
 END_EXTERN_C
 #pragma endregion
@@ -303,11 +324,11 @@ END_EXTERN_C
 
 #pragma region dense vector set values with small absolutes to zero
 template<typename T, typename Bound>
-struct trimAbs_functor
+struct clipAbs_functor
 {
 	Bound b;
 
-	trimAbs_functor(Bound bound) : b(bound) {}
+	clipAbs_functor(Bound bound) : b(bound) {}
 
 	__host__ __device__ T operator()(const T x) const
 	{
@@ -320,12 +341,12 @@ __inline__ void vectorClip(T* a, const Bound threshold, const size_t N, const un
 {
 	if (stride == 1)
 	{
-		thrust::transform(thrust::cuda::par, a, a + N, a, trimAbs_functor<T, Bound>(threshold));
+		thrust::transform(THRUST_PAR, a, a + N, a, clipAbs_functor<T, Bound>(threshold));
 	}
 	else
 	{
-		strided_range<const T*> strideA(a, a + N * stride, stride);
-		thrust::transform(thrust::cuda::par, strideA.begin(), strideA.end(), strideA.begin(), trimAbs_functor<T, Bound>(threshold));
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), clipAbs_functor<T, Bound>(threshold));
 	}
 }
 
@@ -334,15 +355,15 @@ DLLEXP void vecClipS(float* a, const float threshold, const size_t N, const unsi
 {
 	vectorClip(a, threshold, N, stride);
 }
-DLLEXP void arrTrimD(double* a, const float threshold, const size_t N, const unsigned int stride)
+DLLEXP void vecClipD(double* a, const float threshold, const size_t N, const unsigned int stride)
 {
 	vectorClip(a, (double)threshold, N, stride);
 }
-DLLEXP void arrTrimC(cuFloatComplex* a, const float threshold, const size_t N, const unsigned int stride)
+DLLEXP void vecClipC(cuFloatComplex* a, const float threshold, const size_t N, const unsigned int stride)
 {
 	vectorClip(a, threshold, N, stride);
 }
-DLLEXP void arrTrimZ(cuDoubleComplex* a, const float threshold, const size_t N, const unsigned int stride)
+DLLEXP void vecClipZ(cuDoubleComplex* a, const float threshold, const size_t N, const unsigned int stride)
 {
 	vectorClip(a, (double)threshold, N, stride);
 }
@@ -354,7 +375,7 @@ END_EXTERN_C
 EXTERN_C
 DLLEXP cudaError intMinMax(const int* v, const size_t N, int& min, int& max)
 {
-	thrust::pair<const int*, const int*> res = thrust::minmax_element(thrust::cuda::par, v, v + N);
+	thrust::pair<const int*, const int*> res = thrust::minmax_element(THRUST_PAR, v, v + N);
 	cudaError err = cudaMemcpy(&min, res.first, sizeof(int), cudaMemcpyDeviceToHost);
 	if (err != 0) return err;
 	err = cudaMemcpy(&max, res.second, sizeof(int), cudaMemcpyDeviceToHost);
@@ -363,29 +384,29 @@ DLLEXP cudaError intMinMax(const int* v, const size_t N, int& min, int& max)
 
 DLLEXP cudaError intMax(const int* v, const size_t N, int& max)
 {
-	const int* res = thrust::max_element(thrust::cuda::par, v, v + N);
+	const int* res = thrust::max_element(THRUST_PAR, v, v + N);
 	cudaError err = cudaMemcpy(&max, res, sizeof(int), cudaMemcpyDeviceToHost);
 	return err;
 }
 
 DLLEXP int intLowerBound(const int* v, const size_t N, const int lower)
 {
-	return thrust::lower_bound(thrust::cuda::par, v, v + N, lower) - v;
+	return thrust::lower_bound(THRUST_PAR, v, v + N, lower) - v;
 }
 
 DLLEXP int intUpperBound(const int* v, const size_t N, const int upper)
 {
-	return thrust::upper_bound(thrust::cuda::par, v, v + N, upper) - v;
+	return thrust::upper_bound(THRUST_PAR, v, v + N, upper) - v;
 }
 
 DLLEXP int intFind(const int* v, const size_t N, const int toFind)
 {
-	return thrust::find(thrust::cuda::par, v, v + N, toFind) - v;
+	return thrust::find(THRUST_PAR, v, v + N, toFind) - v;
 }
 
 DLLEXP void intFillRange(int* v, const size_t N, const int start, const int step)
 {
-	thrust::sequence(thrust::cuda::par, v, v + N, start, step);
+	thrust::sequence(THRUST_PAR, v, v + N, start, step);
 }
 END_EXTERN_C
 #pragma endregion
@@ -409,12 +430,12 @@ DLLEXP void intAddScalar(int* a, const int scalar, const size_t N, const unsigne
 {
 	if (stride == 1)
 	{
-		thrust::transform(thrust::cuda::par, a, a + N, a, intAddScalar_functor(scalar));
+		thrust::transform(THRUST_PAR, a, a + N, a, intAddScalar_functor(scalar));
 	}
 	else
 	{
-		strided_range<const int*> strideA(a, a + N * stride, stride);
-		thrust::transform(thrust::cuda::par, strideA.begin(), strideA.end(), strideA.begin(), intAddScalar_functor(scalar));
+		StridedRange<const int*> strideA(a, a + N * stride, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), intAddScalar_functor(scalar));
 	}
 }
 END_EXTERN_C
@@ -427,12 +448,12 @@ __inline__ T vectorSum(const T* a, const size_t N, const unsigned int stride)
 {	// the thrust::plus<T> is enough since we have defined operator+ for complex types
 	if (stride == 1)
 	{
-		return thrust::reduce(thrust::cuda::par, a, a + N, T());
+		return thrust::reduce(THRUST_PAR, a, a + N, T());
 	}
 	else
 	{
-		strided_range<const T*> strideA(a, a + N * stride, stride);
-		return thrust::reduce(thrust::cuda::par, strideA.begin(), strideA.end(), T());
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		return thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T());
 	}
 }
 

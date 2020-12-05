@@ -14,9 +14,6 @@
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
 
-#define EXTERN_C extern "C" {
-#define END_EXTERN_C }
-
 
 // CUDA includes
 #include "cuda_runtime.h"
@@ -31,7 +28,24 @@
 #include <thrust/binary_search.h>
 #include <thrust/find.h>
 
-// self defined operators
+// self-defined data type
+#include "datatype.h"
+
+// compile options
+// ignore spelling: nvcc
+// nvcc -o kernels.dll [-DCPU] --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu
+#ifdef CPU
+#include <thrust/system/omp/execution_policy.h>
+#define THRUST_PAR thrust::omp::par
+#define ERROR_RETURN void
+#else
+#define THRUST_PAR thrust::cuda::par
+#define ERROR_RETURN cudaError
+#endif // CPU
+
+
+
+// self defined operators for complex
 __host__ __device__ static __inline__ cuFloatComplex operator+(cuFloatComplex x, cuFloatComplex y)
 {
 	return cuCaddf(x, y);
@@ -42,20 +56,19 @@ __host__ __device__ static __inline__ cuDoubleComplex operator+(cuDoubleComplex 
 	return cuCadd(x, y);
 }
 
-/*
-// conjugate multiply
+// direct multiply
 __host__ __device__ static __inline__ cuFloatComplex operator*(cuFloatComplex x, cuFloatComplex y)
 {
-	return cuCmulf(cuConjf(x), y);
+	return cuCmulf(x, y);
 }
 
-// conjugate multiply
+// direct multiply
 __host__ __device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex x, cuDoubleComplex y)
 {
-	return cuCmul(cuConj(x), y);
+	return cuCmul(x, y);
 }
-*/
 
+// self defined methods for complex
 namespace std
 {
 	__host__ __device__ static __inline__ cuDoubleComplex pow(cuDoubleComplex a, const double p)
@@ -95,4 +108,18 @@ namespace std
 	{
 		return cuCabs(a);
 	}
+
+	__host__ __device__ static __inline__ cuFloatComplex fma(cuFloatComplex x, cuFloatComplex y, cuFloatComplex z)
+	{
+		return cuCfmaf(x, y, z);
+	}
+
+	__host__ __device__ static __inline__ cuDoubleComplex fma(cuDoubleComplex x, cuDoubleComplex y, cuDoubleComplex z)
+	{
+		return cuCfma(x, y, z);
+	}
 }
+
+
+#define EXTERN_C extern "C" {
+#define END_EXTERN_C }

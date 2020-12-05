@@ -221,7 +221,7 @@ DLLEXP cudaError CSRGetNer(const int* csrRowPtr, const int rows, int& nnz, int* 
 	KerCsrGerNer << <gridSize, blockSize >> > (csrRowPtr, N, buffer);
 
 	// remove negative indexes
-	int* tempEnd = thrust::remove_if(thrust::cuda::par, buffer, buffer + N, intNeg2);
+	int* tempEnd = thrust::remove_if(THRUST_PAR, buffer, buffer + N, intNeg2);
 	nnz = tempEnd - buffer;
 
 	// copy to output
@@ -590,79 +590,3 @@ DLLEXP cudaError cooMatKronZ(const cuDoubleComplex* valA, const int* rowA, const
 }
 END_EXTERN_C
 #pragma endregion
-
-
-
-/*
-int main()
-{
-	const int rows = 10;
-	int row[] = { 0,1,2,3,4,5,6,7,8,9 };
-	int* rowd;
-	cudaMalloc(&rowd, sizeof(int) * rows);
-	cudaMemcpy(rowd, row, sizeof(int) * rows, cudaMemcpyHostToDevice);
-	int* buffer;
-	cudaMalloc(&buffer, sizeof(int) * rows);
-	int nnz = 0;
-	int* idx;
-	CSRGetNer(rowd, rows, nnz, buffer, idx);
-}
-*/
-/*
-int main()
-{
-	const int N = 5, P = 10;
-	double* mat, *pad;
-	cudaMalloc(&mat, N * N * sizeof(double));
-	cudaMalloc(&pad, P * P * sizeof(double));
-	curandGenerator_t generator;
-	curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
-	cusolverDnHandle_t handle;
-	cusolverDnCreate(&handle);
-	curandGenerateUniformDouble(generator, mat, N * N);
-	cudaMemset(pad, 0, P * P * sizeof(double));
-	cudaMemcpy2D(pad, P * sizeof(double), mat, N * sizeof(double), N * sizeof(double), N, cudaMemcpyDeviceToDevice);
-
-	double host[P][P];
-	cudaMemcpy(&host, pad, P * P * sizeof(double), cudaMemcpyDeviceToHost);
-	for (int x = 0; x < P; x++)
-	{
-		for (int y = 0; y < P; y++)
-		{
-			printf("%.4f\t", host[x][y]);
-		}
-		std::cout << std::endl;
-	}
-
-	double* val;
-	auto sta = cudaMalloc(&val, P * sizeof(double));
-	std::cout << "allocate eigenvalue\t" << sta << std::endl;
-	int lwork = 0;
-	cusolverStatus_t err = cusolverDnDsyevd_bufferSize(handle, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER, N, pad, P, val, &lwork);
-	std::cout << "buffer\t" << err << std::endl;
-	double* work;
-	sta = cudaMalloc(&work, lwork * sizeof(double));
-	std::cout << "allocate work\t" << sta << std::endl;
-	int* info;
-	sta = cudaMalloc(&info, sizeof(int));
-	std::cout << "allocate info\t" << sta << std::endl;
-	err = cusolverDnDsyevd(handle, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER, N, pad, P, val, work, lwork, info);
-	std::cout << "solve\t" << err << std::endl;
-
-	double hostInfo;
-	cudaMemcpy(&hostInfo, info, sizeof(int), cudaMemcpyDeviceToHost);
-	std::cout << hostInfo << std::endl;
-
-	cudaMemcpy(&host, pad, P * P * sizeof(double), cudaMemcpyDeviceToHost);
-	for (int x = 0; x < P; x++)
-	{
-		for (int y = 0; y < P; y++)
-		{
-			printf("%.4f\t", host[x][y]);
-		}
-		std::cout << std::endl;
-	}
-
-	return 0;
-}
-*/
