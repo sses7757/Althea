@@ -24,6 +24,7 @@
     <ProjectGuid>{dec377dc-7c1e-4a06-9dfa-dcb50157a7d2}</ProjectGuid>
     <RootNamespace>CpuBlasSupplement</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>MklBlasSupplement</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

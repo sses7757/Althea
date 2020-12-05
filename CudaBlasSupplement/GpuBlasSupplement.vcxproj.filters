@@ -10,9 +10,6 @@
     <CudaCompile Include="SparseVector.cu">
       <Filter>CUDA文件</Filter>
     </CudaCompile>
-    <CudaCompile Include="tensor.cu">
-      <Filter>CUDA文件</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="头文件">
