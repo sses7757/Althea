@@ -27,10 +27,8 @@ public:
 
 	struct stride_functor : public thrust::unary_function<difference_type, difference_type>
 	{
-		difference_type stride;
-
-		stride_functor(difference_type stride)
-			: stride(stride) {}
+		const difference_type stride;
+		stride_functor(const difference_type stride) : stride(stride) {}
 
 		__host__ __device__ difference_type operator()(const difference_type& i) const
 		{
@@ -114,9 +112,9 @@ END_EXTERN_C
 template<typename T, typename P>
 struct floatPower_functor
 {
-	P p;
+	const P p;
 
-	floatPower_functor(P pow) : p(pow) {}
+	floatPower_functor(const P pow) : p(pow) {}
 
 	__host__ __device__ T operator()(const T x) const
 	{
@@ -199,10 +197,11 @@ END_EXTERN_C
 template<typename T>
 struct floatConjugate_functor
 {
-	__host__ __device__ T operator()(T x) const
+	__host__ __device__ T operator()(const T x) const
 	{
-		x.y = -x.y;
-		return x;
+		T conj = T(x);
+		conj.x = -conj.x;
+		return conj;
 	}
 };
 
@@ -326,7 +325,7 @@ END_EXTERN_C
 template<typename T, typename Bound>
 struct clipAbs_functor
 {
-	Bound b;
+	const Bound b;
 
 	clipAbs_functor(Bound bound) : b(bound) {}
 
@@ -415,9 +414,9 @@ END_EXTERN_C
 #pragma region int add scalar
 struct intAddScalar_functor
 {
-	int scalar;
+	const int scalar;
 
-	intAddScalar_functor(int s) : scalar(s) {}
+	intAddScalar_functor(const int s) : scalar(s) {}
 
 	__host__ __device__ int operator()(const int x) const
 	{
@@ -473,6 +472,128 @@ DLLEXP cuFloatComplex vecSumC(const cuFloatComplex* a, const size_t N, const uns
 DLLEXP cuDoubleComplex vecSumZ(const cuDoubleComplex* a, const size_t N, const unsigned int stride)
 {
 	return vectorSum(a, N, stride);
+}
+END_EXTERN_C
+#pragma endregion
+
+
+#pragma region vector aggregate -- product
+template<typename T>
+__inline__ T vectorAccumulateProduct(const T* a, const size_t N, const unsigned int stride)
+{	// the thrust::multiplies<T> is enough since we have defined operator* for complex types
+	if (stride == 1)
+	{
+		return thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::multiplies<T>());
+	}
+	else
+	{
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		return thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::multiplies<T>());
+	}
+}
+
+EXTERN_C
+DLLEXP float vecProdS(const float* a, const size_t N, const unsigned int stride)
+{
+	return vectorAccumulateProduct(a, N, stride);
+}
+DLLEXP double vecProdD(const double* a, const size_t N, const unsigned int stride)
+{
+	return vectorAccumulateProduct(a, N, stride);
+}
+DLLEXP cuFloatComplex vecProdC(const cuFloatComplex* a, const size_t N, const unsigned int stride)
+{
+	return vectorAccumulateProduct(a, N, stride);
+}
+DLLEXP cuDoubleComplex vecProdZ(const cuDoubleComplex* a, const size_t N, const unsigned int stride)
+{
+	return vectorAccumulateProduct(a, N, stride);
+}
+END_EXTERN_C
+#pragma endregion
+
+
+#pragma region vector aggregate -- partial sum
+template<typename T>
+__inline__ void vectorPartialSum(const T* a, T* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{	// the thrust::plus<T> is enough since we have defined operator+ for complex types
+	if (stride == 1)
+	{
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, a, a + N, dst);
+		else
+			thrust::exclusive_scan(THRUST_PAR, a, a + N, dst);
+	}
+	else
+	{
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		StridedRange<const T*> strideDst(dst, dst + N * stride, stride);
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin());
+		else
+			thrust::exclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin());
+	}
+}
+
+EXTERN_C
+DLLEXP void vecParSumS(const float* a, float* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialSum(a, dst, N, stride, inclusive);
+}
+DLLEXP void vecParSumD(const double* a, double* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialSum(a, dst, N, stride, inclusive);
+}
+DLLEXP void vecParSumC(const cuFloatComplex* a, cuFloatComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialSum(a, dst, N, stride, inclusive);
+}
+DLLEXP void vecParSumZ(const cuDoubleComplex* a, cuDoubleComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialSum(a, dst, N, stride, inclusive);
+}
+END_EXTERN_C
+#pragma endregion
+
+
+#pragma region vector aggregate -- partial product
+template<typename T>
+__inline__ void vectorPartialProduct(const T* a, T* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{	// the thrust::plus<T> is enough since we have defined operator+ for complex types
+	if (stride == 1)
+	{
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, a, a + N, dst, thrust::multiplies<T>());
+		else
+			thrust::exclusive_scan(THRUST_PAR, a, a + N, dst, complex::one<T>(), thrust::multiplies<T>());
+	}
+	else
+	{
+		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		StridedRange<const T*> strideDst(dst, dst + N * stride, stride);
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), thrust::multiplies<T>());
+		else
+			thrust::exclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), complex::one<T>(), thrust::multiplies<T>());
+	}
+}
+
+EXTERN_C
+DLLEXP void vecParProdS(const float* a, float* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialProduct(a, dst, N, stride, inclusive);
+}
+DLLEXP void vecParProdD(const double* a, double* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialProduct(a, dst, N, stride, inclusive);
+}
+DLLEXP void vecParProdC(const cuFloatComplex* a, cuFloatComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialProduct(a, dst, N, stride, inclusive);
+}
+DLLEXP void vecParProdZ(const cuDoubleComplex* a, cuDoubleComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	vectorPartialProduct(a, dst, N, stride, inclusive);
 }
 END_EXTERN_C
 #pragma endregion

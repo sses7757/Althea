@@ -1,207 +1,174 @@
-// CUDA includes
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#include "cublas.h"
-#include "math.h"
-#include "cuComplex.h"
-
-#include <thrust/remove.h>
 #include "macro.h"
 
 
-#pragma region matrix Kronecker
+#ifdef CPU
+
+#else
+
+#pragma region matrix Kronecker (GPU version)
+// TODO: the Kronecker product of two matrices can be achieved by
+//	1. outer product of two matrices' column vectors
+//	2. reshape the matrix to a proper rank-4 tensor
+//	3. permute the tensor [3,1,4,2] (may be)
+//	4. reshape the tensor to the output matrix
+// Test this
+
 // TODO: can improve by avoid bank conflict, etc.
-__global__ void KerKronS(const float* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-						 const float* B, const unsigned int ldB,  const unsigned int rowsB, const unsigned int colsB,
-						 float* dest, const unsigned int ldD, const unsigned int rowsD, const unsigned int colsD)
+
+template <typename T, bool hasA, bool hasB>
+__global__ void kroneckerKernel(const T* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
+								const T* B, const unsigned int ldB, const unsigned int rowsB, const unsigned int colsB,
+								T* dest,	const unsigned int ldD, const unsigned int rowsD, const unsigned int colsD,
+								const T alpha, const T beta)
 {
 	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < rowsD && m < colsD)
-	{ // m for sd, n for ld
+	{
 		unsigned int xb = n % ldB, yb = m % colsB;
 		unsigned int xa = n / ldB, ya = m / colsB;
 		if (xa < rowsA && xb < rowsB && ya < colsA && yb < colsB)
-			dest[m * ldD + n] = A[ya * ldA + xa] * B[yb * ldB + xb];
+		{
+			unsigned int destInd = m * ldD + n;
+			if constexpr (hasA && hasB)
+				dest[destInd] = std::fma(alpha, A[ya * ldA + xa] * B[yb * ldB + xb], beta * dest[destInd]);
+			else if constexpr (hasA)
+				dest[destInd] = alpha * A[ya * ldA + xa] * B[yb * ldB + xb];
+			else if constexpr (hasB)
+				dest[destInd] = std::fma(A[ya * ldA + xa], B[yb * ldB + xb], beta * dest[destInd]);
+			else
+				dest[destInd] = A[ya * ldA + xa] * B[yb * ldB + xb];
+		}
 	}
 }
 
-__global__ void KerKronD(const double* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-						 const double* B, const unsigned int ldB,  const unsigned int rowsB, const unsigned int colsB,
-						 double* dest, const unsigned int ldD, const unsigned int rowsD, const unsigned int colsD)
-{
-	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
-	if (n < rowsD && m < colsD)
-	{ // m for sd, n for ld
-		unsigned int xb = n % ldB, yb = m % colsB;
-		unsigned int xa = n / ldB, ya = m / colsB;
-		if (xa < rowsA && xb < rowsB && ya < colsA && yb < colsB)
-			dest[m * ldD + n] = A[ya * ldA + xa] * B[yb * ldB + xb];
-	}
-}
-
-__global__ void KerKronC(const cuFloatComplex* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-						 const cuFloatComplex* B, const unsigned int ldB,  const unsigned int rowsB, const unsigned int colsB,
-						 cuFloatComplex* dest, const unsigned int ldD, const unsigned int rowsD, const unsigned int colsD)
-{
-	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
-	if (n < rowsD && m < colsD)
-	{ // m for sd, n for ld
-		unsigned int xb = n % ldB, yb = m % colsB;
-		unsigned int xa = n / ldB, ya = m / colsB;
-		if (xa < rowsA && xb < rowsB && ya < colsA && yb < colsB)
-			dest[m * ldD + n] = cuCmulf(A[ya * ldA + xa], B[yb * ldB + xb]);
-	}
-}
-
-__global__ void KerKronZ(const cuDoubleComplex* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-						 const cuDoubleComplex* B, const unsigned int ldB,  const unsigned int rowsB, const unsigned int colsB,
-						 cuDoubleComplex* dest, const unsigned int ldD, const unsigned int rowsD, const unsigned int colsD)
-{
-	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
-	if (n < rowsD && m < colsD)
-	{ // m for sd, n for ld
-		unsigned int xb = n % ldB, yb = m % colsB;
-		unsigned int xa = n / ldB, ya = m / colsB;
-		if (xa < rowsA && xb < rowsB && ya < colsA && yb < colsB)
-			dest[m * ldD + n] = cuCmul(A[ya * ldA + xa], B[yb * ldB + xb]);
-	}
-}
-
-
-template<typename T, typename Kernel>
-cudaError matKron(const T* A, const int ldA, const int rowsA, const int colsA, const T* B, const int ldB,  const int rowsB, const int colsB, T* dest, const int ldD, Kernel ker)
+template<typename T>
+cudaError matricesKronecker(const T* A, const int ldA, const int rowsA, const int colsA, const T* B, const int ldB, const int rowsB, const int colsB, T* dest, const int ldD, const T alpha, const T beta)
 {
 	// constants
 	int N = rowsA * colsA * rowsB * colsB;
 	if (N < 0)
 		N = INT_MAX;
-	const int rows = rowsA * rowsB;
-	const int cols = colsA * colsB;
+
+	auto ker = kroneckerKernel<T, true, true>;
+	if (alpha == 1 && beta == 0)
+	{
+		ker = kroneckerKernel<T, false, false>;
+	}
+	else if (alpha == 1)
+	{
+		ker = kroneckerKernel<T, false, true>;
+	}
+	else if (beta == 0)
+	{
+		ker = kroneckerKernel<T, true, false>;
+	}
 
 	int blockSize, minGridSize;
 	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, ker, 0, N);
-	if (err != 0)
-		return err;
+	if (err != 0) return err;
+
+	const int rowsD = rowsA * rowsB;
+	const int colsD = colsA * colsB;
 	dim3 dimBlock((int)sqrt(blockSize), (int)sqrt(blockSize));
 	dim3 dimGrid;
-	dimGrid.x = (rows + dimBlock.x - 1) / dimBlock.x;
-	dimGrid.y = (cols + dimBlock.y - 1) / dimBlock.y;
+	dimGrid.x = (rowsD + dimBlock.x - 1) / dimBlock.x;
+	dimGrid.y = (colsD + dimBlock.y - 1) / dimBlock.y;
 
-	ker<<<dimGrid, dimBlock>>>(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, rows, cols);
-	
 	err = cudaDeviceSynchronize();
-	return err;
+	if (err != 0) return err;
+
+	ker << < dimGrid, dimBlock >> > (A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, rows, cols, alpha, beta);
+
+	return cudaError::cudaSuccess;
 }
 
 EXTERN_C
-DLLEXP cudaError matKronS(const float* A, const int ldA, const int rowsA, const int colsA,
-						 const float* B, const int ldB, const int rowsB, const int colsB,
-						 float* dest, const int ldD)
+DLLEXP cudaError matKronS(const float* A, const int ldA, const int rowsA, const int colsA, const float* B, const int ldB, const int rowsB, const int colsB, float* dest, const int ldD, const float alpha, const float beta)
 {
-	return matKron(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, KerKronS);
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
-
-DLLEXP cudaError matKronD(const double* A, const int ldA, const int rowsA, const int colsA,
-						 const double* B, const int ldB, const int rowsB, const int colsB,
-						 double* dest, const int ldD)
+DLLEXP cudaError matKronD(const double* A, const int ldA, const int rowsA, const int colsA, const double* B, const int ldB, const int rowsB, const int colsB, double* dest, const int ldD, const double alpha, const double beta)
 {
-	return matKron(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, KerKronD);
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
-
-DLLEXP cudaError matKronC(const cuFloatComplex* A, const int ldA, const int rowsA, const int colsA,
-						 const cuFloatComplex* B, const int ldB, const int rowsB, const int colsB,
-						 cuFloatComplex* dest, const int ldD)
+DLLEXP cudaError matKronC(const cuFloatComplex* A, const int ldA, const int rowsA, const int colsA, const cuFloatComplex* B, const int ldB, const int rowsB, const int colsB, cuFloatComplex* dest, const int ldD, const cuFloatComplex alpha, const cuFloatComplex beta)
 {
-	return matKron(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, KerKronC);
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
-
-DLLEXP cudaError matKronZ(const cuDoubleComplex* A, const int ldA, const int rowsA, const int colsA,
-						 const cuDoubleComplex* B, const int ldB, const int rowsB, const int colsB,
-						 cuDoubleComplex* dest, const int ldD)
+DLLEXP cudaError matKronZ(const cuDoubleComplex* A, const int ldA, const int rowsA, const int colsA, const cuDoubleComplex* B, const int ldB, const int rowsB, const int colsB, cuDoubleComplex* dest, const int ldD, const cuDoubleComplex alpha, const cuDoubleComplex beta)
 {
-	return matKron(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, KerKronZ);
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
 
 END_EXTERN_C
 #pragma endregion
 
+#endif // CPU
 
-#pragma region index to COO and back
-__global__ void KerIndexToCOO(const int* index, int* rowIdx, int* colIdx, const size_t N, const int ld)
-{
-	unsigned int p = blockDim.x * blockIdx.x + threadIdx.x;
-	if (p < N)
-	{
-		size_t idx = index[p];
-		rowIdx[p] = idx % ld;
-		colIdx[p] = idx / ld;
-	}
-}
 
-__global__ void KerCOOToIndex(int* index, const int* rowIdx, const int* colIdx, const size_t N, const int ld)
+#pragma region sparse vector's index array to COO format sparse matrix's index arrays and back
+struct intModulus_functor
 {
-	unsigned int p = blockDim.x * blockIdx.x + threadIdx.x;
-	if (p < N)
+	const int mod;
+	intModulus_functor(const int m) : mod(m) {}
+
+	__host__ __device__ int operator()(const int x) const
 	{
-		index[p] = rowIdx[p] + colIdx[p] * ld;
+		return x % mod;
 	}
-}
+};
+struct intDivide_functor
+{
+	const int div;
+	intDivide_functor(const int d) : div(d) {}
+
+	__host__ __device__ int operator()(const int x) const
+	{
+		return x / div;
+	}
+};
+struct intFMA_functor
+{
+	const int mul;
+	intFMA_functor(const int m) : mul(m) {}
+
+	__host__ __device__ int operator()(const int x, const int y) const
+	{
+		return x + y * mul;
+	}
+};
 
 EXTERN_C
-DLLEXP cudaError indexToCOO(const int* index, int* rowIdx, int* colIdx, const size_t N, const int ld)
+DLLEXP void spVecIndToCooInds(const int* index, int* rowIdx, int* colIdx, const size_t N, const int ld)
 {
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, (void*)KerIndexToCOO, 0, N * N);
-	if (err != 0) return err;
-	gridSize = (N + blockSize - 1) / blockSize;
-	KerIndexToCOO << <gridSize, blockSize >> > (index, rowIdx, colIdx, N, ld);
-	err = cudaDeviceSynchronize();
-	return err;
+	thrust::transform(THRUST_PAR, index, index + N, rowIdx, intModulus_functor(ld));
+	thrust::transform(THRUST_PAR, index, index + N, colIdx, intDivide_functor(ld));
 }
 
-DLLEXP cudaError COOToIndex(int* index, const int* rowIdx, const int* colIdx, const size_t N, const int ld)
+DLLEXP void CooIndxToSpVecInd(int* index, const int* rowIdx, const int* colIdx, const size_t N, const int ld)
 {
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, (void*)KerCOOToIndex, 0, N * N);
-	if (err != 0) return err;
-	gridSize = (N + blockSize - 1) / blockSize;
-	KerCOOToIndex << <gridSize, blockSize >> > (index, rowIdx, colIdx, N, ld);
-	err = cudaDeviceSynchronize();
-	return err;
+	thrust::transform(THRUST_PAR, rowIdx, rowIdx + N, colIdx, index, intFMA_functor(ld));
 }
 END_EXTERN_C
 #pragma endregion
 
 
 #pragma region CSR matrix get non-empty row indexes
-struct intNegative2
+struct intLessThanZero_functor
 {
 	__host__ __device__ bool operator()(const int x) const
 	{
 		return x < 0;
 	}
 };
-intNegative2 intNeg2;
-
-__global__ void KerCsrGerNer(const int* index, const int N, int* out)
+struct intCSRGetNER_functor
 {
-	unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < N)
+	__host__ __device__ int operator()(const thrust::tuple<int, int, int> t) const
 	{
-		if (index[idx] != index[idx + 1])
-		{
-			out[idx] = idx;
-		}
-		else
-		{
-			out[idx] = -1;
-		}
+		return t.get<1>() == t.get<2>() ? -1 : t.get<0>();
 	}
-}
+};
 
 EXTERN_C
 DLLEXP size_t CSRGetNerBuffer(const int rows)
@@ -209,39 +176,44 @@ DLLEXP size_t CSRGetNerBuffer(const int rows)
 	return sizeof(int) * rows;
 }
 
-DLLEXP cudaError CSRGetNer(const int* csrRowPtr, const int rows, int& nnz, int* buffer, int*& nerOut)
+DLLEXP size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
 {
-	const int N = rows;
+	const int N = rows - 1;
 
-	// kernel to get indexes
-	int blockSize, minGridSize, gridSize;
-	cudaError err = cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, KerCsrGerNer, 0, N);
-	if (err != 0) return err;
-	gridSize = (N + blockSize - 1) / blockSize;
-	KerCsrGerNer << <gridSize, blockSize >> > (csrRowPtr, N, buffer);
+	// get indexes
+	thrust::sequence(THRUST_PAR, buffer, buffer + N);
+	auto begin = thrust::make_zip_iterator(thrust::make_tuple(csrRowPtr, csrRowPtr + 1, buffer));
+	auto end = thrust::make_zip_iterator(thrust::make_tuple(csrRowPtr + N, csrRowPtr + N + 1, buffer + N));
+	thrust::transform(THRUST_PAR, begin, end, buffer, intCSRGetNER_functor());
 
 	// remove negative indexes
-	int* tempEnd = thrust::remove_if(THRUST_PAR, buffer, buffer + N, intNeg2);
-	nnz = tempEnd - buffer;
+	int* tempEnd = thrust::remove_if(THRUST_PAR, buffer, buffer + N, intLessThanZero_functor());
+	size_t nnz = tempEnd - buffer;
+	return nnz;
+}
 
-	// copy to output
-	err = cudaMalloc(&nerOut, sizeof(int) * nnz);
-	if (err != 0) return err;
-	err = cudaMemcpy(nerOut, buffer, sizeof(int) * nnz, cudaMemcpyDeviceToDevice);
-
+DLLEXP ERROR_RETURN CSRGetNerCal(size_t nnz, const int* buffer, int* nerOut)
+{
+#ifdef CPU
+	memcpy(nerOut, buffer, sizeof(int) * nnz);
+#else
+	cudaError err = cudaMemcpy(nerOut, buffer, sizeof(int) * nnz, cudaMemcpyDeviceToDevice);
 	return err;
+#endif // CPU
 }
 END_EXTERN_C
 #pragma endregion
 
 
-#pragma region upper copy to lower matUpCpyLow
-__global__ void KerUpCpyLowS(float* a, const unsigned int ld, const unsigned int rows)
+#pragma region upper copy to lower matUpCpyLow (GPU version)
+template<typename T>
+__global__ void KerUpCpyLowS(T* a, const unsigned int ld, const unsigned int rows)
 {
 	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < rows && m < rows && n < m)
-	{ // m for sd, n for ld
+	{
+		if ()
 		a[n * ld + m] = a[m * ld + n];
 	}
 }
@@ -250,7 +222,7 @@ __global__ void KerUpCpyLowD(double* a, const unsigned int ld, const unsigned in
 	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < rows && m < rows && n < m)
-	{ // m for sd, n for ld
+	{
 		a[n * ld + m] = a[m * ld + n];
 	}
 }
@@ -259,7 +231,7 @@ __global__ void KerUpCpyLowC(cuFloatComplex* a, const unsigned int ld, const uns
 	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < rows && m < rows)
-	{ // m for sd, n for ld
+	{
 		if (n < m)
 			a[n * ld + m] = cuConjf(a[m * ld + n]);
 		else if (n == m)
@@ -271,7 +243,7 @@ __global__ void KerUpCpyLowZ(cuDoubleComplex* a, const unsigned int ld, const un
 	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < rows && m < rows)
-	{ // m for sd, n for ld
+	{
 		if (n < m)
 			a[n * ld + m] = cuConj(a[m * ld + n]);
 		else if (n == m)
@@ -297,7 +269,7 @@ cudaError matUpCpyLow(T* A, const unsigned int ld, const unsigned int rows, Kern
 	dimGrid.x = (ld + dimBlock.x - 1) / dimBlock.x;
 	dimGrid.y = (ld + dimBlock.y - 1) / dimBlock.y;
 
-	ker<<<dimGrid, dimBlock>>>(A, ld, rows);
+	ker<<<dimGrid, dimBlock>>>(A, ld, rowsD);
 
 	err = cudaDeviceSynchronize();
 	return err;
@@ -324,20 +296,21 @@ END_EXTERN_C
 #pragma endregion
 
 
-#pragma region sparse vector outer to COOC matrix
-__global__ void KerSpVecOuterS
-	(const float* valA, const int* indA, const size_t nnzA,
-	 const float* valB, const int* indB, const size_t nnzB,
-	 float* C, int* rowC, int* colC)
+#pragma region sparse vectors outer product to COOC matrix (GPU version)
+template <typename T, bool conj>
+__global__ void KerSpVecOuter(const float* valA, const int* indA, const size_t nnzA, const float* valB, const int* indB, const size_t nnzB, float* C, int* rowC, int* colC)
 {
-	size_t n = blockIdx.x * blockDim.x + threadIdx.x;
-	size_t m = blockIdx.y * blockDim.y + threadIdx.y;
+	const unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
+	const unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < nnzA && m < nnzB)
 	{ // m for column (second dim), n for row (lead dim)
 		size_t idx = n + m * nnzA;
 		rowC[idx] = indA[n];
 		colC[idx] = indB[m];
-		C[idx] = valA[n] * valB[m];
+		if constexpr (conj)
+			C[idx] = valA[n] * valB[m];
+		else
+			C[idx] = valA[n] * valB[m];
 	}
 }
 __global__ void KerSpVecOuterD
@@ -367,7 +340,7 @@ __global__ void KerSpVecOuterC
 		size_t idx = n + m * nnzA;
 		rowC[idx] = indA[n];
 		colC[idx] = indB[m];
-		C[idx] = cuCmulf(valA[n], cuConjf(valB[m]));
+		C[idx] = valA[n] * cuConjf(valB[m]);
 	}
 }
 __global__ void KerSpVecOuterZ
@@ -382,7 +355,7 @@ __global__ void KerSpVecOuterZ
 		size_t idx = n + m * nnzA;
 		rowC[idx] = indA[n];
 		colC[idx] = indB[m];
-		C[idx] = cuCmul(valA[n], cuConj(valB[m]));
+		C[idx] = valA[n] * cuConj(valB[m]);
 	}
 }
 __global__ void KerSpVecOuterNonconjC
@@ -397,7 +370,7 @@ __global__ void KerSpVecOuterNonconjC
 		size_t idx = n + m * nnzA;
 		rowC[idx] = indA[n];
 		colC[idx] = indB[m];
-		C[idx] = cuCmulf(valA[n], valB[m]);
+		C[idx] = valA[n] * valB[m];
 	}
 }
 __global__ void KerSpVecOuterNonconjZ
@@ -419,7 +392,7 @@ __global__ void KerSpVecOuterNonconjZ
 template<typename T, typename Kernel>
 cudaError spVecOuter(const T* valA, const int* indA, const size_t nnzA,
 	const T* valB, const int* indB, const size_t nnzB,
-	T* C, int* rowC, int* colC, Kernel ker)
+	T* C, int* rowC, int* colC, const Kernel ker)
 {
 	// constants
 	int N = (int)(nnzA * nnzB);
@@ -441,25 +414,29 @@ cudaError spVecOuter(const T* valA, const int* indA, const size_t nnzA,
 }
 
 EXTERN_C
-DLLEXP cudaError spVecOuterS(const float* valA, const int* indA, const size_t nnzA,
+DLLEXP cudaError spVecOuterS(
+	const float* valA, const int* indA, const size_t nnzA,
 	const float* valB, const int* indB, const size_t nnzB,
 	float* C, int* rowC, int* colC)
 {
 	return spVecOuter(valA, indA, nnzA, valB, indB, nnzB, C, rowC, colC, KerSpVecOuterS);
 }
-DLLEXP cudaError spVecOuterD(const double* valA, const int* indA, const size_t nnzA,
+DLLEXP cudaError spVecOuterD(
+	const double* valA, const int* indA, const size_t nnzA,
 	const double* valB, const int* indB, const size_t nnzB,
 	double* C, int* rowC, int* colC)
 {
 	return spVecOuter(valA, indA, nnzA, valB, indB, nnzB, C, rowC, colC, KerSpVecOuterD);
 }
-DLLEXP cudaError spVecOuterC(const cuFloatComplex* valA, const int* indA, const size_t nnzA,
+DLLEXP cudaError spVecOuterC(
+	const cuFloatComplex* valA, const int* indA, const size_t nnzA,
 	const cuFloatComplex* valB, const int* indB, const size_t nnzB,
 	cuFloatComplex* C, int* rowC, int* colC)
 {
 	return spVecOuter(valA, indA, nnzA, valB, indB, nnzB, C, rowC, colC, KerSpVecOuterC);
 }
-DLLEXP cudaError spVecOuterZ(const cuDoubleComplex* valA, const int* indA, const size_t nnzA,
+DLLEXP cudaError spVecOuterZ(
+	const cuDoubleComplex* valA, const int* indA, const size_t nnzA,
 	const cuDoubleComplex* valB, const int* indB, const size_t nnzB,
 	cuDoubleComplex* C, int* rowC, int* colC)
 {

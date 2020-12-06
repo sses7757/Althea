@@ -1,29 +1,12 @@
 #include "macro.h"
 
 
-#include <thrust/device_ptr.h>
-#include <thrust/device_vector.h>
-#include <thrust/device_malloc.h>
-#include <thrust/device_free.h>
-
-#include <thrust/sequence.h>
-#include <thrust/reduce.h>
-#include <thrust/extrema.h>
-
-#include <thrust/copy.h>
-#include <thrust/remove.h>
-#include <thrust/count.h>
-#include <thrust/binary_search.h>
-#include <thrust/set_operations.h>
-#include <thrust/inner_product.h>
-
-
-
 #pragma region set array values at positions
 template <typename T>
 __inline__ void vectorSetValuesAt(T* dst, const T value, const int* pos, const size_t posN)
 {
-	thrust::fill(THRUST_PAR, thrust::make_permutation_iterator(dst, pos), thrust::make_permutation_iterator(dst, pos + posN), value);
+	auto iter = thrust::make_permutation_iterator(dst, pos);
+	thrust::fill(THRUST_PAR, iter, iter + posN, value);
 }
 
 EXTERN_C
@@ -52,7 +35,7 @@ template <typename T, typename U>
 struct floatAboveThreshold_functor
 {
 	const U threshold;
-	floatAboveThreshold_functor(U t) : threshold(t) {}
+	floatAboveThreshold_functor(const U t) : threshold(t) {}
 
 	__host__ __device__ bool operator()(const T x) const
 	{
@@ -83,11 +66,10 @@ size_t vecPruneNonZeros(const T* v, const U threshold, const size_t N, void* buf
 
 	// make zip
 	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(index, v));
-	auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(index + N, v + N));
 	auto resultBegin = thrust::make_zip_iterator(thrust::make_tuple(idxOut, valOut));
 
 	// copy_if to get sparse indexes
-	auto resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipEnd, v, resultBegin, floatAboveThreshold_functor<T, U>(threshold));
+	auto resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, v, resultBegin, floatAboveThreshold_functor<T, U>(threshold));
 	return resultEnd - resultBegin;
 }
 
@@ -202,8 +184,8 @@ extern "C" DLLEXP size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, co
 template <typename T>
 struct floatMultiplyScalar_functor
 {
-	T scalar;
-	floatMultiplyScalar_functor(T s) : scalar(s) {}
+	const T scalar;
+	floatMultiplyScalar_functor(const T s) : scalar(s) {}
 
 	__host__ __device__ T operator()(const T x) const
 	{
@@ -219,7 +201,7 @@ struct notEqualAsInt_functor
 
 // sparse vector add another sparse vector -- get non-zeros, 'alpha' is the number to multiply to each value of B
 template <typename T>
-size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nnzA, const int* indB, const T* valB, const size_t nnzB, const T alpha, bool alphaIsOne, void* buffer)
+size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nnzA, const int* indB, const T* valB, const size_t nnzB, const T alpha, void* buffer)
 {
 	size_t nnz = nnzA + nnzB;
 	// get storage from buffer for the combined contents of sparse vectors A and B
@@ -227,7 +209,7 @@ size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nn
 	T* temp_value = (T*)(nnz + (int*)buffer);
 
 	// merge A and B by index
-	if (alphaIsOne)
+	if (alpha == 1)
 	{
 		thrust::merge_by_key(THRUST_PAR, indA, indA + nnzA, indB, indB + nnzB, valA, valB, temp_index, temp_value);
 	}
@@ -248,19 +230,19 @@ size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nn
 EXTERN_C
 DLLEXP size_t vecSpAddNnzS(const int* indA, const float* valA, const size_t nnzA, const int* indB, const float* valB, const size_t nnzB, const float alpha, void* buffer)
 {
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha == 1.0f, buffer);
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
 DLLEXP size_t vecSpAddNnzD(const int* indA, const double* valA, const size_t nnzA, const int* indB, const double* valB, const size_t nnzB, const double alpha, void* buffer)
 {
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha == 1.0, buffer);
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
 DLLEXP size_t vecSpAddNnzC(const int* indA, const cuFloatComplex* valA, const size_t nnzA, const int* indB, const cuFloatComplex* valB, const size_t nnzB, const cuFloatComplex alpha, void* buffer)
 {
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha.x == 1.0f && alpha.y == 0.0f, buffer);
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
 DLLEXP size_t vecSpAddNnzZ(const int* indA, const cuDoubleComplex* valA, const size_t nnzA, const int* indB, const cuDoubleComplex* valB, const size_t nnzB, const cuDoubleComplex alpha, void* buffer)
 {
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, alpha.x == 1.0 && alpha.y == 0.0, buffer);
+	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
 END_EXTERN_C
 
@@ -302,8 +284,8 @@ END_EXTERN_C
 template <typename T>
 struct floatFMA_functor
 {
-	T alpha;
-	floatFMA_functor(T a) : alpha(a) {}
+	const T alpha;
+	floatFMA_functor(const T a) : alpha(a) {}
 
 	__host__ __device__ T operator()(const T x, const T y) const
 	{
@@ -313,10 +295,10 @@ struct floatFMA_functor
 
 // dense[index[i]] = sparse[i] * alpha + dense[index[i]]
 template <typename T>
-void vectorDenseAddBySparse(T* dense, const T* sparse, const int* index, const size_t nnz, const T alpha, const bool alphaIsOne)
+void vectorDenseAddBySparse(T* dense, const T* sparse, const int* index, const size_t nnz, const T alpha)
 {
 	auto densePerm = thrust::make_permutation_iterator(dense, index);
-	if (alphaIsOne)
+	if (alpha == 1)
 	{
 		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, thrust::plus<T>());
 	}
@@ -329,19 +311,19 @@ void vectorDenseAddBySparse(T* dense, const T* sparse, const int* index, const s
 EXTERN_C
 DLLEXP void vecDnAddSpS(float* dense, const float* sparse, const int* index, const size_t nnz, const float alpha)
 {
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha == 1.0f);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
 DLLEXP void vecDnAddSpD(double* dense, const double* sparse, const int* index, const size_t nnz, const double alpha)
 {
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha == 1.0);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
 DLLEXP void vecDnAddSpC(cuFloatComplex* dense, const cuFloatComplex* sparse, const int* index, const size_t nnz, const cuFloatComplex alpha)
 {
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha.x == 1.0f);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
 DLLEXP void vecDnAddSpZ(cuDoubleComplex* dense, const cuDoubleComplex* sparse, const int* index, const size_t nnz, const cuDoubleComplex alpha)
 {
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha, alpha.x == 1.0);
+	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
 END_EXTERN_C
 #pragma endregion
