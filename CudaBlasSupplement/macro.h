@@ -21,6 +21,7 @@
 // math and complex
 #include <math.h>
 #include <complex>
+#include "cuComplex.h"
 
 #include <thrust/fill.h>
 #include <thrust/extrema.h>
@@ -50,131 +51,42 @@
 #define ERROR_RETURN cudaError
 #endif // CPU
 
+// extern "C"
+#define EXTERN_C extern "C" {
+#define END_EXTERN_C }
 
 
-// self defined operators for complex
+// complex type alias
 using complexFloat = std::complex<float>;
+// complex type alias
 using complexDouble = std::complex<double>;
-__host__ __device__ static __inline__ cuFloatComplex operator+(cuFloatComplex x, cuFloatComplex y)
-{
-	return cuCaddf(x, y);
-}
-
-__host__ __device__ static __inline__ cuDoubleComplex operator+(cuDoubleComplex x, cuDoubleComplex y)
-{
-	return cuCadd(x, y);
-}
-
-// direct multiply
-__host__ __device__ static __inline__ cuFloatComplex operator*(cuFloatComplex x, cuFloatComplex y)
-{
-	return cuCmulf(x, y);
-}
-
-// direct multiply
-__host__ __device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex x, cuDoubleComplex y)
-{
-	return cuCmul(x, y);
-}
-
-__host__ __device__ static __inline__ bool operator==(cuFloatComplex x, float y)
-{
-	return x.x == y && x.y == 0;
-}
-
-__host__ __device__ static __inline__ bool operator==(cuDoubleComplex x, double y)
-{
-	return x.x == y && x.y == 0;
-}
-
-
-namespace complex
-{
-	template <typename T>
-	__host__ __device__ static __inline__ bool iscomplex(T a)
-	{
-		if constexpr (is_same_v<T, cuFloatComplex> || is_same_v<T, cuDoubleComplex>)
-			return true;
-		else
-			return T(1);
-	}
-
-	template <typename T>
-	__host__ __device__ static __inline__ T one()
-	{
-		if constexpr (is_same_v<T, cuFloatComplex>)
-			return make_cuFloatComplex(1.0f, 0.0f);
-		else if constexpr (is_same_v<T, cuDoubleComplex>)
-			return make_cuDoubleComplex(1.0, 0.0);
-		else
-			return T(1);
-	}
-
-	template <typename T>
-	__host__ __device__ static __inline__ T conj(T a)
-	{
-		if constexpr (is_same_v<T, cuFloatComplex>)
-			return cuConjf(a);
-		else if constexpr (is_same_v<T, cuDoubleComplex>)
-			return cuConj(a);
-		else
-			return a;
-	}
-}
 
 
 // self defined methods for complex
 namespace std
 {
-	__host__ __device__ static __inline__ cuDoubleComplex pow(cuDoubleComplex a, const double p)
+	template <typename T>
+	__host__ __device__ static __inline__ T conjAllCase(const T a)
 	{
-		if (p == 1.0)
+		if constexpr (std::is_scalar_v<T>)
 			return a;
-		if (p == 2.0)
-			return cuCmul(a, a);
-		if (cuCimag(a) == 0.0)
-			return make_cuDoubleComplex(pow(cuCreal(a), p), 0.0);
-
-		double rho = cuCabs(a);
-		double phi = atan2(cuCimag(a), cuCreal(a));
-		return make_cuDoubleComplex(pow(rho, p) * pow(cos(phi), p), pow(rho, p) * pow(sin(phi), p));
+		else
+			return std::conj(a);
 	}
 
-	__host__ __device__ static __inline__ cuFloatComplex pow(cuFloatComplex a, const float p)
-	{
-		if (p == 1.0f)
-			return a;
-		if (p == 2.0f)
-			return cuCmulf(a, a);
-		if (cuCimagf(a) == 0.0f)
-			return make_cuFloatComplex(powf(cuCrealf(a), p), 0.0f);
 
-		float rho = cuCabsf(a);
-		float phi = atan2f(cuCimagf(a), cuCrealf(a));
-		return make_cuFloatComplex(powf(rho, p) * powf(cosf(phi), p), powf(rho, p) * powf(sin(phi), p));
-	}
-
-	__host__ __device__ static __inline__ float abs(cuFloatComplex a)
+	template <typename T>
+	__host__ __device__ static __inline__ std::complex<T> fma(const std::complex<T> x, const std::complex<T> y, const std::complex<T> d)
 	{
-		return cuCabsf(a);
-	}
+		T real_res;
+		T imag_res;
 
-	__host__ __device__ static __inline__ double abs(cuDoubleComplex a)
-	{
-		return cuCabs(a);
-	}
+		real_res = (x.real() * y.real()) + d.real();
+		imag_res = (x.imag() * y.imag()) + d.imag();
 
-	__host__ __device__ static __inline__ cuFloatComplex fma(cuFloatComplex x, cuFloatComplex y, cuFloatComplex z)
-	{
-		return cuCfmaf(x, y, z);
-	}
+		real_res = -(x.imag() * y.imag()) + real_res;
+		imag_res = (x.imag() * y.real()) + imag_res;
 
-	__host__ __device__ static __inline__ cuDoubleComplex fma(cuDoubleComplex x, cuDoubleComplex y, cuDoubleComplex z)
-	{
-		return cuCfma(x, y, z);
+		return std::complex<T>(real_res, imag_res);
 	}
 }
-
-
-#define EXTERN_C extern "C" {
-#define END_EXTERN_C }

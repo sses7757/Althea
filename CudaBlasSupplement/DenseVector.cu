@@ -96,11 +96,11 @@ DLLEXP void vecEWMulDivD(double* a, const double* b, const size_t N, const unsig
 {
 	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
 }
-DLLEXP void vecEWMulDivC(cuFloatComplex* a, const cuFloatComplex* b, const size_t N, const unsigned int stride, bool multiply)
+DLLEXP void vecEWMulDivC(complexFloat* a, const complexFloat* b, const size_t N, const unsigned int stride, bool multiply)
 {
 	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
 }
-DLLEXP void vecEWMulDivZ(cuDoubleComplex* a, const cuDoubleComplex* b, const size_t N, const unsigned int stride, bool multiply)
+DLLEXP void vecEWMulDivZ(complexDouble* a, const complexDouble* b, const size_t N, const unsigned int stride, bool multiply)
 {
 	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
 }
@@ -109,12 +109,12 @@ END_EXTERN_C
 
 
 #pragma region element-wise power
-template<typename T, typename P>
+template<typename T>
 struct floatPower_functor
 {
-	const P p;
+	const T p;
 
-	floatPower_functor(const P pow) : p(pow) {}
+	floatPower_functor(const T pow) : p(pow) {}
 
 	__host__ __device__ T operator()(const T x) const
 	{
@@ -122,17 +122,17 @@ struct floatPower_functor
 	}
 };
 
-template<typename T, typename P>
-void vectorElementWisePower(T* a, const P p, const size_t N, const unsigned int stride)
+template<typename T>
+void vectorElementWisePower(T* a, const T p, const size_t N, const unsigned int stride)
 {
 	if (stride == 1)
 	{
-		thrust::transform(THRUST_PAR, a, a + N, a, floatPower_functor<T, P>(p));
+		thrust::transform(THRUST_PAR, a, a + N, a, floatPower_functor<T>(p));
 	}
 	else
 	{
 		StridedRange<const T*> strideA(a, a + N * stride, stride);
-		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatPower_functor<T, P>(p));
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatPower_functor<T>(p));
 	}
 }
 
@@ -145,11 +145,11 @@ DLLEXP void vecEWPowD(double* a, const double p, const size_t N, const unsigned 
 {
 	vectorElementWisePower(a, p, N, stride);
 }
-DLLEXP void vecEWPowC(cuFloatComplex* a, const float p, const size_t N, const unsigned int stride)
+DLLEXP void vecEWPowC(complexFloat* a, const complexFloat p, const size_t N, const unsigned int stride)
 {
 	vectorElementWisePower(a, p, N, stride);
 }
-DLLEXP void vecEWPowZ(cuDoubleComplex* a, const double p, const size_t N, const unsigned int stride)
+DLLEXP void vecEWPowZ(complexDouble* a, const complexDouble p, const size_t N, const unsigned int stride)
 {
 	vectorElementWisePower(a, p, N, stride);
 }
@@ -173,21 +173,21 @@ void vectorFillWith(T* a, const T val, const size_t N, const unsigned int stride
 }
 
 EXTERN_C
-DLLEXP void fillOneS(float* a, const size_t N, const unsigned int stride)
+DLLEXP void fillValS(float* a, const float val, const size_t N, const unsigned int stride)
 {
-	vectorFillWith(a, 1.0f, N, stride);
+	vectorFillWith(a, val, N, stride);
 }
-DLLEXP void fillOneD(double* a, const size_t N, const unsigned int stride)
+DLLEXP void fillValD(double* a, const double val, const size_t N, const unsigned int stride)
 {
-	vectorFillWith(a, 1.0, N, stride);
+	vectorFillWith(a, val, N, stride);
 }
-DLLEXP void fillOneC(cuFloatComplex* a, const size_t N, const unsigned int stride)
+DLLEXP void fillValC(complexFloat* a, const complexFloat val, const size_t N, const unsigned int stride)
 {
-	vectorFillWith(a, make_cuFloatComplex(1.0f, 0.0f), N, stride);
+	vectorFillWith(a, val, N, stride);
 }
-DLLEXP void fillOneZ(cuDoubleComplex* a, const size_t N, const unsigned int stride)
+DLLEXP void fillValZ(complexDouble* a, const complexDouble val, const size_t N, const unsigned int stride)
 {
-	vectorFillWith(a, make_cuDoubleComplex(1.0, 0.0), N, stride);
+	vectorFillWith(a, val, N, stride);
 }
 END_EXTERN_C
 #pragma endregion
@@ -220,11 +220,11 @@ void vecConjugate(T* a, const size_t N, const unsigned int stride)
 }
 
 EXTERN_C
-DLLEXP void vecConjC(cuFloatComplex* a, const size_t N, const unsigned int stride)
+DLLEXP void vecConjC(complexFloat* a, const size_t N, const unsigned int stride)
 {
 	vecConjugate(a, N, stride);
 }
-DLLEXP void vecConjZ(cuDoubleComplex* a, const size_t N, const unsigned int stride)
+DLLEXP void vecConjZ(complexDouble* a, const size_t N, const unsigned int stride)
 {
 	vecConjugate(a, N, stride);
 }
@@ -309,11 +309,11 @@ DLLEXP void vecDoubleToSingle(float* dest, const double* src, const size_t N, co
 	}
 }
 
-DLLEXP void vecComplexDoubleToReal(double* dest, const cuDoubleComplex* src, const size_t N, const unsigned int stride)
+DLLEXP void vecComplexDoubleToReal(double* dest, const complexDouble* src, const size_t N, const unsigned int stride)
 {
 	vecComplexToReal(dest, src, N, stride);
 }
-DLLEXP void vecComplexSingleToReal(float* dest, const cuFloatComplex* src, const size_t N, const unsigned int stride)
+DLLEXP void vecComplexSingleToReal(float* dest, const complexFloat* src, const size_t N, const unsigned int stride)
 {
 	vecComplexToReal(dest, src, N, stride);
 }
@@ -358,11 +358,11 @@ DLLEXP void vecClipD(double* a, const float threshold, const size_t N, const uns
 {
 	vectorClip(a, (double)threshold, N, stride);
 }
-DLLEXP void vecClipC(cuFloatComplex* a, const float threshold, const size_t N, const unsigned int stride)
+DLLEXP void vecClipC(complexFloat* a, const float threshold, const size_t N, const unsigned int stride)
 {
 	vectorClip(a, threshold, N, stride);
 }
-DLLEXP void vecClipZ(cuDoubleComplex* a, const float threshold, const size_t N, const unsigned int stride)
+DLLEXP void vecClipZ(complexDouble* a, const float threshold, const size_t N, const unsigned int stride)
 {
 	vectorClip(a, (double)threshold, N, stride);
 }
@@ -465,11 +465,11 @@ DLLEXP double vecSumD(const double* a, const size_t N, const unsigned int stride
 {
 	return vectorSum(a, N, stride);
 }
-DLLEXP cuFloatComplex vecSumC(const cuFloatComplex* a, const size_t N, const unsigned int stride)
+DLLEXP complexFloat vecSumC(const complexFloat* a, const size_t N, const unsigned int stride)
 {
 	return vectorSum(a, N, stride);
 }
-DLLEXP cuDoubleComplex vecSumZ(const cuDoubleComplex* a, const size_t N, const unsigned int stride)
+DLLEXP complexDouble vecSumZ(const complexDouble* a, const size_t N, const unsigned int stride)
 {
 	return vectorSum(a, N, stride);
 }
@@ -501,11 +501,11 @@ DLLEXP double vecProdD(const double* a, const size_t N, const unsigned int strid
 {
 	return vectorAccumulateProduct(a, N, stride);
 }
-DLLEXP cuFloatComplex vecProdC(const cuFloatComplex* a, const size_t N, const unsigned int stride)
+DLLEXP complexFloat vecProdC(const complexFloat* a, const size_t N, const unsigned int stride)
 {
 	return vectorAccumulateProduct(a, N, stride);
 }
-DLLEXP cuDoubleComplex vecProdZ(const cuDoubleComplex* a, const size_t N, const unsigned int stride)
+DLLEXP complexDouble vecProdZ(const complexDouble* a, const size_t N, const unsigned int stride)
 {
 	return vectorAccumulateProduct(a, N, stride);
 }
@@ -544,11 +544,11 @@ DLLEXP void vecParSumD(const double* a, double* dst, const size_t N, const unsig
 {
 	vectorPartialSum(a, dst, N, stride, inclusive);
 }
-DLLEXP void vecParSumC(const cuFloatComplex* a, cuFloatComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+DLLEXP void vecParSumC(const complexFloat* a, complexFloat* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
 	vectorPartialSum(a, dst, N, stride, inclusive);
 }
-DLLEXP void vecParSumZ(const cuDoubleComplex* a, cuDoubleComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+DLLEXP void vecParSumZ(const complexDouble* a, complexDouble* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
 	vectorPartialSum(a, dst, N, stride, inclusive);
 }
@@ -565,7 +565,7 @@ __inline__ void vectorPartialProduct(const T* a, T* dst, const size_t N, const u
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, a, a + N, dst, thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, a, a + N, dst, complex::one<T>(), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, a, a + N, dst, T(1), thrust::multiplies<T>());
 	}
 	else
 	{
@@ -574,7 +574,7 @@ __inline__ void vectorPartialProduct(const T* a, T* dst, const size_t N, const u
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), complex::one<T>(), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), T(1), thrust::multiplies<T>());
 	}
 }
 
@@ -587,11 +587,11 @@ DLLEXP void vecParProdD(const double* a, double* dst, const size_t N, const unsi
 {
 	vectorPartialProduct(a, dst, N, stride, inclusive);
 }
-DLLEXP void vecParProdC(const cuFloatComplex* a, cuFloatComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+DLLEXP void vecParProdC(const complexFloat* a, complexFloat* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
 	vectorPartialProduct(a, dst, N, stride, inclusive);
 }
-DLLEXP void vecParProdZ(const cuDoubleComplex* a, cuDoubleComplex* dst, const size_t N, const unsigned int stride, const bool inclusive)
+DLLEXP void vecParProdZ(const complexDouble* a, complexDouble* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
 	vectorPartialProduct(a, dst, N, stride, inclusive);
 }

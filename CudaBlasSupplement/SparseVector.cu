@@ -18,11 +18,11 @@ DLLEXP void vecSetValAtD(double* a, const double v, const int* pos, const size_t
 {
 	vectorSetValuesAt(a, v, pos, posN);
 }
-DLLEXP void vecSetValAtC(cuFloatComplex* a, const cuFloatComplex v, const int* pos, const size_t posN)
+DLLEXP void vecSetValAtC(complexFloat* a, const complexFloat v, const int* pos, const size_t posN)
 {
 	vectorSetValuesAt(a, v, pos, posN);
 }
-DLLEXP void vecSetValAtZ(cuDoubleComplex* a, const cuDoubleComplex v, const int* pos, const size_t posN)
+DLLEXP void vecSetValAtZ(complexDouble* a, const complexDouble v, const int* pos, const size_t posN)
 {
 	vectorSetValuesAt(a, v, pos, posN);
 }
@@ -82,11 +82,11 @@ DLLEXP size_t vecPruneNnzD(const double* v, const float threshold, const size_t 
 {
 	return vecPruneNonZeros(v, (double)threshold, N, buffer);
 }
-DLLEXP size_t vecPruneNnzC(const cuFloatComplex* v, const float threshold, const size_t N, void* buffer)
+DLLEXP size_t vecPruneNnzC(const complexFloat* v, const float threshold, const size_t N, void* buffer)
 {
 	return vecPruneNonZeros(v, threshold, N, buffer);
 }
-DLLEXP size_t vecPruneNnzZ(const cuDoubleComplex* v, const float threshold, const size_t N, void* buffer)
+DLLEXP size_t vecPruneNnzZ(const complexDouble* v, const float threshold, const size_t N, void* buffer)
 {
 	return vecPruneNonZeros(v, (double)threshold, N, buffer);
 }
@@ -123,11 +123,11 @@ DLLEXP ERROR_RETURN vecPruneCalD(const size_t N, void* buffer, size_t nnz, int* 
 {
 	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
-DLLEXP ERROR_RETURN vecPruneCalC(const size_t N, void* buffer, size_t nnz, int* indexOut, cuFloatComplex* valueOut)
+DLLEXP ERROR_RETURN vecPruneCalC(const size_t N, void* buffer, size_t nnz, int* indexOut, complexFloat* valueOut)
 {
 	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
-DLLEXP ERROR_RETURN vecPruneCalZ(const size_t N, void* buffer, size_t nnz, int* indexOut, cuDoubleComplex* valueOut)
+DLLEXP ERROR_RETURN vecPruneCalZ(const size_t N, void* buffer, size_t nnz, int* indexOut, complexDouble* valueOut)
 {
 	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
@@ -158,11 +158,11 @@ DLLEXP void vecSpMulDivDnD(double* sparse, const int* index, const size_t nnz, c
 {
 	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
-DLLEXP void vecSpMulDivDnC(cuFloatComplex* sparse, const int* index, const size_t nnz, const cuFloatComplex* dense, bool multiply)
+DLLEXP void vecSpMulDivDnC(complexFloat* sparse, const int* index, const size_t nnz, const complexFloat* dense, bool multiply)
 {
 	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
-DLLEXP void vecSpMulDivDnZ(cuDoubleComplex* sparse, const int* index, const size_t nnz, const cuDoubleComplex* dense, bool multiply)
+DLLEXP void vecSpMulDivDnZ(complexDouble* sparse, const int* index, const size_t nnz, const complexDouble* dense, bool multiply)
 {
 	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
@@ -236,11 +236,11 @@ DLLEXP size_t vecSpAddNnzD(const int* indA, const double* valA, const size_t nnz
 {
 	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
-DLLEXP size_t vecSpAddNnzC(const int* indA, const cuFloatComplex* valA, const size_t nnzA, const int* indB, const cuFloatComplex* valB, const size_t nnzB, const cuFloatComplex alpha, void* buffer)
+DLLEXP size_t vecSpAddNnzC(const int* indA, const complexFloat* valA, const size_t nnzA, const int* indB, const complexFloat* valB, const size_t nnzB, const complexFloat alpha, void* buffer)
 {
 	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
-DLLEXP size_t vecSpAddNnzZ(const int* indA, const cuDoubleComplex* valA, const size_t nnzA, const int* indB, const cuDoubleComplex* valB, const size_t nnzB, const cuDoubleComplex alpha, void* buffer)
+DLLEXP size_t vecSpAddNnzZ(const int* indA, const complexDouble* valA, const size_t nnzA, const int* indB, const complexDouble* valB, const size_t nnzB, const complexDouble alpha, void* buffer)
 {
 	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
@@ -317,11 +317,11 @@ DLLEXP void vecDnAddSpD(double* dense, const double* sparse, const int* index, c
 {
 	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
-DLLEXP void vecDnAddSpC(cuFloatComplex* dense, const cuFloatComplex* sparse, const int* index, const size_t nnz, const cuFloatComplex alpha)
+DLLEXP void vecDnAddSpC(complexFloat* dense, const complexFloat* sparse, const int* index, const size_t nnz, const complexFloat alpha)
 {
 	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
-DLLEXP void vecDnAddSpZ(cuDoubleComplex* dense, const cuDoubleComplex* sparse, const int* index, const size_t nnz, const cuDoubleComplex alpha)
+DLLEXP void vecDnAddSpZ(complexDouble* dense, const complexDouble* sparse, const int* index, const size_t nnz, const complexDouble alpha)
 {
 	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
