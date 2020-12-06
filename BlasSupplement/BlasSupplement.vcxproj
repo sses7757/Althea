@@ -19,11 +19,14 @@
     <ClInclude Include="datatype.h" />
     <ClInclude Include="macro.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="host_util.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}</ProjectGuid>
     <RootNamespace>GpuBlasSupplement</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>CudaBlasSupplement</ProjectName>
+    <ProjectName>BlasSupplement</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

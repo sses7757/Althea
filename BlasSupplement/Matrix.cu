@@ -350,7 +350,7 @@ END_EXTERN_C
 #pragma endregion
 
 
-#pragma region sparse COO matrix Kronecker
+#pragma region sparse COO matrix Kronecker (GPU version)
 template <typename T>
 __global__ void cooMatricesKroneckerKernel(
 	const T* valA, const int* rowA, const int* colA, const size_t nnzA,

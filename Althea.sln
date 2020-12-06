@@ -5,9 +5,7 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea", "Althea\Althea.csproj", "{09ECD0E5-2229-496D-9558-1E5F617A081D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaBlasSupplement", "CudaBlasSupplement\GpuBlasSupplement.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MklBlasSupplement", "MklBlasSupplement\CpuBlasSupplement.vcxproj", "{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BlasSupplement", "BlasSupplement\BlasSupplement.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,14 +27,6 @@ Global
 		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.ActiveCfg = Release|x64
 		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.Build.0 = Release|x64
 		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x86.ActiveCfg = Release|x64
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Debug|x64.ActiveCfg = Debug|x64
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Debug|x64.Build.0 = Debug|x64
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Debug|x86.ActiveCfg = Debug|Win32
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Debug|x86.Build.0 = Debug|Win32
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Release|x64.ActiveCfg = Release|x64
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Release|x64.Build.0 = Release|x64
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Release|x86.ActiveCfg = Release|Win32
-		{DEC377DC-7C1E-4A06-9DFA-DCB50157A7D2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

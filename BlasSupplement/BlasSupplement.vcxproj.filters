@@ -2,20 +2,20 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <CudaCompile Include="DenseVector.cu">
-      <Filter>CUDA文件</Filter>
+      <Filter>源文件</Filter>
     </CudaCompile>
     <CudaCompile Include="Matrix.cu">
-      <Filter>CUDA文件</Filter>
+      <Filter>源文件</Filter>
     </CudaCompile>
     <CudaCompile Include="SparseVector.cu">
-      <Filter>CUDA文件</Filter>
+      <Filter>源文件</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="头文件">
       <UniqueIdentifier>{37378cee-1cbf-4e86-9cb9-4bd3b72ad87f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CUDA文件">
+    <Filter Include="源文件">
       <UniqueIdentifier>{71873926-14b8-40e3-b7a7-30854b55add6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -26,5 +26,10 @@
     <ClInclude Include="datatype.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="host_util.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
