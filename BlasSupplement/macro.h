@@ -1,5 +1,6 @@
 #pragma once
 
+// platform specific INLINE and export DLL
 #if defined(_MSC_VER)
 #define INLINE __forceinline
 #define DLLEXP __declspec(dllexport)
@@ -13,6 +14,10 @@
 #pragma warning Unknown inline semantics.
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
+
+// extern "C"
+#define EXTERN_C extern "C" {
+#define END_EXTERN_C }
 
 
 // CUDA includes
@@ -39,9 +44,10 @@
 // self-defined data type
 #include "datatype.h"
 
+
 // compile options
 // ignore spelling: nvcc
-// nvcc -o kernels.dll [-DCPU] --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu
+// nvcc -o kernels.dll [-DCPU] --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu --shared host_util.cpp
 #ifdef CPU
 #include <thrust/system/omp/execution_policy.h>
 #define THRUST_PAR thrust::omp::par
@@ -50,10 +56,6 @@
 #define THRUST_PAR thrust::cuda::par
 #define ERROR_RETURN cudaError
 #endif // CPU
-
-// extern "C"
-#define EXTERN_C extern "C" {
-#define END_EXTERN_C }
 
 
 // complex type alias
@@ -81,11 +83,11 @@ namespace std
 		T real_res;
 		T imag_res;
 
-		real_res = (x.real() * y.real()) + d.real();
-		imag_res = (x.imag() * y.imag()) + d.imag();
+		real_res = std::fma(x.real(), y.real(), d.real());
+		imag_res = std::fma(x.imag(), y.imag(), d.imag());
 
-		real_res = -(x.imag() * y.imag()) + real_res;
-		imag_res = (x.imag() * y.real()) + imag_res;
+		real_res = std::fma(-x.imag(), y.imag(), real_res);
+		imag_res = std::fma(x.imag(), y.real(), imag_res);
 
 		return std::complex<T>(real_res, imag_res);
 	}

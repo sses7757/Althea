@@ -75,10 +75,8 @@ DLLEXP size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
 	const int N = rows - 1;
 
 	// get indexes
-	thrust::sequence(THRUST_PAR, buffer, buffer + N);
-	auto begin = thrust::make_zip_iterator(thrust::make_tuple(csrRowPtr, csrRowPtr + 1, buffer));
-	auto end = thrust::make_zip_iterator(thrust::make_tuple(csrRowPtr + N, csrRowPtr + N + 1, buffer + N));
-	thrust::transform(THRUST_PAR, begin, end, buffer, intCSRGetNER_functor());
+	auto zip = thrust::make_zip_iterator(thrust::make_tuple(csrRowPtr, csrRowPtr + 1, thrust::make_counting_iterator(0)));
+	thrust::transform(THRUST_PAR, zip, zip + N, buffer, intCSRGetNER_functor());
 
 	// remove negative indexes
 	int* tempEnd = thrust::remove_if(THRUST_PAR, buffer, buffer + N, intLessThanZero_functor());
@@ -126,99 +124,101 @@ __inline__ static cudaError calc2DKernelPara(size_t nx, size_t ny, Func ker, dim
 
 
 #pragma region matrix Kronecker (GPU version)
-// TODO: the Kronecker product of two matrices can be achieved by
-//	1. outer product of two matrices' column vectors
-//	2. reshape the matrix to a proper rank-4 tensor
-//	3. permute the tensor [3,1,4,2] (may be)
-//	4. reshape the tensor to the output matrix
-// Test this
-
-// TODO: can improve by avoid bank conflict, etc.
-
-template <typename T, bool hasA, bool hasB>
-__global__ void kroneckerKernel(const T* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-								const T* B, const unsigned int ldB, const unsigned int rowsB, const unsigned int colsB,
-								T* dest,	const unsigned int ldD, const unsigned int rowsD, const unsigned int colsD,
-								const T alpha, const T beta)
+namespace GPUVersion
 {
-	unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
-	if (n < rowsD && m < colsD)
+	// TODO: the Kronecker product of two matrices can be achieved by
+	//	1. outer product of two matrices' column vectors
+	//	2. reshape the matrix to a proper rank-4 tensor
+	//	3. permute the tensor [3,1,4,2] (may be)
+	//	4. reshape the tensor to the output matrix
+	// Test this
+
+	// TODO: can improve by avoid bank conflict, etc.
+
+	template <typename T, bool hasA, bool hasB>
+	__global__ void kroneckerKernel(const T* A, const int ldA, const int rowsA, const int colsA,
+		const T* B, const int ldB, const int rowsB, const int colsB,
+		T* dest, const int ldD, const int rowsD, const int colsD,
+		const T alpha, const T beta)
 	{
-		unsigned int xb = n % ldB, yb = m % colsB;
-		unsigned int xa = n / ldB, ya = m / colsB;
-		if (xa < rowsA && xb < rowsB && ya < colsA && yb < colsB)
+		unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
+		unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
+		if (n < rowsD && m < colsD)
 		{
-			unsigned int destInd = m * ldD + n;
-			if constexpr (hasA && hasB)
-				dest[destInd] = std::fma(alpha, A[ya * ldA + xa] * B[yb * ldB + xb], beta * dest[destInd]);
-			else if constexpr (hasA)
-				dest[destInd] = alpha * A[ya * ldA + xa] * B[yb * ldB + xb];
-			else if constexpr (hasB)
-				dest[destInd] = std::fma(A[ya * ldA + xa], B[yb * ldB + xb], beta * dest[destInd]);
-			else
-				dest[destInd] = A[ya * ldA + xa] * B[yb * ldB + xb];
+			unsigned int xb = n % ldB, yb = m % colsB;
+			unsigned int xa = n / ldB, ya = m / colsB;
+			if (xa < rowsA && xb < rowsB && ya < colsA && yb < colsB)
+			{
+				unsigned int destInd = m * ldD + n;
+				if constexpr (hasA && hasB)
+					dest[destInd] = std::fma(alpha, A[ya * ldA + xa] * B[yb * ldB + xb], beta * dest[destInd]);
+				else if constexpr (hasA)
+					dest[destInd] = alpha * A[ya * ldA + xa] * B[yb * ldB + xb];
+				else if constexpr (hasB)
+					dest[destInd] = std::fma(A[ya * ldA + xa], B[yb * ldB + xb], beta * dest[destInd]);
+				else
+					dest[destInd] = A[ya * ldA + xa] * B[yb * ldB + xb];
+			}
 		}
 	}
-}
 
-template<typename T>
-cudaError matricesKronecker(const T* A, const int ldA, const int rowsA, const int colsA, const T* B, const int ldB, const int rowsB, const int colsB, T* dest, const int ldD, const T alpha, const T beta)
-{
-	const int rowsD = rowsA * rowsB;
-	const int colsD = colsA * colsB;
-	auto ker = kroneckerKernel<T, true, true>;
-	if (alpha == 1 && beta == 0)
+	template<typename T>
+	cudaError matricesKronecker(const T* A, const int ldA, const int rowsA, const int colsA, const T* B, const int ldB, const int rowsB, const int colsB, T* dest, const int ldD, const T alpha, const T beta)
 	{
-		ker = kroneckerKernel<T, false, false>;
-	}
-	else if (alpha == 1)
-	{
-		ker = kroneckerKernel<T, false, true>;
-	}
-	else if (beta == 0)
-	{
-		ker = kroneckerKernel<T, true, false>;
-	}
+		const int rowsD = rowsA * rowsB;
+		const int colsD = colsA * colsB;
+		auto ker = kroneckerKernel<T, true, true>;
+		if (alpha == T(1) && beta == T(0))
+		{
+			ker = kroneckerKernel<T, false, false>;
+		}
+		else if (alpha == T(1))
+		{
+			ker = kroneckerKernel<T, false, true>;
+		}
+		else if (beta == T(0))
+		{
+			ker = kroneckerKernel<T, true, false>;
+		}
 
-	dim3 dimBlock, dimGrid;
-	cudaError err = calc2DKernelPara(rowsD, colsD, ker, dimBlock, dimGrid);
-	if (err != cudaError::cudaSuccess)
+		dim3 dimBlock, dimGrid;
+		cudaError err = calc2DKernelPara(rowsD, colsD, ker, dimBlock, dimGrid);
+		if (err != cudaError::cudaSuccess)
+			return err;
+
+		ker << <dimGrid, dimBlock >> > (A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, rowsD, colsD, alpha, beta);
+
 		return err;
+	}
 
-	ker<<<dimGrid, dimBlock>>>(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, rowsD, colsD, alpha, beta);
-
-	return err;
+	EXTERN_C
+	DLLEXP cudaError matKronS(const float* A, const int ldA, const int rowsA, const int colsA, const float* B, const int ldB, const int rowsB, const int colsB, float* dest, const int ldD, const float alpha, const float beta)
+	{
+		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+	}
+	DLLEXP cudaError matKronD(const double* A, const int ldA, const int rowsA, const int colsA, const double* B, const int ldB, const int rowsB, const int colsB, double* dest, const int ldD, const double alpha, const double beta)
+	{
+		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+	}
+	DLLEXP cudaError matKronC(const complexFloat* A, const int ldA, const int rowsA, const int colsA, const complexFloat* B, const int ldB, const int rowsB, const int colsB, complexFloat* dest, const int ldD, const complexFloat alpha, const complexFloat beta)
+	{
+		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+	}
+	DLLEXP cudaError matKronZ(const complexDouble* A, const int ldA, const int rowsA, const int colsA, const complexDouble* B, const int ldB, const int rowsB, const int colsB, complexDouble* dest, const int ldD, const complexDouble alpha, const complexDouble beta)
+	{
+		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+	}
+	END_EXTERN_C
 }
-
-EXTERN_C
-DLLEXP cudaError matKronS(const float* A, const int ldA, const int rowsA, const int colsA, const float* B, const int ldB, const int rowsB, const int colsB, float* dest, const int ldD, const float alpha, const float beta)
-{
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-DLLEXP cudaError matKronD(const double* A, const int ldA, const int rowsA, const int colsA, const double* B, const int ldB, const int rowsB, const int colsB, double* dest, const int ldD, const double alpha, const double beta)
-{
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-DLLEXP cudaError matKronC(const complexFloat* A, const int ldA, const int rowsA, const int colsA, const complexFloat* B, const int ldB, const int rowsB, const int colsB, complexFloat* dest, const int ldD, const complexFloat alpha, const complexFloat beta)
-{
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-DLLEXP cudaError matKronZ(const complexDouble* A, const int ldA, const int rowsA, const int colsA, const complexDouble* B, const int ldB, const int rowsB, const int colsB, complexDouble* dest, const int ldD, const complexDouble alpha, const complexDouble beta)
-{
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region upper copy to lower matUpCpyLow (GPU version)
 template<typename T>
-__global__ void upperCopyToLowerKernel(T* a, const unsigned int ld, const unsigned int rows)
+__global__ void upperCopyToLowerKernel(T* a, const int ld, const int rows)
 {
-	const unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	const unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
+	const int n = blockIdx.x * blockDim.x + threadIdx.x;
+	const int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < rows && m < rows && n < m)
 	{
 		if constexpr (std::is_scalar_v<T>)
@@ -233,7 +233,7 @@ __global__ void upperCopyToLowerKernel(T* a, const unsigned int ld, const unsign
 			}
 			else if (n == m)
 			{
-				const unsigned int idx = n * ld + m;
+				const int idx = n * ld + m;
 				a[idx] = std::conjAllCase(a[idx]);
 			}
 		}
@@ -241,7 +241,7 @@ __global__ void upperCopyToLowerKernel(T* a, const unsigned int ld, const unsign
 }
 
 template<typename T>
-cudaError matrixUpperCopyToLower(T* A, const unsigned int ld, const unsigned int rows)
+cudaError matrixUpperCopyToLower(T* A, const int ld, const int rows)
 {
 	auto ker = upperCopyToLowerKernel<T>;
 
@@ -283,8 +283,8 @@ __global__ void KerSpVecOuter(
 	const T* valB, const int* indB, const size_t nnzB,
 	T* C, int* rowC, int* colC)
 {
-	const unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	const unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
+	const int n = blockIdx.x * blockDim.x + threadIdx.x;
+	const int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < nnzA && m < nnzB)
 	{ // m for column (second dim), n for row (lead dim)
 		size_t idx = n + m * nnzA;
@@ -357,8 +357,8 @@ __global__ void cooMatricesKroneckerKernel(
 	const T* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t ldB, const size_t sdB,
 	T* valC, int* rowC, int* colC)
 {
-	const unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-	const unsigned int m = blockIdx.y * blockDim.y + threadIdx.y;
+	const int n = blockIdx.x * blockDim.x + threadIdx.x;
+	const int m = blockIdx.y * blockDim.y + threadIdx.y;
 	if (n < nnzA && m < nnzB)
 	{ // m for column (second dim), n for row (lead dim)
 		size_t idx = m + n * nnzB;
@@ -419,3 +419,140 @@ END_EXTERN_C
 #pragma endregion
 
 #endif // CPU
+
+
+
+#pragma region matrix Kronecker
+namespace kronecker
+{
+	typedef const int uint;
+
+	template <bool left, bool largerLeadDim>
+	struct iter_functor
+	{
+		uint ldB, colsB, ldDst, rowsDst;
+		uint ldThis, rowsThis;
+		iter_functor(uint ldB, uint colsB, uint ldDst, uint rowsDst, uint ldThis, uint rowsThis) :
+			ldB(ldB), colsB(colsB), ldDst(ldDst), rowsDst(rowsDst), ldThis(ldThis), rowsThis(rowsThis) {}
+
+		__host__ __device__ uint operator()(const uint posDst) const
+		{
+			div_t pos = std::div(posDst, ldDst);
+			if constexpr (largerLeadDim)
+			{	// return 0 immediately if out of range
+				if (pos.rem >= rowsDst)
+					return 0;
+			}
+			int x, y;
+			if constexpr (left)
+			{
+				x = pos.rem / ldB;
+				y = pos.quot / colsB;
+			}
+			else
+			{
+				x = pos.rem % ldB;
+				y = pos.quot % colsB;
+			}
+			return y * ldThis + x;
+		}
+	};
+
+	template <typename T, bool largerLeadDim, bool hasAlpha, bool hasBeta>
+	struct multiply_functor
+	{
+		const T alpha, beta;
+		uint ldD, rowsD;
+		multiply_functor(const T alpha, const T beta, uint ldD, uint rowsD) :
+			alpha(alpha), beta(beta), ldD(ldD), rowsD(rowsD) {}
+
+		// A, B, D, position of D
+		typedef typename thrust::tuple<const T, const T, const T, uint> Tuple;
+
+		__host__ __device__ T operator()(const Tuple t) const
+		{
+			if constexpr (largerLeadDim)
+			{	// return D immediately if out of range
+				if ((t.get<3>() % ldD) >= rowsD)
+				{
+					return t.get<2>();
+				}
+			}
+			if constexpr (hasAlpha && hasBeta)
+				return std::fma(alpha, t.get<0>() * t.get<1>(), beta * t.get<2>());
+			else if constexpr (hasAlpha)
+				return alpha * t.get<0>() * t.get<1>();
+			else if constexpr (hasBeta)
+				return std::fma(t.get<0>(), t.get<1>(), beta * t.get<2>());
+			else
+				return t.get<0>() * t.get<1>();
+		}
+	};
+
+}
+
+template<typename T>
+void matricesKronecker(
+	const T* A, const int ldA, const int rowsA, const int colsA,
+	const T* B, const int ldB, const int rowsB, const int colsB,
+	T* dest,	const int ldD, const T alpha, const T beta)
+{
+	const int rowsD = rowsA * rowsB;
+	const int colsD = colsA * colsB;
+	
+#define KRON_CODE(bool1, bool2, bool3) do { \
+		/*make iterators of A and B*/ \
+		auto count = thrust::make_counting_iterator(0); \
+		auto permA = thrust::make_transform_iterator(count, kronecker::iter_functor<true,  bool1>(ldB, colsB, ldD, rowsD, ldA, rowsA)); \
+		auto permB = thrust::make_transform_iterator(count, kronecker::iter_functor<false, bool1>(ldB, colsB, ldD, rowsD, ldB, rowsB)); \
+		auto iterA = thrust::make_permutation_iterator(A, permA); \
+		auto iterB = thrust::make_permutation_iterator(B, permB); \
+		/*make zip iterator of A, B, D and position of D*/ \
+		auto zip = thrust::make_zip_iterator(thrust::make_tuple(iterA, iterB, dest, count)); \
+		/*calculate*/ \
+		thrust::transform(THRUST_PAR, zip, zip + ldD * colsD, dest, kronecker::multiply_functor<T, bool1, bool2, bool3>(alpha, beta, ldD, rowsD)); \
+	} while (0)
+
+	if (rowsD == ldD)
+	{
+		if (alpha == T(1) && beta == T(0))
+			KRON_CODE(false, false, false);
+		else if (alpha == T(1))
+			KRON_CODE(false, false, true);
+		else if (beta == T(0))
+			KRON_CODE(false, true, false);
+		else
+			KRON_CODE(false, true, true);
+	}
+	else
+	{
+		if (alpha == T(1) && beta == T(0))
+			KRON_CODE(true, false, false);
+		else if (alpha == T(1))
+			KRON_CODE(true, false, true);
+		else if (beta == T(0))
+			KRON_CODE(true, true, false);
+		else
+			KRON_CODE(true, true, true);
+	}
+}
+
+EXTERN_C
+DLLEXP void matKronS(const float* A, const int ldA, const int rowsA, const int colsA, const float* B, const int ldB, const int rowsB, const int colsB, float* dest, const int ldD, const float alpha, const float beta)
+{
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+}
+DLLEXP void matKronD(const double* A, const int ldA, const int rowsA, const int colsA, const double* B, const int ldB, const int rowsB, const int colsB, double* dest, const int ldD, const double alpha, const double beta)
+{
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+}
+DLLEXP void matKronC(const complexFloat* A, const int ldA, const int rowsA, const int colsA, const complexFloat* B, const int ldB, const int rowsB, const int colsB, complexFloat* dest, const int ldD, const complexFloat alpha, const complexFloat beta)
+{
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+}
+DLLEXP void matKronZ(const complexDouble* A, const int ldA, const int rowsA, const int colsA, const complexDouble* B, const int ldB, const int rowsB, const int colsB, complexDouble* dest, const int ldD, const complexDouble alpha, const complexDouble beta)
+{
+	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+}
+END_EXTERN_C
+#pragma endregion

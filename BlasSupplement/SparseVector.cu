@@ -46,7 +46,7 @@ struct floatAboveThreshold_functor
 // dense vector prune to sparse vector -- get buffer size
 extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const DataType type)
 {
-	size_t res = sizeof(int) * N * 2; // size for a 0-N sequence and possible indices
+	size_t res = sizeof(int) * N; // max size for possible indices
 	int sizeofType = (int)((type & DataType::ByteMask) >> DataType::ByteMaskStart);
 	res += sizeofType * N; // size for temporary values
 	return res;
@@ -56,16 +56,12 @@ extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const DataType type)
 template <typename T, typename U>
 size_t vecPruneNonZeros(const T* v, const U threshold, const size_t N, void* buffer)
 {
-	// create range sequence
-	int* index = (int*)buffer;
-	thrust::sequence(THRUST_PAR, index, index + N);
-
 	// create result container
-	int* idxOut = N + (int*)buffer;
-	T* valOut = (T*)(2 * N + (int*)buffer);
+	int* idxOut = (int*)buffer;
+	T* valOut = (T*)(N + (int*)buffer);
 
 	// make zip
-	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(index, v));
+	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_counting_iterator(0), v));
 	auto resultBegin = thrust::make_zip_iterator(thrust::make_tuple(idxOut, valOut));
 
 	// copy_if to get sparse indexes
