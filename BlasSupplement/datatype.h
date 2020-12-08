@@ -241,17 +241,13 @@ namespace Datatype
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
-			funcName<float>(__VA_ARGS__); \
-			break; \
+			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
-			funcName<double>(__VA_ARGS__); \
-			break; \
+			return funcName<double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			funcName<std::complex<float>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			funcName<std::complex<double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<double>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, type); \
 		} \
@@ -263,23 +259,17 @@ namespace Datatype
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
-			funcName<float>(__VA_ARGS__); \
-			break; \
+			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
-			funcName<double>(__VA_ARGS__); \
-			break; \
+			return funcName<double>(__VA_ARGS__); \
 		case Datatype::RealLongDouble: \
-			funcName<long double>(__VA_ARGS__); \
-			break; \
+			return funcName<long double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			funcName<std::complex<float>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			funcName<std::complex<double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexLongDouble: \
-			funcName<std::complex<long double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long double>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, type); \
 		} \
@@ -292,65 +282,45 @@ namespace Datatype
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
-			funcName<float>(__VA_ARGS__); \
-			break; \
+			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
-			funcName<double>(__VA_ARGS__); \
-			break; \
+			return funcName<double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			funcName<std::complex<float>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			funcName<std::complex<double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			funcName<char>(__VA_ARGS__); \
-			break; \
+			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			funcName<short>(__VA_ARGS__); \
-			break; \
+			return funcName<short>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			funcName<int>(__VA_ARGS__); \
-			break; \
+			return funcName<int>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			funcName<long long>(__VA_ARGS__); \
-			break; \
+			return funcName<long long>(__VA_ARGS__); \
 		case Datatype::RealUInt8: \
-			funcName<unsigned char>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned char>(__VA_ARGS__); \
 		case Datatype::RealUInt16: \
-			funcName<unsigned short>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned short>(__VA_ARGS__); \
 		case Datatype::RealUInt32: \
-			funcName<unsigned int>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned int>(__VA_ARGS__); \
 		case Datatype::RealUInt64: \
-			funcName<unsigned long long>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			funcName<std::complex<char>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			funcName<std::complex<short>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			funcName<std::complex<int>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			funcName<std::complex<long long>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long long>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			funcName<std::complex<unsigned char>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned char>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			funcName<std::complex<unsigned short>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned short>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			funcName<std::complex<unsigned int>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned int>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			funcName<std::complex<unsigned long long>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned long long>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, type); \
 		} \
@@ -360,71 +330,49 @@ namespace Datatype
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
-			funcName<float>(__VA_ARGS__); \
-			break; \
+			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
-			funcName<double>(__VA_ARGS__); \
-			break; \
+			return funcName<double>(__VA_ARGS__); \
 		case Datatype::RealLongDouble: \
-			funcName<long double>(__VA_ARGS__); \
-			break; \
+			return funcName<long double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			funcName<std::complex<float>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			funcName<std::complex<double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexLongDouble: \
-			funcName<std::complex<long double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			funcName<char>(__VA_ARGS__); \
-			break; \
+			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			funcName<short>(__VA_ARGS__); \
-			break; \
+			return funcName<short>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			funcName<int>(__VA_ARGS__); \
-			break; \
+			return funcName<int>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			funcName<long long>(__VA_ARGS__); \
-			break; \
+			return funcName<long long>(__VA_ARGS__); \
 		case Datatype::RealUInt8: \
-			funcName<unsigned char>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned char>(__VA_ARGS__); \
 		case Datatype::RealUInt16: \
-			funcName<unsigned short>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned short>(__VA_ARGS__); \
 		case Datatype::RealUInt32: \
-			funcName<unsigned int>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned int>(__VA_ARGS__); \
 		case Datatype::RealUInt64: \
-			funcName<unsigned long long>(__VA_ARGS__); \
-			break; \
+			return funcName<unsigned long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			funcName<std::complex<char>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			funcName<std::complex<short>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			funcName<std::complex<int>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			funcName<std::complex<long long>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long long>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			funcName<std::complex<unsigned char>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned char>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			funcName<std::complex<unsigned short>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned short>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			funcName<std::complex<unsigned int>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned int>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			funcName<std::complex<unsigned long long>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<unsigned long long>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, type); \
 		} \
@@ -437,41 +385,29 @@ namespace Datatype
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
-			funcName<float>(__VA_ARGS__); \
-			break; \
+			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
-			funcName<double>(__VA_ARGS__); \
-			break; \
+			return funcName<double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			funcName<std::complex<float>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			funcName<std::complex<double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			funcName<char>(__VA_ARGS__); \
-			break; \
+			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			funcName<short>(__VA_ARGS__); \
-			break; \
+			return funcName<short>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			funcName<int>(__VA_ARGS__); \
-			break; \
+			return funcName<int>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			funcName<long long>(__VA_ARGS__); \
-			break; \
+			return funcName<long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			funcName<std::complex<char>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			funcName<std::complex<short>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			funcName<std::complex<int>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			funcName<std::complex<long long>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long long>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, type); \
 		} \
@@ -481,47 +417,33 @@ namespace Datatype
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
-			funcName<float>(__VA_ARGS__); \
-			break; \
+			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
-			funcName<double>(__VA_ARGS__); \
-			break; \
+			return funcName<double>(__VA_ARGS__); \
 		case Datatype::RealLongDouble: \
-			funcName<long double>(__VA_ARGS__); \
-			break; \
+			return funcName<long double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			funcName<std::complex<float>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			funcName<std::complex<double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexLongDouble: \
-			funcName<std::complex<long double>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			funcName<char>(__VA_ARGS__); \
-			break; \
+			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			funcName<short>(__VA_ARGS__); \
-			break; \
+			return funcName<short>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			funcName<int>(__VA_ARGS__); \
-			break; \
+			return funcName<int>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			funcName<long long>(__VA_ARGS__); \
-			break; \
+			return funcName<long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			funcName<std::complex<char>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			funcName<std::complex<short>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			funcName<std::complex<int>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			funcName<std::complex<long long>>(__VA_ARGS__); \
-			break; \
+			return funcName<std::complex<long long>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, type); \
 		} \

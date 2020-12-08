@@ -22,6 +22,9 @@
   <ItemGroup>
     <ClCompile Include="host_util.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}</ProjectGuid>
     <RootNamespace>GpuBlasSupplement</RootNamespace>

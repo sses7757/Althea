@@ -2,21 +2,14 @@
 
 // platform specific INLINE and export DLL
 #if defined(_MSC_VER)
-#define INLINE __forceinline
-#define DLLEXP __declspec(dllexport)
+#define DLLEXP extern "C" __declspec(dllexport)
 #elif defined(__ICC) || defined(__INTEL_COMPILER) || defined(__GNUC__) || defined(__GNUG__)
-#define INLINE __attribute__((always_inline)) inline
-#define DLLEXP __attribute__((visibility("default")))
+#define DLLEXP extern "C" __attribute__((visibility("default")))
 #else
-#define INLINE
 //  do nothing and hope for the best?
 #define DLLEXP
-#pragma warning Unknown inline semantics.
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
-
-// extern "C"
-#define EXTERN_C extern "C"
 
 
 // CUDA includes
@@ -71,7 +64,7 @@ using complexLongDouble = std::complex<long double>;
 namespace std
 {
 	template <typename T>
-	__host__ __device__ static __inline__ T conjAllCase(const T a)
+	__host__ __device__ static inline T conjAllCase(const T a)
 	{
 		if constexpr (std::is_scalar_v<T>)
 			return a;
@@ -81,7 +74,7 @@ namespace std
 
 
 	template <typename T>
-	__host__ __device__ static __inline__ std::complex<T> fma(const std::complex<T> x, const std::complex<T> y, const std::complex<T> d)
+	__host__ __device__ static inline std::complex<T> fma(const std::complex<T> x, const std::complex<T> y, const std::complex<T> d)
 	{
 		T real_res;
 		T imag_res;
@@ -95,11 +88,22 @@ namespace std
 		return std::complex<T>(real_res, imag_res);
 	}
 
-	__host__ __device__ static __inline__ constexpr char abs(const char a) { return a < 0I8 ? -a : a; }
-	__host__ __device__ static __inline__ constexpr short abs(const short a) { return a < 0I16 ? -a : a; }
-	__host__ __device__ static __inline__ constexpr unsigned char abs(const unsigned char a) { return a; }
-	__host__ __device__ static __inline__ constexpr unsigned short abs(const unsigned short a) { return a; }
-	__host__ __device__ static __inline__ constexpr unsigned int abs(const unsigned int a) { return a; }
-	__host__ __device__ static __inline__ constexpr unsigned long abs(const unsigned long a) { return a; }
-	__host__ __device__ static __inline__ constexpr unsigned long long abs(const unsigned long long a) { return a; }
+	__host__ __device__ static inline constexpr char fma(const char x, const char y, const char d) { return x * y + d; }
+	__host__ __device__ static inline constexpr short fma(const short x, const short y, const short d) { return x * y + d; }
+	__host__ __device__ static inline constexpr int fma(const int x, const int y, const int d) { return x * y + d; }
+	__host__ __device__ static inline constexpr long fma(const long x, const long y, const long d) { return x * y + d; }
+	__host__ __device__ static inline constexpr long long fma(const long long x, const long long y, const long long d) { return x * y + d; }
+	__host__ __device__ static inline constexpr unsigned char fma(const unsigned char x, const unsigned char y, const unsigned char d) { return x * y + d; }
+	__host__ __device__ static inline constexpr unsigned short fma(const unsigned short x, const unsigned short y, const unsigned short d) { return x * y + d; }
+	__host__ __device__ static inline constexpr unsigned int fma(const unsigned int x, const unsigned int y, const unsigned int d) { return x * y + d; }
+	__host__ __device__ static inline constexpr unsigned long fma(const unsigned long x, const unsigned long y, const unsigned long d) { return x * y + d; }
+	__host__ __device__ static inline constexpr unsigned long long fma(const unsigned long long x, const unsigned long long y, const unsigned long long d) { return x * y + d; }
+
+	__host__ __device__ static inline constexpr char abs(const char a) { return a < 0I8 ? -a : a; }
+	__host__ __device__ static inline constexpr short abs(const short a) { return a < 0I16 ? -a : a; }
+	__host__ __device__ static inline constexpr unsigned char abs(const unsigned char a) { return a; }
+	__host__ __device__ static inline constexpr unsigned short abs(const unsigned short a) { return a; }
+	__host__ __device__ static inline constexpr unsigned int abs(const unsigned int a) { return a; }
+	__host__ __device__ static inline constexpr unsigned long abs(const unsigned long a) { return a; }
+	__host__ __device__ static inline constexpr unsigned long long abs(const unsigned long long a) { return a; }
 }

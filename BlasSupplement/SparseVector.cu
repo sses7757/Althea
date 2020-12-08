@@ -1,41 +1,30 @@
 #include "macro.h"
 
 
-#pragma region set array values at positions
+#pragma region set av values at positions
 template <typename T>
-__inline__ void vectorSetValuesAt(T* dst, const T value, const int* pos, const size_t posN)
+inline void vectorSetValuesAt(void* dst, const void* value, const int* pos, const size_t posN)
 {
-	auto iter = thrust::make_permutation_iterator(dst, pos);
-	thrust::fill(THRUST_PAR, iter, iter + posN, value);
+	T* a = (T*)dst;
+	const T v = *((const T*)value);
+	auto iter = thrust::make_permutation_iterator(a, pos);
+	thrust::fill(THRUST_PAR, iter, iter + posN, v);
 }
 
-EXTERN_C
-DLLEXP void vecSetValAtS(float* a, const float v, const int* pos, const size_t posN)
+DLLEXP
+void vecSetValAt(const Datatype::DataType type, void* a, const void* value, const int* pos, const size_t posN)
 {
-	vectorSetValuesAt(a, v, pos, posN);
+	AUTO_ALLTYPE_FUNC(vectorSetValuesAt, type, a, value, pos, posN);
 }
-DLLEXP void vecSetValAtD(double* a, const double v, const int* pos, const size_t posN)
-{
-	vectorSetValuesAt(a, v, pos, posN);
-}
-DLLEXP void vecSetValAtC(complexSingle* a, const complexSingle v, const int* pos, const size_t posN)
-{
-	vectorSetValuesAt(a, v, pos, posN);
-}
-DLLEXP void vecSetValAtZ(complexDouble* a, const complexDouble v, const int* pos, const size_t posN)
-{
-	vectorSetValuesAt(a, v, pos, posN);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region dense vector prune to sparse vector
 template <typename T, typename U>
-struct floatAboveThreshold_functor
+struct aboveThreshold_functor
 {
 	const U threshold;
-	floatAboveThreshold_functor(const U t) : threshold(t) {}
+	aboveThreshold_functor(const U t) : threshold(std::abs(t)) {}
 
 	__host__ __device__ bool operator()(const T x) const
 	{
@@ -44,7 +33,8 @@ struct floatAboveThreshold_functor
 };
 
 // dense vector prune to sparse vector -- get buffer size
-extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const Datatype::DataType type)
+DLLEXP
+size_t vecPruneBuffer(const size_t N, const Datatype::DataType type)
 {
 	size_t res = sizeof(int) * N; // max size for possible indices
 	res += Datatype::size(type) * N; // size for temporary values
@@ -52,48 +42,46 @@ extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const Datatype::DataType
 }
 
 // dense vector prune to sparse vector -- get non-zeros
-template <typename T, typename U>
-size_t vecPruneNonZeros(const T* v, const U threshold, const size_t N, void* buffer)
+template <typename T>
+inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const size_t N, void* buffer)
 {
+	const T* a = (const T*)av;
+	const T thre = *((const T*)threshold);
+
 	// create result container
 	int* idxOut = (int*)buffer;
 	T* valOut = (T*)(N + (int*)buffer);
 
 	// make zip
-	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_counting_iterator(0), v));
+	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_counting_iterator(0), a));
 	auto resultBegin = thrust::make_zip_iterator(thrust::make_tuple(idxOut, valOut));
 
 	// copy_if to get sparse indexes
-	auto resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, v, resultBegin, floatAboveThreshold_functor<T, U>(threshold));
+	auto resultEnd = resultBegin;
+	if constexpr (std::is_scalar_v<T>)
+	{
+		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, T>(thre));
+	}
+	else
+	{
+		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, T::value_type>(std::abs(thre)));
+	}
 	return resultEnd - resultBegin;
 }
 
-EXTERN_C
-DLLEXP size_t vecPruneNnzS(const float* v, const float threshold, const size_t N, void* buffer)
+DLLEXP
+size_t vecPruneNnz(const Datatype::DataType type, const void* a, const void* threshold, const size_t N, void* buffer)
 {
-	return vecPruneNonZeros(v, threshold, N, buffer);
+	AUTO_ALLTYPE_FUNC(vectorPruneNonZeros, type, a, threshold, N, buffer);
 }
-DLLEXP size_t vecPruneNnzD(const double* v, const float threshold, const size_t N, void* buffer)
-{
-	return vecPruneNonZeros(v, (double)threshold, N, buffer);
-}
-DLLEXP size_t vecPruneNnzC(const complexSingle* v, const float threshold, const size_t N, void* buffer)
-{
-	return vecPruneNonZeros(v, threshold, N, buffer);
-}
-DLLEXP size_t vecPruneNnzZ(const complexDouble* v, const float threshold, const size_t N, void* buffer)
-{
-	return vecPruneNonZeros(v, (double)threshold, N, buffer);
-}
-END_EXTERN_C
 
 // dense vector prune to sparse vector -- calculate
 template <typename T>
-ERROR_RETURN vecPruneCalculate(const size_t N, const void* buffer, size_t nnz, int* indexOut, T* valueOut)
+inline ERROR_RETURN vecPruneCalculate(const void* buffer, const size_t N, size_t nnz, int* indexOut, void* valueOut)
 {
 	// get result container from buffer
-	int* idxOut = N + (int*)buffer;
-	T* valOut = (T*)(2 * N + (int*)buffer);
+	const int* idxOut =(int*)buffer;
+	const T* valOut = (const T*)(N + (const int*)buffer);
 
 	// copy to output arrays
 #ifdef CPU
@@ -109,31 +97,20 @@ ERROR_RETURN vecPruneCalculate(const size_t N, const void* buffer, size_t nnz, i
 #endif // CPU
 }
 
-EXTERN_C
-DLLEXP ERROR_RETURN vecPruneCalS(const size_t N, void* buffer, size_t nnz, int* indexOut, float* valueOut)
+DLLEXP
+ERROR_RETURN vecPruneCal(const Datatype::DataType type, const size_t N, const void* buffer, size_t nnz, int* indexOut, void* valueOut)
 {
-	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
+	AUTO_ALLTYPE_FUNC(vecPruneCalculate, type, buffer, N, nnz, indexOut, valueOut);
 }
-DLLEXP ERROR_RETURN vecPruneCalD(const size_t N, void* buffer, size_t nnz, int* indexOut, double* valueOut)
-{
-	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
-}
-DLLEXP ERROR_RETURN vecPruneCalC(const size_t N, void* buffer, size_t nnz, int* indexOut, complexSingle* valueOut)
-{
-	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
-}
-DLLEXP ERROR_RETURN vecPruneCalZ(const size_t N, void* buffer, size_t nnz, int* indexOut, complexDouble* valueOut)
-{
-	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region sparse vector element-wise multipilied or divided by dense vector
 template<typename T>
-void vectorSparseMultipliedDividedByDense(T* sparse, const int* index, const size_t nnz, const T* dense, bool multiply)
+inline void vectorSparseMultipliedDividedByDense(void* sparsev, const int* index, const size_t nnz, const void* densev, bool multiply)
 {
+	T* sparse = (T*)sparsev;
+	const T* dense = (const T*)densev;
 	if (multiply)
 	{
 		thrust::transform(THRUST_PAR, sparse, sparse + nnz, thrust::make_permutation_iterator(dense, index), sparse, thrust::multiplies<T>());
@@ -144,30 +121,18 @@ void vectorSparseMultipliedDividedByDense(T* sparse, const int* index, const siz
 	}
 }
 
-EXTERN_C
-DLLEXP void vecSpMulDivDnS(float* sparse, const int* index, const size_t nnz, const float* dense, bool multiply)
+DLLEXP
+void vecSpMulDivDn(const Datatype::DataType type, void* sparse, const int* index, const size_t nnz, const void* dense, bool multiply)
 {
-	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
+	AUTO_ALLTYPE_FUNC(vectorSparseMultipliedDividedByDense, type, sparse, index, nnz, dense, multiply);
 }
-DLLEXP void vecSpMulDivDnD(double* sparse, const int* index, const size_t nnz, const double* dense, bool multiply)
-{
-	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
-}
-DLLEXP void vecSpMulDivDnC(complexSingle* sparse, const int* index, const size_t nnz, const complexSingle* dense, bool multiply)
-{
-	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
-}
-DLLEXP void vecSpMulDivDnZ(complexDouble* sparse, const int* index, const size_t nnz, const complexDouble* dense, bool multiply)
-{
-	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
-}
-END_EXTERN_C
 #pragma endregion
 
 
-#pragma region sparse vector add sparse vector vecSpAdd
+#pragma region sparse vector add sparse vector
 // sparse vector add another sparse vector -- get buffer size
-extern "C" DLLEXP size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const Datatype::DataType type)
+DLLEXP
+size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const Datatype::DataType type)
 {
 	size_t N = nnzA + nnzB;
 	size_t res = sizeof(int) * N; // size for temporary indices
@@ -176,10 +141,10 @@ extern "C" DLLEXP size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, co
 }
 
 template <typename T>
-struct floatMultiplyScalar_functor
+struct multiplyScalar_functor
 {
 	const T scalar;
-	floatMultiplyScalar_functor(const T s) : scalar(s) {}
+	multiplyScalar_functor(const T s) : scalar(s) {}
 
 	__host__ __device__ T operator()(const T x) const
 	{
@@ -195,8 +160,13 @@ struct notEqualAsInt_functor
 
 // sparse vector add another sparse vector -- get non-zeros, 'alpha' is the number to multiply to each value of B
 template <typename T>
-size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nnzA, const int* indB, const T* valB, const size_t nnzB, const T alpha, void* buffer)
+inline size_t vectorSparseAddGetNonzero(const int* indA, const void* valAv, const size_t nnzA, const int* indB, const void* valBv, const size_t nnzB, const void* alphav, void* buffer)
 {
+	// cast
+	const T* valA = (const T*)valAv;
+	const T* valB = (const T*)valBv;
+	const T alpha = *((const T*)alphav);
+
 	size_t nnz = nnzA + nnzB;
 	// get storage from buffer for the combined contents of sparse vectors A and B
 	int* temp_index = (int*)buffer;
@@ -209,7 +179,7 @@ size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nn
 	}
 	else
 	{
-		auto alphaMultiplyB = thrust::make_transform_iterator(valB, floatMultiplyScalar_functor<T>(alpha));
+		auto alphaMultiplyB = thrust::make_transform_iterator(valB, multiplyScalar_functor<T>(alpha));
 		thrust::merge_by_key(THRUST_PAR, indA, indA + nnzA, indB, indB + nnzB, valA, alphaMultiplyB, temp_index, temp_value);
 	}
 
@@ -221,65 +191,41 @@ size_t vectorSparseAddGetNonzero(const int* indA, const T* valA, const size_t nn
 	return nnzC;
 }
 
-EXTERN_C
-DLLEXP size_t vecSpAddNnzS(const int* indA, const float* valA, const size_t nnzA, const int* indB, const float* valB, const size_t nnzB, const float alpha, void* buffer)
+DLLEXP
+size_t vecSpAddNnz(const Datatype::DataType type, const int* indA, const void* valA, const size_t nnzA, const int* indB, const void* valB, const size_t nnzB, const void* alpha, void* buffer)
 {
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
+	AUTO_ALLTYPE_FUNC(vectorSparseAddGetNonzero, type, indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
-DLLEXP size_t vecSpAddNnzD(const int* indA, const double* valA, const size_t nnzA, const int* indB, const double* valB, const size_t nnzB, const double alpha, void* buffer)
-{
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
-}
-DLLEXP size_t vecSpAddNnzC(const int* indA, const complexSingle* valA, const size_t nnzA, const int* indB, const complexSingle* valB, const size_t nnzB, const complexSingle alpha, void* buffer)
-{
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
-}
-DLLEXP size_t vecSpAddNnzZ(const int* indA, const complexDouble* valA, const size_t nnzA, const int* indB, const complexDouble* valB, const size_t nnzB, const complexDouble alpha, void* buffer)
-{
-	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
-}
-END_EXTERN_C
 
 // sparse vector add another sparse vector -- calculate
 template <typename T>
-void vectorSparseAddCalculate(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, T* C_value)
+inline void vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nnzC, int* C_indexOut, void* C_valueOut)
 {
+	// cast
+	T* C_value = (T*)C_valueOut;
 	// get storage from buffer for the combined contents of sparse vectors A and B
-	int* temp_index = (int*)buffer;
-	T* temp_value = (T*)(nnzAB + (int*)buffer);
+	const int* temp_index = (const int*)buffer;
+	const T* temp_value = (const T*)(nnzAB + (const int*)buffer);
 
 	// sum values with the same index
-	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_index, C_value, thrust::equal_to<int>(), thrust::plus<T>());
+	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_indexOut, C_value, thrust::equal_to<int>(), thrust::plus<T>());
 }
 
-EXTERN_C
-DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
+DLLEXP
+void vecSpAddCal(const Datatype::DataType type, const void* buffer, size_t nnzAB, size_t nnzC, int* C_index, void* C_value)
 {
-	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
+	AUTO_ALLTYPE_FUNC(vectorSparseAddCalculate, type, buffer, nnzAB, nnzC, C_index, C_value);
 }
-DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
-{
-	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
-}
-DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
-{
-	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
-}
-DLLEXP void vecSpAddCalS(size_t nnzAB, void* buffer, size_t nnzC, int* C_index, float* C_value)
-{
-	return vectorSparseAddCalculate(nnzAB, buffer, nnzC, C_index, C_value);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region dense vector added by sparse
 // return alpha * x + y
 template <typename T>
-struct floatFMA_functor
+struct FMA_functor
 {
 	const T alpha;
-	floatFMA_functor(const T a) : alpha(a) {}
+	FMA_functor(const T a) : alpha(a) {}
 
 	__host__ __device__ T operator()(const T x, const T y) const
 	{
@@ -289,8 +235,12 @@ struct floatFMA_functor
 
 // dense[index[i]] = sparse[i] * alpha + dense[index[i]]
 template <typename T>
-void vectorDenseAddBySparse(T* dense, const T* sparse, const int* index, const size_t nnz, const T alpha)
+inline void vectorDenseAddBySparse(void* densev, const void* sparsev, const int* index, const size_t nnz, const void* alphav)
 {
+	T* dense = (T*)densev;
+	const T* sparse = (const T*)sparsev;
+	const T alpha = *((const T*)alphav);
+
 	auto densePerm = thrust::make_permutation_iterator(dense, index);
 	if (alpha == 1)
 	{
@@ -298,26 +248,13 @@ void vectorDenseAddBySparse(T* dense, const T* sparse, const int* index, const s
 	}
 	else
 	{
-		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, floatFMA_functor<T>(alpha));
+		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, FMA_functor<T>(alpha));
 	}
 }
 
-EXTERN_C
-DLLEXP void vecDnAddSpS(float* dense, const float* sparse, const int* index, const size_t nnz, const float alpha)
+DLLEXP
+void vecDnAddSp(const Datatype::DataType type, void* dense, const void* sparse, const int* index, const size_t nnz, const void* alpha)
 {
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
+	AUTO_ALLTYPE_FUNC(vectorDenseAddBySparse, type, dense, sparse, index, nnz, alpha);
 }
-DLLEXP void vecDnAddSpD(double* dense, const double* sparse, const int* index, const size_t nnz, const double alpha)
-{
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
-}
-DLLEXP void vecDnAddSpC(complexSingle* dense, const complexSingle* sparse, const int* index, const size_t nnz, const complexSingle alpha)
-{
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
-}
-DLLEXP void vecDnAddSpZ(complexDouble* dense, const complexDouble* sparse, const int* index, const size_t nnz, const complexDouble alpha)
-{
-	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
-}
-END_EXTERN_C
 #pragma endregion

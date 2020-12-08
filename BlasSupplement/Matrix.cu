@@ -33,18 +33,18 @@ struct intFMA_functor
 	}
 };
 
-EXTERN_C
-DLLEXP void spVecIndToCooInds(const int* index, int* rowIdx, int* colIdx, const size_t N, const int ld)
+DLLEXP
+void spVecIndToCooInds(const int* index, int* rowIdx, int* colIdx, const size_t N, const int ld)
 {
 	thrust::transform(THRUST_PAR, index, index + N, rowIdx, intModulus_functor(ld));
 	thrust::transform(THRUST_PAR, index, index + N, colIdx, intDivide_functor(ld));
 }
 
-DLLEXP void CooIndxToSpVecInd(int* index, const int* rowIdx, const int* colIdx, const size_t N, const int ld)
+DLLEXP
+void CooIndxToSpVecInd(int* index, const int* rowIdx, const int* colIdx, const size_t N, const int ld)
 {
 	thrust::transform(THRUST_PAR, rowIdx, rowIdx + N, colIdx, index, intFMA_functor(ld));
 }
-END_EXTERN_C
 #pragma endregion
 
 
@@ -64,13 +64,14 @@ struct intCSRGetNER_functor
 	}
 };
 
-EXTERN_C
-DLLEXP size_t CSRGetNerBuffer(const int rows)
+DLLEXP
+size_t CSRGetNerBuffer(const int rows)
 {
-	return sizeof(int) * (rows - 1);
+	return sizeof(int) * ((size_t)rows - 1);
 }
 
-DLLEXP size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
+DLLEXP
+size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
 {
 	const int N = rows - 1;
 
@@ -84,7 +85,7 @@ DLLEXP size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
 	return nnz;
 }
 
-DLLEXP ERROR_RETURN CSRGetNerCal(size_t nnz, const int* buffer, int* nerOut)
+DLLEXP ERROR_RETURN CSRGetNerCal(const int* buffer, size_t nnz, int* nerOut)
 {
 #ifdef CPU
 	memcpy(nerOut, buffer, sizeof(int) * nnz);
@@ -93,7 +94,6 @@ DLLEXP ERROR_RETURN CSRGetNerCal(size_t nnz, const int* buffer, int* nerOut)
 	return err;
 #endif // CPU
 }
-END_EXTERN_C
 #pragma endregion
 
 
@@ -103,7 +103,7 @@ END_EXTERN_C
 #else
 
 template <typename Func>
-__inline__ static cudaError calc2DKernelPara(size_t nx, size_t ny, Func ker, dim3& dimBlock, dim3& dimGrid)
+inline static cudaError calc2DKernelPara(size_t nx, size_t ny, Func ker, dim3& dimBlock, dim3& dimGrid)
 {
 	int N = (int)(nx + ny);
 	if (N < 0)
@@ -191,24 +191,22 @@ namespace GPUVersion
 		return err;
 	}
 
-	EXTERN_C
 	DLLEXP cudaError matKronS(const float* A, const int ldA, const int rowsA, const int colsA, const float* B, const int ldB, const int rowsB, const int colsB, float* dest, const int ldD, const float alpha, const float beta)
 	{
-		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+		return GPUVersion::matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 	}
 	DLLEXP cudaError matKronD(const double* A, const int ldA, const int rowsA, const int colsA, const double* B, const int ldB, const int rowsB, const int colsB, double* dest, const int ldD, const double alpha, const double beta)
 	{
-		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+		return GPUVersion::matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 	}
 	DLLEXP cudaError matKronC(const complexSingle* A, const int ldA, const int rowsA, const int colsA, const complexSingle* B, const int ldB, const int rowsB, const int colsB, complexSingle* dest, const int ldD, const complexSingle alpha, const complexSingle beta)
 	{
-		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+		return GPUVersion::matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 	}
 	DLLEXP cudaError matKronZ(const complexDouble* A, const int ldA, const int rowsA, const int colsA, const complexDouble* B, const int ldB, const int rowsB, const int colsB, complexDouble* dest, const int ldD, const complexDouble alpha, const complexDouble beta)
 	{
-		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+		return GPUVersion::matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 	}
-	END_EXTERN_C
 }
 #pragma endregion
 
@@ -255,7 +253,6 @@ cudaError matrixUpperCopyToLower(T* A, const int ld, const int rows)
 	return err;
 }
 
-EXTERN_C
 DLLEXP cudaError matUpCpyLowS(float* A, const int ld, const int rows)
 {
 	return matrixUpperCopyToLower(A, ld, rows);
@@ -272,7 +269,6 @@ DLLEXP cudaError matUpCpyLowZ(complexDouble* A, const int ld, const int rows)
 {
 	return matrixUpperCopyToLower(A, ld, rows);
 }
-END_EXTERN_C
 #pragma endregion
 
 
@@ -317,7 +313,6 @@ cudaError sparseVectorsOuter(
 	return err;
 }
 
-EXTERN_C
 DLLEXP cudaError spVecOuterS(
 	const float* valA, const int* indA, const size_t nnzA,
 	const float* valB, const int* indB, const size_t nnzB,
@@ -346,7 +341,6 @@ DLLEXP cudaError spVecOuterZ(
 {
 	return sparseVectorsOuter(valA, indA, nnzA, valB, indB, nnzB, C, rowC, colC, conj);
 }
-END_EXTERN_C
 #pragma endregion
 
 
@@ -386,7 +380,6 @@ cudaError cooMatricesKronecker(
 	return err;
 }
 
-EXTERN_C
 DLLEXP cudaError cooMatKronS(
 	const float* valA, const int* rowA, const int* colA, const size_t nnzA,
 	const float* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t ldB, const size_t sdB,
@@ -415,7 +408,6 @@ DLLEXP cudaError cooMatKronZ(
 {
 	return cooMatricesKronecker(valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, ldB, sdB, valC, rowC, colC);
 }
-END_EXTERN_C
 #pragma endregion
 
 #endif // CPU
@@ -488,15 +480,21 @@ namespace kronecker
 				return t.get<0>() * t.get<1>();
 		}
 	};
-
 }
 
 template<typename T>
-void matricesKronecker(
-	const T* A, const int ldA, const int rowsA, const int colsA,
-	const T* B, const int ldB, const int rowsB, const int colsB,
-	T* dest,	const int ldD, const T alpha, const T beta)
+inline void matricesKronecker(
+	const void* Av, const int ldA, const int rowsA, const int colsA,
+	const void* Bv, const int ldB, const int rowsB, const int colsB,
+	void* destv, const int ldD, const void* alphav, const void* betav)
 {
+	// cast
+	const T* A = (const T*)Av;
+	const T* B = (const T*)Bv;
+	T* dest = (T*)destv;
+	const T alpha = *((const T*)alphav);
+	const T beta = *((const T*)betav);
+
 	const int rowsD = rowsA * rowsB;
 	const int colsD = colsA * colsB;
 	
@@ -537,22 +535,41 @@ void matricesKronecker(
 	}
 }
 
-EXTERN_C
-DLLEXP void matKronS(const float* A, const int ldA, const int rowsA, const int colsA, const float* B, const int ldB, const int rowsB, const int colsB, float* dest, const int ldD, const float alpha, const float beta)
+DLLEXP
+void matKron(const Datatype::DataType type,
+	const void* A, const int ldA, const int rowsA, const int colsA,
+	const void* B, const int ldB, const int rowsB, const int colsB,
+	void* dest, const int ldD, const void* alpha, const void* beta)
 {
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
+	AUTO_ALLTYPE_FUNC(matricesKronecker, type, A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
-DLLEXP void matKronD(const double* A, const int ldA, const int rowsA, const int colsA, const double* B, const int ldB, const int rowsB, const int colsB, double* dest, const int ldD, const double alpha, const double beta)
+#pragma endregion
+
+
+#pragma region make matrix Hermitian by copying its upper part to its lower part
+template<typename T, bool largerLeadDim>
+struct copyToLower_functor
 {
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-DLLEXP void matKronC(const complexSingle* A, const int ldA, const int rowsA, const int colsA, const complexSingle* B, const int ldB, const int rowsB, const int colsB, complexSingle* dest, const int ldD, const complexSingle alpha, const complexSingle beta)
-{
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-DLLEXP void matKronZ(const complexDouble* A, const int ldA, const int rowsA, const int colsA, const complexDouble* B, const int ldB, const int rowsB, const int colsB, complexDouble* dest, const int ldD, const complexDouble alpha, const complexDouble beta)
-{
-	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
-}
-END_EXTERN_C
+	const int ld, rows;
+	copyToLower_functor(const int ld, const int rows) : ld(ld), rows(rows) {}
+
+	__host__ __device__ T operator()(const T val, const int pos) const
+	{
+		int x = pos % ld;
+		if constexpr (largerLeadDim)
+		{
+			if (x >= rows)
+				return val;
+		}
+		int y = pos / ld;
+		if constexpr (!std::is_scalar_v<T>)
+		{
+			if (x == y)
+				return T(val.real());
+		}
+		if (x > y)
+			return 
+	}
+};
+
 #pragma endregion
