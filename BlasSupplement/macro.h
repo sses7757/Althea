@@ -16,8 +16,7 @@
 #endif
 
 // extern "C"
-#define EXTERN_C extern "C" {
-#define END_EXTERN_C }
+#define EXTERN_C extern "C"
 
 
 // CUDA includes
@@ -59,9 +58,13 @@
 
 
 // complex type alias
-using complexFloat = std::complex<float>;
+using complexSingle = std::complex<float>;
 // complex type alias
 using complexDouble = std::complex<double>;
+#ifdef HAS_LDBL
+// complex type alias
+using complexLongDouble = std::complex<long double>;
+#endif
 
 
 // self defined methods for complex
@@ -91,4 +94,12 @@ namespace std
 
 		return std::complex<T>(real_res, imag_res);
 	}
+
+	__host__ __device__ static __inline__ constexpr char abs(const char a) { return a < 0I8 ? -a : a; }
+	__host__ __device__ static __inline__ constexpr short abs(const short a) { return a < 0I16 ? -a : a; }
+	__host__ __device__ static __inline__ constexpr unsigned char abs(const unsigned char a) { return a; }
+	__host__ __device__ static __inline__ constexpr unsigned short abs(const unsigned short a) { return a; }
+	__host__ __device__ static __inline__ constexpr unsigned int abs(const unsigned int a) { return a; }
+	__host__ __device__ static __inline__ constexpr unsigned long abs(const unsigned long a) { return a; }
+	__host__ __device__ static __inline__ constexpr unsigned long long abs(const unsigned long long a) { return a; }
 }

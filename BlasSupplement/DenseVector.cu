@@ -3,8 +3,8 @@
 
 
 #pragma region get properties
-EXTERN_C
-DLLEXP cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
+EXTERN_C DLLEXP
+cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
 {
 	cudaDeviceProp prop;
 	cudaError err;
@@ -12,7 +12,6 @@ DLLEXP cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor
 	major = prop.major; minor = prop.minor;
 	return err;
 }
-END_EXTERN_C
 #pragma endregion
 
 
@@ -62,13 +61,21 @@ protected:
 	Iterator last;
 	difference_type stride;
 };
+
+template <typename Iterator>
+__inline__ static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, const StridedRange<Iterator>::difference_type stride)
+{
+	return StridedRange<Iterator>(it, it + N * stride, stride);
+}
 #pragma endregion
 
 
 #pragma region element-wise multiply and divide
 template<typename T>
-__inline__ void vectorsElementWiseMultiplyDivide(T* a, const T* b, const size_t N, const unsigned int stride, bool multiply)
+__inline__ void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const size_t N, const unsigned int stride, bool multiply)
 {
+	T* a = (T*)av;
+	const T* b = (const T*)bv;
 	if (stride == 1)
 	{
 		if (multiply)
@@ -78,8 +85,8 @@ __inline__ void vectorsElementWiseMultiplyDivide(T* a, const T* b, const size_t 
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
-		StridedRange<const T*> strideB(b, b + N * stride, stride);
+		auto strideA = make_strided_range(a, N, stride);
+		auto strideB = make_strided_range(b, N, stride);
 		if (multiply)
 			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), strideA.begin(), thrust::multiplies<T>());
 		else
@@ -87,24 +94,11 @@ __inline__ void vectorsElementWiseMultiplyDivide(T* a, const T* b, const size_t 
 	}
 }
 
-EXTERN_C
-DLLEXP void vecEWMulDivS(float* a, const float* b, const size_t N, const unsigned int stride, bool multiply)
+EXTERN_C DLLEXP
+void vecEWMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int stride, bool multiply)
 {
-	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
+	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, a, b, N, stride, multiply);
 }
-DLLEXP void vecEWMulDivD(double* a, const double* b, const size_t N, const unsigned int stride, bool multiply)
-{
-	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
-}
-DLLEXP void vecEWMulDivC(complexFloat* a, const complexFloat* b, const size_t N, const unsigned int stride, bool multiply)
-{
-	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
-}
-DLLEXP void vecEWMulDivZ(complexDouble* a, const complexDouble* b, const size_t N, const unsigned int stride, bool multiply)
-{
-	vectorsElementWiseMultiplyDivide(a, b, N, stride, multiply);
-}
-END_EXTERN_C
 #pragma endregion
 
 
@@ -123,73 +117,51 @@ struct floatPower_functor
 };
 
 template<typename T>
-void vectorElementWisePower(T* a, const T p, const size_t N, const unsigned int stride)
+__inline__ void vectorElementWisePower(void* av, const void* pv, const size_t N, const unsigned int stride)
 {
+	T* a = (T*)av;
+	const T p = *(T*)pv;
 	if (stride == 1)
 	{
 		thrust::transform(THRUST_PAR, a, a + N, a, floatPower_functor<T>(p));
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		auto strideA = make_strided_range(a, N, stride);
 		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatPower_functor<T>(p));
 	}
 }
 
-EXTERN_C
-DLLEXP void vecEWPowS(float* a, const float p, const size_t N, const unsigned int stride)
+EXTERN_C DLLEXP
+void vecEWPow(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
 {
-	vectorElementWisePower(a, p, N, stride);
+	AUTO_FLOAT_FUNC(vectorElementWisePower, type, a, p, N, stride);
 }
-DLLEXP void vecEWPowD(double* a, const double p, const size_t N, const unsigned int stride)
-{
-	vectorElementWisePower(a, p, N, stride);
-}
-DLLEXP void vecEWPowC(complexFloat* a, const complexFloat p, const size_t N, const unsigned int stride)
-{
-	vectorElementWisePower(a, p, N, stride);
-}
-DLLEXP void vecEWPowZ(complexDouble* a, const complexDouble p, const size_t N, const unsigned int stride)
-{
-	vectorElementWisePower(a, p, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
-#pragma region fill array with ones
+#pragma region fill array with value
 template<typename T>
-void vectorFillWith(T* a, const T val, const size_t N, const unsigned int stride)
+__inline__ void vectorFillWith(void* av, const void* val, const size_t N, const unsigned int stride)
 {
+	T* a = (T*)av;
+	T v = *(T*)val;
 	if (stride == 1)
 	{
-		thrust::fill_n(THRUST_PAR, a, N, val);
+		thrust::fill_n(THRUST_PAR, a, N, v);
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		auto strideA = make_strided_range(a, N, stride);
 		thrust::fill(THRUST_PAR, strideA.begin(), strideA.end(), val);
 	}
 }
 
-EXTERN_C
-DLLEXP void fillValS(float* a, const float val, const size_t N, const unsigned int stride)
+EXTERN_C DLLEXP
+void fillVal(const Datatype::DataType type, void* a, const void* val, const size_t N, const unsigned int stride)
 {
-	vectorFillWith(a, val, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorFillWith, type, a, val, N, stride);
 }
-DLLEXP void fillValD(double* a, const double val, const size_t N, const unsigned int stride)
-{
-	vectorFillWith(a, val, N, stride);
-}
-DLLEXP void fillValC(complexFloat* a, const complexFloat val, const size_t N, const unsigned int stride)
-{
-	vectorFillWith(a, val, N, stride);
-}
-DLLEXP void fillValZ(complexDouble* a, const complexDouble val, const size_t N, const unsigned int stride)
-{
-	vectorFillWith(a, val, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
@@ -199,135 +171,294 @@ struct floatConjugate_functor
 {
 	__host__ __device__ T operator()(const T x) const
 	{
-		T conj = T(x);
-		conj.x = -conj.x;
-		return conj;
+		return std::conjAllCase(x);
 	}
 };
 
 template<typename T>
-void vecConjugate(T* a, const size_t N, const unsigned int stride)
+__inline__ void vecConjugate(void* av, const size_t N, const unsigned int stride)
 {
+	T* a = (T*)av;
 	if (stride == 1)
 	{
 		thrust::transform(THRUST_PAR, a, a + N, a, floatConjugate_functor<T>());
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		auto strideA = make_strided_range(a, N, stride);
 		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatConjugate_functor<T>());
 	}
 }
 
-EXTERN_C
-DLLEXP void vecConjC(complexFloat* a, const size_t N, const unsigned int stride)
+EXTERN_C DLLEXP
+void vecConj(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
 {
-	vecConjugate(a, N, stride);
+	AUTO_ALL_SIGNED_TYPE_FUNC(vecConjugate, type, a, N, stride);
 }
-DLLEXP void vecConjZ(complexDouble* a, const size_t N, const unsigned int stride)
-{
-	vecConjugate(a, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
-#pragma region up-cast and down-cast
-struct singleToDouble_functor
+#pragma region data type cast
+template <typename RealIn, typename RealOut>
+struct realTypeConvert_functor
 {
-	__host__ __device__ double operator()(const float x) const
+	__host__ __device__ RealOut operator()(const RealIn x) const
 	{
-		return x;
+		return (RealOut)x;
 	}
 };
-struct doubleToSingle_functor
+template <typename RealIn, typename RealOut>
+struct realToComplex_functor
 {
-	__host__ __device__ float operator()(const double x) const
+	__host__ __device__ std::complex<RealOut> operator()(const RealIn x) const
 	{
-		return (float)x;
+		return std::complex<RealOut>((RealOut)x);
 	}
 };
-template <typename Complex, typename Real>
-struct complexToRealPart_functor
-{
-	__host__ __device__ Real operator()(const Complex x) const
-	{
-		return x.x;
-	}
-};
-template <typename Complex, typename Real>
+template <typename RealIn, typename RealOut>
 struct complexToRealAbs_functor
 {
-	__host__ __device__ Real operator()(const Complex x) const
+	__host__ __device__ RealOut operator()(const std::complex<RealIn> x) const
 	{
-		return std::abs(x);
+		return (RealOut)std::abs(x);
 	}
 };
-// real to complex can be done by strided copies
-
-template <typename Complex, typename Real>
-void vecComplexToReal(Real* dest, const Complex* src, const size_t N, const unsigned int stride)
+template <typename RealIn, typename RealOut>
+struct complexToRealPart_functor
 {
+	__host__ __device__ RealOut operator()(const std::complex<RealIn> x) const
+	{
+		return (RealOut)x.real();
+	}
+};
+
+template <typename RealIn, typename RealOut>
+__inline__ void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
+{
+	const std::complex<RealIn>* src = (const std::complex<RealIn>*)srcv;
+	RealOut* dst = (RealOut*)dstv;
 	if (stride == 1)
 	{
-		thrust::transform(THRUST_PAR, src, src + N, dest, complexToRealAbs_functor<Complex, Real>());
+		if (toRealByAbs)
+			thrust::transform(THRUST_PAR, src, src + N, dst, complexToRealAbs_functor<RealIn, RealOut>());
+		else
+			thrust::transform(THRUST_PAR, src, src + N, dst, complexToRealPart_functor<RealIn, RealOut>());
 	}
 	else
 	{
-		StridedRange<const Complex*> strideSrc(src, src + N * stride, stride);
-		StridedRange<const Real*> strideDst(dest, dest + N * stride, stride);
-		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), complexToRealAbs_functor<Complex, Real>());
+		auto strideSrc = make_strided_range(src, N, stride);
+		auto strideDst = make_strided_range(dst, N, stride);
+		if (toRealByAbs)
+			thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), complexToRealAbs_functor<RealIn, RealOut>());
+		else
+			thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), complexToRealPart_functor<RealIn, RealOut>());
 	}
 }
 
-EXTERN_C
-DLLEXP void vecSingleToDouble(double* dest, const float* src, const size_t N, const unsigned int stride)
+template <typename RealIn, typename RealOut>
+__inline__ void vectorRealToComplex(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
+	const RealIn* src = (const RealIn*)srcv;
+	std::complex<RealOut>* dst = (std::complex<RealOut>*)dstv;
 	if (stride == 1)
 	{
-		thrust::transform(THRUST_PAR, src, src + N, dest, singleToDouble_functor());
+		thrust::transform(THRUST_PAR, src, src + N, dst, realToComplex_functor<RealIn, RealOut>());
 	}
 	else
 	{
-		StridedRange<const float*> strideSrc(src, src + N * stride, stride);
-		StridedRange<const double*> strideDst(dest, dest + N * stride, stride);
-		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), singleToDouble_functor());
+		auto strideSrc = make_strided_range(src, N, stride);
+		auto strideDst = make_strided_range(dst, N, stride);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), realToComplex_functor<RealIn, RealOut>());
 	}
 }
 
-DLLEXP void vecDoubleToSingle(float* dest, const double* src, const size_t N, const unsigned int stride)
+template <typename RealIn, typename RealOut>
+__inline__ void vectorRealConvert(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
+	const RealIn* src = (const RealIn*)srcv;
+	RealOut* dst = (RealOut*)dstv;
 	if (stride == 1)
 	{
-		thrust::transform(THRUST_PAR, src, src + N, dest, doubleToSingle_functor());
+		thrust::transform(THRUST_PAR, src, src + N, dst, realTypeConvert_functor<RealIn, RealOut>());
 	}
 	else
 	{
-		StridedRange<const double*> strideSrc(src, src + N * stride, stride);
-		StridedRange<const float*> strideDst(dest, dest + N * stride, stride);
-		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), doubleToSingle_functor());
+		auto strideSrc = make_strided_range(src, N, stride);
+		auto strideDst = make_strided_range(dst, N, stride);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), realTypeConvert_functor<RealIn, RealOut>());
 	}
 }
 
-DLLEXP void vecComplexDoubleToReal(double* dest, const complexDouble* src, const size_t N, const unsigned int stride)
+// TODO: could support integer types
+EXTERN_C DLLEXP
+void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType dstType, const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
-	vecComplexToReal(dest, src, N, stride);
+	// copy if no data conversion
+	if (srcType == dstType)
+	{
+		if (stride == 1)
+		{
+			thrust::copy_n(THRUST_PAR, (const char*)src, N * Datatype::size(srcType), (char*)dst);
+		}
+		else
+		{
+			size_t NN = N * Datatype::size(srcType);
+			auto strideSrc = make_strided_range((const char*)src, NN, stride);
+			auto strideDst = make_strided_range((char*)dst, NN, stride);
+			thrust::copy(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst);
+		}
+		return;
+	}
+
+	// otherwise
+	if (!Datatype::isfloat(srcType) || !Datatype::isfloat(dstType))
+	{
+		printf("[vecDataConvert] only supports float types!");
+		return;
+	}
+	const int sizeSrc = Datatype::size(srcType), sizeDst = Datatype::size(dstType);
+	auto convertFunc = vectorRealConvert<float, float>; // default convert function
+	if (Datatype::isreal(srcType) && Datatype::isreal(dstType))
+	{	// real convert
+		if (sizeSrc == sizeof(float))
+		{
+			if (sizeDst == sizeof(double))
+				convertFunc = vectorRealConvert<float, double>;
+#ifdef HAS_LDBL
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorRealConvert<float, long double>;
+#endif // HAS_LDBL
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+		else if (sizeSrc == sizeof(double))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorRealConvert<double, float>;
+#ifdef HAS_LDBL
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorRealConvert<double, long double>;
+#endif // HAS_LDBL
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+#ifdef HAS_LDBL
+		else if (sizeSrc == sizeof(long double))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorRealConvert<long double, float>;
+			else if (sizeDst == sizeof(double))
+				convertFunc = vectorRealConvert<long double, double>;
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+#endif // HAS_LDBL
+		else
+			UNSUPPORT(vecDataConvert, srcType);
+	}
+	else if (Datatype::isreal(srcType))
+	{	// real to complex
+		if (sizeSrc == sizeof(float))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorRealToComplex<float, float>;
+			else if (sizeDst == sizeof(double))
+				convertFunc = vectorRealToComplex<float, double>;
+#ifdef HAS_LDBL
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorRealToComplex<float, long double>;
+#endif // HAS_LDBL
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+		else if (sizeSrc == sizeof(double))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorRealToComplex<double, float>;
+			if (sizeDst == sizeof(double))
+				convertFunc = vectorRealToComplex<double, double>;
+#ifdef HAS_LDBL
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorRealToComplex<double, long double>;
+#endif // HAS_LDBL
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+#ifdef HAS_LDBL
+		else if (sizeSrc == sizeof(long double))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorRealToComplex<long double, float>;
+			else if (sizeDst == sizeof(double))
+				convertFunc = vectorRealToComplex<long double, double>;
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorRealToComplex<long double, long double>;
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+#endif // HAS_LDBL
+		else
+			UNSUPPORT(vecDataConvert, srcType);
+	}
+	else if (Datatype::isreal(dstType))
+	{	// complex to real, 'toRealByAbs' is only used here
+		if (sizeSrc == sizeof(float))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorComplexToReal<float, float>;
+			else if (sizeDst == sizeof(double))
+				convertFunc = vectorComplexToReal<float, double>;
+#ifdef HAS_LDBL
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorComplexToReal<float, long double>;
+#endif // HAS_LDBL
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+		else if (sizeSrc == sizeof(double))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorComplexToReal<double, float>;
+			if (sizeDst == sizeof(double))
+				convertFunc = vectorComplexToReal<double, double>;
+#ifdef HAS_LDBL
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorComplexToReal<double, long double>;
+#endif // HAS_LDBL
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+#ifdef HAS_LDBL
+		else if (sizeSrc == sizeof(long double))
+		{
+			if (sizeDst == sizeof(float))
+				convertFunc = vectorComplexToReal<long double, float>;
+			else if (sizeDst == sizeof(double))
+				convertFunc = vectorComplexToReal<long double, double>;
+			else if (sizeDst == sizeof(long double))
+				convertFunc = vectorComplexToReal<long double, long double>;
+			else
+				UNSUPPORT(vecDataConvert, dstType);
+		}
+#endif // HAS_LDBL
+		else
+			UNSUPPORT(vecDataConvert, srcType);
+	}
+	else
+	{
+		vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, stride == 1 ? 1 : (2 * stride), true);
+	}
 }
-DLLEXP void vecComplexSingleToReal(float* dest, const complexFloat* src, const size_t N, const unsigned int stride)
-{
-	vecComplexToReal(dest, src, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region dense vector set values with small absolutes to zero
-template<typename T, typename Bound>
+template<typename T>
 struct clipAbs_functor
 {
-	const Bound b;
+	const T b;
 
-	clipAbs_functor(Bound bound) : b(bound) {}
+	clipAbs_functor(T bound) : b(std::abs(bound)) {}
 
 	__host__ __device__ T operator()(const T x) const
 	{
@@ -335,242 +466,219 @@ struct clipAbs_functor
 	}
 };
 
-template<typename T, typename Bound>
-__inline__ void vectorClip(T* a, const Bound threshold, const size_t N, const unsigned int stride)
+template<typename T>
+__inline__ void vectorClip(void* av, const void* threshold, const size_t N, const unsigned int stride)
 {
+	T* a = (T*)av;
+	const T thre = *((const T*)threshold);
 	if (stride == 1)
 	{
-		thrust::transform(THRUST_PAR, a, a + N, a, clipAbs_functor<T, Bound>(threshold));
+		thrust::transform(THRUST_PAR, a, a + N, a, clipAbs_functor<T>(thre));
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
-		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), clipAbs_functor<T, Bound>(threshold));
+		auto strideA = make_strided_range(a, N, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), clipAbs_functor<T>(thre));
 	}
 }
 
-EXTERN_C
-DLLEXP void vecClipS(float* a, const float threshold, const size_t N, const unsigned int stride)
+EXTERN_C DLLEXP
+void vecClip(const Datatype::DataType type, void* a, const void* threshold, const size_t N, const unsigned int stride)
 {
-	vectorClip(a, threshold, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorClip, type, a, threshold, N, stride);
 }
-DLLEXP void vecClipD(double* a, const float threshold, const size_t N, const unsigned int stride)
-{
-	vectorClip(a, (double)threshold, N, stride);
-}
-DLLEXP void vecClipC(complexFloat* a, const float threshold, const size_t N, const unsigned int stride)
-{
-	vectorClip(a, threshold, N, stride);
-}
-DLLEXP void vecClipZ(complexDouble* a, const float threshold, const size_t N, const unsigned int stride)
-{
-	vectorClip(a, (double)threshold, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region int operations
-EXTERN_C
-DLLEXP cudaError intMinMax(const int* v, const size_t N, int& min, int& max)
+EXTERN_C DLLEXP
+ERROR_RETURN intMinMax(const int* v, const size_t N, int& min, int& max)
 {
-	thrust::pair<const int*, const int*> res = thrust::minmax_element(THRUST_PAR, v, v + N);
-	cudaError err = cudaMemcpy(&min, res.first, sizeof(int), cudaMemcpyDeviceToHost);
+	auto result = thrust::minmax_element(THRUST_PAR, v, v + N);
+#ifdef CPU
+	memcpy(&min, result.first, sizeof(int));
+	memcpy(&max, result.second, sizeof(int));
+#else
+	cudaError err = cudaMemcpy(&min, result.first, sizeof(int), cudaMemcpyDeviceToHost);
 	if (err != 0) return err;
-	err = cudaMemcpy(&max, res.second, sizeof(int), cudaMemcpyDeviceToHost);
+	err = cudaMemcpy(&max, result.second, sizeof(int), cudaMemcpyDeviceToHost);
 	return err;
+#endif // CPU
 }
 
-DLLEXP cudaError intMax(const int* v, const size_t N, int& max)
+EXTERN_C DLLEXP
+ERROR_RETURN intMax(const int* v, const size_t N, int& max)
 {
-	const int* res = thrust::max_element(THRUST_PAR, v, v + N);
-	cudaError err = cudaMemcpy(&max, res, sizeof(int), cudaMemcpyDeviceToHost);
+	const int* result = thrust::max_element(THRUST_PAR, v, v + N);
+#ifdef CPU
+	memcpy(&max, result, sizeof(int));
+#else
+	cudaError err = cudaMemcpy(&max, result, sizeof(int), cudaMemcpyDeviceToHost);
 	return err;
+#endif // CPU
 }
 
-DLLEXP int intLowerBound(const int* v, const size_t N, const int lower)
+EXTERN_C DLLEXP
+int intLowerBound(const int* v, const size_t N, const int lower)
 {
 	return thrust::lower_bound(THRUST_PAR, v, v + N, lower) - v;
 }
 
-DLLEXP int intUpperBound(const int* v, const size_t N, const int upper)
+EXTERN_C DLLEXP
+int intUpperBound(const int* v, const size_t N, const int upper)
 {
 	return thrust::upper_bound(THRUST_PAR, v, v + N, upper) - v;
 }
 
-DLLEXP int intFind(const int* v, const size_t N, const int toFind)
+EXTERN_C DLLEXP
+int intFind(const int* v, const size_t N, const int toFind)
 {
 	return thrust::find(THRUST_PAR, v, v + N, toFind) - v;
 }
 
-DLLEXP void intFillRange(int* v, const size_t N, const int start, const int step)
+EXTERN_C DLLEXP
+void intFillRange(int* v, const size_t N, const int start, const int step)
 {
 	thrust::sequence(THRUST_PAR, v, v + N, start, step);
 }
-END_EXTERN_C
 #pragma endregion
 
 
-#pragma region int add scalar
-struct intAddScalar_functor
+#pragma region vector add scalar
+template<typename T>
+struct addScalar_functor
 {
-	const int scalar;
+	const T scalar;
 
-	intAddScalar_functor(const int s) : scalar(s) {}
+	addScalar_functor(const T s) : scalar(s) {}
 
-	__host__ __device__ int operator()(const int x) const
+	__host__ __device__ T operator()(const T x) const
 	{
 		return x + scalar;
 	}
 };
 
-EXTERN_C
-DLLEXP void intAddScalar(int* a, const int scalar, const size_t N, const unsigned int stride)
+template<typename T>
+__inline__ void vectorAddedByScalar(void* av, const void* scalar, const size_t N, const unsigned int stride)
 {
+	T* a = (T*)av;
+	const T s = *((const T*)scalar);
 	if (stride == 1)
 	{
-		thrust::transform(THRUST_PAR, a, a + N, a, intAddScalar_functor(scalar));
+		thrust::transform(THRUST_PAR, a, a + N, a, addScalar_functor<T>(s));
 	}
 	else
 	{
-		StridedRange<const int*> strideA(a, a + N * stride, stride);
-		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), intAddScalar_functor(scalar));
+		auto strideA = make_strided_range(a, N, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), addScalar_functor<T>(s));
 	}
 }
-END_EXTERN_C
+
+EXTERN_C DLLEXP
+void vecAddScalar(const Datatype::DataType type, void* a, const void* scalar, const size_t N, const unsigned int stride)
+{
+	AUTO_ALLTYPE_FUNC(vectorAddedByScalar, type, a, scalar, N, stride);
+}
 #pragma endregion
 
 
 #pragma region vector aggregate -- sum
 template<typename T>
-__inline__ T vectorSum(const T* a, const size_t N, const unsigned int stride)
-{	// the thrust::plus<T> is enough since we have defined operator+ for complex types
+__inline__ T vectorSum(const void* av, const size_t N, const unsigned int stride)
+{
+	const T* a = (const T*)av;
 	if (stride == 1)
 	{
 		return thrust::reduce(THRUST_PAR, a, a + N, T());
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		auto strideA = make_strided_range(a, N, stride);
 		return thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T());
 	}
 }
 
-EXTERN_C
-DLLEXP float vecSumS(const float* a, const size_t N, const unsigned int stride)
+EXTERN_C DLLEXP
+void vecSum(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
 {
-	return vectorSum(a, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorSum, type, a, N, stride);
 }
-DLLEXP double vecSumD(const double* a, const size_t N, const unsigned int stride)
-{
-	return vectorSum(a, N, stride);
-}
-DLLEXP complexFloat vecSumC(const complexFloat* a, const size_t N, const unsigned int stride)
-{
-	return vectorSum(a, N, stride);
-}
-DLLEXP complexDouble vecSumZ(const complexDouble* a, const size_t N, const unsigned int stride)
-{
-	return vectorSum(a, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region vector aggregate -- product
 template<typename T>
-__inline__ T vectorAccumulateProduct(const T* a, const size_t N, const unsigned int stride)
-{	// the thrust::multiplies<T> is enough since we have defined operator* for complex types
+__inline__ T vectorAccumulateProduct(const void* av, const size_t N, const unsigned int stride)
+{
+	const T* a = (const T*)av;
 	if (stride == 1)
 	{
 		return thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::multiplies<T>());
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
+		auto strideA = make_strided_range(a, N, stride);
 		return thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::multiplies<T>());
 	}
 }
 
-EXTERN_C
-DLLEXP float vecProdS(const float* a, const size_t N, const unsigned int stride)
+EXTERN_C DLLEXP
+void vecProd(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
 {
-	return vectorAccumulateProduct(a, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, a, N, stride);
 }
-DLLEXP double vecProdD(const double* a, const size_t N, const unsigned int stride)
-{
-	return vectorAccumulateProduct(a, N, stride);
-}
-DLLEXP complexFloat vecProdC(const complexFloat* a, const size_t N, const unsigned int stride)
-{
-	return vectorAccumulateProduct(a, N, stride);
-}
-DLLEXP complexDouble vecProdZ(const complexDouble* a, const size_t N, const unsigned int stride)
-{
-	return vectorAccumulateProduct(a, N, stride);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region vector aggregate -- partial sum
 template<typename T>
-__inline__ void vectorPartialSum(const T* a, T* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{	// the thrust::plus<T> is enough since we have defined operator+ for complex types
+__inline__ void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	const T* src = (const T*)srcv;
+	T* dst = (T*)dstv;
 	if (stride == 1)
 	{
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, a, a + N, dst);
+			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst);
 		else
-			thrust::exclusive_scan(THRUST_PAR, a, a + N, dst);
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst);
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
-		StridedRange<const T*> strideDst(dst, dst + N * stride, stride);
+		auto strideSrc = make_strided_range(src, N, stride);
+		auto strideDst = make_strided_range(dst, N, stride);
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin());
+			thrust::inclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin());
 		else
-			thrust::exclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin());
+			thrust::exclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin());
 	}
 }
 
-EXTERN_C
-DLLEXP void vecParSumS(const float* a, float* dst, const size_t N, const unsigned int stride, const bool inclusive)
+EXTERN_C DLLEXP
+void vecParSum(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
-	vectorPartialSum(a, dst, N, stride, inclusive);
+	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, src, dst, N, stride, inclusive);
 }
-DLLEXP void vecParSumD(const double* a, double* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{
-	vectorPartialSum(a, dst, N, stride, inclusive);
-}
-DLLEXP void vecParSumC(const complexFloat* a, complexFloat* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{
-	vectorPartialSum(a, dst, N, stride, inclusive);
-}
-DLLEXP void vecParSumZ(const complexDouble* a, complexDouble* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{
-	vectorPartialSum(a, dst, N, stride, inclusive);
-}
-END_EXTERN_C
 #pragma endregion
 
 
 #pragma region vector aggregate -- partial product
 template<typename T>
-__inline__ void vectorPartialProduct(const T* a, T* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{	// the thrust::plus<T> is enough since we have defined operator+ for complex types
+__inline__ void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool inclusive)
+{
+	const T* src = (const T*)srcv;
+	T* dst = (T*)dstv;
 	if (stride == 1)
 	{
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, a, a + N, dst, thrust::multiplies<T>());
+			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst, thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, a, a + N, dst, T(1), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(1), thrust::multiplies<T>());
 	}
 	else
 	{
-		StridedRange<const T*> strideA(a, a + N * stride, stride);
-		StridedRange<const T*> strideDst(dst, dst + N * stride, stride);
+		auto strideSrc = make_strided_range(src, N, stride);
+		auto strideDst = make_strided_range(dst, N, stride);
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), thrust::multiplies<T>());
 		else
@@ -578,22 +686,9 @@ __inline__ void vectorPartialProduct(const T* a, T* dst, const size_t N, const u
 	}
 }
 
-EXTERN_C
-DLLEXP void vecParProdS(const float* a, float* dst, const size_t N, const unsigned int stride, const bool inclusive)
+EXTERN_C DLLEXP
+void vecParProd(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
-	vectorPartialProduct(a, dst, N, stride, inclusive);
+	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, src, dst, N, stride, inclusive);
 }
-DLLEXP void vecParProdD(const double* a, double* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{
-	vectorPartialProduct(a, dst, N, stride, inclusive);
-}
-DLLEXP void vecParProdC(const complexFloat* a, complexFloat* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{
-	vectorPartialProduct(a, dst, N, stride, inclusive);
-}
-DLLEXP void vecParProdZ(const complexDouble* a, complexDouble* dst, const size_t N, const unsigned int stride, const bool inclusive)
-{
-	vectorPartialProduct(a, dst, N, stride, inclusive);
-}
-END_EXTERN_C
 #pragma endregion

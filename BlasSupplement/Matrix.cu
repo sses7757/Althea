@@ -67,7 +67,7 @@ struct intCSRGetNER_functor
 EXTERN_C
 DLLEXP size_t CSRGetNerBuffer(const int rows)
 {
-	return sizeof(int) * rows;
+	return sizeof(int) * (rows - 1);
 }
 
 DLLEXP size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
@@ -200,7 +200,7 @@ namespace GPUVersion
 	{
 		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 	}
-	DLLEXP cudaError matKronC(const complexFloat* A, const int ldA, const int rowsA, const int colsA, const complexFloat* B, const int ldB, const int rowsB, const int colsB, complexFloat* dest, const int ldD, const complexFloat alpha, const complexFloat beta)
+	DLLEXP cudaError matKronC(const complexSingle* A, const int ldA, const int rowsA, const int colsA, const complexSingle* B, const int ldB, const int rowsB, const int colsB, complexSingle* dest, const int ldD, const complexSingle alpha, const complexSingle beta)
 	{
 		return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 	}
@@ -264,7 +264,7 @@ DLLEXP cudaError matUpCpyLowD(double* A, const int ld, const int rows)
 {
 	return matrixUpperCopyToLower(A, ld, rows);
 }
-DLLEXP cudaError matUpCpyLowC(complexFloat* A, const int ld, const int rows)
+DLLEXP cudaError matUpCpyLowC(complexSingle* A, const int ld, const int rows)
 {
 	return matrixUpperCopyToLower(A, ld, rows);
 }
@@ -333,9 +333,9 @@ DLLEXP cudaError spVecOuterD(
 	return sparseVectorsOuter(valA, indA, nnzA, valB, indB, nnzB, C, rowC, colC, conj);
 }
 DLLEXP cudaError spVecOuterC(
-	const complexFloat* valA, const int* indA, const size_t nnzA,
-	const complexFloat* valB, const int* indB, const size_t nnzB,
-	complexFloat* C, int* rowC, int* colC, const bool conj)
+	const complexSingle* valA, const int* indA, const size_t nnzA,
+	const complexSingle* valB, const int* indB, const size_t nnzB,
+	complexSingle* C, int* rowC, int* colC, const bool conj)
 {
 	return sparseVectorsOuter(valA, indA, nnzA, valB, indB, nnzB, C, rowC, colC, conj);
 }
@@ -402,9 +402,9 @@ DLLEXP cudaError cooMatKronD(
 	return cooMatricesKronecker(valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, ldB, sdB, valC, rowC, colC);
 }
 DLLEXP cudaError cooMatKronC(
-	const complexFloat* valA, const int* rowA, const int* colA, const size_t nnzA,
-	const complexFloat* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t ldB, const size_t sdB,
-	complexFloat* valC, int* rowC, int* colC)
+	const complexSingle* valA, const int* rowA, const int* colA, const size_t nnzA,
+	const complexSingle* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t ldB, const size_t sdB,
+	complexSingle* valC, int* rowC, int* colC)
 {
 	return cooMatricesKronecker(valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, ldB, sdB, valC, rowC, colC);
 }
@@ -546,7 +546,7 @@ DLLEXP void matKronD(const double* A, const int ldA, const int rowsA, const int 
 {
 	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
-DLLEXP void matKronC(const complexFloat* A, const int ldA, const int rowsA, const int colsA, const complexFloat* B, const int ldB, const int rowsB, const int colsB, complexFloat* dest, const int ldD, const complexFloat alpha, const complexFloat beta)
+DLLEXP void matKronC(const complexSingle* A, const int ldA, const int rowsA, const int colsA, const complexSingle* B, const int ldB, const int rowsB, const int colsB, complexSingle* dest, const int ldD, const complexSingle alpha, const complexSingle beta)
 {
 	return matricesKronecker(A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }

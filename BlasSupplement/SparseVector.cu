@@ -18,7 +18,7 @@ DLLEXP void vecSetValAtD(double* a, const double v, const int* pos, const size_t
 {
 	vectorSetValuesAt(a, v, pos, posN);
 }
-DLLEXP void vecSetValAtC(complexFloat* a, const complexFloat v, const int* pos, const size_t posN)
+DLLEXP void vecSetValAtC(complexSingle* a, const complexSingle v, const int* pos, const size_t posN)
 {
 	vectorSetValuesAt(a, v, pos, posN);
 }
@@ -44,11 +44,10 @@ struct floatAboveThreshold_functor
 };
 
 // dense vector prune to sparse vector -- get buffer size
-extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const DataType type)
+extern "C" DLLEXP size_t vecPruneBuffer(const size_t N, const Datatype::DataType type)
 {
 	size_t res = sizeof(int) * N; // max size for possible indices
-	int sizeofType = (int)((type & DataType::ByteMask) >> DataType::ByteMaskStart);
-	res += sizeofType * N; // size for temporary values
+	res += Datatype::size(type) * N; // size for temporary values
 	return res;
 }
 
@@ -78,7 +77,7 @@ DLLEXP size_t vecPruneNnzD(const double* v, const float threshold, const size_t 
 {
 	return vecPruneNonZeros(v, (double)threshold, N, buffer);
 }
-DLLEXP size_t vecPruneNnzC(const complexFloat* v, const float threshold, const size_t N, void* buffer)
+DLLEXP size_t vecPruneNnzC(const complexSingle* v, const float threshold, const size_t N, void* buffer)
 {
 	return vecPruneNonZeros(v, threshold, N, buffer);
 }
@@ -119,7 +118,7 @@ DLLEXP ERROR_RETURN vecPruneCalD(const size_t N, void* buffer, size_t nnz, int* 
 {
 	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
-DLLEXP ERROR_RETURN vecPruneCalC(const size_t N, void* buffer, size_t nnz, int* indexOut, complexFloat* valueOut)
+DLLEXP ERROR_RETURN vecPruneCalC(const size_t N, void* buffer, size_t nnz, int* indexOut, complexSingle* valueOut)
 {
 	return vecPruneCalculate(N, buffer, nnz, indexOut, valueOut);
 }
@@ -154,7 +153,7 @@ DLLEXP void vecSpMulDivDnD(double* sparse, const int* index, const size_t nnz, c
 {
 	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
-DLLEXP void vecSpMulDivDnC(complexFloat* sparse, const int* index, const size_t nnz, const complexFloat* dense, bool multiply)
+DLLEXP void vecSpMulDivDnC(complexSingle* sparse, const int* index, const size_t nnz, const complexSingle* dense, bool multiply)
 {
 	vectorSparseMultipliedDividedByDense(sparse, index, nnz, dense, multiply);
 }
@@ -168,12 +167,11 @@ END_EXTERN_C
 
 #pragma region sparse vector add sparse vector vecSpAdd
 // sparse vector add another sparse vector -- get buffer size
-extern "C" DLLEXP size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const DataType type)
+extern "C" DLLEXP size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const Datatype::DataType type)
 {
 	size_t N = nnzA + nnzB;
 	size_t res = sizeof(int) * N; // size for temporary indices
-	int sizeofType = (int)((type & DataType::ByteMask) >> DataType::ByteMaskStart);
-	res += sizeofType * N; // size for temporary values
+	res += Datatype::size(type) * N; // size for temporary values
 	return res;
 }
 
@@ -232,7 +230,7 @@ DLLEXP size_t vecSpAddNnzD(const int* indA, const double* valA, const size_t nnz
 {
 	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
-DLLEXP size_t vecSpAddNnzC(const int* indA, const complexFloat* valA, const size_t nnzA, const int* indB, const complexFloat* valB, const size_t nnzB, const complexFloat alpha, void* buffer)
+DLLEXP size_t vecSpAddNnzC(const int* indA, const complexSingle* valA, const size_t nnzA, const int* indB, const complexSingle* valB, const size_t nnzB, const complexSingle alpha, void* buffer)
 {
 	return vectorSparseAddGetNonzero(indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
@@ -313,7 +311,7 @@ DLLEXP void vecDnAddSpD(double* dense, const double* sparse, const int* index, c
 {
 	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
-DLLEXP void vecDnAddSpC(complexFloat* dense, const complexFloat* sparse, const int* index, const size_t nnz, const complexFloat alpha)
+DLLEXP void vecDnAddSpC(complexSingle* dense, const complexSingle* sparse, const int* index, const size_t nnz, const complexSingle alpha)
 {
 	vectorDenseAddBySparse(dense, sparse, index, nnz, alpha);
 }
