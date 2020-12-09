@@ -13,12 +13,12 @@
 
 
 // CUDA includes
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 // math and complex
 #include <math.h>
 #include <complex>
-#include "cuComplex.h"
 
 #include <thrust/fill.h>
 #include <thrust/extrema.h>
@@ -107,3 +107,58 @@ namespace std
 	__host__ __device__ static inline constexpr unsigned long abs(const unsigned long a) { return a; }
 	__host__ __device__ static inline constexpr unsigned long long abs(const unsigned long long a) { return a; }
 }
+
+
+#pragma region stride range
+// stride range iterator class from NVIDIA/thrust/examples/strided_range.cu
+template <typename Iterator>
+class StridedRange
+{
+public:
+
+	typedef typename thrust::iterator_difference<Iterator>::type difference_type;
+
+	struct stride_functor : public thrust::unary_function<difference_type, difference_type>
+	{
+		const difference_type stride;
+		stride_functor(const difference_type stride) : stride(stride) {}
+
+		__host__ __device__ difference_type operator()(const difference_type& i) const
+		{
+			return stride * i;
+		}
+	};
+
+	typedef typename thrust::counting_iterator<difference_type>                   CountingIterator;
+	typedef typename thrust::transform_iterator<stride_functor, CountingIterator> TransformIterator;
+	typedef typename thrust::permutation_iterator<Iterator, TransformIterator>    PermutationIterator;
+
+	// type of the strided_range iterator
+	typedef PermutationIterator iterator;
+
+	// construct strided_range for the range [first,last)
+	StridedRange(Iterator first, Iterator last, difference_type stride)
+		: first(first), last(last), stride(stride) {}
+
+	iterator begin(void) const
+	{
+		return PermutationIterator(first, TransformIterator(CountingIterator(0), stride_functor(stride)));
+	}
+
+	iterator end(void) const
+	{
+		return begin() + ((last - first) + (stride - 1)) / stride;
+	}
+
+protected:
+	Iterator first;
+	Iterator last;
+	difference_type stride;
+};
+
+template <typename Iterator>
+inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, const StridedRange<Iterator>::difference_type stride)
+{
+	return StridedRange<Iterator>(it, it + N * stride, stride);
+}
+#pragma endregion

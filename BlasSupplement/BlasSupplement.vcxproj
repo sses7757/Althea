@@ -58,6 +58,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\lib\intel64_win;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\lib\intel64_win;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

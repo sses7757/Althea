@@ -97,10 +97,8 @@ DLLEXP ERROR_RETURN CSRGetNerCal(const int* buffer, size_t nnz, int* nerOut)
 #pragma endregion
 
 
+// TODO: test speed of outer in https://stackoverflow.com/questions/41794068/call-functor-for-all-combinations-in-cuda-thrust compared with CUDA
 
-#ifdef CPU
-
-#else
 
 template <typename Func>
 inline static cudaError calc2DKernelPara(size_t nx, size_t ny, Func ker, dim3& dimBlock, dim3& dimGrid)
@@ -211,36 +209,50 @@ namespace GPUVersion
 #pragma endregion
 
 
-#pragma region upper copy to lower matUpCpyLow (GPU version)
+#pragma region make matrix Hermitian by copying its upper part to its lower part (GPU version)
+#ifdef CPU
+
+
+#else
+
 template<typename T>
 __global__ void upperCopyToLowerKernel(T* a, const int ld, const int rows)
 {
-	const int n = blockIdx.x * blockDim.x + threadIdx.x;
-	const int m = blockIdx.y * blockDim.y + threadIdx.y;
-	if (n < rows && m < rows && n < m)
-	{
-		if constexpr (std::is_scalar_v<T>)
-		{
-			a[n * ld + m] = std::conjAllCase(a[m * ld + n]);
-		}
-		else
-		{
-			if (n < m)
-			{
-				a[n * ld + m] = std::conjAllCase(a[m * ld + n]);
-			}
-			else if (n == m)
-			{
-				const int idx = n * ld + m;
-				a[idx] = std::conjAllCase(a[idx]);
-			}
-		}
-	}
+	constexpr int TILE_DIM = 256 / sizeof(T);
+
+	const int x = blockIdx.x * TILE_DIM + threadIdx.x;
+	const int y = blockIdx.y * TILE_DIM + threadIdx.y;
+
+	if (x >= rows || x >= y)
+		return;
+
+	__shared__ T tile[TILE_DIM][TILE_DIM + 1];
+
+	for (int j = 0; j < TILE_DIM; j++)
+		tile[threadIdx.y][threadIdx.x + j] = a[y * ld + (x + j)];
+
+	__syncthreads(); // the tile is now filled by different threads
+
+	for (int j = 0; j < TILE_DIM; j++)
+		a[(x + j) * ld + y] = std::conjAllCase(tile[threadIdx.x + j][threadIdx.y]);
 }
 
-template<typename T>
-cudaError matrixUpperCopyToLower(T* A, const int ld, const int rows)
+
+
+template <typename T>
+struct complexOnlyRealPart_functor
 {
+	__host__ __device__ T operator()(const T x) const
+	{
+		return T(x.real());
+	}
+};
+
+
+template<typename T>
+cudaError matrixMakeHermitianGPU(void* Av, const int ld, const int rows)
+{
+	T* A = (T*)Av;
 	auto ker = upperCopyToLowerKernel<T>;
 
 	dim3 dimBlock, dimGrid;
@@ -249,25 +261,25 @@ cudaError matrixUpperCopyToLower(T* A, const int ld, const int rows)
 		return err;
 
 	ker<<<dimGrid, dimBlock>>>(A, ld, rows);
+	err = cudaDeviceSynchronize();
+	if (err != cudaError::cudaSuccess)
+		return err;
+
+	if constexpr (!std::is_scalar_v<T>)
+	{	// set the diagonal elements' imaginary parts to zero
+		auto strideA = make_strided_range(A, rows, ld + 1);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), complexOnlyRealPart_functor<T>());
+	}
 
 	return err;
 }
+#endif // CPU
 
-DLLEXP cudaError matUpCpyLowS(float* A, const int ld, const int rows)
+
+DLLEXP
+ERROR_RETURN matMakeHerm(const Datatype::DataType type, void* A, const int ld, const int rows)
 {
-	return matrixUpperCopyToLower(A, ld, rows);
-}
-DLLEXP cudaError matUpCpyLowD(double* A, const int ld, const int rows)
-{
-	return matrixUpperCopyToLower(A, ld, rows);
-}
-DLLEXP cudaError matUpCpyLowC(complexSingle* A, const int ld, const int rows)
-{
-	return matrixUpperCopyToLower(A, ld, rows);
-}
-DLLEXP cudaError matUpCpyLowZ(complexDouble* A, const int ld, const int rows)
-{
-	return matrixUpperCopyToLower(A, ld, rows);
+	AUTO_SIGNED_TYPE_FUNC(matrixMakeHermitianGPU, type, A, ld, rows);
 }
 #pragma endregion
 
@@ -410,7 +422,6 @@ DLLEXP cudaError cooMatKronZ(
 }
 #pragma endregion
 
-#endif // CPU
 
 
 
@@ -543,33 +554,4 @@ void matKron(const Datatype::DataType type,
 {
 	AUTO_ALLTYPE_FUNC(matricesKronecker, type, A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
-#pragma endregion
-
-
-#pragma region make matrix Hermitian by copying its upper part to its lower part
-template<typename T, bool largerLeadDim>
-struct copyToLower_functor
-{
-	const int ld, rows;
-	copyToLower_functor(const int ld, const int rows) : ld(ld), rows(rows) {}
-
-	__host__ __device__ T operator()(const T val, const int pos) const
-	{
-		int x = pos % ld;
-		if constexpr (largerLeadDim)
-		{
-			if (x >= rows)
-				return val;
-		}
-		int y = pos / ld;
-		if constexpr (!std::is_scalar_v<T>)
-		{
-			if (x == y)
-				return T(val.real());
-		}
-		if (x > y)
-			return 
-	}
-};
-
 #pragma endregion

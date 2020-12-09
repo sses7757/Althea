@@ -2,7 +2,7 @@
 #include "macro.h"
 
 
-#pragma region get properties
+#pragma region get GPU properties
 DLLEXP
 cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
 {
@@ -14,60 +14,6 @@ cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
 }
 #pragma endregion
 
-
-#pragma region stride range
-// stride range iterator class from NVIDIA/thrust/examples/strided_range.cu
-template <typename Iterator>
-class StridedRange
-{
-public:
-
-	typedef typename thrust::iterator_difference<Iterator>::type difference_type;
-
-	struct stride_functor : public thrust::unary_function<difference_type, difference_type>
-	{
-		const difference_type stride;
-		stride_functor(const difference_type stride) : stride(stride) {}
-
-		__host__ __device__ difference_type operator()(const difference_type& i) const
-		{
-			return stride * i;
-		}
-	};
-
-	typedef typename thrust::counting_iterator<difference_type>                   CountingIterator;
-	typedef typename thrust::transform_iterator<stride_functor, CountingIterator> TransformIterator;
-	typedef typename thrust::permutation_iterator<Iterator, TransformIterator>    PermutationIterator;
-
-	// type of the strided_range iterator
-	typedef PermutationIterator iterator;
-
-	// construct strided_range for the range [first,last)
-	StridedRange(Iterator first, Iterator last, difference_type stride)
-		: first(first), last(last), stride(stride) {}
-
-	iterator begin(void) const
-	{
-		return PermutationIterator(first, TransformIterator(CountingIterator(0), stride_functor(stride)));
-	}
-
-	iterator end(void) const
-	{
-		return begin() + ((last - first) + (stride - 1)) / stride;
-	}
-
-protected:
-	Iterator first;
-	Iterator last;
-	difference_type stride;
-};
-
-template <typename Iterator>
-inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, const StridedRange<Iterator>::difference_type stride)
-{
-	return StridedRange<Iterator>(it, it + N * stride, stride);
-}
-#pragma endregion
 
 
 #pragma region element-wise multiply and divide
@@ -193,7 +139,7 @@ inline void vecConjugate(void* av, const size_t N, const unsigned int stride)
 DLLEXP
 void vecConj(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
 {
-	AUTO_ALL_SIGNED_TYPE_FUNC(vecConjugate, type, a, N, stride);
+	AUTO_SIGNED_TYPE_FUNC(vecConjugate, type, a, N, stride);
 }
 #pragma endregion
 
@@ -289,7 +235,6 @@ inline void vectorRealConvert(const void* srcv, void* dstv, const size_t N, cons
 	}
 }
 
-// TODO: could support integer types
 DLLEXP
 void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType dstType, const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
@@ -310,142 +255,186 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 		return;
 	}
 
+// define inner switch
+#ifndef HAS_LDBL
+#define CONVERT_INNER_SWITCH(type, convert) do { \
+		switch (dstType) \
+		{ \
+		case Datatype::RealSingle: \
+		case Datatype::ComplexSingle: \
+			convertFunc = convert<type, float>; break; \
+		case Datatype::RealDouble: \
+		case Datatype::ComplexDouble: \
+			convertFunc = convert<type, double>; break; \
+		case Datatype::RealInt8: \
+		case Datatype::ComplexInt8: \
+			convertFunc = convert<type, char>; break; \
+		case Datatype::RealInt16: \
+		case Datatype::ComplexInt16: \
+			convertFunc = convert<type, short>; break; \
+		case Datatype::RealInt32: \
+		case Datatype::ComplexInt32: \
+			convertFunc = convert<type, int>; break; \
+		case Datatype::RealInt64: \
+		case Datatype::ComplexInt64: \
+			convertFunc = convert<type, long long>; break; \
+		case Datatype::RealUInt8: \
+		case Datatype::ComplexUInt8: \
+			convertFunc = convert<type, unsigned char>; break; \
+		case Datatype::RealUInt16: \
+		case Datatype::ComplexUInt16: \
+			convertFunc = convert<type, unsigned short>; break; \
+		case Datatype::RealUInt32: \
+		case Datatype::ComplexUInt32: \
+			convertFunc = convert<type, unsigned int>; break; \
+		case Datatype::RealUInt64: \
+		case Datatype::ComplexUInt64: \
+			convertFunc = convert<type, unsigned long long>; break; \
+		default: \
+			UNSUPPORT(vecDataConvert, dstType); \
+		} \
+	} while (0)
+#else
+#define CONVERT_INNER_SWITCH(type, convert) do { \
+		switch (dstType) \
+		{ \
+		case Datatype::RealSingle: \
+		case Datatype::ComplexSingle: \
+			convertFunc = convert<type, float>; break; \
+		case Datatype::RealDouble: \
+		case Datatype::ComplexDouble: \
+			convertFunc = convert<type, double>; break; \
+		case Datatype::RealLongDouble: \
+		case Datatype::ComplexLongDouble: \
+			convertFunc = convert<type, long double>; break; \
+		case Datatype::RealInt8: \
+		case Datatype::ComplexInt8: \
+			convertFunc = convert<type, char>; break; \
+		case Datatype::RealInt16: \
+		case Datatype::ComplexInt16: \
+			convertFunc = convert<type, short>; break; \
+		case Datatype::RealInt32: \
+		case Datatype::ComplexInt32: \
+			convertFunc = convert<type, int>; break; \
+		case Datatype::RealInt64: \
+		case Datatype::ComplexInt64: \
+			convertFunc = convert<type, long long>; break; \
+		case Datatype::RealUInt8: \
+		case Datatype::ComplexUInt8: \
+			convertFunc = convert<type, unsigned char>; break; \
+		case Datatype::RealUInt16: \
+		case Datatype::ComplexUInt16: \
+			convertFunc = convert<type, unsigned short>; break; \
+		case Datatype::RealUInt32: \
+		case Datatype::ComplexUInt32: \
+			convertFunc = convert<type, unsigned int>; break; \
+		case Datatype::RealUInt64: \
+		case Datatype::ComplexUInt64: \
+			convertFunc = convert<type, unsigned long long>; break; \
+		default: \
+			UNSUPPORT(vecDataConvert, dstType); \
+		} \
+	} while (0)
+#endif
+
+// define outer switch
+#ifndef HAS_LDBL
+#define CONVERT_OUTER_SWITCH(convert) do { \
+		switch (srcType) \
+		{ \
+		case Datatype::RealSingle: \
+		case Datatype::ComplexSingle: \
+			CONVERT_INNER_SWITCH(float, convert); break; \
+		case Datatype::RealDouble: \
+		case Datatype::ComplexDouble: \
+			CONVERT_INNER_SWITCH(double, convert); break; \
+		case Datatype::RealInt8: \
+		case Datatype::ComplexInt8: \
+			CONVERT_INNER_SWITCH(char, convert); break; \
+		case Datatype::RealInt16: \
+		case Datatype::ComplexInt16: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealInt32: \
+		case Datatype::ComplexInt32: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealInt64: \
+		case Datatype::ComplexInt64: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt8: \
+		case Datatype::ComplexUInt8: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt16: \
+		case Datatype::ComplexUInt16: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt32: \
+		case Datatype::ComplexUInt32: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt64: \
+		case Datatype::ComplexUInt64: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		default: \
+			UNSUPPORT(vecDataConvert, srcType); \
+		} \
+	} while (0)
+#else
+#define CONVERT_OUTER_SWITCH(convert) do { \
+		switch (srcType) \
+		{ \
+		case Datatype::RealSingle: \
+		case Datatype::ComplexSingle: \
+			CONVERT_INNER_SWITCH(float, convert); break; \
+		case Datatype::RealDouble: \
+		case Datatype::ComplexDouble: \
+			CONVERT_INNER_SWITCH(double, convert); break; \
+		case Datatype::RealLongDouble: \
+		case Datatype::ComplexLongDouble: \
+			CONVERT_INNER_SWITCH(long double, convert); break; \
+		case Datatype::RealInt8: \
+		case Datatype::ComplexInt8: \
+			CONVERT_INNER_SWITCH(char, convert); break; \
+		case Datatype::RealInt16: \
+		case Datatype::ComplexInt16: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealInt32: \
+		case Datatype::ComplexInt32: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealInt64: \
+		case Datatype::ComplexInt64: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt8: \
+		case Datatype::ComplexUInt8: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt16: \
+		case Datatype::ComplexUInt16: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt32: \
+		case Datatype::ComplexUInt32: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		case Datatype::RealUInt64: \
+		case Datatype::ComplexUInt64: \
+			CONVERT_INNER_SWITCH(short, convert); break; \
+		default: \
+			UNSUPPORT(vecDataConvert, srcType); \
+		} \
+	} while (0)
+#endif
+
 	// otherwise
-	if (!Datatype::isfloat(srcType) || !Datatype::isfloat(dstType))
-	{
-		printf("[vecDataConvert] only supports float types!");
-		return;
-	}
-	const int sizeSrc = Datatype::size(srcType), sizeDst = Datatype::size(dstType);
 	auto convertFunc = vectorRealConvert<float, float>; // default convert function
 	if (Datatype::isreal(srcType) && Datatype::isreal(dstType))
 	{	// real convert
-		if (sizeSrc == sizeof(float))
-		{
-			if (sizeDst == sizeof(double))
-				convertFunc = vectorRealConvert<float, double>;
-#ifdef HAS_LDBL
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorRealConvert<float, long double>;
-#endif // HAS_LDBL
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-		else if (sizeSrc == sizeof(double))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorRealConvert<double, float>;
-#ifdef HAS_LDBL
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorRealConvert<double, long double>;
-#endif // HAS_LDBL
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-#ifdef HAS_LDBL
-		else if (sizeSrc == sizeof(long double))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorRealConvert<long double, float>;
-			else if (sizeDst == sizeof(double))
-				convertFunc = vectorRealConvert<long double, double>;
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-#endif // HAS_LDBL
-		else
-			UNSUPPORT(vecDataConvert, srcType);
+		CONVERT_OUTER_SWITCH(vectorRealConvert);
 	}
 	else if (Datatype::isreal(srcType))
 	{	// real to complex
-		if (sizeSrc == sizeof(float))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorRealToComplex<float, float>;
-			else if (sizeDst == sizeof(double))
-				convertFunc = vectorRealToComplex<float, double>;
-#ifdef HAS_LDBL
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorRealToComplex<float, long double>;
-#endif // HAS_LDBL
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-		else if (sizeSrc == sizeof(double))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorRealToComplex<double, float>;
-			if (sizeDst == sizeof(double))
-				convertFunc = vectorRealToComplex<double, double>;
-#ifdef HAS_LDBL
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorRealToComplex<double, long double>;
-#endif // HAS_LDBL
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-#ifdef HAS_LDBL
-		else if (sizeSrc == sizeof(long double))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorRealToComplex<long double, float>;
-			else if (sizeDst == sizeof(double))
-				convertFunc = vectorRealToComplex<long double, double>;
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorRealToComplex<long double, long double>;
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-#endif // HAS_LDBL
-		else
-			UNSUPPORT(vecDataConvert, srcType);
+		CONVERT_OUTER_SWITCH(vectorRealToComplex);
 	}
 	else if (Datatype::isreal(dstType))
 	{	// complex to real, 'toRealByAbs' is only used here
-		if (sizeSrc == sizeof(float))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorComplexToReal<float, float>;
-			else if (sizeDst == sizeof(double))
-				convertFunc = vectorComplexToReal<float, double>;
-#ifdef HAS_LDBL
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorComplexToReal<float, long double>;
-#endif // HAS_LDBL
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-		else if (sizeSrc == sizeof(double))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorComplexToReal<double, float>;
-			if (sizeDst == sizeof(double))
-				convertFunc = vectorComplexToReal<double, double>;
-#ifdef HAS_LDBL
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorComplexToReal<double, long double>;
-#endif // HAS_LDBL
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-#ifdef HAS_LDBL
-		else if (sizeSrc == sizeof(long double))
-		{
-			if (sizeDst == sizeof(float))
-				convertFunc = vectorComplexToReal<long double, float>;
-			else if (sizeDst == sizeof(double))
-				convertFunc = vectorComplexToReal<long double, double>;
-			else if (sizeDst == sizeof(long double))
-				convertFunc = vectorComplexToReal<long double, long double>;
-			else
-				UNSUPPORT(vecDataConvert, dstType);
-		}
-#endif // HAS_LDBL
-		else
-			UNSUPPORT(vecDataConvert, srcType);
+		CONVERT_OUTER_SWITCH(vectorComplexToReal);
 	}
 	else
-	{
+	{	// all complex, use the real convert of each part instead
 		vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, stride == 1 ? 1 : (2 * stride), true);
 	}
 }
@@ -599,48 +588,50 @@ void vecAddScalar(const Datatype::DataType type, void* a, const void* scalar, co
 
 #pragma region vector aggregate -- sum
 template<typename T>
-inline T vectorSum(const void* av, const size_t N, const unsigned int stride)
+inline void vectorSum(const void* av, const size_t N, const unsigned int stride, void* outv)
 {
 	const T* a = (const T*)av;
+	T* outSum = (T*)outv;
 	if (stride == 1)
 	{
-		return thrust::reduce(THRUST_PAR, a, a + N, T());
+		*outSum = thrust::reduce(THRUST_PAR, a, a + N, T());
 	}
 	else
 	{
 		auto strideA = make_strided_range(a, N, stride);
-		return thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T());
+		*outSum = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T());
 	}
 }
 
 DLLEXP
-void vecSum(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
+void vecSum(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outSum)
 {
-	AUTO_ALLTYPE_FUNC(vectorSum, type, a, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorSum, type, a, N, stride, outSum);
 }
 #pragma endregion
 
 
 #pragma region vector aggregate -- product
 template<typename T>
-inline T vectorAccumulateProduct(const void* av, const size_t N, const unsigned int stride)
+inline void vectorAccumulateProduct(const void* av, const size_t N, const unsigned int stride, void* outv)
 {
 	const T* a = (const T*)av;
+	T* outProd = (T*)outv;
 	if (stride == 1)
 	{
-		return thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::multiplies<T>());
+		*outProd = thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::multiplies<T>());
 	}
 	else
 	{
 		auto strideA = make_strided_range(a, N, stride);
-		return thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::multiplies<T>());
+		*outProd = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::multiplies<T>());
 	}
 }
 
 DLLEXP
-void vecProd(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
+void vecProd(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outProd)
 {
-	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, a, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, a, N, stride, outProd);
 }
 #pragma endregion
 

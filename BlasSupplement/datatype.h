@@ -381,7 +381,7 @@ namespace Datatype
 
 // automatically generate float and signed integer type switch functions
 #ifndef HAS_LDBL
-#define AUTO_ALL_SIGNED_TYPE_FUNC(funcName, type, ...) do { \
+#define AUTO_SIGNED_TYPE_FUNC(funcName, type, ...) do { \
 		switch (type) \
 		{ \
 		case Datatype::RealSingle: \
