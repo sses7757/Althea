@@ -3,6 +3,7 @@
 
 
 #pragma region get GPU properties
+#ifndef CPU
 DLLEXP
 cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
 {
@@ -12,6 +13,8 @@ cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
 	major = prop.major; minor = prop.minor;
 	return err;
 }
+#endif // !CPU
+
 #pragma endregion
 
 
@@ -43,7 +46,7 @@ inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const siz
 DLLEXP
 void vecEWMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int stride, bool multiply)
 {
-	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, a, b, N, stride, multiply);
+	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, void, a, b, N, stride, multiply);
 }
 #pragma endregion
 
@@ -81,20 +84,20 @@ inline void vectorElementWisePower(void* av, const void* pv, const size_t N, con
 DLLEXP
 void vecEWPow(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
 {
-	AUTO_FLOAT_FUNC(vectorElementWisePower, type, a, p, N, stride);
+	AUTO_FLOAT_FUNC(vectorElementWisePower, type, void, a, p, N, stride);
 }
 #pragma endregion
 
 
 #pragma region fill array with value
 template<typename T>
-inline void vectorFillWith(void* av, const void* val, const size_t N, const unsigned int stride)
+inline void vectorFillWith(void* av, const void* valv, const size_t N, const unsigned int stride)
 {
 	T* a = (T*)av;
-	T v = *(T*)val;
+	T val = *(T*)valv;
 	if (stride == 1)
 	{
-		thrust::fill_n(THRUST_PAR, a, N, v);
+		thrust::fill_n(THRUST_PAR, a, N, val);
 	}
 	else
 	{
@@ -106,7 +109,7 @@ inline void vectorFillWith(void* av, const void* val, const size_t N, const unsi
 DLLEXP
 void fillVal(const Datatype::DataType type, void* a, const void* val, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorFillWith, type, a, val, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorFillWith, type, void, a, val, N, stride);
 }
 #pragma endregion
 
@@ -117,7 +120,7 @@ struct floatConjugate_functor
 {
 	__host__ __device__ T operator()(const T x) const
 	{
-		return std::conjAllCase(x);
+		return std::conj(x);
 	}
 };
 
@@ -139,7 +142,7 @@ inline void vecConjugate(void* av, const size_t N, const unsigned int stride)
 DLLEXP
 void vecConj(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
 {
-	AUTO_SIGNED_TYPE_FUNC(vecConjugate, type, a, N, stride);
+	AUTO_SIGNED_TYPE_FUNC(vecConjugate, type, void, a, N, stride);
 }
 #pragma endregion
 
@@ -156,15 +159,15 @@ struct realTypeConvert_functor
 template <typename RealIn, typename RealOut>
 struct realToComplex_functor
 {
-	__host__ __device__ std::complex<RealOut> operator()(const RealIn x) const
+	__host__ __device__ BlasSupp::complex<RealOut> operator()(const RealIn x) const
 	{
-		return std::complex<RealOut>((RealOut)x);
+		return BlasSupp::complex<RealOut>((RealOut)x);
 	}
 };
 template <typename RealIn, typename RealOut>
 struct complexToRealAbs_functor
 {
-	__host__ __device__ RealOut operator()(const std::complex<RealIn> x) const
+	__host__ __device__ RealOut operator()(const BlasSupp::complex<RealIn> x) const
 	{
 		return (RealOut)std::abs(x);
 	}
@@ -172,7 +175,7 @@ struct complexToRealAbs_functor
 template <typename RealIn, typename RealOut>
 struct complexToRealPart_functor
 {
-	__host__ __device__ RealOut operator()(const std::complex<RealIn> x) const
+	__host__ __device__ RealOut operator()(const BlasSupp::complex<RealIn> x) const
 	{
 		return (RealOut)x.real();
 	}
@@ -181,7 +184,7 @@ struct complexToRealPart_functor
 template <typename RealIn, typename RealOut>
 inline void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
-	const std::complex<RealIn>* src = (const std::complex<RealIn>*)srcv;
+	const BlasSupp::complex<RealIn>* src = (const BlasSupp::complex<RealIn>*)srcv;
 	RealOut* dst = (RealOut*)dstv;
 	if (stride == 1)
 	{
@@ -205,7 +208,7 @@ template <typename RealIn, typename RealOut>
 inline void vectorRealToComplex(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
 	const RealIn* src = (const RealIn*)srcv;
-	std::complex<RealOut>* dst = (std::complex<RealOut>*)dstv;
+	BlasSupp::complex<RealOut>* dst = (BlasSupp::complex<RealOut>*)dstv;
 	if (stride == 1)
 	{
 		thrust::transform(THRUST_PAR, src, src + N, dst, realToComplex_functor<RealIn, RealOut>());
@@ -247,9 +250,11 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 		}
 		else
 		{
-			size_t NN = N * Datatype::size(srcType);
-			auto strideSrc = make_strided_range((const char*)src, NN, stride);
-			auto strideDst = make_strided_range((char*)dst, NN, stride);
+			// TODO
+			const size_t NN = N * Datatype::size(srcType);
+			const size_t SS = (size_t)stride * Datatype::size(srcType);
+			auto strideSrc = make_strided_range((const char*)src, NN, SS);
+			auto strideDst = make_strided_range((char*)dst, NN, SS);
 			thrust::copy(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst);
 		}
 		return;
@@ -291,7 +296,7 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 		case Datatype::ComplexUInt64: \
 			convertFunc = convert<type, unsigned long long>; break; \
 		default: \
-			UNSUPPORT(vecDataConvert, dstType); \
+			UNSUPPORT(vecDataConvert, dstType, void); \
 		} \
 	} while (0)
 #else
@@ -332,7 +337,7 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 		case Datatype::ComplexUInt64: \
 			convertFunc = convert<type, unsigned long long>; break; \
 		default: \
-			UNSUPPORT(vecDataConvert, dstType); \
+			UNSUPPORT(vecDataConvert, dstType, void); \
 		} \
 	} while (0)
 #endif
@@ -373,7 +378,7 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 		case Datatype::ComplexUInt64: \
 			CONVERT_INNER_SWITCH(short, convert); break; \
 		default: \
-			UNSUPPORT(vecDataConvert, srcType); \
+			UNSUPPORT(vecDataConvert, srcType, void); \
 		} \
 	} while (0)
 #else
@@ -414,7 +419,7 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 		case Datatype::ComplexUInt64: \
 			CONVERT_INNER_SWITCH(short, convert); break; \
 		default: \
-			UNSUPPORT(vecDataConvert, srcType); \
+			UNSUPPORT(vecDataConvert, srcType, void); \
 		} \
 	} while (0)
 #endif
@@ -435,7 +440,21 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 	}
 	else
 	{	// all complex, use the real convert of each part instead
-		vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, stride == 1 ? 1 : (2 * stride), true);
+		if (stride == 1)
+		{
+			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, 1, true);
+		}
+		else
+		{
+			// the real parts
+			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, stride * 2, true);
+			// increase pointers
+			const int sizeSrc = Datatype::size(srcType), sizeDst = Datatype::size(dstType);
+			const void* srcInc = (const char*)src + sizeSrc;
+			void* dstInc = (char*)dst + sizeDst;
+			// the imaginary parts
+			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), srcInc, dstInc, N * 2, stride * 2, true);
+		}
 	}
 }
 #pragma endregion
@@ -460,7 +479,7 @@ inline void vectorClip(void* av, const void* threshold, const size_t N, const un
 {
 	T* a = (T*)av;
 	const T thre = *((const T*)threshold);
-	if constexpr (std::is_scalar_v<T>)
+	if constexpr (std::is_scalar<T>::value)
 	{
 		if (stride == 1)
 		{
@@ -489,7 +508,7 @@ inline void vectorClip(void* av, const void* threshold, const size_t N, const un
 DLLEXP
 void vecClip(const Datatype::DataType type, void* a, const void* threshold, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorClip, type, a, threshold, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorClip, type, void, a, threshold, N, stride);
 }
 #pragma endregion
 
@@ -581,7 +600,7 @@ inline void vectorAddedByScalar(void* av, const void* scalar, const size_t N, co
 DLLEXP
 void vecAddScalar(const Datatype::DataType type, void* a, const void* scalar, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorAddedByScalar, type, a, scalar, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorAddedByScalar, type, void, a, scalar, N, stride);
 }
 #pragma endregion
 
@@ -594,19 +613,20 @@ inline void vectorSum(const void* av, const size_t N, const unsigned int stride,
 	T* outSum = (T*)outv;
 	if (stride == 1)
 	{
-		*outSum = thrust::reduce(THRUST_PAR, a, a + N, T());
+		// TODO: plus<T> has bug?
+		*outSum = thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::plus<T>());
 	}
 	else
 	{
 		auto strideA = make_strided_range(a, N, stride);
-		*outSum = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T());
+		*outSum = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::plus<T>());
 	}
 }
 
 DLLEXP
 void vecSum(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outSum)
 {
-	AUTO_ALLTYPE_FUNC(vectorSum, type, a, N, stride, outSum);
+	AUTO_ALLTYPE_FUNC(vectorSum, type, void, a, N, stride, outSum);
 }
 #pragma endregion
 
@@ -631,7 +651,7 @@ inline void vectorAccumulateProduct(const void* av, const size_t N, const unsign
 DLLEXP
 void vecProd(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outProd)
 {
-	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, a, N, stride, outProd);
+	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, void, a, N, stride, outProd);
 }
 #pragma endregion
 
@@ -663,7 +683,7 @@ inline void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const
 DLLEXP
 void vecParSum(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
-	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, src, dst, N, stride, inclusive);
+	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, void, src, dst, N, stride, inclusive);
 }
 #pragma endregion
 
@@ -686,15 +706,15 @@ inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, c
 		auto strideSrc = make_strided_range(src, N, stride);
 		auto strideDst = make_strided_range(dst, N, stride);
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), thrust::multiplies<T>());
+			thrust::inclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, strideA.begin(), strideA.end(), strideDst.begin(), T(1), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), T(1), thrust::multiplies<T>());
 	}
 }
 
 DLLEXP
 void vecParProd(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int stride, const bool inclusive)
 {
-	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, src, dst, N, stride, inclusive);
+	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, void, src, dst, N, stride, inclusive);
 }
 #pragma endregion

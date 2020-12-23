@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include "complex.h"
+
 
 namespace Datatype
 {
@@ -229,34 +231,30 @@ namespace Datatype
 
 
 // automatically generate float type switch functions
-#define UNSUPPORT(funcName, type) do { \
-		printf("[%s] does not support [%s]!", #funcName, Datatype::tostring(type).c_str()); \
-		return; \
+#define UNSUPPORT(funcName, dataType, returnType) do { \
+		printf("[%s] does not support [%s]!", #funcName, Datatype::tostring(dataType).c_str()); \
+		return returnType(); \
 	} while(0)
 
 #ifndef HAS_LDBL
-#define AUTO_FLOAT_FUNC(funcName, type, ...) do { \
-		if (!Datatype::isfloat(type)) \
-			UNSUPPORT(funcName, type); \
-		switch (type) \
+#define AUTO_FLOAT_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
 		{ \
 		case Datatype::RealSingle: \
 			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
 			return funcName<double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			return funcName<std::complex<float>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			return funcName<std::complex<double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		default: \
-			UNSUPPORT(funcName, type); \
+			UNSUPPORT(funcName, dataType, returnType); \
 		} \
 	} while (0)
 #else
-#define AUTO_FLOAT_FUNC(funcName, type, ...) do { \
-		if (!Datatype::isfloat(type)) \
-			UNSUPPORT(funcName, type); \
-		switch (type) \
+#define AUTO_FLOAT_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
 		{ \
 		case Datatype::RealSingle: \
 			return funcName<float>(__VA_ARGS__); \
@@ -265,30 +263,30 @@ namespace Datatype
 		case Datatype::RealLongDouble: \
 			return funcName<long double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			return funcName<std::complex<float>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			return funcName<std::complex<double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexLongDouble: \
-			return funcName<std::complex<long double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
 		default: \
-			UNSUPPORT(funcName, type); \
+			UNSUPPORT(funcName, dataType, returnType); \
 		} \
 	} while (0)
 #endif
 
 // automatically generate float and integer type switch functions
 #ifndef HAS_LDBL
-#define AUTO_ALLTYPE_FUNC(funcName, type, ...) do { \
-		switch (type) \
+#define AUTO_ALLTYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
 		{ \
 		case Datatype::RealSingle: \
 			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
 			return funcName<double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			return funcName<std::complex<float>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			return funcName<std::complex<double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
 			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
@@ -306,28 +304,28 @@ namespace Datatype
 		case Datatype::RealUInt64: \
 			return funcName<unsigned long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<std::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<std::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<std::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<std::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			return funcName<std::complex<unsigned char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			return funcName<std::complex<unsigned short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			return funcName<std::complex<unsigned int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			return funcName<std::complex<unsigned long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
 		default: \
-			UNSUPPORT(funcName, type); \
+			UNSUPPORT(funcName, dataType, returnType); \
 		} \
 	} while (0)
 #else
-#define AUTO_ALLTYPE_FUNC(funcName, type, ...) do { \
-		switch (type) \
+#define AUTO_ALLTYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
 		{ \
 		case Datatype::RealSingle: \
 			return funcName<float>(__VA_ARGS__); \
@@ -336,11 +334,11 @@ namespace Datatype
 		case Datatype::RealLongDouble: \
 			return funcName<long double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			return funcName<std::complex<float>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			return funcName<std::complex<double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexLongDouble: \
-			return funcName<std::complex<long double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
 			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
@@ -358,40 +356,40 @@ namespace Datatype
 		case Datatype::RealUInt64: \
 			return funcName<unsigned long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<std::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<std::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<std::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<std::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			return funcName<std::complex<unsigned char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			return funcName<std::complex<unsigned short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			return funcName<std::complex<unsigned int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			return funcName<std::complex<unsigned long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
 		default: \
-			UNSUPPORT(funcName, type); \
+			UNSUPPORT(funcName, dataType, returnType); \
 		} \
 	} while (0)
 #endif
 
 // automatically generate float and signed integer type switch functions
 #ifndef HAS_LDBL
-#define AUTO_SIGNED_TYPE_FUNC(funcName, type, ...) do { \
-		switch (type) \
+#define AUTO_SIGNED_TYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
 		{ \
 		case Datatype::RealSingle: \
 			return funcName<float>(__VA_ARGS__); \
 		case Datatype::RealDouble: \
 			return funcName<double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			return funcName<std::complex<float>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			return funcName<std::complex<double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
 			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
@@ -401,20 +399,20 @@ namespace Datatype
 		case Datatype::RealInt64: \
 			return funcName<long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<std::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<std::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<std::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<std::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
 		default: \
-			UNSUPPORT(funcName, type); \
+			UNSUPPORT(funcName, dataType, returnType); \
 		} \
 	} while (0)
 #else
-#define AUTO_ALL_SIGNED_TYPE_FUNC(funcName, type, ...) do { \
-		switch (type) \
+#define AUTO_ALL_SIGNED_TYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
 		{ \
 		case Datatype::RealSingle: \
 			return funcName<float>(__VA_ARGS__); \
@@ -423,11 +421,11 @@ namespace Datatype
 		case Datatype::RealLongDouble: \
 			return funcName<long double>(__VA_ARGS__); \
 		case Datatype::ComplexSingle: \
-			return funcName<std::complex<float>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
 		case Datatype::ComplexDouble: \
-			return funcName<std::complex<double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexLongDouble: \
-			return funcName<std::complex<long double>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
 			return funcName<char>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
@@ -437,15 +435,15 @@ namespace Datatype
 		case Datatype::RealInt64: \
 			return funcName<long long>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<std::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<std::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<std::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<std::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
 		default: \
-			UNSUPPORT(funcName, type); \
+			UNSUPPORT(funcName, dataType, returnType); \
 		} \
 	} while (0)
 #endif

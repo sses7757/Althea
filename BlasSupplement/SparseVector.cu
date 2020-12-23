@@ -14,7 +14,7 @@ inline void vectorSetValuesAt(void* dst, const void* value, const int* pos, cons
 DLLEXP
 void vecSetValAt(const Datatype::DataType type, void* a, const void* value, const int* pos, const size_t posN)
 {
-	AUTO_ALLTYPE_FUNC(vectorSetValuesAt, type, a, value, pos, posN);
+	AUTO_ALLTYPE_FUNC(vectorSetValuesAt, type, void, a, value, pos, posN);
 }
 #pragma endregion
 
@@ -58,7 +58,7 @@ inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const s
 
 	// copy_if to get sparse indexes
 	auto resultEnd = resultBegin;
-	if constexpr (std::is_scalar_v<T>)
+	if constexpr (std::is_scalar<T>::value)
 	{
 		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, T>(thre));
 	}
@@ -72,7 +72,7 @@ inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const s
 DLLEXP
 size_t vecPruneNnz(const Datatype::DataType type, const void* a, const void* threshold, const size_t N, void* buffer)
 {
-	AUTO_ALLTYPE_FUNC(vectorPruneNonZeros, type, a, threshold, N, buffer);
+	AUTO_ALLTYPE_FUNC(vectorPruneNonZeros, type, size_t, a, threshold, N, buffer);
 }
 
 // dense vector prune to sparse vector -- calculate
@@ -100,7 +100,7 @@ inline ERROR_RETURN vecPruneCalculate(const void* buffer, const size_t N, size_t
 DLLEXP
 ERROR_RETURN vecPruneCal(const Datatype::DataType type, const size_t N, const void* buffer, size_t nnz, int* indexOut, void* valueOut)
 {
-	AUTO_ALLTYPE_FUNC(vecPruneCalculate, type, buffer, N, nnz, indexOut, valueOut);
+	AUTO_ALLTYPE_FUNC(vecPruneCalculate, type, ERROR_RETURN, buffer, N, nnz, indexOut, valueOut);
 }
 #pragma endregion
 
@@ -124,7 +124,7 @@ inline void vectorSparseMultipliedDividedByDense(void* sparsev, const int* index
 DLLEXP
 void vecSpMulDivDn(const Datatype::DataType type, void* sparse, const int* index, const size_t nnz, const void* dense, bool multiply)
 {
-	AUTO_ALLTYPE_FUNC(vectorSparseMultipliedDividedByDense, type, sparse, index, nnz, dense, multiply);
+	AUTO_ALLTYPE_FUNC(vectorSparseMultipliedDividedByDense, type, void, sparse, index, nnz, dense, multiply);
 }
 #pragma endregion
 
@@ -192,9 +192,12 @@ inline size_t vectorSparseAddGetNonzero(const int* indA, const void* valAv, cons
 }
 
 DLLEXP
-size_t vecSpAddNnz(const Datatype::DataType type, const int* indA, const void* valA, const size_t nnzA, const int* indB, const void* valB, const size_t nnzB, const void* alpha, void* buffer)
+size_t vecSpAddNnz(const Datatype::DataType type,
+	const int* indA, const void* valA, const size_t nnzA,
+	const int* indB, const void* valB, const size_t nnzB,
+	const void* alpha, void* buffer)
 {
-	AUTO_ALLTYPE_FUNC(vectorSparseAddGetNonzero, type, indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
+	AUTO_ALLTYPE_FUNC(vectorSparseAddGetNonzero, type, size_t, indA, valA, nnzA, indB, valB, nnzB, alpha, buffer);
 }
 
 // sparse vector add another sparse vector -- calculate
@@ -207,6 +210,7 @@ inline void vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nn
 	const int* temp_index = (const int*)buffer;
 	const T* temp_value = (const T*)(nnzAB + (const int*)buffer);
 
+	// TODO: plus<T> has bug?
 	// sum values with the same index
 	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_indexOut, C_value, thrust::equal_to<int>(), thrust::plus<T>());
 }
@@ -214,7 +218,7 @@ inline void vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nn
 DLLEXP
 void vecSpAddCal(const Datatype::DataType type, const void* buffer, size_t nnzAB, size_t nnzC, int* C_index, void* C_value)
 {
-	AUTO_ALLTYPE_FUNC(vectorSparseAddCalculate, type, buffer, nnzAB, nnzC, C_index, C_value);
+	AUTO_ALLTYPE_FUNC(vectorSparseAddCalculate, type, void, buffer, nnzAB, nnzC, C_index, C_value);
 }
 #pragma endregion
 
@@ -229,7 +233,7 @@ struct FMA_functor
 
 	__host__ __device__ T operator()(const T x, const T y) const
 	{
-		return std::fma(alpha, x, y);
+		return alpha * x + y;
 	}
 };
 
@@ -255,6 +259,6 @@ inline void vectorDenseAddBySparse(void* densev, const void* sparsev, const int*
 DLLEXP
 void vecDnAddSp(const Datatype::DataType type, void* dense, const void* sparse, const int* index, const size_t nnz, const void* alpha)
 {
-	AUTO_ALLTYPE_FUNC(vectorDenseAddBySparse, type, dense, sparse, index, nnz, alpha);
+	AUTO_ALLTYPE_FUNC(vectorDenseAddBySparse, type, void, dense, sparse, index, nnz, alpha);
 }
 #pragma endregion

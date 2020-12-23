@@ -257,7 +257,7 @@ namespace Althea.Linq
 		TKey Key { get; }
 	}
 
-	internal readonly class ReadOnlyGrouping<TKey, TElement> : IReadOnlyGrouping<TKey, TElement>
+	internal readonly struct ReadOnlyGrouping<TKey, TElement> : IReadOnlyGrouping<TKey, TElement>
 	{
 		public TKey Key { get; }
 

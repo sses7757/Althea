@@ -9,3 +9,4 @@
 #define __global__ __location__(global)
 #define __device__ __location__(device)
 #define __device__
+#define NAN ((float)(INFINITY * 0.0F))
