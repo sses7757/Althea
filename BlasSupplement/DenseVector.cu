@@ -44,7 +44,7 @@ inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const siz
 }
 
 DLLEXP
-void vecEWMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int stride, bool multiply)
+void vecMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int stride, bool multiply)
 {
 	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, void, a, b, N, stride, multiply);
 }
@@ -66,7 +66,7 @@ struct floatPower_functor
 };
 
 template<typename T>
-inline void vectorElementWisePower(void* av, const void* pv, const size_t N, const unsigned int stride)
+inline void vectorElementWisePowerSameType(void* av, const void* pv, const size_t N, const unsigned int stride)
 {
 	T* a = (T*)av;
 	const T p = *(T*)pv;
@@ -81,10 +81,46 @@ inline void vectorElementWisePower(void* av, const void* pv, const size_t N, con
 	}
 }
 
-DLLEXP
-void vecEWPow(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
+template<typename T>
+struct floatPowerRealType_functor
 {
-	AUTO_FLOAT_FUNC(vectorElementWisePower, type, void, a, p, N, stride);
+	const T p;
+
+	floatPowerRealType_functor(const T pow) : p(pow) {}
+
+	__host__ __device__ BlasSupp::complex<T> operator()(const BlasSupp::complex<T> x) const
+	{
+		return std::pow(x, p);
+	}
+};
+
+template<typename T>
+inline void vectorElementWiseRealPower(void* av, const void* pv, const size_t N, const unsigned int stride)
+{
+	using realT = T::value_type;
+	T* a = (T*)av;
+	const realT p = *(realT*)pv;
+	if (stride == 1)
+	{
+		thrust::transform(THRUST_PAR, a, a + N, a, floatPowerRealType_functor<realT>(p));
+	}
+	else
+	{
+		auto strideA = make_strided_range(a, N, stride);
+		thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), floatPowerRealType_functor<realT>(p));
+	}
+}
+
+DLLEXP
+void vecPow(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
+{
+	AUTO_ALLTYPE_FUNC(vectorElementWisePowerSameType, type, void, a, p, N, stride);
+}
+
+DLLEXP
+void vecPowRealType(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
+{
+	AUTO_COMPLEX_TYPE_FUNC(vectorElementWiseRealPower, type, void, a, p, N, stride);
 }
 #pragma endregion
 
@@ -238,26 +274,31 @@ inline void vectorRealConvert(const void* srcv, void* dstv, const size_t N, cons
 	}
 }
 
+template <typename T>
+inline void vectorStridedCopy(const void* srcv, void* dstv, const size_t N, const unsigned int stride)
+{
+	const T* src = (const T*)srcv;
+	T* dst = (T*)dstv;
+	if (stride == 1)
+	{
+		thrust::copy_n(THRUST_PAR, src, N, dst);
+	}
+	else
+	{
+		auto strideSrc = make_strided_range(src, N, stride);
+		auto strideDst = make_strided_range(dst, N, stride);
+		thrust::copy(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin());
+	}
+}
+
 DLLEXP
 void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType dstType, const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
 	// copy if no data conversion
 	if (srcType == dstType)
 	{
-		if (stride == 1)
-		{
-			thrust::copy_n(THRUST_PAR, (const char*)src, N * Datatype::size(srcType), (char*)dst);
-		}
-		else
-		{
-			// TODO
-			const size_t NN = N * Datatype::size(srcType);
-			const size_t SS = (size_t)stride * Datatype::size(srcType);
-			auto strideSrc = make_strided_range((const char*)src, NN, SS);
-			auto strideDst = make_strided_range((char*)dst, NN, SS);
-			thrust::copy(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst);
-		}
-		return;
+		AUTO_ALLTYPE_FUNC(vectorStridedCopy, srcType, void, src, dst, N, stride);
+		// return is inside the auto generated switch
 	}
 
 // define inner switch
@@ -424,8 +465,8 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 	} while (0)
 #endif
 
-	// otherwise
-	auto convertFunc = vectorRealConvert<float, float>; // default convert function
+	// the convert function
+	void (*convertFunc)(const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs);
 	if (Datatype::isreal(srcType) && Datatype::isreal(dstType))
 	{	// real convert
 		CONVERT_OUTER_SWITCH(vectorRealConvert);
@@ -456,6 +497,9 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), srcInc, dstInc, N * 2, stride * 2, true);
 		}
 	}
+
+	// calculate
+	convertFunc(src, dst, N, stride, toRealByAbs);
 }
 #pragma endregion
 
@@ -491,16 +535,16 @@ inline void vectorClip(void* av, const void* threshold, const size_t N, const un
 			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), clipAbs_functor<T, T>(thre));
 		}
 	}
-	else
+	if constexpr (!std::is_scalar<T>::value)
 	{
 		if (stride == 1)
 		{
-			thrust::transform(THRUST_PAR, a, a + N, a, clipAbs_functor<T, T::value_type>(std::abs(thre)));
+			thrust::transform(THRUST_PAR, a, a + N, a, clipAbs_functor<T, typename T::value_type>(std::abs(thre)));
 		}
 		else
 		{
 			auto strideA = make_strided_range(a, N, stride);
-			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), clipAbs_functor<T, T::value_type>(std::abs(thre)));
+			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), clipAbs_functor<T, typename T::value_type>(std::abs(thre)));
 		}
 	}
 }
@@ -613,13 +657,12 @@ inline void vectorSum(const void* av, const size_t N, const unsigned int stride,
 	T* outSum = (T*)outv;
 	if (stride == 1)
 	{
-		// TODO: plus<T> has bug?
-		*outSum = thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::plus<T>());
+		*outSum = thrust::reduce(THRUST_PAR, a, a + N, T(), plus_functor<T>());
 	}
 	else
 	{
 		auto strideA = make_strided_range(a, N, stride);
-		*outSum = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::plus<T>());
+		*outSum = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), plus_functor<T>());
 	}
 }
 
@@ -639,12 +682,12 @@ inline void vectorAccumulateProduct(const void* av, const size_t N, const unsign
 	T* outProd = (T*)outv;
 	if (stride == 1)
 	{
-		*outProd = thrust::reduce(THRUST_PAR, a, a + N, T(), thrust::multiplies<T>());
+		*outProd = thrust::reduce(THRUST_PAR, a, a + N, T(1), thrust::multiplies<T>());
 	}
 	else
 	{
 		auto strideA = make_strided_range(a, N, stride);
-		*outProd = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), thrust::multiplies<T>());
+		*outProd = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(1), thrust::multiplies<T>());
 	}
 }
 
@@ -665,18 +708,18 @@ inline void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const
 	if (stride == 1)
 	{
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst);
+			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst, plus_functor<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst);
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(), plus_functor<T>());
 	}
 	else
 	{
 		auto strideSrc = make_strided_range(src, N, stride);
 		auto strideDst = make_strided_range(dst, N, stride);
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin());
+			thrust::inclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), plus_functor<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin());
+			thrust::exclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), T(), plus_functor<T>());
 	}
 }
 

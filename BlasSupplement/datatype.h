@@ -377,6 +377,67 @@ namespace Datatype
 	} while (0)
 #endif
 
+// automatically generate float and integer complex type switch functions
+#ifndef HAS_LDBL
+#define AUTO_COMPLEX_TYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
+		{ \
+		case Datatype::ComplexSingle: \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
+		case Datatype::ComplexDouble: \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
+		case Datatype::ComplexInt8: \
+			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+		case Datatype::ComplexInt16: \
+			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+		case Datatype::ComplexInt32: \
+			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+		case Datatype::ComplexInt64: \
+			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt8: \
+			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt16: \
+			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt32: \
+			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt64: \
+			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
+		default: \
+			UNSUPPORT(funcName, dataType, returnType); \
+		} \
+	} while (0)
+#else
+#define AUTO_ALLTYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
+		{ \
+		case Datatype::ComplexSingle: \
+			return funcName<BlasSupp::complex<float>>(__VA_ARGS__); \
+		case Datatype::ComplexDouble: \
+			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
+		case Datatype::ComplexLongDouble: \
+			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
+		case Datatype::ComplexInt8: \
+			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+		case Datatype::ComplexInt16: \
+			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+		case Datatype::ComplexInt32: \
+			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+		case Datatype::ComplexInt64: \
+			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt8: \
+			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt16: \
+			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt32: \
+			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt64: \
+			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
+		default: \
+			UNSUPPORT(funcName, dataType, returnType); \
+		} \
+	} while (0)
+#endif
+
 // automatically generate float and signed integer type switch functions
 #ifndef HAS_LDBL
 #define AUTO_SIGNED_TYPE_FUNC(funcName, dataType, returnType, ...) do { \

@@ -1,7 +1,7 @@
 #include "macro.h"
 
 
-#pragma region sparse vector's index array to COO format sparse matrix's index arrays and back
+#pragma region sparse vector to/from COO matrix
 struct intModulus_functor
 {
 	const int mod;

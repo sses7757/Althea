@@ -40,8 +40,9 @@
 
 
 // compile options
-// ignore spelling: nvcc
-// nvcc -o kernels.dll [-DCPU] --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu --shared host_util.cpp
+// ignore spelling: nvcc Xcompiler bigobj
+// nvcc -o kernels.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "/bigobj"
+// nvcc -o kernels.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu --shared host_util.cpp -std=c++17 -Xcompiler "/bigobj"
 #ifdef CPU
 #include <thrust/system/omp/execution_policy.h>
 #define THRUST_PAR thrust::omp::par
@@ -52,16 +53,6 @@
 #endif // CPU
 
 
-// complex type alias
-using complexSingle = BlasSupp::complex<float>;
-// complex type alias
-using complexDouble = BlasSupp::complex<double>;
-#ifdef HAS_LDBL
-// complex type alias
-using complexLongDouble = BlasSupp::complex<long double>;
-#endif
-
-
 #pragma region stride range
 // stride range iterator class from NVIDIA/thrust/examples/strided_range.cu
 template <typename Iterator>
@@ -70,6 +61,7 @@ class StridedRange
 public:
 
 	typedef typename thrust::iterator_difference<Iterator>::type difference_type;
+	typedef typename thrust::iterator_value<Iterator>::type value_type;
 
 	struct stride_functor : public thrust::unary_function<difference_type, difference_type>
 	{
@@ -114,4 +106,17 @@ inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, c
 {
 	return StridedRange<Iterator>(it, it + N * stride, stride);
 }
+#pragma endregion
+
+
+#pragma region plus functor test
+// thrust::plus<T> have bug? Use this instead.
+template <typename T>
+struct plus_functor
+{
+	__host__ __device__ T operator()(const T x, const T y) const
+	{
+		return x + y;
+	}
+};
 #pragma endregion

@@ -46,7 +46,7 @@ template <typename T>
 inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const size_t N, void* buffer)
 {
 	const T* a = (const T*)av;
-	const T thre = *((const T*)threshold);
+	const T thre = std::abs(*((const T*)threshold));
 
 	// create result container
 	int* idxOut = (int*)buffer;
@@ -64,7 +64,7 @@ inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const s
 	}
 	else
 	{
-		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, T::value_type>(std::abs(thre)));
+		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, typename T::value_type>(std::abs(thre)));
 	}
 	return resultEnd - resultBegin;
 }
@@ -184,7 +184,7 @@ inline size_t vectorSparseAddGetNonzero(const int* indA, const void* valAv, cons
 	}
 
 	// compute number of unique indices, must larger than 0
-	size_t nnzC = thrust::inner_product(THRUST_PAR, temp_index, temp_index + nnz - 1, temp_index + 1, int(0), thrust::plus<int>(), notEqualAsInt_functor<int>());
+	size_t nnzC = thrust::inner_product(THRUST_PAR, temp_index, temp_index + nnz - 1, temp_index + 1, int(0), plus_functor<int>(), notEqualAsInt_functor<int>());
 	nnzC += 1;
 
 	// return
@@ -210,9 +210,8 @@ inline void vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nn
 	const int* temp_index = (const int*)buffer;
 	const T* temp_value = (const T*)(nnzAB + (const int*)buffer);
 
-	// TODO: plus<T> has bug?
 	// sum values with the same index
-	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_indexOut, C_value, thrust::equal_to<int>(), thrust::plus<T>());
+	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_indexOut, C_value, thrust::equal_to<int>(), plus_functor<T>());
 }
 
 DLLEXP
@@ -248,7 +247,7 @@ inline void vectorDenseAddBySparse(void* densev, const void* sparsev, const int*
 	auto densePerm = thrust::make_permutation_iterator(dense, index);
 	if (alpha == 1)
 	{
-		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, thrust::plus<T>());
+		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, plus_functor<T>());
 	}
 	else
 	{
