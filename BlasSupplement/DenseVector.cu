@@ -97,7 +97,7 @@ struct floatPowerRealType_functor
 template<typename T>
 inline void vectorElementWiseRealPower(void* av, const void* pv, const size_t N, const unsigned int stride)
 {
-	using realT = T::value_type;
+	using realT = typename T::value_type;
 	T* a = (T*)av;
 	const realT p = *(realT*)pv;
 	if (stride == 1)
@@ -112,7 +112,7 @@ inline void vectorElementWiseRealPower(void* av, const void* pv, const size_t N,
 }
 
 DLLEXP
-void vecPow(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
+void vecPowSameType(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
 {
 	AUTO_ALLTYPE_FUNC(vectorElementWisePowerSameType, type, void, a, p, N, stride);
 }

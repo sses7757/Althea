@@ -17,7 +17,7 @@ namespace BlasSupp
 			return (T)(LLONG_MAX);
 		else
 			return T();
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return T();
 	}
 
@@ -28,7 +28,7 @@ namespace BlasSupp
 			return a == inf<T>() || a == -inf<T>();
 		else
 			return false;
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return true;
 	}
 
@@ -41,7 +41,7 @@ namespace BlasSupp
 			return (T)(LLONG_MAX);
 		else
 			return T();
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return T();
 	}
 
@@ -52,7 +52,7 @@ namespace BlasSupp
 			return (float)a == NAN;
 		else
 			return false;
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return true;
 	}
 
@@ -81,7 +81,7 @@ namespace BlasSupp
 				return complex<T>(_real, -_imag);
 			else
 				return *this; // not allowed
-			// false return at end since CUDA have problem
+			// false return at end to suppress NVCC problem
 			return *this;
 		}
 		
@@ -237,7 +237,7 @@ __host__ __device__ inline static bool operator==(const BlasSupp::complex<T> lef
 		return left == BlasSupp::complex<T>((T)right);
 	else
 		return false;
-	// false return at end since CUDA have problem
+	// false return at end to suppress NVCC problem
 	return true;
 }
 #pragma endregion
@@ -253,7 +253,7 @@ namespace std
 			return a;
 		else
 			return a.conj();
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return T();
 	}
 
@@ -263,26 +263,52 @@ namespace std
 		return hypot(x.real(), x.imag());
 	}
 	
+	#pragma region integer type conversions
+	template <typename T, typename U>
+	__host__ __device__ static inline BlasSupp::complex<T> _interger_op(BlasSupp::complex<U>(*func)(BlasSupp::complex<U>), BlasSupp::complex<T> left)
+	{
+		const BlasSupp::complex<U> result = func(BlasSupp::complex<U>((U)left.real(), (U)left.imag()));
+		return BlasSupp::complex<T>((T)result.real(), (T)result.imag());
+	}
+
+	template <typename T, typename U>
+	__host__ __device__ static inline BlasSupp::complex<T> _interger_op(BlasSupp::complex<U>(*func)(BlasSupp::complex<U>, U), BlasSupp::complex<T> left, T right)
+	{
+		const BlasSupp::complex<U> result = func(BlasSupp::complex<U>((U)left.real(), (U)left.imag()), (U)right);
+		return BlasSupp::complex<T>((T)result.real(), (T)result.imag());
+	}
+
+	template <typename T, typename U>
+	__host__ __device__ static inline BlasSupp::complex<T> _interger_op(BlasSupp::complex<U>(*func)(BlasSupp::complex<U>, BlasSupp::complex<U>), BlasSupp::complex<T> left, BlasSupp::complex<T> right)
+	{
+		const BlasSupp::complex<U> result = func(BlasSupp::complex<U>((U)left.real(), (U)left.imag()), BlasSupp::complex<U>((U)right.real(), (U)right.imag()));
+		return BlasSupp::complex<T>((T)result.real(), (T)result.imag());
+	}
+	#pragma endregion
+
 	// direct log implementation
-	template <class T>
+	template <typename T>
 	__host__ __device__ static inline BlasSupp::complex<T> log(const BlasSupp::complex<T> comp)
 	{
 		// Ignore Spelling: mathtt hypot
 		//tex:$\log(a+b\mathtt{i}) = \log(\mathrm{hypot}(a,b))+\mathtt{i}\cdot\mathrm{atan2}(a,b)$
 
-		if constexpr (is_floating_point<T>::value)
+		if constexpr (!is_floating_point<T>::value)
+		{	// integer types need conversions
+			if constexpr (sizeof(T) < 4)
+				return _interger_op(log<float>, comp);
+			else
+				return _interger_op(log<double>, comp);
+			// false return at end to suppress NVCC problem
+			return BlasSupp::complex<T>();
+		}
+		else
 		{
 			const T real = log(abs(comp));
 			const T imag = atan2(comp.real(), comp.imag());
 			return BlasSupp::complex<T>(real, imag);
 		}
-		else
-		{
-			// integer types need conversions
-			const BlasSupp::complex<double> doubleResult = log(BlasSupp::complex<double>((double)comp.real(), (double)comp.imag()));
-			return BlasSupp::complex<T>((T)doubleResult.real(), (T)doubleResult.imag());
-		}
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return BlasSupp::complex<T>();
 	}
 
@@ -290,18 +316,21 @@ namespace std
 	template <typename T>
 	__host__ __device__ static inline BlasSupp::complex<T> exp(const BlasSupp::complex<T> comp)
 	{
-		if constexpr (is_floating_point<T>::value)
+		if constexpr (!is_floating_point<T>::value)
+		{	// integer types need conversions
+			if constexpr (sizeof(T) < 4)
+				return _interger_op(exp<float>, comp);
+			else
+				return _interger_op(exp<double>, comp);
+			// false return at end to suppress NVCC problem
+			return BlasSupp::complex<T>();
+		}
+		else
 		{
 			const T real = exp(comp.real()), imag = comp.imag();
 			return BlasSupp::complex<T>(real * cos(imag), real * sin(imag));
 		}
-		else
-		{
-			// integer types need conversions
-			const BlasSupp::complex<double> doubleResult = exp(BlasSupp::complex<double>((double)comp.real(), (double)comp.imag()));
-			return BlasSupp::complex<T>((T)doubleResult.real(), (T)doubleResult.imag());
-		}
-		// false return at end since CUDA have problem
+		// false return at end to suppress NVCC problem
 		return BlasSupp::complex<T>();
 	}
 
@@ -309,33 +338,61 @@ namespace std
 	template <typename T>
 	__host__ __device__ static inline BlasSupp::complex<T> pow(const BlasSupp::complex<T> base, const T p)
 	{
-		if (base.imag() == 0)
-		{
-			T real = std::pow(base.real(), p);
-			return BlasSupp::complex<T>(real, base.imag());
+		if constexpr (!is_floating_point<T>::value)
+		{	// integer types need conversions
+			if constexpr (sizeof(T) < 4)
+				return _interger_op(pow<float>, base, p);
+			else
+				return _interger_op(pow<double>, base, p);
+			// false return at end to suppress NVCC problem
+			return BlasSupp::complex<T>();
 		}
 		else
 		{
-			return exp(p * log(base));
+			if (base.imag() == 0)
+			{
+				T real = std::pow(base.real(), p);
+				return BlasSupp::complex<T>(real, base.imag());
+			}
+			else
+			{
+				return exp(p * log(base));
+			}
 		}
+		// false return at end to suppress NVCC problem
+		return BlasSupp::complex<T>();
 	}
 
 	// pow implementation from MSVC
 	template <typename T>
 	__host__ __device__ static inline BlasSupp::complex<T> pow(const BlasSupp::complex<T> base, const BlasSupp::complex<T> p)
 	{
-		if (p.imag() == 0)
-		{
-			return pow(base, p.real());
-		}
-		else if (base.imag() == 0 && 0 < base.real())
-		{
-			return exp(p * log(base.real()));
+		if constexpr (!is_floating_point<T>::value)
+		{	// integer types need conversions
+			if constexpr (sizeof(T) < 4)
+				return _interger_op(pow<float>, base, p);
+			else
+				return _interger_op(pow<double>, base, p);
+			// false return at end to suppress NVCC problem
+			return BlasSupp::complex<T>();
 		}
 		else
 		{
-			return exp(p * log(base));
+			if (p.imag() == 0)
+			{
+				return pow(base, p.real());
+			}
+			else if (base.imag() == 0 && 0 < base.real())
+			{
+				return exp(p * log(base.real()));
+			}
+			else
+			{
+				return exp(p * log(base));
+			}
 		}
+		// false return at end to suppress NVCC problem
+		return BlasSupp::complex<T>();
 	}
 }
 #pragma endregion

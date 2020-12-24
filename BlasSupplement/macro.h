@@ -40,16 +40,19 @@
 
 
 // compile options
-// ignore spelling: nvcc Xcompiler bigobj
+// ignore spelling: nvcc Xcompiler bigobj openmp
 // nvcc -o kernels.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "/bigobj"
-// nvcc -o kernels.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu --shared host_util.cpp -std=c++17 -Xcompiler "/bigobj"
+// nvcc -o kernels.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu --shared host_util.cpp -std=c++17 -Xcompiler "/bigobj /openmp"
+#undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
 #include <thrust/system/omp/execution_policy.h>
 #define THRUST_PAR thrust::omp::par
 #define ERROR_RETURN void
+#define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
 #else
 #define THRUST_PAR thrust::cuda::par
 #define ERROR_RETURN cudaError
+#define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA
 #endif // CPU
 
 
@@ -102,7 +105,7 @@ protected:
 };
 
 template <typename Iterator>
-inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, const StridedRange<Iterator>::difference_type stride)
+inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, const typename StridedRange<Iterator>::difference_type stride)
 {
 	return StridedRange<Iterator>(it, it + N * stride, stride);
 }

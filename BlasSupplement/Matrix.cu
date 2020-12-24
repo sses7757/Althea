@@ -335,13 +335,13 @@ DLLEXP void spVecOuter(const Datatype::DataType type,
 
 #pragma region sparse COO format matrices Kronecker
 template <typename T>
-struct cooMatricesKronecker_functor
+struct CooMatricesKronecker_functor
 {
 	const T* valA; const int* rowA; const int* colA;
 	const T* valB; const int* rowB; const int* colB; const size_t nnzB; const size_t rowsB; const size_t colsB;
 	T* valC; int* rowC; int* colC;
 
-	cooMatricesKronecker_functor(
+	CooMatricesKronecker_functor(
 		const T* valA, const int* rowA, const int* colA,
 		const T* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
 		T* valC, int* rowC, int* colC) :
@@ -373,7 +373,7 @@ struct cooMatrixSortByColumn_functor
 };
 
 template<typename T>
-void cooMatricesKronecker(
+void CooMatricesKronecker(
 	const void* valAv, const int* rowA, const int* colA, const size_t nnzA,
 	const void* valBv, const int* rowB, const int* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
 	void* valCv, int* rowC, int* colC)
@@ -384,17 +384,17 @@ void cooMatricesKronecker(
 	const size_t nnzC = nnzA * nnzB;
 
 	// outer
-	thrust::for_each_n(THRUST_PAR, count_iter, nnzC, cooMatricesKronecker_functor<T>(valA, rowA, colA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC));
+	thrust::for_each_n(THRUST_PAR, count_iter, nnzC, CooMatricesKronecker_functor<T>(valA, rowA, colA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC));
 	// sort column wise
 	auto rowColC = thrust::make_zip_iterator(thrust::make_tuple(rowC, colC));
 	thrust::sort_by_key(THRUST_PAR, rowColC, rowColC + nnzC, valC, cooMatrixSortByColumn_functor());
 }
 
-DLLEXP void cooMatKron(const Datatype::DataType type,
+DLLEXP void COOMatKron(const Datatype::DataType type,
 	const void* valA, const int* rowA, const int* colA, const size_t nnzA,
 	const void* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
 	void* valC, int* rowC, int* colC)
 {
-	AUTO_ALLTYPE_FUNC(cooMatricesKronecker, type, void, valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC);
+	AUTO_ALLTYPE_FUNC(CooMatricesKronecker, type, void, valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC);
 }
 #pragma endregion
