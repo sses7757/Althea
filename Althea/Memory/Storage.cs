@@ -12,6 +12,48 @@ using RT = Althea.Runtime.API;
 
 namespace Althea.Memory
 {
+	/// <summary>
+	/// The enum of the storage position, a bit flag
+	/// </summary>
+	/// <remarks>Use <c>.<see cref="Enum.ToString(string?)">ToString</see>("F")</c> or <c>.<see cref="Enum.ToString(string?)">ToString</see>("G")</c> to get a <see cref="FlagsAttribute"/>'s actual string representation</remarks>
+	[Flags]
+	public enum StoragePosition
+	{
+		/// <summary>
+		/// Storage at local CPU memory
+		/// </summary>
+		CpuMemory = 1,
+		/// <summary>
+		/// Storage at local GPU memory
+		/// </summary>
+		GpuMemory = 1 << 1,
+		/// <summary>
+		/// Storage determined by a Uniform Resource Identifier <see cref="string"/> such as <c>"file:///home/file_name.tmp"</c> or <c>"ftp://192.108.1.1/share/file_name.tmp"</c>
+		/// </summary>
+		URI = 1 << 2,
+		/// <summary>
+		/// Storage at platform-specific local memory other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+		/// </summary>
+		OtherMemory = 1 << 3,
+	}
+
+	/// <summary>
+	/// The static class that contains several extension methods for <see cref="StoragePosition"/>
+	/// </summary>
+	public static class StoragePositionExtension
+	{
+		/// <summary>
+		/// Get the string representation of a given <see cref="StoragePosition"/>
+		/// </summary>
+		/// <param name="position">the <see cref="StoragePosition"/></param>
+		/// <returns>the string representation of <paramref name="position"/></returns>
+		public static string StringRepr(this StoragePosition position)
+		{
+
+		}
+	}
+
+
 	#region pointer interface
 	/// <summary>
 	/// The interface for any data type of pointer
@@ -84,7 +126,7 @@ namespace Althea.Memory
 	/// <typeparam name="T">any certain memory layout <c><see cref="StructLayoutAttribute"/>(<see cref="LayoutKind.Sequential"/>)</c> or <c><see cref="StructLayoutAttribute"/>(<see cref="LayoutKind.Explicit"/>)</c> struct</typeparam>
 	/// <remarks>I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class that inherits <see cref="ISwappablePointer"/> shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
-	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC.</remarks>
+	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
 	public abstract class Storage<T> : IPointer, IEquatable<Storage<T>> where T : struct
 	{
 		#region properties

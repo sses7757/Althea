@@ -41,8 +41,8 @@
 
 // compile options
 // ignore spelling: nvcc Xcompiler bigobj openmp
-// nvcc -o kernels.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "/bigobj"
-// nvcc -o kernels.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu --shared host_util.cpp -std=c++17 -Xcompiler "/bigobj /openmp"
+// nvcc -o BlasSupplementGPU.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj"
+// nvcc -o BlasSupplementCPU.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
 #undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
 #include <thrust/system/omp/execution_policy.h>
@@ -112,7 +112,7 @@ inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, c
 #pragma endregion
 
 
-#pragma region plus functor test
+#pragma region plus functor
 // thrust::plus<T> have bug? Use this instead.
 template <typename T>
 struct plus_functor

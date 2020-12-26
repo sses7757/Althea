@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <cmath>
 #include <type_traits>
+#include <stdint.h>
 
 
 // TODO: CUDA has a problem that gives false warnings for CONSTEXPR IF
@@ -96,57 +97,48 @@ namespace BlasSupp
 #pragma region integer type float-like operations
 namespace std
 {
-	__host__ __device__ static inline constexpr char fma(const char x, const char y, const char d) { return x * y + d; }
-	__host__ __device__ static inline constexpr short fma(const short x, const short y, const short d) { return x * y + d; }
-	__host__ __device__ static inline constexpr int fma(const int x, const int y, const int d) { return x * y + d; }
-	__host__ __device__ static inline constexpr long fma(const long x, const long y, const long d) { return x * y + d; }
-	__host__ __device__ static inline constexpr long long fma(const long long x, const long long y, const long long d) { return x * y + d; }
-	__host__ __device__ static inline constexpr unsigned char fma(const unsigned char x, const unsigned char y, const unsigned char d) { return x * y + d; }
-	__host__ __device__ static inline constexpr unsigned short fma(const unsigned short x, const unsigned short y, const unsigned short d) { return x * y + d; }
-	__host__ __device__ static inline constexpr unsigned int fma(const unsigned int x, const unsigned int y, const unsigned int d) { return x * y + d; }
-	__host__ __device__ static inline constexpr unsigned long fma(const unsigned long x, const unsigned long y, const unsigned long d) { return x * y + d; }
-	__host__ __device__ static inline constexpr unsigned long long fma(const unsigned long long x, const unsigned long long y, const unsigned long long d) { return x * y + d; }
+	__host__ __device__ static inline constexpr int8_t fma(const int8_t x, const int8_t y, const int8_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr int16_t fma(const int16_t x, const int16_t y, const int16_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr int32_t fma(const int32_t x, const int32_t y, const int32_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr int64_t fma(const int64_t x, const int64_t y, const int64_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr uint8_t fma(const uint8_t x, const uint8_t y, const uint8_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr uint16_t fma(const uint16_t x, const uint16_t y, const uint16_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr uint32_t fma(const uint32_t x, const uint32_t y, const uint32_t d) { return x * y + d; }
+	__host__ __device__ static inline constexpr uint64_t fma(const uint64_t x, const uint64_t y, const uint64_t d) { return x * y + d; }
 
-	__host__ __device__ static inline constexpr char abs(const char a) { return a < 0I8 ? -a : a; }
-	__host__ __device__ static inline constexpr short abs(const short a) { return a < 0I16 ? -a : a; }
-	__host__ __device__ static inline constexpr unsigned char abs(const unsigned char a) { return a; }
-	__host__ __device__ static inline constexpr unsigned short abs(const unsigned short a) { return a; }
-	__host__ __device__ static inline constexpr unsigned int abs(const unsigned int a) { return a; }
-	__host__ __device__ static inline constexpr unsigned long abs(const unsigned long a) { return a; }
-	__host__ __device__ static inline constexpr unsigned long long abs(const unsigned long long a) { return a; }
+	__host__ __device__ static inline constexpr int8_t abs(const int8_t a) { return a < 0I8 ? -a : a; }
+	__host__ __device__ static inline constexpr int16_t abs(const int16_t a) { return a < 0I16 ? -a : a; }
+	__host__ __device__ static inline constexpr uint8_t abs(const uint8_t a) { return a; }
+	__host__ __device__ static inline constexpr uint16_t abs(const uint16_t a) { return a; }
+	__host__ __device__ static inline constexpr uint32_t abs(const uint32_t a) { return a; }
+	__host__ __device__ static inline constexpr uint64_t abs(const uint64_t a) { return a; }
 
-	__host__ __device__ static inline signed char hypot(const char a, const char b) { return (char)hypotf(a, b); }
-	__host__ __device__ static inline signed short hypot(const short a, const short b) { return (short)hypotf(a, b); }
-	__host__ __device__ static inline signed int hypot(const int a, const int b) { return (int)hypot((double)a, (double)b); }
-	__host__ __device__ static inline signed long hypot(const long a, const long b) { return (long)hypot((double)a, (double)b); }
-	__host__ __device__ static inline signed long long hypot(const long long a, const long long b) { return (long long)hypot((double)a, (double)b); }
-	__host__ __device__ static inline unsigned char hypot(const unsigned char a, const unsigned char b) { return (unsigned char)hypotf(a, b); }
-	__host__ __device__ static inline unsigned short hypot(const unsigned short a, const unsigned short b) { return (unsigned short)hypotf(a, b); }
-	__host__ __device__ static inline unsigned int hypot(const unsigned int a, const unsigned int b) { return (unsigned int)hypot((double)a, (double)b); }
-	__host__ __device__ static inline unsigned long hypot(const unsigned long a, const unsigned long b) { return (unsigned long)hypot((double)a, (double)b); }
-	__host__ __device__ static inline unsigned long long hypot(const unsigned long long a, const unsigned long long b) { return (unsigned long long)hypot((double)a, (double)b); }
+	__host__ __device__ static inline int8_t hypot(const int8_t a, const int8_t b) { return (int8_t)hypotf(a, b); }
+	__host__ __device__ static inline int16_t hypot(const int16_t a, const int16_t b) { return (int16_t)hypotf(a, b); }
+	__host__ __device__ static inline int32_t hypot(const int32_t a, const int32_t b) { return (int32_t)hypot((double)a, (double)b); }
+	__host__ __device__ static inline int64_t hypot(const int64_t a, const int64_t b) { return (int64_t)hypot((double)a, (double)b); }
+	__host__ __device__ static inline uint8_t hypot(const uint8_t a, const uint8_t b) { return (uint8_t)hypotf(a, b); }
+	__host__ __device__ static inline uint16_t hypot(const uint16_t a, const uint16_t b) { return (uint16_t)hypotf(a, b); }
+	__host__ __device__ static inline uint32_t hypot(const uint32_t a, const uint32_t b) { return (uint32_t)hypot((double)a, (double)b); }
+	__host__ __device__ static inline uint64_t hypot(const uint64_t a, const uint64_t b) { return (uint64_t)hypot((double)a, (double)b); }
 
-	__host__ __device__ static inline signed char pow(const char a, const char b) { return (char)powf(a, b); }
-	__host__ __device__ static inline signed short pow(const short a, const short b) { return (short)powf(a, b); }
-	__host__ __device__ static inline signed int pow(const int a, const int b) { return (int)pow((double)a, (double)b); }
-	__host__ __device__ static inline signed long pow(const long a, const long b) { return (long)pow((double)a, (double)b); }
-	__host__ __device__ static inline signed long long pow(const long long a, const long long b) { return (long long)pow((double)a, (double)b); }
-	__host__ __device__ static inline unsigned char pow(const unsigned char a, const unsigned char b) { return (unsigned char)powf(a, b); }
-	__host__ __device__ static inline unsigned short pow(const unsigned short a, const unsigned short b) { return (unsigned short)powf(a, b); }
-	__host__ __device__ static inline unsigned int pow(const unsigned int a, const unsigned int b) { return (unsigned int)pow((double)a, (double)b); }
-	__host__ __device__ static inline unsigned long pow(const unsigned long a, const unsigned long b) { return (unsigned long)pow((double)a, (double)b); }
-	__host__ __device__ static inline unsigned long long pow(const unsigned long long a, const unsigned long long b) { return (unsigned long long)pow((double)a, (double)b); }
+	__host__ __device__ static inline int8_t pow(const int8_t a, const int8_t b) { return (int8_t)powf(a, b); }
+	__host__ __device__ static inline int16_t pow(const int16_t a, const int16_t b) { return (int16_t)powf(a, b); }
+	__host__ __device__ static inline int32_t pow(const int32_t a, const int32_t b) { return (int32_t)pow((double)a, (double)b); }
+	__host__ __device__ static inline int64_t pow(const int64_t a, const int64_t b) { return (int64_t)pow((double)a, (double)b); }
+	__host__ __device__ static inline uint8_t pow(const uint8_t a, const uint8_t b) { return (uint8_t)powf(a, b); }
+	__host__ __device__ static inline uint16_t pow(const uint16_t a, const uint16_t b) { return (uint16_t)powf(a, b); }
+	__host__ __device__ static inline uint32_t pow(const uint32_t a, const uint32_t b) { return (uint32_t)pow((double)a, (double)b); }
+	__host__ __device__ static inline uint64_t pow(const uint64_t a, const uint64_t b) { return (uint64_t)pow((double)a, (double)b); }
 
-	__host__ __device__ static inline signed char sqrt(const char a) { return (char)sqrtf(a); }
-	__host__ __device__ static inline signed short sqrt(const short a, const short b) { return (short)sqrtf(a); }
-	__host__ __device__ static inline signed int sqrt(const int a, const int b) { return (int)sqrt((double)a); }
-	__host__ __device__ static inline signed long sqrt(const long a, const long b) { return (long)sqrt((double)a); }
-	__host__ __device__ static inline signed long long sqrt(const long long a, const long long b) { return (long long)sqrt((double)a); }
-	__host__ __device__ static inline unsigned char sqrt(const unsigned char a, const unsigned char b) { return (unsigned char)sqrtf(a); }
-	__host__ __device__ static inline unsigned short sqrt(const unsigned short a, const unsigned short b) { return (unsigned short)sqrtf(a); }
-	__host__ __device__ static inline unsigned int sqrt(const unsigned int a, const unsigned int b) { return (unsigned int)sqrt((double)a); }
-	__host__ __device__ static inline unsigned long sqrt(const unsigned long a, const unsigned long b) { return (unsigned long)sqrt((double)a); }
-	__host__ __device__ static inline unsigned long long sqrt(const unsigned long long a, const unsigned long long b) { return (unsigned long long)sqrt((double)a); }
+	__host__ __device__ static inline int8_t sqrt(const int8_t a) { return (int8_t)sqrtf(a); }
+	__host__ __device__ static inline int16_t sqrt(const int16_t a, const int16_t b) { return (int16_t)sqrtf(a); }
+	__host__ __device__ static inline int32_t sqrt(const int32_t a, const int32_t b) { return (int32_t)sqrt((double)a); }
+	__host__ __device__ static inline int64_t sqrt(const int64_t a, const int64_t b) { return (int64_t)sqrt((double)a); }
+	__host__ __device__ static inline uint8_t sqrt(const uint8_t a, const uint8_t b) { return (uint8_t)sqrtf(a); }
+	__host__ __device__ static inline uint16_t sqrt(const uint16_t a, const uint16_t b) { return (uint16_t)sqrtf(a); }
+	__host__ __device__ static inline uint32_t sqrt(const uint32_t a, const uint32_t b) { return (uint32_t)sqrt((double)a); }
+	__host__ __device__ static inline uint64_t sqrt(const uint64_t a, const uint64_t b) { return (uint64_t)sqrt((double)a); }
 }
 #pragma endregion
 

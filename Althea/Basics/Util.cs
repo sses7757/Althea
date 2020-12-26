@@ -343,15 +343,6 @@ namespace Althea
 				return DataType.RealDouble;
 			else if (type == typeof(float))
 				return DataType.RealSingle;
-			else if (type == typeof(DoubleComplex))
-				return DataType.ComplexDouble;
-			else if (type == typeof(FloatComplex))
-				return DataType.ComplexSingle;
-			// other user-defined complex float types
-			else if (typeof(IComplex<double>).IsAssignableFrom(type))
-				return DataType.ComplexDouble;
-			else if (typeof(IComplex<float>).IsAssignableFrom(type))
-				return DataType.ComplexSingle;
 			// built-in integer types
 			else if (type == typeof(int))
 				return DataType.RealInt32;
@@ -369,22 +360,26 @@ namespace Althea
 				return DataType.RealUInt8;
 			else if (type == typeof(ushort))
 				return DataType.RealUInt16;
-			// other user-defined complex integer types
-			else if (typeof(IComplex<int>).IsAssignableFrom(type))
+			// complex types
+			else if (type == typeof(Complex<float>))
+				return DataType.ComplexSingle;
+			else if (type == typeof(Complex<double>))
+				return DataType.ComplexDouble;
+			else if (type == typeof(Complex<int>))
 				return DataType.ComplexInt32;
-			else if (typeof(IComplex<long>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<long>))
 				return DataType.ComplexInt64;
-			else if (typeof(IComplex<sbyte>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<sbyte>))
 				return DataType.ComplexInt8;
-			else if (typeof(IComplex<short>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<short>))
 				return DataType.ComplexInt16;
-			else if (typeof(IComplex<uint>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<uint>))
 				return DataType.ComplexUInt32;
-			else if (typeof(IComplex<ulong>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<ulong>))
 				return DataType.ComplexUInt64;
-			else if (typeof(IComplex<byte>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<byte>))
 				return DataType.ComplexUInt8;
-			else if (typeof(IComplex<ushort>).IsAssignableFrom(type))
+			else if (type == typeof(Complex<ushort>))
 				return DataType.ComplexUInt16;
 			// otherwise
 			else
@@ -414,11 +409,6 @@ namespace Althea
 				// built-in float types
 				float _ => DataType.RealSingle,
 				double _ => DataType.RealDouble,
-				FloatComplex _ => DataType.ComplexSingle,
-				DoubleComplex _ => DataType.ComplexDouble,
-				// other user-defined complex float types
-				IComplex<float> _ => DataType.ComplexSingle,
-				IComplex<double> _ => DataType.ComplexDouble,
 				// built-in integer types
 				int _ => DataType.RealInt32,
 				long _ => DataType.RealInt64,
@@ -428,15 +418,17 @@ namespace Althea
 				ulong _ => DataType.RealUInt64,
 				byte _ => DataType.RealUInt8,
 				ushort _ => DataType.RealUInt16,
-				// other user-defined complex integer types
-				IComplex<int> _ => DataType.ComplexInt32,
-				IComplex<long> _ => DataType.ComplexInt64,
-				IComplex<sbyte> _ => DataType.ComplexInt8,
-				IComplex<short> _ => DataType.ComplexInt16,
-				IComplex<uint> _ => DataType.ComplexUInt32,
-				IComplex<ulong> _ => DataType.ComplexUInt64,
-				IComplex<byte> _ => DataType.ComplexUInt8,
-				IComplex<ushort> _ => DataType.ComplexUInt16,
+				// complex types
+				Complex<float> _ => DataType.ComplexSingle,
+				Complex<double> _ => DataType.ComplexDouble,
+				Complex<int> _ => DataType.ComplexInt32,
+				Complex<long> _ => DataType.ComplexInt64,
+				Complex<sbyte> _ => DataType.ComplexInt8,
+				Complex<short> _ => DataType.ComplexInt16,
+				Complex<uint> _ => DataType.ComplexUInt32,
+				Complex<ulong> _ => DataType.ComplexUInt64,
+				Complex<byte> _ => DataType.ComplexUInt8,
+				Complex<ushort> _ => DataType.ComplexUInt16,
 				// otherwise
 				_ => throw new NotSupportedException(Resource.DataTypeNotSupport),
 			};

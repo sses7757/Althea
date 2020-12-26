@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <stdint.h>
+
 #include "complex.h"
 
 
@@ -10,6 +12,7 @@ namespace Datatype
 #define HAS_LDBL
 #endif
 
+#pragma region data type enum
 	/// <summary>
 	/// The general data types defined by flags and masks.
 	/// </summary>
@@ -228,6 +231,8 @@ namespace Datatype
 		str = str + " Byte" + std::to_string(size(type)) + (isfloat(type) ? "Float" : "Integer");
 		return str;
 	}
+#pragma endregion
+
 
 
 // automatically generate float type switch functions
@@ -288,37 +293,37 @@ namespace Datatype
 		case Datatype::ComplexDouble: \
 			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			return funcName<char>(__VA_ARGS__); \
+			return funcName<int8_t>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			return funcName<short>(__VA_ARGS__); \
+			return funcName<int16_t>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			return funcName<int>(__VA_ARGS__); \
+			return funcName<int32_t>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			return funcName<long long>(__VA_ARGS__); \
+			return funcName<int64_t>(__VA_ARGS__); \
 		case Datatype::RealUInt8: \
-			return funcName<unsigned char>(__VA_ARGS__); \
+			return funcName<uint8_t>(__VA_ARGS__); \
 		case Datatype::RealUInt16: \
-			return funcName<unsigned short>(__VA_ARGS__); \
+			return funcName<uint16_t>(__VA_ARGS__); \
 		case Datatype::RealUInt32: \
-			return funcName<unsigned int>(__VA_ARGS__); \
+			return funcName<uint32_t>(__VA_ARGS__); \
 		case Datatype::RealUInt64: \
-			return funcName<unsigned long long>(__VA_ARGS__); \
+			return funcName<uint64_t>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int64_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint64_t>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, dataType, returnType); \
 		} \
@@ -340,37 +345,37 @@ namespace Datatype
 		case Datatype::ComplexLongDouble: \
 			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			return funcName<char>(__VA_ARGS__); \
+			return funcName<int8_t>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			return funcName<short>(__VA_ARGS__); \
+			return funcName<int16_t>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			return funcName<int>(__VA_ARGS__); \
+			return funcName<int32_t>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			return funcName<long long>(__VA_ARGS__); \
+			return funcName<int64_t>(__VA_ARGS__); \
 		case Datatype::RealUInt8: \
-			return funcName<unsigned char>(__VA_ARGS__); \
+			return funcName<uint8_t>(__VA_ARGS__); \
 		case Datatype::RealUInt16: \
-			return funcName<unsigned short>(__VA_ARGS__); \
+			return funcName<uint16_t>(__VA_ARGS__); \
 		case Datatype::RealUInt32: \
-			return funcName<unsigned int>(__VA_ARGS__); \
+			return funcName<uint32_t>(__VA_ARGS__); \
 		case Datatype::RealUInt64: \
-			return funcName<unsigned long long>(__VA_ARGS__); \
+			return funcName<uint64_t>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int64_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint64_t>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, dataType, returnType); \
 		} \
@@ -387,21 +392,21 @@ namespace Datatype
 		case Datatype::ComplexDouble: \
 			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int64_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint64_t>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, dataType, returnType); \
 		} \
@@ -417,21 +422,21 @@ namespace Datatype
 		case Datatype::ComplexLongDouble: \
 			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int64_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt8: \
-			return funcName<BlasSupp::complex<unsigned char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt16: \
-			return funcName<BlasSupp::complex<unsigned short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt32: \
-			return funcName<BlasSupp::complex<unsigned int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexUInt64: \
-			return funcName<BlasSupp::complex<unsigned long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<uint64_t>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, dataType, returnType); \
 		} \
@@ -452,21 +457,21 @@ namespace Datatype
 		case Datatype::ComplexDouble: \
 			return funcName<BlasSupp::complex<double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			return funcName<char>(__VA_ARGS__); \
+			return funcName<int8_t>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			return funcName<short>(__VA_ARGS__); \
+			return funcName<int16_t>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			return funcName<int>(__VA_ARGS__); \
+			return funcName<int32_t>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			return funcName<long long>(__VA_ARGS__); \
+			return funcName<int64_t>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int64_t>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, dataType, returnType); \
 		} \
@@ -488,21 +493,21 @@ namespace Datatype
 		case Datatype::ComplexLongDouble: \
 			return funcName<BlasSupp::complex<long double>>(__VA_ARGS__); \
 		case Datatype::RealInt8: \
-			return funcName<char>(__VA_ARGS__); \
+			return funcName<int8_t>(__VA_ARGS__); \
 		case Datatype::RealInt16: \
-			return funcName<short>(__VA_ARGS__); \
+			return funcName<int16_t>(__VA_ARGS__); \
 		case Datatype::RealInt32: \
-			return funcName<int>(__VA_ARGS__); \
+			return funcName<int32_t>(__VA_ARGS__); \
 		case Datatype::RealInt64: \
-			return funcName<long long>(__VA_ARGS__); \
+			return funcName<int64_t>(__VA_ARGS__); \
 		case Datatype::ComplexInt8: \
-			return funcName<BlasSupp::complex<char>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int8_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt16: \
-			return funcName<BlasSupp::complex<short>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int16_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt32: \
-			return funcName<BlasSupp::complex<int>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int32_t>>(__VA_ARGS__); \
 		case Datatype::ComplexInt64: \
-			return funcName<BlasSupp::complex<long long>>(__VA_ARGS__); \
+			return funcName<BlasSupp::complex<int64_t>>(__VA_ARGS__); \
 		default: \
 			UNSUPPORT(funcName, dataType, returnType); \
 		} \

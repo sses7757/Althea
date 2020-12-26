@@ -4,787 +4,313 @@ using System.Numerics;
 
 namespace Althea
 {
-	#region complex interfaces
+	#region generic complex struct
 	/// <summary>
-	/// The complex number interface
+	/// The general complex type
 	/// </summary>
-	/// <typeparam name="T">the data type of real number</typeparam>
-	public interface IComplex<T> where T : struct
+	/// <typeparam name="T">the data type of corresponding real number</typeparam>
+	[StructLayout(LayoutKind.Sequential)]
+	public struct Complex<T> where T : struct, IFormattable, IEquatable<T>
 	{
-		/// <summary>
-		/// Get real part
-		/// </summary>
-		T Real();
+		#region basic
+		private readonly T real, imag;
 
 		/// <summary>
-		/// Get imaginary part
+		/// Get the real part
 		/// </summary>
-		T Imaginary();
+		public T Real() => this.real;
 
 		/// <summary>
-		/// Complex absolute value
+		/// Get the imaginary part
 		/// </summary>
-		T Abs();
-	}
+		public T Imag() => this.imag;
 
-	/// <summary>
-	/// The complex number interface
-	/// </summary>
-	/// <typeparam name="TThis">the type of concrete complex type that implements this interface</typeparam>
-	/// <typeparam name="T">the data type of real number</typeparam>
-	public interface IComplex<TThis, T> : IComplex<T> where TThis : IComplex<TThis, T>, new() where T : struct
-	{
+		/// <summary>
+		/// Constructor from real and imaginary parts
+		/// </summary>
+		/// <param name="re">real part</param>
+		/// <param name="im">imaginary part, default value is <c>default(<typeparamref name="T"/>)</c></param>
+		public Complex(T re, T im = default)
+		{
+			this.real = re;
+			this.imag = im;
+		}
+		#endregion
+
+		#region static values
+		private static readonly T _oneT = (T)(dynamic)1;
+		private static readonly T _minusOneT = (T)(dynamic)(-1);
+
+		/// <summary>
+		/// <see cref="Complex{T}"/> 0
+		/// </summary>
+		public static readonly Complex<T> Zero = new Complex<T>(default);
+		/// <summary>
+		/// <see cref="Complex{T}"/> 1
+		/// </summary>
+		public static readonly Complex<T> One = new Complex<T>(_oneT);
+		/// <summary>
+		/// <see cref="Complex{T}"/> -1
+		/// </summary>
+		public static readonly Complex<T> MinusOne = new Complex<T>(_minusOneT);
+		/// <summary>
+		/// <see cref="Complex{T}"/> i
+		/// </summary>
+		public static readonly Complex<T> ImOne = new Complex<T>(default, _oneT);
+		/// <summary>
+		/// <see cref="Complex{T}"/> -1
+		/// </summary>
+		public static readonly Complex<T> MinusImOne = new Complex<T>(default, _minusOneT);
+		#endregion
+
+		#region static parser
+		private static readonly StringComparison StrCmp = StringComparison.OrdinalIgnoreCase;
+
+		private static readonly string[] ParseSplit = new string[] { " + ", " - " };
+
+		/// <summary>
+		/// Parse a <see cref="string"/> to a new <see cref="Complex{T}"/>
+		/// </summary>
+		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+		public static Complex<T> Parse(string s)
+		{
+			if (s is null || s.Length == 0)
+				throw new ArgumentNullException(nameof(s));
+			// TODO: use native
+			throw new ArgumentException($"Cannot parse '{s}' to Complex.", nameof(s));
+		}
+		#endregion
+
+		#region converter
+		/// <summary>
+		/// Convert from int
+		/// </summary>
+		/// <param name="a">a int</param>
+		public static implicit operator Complex<T>(int a) => new Complex<T>((T)(dynamic)a);
+		/// <summary>
+		/// Convert from T
+		/// </summary>
+		/// <param name="a">a T</param>
+		public static implicit operator Complex<T>(T a) => new Complex<T>(a);
+		/// <summary>
+		/// Convert from int tuple
+		/// </summary>
+		/// <param name="a">a int tuple</param>
+		public static implicit operator Complex<T>((int r, int i) a) => new Complex<T>((T)(dynamic)a.r, (T)(dynamic)a.i);
+		/// <summary>
+		/// Convert from T tuple
+		/// </summary>
+		/// <param name="a">a T tuple</param>
+		public static implicit operator Complex<T>((T r, T i) a) => new Complex<T>(a.r, a.i);
+
+		/// <summary>
+		/// Convert system's complex number to this
+		/// </summary>
+		/// <param name="c">the <see cref="Complex"/> struct of system</param>
+		public static explicit operator Complex<T>(Complex c) => new Complex<T>((T)(dynamic)c.Real, (T)(dynamic)c.Imaginary);
+
+		/// <summary>
+		/// Convert to <typeparamref name="T"/>
+		/// </summary>
+		public static explicit operator T(Complex<T> v) => v.Abs();
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Equal operator
+		/// </summary>
+		public static bool operator ==(Complex<T> a, Complex<T> b) => a.real.Equals(b.real) && a.imag.Equals(b.imag);
+
+		/// <summary>
+		/// Not-equal operator
+		/// </summary>
+		public static bool operator !=(Complex<T> a, Complex<T> b) => !(a == b);
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		/// <param name="another">another <see cref="Complex{T}"/></param>
+		/// <returns>this == <paramref name="another"/></returns>
+		public bool Equals(Complex<T> another)
+		{
+			return this == another;
+		}
+
+		/// <summary>
+		/// Override <see cref="object.GetHashCode"/>
+		/// </summary>
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(this.real, this.imag);
+		}
+
+		/// <summary>
+		/// Override <see cref="object.Equals(object)"/>
+		/// </summary>
+		public override bool Equals(object obj)
+		{
+			Complex<T> a;
+			if (obj is int @int)
+				a = @int;
+			else if (obj is T single)
+				a = single;
+			else if (obj is Complex<T> complex)
+				a = complex;
+			else
+				return false;
+			return this == a;
+		}
+		#endregion
+
+		#region arithmetic operators (I do not recommend you to use them in large managed arrays even though the dynamic functions will be optimized by the JIT)
+		/// <summary>
+		/// Complex negate
+		/// </summary>
+		public static Complex<T> operator -(Complex<T> a) => new Complex<T>(-(dynamic)a.real, -(dynamic)a.imag);
+
+		/// <summary>
+		/// Complex add
+		/// </summary>
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new Complex<T>(a.real + (dynamic)b.real, a.imag + (dynamic)b.imag);
+		/// <summary>
+		/// Complex subtract
+		/// </summary>
+		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new Complex<T>(a.real - (dynamic)b.real, a.imag - (dynamic)b.imag);
+		/// <summary>
+		/// Complex add real
+		/// </summary>
+		public static Complex<T> operator +(Complex<T> a, T b) => new Complex<T>(a.real + (dynamic)b, a.imag);
+		/// <summary>
+		/// Complex add real
+		/// </summary>
+		public static Complex<T> operator +(T b, Complex<T> a) => new Complex<T>(a.real + (dynamic)b, a.imag);
+		/// <summary>
+		/// Complex subtract real
+		/// </summary>
+		public static Complex<T> operator -(Complex<T> a, T b) => new Complex<T>(a.real - (dynamic)b, a.imag);
+		/// <summary>
+		/// Real subtract complex
+		/// </summary>
+		public static Complex<T> operator -(T b, Complex<T> a) => new Complex<T>(b - (dynamic)a.real, -(dynamic)a.imag);
+
+		/// <summary>
+		/// Complex multiply
+		/// </summary>
+		public static Complex<T> operator *(Complex<T> a, Complex<T> b) => new Complex<T>(a.real * (dynamic)b.real - a.imag * (dynamic)b.imag, a.real * (dynamic)b.imag + a.imag * (dynamic)b.real);
+		/// <summary>
+		/// Complex division, guards against intermediate underflow and overflow by scaling
+		/// </summary>
+		public static Complex<T> operator /(Complex<T> x, Complex<T> y)
+		{
+			// TODO: use native
+		}
+		/// <summary>
+		/// Complex multiply real number
+		/// </summary>
+		public static Complex<T> operator *(Complex<T> a, T b) => new Complex<T>((dynamic)a.real * b, (dynamic)a.imag * b);
+		/// <summary>
+		/// Complex multiply real number
+		/// </summary>
+		public static Complex<T> operator *(T b, Complex<T> a) => new Complex<T>((dynamic)a.real * b, (dynamic)a.imag * b);
+		/// <summary>
+		/// Complex divide real number
+		/// </summary>
+		public static Complex<T> operator /(Complex<T> a, T b) => new Complex<T>((dynamic)a.real / b, (dynamic)a.imag / b);
+		/// <summary>
+		/// Real number divide complex 
+		/// </summary>
+		public static Complex<T> operator /(T b, Complex<T> a) => new Complex<T>(b) / a;
+
+		/// <summary>
+		/// Complex absolute value, guards against intermediate underflow and overflow by scaling
+		/// </summary>
+		public T Abs()
+		{
+			// TODO: use native
+		}
+
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
-		TThis Conjugate();
+		public Complex<T> Conjugate() => new Complex<T>(this.real, -(dynamic)this.imag);
+
+		/// <summary>
+		/// Complex exponential
+		/// </summary>
+		public Complex<T> Exp()
+		{
+			// TODO: use native
+		}
+
+		/// <summary>
+		/// Complex logarithm of base <c>e</c>
+		/// </summary>
+		public Complex<T> Log()
+		{
+			// TODO: use native
+		}
+
+		/// <summary>
+		/// Complex number power
+		/// </summary>
+		/// <param name="p">the power of real type <typeparamref name="T"/></param>
+		public Complex<T> Pow(T p)
+		{
+			// TODO: use native
+		}
+
+		/// <summary>
+		/// Complex  number power
+		/// </summary>
+		/// <param name="p">the power of complex type <see cref="Complex{T}"/></param>
+		public Complex<T> Pow(Complex<T> p)
+		{
+			// TODO: use native
+		}
+		#endregion
+
+		#region string representation
+		/// <summary>
+		/// Override <see cref="object.ToString"/>
+		/// </summary>
+		public override string ToString()
+		{
+			return this.ToString(null, Resource.Culture);
+		}
+
+		/// <summary>
+		/// String representation of this complex number
+		/// </summary>
+		/// <param name="format">format of output</param>
+		public string ToString(string format)
+		{
+			return this.ToString(format, Resource.Culture);
+		}
+
+		/// <summary>
+		/// Realization of <see cref="IFormattable.ToString(string, IFormatProvider)"/>
+		/// </summary>
+		/// <param name="format">format of output</param>
+		/// <param name="formatProvider">The provider to use to format the value.</param>
+		public string ToString(string format, IFormatProvider formatProvider = null)
+		{
+			formatProvider ??= Resource.Culture;
+			string r = this.real.ToString(format, formatProvider), i = this.imag.ToString(format, formatProvider);
+			if (!r.StartsWith('-'))
+				r = " " + r;
+			if (!i.StartsWith('-'))
+				i = " " + i;
+			return $"({r},{i})";
+		}
+		#endregion
 	}
 	#endregion
-
-	/// <summary>
-	/// The data type -- float complex
-	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct FloatComplex : IComplex<FloatComplex, float>, IFormattable, IComparable, IComparable<FloatComplex>, IEquatable<FloatComplex>
-	{
-		// real and imaginary parts
-		private readonly float re, im;
-
-		/// <summary>
-		/// Get real part
-		/// </summary>
-		public float Real() => re;
-
-		/// <summary>
-		/// Get imaginary part
-		/// </summary>
-		public float Imaginary() => im;
-
-		/// <summary>
-		/// <see cref="FloatComplex"/> 0
-		/// </summary>
-		public static readonly FloatComplex Zero = new FloatComplex(0);
-		/// <summary>
-		/// <see cref="FloatComplex"/> 1
-		/// </summary>
-		public static readonly FloatComplex One = new FloatComplex(1);
-		/// <summary>
-		/// <see cref="FloatComplex"/> -1
-		/// </summary>
-		public static readonly FloatComplex MinusOne = new FloatComplex(-1);
-		/// <summary>
-		/// <see cref="FloatComplex"/> i
-		/// </summary>
-		public static readonly FloatComplex ImOne = new FloatComplex(0, 1);
-		/// <summary>
-		/// <see cref="FloatComplex"/> -1
-		/// </summary>
-		public static readonly FloatComplex MinusImOne = new FloatComplex(0, -1);
-
-		/// <summary>
-		/// Constructor from floats
-		/// </summary>
-		/// <param name="re">real</param>
-		/// <param name="im">imaginary</param>
-		public FloatComplex(float re, float im = 0)
-		{
-			this.re = re;
-			this.im = im;
-		}
-
-		/// <summary>
-		/// Constructor from <see cref="Complex"/>
-		/// </summary>
-		/// <param name="c">a <see cref="Complex"/></param>
-		public FloatComplex(Complex c)
-		{
-			this.re = (float)c.Real;
-			this.im = (float)c.Imaginary;
-		}
-
-
-		/// <summary>
-		/// Parse the <see cref="string"/> to a new <see cref="FloatComplex"/>
-		/// </summary>
-		/// <param name="s">string to parse</param>
-		public static FloatComplex Parse(string s) => !string.IsNullOrWhiteSpace(s) ? new FloatComplex(CudaCSharpConverters.ParseComplex(s)) : throw new ArgumentNullException(nameof(s));
-
-		/// <summary>
-		/// Convert from int
-		/// </summary>
-		/// <param name="a">a int</param>
-		public static implicit operator FloatComplex(int a) => new FloatComplex(a);
-		/// <summary>
-		/// Convert from float
-		/// </summary>
-		/// <param name="a">a float</param>
-		public static implicit operator FloatComplex(float a) => new FloatComplex(a);
-		/// <summary>
-		/// Convert from int tuple
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		public static implicit operator FloatComplex((int r, int i) a) => new FloatComplex(a.r, a.i);
-		/// <summary>
-		/// Convert from float tuple
-		/// </summary>
-		/// <param name="a">a float tuple</param>
-		public static implicit operator FloatComplex((float r, float i) a) => new FloatComplex(a.r, a.i);
-
-		/// <summary>
-		/// Convert system's complex number to this
-		/// </summary>
-		/// <param name="c">the <see cref="Complex"/> struct of system</param>
-		public static explicit operator FloatComplex(Complex c) => new FloatComplex((float)c.Real, (float)c.Imaginary);
-
-		/// <summary>
-		/// Downcast <see cref="DoubleComplex"/> to this
-		/// </summary>
-		public static explicit operator FloatComplex(DoubleComplex c) => new FloatComplex((float)c.Real(), (float)c.Imaginary());
-
-		/// <summary>
-		/// Convert to <see cref="int"/>
-		/// </summary>
-		public static explicit operator int(FloatComplex c) => Convert.ToInt32(c.Abs());
-
-		/// <summary>
-		/// Convert to <see cref="double"/>
-		/// </summary>
-		public static explicit operator double(FloatComplex v) => v.Abs();
-
-		/// <summary>
-		/// Convert to <see cref="float"/>
-		/// </summary>
-		public static explicit operator float(FloatComplex v) => v.Abs();
-
-		/// <summary>
-		/// Equal operator
-		/// </summary>
-		public static bool operator ==(FloatComplex a, FloatComplex b) => a.re == b.re && a.im == b.im;
-		/// <summary>
-		/// Not-equal operator
-		/// </summary>
-		public static bool operator !=(FloatComplex a, FloatComplex b) => !(a == b);
-		/// <summary>
-		/// Override <see cref="object.GetHashCode"/>
-		/// </summary>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.re, this.im);
-		}
-		/// <summary>
-		/// Override <see cref="object.Equals(object)"/>
-		/// </summary>
-		public override bool Equals(object obj)
-		{
-			FloatComplex a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is float single)
-				a = single;
-			else if (obj is FloatComplex complex)
-				a = complex;
-			else
-				return false;
-			return this == a;
-		}
-
-		/// <summary>
-		/// Complex negate
-		/// </summary>
-		public static FloatComplex operator -(FloatComplex a) => new FloatComplex(-a.re, -a.im);
-
-		/// <summary>
-		/// Complex add
-		/// </summary>
-		public static FloatComplex operator +(FloatComplex a, FloatComplex b)
-			=> new FloatComplex(a.re + b.re, a.im + b.im);
-		/// <summary>
-		/// Complex subtract
-		/// </summary>
-		public static FloatComplex operator -(FloatComplex a, FloatComplex b)
-			=> new FloatComplex(a.re - b.re, a.im - b.im);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static FloatComplex operator +(FloatComplex a, float b)
-			=> new FloatComplex(a.re + b, a.im);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static FloatComplex operator +(float b, FloatComplex a)
-			=> new FloatComplex(a.re + b, a.im);
-		/// <summary>
-		/// Complex subtract real
-		/// </summary>
-		public static FloatComplex operator -(FloatComplex a, float b)
-			=> new FloatComplex(a.re - b, a.im);
-		/// <summary>
-		/// Real subtract complex
-		/// </summary>
-		public static FloatComplex operator -(float b, FloatComplex a)
-			=> new FloatComplex(b - a.re, -a.im);
-
-		/// <summary>
-		/// Complex multiply
-		/// </summary>
-		public static FloatComplex operator *(FloatComplex a, FloatComplex b)
-			=> new FloatComplex(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
-		/// <summary>
-		/// Complex division, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public static FloatComplex operator /(FloatComplex x, FloatComplex y)
-		{
-			FloatComplex quot;
-			float s = Math.Abs(y.re) + Math.Abs(y.im);
-			float oos = 1.0f / s;
-			float ars = x.re * oos;
-			float ais = x.im * oos;
-			float brs = y.re * oos;
-			float bis = y.im * oos;
-			s = (brs * brs) + (bis * bis);
-			oos = 1.0f / s;
-			quot = new FloatComplex(((ars * brs) + (ais * bis)) * oos, ((ais * brs) - (ars * bis)) * oos);
-			return quot;
-		}
-		/// <summary>
-		/// Complex multiply number
-		/// </summary>
-		public static FloatComplex operator *(FloatComplex a, float b)
-			=> new FloatComplex(a.re * b, a.im * b);
-		/// <summary>
-		/// Complex multiply number
-		/// </summary>
-		public static FloatComplex operator *(float b, FloatComplex a)
-			=> new FloatComplex(a.re * b, a.im * b);
-		/// <summary>
-		/// Complex divide number
-		/// </summary>
-		public static FloatComplex operator /(FloatComplex a, float b)
-			=> new FloatComplex(a.re / b, a.im / b);
-		/// <summary>
-		/// Number divide complex 
-		/// </summary>
-		public static FloatComplex operator /(float b, FloatComplex a)
-			=> new FloatComplex(b) / a;
-
-		/// <summary>
-		/// Complex absolute value, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public float Abs()
-		{
-			float a = this.re, b = this.im;
-			float v, w, t;
-			a = Math.Abs(a); b = Math.Abs(b);
-			if (a > b)
-			{
-				v = a; w = b;
-			}
-			else
-			{
-				v = b; w = a;
-			}
-			t = w / v;
-			t = 1.0f + t * t;
-			t = v * (float)Math.Sqrt(t);
-			if ((v == 0.0f) || (v > float.MaxValue) || (w > float.MaxValue))
-			{
-				t = v + w;
-			}
-			return t;
-		}
-
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		public FloatComplex Conjugate() => new FloatComplex(this.re, -this.im);
-
-		/// <summary>
-		/// Complex power
-		/// </summary>
-		/// <param name="p">the power</param>
-		public FloatComplex Pow(double p) => (FloatComplex)Complex.Pow(new Complex(this.re, this.im), p);
-
-		/// <summary>
-		/// Override <see cref="object.ToString"/>
-		/// </summary>
-		public override string ToString()
-		{
-			return string.Format(Resource.Culture, "({0},{1})", re, im);
-		}
-
-		/// <summary>
-		/// Used to realize <see cref="IFormattable.ToString(string, IFormatProvider)"/>
-		/// </summary>
-		/// <param name="format">format of output</param>
-		public string ToString(string format)
-		{
-			return string.Format(Resource.Culture, "{2}({0:" + format + "},{3}{1:" + format + "})", re, im, re >= 0 ? " " : "", im >= 0 ? " " : "");
-		}
-
-		/// <summary>
-		/// Realization of <see cref="IFormattable.ToString(string, IFormatProvider)"/>
-		/// </summary>
-		/// <param name="format">format of output</param>
-		/// <param name="formatProvider">The provider to use to format the value. -or- A null reference
-		/// (Nothing in Visual Basic) to obtain the numeric format information from the current locale setting
-		/// of the operating system.</param>
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			if (formatProvider is null)
-#pragma warning disable CA1305
-				return this.ToString(format);
-#pragma warning restore CA1305
-			else
-				return new Complex(re, im).ToString(format, formatProvider);
-		}
-
-		/// <summary>
-		/// Compare this complex's value to the given value. If complexes are compared, their absolute values will be compared; otherwise, this complex's real part will be used to compare.
-		/// </summary>
-		/// <param name="obj">given value; if it is complex, its <see cref="Abs"/> will be used</param>
-		public int CompareTo(object obj)
-		{
-			if (obj is null)
-				throw new ArgumentNullException(nameof(obj));
-			FloatComplex a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is float single)
-				a = single;
-			else if (obj is FloatComplex complex)
-				return this.Abs().CompareTo(complex.Abs());
-			else if (obj is DoubleComplex complex1)
-				return ((double)this.Abs()).CompareTo(complex1.Abs());
-			else
-				throw new ArgumentException($"cannot compare FloatComplex to {obj.GetType().Name}");
-			return this.re.CompareTo(a.re);
-		}
-
-		/// <summary>
-		/// Compare this to another <see cref="FloatComplex"/>
-		/// </summary>
-		/// <param name="complex">another <see cref="FloatComplex"/></param>
-		/// <returns>an <see cref="int"/> indicating the comparison result</returns>
-		public int CompareTo(FloatComplex complex) => this.Abs().CompareTo(complex.Abs());
-
-		/// <summary>
-		/// Override <see cref="IEquatable{FloatComplex}"/>
-		/// </summary>
-		/// <param name="other">the other <see cref="FloatComplex"/></param>
-		/// <returns>equal or not</returns>
-		public bool Equals(FloatComplex other) => this == other;
-
-		/// <summary>
-		/// Smaller operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left &lt; right or not</returns>
-		public static bool operator <(FloatComplex left, FloatComplex right) => left.CompareTo(right) < 0;
-
-		/// <summary>
-		/// Smaller or equal operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left ≤ right or not</returns>
-		public static bool operator <=(FloatComplex left, FloatComplex right) => left.CompareTo(right) <= 0;
-
-		/// <summary>
-		/// Larger operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left &gt; right or not</returns>
-		public static bool operator >(FloatComplex left, FloatComplex right) => left.CompareTo(right) > 0;
-
-		/// <summary>
-		/// Larger or equal operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left ≥ right or not</returns>
-		public static bool operator >=(FloatComplex left, FloatComplex right) => left.CompareTo(right) >= 0;
-	}
-
-	/// <summary>
-	/// The data type -- double complex
-	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct DoubleComplex : IComplex<DoubleComplex, double>, IFormattable, IComparable, IComparable<DoubleComplex>, IEquatable<DoubleComplex>
-	{
-		/// <summary>
-		/// real and imaginary pars
-		/// </summary>
-		private readonly double re, im;
-
-		/// <summary>
-		/// Get real part
-		/// </summary>
-		public double Real() => re;
-
-		/// <summary>
-		/// Get imaginary part
-		/// </summary>
-		public double Imaginary() => im;
-
-		/// <summary>
-		/// <see cref="DoubleComplex"/> 0
-		/// </summary>
-		public static readonly DoubleComplex Zero = new DoubleComplex(0);
-		/// <summary>
-		/// <see cref="DoubleComplex"/> 1
-		/// </summary>
-		public static readonly DoubleComplex One = new DoubleComplex(1);
-		/// <summary>
-		/// <see cref="DoubleComplex"/> -1
-		/// </summary>
-		public static readonly DoubleComplex MinusOne = new DoubleComplex(-1);
-		/// <summary>
-		/// <see cref="DoubleComplex"/> i
-		/// </summary>
-		public static readonly DoubleComplex ImOne = new DoubleComplex(0, 1);
-		/// <summary>
-		/// <see cref="DoubleComplex"/> -1
-		/// </summary>
-		public static readonly DoubleComplex MinusImOne = new DoubleComplex(0, -1);
-
-		/// <summary>
-		/// Constructor from floats
-		/// </summary>
-		/// <param name="re">real</param>
-		/// <param name="im">imaginary</param>
-		public DoubleComplex(double re, double im = 0)
-		{
-			this.re = re;
-			this.im = im;
-		}
-
-		/// <summary>
-		/// Constructor from <see cref="Complex"/>
-		/// </summary>
-		/// <param name="c">a <see cref="Complex"/></param>
-		public DoubleComplex(Complex c)
-		{
-			this.re = c.Real;
-			this.im = c.Imaginary;
-		}
-
-		/// <summary>
-		/// Parse the <see cref="string"/> to a new <see cref="DoubleComplex"/>
-		/// </summary>
-		/// <param name="s">string to parse</param>
-		public static DoubleComplex Parse(string s) => !string.IsNullOrWhiteSpace(s) ? new DoubleComplex(CudaCSharpConverters.ParseComplex(s)) : throw new ArgumentNullException(nameof(s));
-
-		/// <summary>
-		/// Convert from int
-		/// </summary>
-		/// <param name="a">a int</param>
-		public static implicit operator DoubleComplex(int a) => new DoubleComplex(a);
-		/// <summary>
-		/// Convert from double
-		/// </summary>
-		/// <param name="a">a double</param>
-		public static implicit operator DoubleComplex(double a) => new DoubleComplex(a);
-		/// <summary>
-		/// Convert from int tuple
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		public static implicit operator DoubleComplex((int r, int i) a) => new DoubleComplex(a.r, a.i);
-		/// <summary>
-		/// Convert from float tuple
-		/// </summary>
-		/// <param name="a">a double tuple</param>
-		public static implicit operator DoubleComplex((float r, float i) a) => new DoubleComplex(a.r, a.i);
-		/// <summary>
-		/// Convert from double tuple
-		/// </summary>
-		/// <param name="a">a double tuple</param>
-		public static implicit operator DoubleComplex((double r, double i) a) => new DoubleComplex(a.r, a.i);
-
-		/// <summary>
-		/// Up-cast from a <see cref="FloatComplex"/>
-		/// </summary>
-		/// <param name="a">a <see cref="FloatComplex"/></param>
-		public static implicit operator DoubleComplex(FloatComplex a) => new DoubleComplex(a.Real(), a.Imaginary());
-
-		/// <summary>
-		/// Convert system's complex number to this
-		/// </summary>
-		/// <param name="c">the <see cref="Complex"/> struct of system</param>
-		public static explicit operator DoubleComplex(Complex c) => new DoubleComplex(c.Real, c.Imaginary);
-
-		/// <summary>
-		/// Convert to <see cref="int"/>
-		/// </summary>
-		public static explicit operator int(DoubleComplex v) => Convert.ToInt32(v.Abs());
-
-		/// <summary>
-		/// Convert to <see cref="double"/>
-		/// </summary>
-		public static explicit operator double(DoubleComplex v) => v.Abs();
-
-		/// <summary>
-		/// Convert to <see cref="float"/>
-		/// </summary>
-		public static explicit operator float(DoubleComplex v) => (float)v.Abs();
-
-		/// <summary>
-		/// Equal operator
-		/// </summary>
-		public static bool operator ==(DoubleComplex a, DoubleComplex b) => a.re == b.re && a.im == b.im;
-		/// <summary>
-		/// Not-equal operator
-		/// </summary>
-		public static bool operator !=(DoubleComplex a, DoubleComplex b) => !(a == b);
-		/// <summary>
-		/// Override <see cref="object.GetHashCode"/>
-		/// </summary>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.re, this.im);
-		}
-		/// <summary>
-		/// Override <see cref="object.Equals(object)"/>
-		/// </summary>
-		public override bool Equals(object obj)
-		{
-			DoubleComplex a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is float || obj is double)
-				a = (double)obj;
-			else if (obj is FloatComplex complex)
-				a = complex;
-			else if (obj is DoubleComplex complex1)
-				a = complex1;
-			else
-				return false;
-			return this == a;
-		}
-
-		/// <summary>
-		/// Complex negate
-		/// </summary>
-		public static DoubleComplex operator -(DoubleComplex a) => new DoubleComplex(-a.re, -a.im);
-
-		/// <summary>
-		/// Complex add
-		/// </summary>
-		public static DoubleComplex operator +(DoubleComplex a, DoubleComplex b)
-			=> new DoubleComplex(a.re + b.re, a.im + b.im);
-		/// <summary>
-		/// Complex subtract
-		/// </summary>
-		public static DoubleComplex operator -(DoubleComplex a, DoubleComplex b)
-			=> new DoubleComplex(a.re - b.re, a.im - b.im);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static DoubleComplex operator +(DoubleComplex a, double b)
-			=> new DoubleComplex(a.re + b, a.im);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static DoubleComplex operator +(double b, DoubleComplex a)
-			=> new DoubleComplex(a.re + b, a.im);
-		/// <summary>
-		/// Complex subtract real
-		/// </summary>
-		public static DoubleComplex operator -(DoubleComplex a, double b)
-			=> new DoubleComplex(a.re - b, a.im);
-		/// <summary>
-		/// Real subtract complex
-		/// </summary>
-		public static DoubleComplex operator -(double b, DoubleComplex a)
-			=> new DoubleComplex(b - a.re, -a.im);
-
-		/// <summary>
-		/// Complex multiply
-		/// </summary>
-		public static DoubleComplex operator *(DoubleComplex a, DoubleComplex b)
-			=> new DoubleComplex(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
-		/// <summary>
-		/// Complex division, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public static DoubleComplex operator /(DoubleComplex x, DoubleComplex y)
-		{
-			double s = Math.Abs(y.re) + Math.Abs(y.im);
-			double oos = 1.0f / s;
-			double ars = x.re * oos;
-			double ais = x.im * oos;
-			double brs = y.re * oos;
-			double bis = y.im * oos;
-			s = (brs * brs) + (bis * bis);
-			oos = 1.0f / s;
-			var quot = new DoubleComplex(((ars * brs) + (ais * bis)) * oos, ((ais * brs) - (ars * bis)) * oos);
-			return quot;
-		}
-		/// <summary>
-		/// Complex multiply number
-		/// </summary>
-		public static DoubleComplex operator *(DoubleComplex a, double b)
-			=> new DoubleComplex(a.re * b, a.im * b);
-		/// <summary>
-		/// Complex multiply number
-		/// </summary>
-		public static DoubleComplex operator *(double b, DoubleComplex a)
-			=> new DoubleComplex(a.re * b, a.im * b);
-		/// <summary>
-		/// Complex divide number
-		/// </summary>
-		public static DoubleComplex operator /(DoubleComplex a, double b)
-			=> new DoubleComplex(a.re / b, a.im / b);
-		/// <summary>
-		/// Number divide complex 
-		/// </summary>
-		public static DoubleComplex operator /(double b, DoubleComplex a)
-			=> new DoubleComplex(b) / a;
-
-		/// <summary>
-		/// Complex absolute value, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public double Abs()
-		{
-			double a = this.re, b = this.im;
-			double v, w, t;
-			a = Math.Abs(a); b = Math.Abs(b);
-			if (a > b)
-			{
-				v = a; w = b;
-			}
-			else
-			{
-				v = b; w = a;
-			}
-			t = w / v;
-			t = 1.0d + t * t;
-			t = v * Math.Sqrt(t);
-			if ((v == 0.0) || (v > double.MaxValue) || (w > double.MaxValue))
-			{
-				t = v + w;
-			}
-			return t;
-		}
-
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		public DoubleComplex Conjugate() => new DoubleComplex(this.re, -this.im);
-
-		/// <summary>
-		/// Complex power
-		/// </summary>
-		/// <param name="p">the power</param>
-		public DoubleComplex Pow(double p) => (DoubleComplex)Complex.Pow(new Complex(this.re, this.im), p);
-
-		/// <summary>
-		/// Override <see cref="object.ToString"/>
-		/// </summary>
-		public override string ToString()
-		{
-			return string.Format(Resource.Culture, "({0},{1})", re, im);
-		}
-
-		/// <summary>
-		/// Used to realize <see cref="IFormattable.ToString(string, IFormatProvider)"/>
-		/// </summary>
-		/// <param name="format">format of output</param>
-		public string ToString(string format)
-		{
-			return string.Format(Resource.Culture, "{2}({0:" + format + "},{3}{1:" + format + "})", re, im, re >= 0 ? " " : "", im >= 0 ? " " : "");
-		}
-
-		/// <summary>
-		/// Realization of <see cref="IFormattable.ToString(string, IFormatProvider)"/>
-		/// </summary>
-		/// <param name="format">format of output</param>
-		/// <param name="formatProvider">The provider to use to format the value. -or- A null reference
-		/// (Nothing in Visual Basic) to obtain the numeric format information from the current locale setting
-		/// of the operating system.</param>
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			if (formatProvider is null)
-#pragma warning disable CA1305
-				return this.ToString(format);
-#pragma warning restore CA1305
-			else
-				return new Complex(re, im).ToString(format, formatProvider);
-		}
-
-		/// <summary>
-		/// Compare this complex's value to the given value. If complexes are compared, their absolute values will be compared; otherwise, this complex's real part will be used to compare.
-		/// </summary>
-		/// <param name="obj">given value; if it is complex, its <see cref="Abs"/> will be used</param>
-		public int CompareTo(object obj)
-		{
-			if (obj is null)
-				throw new ArgumentNullException(nameof(obj));
-			DoubleComplex a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is float single)
-				a = single;
-			else if (obj is FloatComplex complex)
-				return ((float)this.Abs()).CompareTo(complex.Abs());
-			else if (obj is DoubleComplex complex1)
-				return this.Abs().CompareTo(complex1.Abs());
-			else
-				throw new ArgumentException($"cannot compare FloatComplex to {obj.GetType().Name}");
-			return this.re.CompareTo(a.re);
-		}
-
-		/// <summary>
-		/// Compare this to another <see cref="DoubleComplex"/>
-		/// </summary>
-		/// <param name="complex">another <see cref="DoubleComplex"/></param>
-		/// <returns>an <see cref="int"/> indicating the comparison result</returns>
-		public int CompareTo(DoubleComplex complex) => this.Abs().CompareTo(complex.Abs());
-
-		/// <summary>
-		/// Override <see cref="IEquatable{DoubleComplex}"/>
-		/// </summary>
-		/// <param name="other">the other <see cref="DoubleComplex"/></param>
-		/// <returns>equal or not</returns>
-		public bool Equals(DoubleComplex other) => this == other;
-
-		/// <summary>
-		/// Smaller operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left &lt; right or not</returns>
-		public static bool operator <(DoubleComplex left, DoubleComplex right) => left.CompareTo(right) < 0;
-
-		/// <summary>
-		/// Smaller or equal operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left ≤ right or not</returns>
-		public static bool operator <=(DoubleComplex left, DoubleComplex right) => left.CompareTo(right) <= 0;
-
-		/// <summary>
-		/// Larger operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left &gt; right or not</returns>
-		public static bool operator >(DoubleComplex left, DoubleComplex right) => left.CompareTo(right) > 0;
-
-		/// <summary>
-		/// Larger or equal operator
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>left ≥ right or not</returns>
-		public static bool operator >=(DoubleComplex left, DoubleComplex right) => left.CompareTo(right) >= 0;
-	}
 
 
 	/// <summary>
 	/// The format specification enum of sparse matrix
 	/// </summary>
+	// TODO: move to Althea.LinearAlgebra.Sparse
 	[Flags]
 	public enum SparseMatrixFormat
 	{
@@ -845,6 +371,7 @@ namespace Althea
 	/// The FillMode type indicates which part (lower or upper) of the dense matrix was filled and consequently should be used by the function. <br/>
 	/// Its values correspond to Fortran characters ‘L’ or ‘l’ (lower) and ‘U’ or ‘u’ (upper) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
+	// TODO: move to Althea.LinearAlgebra.Dense
 	public enum MatrixFillMode
 	{
 		/// <summary>
@@ -861,6 +388,7 @@ namespace Althea
 	/// The DiagType type indicates whether the main diagonal of the dense matrix is unity and consequently should not be touched or modified by the function. <br/>
 	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-unit) and ‘U’ or ‘u’ (unit) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
+	// TODO: move to Althea.LinearAlgebra.Sparse
 	public enum DiagType
 	{
 		/// <summary>
@@ -877,6 +405,7 @@ namespace Althea
 	/// The SideMode type indicates whether the dense matrix is on the left or right side in the matrix equation solved by a particular function. <br/>
 	/// Its values correspond to Fortran characters ‘L’ or ‘l’ (left) and ‘R’ or ‘r’ (right) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
+	// TODO: move to Althea.LinearAlgebra.Dense
 	public enum SideMode
 	{
 		/// <summary>
@@ -893,6 +422,7 @@ namespace Althea
 	/// The Operation type indicates which operation needs to be performed with the dense matrix. <br/>
 	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-transpose), ‘T’ or ‘t’ (transpose) and ‘C’ or ‘c’ (conjugate transpose) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
+	// TODO: move to Althea.LinearAlgebra
 	public enum MatrixOperation
 	{
 		/// <summary>
@@ -912,6 +442,7 @@ namespace Althea
 	/// <summary>
 	/// Used in overloading operators
 	/// </summary>
+	// TODO: move to Althea.LinearAlgebra.Sparse
 	public enum PowerOperation
 	{
 		/// <summary>
@@ -971,13 +502,21 @@ namespace Althea
 		/// <param name="dataType">the <see cref="DataType"/> to get</param>
 		/// <returns>The number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.</returns>
 		public static int Bytes(this DataType dataType) => (int)(dataType & DataType.ByteMask) >> (int)DataType.ByteMaskStart;
+
+		/// <summary>
+		/// Get the string representation of a given <see cref="DataType"/>
+		/// </summary>
+		/// <param name="dataType"></param>
+		/// <returns></returns>
+		public static string ToString(this DataType dataType)
+		{
+
+		}
 	}
 
-#pragma warning disable CA1069
 	/// <summary>
 	/// The general data types defined by flags and masks.
 	/// </summary>
-	[Flags]
 	public enum DataType
 	{
 		/// <summary>
@@ -1128,11 +667,11 @@ namespace Althea
 		/// </summary>
 		ComplexUInt64 = Complex | TypeUnsignedInteger | Byte8,
 	}
-#pragma warning restore CA1069
 
 	/// <summary>
 	/// The <see cref="CudaDataType"/> type is an enum to specify the data precision. It is used when the data reference does not carry the type itself (e.g <see cref="IntPtr"/> alone).
 	/// </summary>
+	// TODO: move to Althea.Cuda, and set to internal
 	public enum CudaDataType
 	{
 		/// <summary>
@@ -1377,7 +916,7 @@ namespace Althea
 		/// This indicates that a CUDA Runtime API call cannot be executed because it is being called during process shut down, at a point in time after CUDA driver has been unloaded
 		/// </summary>
 		ErrorDeinitialized = 4,
-		
+
 		/// <summary>
 		/// This indicates profiler is not initialized for this run.
 		/// This can happen when the application is running with external profiling tools
