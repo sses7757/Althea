@@ -138,6 +138,9 @@
   <data name="CannotOperate" xml:space="preserve">
     <value>Matrices/vectors with incompatible sizes cannot perform such operation; </value>
   </data>
+  <data name="CannotParseComplex" xml:space="preserve">
+    <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
+  </data>
   <data name="ClassConcrete" xml:space="preserve">
     <value>The class should be a concrete one.</value>
   </data>

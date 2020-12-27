@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+using Althea.NativeType;
+
 
 namespace Althea.Linq
 {
@@ -806,6 +808,24 @@ namespace Althea.Linq
 			}
 			return prod;
 		}
+
+		/// <summary>
+		/// Complex list product
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static Complex<T> Prod<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (list is null || list.Count == 0)
+				return 1;
+			Complex<T> prod = 1;
+			for (int i = 0; i < list.Count; i++)
+			{
+				prod *= list[i];
+			}
+			return prod;
+		}
 		#endregion
 
 		#region concrete sum
@@ -887,34 +907,16 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static FloatComplex Sum(this IReadOnlyList<FloatComplex> list)
+		public static Complex<T> Sum<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>
 		{
 			if (list is null || list.Count == 0)
-				return 0;
-			FloatComplex prod = 1;
+				return default;
+			Complex<T> sum = default;
 			for (int i = 0; i < list.Count; i++)
 			{
-				prod *= list[i];
+				sum += list[i];
 			}
-			return prod;
-		}
-
-		/// <summary>
-		/// Complex list summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static DoubleComplex Sum(this IReadOnlyList<DoubleComplex> list)
-		{
-			if (list is null || list.Count == 0)
-				return 0;
-			DoubleComplex prod = 1;
-			for (int i = 0; i < list.Count; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
+			return sum;
 		}
 		#endregion
 
@@ -995,18 +997,42 @@ namespace Althea.Linq
 			return sum;
 		}
 
+
 		/// <summary>
-		/// List summation by <paramref name="selector"/>
+		/// Complex list summation by <paramref name="selector"/>
 		/// </summary>
+		/// <typeparam name="T">the complex type's real type</typeparam>
+		/// <typeparam name="TFrom">the conversion from type</typeparam>
 		/// <param name="list"></param>
 		/// <param name="selector">the selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static FloatComplex Sum<T>(this IReadOnlyList<T> list, Converter<T, FloatComplex> selector)
+		public static Complex<T> Sum<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (list is null || list.Count == 0)
+				return default;
+			Complex<T> sum = default;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+		#endregion
+
+		#region concrete selector prod
+		/// <summary>
+		/// List product by <paramref name="selector"/>
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static int Prod<T>(this IReadOnlyList<T> list, Converter<T, int> selector)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
-			FloatComplex sum = 0;
+			int sum = 0;
 			for (int i = 0; i < list.Count; i++)
 			{
 				sum += selector(list[i]);
@@ -1015,17 +1041,77 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// List summation by <paramref name="selector"/>
+		/// List product by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
 		/// <param name="selector">the selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static DoubleComplex Sum<T>(this IReadOnlyList<T> list, Converter<T, DoubleComplex> selector)
+		public static long Prod<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
-			DoubleComplex sum = 0;
+			long sum = 0;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List product by <paramref name="selector"/>
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static float Prod<T>(this IReadOnlyList<T> list, Converter<T, float> selector)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+			float sum = 0;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List product by <paramref name="selector"/>
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static double Prod<T>(this IReadOnlyList<T> list, Converter<T, double> selector)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+			double sum = 0;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+
+
+		/// <summary>
+		/// Complex list product by <paramref name="selector"/>
+		/// </summary>
+		/// <typeparam name="T">the complex type's real type</typeparam>
+		/// <typeparam name="TFrom">the conversion from type</typeparam>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static Complex<T> Prod<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (list is null || list.Count == 0)
+				return default;
+			Complex<T> sum = default;
 			for (int i = 0; i < list.Count; i++)
 			{
 				sum += selector(list[i]);
@@ -2593,7 +2679,7 @@ namespace Althea.Linq
 			{
 				result[i] = new ReadOnlyGrouping<TKey, TValue>(keys[i], values[i].ToArray());
 			}
-			return result;
+			return result as IReadOnlyList<IReadOnlyGrouping<TKey, TValue>>;
 		}
 		#endregion
 
@@ -2872,37 +2958,21 @@ namespace Althea.Linq
 		public static int[] ToInts<T>(this IReadOnlyList<T> array) where T : IConvertible => Array.ConvertAll(array.ToArray(), a => a.ToInt32(Resource.Culture));
 
 		/// <summary>
-		/// Convert a 1D <see cref="float"/> array to <see cref="FloatComplex"/> array by taking two items to form one.
+		/// Convert a 1D <typeparamref name="T"/> array to <see cref="Complex{T}"/> array by taking two consecutive real values to form one complex value.
 		/// </summary>
-		/// <param name="input">input <see cref="float"/> array</param>
-		/// <returns>a new <see cref="FloatComplex"/> array made out of <paramref name="input"/></returns>
+		/// <typeparam name="T">the real type</typeparam>
+		/// <param name="input">input array of type <typeparamref name="T"/></param>
+		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
 		/// <remarks>extend method of <paramref name="input"/></remarks>
-		public static FloatComplex[] ToComplexArray(this float[] input)
+		public static Complex<T>[] ToComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>
 		{
 			if (input is null)
 				throw new ArgumentNullException(nameof(input));
-			var complexArray = new FloatComplex[input.LongLength / 2];
-			for (long i = 0; i < input.LongLength; i += 2)
+			long length = input.LongLength / 2;
+			var complexArray = new Complex<T>[length];
+			for (long i = 0; i < length; i++)
 			{
-				complexArray[i / 2] = new FloatComplex(input[i], input[i + 1]);
-			}
-			return complexArray;
-		}
-
-		/// <summary>
-		/// Convert a 1D <see cref="double"/> array to <see cref="DoubleComplex"/> array by taking two items to form one.
-		/// </summary>
-		/// <param name="input">input <see cref="double"/> array</param>
-		/// <returns>a new <see cref="FloatComplex"/> array made out of <paramref name="input"/></returns>
-		/// <remarks>extend method of <paramref name="input"/></remarks>
-		public static DoubleComplex[] ToComplexArray(this double[] input)
-		{
-			if (input is null)
-				throw new ArgumentNullException(nameof(input));
-			var complexArray = new DoubleComplex[input.LongLength / 2];
-			for (long i = 0; i < input.LongLength; i += 2)
-			{
-				complexArray[i / 2] = new DoubleComplex(input[i], input[i + 1]);
+				complexArray[i] = new Complex<T>(input[i * 2], input[i * 2 + 1]);
 			}
 			return complexArray;
 		}

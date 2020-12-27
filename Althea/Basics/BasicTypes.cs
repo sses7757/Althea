@@ -1,312 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Numerics;
+
 
 namespace Althea
 {
-	#region generic complex struct
-	/// <summary>
-	/// The general complex type
-	/// </summary>
-	/// <typeparam name="T">the data type of corresponding real number</typeparam>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> where T : struct, IFormattable, IEquatable<T>
-	{
-		#region basic
-		private readonly T real, imag;
-
-		/// <summary>
-		/// Get the real part
-		/// </summary>
-		public T Real() => this.real;
-
-		/// <summary>
-		/// Get the imaginary part
-		/// </summary>
-		public T Imag() => this.imag;
-
-		/// <summary>
-		/// Constructor from real and imaginary parts
-		/// </summary>
-		/// <param name="re">real part</param>
-		/// <param name="im">imaginary part, default value is <c>default(<typeparamref name="T"/>)</c></param>
-		public Complex(T re, T im = default)
-		{
-			this.real = re;
-			this.imag = im;
-		}
-		#endregion
-
-		#region static values
-		private static readonly T _oneT = (T)(dynamic)1;
-		private static readonly T _minusOneT = (T)(dynamic)(-1);
-
-		/// <summary>
-		/// <see cref="Complex{T}"/> 0
-		/// </summary>
-		public static readonly Complex<T> Zero = new Complex<T>(default);
-		/// <summary>
-		/// <see cref="Complex{T}"/> 1
-		/// </summary>
-		public static readonly Complex<T> One = new Complex<T>(_oneT);
-		/// <summary>
-		/// <see cref="Complex{T}"/> -1
-		/// </summary>
-		public static readonly Complex<T> MinusOne = new Complex<T>(_minusOneT);
-		/// <summary>
-		/// <see cref="Complex{T}"/> i
-		/// </summary>
-		public static readonly Complex<T> ImOne = new Complex<T>(default, _oneT);
-		/// <summary>
-		/// <see cref="Complex{T}"/> -1
-		/// </summary>
-		public static readonly Complex<T> MinusImOne = new Complex<T>(default, _minusOneT);
-		#endregion
-
-		#region static parser
-		private static readonly StringComparison StrCmp = StringComparison.OrdinalIgnoreCase;
-
-		private static readonly string[] ParseSplit = new string[] { " + ", " - " };
-
-		/// <summary>
-		/// Parse a <see cref="string"/> to a new <see cref="Complex{T}"/>
-		/// </summary>
-		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		public static Complex<T> Parse(string s)
-		{
-			if (s is null || s.Length == 0)
-				throw new ArgumentNullException(nameof(s));
-			// TODO: use native
-			throw new ArgumentException($"Cannot parse '{s}' to Complex.", nameof(s));
-		}
-		#endregion
-
-		#region converter
-		/// <summary>
-		/// Convert from int
-		/// </summary>
-		/// <param name="a">a int</param>
-		public static implicit operator Complex<T>(int a) => new Complex<T>((T)(dynamic)a);
-		/// <summary>
-		/// Convert from T
-		/// </summary>
-		/// <param name="a">a T</param>
-		public static implicit operator Complex<T>(T a) => new Complex<T>(a);
-		/// <summary>
-		/// Convert from int tuple
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		public static implicit operator Complex<T>((int r, int i) a) => new Complex<T>((T)(dynamic)a.r, (T)(dynamic)a.i);
-		/// <summary>
-		/// Convert from T tuple
-		/// </summary>
-		/// <param name="a">a T tuple</param>
-		public static implicit operator Complex<T>((T r, T i) a) => new Complex<T>(a.r, a.i);
-
-		/// <summary>
-		/// Convert system's complex number to this
-		/// </summary>
-		/// <param name="c">the <see cref="Complex"/> struct of system</param>
-		public static explicit operator Complex<T>(Complex c) => new Complex<T>((T)(dynamic)c.Real, (T)(dynamic)c.Imaginary);
-
-		/// <summary>
-		/// Convert to <typeparamref name="T"/>
-		/// </summary>
-		public static explicit operator T(Complex<T> v) => v.Abs();
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// Equal operator
-		/// </summary>
-		public static bool operator ==(Complex<T> a, Complex<T> b) => a.real.Equals(b.real) && a.imag.Equals(b.imag);
-
-		/// <summary>
-		/// Not-equal operator
-		/// </summary>
-		public static bool operator !=(Complex<T> a, Complex<T> b) => !(a == b);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		/// <param name="another">another <see cref="Complex{T}"/></param>
-		/// <returns>this == <paramref name="another"/></returns>
-		public bool Equals(Complex<T> another)
-		{
-			return this == another;
-		}
-
-		/// <summary>
-		/// Override <see cref="object.GetHashCode"/>
-		/// </summary>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.real, this.imag);
-		}
-
-		/// <summary>
-		/// Override <see cref="object.Equals(object)"/>
-		/// </summary>
-		public override bool Equals(object obj)
-		{
-			Complex<T> a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is T single)
-				a = single;
-			else if (obj is Complex<T> complex)
-				a = complex;
-			else
-				return false;
-			return this == a;
-		}
-		#endregion
-
-		#region arithmetic operators (I do not recommend you to use them in large managed arrays even though the dynamic functions will be optimized by the JIT)
-		/// <summary>
-		/// Complex negate
-		/// </summary>
-		public static Complex<T> operator -(Complex<T> a) => new Complex<T>(-(dynamic)a.real, -(dynamic)a.imag);
-
-		/// <summary>
-		/// Complex add
-		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new Complex<T>(a.real + (dynamic)b.real, a.imag + (dynamic)b.imag);
-		/// <summary>
-		/// Complex subtract
-		/// </summary>
-		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new Complex<T>(a.real - (dynamic)b.real, a.imag - (dynamic)b.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, T b) => new Complex<T>(a.real + (dynamic)b, a.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static Complex<T> operator +(T b, Complex<T> a) => new Complex<T>(a.real + (dynamic)b, a.imag);
-		/// <summary>
-		/// Complex subtract real
-		/// </summary>
-		public static Complex<T> operator -(Complex<T> a, T b) => new Complex<T>(a.real - (dynamic)b, a.imag);
-		/// <summary>
-		/// Real subtract complex
-		/// </summary>
-		public static Complex<T> operator -(T b, Complex<T> a) => new Complex<T>(b - (dynamic)a.real, -(dynamic)a.imag);
-
-		/// <summary>
-		/// Complex multiply
-		/// </summary>
-		public static Complex<T> operator *(Complex<T> a, Complex<T> b) => new Complex<T>(a.real * (dynamic)b.real - a.imag * (dynamic)b.imag, a.real * (dynamic)b.imag + a.imag * (dynamic)b.real);
-		/// <summary>
-		/// Complex division, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public static Complex<T> operator /(Complex<T> x, Complex<T> y)
-		{
-			// TODO: use native
-		}
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		public static Complex<T> operator *(Complex<T> a, T b) => new Complex<T>((dynamic)a.real * b, (dynamic)a.imag * b);
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		public static Complex<T> operator *(T b, Complex<T> a) => new Complex<T>((dynamic)a.real * b, (dynamic)a.imag * b);
-		/// <summary>
-		/// Complex divide real number
-		/// </summary>
-		public static Complex<T> operator /(Complex<T> a, T b) => new Complex<T>((dynamic)a.real / b, (dynamic)a.imag / b);
-		/// <summary>
-		/// Real number divide complex 
-		/// </summary>
-		public static Complex<T> operator /(T b, Complex<T> a) => new Complex<T>(b) / a;
-
-		/// <summary>
-		/// Complex absolute value, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public T Abs()
-		{
-			// TODO: use native
-		}
-
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		public Complex<T> Conjugate() => new Complex<T>(this.real, -(dynamic)this.imag);
-
-		/// <summary>
-		/// Complex exponential
-		/// </summary>
-		public Complex<T> Exp()
-		{
-			// TODO: use native
-		}
-
-		/// <summary>
-		/// Complex logarithm of base <c>e</c>
-		/// </summary>
-		public Complex<T> Log()
-		{
-			// TODO: use native
-		}
-
-		/// <summary>
-		/// Complex number power
-		/// </summary>
-		/// <param name="p">the power of real type <typeparamref name="T"/></param>
-		public Complex<T> Pow(T p)
-		{
-			// TODO: use native
-		}
-
-		/// <summary>
-		/// Complex  number power
-		/// </summary>
-		/// <param name="p">the power of complex type <see cref="Complex{T}"/></param>
-		public Complex<T> Pow(Complex<T> p)
-		{
-			// TODO: use native
-		}
-		#endregion
-
-		#region string representation
-		/// <summary>
-		/// Override <see cref="object.ToString"/>
-		/// </summary>
-		public override string ToString()
-		{
-			return this.ToString(null, Resource.Culture);
-		}
-
-		/// <summary>
-		/// String representation of this complex number
-		/// </summary>
-		/// <param name="format">format of output</param>
-		public string ToString(string format)
-		{
-			return this.ToString(format, Resource.Culture);
-		}
-
-		/// <summary>
-		/// Realization of <see cref="IFormattable.ToString(string, IFormatProvider)"/>
-		/// </summary>
-		/// <param name="format">format of output</param>
-		/// <param name="formatProvider">The provider to use to format the value.</param>
-		public string ToString(string format, IFormatProvider formatProvider = null)
-		{
-			formatProvider ??= Resource.Culture;
-			string r = this.real.ToString(format, formatProvider), i = this.imag.ToString(format, formatProvider);
-			if (!r.StartsWith('-'))
-				r = " " + r;
-			if (!i.StartsWith('-'))
-				i = " " + i;
-			return $"({r},{i})";
-		}
-		#endregion
-	}
-	#endregion
-
-
 	/// <summary>
 	/// The format specification enum of sparse matrix
 	/// </summary>
@@ -735,6 +432,7 @@ namespace Althea
 	/// <summary>
 	/// Memory copy enum
 	/// </summary>
+	// TODO: move to Althea.Cuda, and set to internal
 	public enum MemoryCopyKind
 	{
 		/// <summary>
@@ -763,6 +461,7 @@ namespace Althea
 	/// <summary>
 	/// Binary operations supported by tensor point-wise operations
 	/// </summary>
+	// TODO: move to Althea.TensorAlgebra, and modify
 	public enum BinaryOperation
 	{
 		/// <summary>
@@ -786,6 +485,7 @@ namespace Althea
 	/// <summary>
 	/// Unitary operations supported by tensor point-wise operations
 	/// </summary>
+	// TODO: move to Althea.TensorAlgebra, and modify
 	public enum UnitaryOperation
 	{
 		/// <summary>
@@ -890,6 +590,7 @@ namespace Althea
 	/// <summary>
 	/// Error codes returned by CUDA driver API calls
 	/// </summary>
+	// TODO: move to Althea.Cuda, and set internal
 	public enum CudaError
 	{
 		/// <summary>

@@ -124,6 +124,15 @@ namespace Althea {
         }
         
         /// <summary>
+        ///   查找类似 Cannot parse &apos;{0}&apos; to a complex number with real type {1}. 的本地化字符串。
+        /// </summary>
+        internal static string CannotParseComplex {
+            get {
+                return ResourceManager.GetString("CannotParseComplex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The class should be a concrete one. 的本地化字符串。
         /// </summary>
         internal static string ClassConcrete {
