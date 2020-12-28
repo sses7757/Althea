@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+
+using Althea.NativeType;
 
 
 namespace Althea.NativeType
@@ -9,7 +12,8 @@ namespace Althea.NativeType
 	/// The general complex type
 	/// </summary>
 	/// <typeparam name="T">the data type of corresponding real number</typeparam>
-	/// <remarks>I do not recommend one to use any data type conversions or arithmetic operations in large lists like <see cref="Array"/> even though the dynamic functions will be optimized by the JIT to have performance way better than boxing and unboxing <typeparamref name="T"/> since they may still perform a lot worse than operations with compile-time-known <typeparamref name="T"/>.</remarks>
+	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
+	/// I do not recommend one to use any data type conversions or arithmetic operations in heavy load like loop over a <c><see cref="Complex{T}"/>[]</c> even though the dynamic functions will be optimized by the JIT to have performance way better than boxing and unboxing <typeparamref name="T"/>, they may still perform a lot worse than operations with compile-time-known <typeparamref name="T"/>.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Complex<T> : ICustomNativeType<Complex<T>>, IFormattable, IEquatable<Complex<T>> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 	{
@@ -39,22 +43,22 @@ namespace Althea.NativeType
 		#endregion
 
 		#region static information
-		bool ICustomNativeType<Complex<T>>.IsFloatPoint_Internal()
+		DataTypeClassification ICustomNativeType<Complex<T>>.Classification_Internal()
 		{
-			return _FloatPoint;
+			return _Classification;
 		}
 
-		private static readonly bool _FloatPoint;
+		private static readonly DataTypeClassification _Classification;
 
 		static Complex()
 		{
-			Type t = typeof(T);
-			if (!t.IsPrimitive)
+			// generic type check
+			if (typeof(T).IsGenericType)
 				throw new InvalidOperationException(Resource.DataTypeNotSupport);
-			bool? floatPoint = default(T).FloatPointOrIntegral();
-			if (!floatPoint.HasValue)
+			// native type check
+			_Classification = default(T).GetClassification();
+			if (_Classification == DataTypeClassification.NotSupported)
 				throw new InvalidOperationException(Resource.DataTypeNotSupport);
-			_FloatPoint = floatPoint.Value;
 		}
 
 		private static unsafe readonly int _sizeofT = sizeof(T);
@@ -184,8 +188,8 @@ namespace Althea.NativeType
 					return false;
 			}
 			// have both parts
-			string firstPart = s.Substring(0, Math.Max(findAdd, findSub));
-			string lastPart = s.Substring(Math.Max(findAdd, findSub) + _StrAdd.Length);
+			string firstPart = s[..Math.Max(findAdd, findSub)];
+			string lastPart = s[(Math.Max(findAdd, findSub) + _StrAdd.Length)..];
 			(T part, bool real)? parseFirst = TryParsePart(firstPart);
 			if (!parseFirst.HasValue)
 			{
@@ -546,4 +550,129 @@ namespace Althea.NativeType
 		
 	}
 	#endregion
+}
+
+
+namespace Althea.Linq
+{
+	// complex type array LINQ
+	public static partial class ArrayLinq
+	{
+		/// <summary>
+		/// Convert a 1D <typeparamref name="T"/> array to <see cref="Complex{T}"/> array by taking two consecutive real values to form one complex value.
+		/// </summary>
+		/// <typeparam name="T">the real type</typeparam>
+		/// <param name="input">input array of type <typeparamref name="T"/></param>
+		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
+		/// <remarks>extend method of <paramref name="input"/></remarks>
+		public static Complex<T>[] FormComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		{
+			if (input is null)
+				throw new ArgumentNullException(nameof(input));
+			long length = input.LongLength / 2;
+			var complexArray = new Complex<T>[length];
+			for (long i = 0; i < length; i++)
+			{
+				complexArray[i] = new Complex<T>(input[i * 2], input[i * 2 + 1]);
+			}
+			return complexArray;
+		}
+
+		/// <summary>
+		/// Convert a 1D <typeparamref name="T"/> array to <see cref="Complex{T}"/> array by creating complex values with only real parts.
+		/// </summary>
+		/// <typeparam name="T">the real type</typeparam>
+		/// <param name="input">input array of type <typeparamref name="T"/></param>
+		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
+		/// <remarks>extend method of <paramref name="input"/></remarks>
+		public static Complex<T>[] ToComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		{
+			if (input is null)
+				throw new ArgumentNullException(nameof(input));
+			var complexArray = new Complex<T>[input.LongLength];
+			for (long i = 0; i < input.LongLength; i++)
+			{
+				complexArray[i] = new Complex<T>(input[i]);
+			}
+			return complexArray;
+		}
+
+		/// <summary>
+		/// Complex list product
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static Complex<T> Prod<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		{
+			if (list is null || list.Count == 0)
+				return 1;
+			Complex<T> prod = 1;
+			for (int i = 0; i < list.Count; i++)
+			{
+				prod *= list[i];
+			}
+			return prod;
+		}
+
+		/// <summary>
+		/// Complex list summation
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static Complex<T> Sum<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		{
+			if (list is null || list.Count == 0)
+				return default;
+			Complex<T> sum = default;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += list[i];
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// Complex list summation by <paramref name="selector"/>
+		/// </summary>
+		/// <typeparam name="T">the complex type's real type</typeparam>
+		/// <typeparam name="TFrom">the conversion from type</typeparam>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static Complex<T> Sum<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		{
+			if (list is null || list.Count == 0)
+				return default;
+			Complex<T> sum = default;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// Complex list product by <paramref name="selector"/>
+		/// </summary>
+		/// <typeparam name="T">the complex type's real type</typeparam>
+		/// <typeparam name="TFrom">the conversion from type</typeparam>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static Complex<T> Prod<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		{
+			if (list is null || list.Count == 0)
+				return default;
+			Complex<T> sum = default;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+	}
 }

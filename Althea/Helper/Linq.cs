@@ -350,7 +350,7 @@ namespace Althea.Linq
 	/// A replacement of <see cref="System.Linq.Enumerable"/> to reduce GC stress.<br/>
 	/// Most methods of this class is based on <see cref="IReadOnlyList{T}"/> and is implemented by <see cref="Array"/>.
 	/// </summary>
-	public static class ArrayLinq
+	public static partial class ArrayLinq
 	{
 		#region min max
 		/// <summary>
@@ -808,24 +808,6 @@ namespace Althea.Linq
 			}
 			return prod;
 		}
-
-		/// <summary>
-		/// Complex list product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Prod<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (list is null || list.Count == 0)
-				return 1;
-			Complex<T> prod = 1;
-			for (int i = 0; i < list.Count; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
 		#endregion
 
 		#region concrete sum
@@ -894,24 +876,6 @@ namespace Althea.Linq
 			if (list is null || list.Count == 0)
 				return 0;
 			double sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// Complex list summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Sum<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (list is null || list.Count == 0)
-				return default;
-			Complex<T> sum = default;
 			for (int i = 0; i < list.Count; i++)
 			{
 				sum += list[i];
@@ -996,28 +960,6 @@ namespace Althea.Linq
 			}
 			return sum;
 		}
-
-
-		/// <summary>
-		/// Complex list summation by <paramref name="selector"/>
-		/// </summary>
-		/// <typeparam name="T">the complex type's real type</typeparam>
-		/// <typeparam name="TFrom">the conversion from type</typeparam>
-		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Sum<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (list is null || list.Count == 0)
-				return default;
-			Complex<T> sum = default;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
 		#endregion
 
 		#region concrete selector prod
@@ -1090,28 +1032,6 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			double sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-
-		/// <summary>
-		/// Complex list product by <paramref name="selector"/>
-		/// </summary>
-		/// <typeparam name="T">the complex type's real type</typeparam>
-		/// <typeparam name="TFrom">the conversion from type</typeparam>
-		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
-		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Prod<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (list is null || list.Count == 0)
-				return default;
-			Complex<T> sum = default;
 			for (int i = 0; i < list.Count; i++)
 			{
 				sum += selector(list[i]);
@@ -2956,26 +2876,6 @@ namespace Althea.Linq
 		/// <param name="array">input <typeparamref name="T"/> array</param>
 		/// <returns>a new <see cref="int"/> array</returns>
 		public static int[] ToInts<T>(this IReadOnlyList<T> array) where T : IConvertible => Array.ConvertAll(array.ToArray(), a => a.ToInt32(Resource.Culture));
-
-		/// <summary>
-		/// Convert a 1D <typeparamref name="T"/> array to <see cref="Complex{T}"/> array by taking two consecutive real values to form one complex value.
-		/// </summary>
-		/// <typeparam name="T">the real type</typeparam>
-		/// <param name="input">input array of type <typeparamref name="T"/></param>
-		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
-		/// <remarks>extend method of <paramref name="input"/></remarks>
-		public static Complex<T>[] ToComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (input is null)
-				throw new ArgumentNullException(nameof(input));
-			long length = input.LongLength / 2;
-			var complexArray = new Complex<T>[length];
-			for (long i = 0; i < length; i++)
-			{
-				complexArray[i] = new Complex<T>(input[i * 2], input[i * 2 + 1]);
-			}
-			return complexArray;
-		}
 
 		/// <summary>
 		/// Act on each element of a list.

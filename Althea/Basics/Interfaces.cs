@@ -781,24 +781,4 @@ namespace Althea
 		}
 		#endregion
 	}
-
-
-	/// <summary>
-	/// Generic type scalars
-	/// </summary>
-	/// <typeparam name="T">the data type</typeparam>
-	public static class Scalars<T> where T : struct, IComparable<T>
-	{
-		/// <summary>
-		/// Generic type scalar
-		/// </summary>
-		public static readonly T	Zero = default,//0.GenericConvert<T, int>(),
-									One = 1.GenericConvert<T, int>(),
-									Two = 2.GenericConvert<T, int>(),
-									MinusOne = (-1).GenericConvert<T, int>(),
-									Half = (0.5).FromDouble<T>(),
-									MinusHalf = (-0.5).FromDouble<T>(),
-									E = Math.E.FromDouble<T>(),
-									Pi = Math.PI.FromDouble<T>();
-	}
 }

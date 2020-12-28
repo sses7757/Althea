@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
@@ -15,8 +16,8 @@ namespace Althea.NativeType
 		/// <summary>
 		/// A in-fact <b>static</b> method to be implemented to indicate whether this type is a floating point type or a integral type
 		/// </summary>
-		/// <returns>Whether this type is a floating point type or a integral type</returns>
-		protected bool IsFloatPoint_Internal();
+		/// <returns>The <see cref="DataTypeClassification"/> of <typeparamref name="T"/></returns>
+		protected DataTypeClassification Classification_Internal();
 
 		/// <summary>
 		/// A in-fact <b>static</b> method to be implemented to parse a string <paramref name="str"/> to <typeparamref name="T"/>
@@ -38,14 +39,9 @@ namespace Althea.NativeType
 		}
 
 		/// <summary>
-		/// Whether this type is a floating point type or a integral type
+		/// The <see cref="DataTypeClassification"/> of <typeparamref name="T"/>
 		/// </summary>
-		public static bool FloatPoint => default(T).IsFloatPoint_Internal();
-
-		/// <summary>
-		/// The size of <typeparamref name="T"/> in bytes
-		/// </summary>
-		public static unsafe int SizeOfT => sizeof(T);
+		public static DataTypeClassification Classification => default(T).Classification_Internal();
 
 		/// <summary>
 		/// Out-of-place add <paramref name="another"/> value of <typeparamref name="T"/>
@@ -78,13 +74,17 @@ namespace Althea.NativeType
 	#endregion
 
 	#region example case
+	/// <summary>
+	/// This struct servers as an example of creating a new native type which will be supported by this framework such as <see cref="Complex{T}"/> and methods in <see cref="NativeTypeExtension"/>.
+	/// </summary>
+	/// <remarks><b>DO NOT</b> use this struct</remarks>
 	[StructLayout(LayoutKind.Sequential, Size = 12)]
-	internal struct CustomTypeTest : ICustomNativeType<CustomTypeTest>, IFormattable, IEquatable<CustomTypeTest>
+	struct CustomTypeTest : ICustomNativeType<CustomTypeTest>, IFormattable, IEquatable<CustomTypeTest>, IComparable<CustomTypeTest>
 	{
 		private readonly double low;
 		private readonly float high;
 
-		bool ICustomNativeType<CustomTypeTest>.IsFloatPoint_Internal() => true;
+		DataTypeClassification ICustomNativeType<CustomTypeTest>.Classification_Internal() => DataTypeClassification.FloatPoint;
 		bool ICustomNativeType<CustomTypeTest>.TryParse_Internal(string str, out CustomTypeTest result) => throw new NotImplementedException();
 
 		public bool Equals(CustomTypeTest other) => this.low == other.low && this.high == other.high;
@@ -102,17 +102,212 @@ namespace Althea.NativeType
 		public CustomTypeTest Divide(CustomTypeTest another) => throw new NotImplementedException();
 
 		public string ToString(string format, IFormatProvider formatProvider) => throw new NotImplementedException();
+		public int CompareTo(CustomTypeTest other) => throw new NotImplementedException();
+
+		public static CustomTypeTest operator +(CustomTypeTest left, CustomTypeTest right) => throw new NotImplementedException();
+		public static CustomTypeTest operator -(CustomTypeTest left, CustomTypeTest right) => throw new NotImplementedException();
+		public static CustomTypeTest operator *(CustomTypeTest left, CustomTypeTest right) => throw new NotImplementedException();
+		public static CustomTypeTest operator /(CustomTypeTest left, CustomTypeTest right) => throw new NotImplementedException();
 	}
 	#endregion
 
 	#region extension methods
+
+	#region static scalars
+	/// <summary>
+	/// Generic type scalars
+	/// </summary>
+	/// <typeparam name="T">the data type</typeparam>
+	public static class Scalars<T> where T : unmanaged
+	{
+		/// <summary>
+		/// Generic type scalar
+		/// </summary>
+		public static readonly T	Zero = default,
+									One = 1.0.FromDouble<T>(),
+									Two = 2.0.FromDouble<T>(),
+									MinusOne = (-1.0).FromDouble<T>(),
+									Half = (0.5).FromDouble<T>(),
+									MinusHalf = (-0.5).FromDouble<T>(),
+									E = Math.E.FromDouble<T>(),
+									Pi = Math.PI.FromDouble<T>();
+	}
+	#endregion
+
 	/// <summary>
 	/// A static class containing some extension methods for native types
 	/// </summary>
+	/// <remarks>Data type supported by this framework must be "native", i.e., it must be an <b>unmanaged</b> type which is either primitive or implementing <see cref="ICustomNativeType{T}"/>.</remarks>
 	public static class NativeTypeExtension
 	{
-		private static readonly Type _customNativeType = typeof(ICustomNativeType<CustomTypeTest>);
+		#region internal
+		// not null return means T is a ICustomNativeType<T>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static Type MakeCustomNativeType(Type T)
+		{
+			try
+			{
+				return typeof(ICustomNativeType<CustomTypeTest>).MakeGenericType(T);
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+		#endregion
 
+		#region predicator
+		/// <summary>
+		/// Generic type zero value checker
+		/// </summary>
+		/// <typeparam name="T">the supported data type</typeparam>
+		/// <param name="a">input number</param>
+		/// <returns><c><paramref name="a"/> == 0</c> or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsZero<T>(this T a) where T : unmanaged
+		{
+			return a.Equals(default);
+		}
+
+		/// <summary>
+		/// Generic type one value checker
+		/// </summary>
+		/// <typeparam name="T">the supported data type</typeparam>
+		/// <param name="a">input number</param>
+		/// <returns><c><paramref name="a"/> == 1</c> or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsOne<T>(this T a) where T : unmanaged
+		{
+			return a.Equals(Scalars<T>.One);
+		}
+		#endregion
+
+		#region generic type arithmetics
+		/// <summary>
+		/// Generic type number reciprocal.
+		/// </summary>
+		/// <typeparam name="T">the supported data type</typeparam>
+		/// <param name="a">input number</param>
+		/// <returns>reciprocal of the number</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericReciprocal<T>(this T a) where T : unmanaged
+		{
+			return (T)(1 / (dynamic)a);
+		}
+
+		/// <summary>
+		/// Generic type number negate.
+		/// </summary>
+		/// <typeparam name="T">the supported data type</typeparam>
+		/// <param name="a">input number</param>
+		/// <returns>negation of the number</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericNegate<T>(this T a) where T : unmanaged
+		{
+			return (T)(-(dynamic)a);
+		}
+
+		/// <summary>
+		/// Generic type number add.
+		/// </summary>
+		/// <typeparam name="T">the supported data type</typeparam>
+		/// <param name="a">input left number</param>
+		/// <param name="b">input right number</param>
+		/// <returns>negation of the number</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericAdd<T>(this T a, T b) where T : unmanaged
+		{
+			return (T)((dynamic)a + b);
+		}
+
+		/// <summary>
+		/// Generic type number conjugate.
+		/// </summary>
+		/// <typeparam name="T">the supported data type</typeparam>
+		/// <param name="a">input number</param>
+		/// <returns>complex conjugate of the number</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericConjugate<T>(this T a) where T : unmanaged
+		{
+			T? result = a switch
+			{
+				sbyte or short or int or long => a,
+				byte or ushort or uint or ulong => a,
+				float or double or decimal => a,
+				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Conjugate(),
+				Complex<short> a_short => (T)(dynamic)a_short.Conjugate(),
+				Complex<int> a_int => (T)(dynamic)a_int.Conjugate(),
+				Complex<long> a_long => (T)(dynamic)a_long.Conjugate(),
+				Complex<byte> a_byte => (T)(dynamic)a_byte.Conjugate(),
+				Complex<ushort> a_ushort => (T)(dynamic)a_ushort.Conjugate(),
+				Complex<uint> a_uint => (T)(dynamic)a_uint.Conjugate(),
+				Complex<ulong> a_ulong => (T)(dynamic)a_ulong.Conjugate(),
+				Complex<float> a_float => (T)(dynamic)a_float.Conjugate(),
+				Complex<double> a_double => (T)(dynamic)a_double.Conjugate(),
+				_ => null,
+			};
+			if (result.HasValue)
+			{
+				return result.Value;
+			}
+			if (!typeof(T).IsSupportedDirect())
+				throw new ArgumentException(Resource.DataTypeNotSupport, nameof(a));
+			if (typeof(T).IsComplexDirect())
+				return (T)((dynamic)a).Conjugate();
+			else
+				return a;
+		}
+		#endregion
+
+		#region generic type conversions
+		/// <summary>
+		/// Generic numeric value converter from any type to <see cref="double"/>.
+		/// </summary>
+		/// <typeparam name="T">convert source type</typeparam>
+		/// <param name="a">number to convert</param>
+		/// <returns>the converted number as a <see cref="double"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static double ToDouble<T>(this T a) where T : unmanaged
+		{
+			return a switch
+			{
+				double aa => aa,
+				_ => (double)(dynamic)a,
+			};
+		}
+
+		/// <summary>
+		/// Generic numeric value converter from <see cref="double"/> to any type.
+		/// </summary>
+		/// <typeparam name="T">convert target type</typeparam>
+		/// <param name="a">number to convert</param>
+		/// <returns>the converted number as <typeparamref name="T"/></returns>
+		/// <remarks>extend method, the supported data type</remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T FromDouble<T>(this double a) where T : unmanaged
+		{
+			return a switch
+			{
+				T aa => aa,
+				_ => (T)(dynamic)a,
+			};
+		}
+
+		/// <summary>
+		/// Generic numeric value converter.
+		/// </summary>
+		/// <typeparam name="TOut">convert target type</typeparam>
+		/// <typeparam name="TIn">convert source type</typeparam>
+		/// <param name="a">number to convert</param>
+		/// <returns>the converted number</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TOut GenericConvert<TOut, TIn>(this TIn a) where TOut : unmanaged where TIn : unmanaged
+		{
+			return (TOut)(dynamic)a;
+		}
+		#endregion
+
+		#region parse native type values
 		private delegate object _parseFunc(string str);
 
 		private static readonly Dictionary<Type, _parseFunc> _parseCache = new Dictionary<Type, _parseFunc>();
@@ -131,17 +326,10 @@ namespace Althea.NativeType
 				T? res = default(T) switch
 				{
 					// built-in float types
-					float _ => (T)(dynamic)float.Parse(str),
-					double _ => (T)(dynamic)double.Parse(str),
+					float or double or decimal => (T)(dynamic)double.Parse(str),
 					// built-in integer types
-					sbyte _ => (T)(dynamic)sbyte.Parse(str),
-					short _ => (T)(dynamic)short.Parse(str),
-					int _ => (T)(dynamic)int.Parse(str),
-					long _ => (T)(dynamic)long.Parse(str),
-					byte _ => (T)(dynamic)byte.Parse(str),
-					ushort _ => (T)(dynamic)ushort.Parse(str),
-					uint _ => (T)(dynamic)uint.Parse(str),
-					ulong _ => (T)(dynamic)ulong.Parse(str),
+					sbyte or short or int or long => (T)(dynamic)long.Parse(str),
+					byte or ushort or uint or ulong => (T)(dynamic)ulong.Parse(str),
 					// otherwise
 					_ => null,
 				};
@@ -161,15 +349,9 @@ namespace Althea.NativeType
 			if (!_parseCache.ContainsKey(type))
 			{
 				_parseFunc func;
-				Type t = _customNativeType.MakeGenericType(type);
-				if (t.IsAssignableFrom(type))
-				{
-					func = t.GetMethod(nameof(ICustomNativeType<CustomTypeTest>.TryParse)).CreateDelegate<_parseFunc>();
-				}
-				else
-				{
-					func = null;
-				}
+				Type custom = MakeCustomNativeType(type);
+				func = custom?.GetMethod(nameof(ICustomNativeType<CustomTypeTest>.TryParse))?.CreateDelegate<_parseFunc>();
+				_parseCache.Add(type, func);
 			}
 			object parseResult = _parseCache[type]?.Invoke(str);
 			if (parseResult == null)
@@ -183,66 +365,206 @@ namespace Althea.NativeType
 				return true;
 			}
 		}
+		#endregion
 
+		#region check whether native types are complex types
+		private static readonly Dictionary<Type, bool> _complexCache = new Dictionary<Type, bool>();
 
-		private static readonly Dictionary<Type, bool?> _floatPointCache = new Dictionary<Type, bool?>();
-
-		private static bool? CacheFloatPointOrIntegral(Type type)
+		internal static bool IsComplexDirect(this Type type)
 		{
-			if (type.IsEnum || type.IsPointer || type.IsPrimitive)
+			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
 			{
-				return null;
+				return false;
 			}
 			// cache
-			if (!_floatPointCache.ContainsKey(type))
+			if (!_complexCache.ContainsKey(type))
 			{
-				bool? result;
-				Type t = _customNativeType.MakeGenericType(type);
-				if (t.IsAssignableFrom(type))
-				{
-					result = (bool)t.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.FloatPoint)).GetValue(null);
-				}
-				else
-				{
-					result = null;
-				}
-				_floatPointCache.Add(type, result);
-				return result;
+				bool isComplex = type.GenericTypeArguments.Length == 1 && type.FullName == typeof(Complex<float>).FullName;
+				_complexCache.Add(type, isComplex);
 			}
-			return _floatPointCache[type];
+			return _complexCache[type];
+		}
+
+		/// <summary>
+		/// Check whether <paramref name="type"/> is a complex data type.
+		/// </summary>
+		/// <param name="type">the type</param>
+		/// <returns>true for complex type</returns>
+		public static bool IsComplex(this Type type)
+		{
+			if (!type.IsValueType)
+				return false;
+			// built-in float types
+			if (type == typeof(double) || type == typeof(float))
+				return true;
+			// built-in integer types
+			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
+				return true;
+			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong))
+				return true;
+			// built-in complex float types
+			else if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
+				return true;
+			// built-in complex integer types
+			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
+				return true;
+			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<uint>) || type == typeof(Complex<ulong>))
+				return true;
+			// other primitive types are null
+			return IsComplexDirect(type);
+		}
+
+		/// <summary>
+		/// Check whether <typeparamref name="T"/> is a complex data type.
+		/// </summary>
+		/// <typeparam name="T">the type to check</typeparam>
+		/// <param name="value">an instance of <typeparamref name="T"/></param>
+		/// <returns>true for complex type</returns>
+		public static bool IsComplex<T>(this T value) where T : unmanaged
+		{
+			return value switch
+			{
+				// built-in float types
+				float or double => false,
+				// built-in integer types
+				sbyte or short or int or long => false,
+				byte or ushort or uint or ulong => false,
+				// built-in complex float types
+				Complex<float> or Complex<double> => true,
+				// built-in complex integer types
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => true,
+				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => true,
+				// otherwise
+				_ => IsComplexDirect(typeof(T)),
+			};
+		}
+
+		/// <summary>
+		/// Check whether <typeparamref name="T"/> is a complex data type.
+		/// </summary>
+		/// <typeparam name="T">the type to check</typeparam>
+		/// <returns>true for complex type</returns>
+		public static bool IsComplex<T>() where T : unmanaged => IsComplex(default(T));
+		#endregion
+
+		#region check whether native types are supported
+		private static readonly Dictionary<Type, bool> _supportCache = new Dictionary<Type, bool>();
+
+		internal static bool IsSupportedDirect(this Type type)
+		{
+			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
+			{
+				return false;
+			}
+			// cache
+			if (!_supportCache.ContainsKey(type))
+			{
+				Type custom = MakeCustomNativeType(type);
+				_supportCache.Add(type, custom is not null);
+			}
+			return _supportCache[type];
+		}
+
+		/// <summary>
+		/// Check whether <paramref name="type"/> is a supported data type.
+		/// </summary>
+		/// <param name="type">the type</param>
+		/// <returns>true for supported type</returns>
+		public static bool IsSupported(this Type type)
+		{
+			if (!type.IsValueType)
+				return false;
+			// built-in float types
+			if (type == typeof(double) || type == typeof(float))
+				return true;
+			// built-in integer types
+			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
+				return true;
+			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong))
+				return true;
+			// built-in complex float types
+			else if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
+				return true;
+			// built-in complex integer types
+			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
+				return true;
+			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<uint>) || type == typeof(Complex<ulong>))
+				return true;
+			// other primitive types are null
+			return IsSupportedDirect(type);
+		}
+
+		/// <summary>
+		/// Check whether <typeparamref name="T"/> is a supported data type.
+		/// </summary>
+		/// <typeparam name="T">the type to check</typeparam>
+		/// <param name="value">an instance of <typeparamref name="T"/></param>
+		/// <returns>true for supported type</returns>
+		public static bool IsSupported<T>(this T value) where T : unmanaged
+		{
+			return value switch
+			{
+				// built-in float types
+				float or double => true,
+				// built-in integer types
+				sbyte or short or int or long => true,
+				byte or ushort or uint or ulong => true,
+				// built-in complex float types
+				Complex<float> or Complex<double> => true,
+				// built-in complex integer types
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => true,
+				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => true,
+				// otherwise
+				_ => IsSupportedDirect(typeof(T)),
+			};
+		}
+
+		/// <summary>
+		/// Check whether <typeparamref name="T"/> is a supported data type.
+		/// </summary>
+		/// <typeparam name="T">the type to check</typeparam>
+		/// <returns>true for supported type</returns>
+		public static bool IsSupported<T>() where T : unmanaged => IsSupported(default(T));
+		#endregion
+
+		#region get floating point or integral of native types
+		private static readonly Dictionary<Type, DataTypeClassification> _classificationCache = new Dictionary<Type, DataTypeClassification>();
+
+		internal static DataTypeClassification GetClassificationDirect(this Type type)
+		{
+			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
+			{
+				return DataTypeClassification.NotSupported;
+			}
+			// cache
+			if (!_classificationCache.ContainsKey(type))
+			{
+				Type custom = MakeCustomNativeType(type);
+				DataTypeClassification? result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
+				_classificationCache.Add(type, result ?? DataTypeClassification.NotSupported);
+			}
+			return _classificationCache[type];
 		}
 
 		/// <summary>
 		/// Check whether <paramref name="type"/> is a floating point type or a integral type.
 		/// </summary>
 		/// <param name="type">the type</param>
-		/// <returns>null for none, true for floating point type, false for integral type</returns>
-		public static bool? FloatPointOrIntegral(this Type type)
+		/// <returns>0 for not supported data type</returns>
+		public static DataTypeClassification GetClassification(this Type type)
 		{
+			if (!type.IsValueType)
+				return DataTypeClassification.NotSupported;
 			// built-in float types
-			if (type == typeof(double))
-				return true;
-			else if (type == typeof(float))
-				return true;
+			if (type == typeof(double) || type == typeof(float))
+				return DataTypeClassification.FloatPoint;
 			// built-in integer types
-			else if (type == typeof(int))
-				return false;
-			else if (type == typeof(long))
-				return false;
-			else if (type == typeof(sbyte))
-				return false;
-			else if (type == typeof(short))
-				return false;
-			else if (type == typeof(uint))
-				return false;
-			else if (type == typeof(ulong))
-				return false;
-			else if (type == typeof(byte))
-				return false;
-			else if (type == typeof(ushort))
-				return false;
+			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
+				return DataTypeClassification.SignedInteger;
+			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong))
+				return DataTypeClassification.UnsignedInteger;
 			// other primitive types are null
-			return CacheFloatPointOrIntegral(type);
+			return GetClassificationDirect(type);
 		}
 
 		/// <summary>
@@ -250,39 +572,28 @@ namespace Althea.NativeType
 		/// </summary>
 		/// <typeparam name="T">the type to check</typeparam>
 		/// <param name="value">an instance of <typeparamref name="T"/></param>
-		/// <returns>null for none, true for floating point type, false for integral type</returns>
-		public static bool? FloatPointOrIntegral<T>(this T value) where T : unmanaged
+		/// <returns>0 for not supported data type</returns>
+		public static DataTypeClassification GetClassification<T>(this T value) where T : unmanaged
 		{
-			bool? result = value switch
+			return value switch
 			{
 				// built-in float types
-				float _ => true,
-				double _ => true,
+				float or double => DataTypeClassification.FloatPoint,
 				// built-in integer types
-				sbyte _ => false,
-				short _ => false,
-				int _ => false,
-				long _ => false,
-				byte _ => false,
-				ushort _ => false,
-				uint _ => false,
-				ulong _ => false,
+				sbyte or short or int or long => DataTypeClassification.SignedInteger,
+				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
 				// otherwise
-				_ => null,
+				_ => GetClassificationDirect(typeof(T)),
 			};
-			if (result.HasValue)
-			{
-				return result;
-			}
-			return CacheFloatPointOrIntegral(typeof(T));
 		}
 
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
 		/// </summary>
 		/// <typeparam name="T">the type to check</typeparam>
-		/// <returns>null for none, true for floating point type, false for integral type</returns>
-		public static bool? FloatPointOrIntegral<T>() where T : unmanaged => FloatPointOrIntegral(default(T));
+		/// <returns>0 for not supported data type</returns>
+		public static DataTypeClassification GetClassification<T>() where T : unmanaged => GetClassification(default(T));
+		#endregion
 	}
 	#endregion
 }
