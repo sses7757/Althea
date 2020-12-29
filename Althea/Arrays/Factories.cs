@@ -13,32 +13,32 @@ namespace Althea.Arrays
 	public interface IArrayFactory
 	{
 		/// <summary>
-		/// Abstract method to create array by size from other information obtained from <see cref="PureArray{T}.GetOtherInfo"/>.
+		/// Abstract method to create array by size from other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/>.
 		/// </summary>
 		/// <typeparam name="T">the data type</typeparam>
 		/// <param name="size">the size of the array about to create</param>
 		/// <param name="onHost">create on host memory or device</param>
-		/// <param name="otherInfo">other information obtained from <see cref="PureArray{T}.GetOtherInfo"/></param>
+		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array</returns>
-		PureArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
+		ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
 
-		internal delegate PureArray<T> DelegateCreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
+		internal delegate ValueArray<T> DelegateCreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
 
 		/// <summary>
-		/// Abstract method to reconstruct array from the pointers obtained from <see cref="PureArray{T}.GetPointers"/> and other information from <see cref="PureArray{T}.GetOtherInfo"/>.
+		/// Abstract method to reconstruct array from the pointers obtained from <see cref="ValueArray{T}.GetPointers"/> and other information from <see cref="ValueArray{T}.GetOtherInfo"/>.
 		/// </summary>
 		/// <typeparam name="T">the data type</typeparam>
 		/// <param name="size">the size of the array about to create</param>
-		/// <param name="pointers">the pointers obtained from <see cref="PureArray{T}.GetPointers"/></param>
-		/// <param name="otherInfo">other information obtained from <see cref="PureArray{T}.GetOtherInfo"/></param>
+		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
+		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array</returns>
-		PureArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
+		ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
 
-		internal delegate PureArray<T> DelegateReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
+		internal delegate ValueArray<T> DelegateReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
 	}
 
 	/// <summary>
-	/// The abstract <see cref="PureArray{T}"/> factory used to create instances
+	/// The abstract <see cref="ValueArray{T}"/> factory used to create instances
 	/// </summary>
 	public static class PureArrayFactory
 	{
@@ -87,15 +87,15 @@ namespace Althea.Arrays
 		/// <typeparam name="T">the data type</typeparam>
 		/// <param name="size">the size of the array about to create</param>
 		/// <param name="onHost">create on host memory or device</param>
-		/// <param name="otherInfo">other information obtained from <see cref="PureArray{T}.GetOtherInfo"/></param>
+		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <typeparamref name="TArray"/></returns>
-		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="PureArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
+		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
 		/// <exception cref="TypeAccessException">if <typeparamref name="TArray"/>'s factory is not a sub-class of <see cref="PureArrayFactory"/></exception>
 		/// <exception cref="TypeLoadException">if <typeparamref name="TArray"/>'s factory cannot be loaded</exception>
 		/// <exception cref="TypeInitializationException">if <typeparamref name="TArray"/>'s factory cannot be created with parameterless constructor</exception>
 		/// <exception cref="System.Reflection.AmbiguousMatchException">if <typeparamref name="TArray"/>'s factory has multiple method named <see cref="IArrayFactory.CreateArray"/></exception>
 		/// <exception cref="MissingMethodException">if <typeparamref name="TArray"/>'s factory has no method <see cref="IArrayFactory.CreateArray"/></exception>
-		public static TArray Create<TArray, T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where TArray : PureArray<T>, new() where T : struct, IComparable<T>
+		public static TArray Create<TArray, T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where TArray : ValueArray<T>, new() where T : struct, IComparable<T>
 		{
 			var delegateCreate = GetDelegate<IArrayFactory.DelegateCreateArray<T>>(typeof(TArray), nameof(IArrayFactory.CreateArray), cacheCreate);
 			return delegateCreate(size, onHost, otherInfo) as TArray;
@@ -108,17 +108,17 @@ namespace Althea.Arrays
 		/// <param name="arrayType">the type of the array to reconstruct</param>
 		/// <param name="size">the size of the array about to create</param>
 		/// <param name="onHost">create on host memory or device</param>
-		/// <param name="otherInfo">other information obtained from <see cref="PureArray{T}.GetOtherInfo"/></param>
+		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <paramref name="arrayType"/></returns>
-		/// <remarks>If <paramref name="arrayType"/> is a user-defined class that inherits <see cref="PureArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
-		/// <exception cref="ArgumentNullException">if <paramref name="arrayType"/> is not a sub-type of <see cref="PureArray{T}"/> or is not a concrete one</exception>
+		/// <remarks>If <paramref name="arrayType"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
+		/// <exception cref="ArgumentNullException">if <paramref name="arrayType"/> is not a sub-type of <see cref="ValueArray{T}"/> or is not a concrete one</exception>
 		/// <exception cref="TypeAccessException">if <paramref name="arrayType"/>'s factory is not a sub-class of <see cref="PureArrayFactory"/></exception>
 		/// <exception cref="TypeLoadException">if <paramref name="arrayType"/>'s factory cannot be loaded</exception>
 		/// <exception cref="System.Reflection.AmbiguousMatchException">if <paramref name="arrayType"/>'s factory has multiple method named <see cref="IArrayFactory.ReconstructArray"/></exception>
 		/// <exception cref="MissingMethodException">if <paramref name="arrayType"/>'s factory has no method <see cref="IArrayFactory.ReconstructArray"/></exception>
-		public static PureArray<T> Create<T>(Type arrayType, IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public static ValueArray<T> Create<T>(Type arrayType, IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
-			if (arrayType is null || !arrayType.IsSubclassOf(typeof(PureArray<T>)) || arrayType.IsAbstract)
+			if (arrayType is null || !arrayType.IsSubclassOf(typeof(ValueArray<T>)) || arrayType.IsAbstract)
 				throw new ArgumentNullException(nameof(arrayType));
 			var delegateReconstruct = GetDelegate<IArrayFactory.DelegateCreateArray<T>>(arrayType, nameof(IArrayFactory.CreateArray), cacheReconstruct);
 			return delegateReconstruct(size, onHost, otherInfo);
@@ -134,15 +134,15 @@ namespace Althea.Arrays
 		/// <typeparam name="TArray">the concrete array type</typeparam>
 		/// <typeparam name="T">the data type</typeparam>
 		/// <param name="size">the size of the array about to create</param>
-		/// <param name="pointers">the pointers obtained from <see cref="PureArray{T}.GetPointers"/></param>
-		/// <param name="otherInfo">other information obtained from <see cref="PureArray{T}.GetOtherInfo"/></param>
+		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
+		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <typeparamref name="TArray"/></returns>
-		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="PureArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
+		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
 		/// <exception cref="TypeAccessException">if <typeparamref name="TArray"/>'s factory is not a sub-class of <see cref="PureArrayFactory"/></exception>
 		/// <exception cref="TypeLoadException">if <typeparamref name="TArray"/>'s factory cannot be loaded</exception>
 		/// <exception cref="System.Reflection.AmbiguousMatchException">if <typeparamref name="TArray"/>'s factory has multiple method named <see cref="IArrayFactory.ReconstructArray"/></exception>
 		/// <exception cref="MissingMethodException">if <typeparamref name="TArray"/>'s factory has no method <see cref="IArrayFactory.ReconstructArray"/></exception>
-		public static TArray Reconstruct<TArray, T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where TArray : PureArray<T>, new() where T : struct, IComparable<T>
+		public static TArray Reconstruct<TArray, T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where TArray : ValueArray<T>, new() where T : struct, IComparable<T>
 		{
 			var delegateReconstruct = GetDelegate<IArrayFactory.DelegateReconstructArray<T>>(typeof(TArray), nameof(IArrayFactory.ReconstructArray), cacheReconstruct);
 			return delegateReconstruct(size, pointers, otherInfo) as TArray;
@@ -154,18 +154,18 @@ namespace Althea.Arrays
 		/// <typeparam name="T">the data type</typeparam>
 		/// <param name="arrayType">the type of the array to reconstruct</param>
 		/// <param name="size">the size of the array about to create</param>
-		/// <param name="pointers">the pointers obtained from <see cref="PureArray{T}.GetPointers"/></param>
-		/// <param name="otherInfo">other information obtained from <see cref="PureArray{T}.GetOtherInfo"/></param>
+		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
+		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <paramref name="arrayType"/></returns>
-		/// <remarks>If <paramref name="arrayType"/> is a user-defined class that inherits <see cref="PureArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
-		/// <exception cref="ArgumentNullException">if <paramref name="arrayType"/> is not a sub-type of <see cref="PureArray{T}"/> or is not a concrete one</exception>
+		/// <remarks>If <paramref name="arrayType"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
+		/// <exception cref="ArgumentNullException">if <paramref name="arrayType"/> is not a sub-type of <see cref="ValueArray{T}"/> or is not a concrete one</exception>
 		/// <exception cref="TypeAccessException">if <paramref name="arrayType"/>'s factory is not a sub-class of <see cref="PureArrayFactory"/></exception>
 		/// <exception cref="TypeLoadException">if <paramref name="arrayType"/>'s factory cannot be loaded</exception>
 		/// <exception cref="System.Reflection.AmbiguousMatchException">if <paramref name="arrayType"/>'s factory has multiple method named <see cref="IArrayFactory.ReconstructArray"/></exception>
 		/// <exception cref="MissingMethodException">if <paramref name="arrayType"/>'s factory has no method <see cref="IArrayFactory.ReconstructArray"/></exception>
-		public static PureArray<T> Reconstruct<T>(Type arrayType, IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public static ValueArray<T> Reconstruct<T>(Type arrayType, IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
-			if (arrayType is null || !arrayType.IsSubclassOf(typeof(PureArray<T>)) || arrayType.IsAbstract)
+			if (arrayType is null || !arrayType.IsSubclassOf(typeof(ValueArray<T>)) || arrayType.IsAbstract)
 				throw new ArgumentNullException(nameof(arrayType));
 			var delegateReconstruct = GetDelegate<IArrayFactory.DelegateReconstructArray<T>>(arrayType, nameof(IArrayFactory.ReconstructArray), cacheReconstruct);
 			return delegateReconstruct(size, pointers, otherInfo);
@@ -302,19 +302,19 @@ namespace Althea.Arrays
 	#region internal concrete factories
 	internal sealed class DenseVectorFactory : IArrayFactory
 	{
-		public PureArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count != 1)
 				throw new ArgumentNullException(nameof(size));
 			return new DenseVector<T>(size[0], onHost);
 		}
 
-		public PureArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count != 1)
 				throw new ArgumentNullException(nameof(size));
 
-			var data = PureArrayFactory.CheckPointer<T>(pointers, PureArray<T>.PointerName, size[0]);
+			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName, size[0]);
 			return new DenseVector<T>(data, size[0]);
 		}
 
@@ -322,7 +322,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IPointer> 
 			{ 
-				[PureArray<T>.PointerName] = vec.Pointer
+				[ValueArray<T>.PointerName] = vec.Pointer
 			};
 		}
 	}
@@ -348,18 +348,18 @@ namespace Althea.Arrays
 
 		private static (Storage<T> value, Storage<int> index) Check<T>(IReadOnlyDictionary<string, IPointer> pointers) where T : struct, IComparable<T>
 		{
-			var value = PureArrayFactory.CheckPointer<T>(pointers, PureArray<T>.PointerName);
+			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName);
 			var index = PureArrayFactory.CheckPointer<int>(pointers, IndexPointerName);
 			return (value, index);
 		}
 
-		public PureArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			long nnz = Check(size, otherInfo);
 			return new SparseVector<T>(size[0], nonZeros: nnz, onHost);
 		}
 
-		public PureArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (value, index) = Check<T>(pointers);
 			return new SparseVector<T>(size[0], value, index);
@@ -369,7 +369,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IPointer>
 			{
-				[PureArray<T>.PointerName] = vec.Pointer,
+				[ValueArray<T>.PointerName] = vec.Pointer,
 				[IndexPointerName] = vec.IndexPointer
 			};
 		}
@@ -426,17 +426,17 @@ namespace Althea.Arrays
 								throw new ArgumentNullException(nameof(otherInfo));
 			}
 
-			var data = PureArrayFactory.CheckPointer<T>(pointers, PureArray<T>.PointerName, ld * size[1]);
+			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName, ld * size[1]);
 			return (ld, herm, data);
 		}
 
-		public PureArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			bool herm = Check(size, otherInfo);
 			return new DenseMatrix<T>(size[0], size[1], onHost, herm);
 		}
 
-		public PureArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (ld, herm, data) = Check<T>(size, pointers, otherInfo);
 			return new DenseMatrix<T>(data, size[0], size[1], ld, herm);
@@ -446,7 +446,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IPointer>
 			{
-				[PureArray<T>.PointerName] = mat.Pointer
+				[ValueArray<T>.PointerName] = mat.Pointer
 			};
 		}
 
@@ -545,7 +545,7 @@ namespace Althea.Arrays
 			if (format == SparseMatrixFormat.Any && nnz == 0)
 				throw new ArgumentNullException(nameof(otherInfo));
 
-			var value = PureArrayFactory.CheckPointer<T>(pointers, PureArray<T>.PointerName);
+			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName);
 			var row = PureArrayFactory.CheckPointer<int>(pointers, RowIndexName);
 			var col = PureArrayFactory.CheckPointer<int>(pointers, ColumnIndexName);
 
@@ -613,13 +613,13 @@ namespace Althea.Arrays
 			return (format, herm, value, row, col);
 		}
 
-		public PureArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (nnz, format, herm) = Check(size, otherInfo);
 			return new SparseMatrix<T>(size[0], size[1], nnz, format, onHost, herm);
 		}
 
-		public PureArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (format, herm, value, row, col) = Check<T>(size, pointers, otherInfo);
 			return new SparseMatrix<T>(size[0], size[1], value, row, col, format, herm);
@@ -629,7 +629,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IPointer>
 			{
-				[PureArray<T>.PointerName] = mat.Pointer,
+				[ValueArray<T>.PointerName] = mat.Pointer,
 				[RowIndexName] = mat.RowPointer,
 				[ColumnIndexName] = mat.ColumnPointer
 			};
@@ -670,19 +670,19 @@ namespace Althea.Arrays
 			return null; // cannot identify type
 		}
 
-		public PureArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count == 0)
 				throw new ArgumentNullException(nameof(size));
 			return new DenseTensor<T>(size, GetLabel(otherInfo), onHost);
 		}
 
-		public PureArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count == 0)
 				throw new ArgumentNullException(nameof(size));
 
-			var data = PureArrayFactory.CheckPointer<T>(pointers, PureArray<T>.PointerName, size.Prod());
+			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName, size.Prod());
 			var label = GetLabel(otherInfo);
 			var result = new DenseTensor<T>(data, size);
 			if (label != null)
@@ -694,7 +694,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IPointer>
 			{
-				[PureArray<T>.PointerName] = ten.Pointer
+				[ValueArray<T>.PointerName] = ten.Pointer
 			};
 		}
 

@@ -6,54 +6,12 @@ using System.Text;
 using RT = Althea.Runtime.API;
 using Althea.Memory;
 using Althea.Linq;
-using Althea.Array;
+using Althea.Arrays;
 
 
 namespace Althea.General
 {
 	#region common
-
-	#region interfaces for solver
-	/// <summary>
-	/// The interface of device / host vector that contains the operation needed for Lanczos and Krylov-Schur solver.
-	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
-	/// <typeparam name="TVec">the vector type</typeparam>
-	public interface IKrylovVector<TVec, T> : IVector<T> where TVec : IKrylovVector<TVec, T> where T : struct, IComparable<T>
-	{
-		/// <summary>
-		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^H) \vec{v}_{\text{other}}$.
-		/// </summary>
-		/// <param name="other">the other <typeparamref name="TVec"/></param>
-		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
-		/// <returns>The inner product result</returns>
-		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
-		T Dot(TVec other, bool? conjugateThis = null);
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} = \vec{v}_{\text{this}} + \alpha \vec{x}$.
-		/// </summary>
-		/// <param name="x">vector</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		void AddBy_αx(TVec x, T α);
-
-		/// <summary>
-		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <typeparamref name="TVec"/>.
-		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
-		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <typeparamref name="TVec"/>.</returns>
-		/// <remarks>this method is actually static</remarks>
-		TVec OperateOn(IReadOnlyList<TVec> notJoinedVecs, T[] input);
-
-		/// <summary>
-		/// Replace this vector's content with <paramref name="another"/> <b>in-place</b>.
-		/// </summary>
-		/// <param name="another">another <typeparamref name="TVec"/> to replace from</param>
-		void ReplaceBy(TVec another);
-
-	}
-	#endregion
 
 	#region restart strategy
 	/// <summary>

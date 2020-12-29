@@ -116,24 +116,28 @@ namespace Althea
 	}
 
 	/// <summary>
-	/// The Operation type indicates which operation needs to be performed with the dense matrix. <br/>
-	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-transpose), ‘T’ or ‘t’ (transpose) and ‘C’ or ‘c’ (conjugate transpose) that are often used as parameters to legacy BLAS implementations.
+	/// The operation type to indicate which operation needs to be performed with the matrix.
 	/// </summary>
+	/// <remarks>the entry with larger value is less preferred</remarks>
 	// TODO: move to Althea.LinearAlgebra
 	public enum MatrixOperation
 	{
 		/// <summary>
-		/// the non-transpose operation is selected
+		/// the non-transpose operation
 		/// </summary>
 		None = 0,
 		/// <summary>
-		/// the transpose operation is selected
+		/// the transpose operation
 		/// </summary>
 		Transpose = 1,
 		/// <summary>
-		/// the conjugate transpose operation is selected
+		/// the conjugate transpose operation
 		/// </summary>
-		ConjugateTranspose = 2
+		ConjugateTranspose = 2,
+		/// <summary>
+		/// the conjugate only operation
+		/// </summary>
+		Conjugate = 3,
 	}
 
 	/// <summary>

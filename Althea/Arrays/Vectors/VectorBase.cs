@@ -10,10 +10,10 @@ using BLAS = Althea.Blas.API;
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract vector class that inherit the <see cref="PureArray{T}"/>.
+	/// The abstract vector class that inherit the <see cref="ValueArray{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public abstract class VectorBase<T> : PureArray<T>, IVector<VectorBase<T>, MatrixBase<T>, T> where T : struct, IComparable<T>
+	public abstract class VectorBase<T> : ValueArray<T>, IVector<VectorBase<T>, MatrixBase<T>, T> where T : struct, IComparable<T>
 	{
 		#region initialize and destroy
 		/// <summary>
@@ -42,8 +42,8 @@ namespace Althea.Arrays
 		/// <param name="refArray">original array</param>
 		/// <param name="actualLength">actual length of vector</param>
 		/// <param name="newLength">size of the new vector</param>
-		/// <param name="offset">offset to the <see cref="PureArray{T}.Pointer"/> in T rather than bytes</param>
-		protected VectorBase(PureArray<T> refArray, long actualLength, long newLength, long offset = 0) : base(refArray, actualLength, new[] { newLength }, offset) { }
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in T rather than bytes</param>
+		protected VectorBase(ValueArray<T> refArray, long actualLength, long newLength, long offset = 0) : base(refArray, actualLength, new[] { newLength }, offset) { }
 		#endregion
 
 
@@ -52,8 +52,8 @@ namespace Althea.Arrays
 		/// Vector to vector -- just returns this is enough.
 		/// </summary>
 		/// <returns>this vector</returns>
-		/// <seealso cref="PureArray{T}.ToVector"/>
-		public override PureArray<T> ToVector() => this;
+		/// <seealso cref="ValueArray{T}.ToVector"/>
+		public override ValueArray<T> ToVector() => this;
 		#endregion
 
 

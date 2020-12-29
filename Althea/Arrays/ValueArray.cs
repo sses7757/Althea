@@ -13,11 +13,10 @@ using RAND = Althea.Rng.API;
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract device array class for array whose <see cref="PureArray{T}.Pointer"/> only refers to the data array. There may be more pointer(s) standing for different indices in a sparse array, in which case the <see cref="PureArray{T}.Pointer"/> only refers to the value data array.
+	/// The abstract device array class for array whose <see cref="ValueArray{T}.Pointer"/> only refers to the data array. There may be more pointer(s) standing for different indices in a sparse array, in which case the <see cref="ValueArray{T}.Pointer"/> only refers to the value data array.
 	/// </summary>
-	/// <typeparam name="T">For default CPU and GPU routines, the supported data types of all functions are <c><see cref="float"/>(<see cref="DataType.RealSingle"/>), <see cref="double"/>(<see cref="DataType.RealDouble"/>), <see cref="FloatComplex"/>(<see cref="DataType.ComplexSingle"/>), <see cref="DoubleComplex"/>(<see cref="DataType.ComplexDouble"/>)</c>; the partially supported data types are other entries in <see cref="DataType"/>; other types of data cause <see cref="NotSupportedException"/>.<br/>
-	/// You can implement your own low-level CPU and / or GPU routines such as <see cref="Blas.IBlas"/>, <see cref="Tensor.ITensor"/> to support other data types.</typeparam>
-	public abstract class PureArray<T> : AbstractArray<T>, IMutableArray<T> where T : struct, IComparable<T>
+	/// <typeparam name="T">the supported data type</typeparam>
+	public abstract class ValueArray<T> : AbstractArray<T>, IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region empty arrays
 		/// <summary>
@@ -66,7 +65,7 @@ namespace Althea.Arrays
 		/// <param name="actualLength">the actual size of the array to allocate in device memory, in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="size">size of the new array</param>
 		/// <param name="onHost">allocate one host memory or device memory</param>
-		protected PureArray(long actualLength, IReadOnlyList<long> size, bool onHost) : base(size)
+		protected ValueArray(long actualLength, IReadOnlyList<long> size, bool onHost) : base(size)
 		{
 			this.Pointer = Storage<T>.Create(actualLength, onHost: onHost);
 		}
@@ -76,7 +75,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="storage">the existing <see cref="Storage{T}"/></param>
 		/// <param name="size">size of this array</param>
-		protected PureArray(Storage<T> storage, IReadOnlyList<long> size) : base(size)
+		protected ValueArray(Storage<T> storage, IReadOnlyList<long> size) : base(size)
 		{
 			if (this.Length != storage.Length)
 				throw new ArgumentException(Resource.ArraySize, nameof(size));
@@ -86,22 +85,22 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The root reference of this array
 		/// </summary>
-		protected readonly PureArray<T> _root = null;
+		protected readonly ValueArray<T> _root = null;
 
 		/// <summary>
 		/// Reshape constructor.
 		/// </summary>
-		/// <param name="refArray">the original <see cref="PureArray{T}"/></param>
+		/// <param name="refArray">the original <see cref="ValueArray{T}"/></param>
 		/// <param name="actualLength">the actual size of the array, in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="newSize">the new array's size</param>
 		/// <param name="offset">offset in <typeparamref name="T"/> rather than bytes</param>
-		protected PureArray(PureArray<T> refArray, long actualLength, IReadOnlyList<long> newSize, long offset = 0) : base(newSize)
+		protected ValueArray(ValueArray<T> refArray, long actualLength, IReadOnlyList<long> newSize, long offset = 0) : base(newSize)
 		{
 			if (refArray is null)
 				throw new ArgumentNullException(nameof(refArray), Resource.ArrayCannotNull);
 			this.Pointer = (refArray.Pointer + offset).MakeSize(actualLength);
 			this._root = refArray._root ?? refArray;
-			GC.SuppressFinalize(this); // since this is a referenced array
+			////GC.SuppressFinalize(this); // since this is a referenced array
 		}
 
 		/// <summary>
@@ -155,7 +154,7 @@ namespace Althea.Arrays
 		/// Flatten the array to a vector.
 		/// </summary>
 		/// <returns>The flattened vector</returns>
-		public virtual PureArray<T> ToVector() => new DenseVector<T>(this, this.ActualLength);
+		public virtual ValueArray<T> ToVector() => new DenseVector<T>(this, this.ActualLength);
 
 		/// <summary>
 		/// Check the new size (dimensionality) to reshape to with respect to the original one
@@ -207,7 +206,7 @@ namespace Althea.Arrays
 		/// <param name="newSize">the new dimensions.
 		/// You can have one uncertain dimension, indicated by a non-positive number.</param>
 		/// <returns>The reshaped array. Note that if out-of-place reshape is performed, the returned one cannot undo reshape.</returns>
-		public PureArray<T> Reshape(params long[] newSize)
+		public ValueArray<T> Reshape(params long[] newSize)
 		{
 			newSize = this.CheckSize(newSize);
 			if (newSize.SequenceEqual(this.Size))
@@ -233,7 +232,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="leadDim">leading dimension of matrix; if leadDim ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public virtual PureArray<T> ToMatrix(long leadDim = 0)
+		public virtual ValueArray<T> ToMatrix(long leadDim = 0)
 		{
 			var newSize = this.CheckSize(new[] { leadDim, 0 });
 			leadDim = newSize[0];
@@ -247,7 +246,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="size">The new dimensions. You can have one or zero uncertain dimension, indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public virtual PureArray<T> ToTensor(params long[] size)
+		public virtual ValueArray<T> ToTensor(params long[] size)
 		{
 			size = this.CheckSize(size);
 			return new DenseTensor<T>(this, size);
@@ -258,19 +257,19 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">the new data type</typeparam>
 		/// <returns>the new array</returns>
-		public abstract PureArray<TOut> NewArrayAlike<TOut>() where TOut : struct, IComparable<TOut>;
+		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : struct, IComparable<TOut>;
 
 		/// <summary>
 		/// Cast this array into another data type <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">the data type to cast to</typeparam>
-		/// <returns>The casted <see cref="PureArray{TOut}"/></returns>
+		/// <returns>The casted <see cref="ValueArray{TOut}"/></returns>
 		/// <exception cref="NotSupportedException">if the cast from <typeparamref name="T"/> to <typeparamref name="TOut"/> is not supported</exception>
 		public override AbstractArray<TOut> DataTypeCast<TOut>()
 		{
 			DataType typeT = default(T).ToDataType(), typeOut = default(TOut).ToDataType();
 			if (typeT == typeOut)
-				return this as PureArray<TOut>;
+				return this as ValueArray<TOut>;
 			if (!typeT.IsFloat())
 				throw new NotSupportedException(Resource.DataTypeNotSupport);
 			var arr = this.NewArrayAlike<TOut>();
@@ -304,16 +303,16 @@ namespace Althea.Arrays
 
 		#region overrides
 		/// <summary>
-		/// Check if this <see cref="PureArray{T}"/> share some memory / data with <paramref name="another"/> one
+		/// Check if this <see cref="ValueArray{T}"/> share some memory / data with <paramref name="another"/> one
 		/// </summary>
 		/// <param name="another">another <see cref="AbstractArray{T}"/> to check</param>
 		/// <returns>True if they do share some memory / data, false otherwise</returns>
 		/// <remarks>The default implementation only works for arrays with only one <see cref="Pointer"/></remarks>
 		public override bool ShareMemoryWith(AbstractArray<T> another)
 		{
-			if (another is PureArray<T> arr)
+			if (another is ValueArray<T> arr)
 			{
-				PureArray<T> a = this._root ?? this, b = arr._root ?? arr;
+				ValueArray<T> a = this._root ?? this, b = arr._root ?? arr;
 				if (a.Equals(b))
 					return true;
 				else
@@ -410,7 +409,7 @@ namespace Althea.Arrays
 		/// <param name="obj"></param>
 		public override bool Equals(object obj)
 		{
-			if (obj is null || !(obj is PureArray<T> a))
+			if (obj is null || !(obj is ValueArray<T> a))
 				return false;
 			else
 				return this.Pointer == a.Pointer && this.Size.SequenceEqual(a.Size);
@@ -425,11 +424,11 @@ namespace Althea.Arrays
 		/// <param name="a">array</param>
 		/// <param name="v">value</param>
 		/// <returns>$$a \stackrel{?}{=} v$$</returns>
-		public static bool operator ==(PureArray<T> a, T v)
+		public static bool operator ==(ValueArray<T> a, T v)
 		{
 			if (a is null || a == EmptyDnVec)
 				return false;
-			using var da = (a.Clone() as PureArray<T>).ToVector() as PureArray<T>;
+			using var da = (a.Clone() as ValueArray<T>).ToVector() as ValueArray<T>;
 			if (!v.Equals(Scalars<T>.Zero))
 			{
 				using var ones = new DenseVector<T>(da.ActualLength, a.OnHost);
@@ -452,7 +451,7 @@ namespace Althea.Arrays
 		/// <param name="a">array treated as a vector</param>
 		/// <param name="v">value</param>
 		/// <returns>$$\vec{a} - v \stackrel{?}{=} 0$$</returns>
-		public static bool operator ==(T v, PureArray<T> a) => a == v;
+		public static bool operator ==(T v, ValueArray<T> a) => a == v;
 
 		/// <summary>
 		/// Array and value compare with threshold
@@ -460,7 +459,7 @@ namespace Althea.Arrays
 		/// <param name="a">array treated as a vector</param>
 		/// <param name="v">value</param>
 		/// <returns>$$\vec{a} - v \stackrel{?}{\ne} 0$$</returns>
-		public static bool operator !=(PureArray<T> a, T v) => !(a == v);
+		public static bool operator !=(ValueArray<T> a, T v) => !(a == v);
 
 		/// <summary>
 		/// Array and value compare with threshold
@@ -468,7 +467,7 @@ namespace Althea.Arrays
 		/// <param name="a">array treated as a vector</param>
 		/// <param name="v">value</param>
 		/// <returns>$$\vec{a} - v \stackrel{?}{\ne} 0$$</returns>
-		public static bool operator !=(T v, PureArray<T> a) => !(a == v);
+		public static bool operator !=(T v, ValueArray<T> a) => !(a == v);
 		#endregion
 
 		#region abstract array operations
@@ -476,7 +475,7 @@ namespace Althea.Arrays
 		/// Conjugate this array out-of-place.
 		/// </summary>
 		/// <returns>the conjugate array. If <typeparamref name="T"/> is a real type, this array is returned</returns>
-		public virtual PureArray<T> ConjugateOutOfPlace()
+		public virtual ValueArray<T> ConjugateOutOfPlace()
 		{
 			if (this.IsRealType)
 				return this;
@@ -572,8 +571,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert this array to the other memory.
 		/// </summary>
-		/// <returns>a new <see cref="PureArray{T}"/> with same value as this one</returns>
-		public abstract PureArray<T> ToTheOtherMemory();
+		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one</returns>
+		public abstract ValueArray<T> ToTheOtherMemory();
 		#endregion
 	}
 }

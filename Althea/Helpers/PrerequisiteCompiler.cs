@@ -12,7 +12,7 @@ namespace Althea.PrerequisiteCompiler
 {
 	internal static class Env
 	{
-		internal static readonly string DllExt = CudaCSharpHelpers.IsWindows ? @"dll" : @"so";
+		internal static readonly string DllExt = Helpers.InternalHelper.IsWindows ? @"dll" : @"so";
 	}
 
 	class PrerequisiteCompiler
@@ -21,8 +21,6 @@ namespace Althea.PrerequisiteCompiler
 @"Usage: dotnet CudaCShap.dll <The source code folder> [OPTIONS]
 The prerequisite compiler program for Althea.
 	For both Linux and Windows users, the environment variable 'LD_LIBRARY_PATH' (or 'PATH' for Windows) (contains the folders of dynamic link libraries, e.g. [lib]cublas.[so|dll], [lib]cusolve.[so|dll], [lib]cutensor.[so|dll]) should contain the MKL, CUDA, cuBLAS and cuTensor pathes. To call the 'Althea' library functions, you must have x86_64 CPUs.";
-
-#pragma warning disable CA1303
 
 		static void Main(string[] args)
 		{
@@ -94,7 +92,7 @@ The prerequisite compiler program for Althea.
 			void outHandler(object o, DataReceivedEventArgs outline)
 			{
 				var writer = isError ? Console.Error : Console.Out;
-				if (outline.Data != null && outline.Data.Trim().Replace("\t", "", CudaCSharpConverters.StrCmp).Length != 0)
+				if (outline.Data != null && outline.Data.Trim().Replace("\t", "").Length != 0)
 					writer.WriteLine("\t" + outline.Data);
 			}
 			return (o, outline) => outHandler(o, outline);
@@ -164,10 +162,8 @@ The prerequisite compiler program for Althea.
 				Console.WriteLine($"{"File",18} {f.PadRight(maxLen)} Found");
 			}
 			var allFiles = string.Join(" --shared ", cuFiles.Select(s => $"\"{s}\""));
-			string arguments = $"{(cuFiles.Any(f => f.Contains(".cu")) ? "-lcublas " : "")}-o {name}.{Env.DllExt} {allFiles} {(CudaCSharpHelpers.IsWindows ? "" : "-Xcompiler \"-fPIC\"")}";
+			string arguments = $"{(cuFiles.Any(f => f.Contains(".cu")) ? "-lcublas " : "")}-o {name}.{Env.DllExt} {allFiles} {(Helpers.InternalHelper.IsWindows ? "" : "-Xcompiler \"-fPIC\"")}";
 			ProcessRun("nvcc", arguments, "NVCC compile failed", () => TryDelete($"{name}.lib", $"{name}.a", $"{name}.exp"));
 		}
-
-#pragma warning restore CA1303
 	}
 }

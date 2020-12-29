@@ -78,8 +78,8 @@ namespace Althea.Arrays
 		/// <param name="newCols">new number of columns</param>
 		/// <param name="newLD">new leading dimension, less than or equal to 0 means that it is equal to <paramref name="newRows"/></param>
 		/// <param name="herm">the new matrix is Hermitian or not, if <paramref name="refArray"/> is <see cref="MatrixBase{T}"/>, its <see cref="MatrixBase{T}.Hermitian"/> will be used</param>
-		/// <param name="offset">offset to the <see cref="PureArray{T}.Pointer"/> in <typeparamref name="T"/> rather than bytes</param>
-		public DenseMatrix(PureArray<T> refArray, long newRows, long newCols, long newLD = 0, bool herm = false, long offset = 0) : base(refArray, (newLD > 0 ? newLD : refArray is DenseMatrix<T> m ? m.LeadDim : newRows) * newCols, newRows, newCols, herm, offset)
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in <typeparamref name="T"/> rather than bytes</param>
+		public DenseMatrix(ValueArray<T> refArray, long newRows, long newCols, long newLD = 0, bool herm = false, long offset = 0) : base(refArray, (newLD > 0 ? newLD : refArray is DenseMatrix<T> m ? m.LeadDim : newRows) * newCols, newRows, newCols, herm, offset)
 		{
 			if (newLD <= 0)
 			{
@@ -95,11 +95,11 @@ namespace Althea.Arrays
 
 		#region reshape
 		/// <summary>
-		/// Reshape the array to a <see cref="MatrixBase{T}"/> with leading dimension = leadDim. Override <see cref="PureArray{T}.ToMatrix(long)"/>.
+		/// Reshape the array to a <see cref="MatrixBase{T}"/> with leading dimension = leadDim. Override <see cref="ValueArray{T}.ToMatrix(long)"/>.
 		/// </summary>
 		/// <param name="leadDim">leading dimension of target matrix</param>
 		/// <returns>If <paramref name="leadDim"/> &lt;= 0 or <paramref name="leadDim"/> == <see cref="MatrixBase{T}.NRows"/>, the matrix itself is returned</returns>
-		public override PureArray<T> ToMatrix(long leadDim = 0)
+		public override ValueArray<T> ToMatrix(long leadDim = 0)
 		{
 			if (this.LeadDim == leadDim || leadDim <= 0)
 				return this;
@@ -163,8 +163,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert this array to the other memory.
 		/// </summary>
-		/// <returns>a new <see cref="PureArray{T}"/> with same value as this one</returns>
-		public override PureArray<T> ToTheOtherMemory()
+		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one</returns>
+		public override ValueArray<T> ToTheOtherMemory()
 		{
 			var newMat = new DenseMatrix<T>(this.NRows, this.NCols, !this.OnHost, this.Hermitian);
 			try
@@ -277,7 +277,7 @@ namespace Althea.Arrays
 		public override AbstractArray<T> NewArrayAlike() => new DenseMatrix<T>(this.NRows, this.NCols, this.OnHost, this.Hermitian);
 
 		/// <summary>
-		/// Take out the data array as a new <see cref="DenseVector{T}"/>, override <see cref="PureArray{T}.AsDenseVector"/>.
+		/// Take out the data array as a new <see cref="DenseVector{T}"/>, override <see cref="ValueArray{T}.AsDenseVector"/>.
 		/// </summary>
 		/// <returns>A new <see cref="DenseVector{T}"/> containing the referenced data array of this one.</returns>
 		public override DenseVector<T> AsDenseVector() => this.ToVector() as DenseVector<T>;
@@ -287,7 +287,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">the new data type</typeparam>
 		/// <returns>the new array</returns>
-		public override PureArray<TOut> NewArrayAlike<TOut>() => new DenseMatrix<TOut>(this.NRows, this.NCols, this.OnHost, this.Hermitian);
+		public override ValueArray<TOut> NewArrayAlike<TOut>() => new DenseMatrix<TOut>(this.NRows, this.NCols, this.OnHost, this.Hermitian);
 		#endregion
 
 
@@ -312,7 +312,7 @@ namespace Althea.Arrays
 
 		private bool CanOverwrite<TOther>(VectorBase<TOther> overwrite, long len = 0) where TOther : struct, IComparable<TOther>
 		{
-			if (overwrite is null || overwrite == PureArray<TOther>.EmptyDnVec)
+			if (overwrite is null || overwrite == ValueArray<TOther>.EmptyDnVec)
 				return false;
 			if (len == 0) len = overwrite.Length;
 			return overwrite is DenseVector<TOther> dd && dd.OnHost == this.OnHost && dd.Length == len;
@@ -1901,7 +1901,7 @@ namespace Althea.Arrays
 
 		#region print
 		/// <summary>
-		/// Override <see cref="PureArray{T}.ToString()"/> to get the string representation of this array.
+		/// Override <see cref="ValueArray{T}.ToString()"/> to get the string representation of this array.
 		/// </summary>
 		/// <returns>String representation of this array</returns>
 		public override string ToString()

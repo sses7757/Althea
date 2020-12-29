@@ -27,7 +27,7 @@ namespace Althea.Arrays
 		public override long LastIndex => RT.CopyOut(this.IndexPointer, offset: this.NonZero - 1);
 
 		/// <summary>
-		/// Number of nonzero values of this sparse vector, equal to the array size of <see cref="IndexPointer"/> and <see cref="PureArray{T}.Pointer"/>, from <see cref="ISparseArray{T}.NonZero"/>.
+		/// Number of nonzero values of this sparse vector, equal to the array size of <see cref="IndexPointer"/> and <see cref="ValueArray{T}.Pointer"/>, from <see cref="ISparseArray{T}.NonZero"/>.
 		/// </summary>
 		public long NonZero => this.ActualLength;
 
@@ -114,7 +114,7 @@ namespace Althea.Arrays
 		/// <param name="newNNZ">the actual length of the stored data, i.e. the number of non-zero values of the new sparse vector</param>
 		/// <param name="indices">the indices array pointer, if it is null and the <paramref name="refArray"/> is not a <see cref="SparseVector{T}"/>, a new one will be allocated</param>
 		/// <param name="offset">offset to the data pointer</param>
-		public SparseVector(PureArray<T> refArray, long newLength, long newNNZ, Storage<int> indices = null, long offset = 0) : base(refArray, newNNZ, newLength, offset)
+		public SparseVector(ValueArray<T> refArray, long newLength, long newNNZ, Storage<int> indices = null, long offset = 0) : base(refArray, newNNZ, newLength, offset)
 		{
 			if (refArray is null)
 				throw new ArgumentNullException(nameof(refArray), Resource.ArrayCannotNull);
@@ -143,7 +143,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// The function that actually implements the dispose functionality, override <see cref="PureArray{T}.Dispose(bool)"/>
+		/// The function that actually implements the dispose functionality, override <see cref="ValueArray{T}.Dispose(bool)"/>
 		/// </summary>
 		/// <param name="disposing">dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)
@@ -178,7 +178,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">the new data type</typeparam>
 		/// <returns>the new array</returns>
-		public override PureArray<TOut> NewArrayAlike<TOut>() => new SparseVector<TOut>(this.Length, this.NonZero, this.OnHost);
+		public override ValueArray<TOut> NewArrayAlike<TOut>() => new SparseVector<TOut>(this.Length, this.NonZero, this.OnHost);
 
 		/// <summary>
 		/// Clone only the value array of this sparse vector.
@@ -223,11 +223,11 @@ namespace Althea.Arrays
 
 		#region reshape
 		/// <summary>
-		/// Reshape this sparse vector to a <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.COOC"/> with leading dimension = leadDim. Override <see cref="PureArray{T}.ToMatrix(long)"/>.
+		/// Reshape this sparse vector to a <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.COOC"/> with leading dimension = leadDim. Override <see cref="ValueArray{T}.ToMatrix(long)"/>.
 		/// </summary>
 		/// <param name="leadDim">leading dimension of matrix; if leadDim ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public override PureArray<T> ToMatrix(long leadDim = 0)
+		public override ValueArray<T> ToMatrix(long leadDim = 0)
 		{
 			var newSize = this.CheckSize(new[] { leadDim, 0 });
 			leadDim = newSize[0];
@@ -247,11 +247,11 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Reshape this sparse vector to a general <see cref="DenseTensor{T}"/> with dimensionality = size. Override <see cref="PureArray{T}.ToTensor(long[])"/>.
+		/// Reshape this sparse vector to a general <see cref="DenseTensor{T}"/> with dimensionality = size. Override <see cref="ValueArray{T}.ToTensor(long[])"/>.
 		/// </summary>
 		/// <param name="size">The new dimensions. You can have one or zero uncertain dimension, indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override PureArray<T> ToTensor(params long[] size)
+		public override ValueArray<T> ToTensor(params long[] size)
 		{
 			throw new NotImplementedException();
 		}
@@ -381,7 +381,7 @@ namespace Althea.Arrays
 		/// Dispose this sparse vector after comparing the pointers between this vector and the target <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">the target <see cref="ISparseArray{T}"/> to compare</param>
-		public void DisposeComparedTo(ISparseArray<T> array)
+		public void DisposeExclude(ISparseArray<T> array)
 		{
 			if (array is SparseVector<T> sv)
 			{
@@ -412,8 +412,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert this array to another memory.
 		/// </summary>
-		/// <returns>a new <see cref="PureArray{T}"/> with same value as this one if this array is on host memory</returns>
-		public override PureArray<T> ToTheOtherMemory()
+		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one if this array is on host memory</returns>
+		public override ValueArray<T> ToTheOtherMemory()
 		{
 			var newVec = new SparseVector<T>(this.Length, this.NonZero, !this.OnHost);
 			try
@@ -462,7 +462,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <returns>Extracted data vector</returns>
 		/// <remarks>This operation is always in-place</remarks>
-		/// <remarks>Override <see cref="PureArray{T}.AsDenseVector"/></remarks>
+		/// <remarks>Override <see cref="ValueArray{T}.AsDenseVector"/></remarks>
 		public override DenseVector<T> AsDenseVector()
 		{
 			return new DenseVector<T>(this.Pointer, this.NonZero);
@@ -1139,7 +1139,7 @@ namespace Althea.Arrays
 		/// <returns>The reference <see cref="SparseVector{T}"/> of the selected range</returns>
 		/// <remarks>
 		/// The getter returns a reference <see cref="SparseVector{T}"/>. <br/>
-		/// The setter value will be used as dense vector <see cref="PureArray{T}.AsDenseVector"/>. The sparse pattern (if any) will not be considered.
+		/// The setter value will be used as dense vector <see cref="ValueArray{T}.AsDenseVector"/>. The sparse pattern (if any) will not be considered.
 		/// </remarks>
 		/// <exception cref="OverflowException">if <paramref name="r"/> cannot be casted into <see cref="int"/> without loss</exception>
 		public override VectorBase<T> this[Range r] {
@@ -1207,7 +1207,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="ranges">the array of <see cref="Range"/> of indices</param>
 		/// <returns>All the values in the ranges at a copied <see cref="VectorBase{T}"/></returns>
-		/// <remarks>The getter copies the values in the ranges while the setter calls <see cref="PureArray{T}.AsDenseVector"/> before utilizing the <see cref="this[int[]]"/>, which may be of bad performance.</remarks>
+		/// <remarks>The getter copies the values in the ranges while the setter calls <see cref="ValueArray{T}.AsDenseVector"/> before utilizing the <see cref="this[int[]]"/>, which may be of bad performance.</remarks>
 		public override DenseVector<T> this[params Range[] ranges] {
 			get {
 				CheckRange(ranges);
@@ -1264,7 +1264,7 @@ namespace Althea.Arrays
 
 		#region equality
 		/// <summary>
-		/// Check if this <see cref="PureArray{T}"/> share some memory / data with <paramref name="another"/> one
+		/// Check if this <see cref="ValueArray{T}"/> share some memory / data with <paramref name="another"/> one
 		/// </summary>
 		/// <param name="another">another <see cref="AbstractArray{T}"/> to check</param>
 		/// <returns>True if they do share some memory / data, false otherwise</returns>
@@ -1285,7 +1285,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Override <see cref="PureArray{T}.GetHashCode"/> to get the hash code this array.
+		/// Override <see cref="ValueArray{T}.GetHashCode"/> to get the hash code this array.
 		/// </summary>
 		/// <returns>The hash code</returns>
 		public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.IndexPointer);
@@ -1296,7 +1296,7 @@ namespace Althea.Arrays
 		/// <param name="obj">another <see cref="SparseVector{T}"/></param>
 		public override bool Equals(object obj)
 		{
-			if (obj is null || !(obj is PureArray<T> a))
+			if (obj is null || !(obj is ValueArray<T> a))
 				return false;
 			else if (this.Pointer != a.Pointer)
 				return false;
@@ -1309,7 +1309,7 @@ namespace Althea.Arrays
 
 		#region print
 		/// <summary>
-		/// Override <see cref="PureArray{T}.ToString()"/> to get the string representation of this array.
+		/// Override <see cref="ValueArray{T}.ToString()"/> to get the string representation of this array.
 		/// </summary>
 		/// <returns>String representation of this array</returns>
 		public override string ToString()

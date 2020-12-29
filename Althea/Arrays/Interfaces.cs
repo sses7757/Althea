@@ -8,10 +8,10 @@ using Althea.TensorAlgebra; // TensorOrder
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The interface for mutable device / host arrays whose value arrays can be filled with different values
+	/// The interface for mutable array whose value array can be filled with different values
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public interface IMutableArray<T> where T : struct, IComparable<T>
+	public interface IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region fills
 		/// <summary>
@@ -32,10 +32,10 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// Simple interface for device / host sparse array which only contains basic members, additional fillings and .conversions from / to C# arrays
+	/// Simple interface for sparse array which only contains basic members, additional fillings and .conversions from / to C# arrays
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
-	public interface ISparseArray<T> : IMutableArray<T> where T : struct, IComparable<T>
+	public interface ISparseArray<T> : IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
 		/// <summary>
@@ -101,18 +101,18 @@ namespace Althea.Arrays
 
 		#region dispose
 		/// <summary>
-		/// Dispose this sparse array after comparing the pointers between this array and the target <paramref name="array"/>.
+		/// Dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>.
 		/// </summary>
-		/// <param name="array">the target <see cref="ISparseArray{T}"/> to compare</param>
-		void DisposeComparedTo(ISparseArray<T> array);
+		/// <param name="array">the target <see cref="ISparseArray{T}"/> to exclude</param>
+		void DisposeExclude(ISparseArray<T> array);
 		#endregion
 	}
 
 	/// <summary>
-	/// Simple interface for device / host dense array which contains the conversions from / to C# arrays.
+	/// Simple interface for dense array which contains the conversions from / to C# arrays.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
-	public interface IDenseArray<T> : IMutableArray<T> where T : struct, IComparable<T>
+	public interface IDenseArray<T> : IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region to C# arrays
 		/// <summary>
@@ -134,10 +134,10 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface of device / host vector that contains the members, operations and indexers of vector whose inputs and outputs are not relevant with vector.
+	/// The interface of vector that contains the members, operations and indexers of vector whose inputs and outputs are not relevant with vector.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
-	public interface IVector<T> where T : struct, IComparable<T>
+	public interface IVector<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		/// <summary>
 		/// The last index of the vector
@@ -175,11 +175,56 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface of device / host vector that contains the members, operations and indexers of vector whose inputs are relevant with vector.
+	/// The interface of vector that contains the operation needed for Lanczos and Krylov-Schur solver.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
-	public interface IVector<TVec, T> : General.IKrylovVector<TVec, T> where TVec : AbstractArray<T>, IVector<TVec, T> where T : struct, IComparable<T>
+	public interface IKrylovVector<TVec, T> : IVector<T>
+		where TVec : IKrylovVector<TVec, T> 
+		where T : unmanaged, IFormattable, IEquatable<T>
+	{
+		#region operation
+		/// <summary>
+		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^H) \vec{v}_{\text{other}}$.
+		/// </summary>
+		/// <param name="other">the other <typeparamref name="TVec"/></param>
+		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
+		/// <returns>The inner product result</returns>
+		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
+		T Dot(TVec other, bool? conjugateThis = null);
+
+		/// <summary>
+		/// Compute $\vec{v}_{\text{this}} = \vec{v}_{\text{this}} + \alpha \vec{x}$.
+		/// </summary>
+		/// <param name="x">vector</param>
+		/// <param name="α">scalar of type <typeparamref name="T"/></param>
+		void AddBy_αx(TVec x, T α);
+
+		/// <summary>
+		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <typeparamref name="TVec"/>.
+		/// </summary>
+		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
+		/// <param name="input">the input C# array to be operated</param>
+		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <typeparamref name="TVec"/>.</returns>
+		/// <remarks>this method is actually static</remarks>
+		TVec OperateOn(IReadOnlyList<TVec> notJoinedVecs, T[] input);
+
+		/// <summary>
+		/// Replace this vector's content with <paramref name="another"/> <b>in-place</b>.
+		/// </summary>
+		/// <param name="another">another <typeparamref name="TVec"/> to replace from</param>
+		void ReplaceBy(TVec another);
+		#endregion
+	}
+
+	/// <summary>
+	/// The interface of vector that contains the members, operations and indexers of vector whose inputs are relevant with vector.
+	/// </summary>
+	/// <typeparam name="T">the supported data types</typeparam>
+	/// <typeparam name="TVec">the vector type</typeparam>
+	public interface IVector<TVec, T> : IKrylovVector<TVec, T>
+		where TVec : AbstractArray<T>, IVector<TVec, T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region operation
 		/// <summary>
@@ -194,16 +239,21 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="other">the other <typeparamref name="TVec"/></param>
 		void PointWiseDivide(TVec other);
+
+		// TODO: add point wise power, etc.?
 		#endregion
 	}
 
 	/// <summary>
-	/// The interface of device / host vector that contains the extra operations of vector whose inputs / outputs are also relevant with matrix.
+	/// The interface of vector that contains the extra operations of vector whose inputs / outputs are also relevant with matrix.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
 	/// <typeparam name="TMat">the matrix type</typeparam>
-	public interface IVector<TVec, TMat, T> : IVector<TVec, T> where TVec : AbstractArray<T>, IVector<TVec, TMat, T> where TMat : AbstractArray<T>, IMatrix<TMat, T> where T : struct, IComparable<T>
+	public interface IVector<TVec, TMat, T> : IVector<TVec, T>
+		where TVec : AbstractArray<T>, IVector<TVec, TMat, T>
+		where TMat : AbstractArray<T>, IMatrix<TMat, T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region operation
 		/// <summary>
@@ -228,10 +278,10 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface of device / host matrix that contains basic members, methods, operations and indexers whose inputs and outputs are not relevant with matrix.
+	/// The interface of matrix that contains basic members, methods, operations and indexers whose inputs and outputs are not relevant with matrix.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
-	public interface IMatrix<T> where T : struct, IComparable<T>
+	public interface IMatrix<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region member
 		/// <summary>
@@ -282,11 +332,13 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface of device / host matrix that contains basic members, methods, operations and indexers whose inputs and outputs are relevant with matrix.
+	/// The interface of matrix that contains basic members, methods, operations and indexers whose inputs and outputs are relevant with matrix.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
 	/// <typeparam name="TMat">the matrix type</typeparam>
-	public interface IMatrix<TMat, T> : IMatrix<T> where TMat : AbstractArray<T>, IMatrix<TMat, T> where T : struct, IComparable<T>
+	public interface IMatrix<TMat, T> : IMatrix<T>, IKrylovVector<TMat, T>
+		where TMat : AbstractArray<T>, IMatrix<TMat, T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region method
 		/// <summary>
@@ -381,12 +433,15 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface of device / host matrix that contains extra methods, operations and indexers whose inputs and outputs are also relevant with vector.
+	/// The interface of matrix that contains extra methods, operations and indexers whose inputs and outputs are also relevant with vector.
 	/// </summary>
 	/// <typeparam name="T">the supported data types</typeparam>
 	/// <typeparam name="TMat">the matrix type</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
-	public interface IMatrix<TMat, TVec, T> : IMatrix<TMat, T> where TMat : AbstractArray<T>, IMatrix<TMat, TVec, T> where TVec : AbstractArray<T>, IVector<TVec, T> where T : struct, IComparable<T>
+	public interface IMatrix<TMat, TVec, T> : IMatrix<TMat, T>
+		where TMat : AbstractArray<T>, IMatrix<TMat, TVec, T>
+		where TVec : AbstractArray<T>, IVector<TVec, T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region method
 		/// <summary>
@@ -469,7 +524,7 @@ namespace Althea.Arrays
 	public interface IDecomposable<TMat, TVec, T>
 		where TMat : AbstractArray<T>, new()
 		where TVec : AbstractArray<T>, new()
-		where T : struct, IComparable<T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region methods
 		/// <summary>
@@ -523,7 +578,7 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for device / host tensor that contains basic members (size and label).
+	/// The interface for tensor that contains basic members (size and label).
 	/// </summary>
 	public interface ITensor
 	{
@@ -549,10 +604,10 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for device / host tensor that contains basic indexers whose inputs and outputs are not relevant with tensors.
+	/// The interface for tensor that contains basic indexers whose inputs and outputs are not relevant with tensors.
 	/// </summary>
 	/// <typeparam name="T">the data type</typeparam>
-	public interface ITensor<T> : ITensor where T : struct, IComparable<T>
+	public interface ITensor<T> : ITensor where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region indexer
 		/// <summary>
@@ -595,13 +650,13 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for device / host tensor that contains more methods, operations and indexers.
+	/// The interface for tensor that contains more methods, operations and indexers.
 	/// </summary>
 	/// <typeparam name="T">the data type</typeparam>
 	/// <typeparam name="TTen">the tensor type</typeparam>
-	public interface ITensor<TTen, T> : ITensor<T>, General.IKrylovVector<TTen, T>
+	public interface ITensor<TTen, T> : ITensor<T>, IKrylovVector<TTen, T>
 		where TTen : AbstractArray<T>, ITensor<TTen, T>
-		where T : struct, IComparable<T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region operations
 		/// <summary>
@@ -686,7 +741,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TTen">the tensor type</typeparam>
 	public interface ITensorAsMatrix<TTen, T>
 		where TTen : AbstractArray<T>, ITensor<TTen, T>, ITensorAsMatrix<TTen, T>
-		where T : struct, IComparable<T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region basics
 		/// <summary>

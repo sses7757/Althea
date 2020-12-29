@@ -14,10 +14,10 @@ using TENSOR = Althea.Tensor.API;
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The general dense tensor class that inherit the <see cref="PureArray{T}"/> and implements <see cref="IDenseArray{T}"/>.
+	/// The general dense tensor class that inherit the <see cref="ValueArray{T}"/> and implements <see cref="IDenseArray{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public sealed class DenseTensor<T> : PureArray<T>, ITensor<DenseTensor<T>, T>, ITensorAsMatrix<DenseTensor<T>, T>, IDenseArray<T>
+	public sealed class DenseTensor<T> : ValueArray<T>, ITensor<DenseTensor<T>, T>, ITensorAsMatrix<DenseTensor<T>, T>, IDenseArray<T>
 		where T : struct, IComparable<T>
 	{
 		#region new members
@@ -135,8 +135,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="refArray">the reference array</param>
 		/// <param name="newSize">new size of this tensor</param>
-		/// <param name="offset">offset to <paramref name="refArray"/>'s <see cref="PureArray{T}.Pointer"/></param>
-		public DenseTensor(PureArray<T> refArray, long[] newSize, long offset = 0) : base(refArray, newSize.Prod(), newSize, offset)
+		/// <param name="offset">offset to <paramref name="refArray"/>'s <see cref="ValueArray{T}.Pointer"/></param>
+		public DenseTensor(ValueArray<T> refArray, long[] newSize, long offset = 0) : base(refArray, newSize.Prod(), newSize, offset)
 		{
 			if (newSize is null || newSize.Length == 0)
 				throw new ArgumentNullException(nameof(newSize));
@@ -318,7 +318,7 @@ namespace Althea.Arrays
 
 
 		#region implement converters
-		private static DenseTensor<T> FromDense(PureArray<T> m, long[] size)
+		private static DenseTensor<T> FromDense(ValueArray<T> m, long[] size)
 		{
 			if (m is null || m == EmptyDnTen)
 				return null;
@@ -352,7 +352,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">the new data type</typeparam>
 		/// <returns>the new array</returns>
-		public override PureArray<TOut> NewArrayAlike<TOut>() => new DenseTensor<TOut>(this.Size, label: this.Label, onHost: this.OnHost);
+		public override ValueArray<TOut> NewArrayAlike<TOut>() => new DenseTensor<TOut>(this.Size, label: this.Label, onHost: this.OnHost);
 
 		/// <summary>
 		/// Create a new array with same properties as this one
@@ -363,8 +363,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert this array to another memory.
 		/// </summary>
-		/// <returns>a new <see cref="PureArray{T}"/> with same value as this one if this array is on host memory</returns>
-		public override PureArray<T> ToTheOtherMemory()
+		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one if this array is on host memory</returns>
+		public override ValueArray<T> ToTheOtherMemory()
 		{
 			var newTensor = new DenseTensor<T>(this.Size, label: this.Label, onHost: !this.OnHost);
 			try
@@ -986,7 +986,7 @@ namespace Althea.Arrays
 
 		#region print
 		/// <summary>
-		/// Override <see cref="PureArray{T}.ToString()"/> to get the string representation of this array.
+		/// Override <see cref="ValueArray{T}.ToString()"/> to get the string representation of this array.
 		/// </summary>
 		/// <returns>String representation of this array</returns>
 		public override string ToString()

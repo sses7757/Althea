@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 
 using Althea.Linq;
+using Althea.Helpers;
 
 
-namespace Althea
+namespace Althea.Arrays
 {
 	/// <summary>
 	/// The abstract array class for device / host array. It is the top level abstract of all built-in array classes. It inherits the <see cref="IDisposable"/> and <see cref="ICloneable"/> interface.
 	/// </summary>
-	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/> and <see cref="DoubleComplex"/>, other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public abstract class AbstractArray<T> : IDisposable, ICloneable where T : struct, IComparable<T>
+	/// <typeparam name="T">the supported data type</typeparam>
+	public abstract class AbstractArray<T> : IDisposable, ICloneable where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
 		/// <summary>
@@ -29,21 +30,6 @@ namespace Althea
 		/// Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
 		public long Length => this.SizeProd[^1];
-
-		/// <summary>
-		/// Is this array's data type a real type or not
-		/// </summary>
-		public bool IsRealType => default(T).ToDataType().IsReal();
-
-		/// <summary>
-		/// Is this array's data type a single type (such as <see cref="float"/>, <see cref="FloatComplex"/>) or not
-		/// </summary>
-		public bool IsSingleType {
-			get {
-				var type = default(T).ToDataType();
-				return type.IsFloat() && type.Bytes() == 4;
-			}
-		}
 		#endregion
 
 		#region initialize and dispose
@@ -59,14 +45,6 @@ namespace Althea
 			this.SizeProd = size.AccumulateProd();
 		}
 
-		/////// <summary>
-		/////// The finalize method invoked by the GC
-		/////// </summary>
-		////~AbstractArray()
-		////{
-		////	this.Dispose(false);
-		////}
-
 		/// <summary>
 		/// This array is disposed or not
 		/// </summary>
@@ -78,7 +56,7 @@ namespace Althea
 		public void Dispose()
 		{
 			this.Dispose(true);
-			////GC.SuppressFinalize(this);
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
@@ -112,21 +90,23 @@ namespace Althea
 		/// <summary>
 		/// Whether the two <see cref="AbstractArray{T}"/> are equal, the shapes / sizes are not compared
 		/// </summary>
-		/// <param name="a1"></param>
-		/// <param name="a2"></param>
-		/// <returns><paramref name="a1"/> == <paramref name="a2"/></returns>
-		public static bool operator ==(AbstractArray<T> a1, AbstractArray<T> a2)
+		/// <param name="left">left operand</param>
+		/// <param name="right">right operand</param>
+		/// <returns><paramref name="left"/> == <paramref name="right"/></returns>
+		public static bool operator ==(AbstractArray<T> left, AbstractArray<T> right)
 		{
-			if (a1 is null && a2 is null)
+			if (left is null && right is null)
 				return true;
-			else if (a1 is null || a2 is null)
+			else if (left is null || right is null)
 				return false;
-			else if (a1.Length == 0 && a2.Length == 0)
+			else if (left.Length == 0 && right.Length == 0)
 				return true; // zero length arrays are regarded as a different type
-			else if (a1.Length == 0 || a2.Length == 0)
+			else if (left.Length == 0 || right.Length == 0)
+				return false;
+			else if (!left.Size.SequenceEqual(right.Size))
 				return false;
 			else
-				return a1.Equals(a2);
+				return left.Equals(right);
 		}
 
 		/// <summary>
@@ -164,7 +144,7 @@ namespace Althea
 		/// <summary>
 		/// Print out the array.
 		/// </summary>
-		/// <param name="overrideSetting">override global settings <see cref="GlobalSettings.PrintConfig"/></param>
+		/// <param name="overrideSetting">override global settings <see cref="Settings.PrintConfig"/></param>
 		/// <returns>detailed string representation</returns>
 		public abstract string Print(IReadOnlyDictionary<PrintSetting, int> overrideSetting = null);
 		#endregion
@@ -175,7 +155,7 @@ namespace Althea
 		/// </summary>
 		/// <typeparam name="TOut">the data type to cast to</typeparam>
 		/// <returns>The casted <see cref="AbstractArray{T}"/>.</returns>
-		public abstract AbstractArray<TOut> DataTypeCast<TOut>() where TOut : struct, IComparable<TOut>;
+		public abstract AbstractArray<TOut> DataTypeCast<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
 		#endregion
 	}
 }

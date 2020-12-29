@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-using Althea.Array;
+using Althea.Arrays;
 using Althea.Memory;
 
 
@@ -255,7 +255,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy a rectangle range of the source matrix to the destination matrix
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source matrix</param>
 		/// <param name="srcLD">leading dimension of <paramref name="source"/></param>
 		/// <param name="copyNRows">copy area height, in <typeparamref name="T"/> rather than bytes</param>
@@ -267,7 +267,7 @@ namespace Althea.Runtime
 		/// <param name="offsetSouceRow">source matrix height offset, in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="offsetSouceCol">source matrix width offset, in <typeparamref name="T"/> rather than bytes</param>
 		/// <returns>the destination matrix; if <paramref name="dest"/>==null, a new matrix is created and returned</returns>
-		public static void CopyMatrixTo<T>(this PureArray<T> source, PureArray<T> dest, long srcLD, long dstLD, long copyNRows, long copyNCols, long offsetSouceRow = 0, long offsetSouceCol = 0, long offsetDestRow = 0, long offsetDestCol = 0) where T : struct, IComparable<T>
+		public static void CopyMatrixTo<T>(this ValueArray<T> source, ValueArray<T> dest, long srcLD, long dstLD, long copyNRows, long copyNCols, long offsetSouceRow = 0, long offsetSouceCol = 0, long offsetDestRow = 0, long offsetDestCol = 0) where T : struct, IComparable<T>
 		{
 			CopyMatrixTo(source.Pointer, dest.Pointer, srcLD, dstLD, copyNRows, copyNCols, offsetSouceRow, offsetSouceCol, offsetDestRow, offsetDestCol);
 		}
@@ -275,7 +275,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy a rectangle range of the source matrix to the destination matrix
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source matrix</param>
 		/// <param name="srcLD">leading dimension of <paramref name="source"/></param>
 		/// <param name="copyNRows">copy area height, in <typeparamref name="T"/> rather than bytes</param>
@@ -365,7 +365,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of at a certain position range of a matrix into an instance value array in column major
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source array</param>
 		/// <param name="leadDim">lead dimension of copy out matrix</param>
 		/// <param name="copyCols">number of columns to copy</param>
@@ -381,7 +381,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of a certain range of a matrix pointer into an new instance of C# array in column major.
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source pointer <see cref="Storage{T}"/></param>
 		/// <param name="leadDim">lead dimension of copy out matrix</param>
 		/// <param name="copyCols">number of columns to copy</param>
@@ -422,7 +422,7 @@ namespace Althea.Runtime
 
 		#region managed to unmanaged
 		/// <summary>
-		/// Copy a instance of value to a certain position of an <see cref="PureArray{T}"/>
+		/// Copy a instance of value to a certain position of an <see cref="ValueArray{T}"/>
 		/// </summary>
 		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="dest">destination array</param>
@@ -447,7 +447,7 @@ namespace Althea.Runtime
 		}
 
 		/// <summary>
-		/// Copy an array of value to a certain position of an <see cref="PureArray{T}"/>
+		/// Copy an array of value to a certain position of an <see cref="ValueArray{T}"/>
 		/// </summary>
 		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="dest">destination array</param>
@@ -481,7 +481,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of a certain range of a column-major matrix in C# array form into an destination matrix pointer.
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="dest">destination <see cref="Storage{T}"/></param>
 		/// <param name="source">source column-major C# array</param>
 		/// <param name="destLeadDim">lead dimension of <paramref name="dest"/></param>
@@ -537,7 +537,7 @@ namespace Althea.Runtime
 		/// <param name="length">length to copy</param>
 		/// <param name="offsetSource">offset to <paramref name="source"/></param>
 		/// <param name="offsetDest">offset to <paramref name="dest"/></param>
-		public static void CopyTo<T>(this PureArray<T> source, PureArray<T> dest, long length = 0, long offsetSource = 0, long offsetDest = 0) where T : struct, IComparable<T>
+		public static void CopyTo<T>(this ValueArray<T> source, ValueArray<T> dest, long length = 0, long offsetSource = 0, long offsetDest = 0) where T : struct, IComparable<T>
 		{
 			if (source is null)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
@@ -555,7 +555,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy a rectangle range of the source matrix to the destination matrix
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source matrix</param>
 		/// <param name="copyNRows">copy area height, in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="copyNCols">copy area width, in <typeparamref name="T"/> rather than bytes</param>
@@ -567,9 +567,9 @@ namespace Althea.Runtime
 		/// <exception cref="ArgumentOutOfRangeException">if the <paramref name="dest"/> or <paramref name="source"/> copy height/width are out of range</exception>
 		public static void CopyMatrixTo<T>(DenseMatrix<T> source, DenseMatrix<T> dest, long copyNRows, long copyNCols, long offsetSouceRow = 0, long offsetSouceCol = 0, long offsetDestRow = 0, long offsetDestCol = 0) where T : struct, IComparable<T>
 		{
-			if (source is null || source == PureArray<T>.EmptyDnMat)
+			if (source is null || source == ValueArray<T>.EmptyDnMat)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
-			if (dest is null || dest == PureArray<T>.EmptyDnMat)
+			if (dest is null || dest == ValueArray<T>.EmptyDnMat)
 				throw new ArgumentNullException(nameof(dest), Resource.ArrayCannotNull);
 			if (copyNCols + offsetSouceCol > source.NCols || copyNCols + offsetDestCol > dest.NCols)
 				throw new ArgumentOutOfRangeException(nameof(copyNCols));
@@ -581,10 +581,10 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy value at a certain position of an array into a instance value
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source array</param>
 		/// <param name="offset">offset to source pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
-		public static T CopyOut<T>(this PureArray<T> source, long offset = 0) where T : struct, IComparable<T>
+		public static T CopyOut<T>(this ValueArray<T> source, long offset = 0) where T : struct, IComparable<T>
 		{
 			if (source is null)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
@@ -597,11 +597,11 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values starts at a certain position and ends else where of an array into an instance value array
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source array</param>
 		/// <param name="length">length of array of <typeparamref name="T"/>, default 0 means length of <paramref name="source"/> from <paramref name="offset"/></param>
 		/// <param name="offset">offset to source pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
-		public static T[] CopyOutArray<T>(this PureArray<T> source, long length = 0, long offset = 0) where T : struct, IComparable<T>
+		public static T[] CopyOutArray<T>(this ValueArray<T> source, long length = 0, long offset = 0) where T : struct, IComparable<T>
 		{
 			if (source is null)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
@@ -616,13 +616,13 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of a certain range of a matrix pointer into an new instance of C# array in column major.
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="source">source array <see cref="PureArray{T}"/></param>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
+		/// <param name="source">source array <see cref="ValueArray{T}"/></param>
 		/// <param name="leadDim">lead dimension of copy out matrix</param>
 		/// <param name="copyCols">number of columns to copy</param>
 		/// <param name="copyRows">number of rows to copy, default = 0 means equal to <paramref name="leadDim"/></param>
 		/// <param name="offset">offset to source pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
-		public static T[] CopyOutColumnMajorMatrix<T>(this PureArray<T> source, long leadDim, long copyCols, long copyRows = 0, long offset = 0) where T : struct, IComparable<T>
+		public static T[] CopyOutColumnMajorMatrix<T>(this ValueArray<T> source, long leadDim, long copyCols, long copyRows = 0, long offset = 0) where T : struct, IComparable<T>
 		{
 			return CopyOutColumnMajorMatrix(source.Pointer, leadDim, copyCols, copyRows, offset);
 		}
@@ -630,14 +630,14 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of at a certain position range of a matrix into an instance value array in column major
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source array</param>
 		/// <param name="rows">number of rows to copy out</param>
 		/// <param name="cols">number of columns to copy out</param>
 		/// <param name="offset">offset to source pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
 		public static T[,] CopyOutMatrix<T>(this DenseMatrix<T> source, long rows = 0, long cols = 0, long offset = 0) where T : struct, IComparable<T>
 		{
-			if (source is null || source == PureArray<T>.EmptyDnMat)
+			if (source is null || source == ValueArray<T>.EmptyDnMat)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
 			if (rows <= 0)
 				rows = source.NRows;
@@ -652,14 +652,14 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of at a certain position range of a matrix into an instance value array in column major
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="source">source array</param>
 		/// <param name="rows">number of rows to copy out</param>
 		/// <param name="cols">number of columns to copy out</param>
 		/// <param name="offset">offset to source pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
 		public static T[] CopyOutColumnMajorMatrix<T>(this DenseMatrix<T> source, long rows = 0, long cols = 0, long offset = 0) where T : struct, IComparable<T>
 		{
-			if (source is null || source == PureArray<T>.EmptyDnMat)
+			if (source is null || source == ValueArray<T>.EmptyDnMat)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
 			if (rows <= 0)
 				rows = source.NRows;
@@ -674,13 +674,13 @@ namespace Althea.Runtime
 
 		#region managed to unmanaged
 		/// <summary>
-		/// Copy a instance of value to a certain position of an <see cref="PureArray{T}"/>
+		/// Copy a instance of value to a certain position of an <see cref="ValueArray{T}"/>
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="dest">destination array</param>
 		/// <param name="value">value to copy</param>
 		/// <param name="offset">offset of destination pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
-		public static void CopyInto<T>(this PureArray<T> dest, T value, long offset = 0) where T : struct, IComparable<T>
+		public static void CopyInto<T>(this ValueArray<T> dest, T value, long offset = 0) where T : struct, IComparable<T>
 		{
 			if (dest is null)
 				throw new ArgumentNullException(nameof(dest), Resource.ArrayCannotNull);
@@ -691,14 +691,14 @@ namespace Althea.Runtime
 		}
 
 		/// <summary>
-		/// Copy an array of value to a certain position of an <see cref="PureArray{T}"/>
+		/// Copy an array of value to a certain position of an <see cref="ValueArray{T}"/>
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="dest">destination array</param>
 		/// <param name="value">value array to copy</param>
 		/// <param name="length">length to take from the <paramref name="value"/> array</param>
 		/// <param name="offset">offset of destination pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
-		public static void CopyIntoArray<T>(this PureArray<T> dest, T[] value, long length = 0, long offset = 0) where T : struct, IComparable<T>
+		public static void CopyIntoArray<T>(this ValueArray<T> dest, T[] value, long length = 0, long offset = 0) where T : struct, IComparable<T>
 		{
 			if (dest is null)
 				throw new ArgumentNullException(nameof(dest), Resource.ArrayCannotNull);
@@ -713,7 +713,7 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of a certain range of a column-major matrix in C# array form into an destination dense matrix.
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
 		/// <param name="dest">destination <see cref="DenseMatrix{T}"/></param>
 		/// <param name="source">source column-major C# array</param>
 		/// <param name="destLeadDim">lead dimension of <paramref name="dest"/></param>
@@ -723,7 +723,7 @@ namespace Althea.Runtime
 		/// <param name="offsetDest">offset to <paramref name="dest"/>, in the count of <typeparamref name="T"/> rather than bytes</param>
 		public static void CopyIntoColumnMajorMatrix<T>(this DenseMatrix<T> dest, T[] source, long destLeadDim = 0, long sourceLeadDim = 0, long copyCols = 0, long copyRows = 0, long offsetDest = 0) where T : struct, IComparable<T>
 		{
-			if (dest is null || dest == PureArray<T>.EmptyDnMat)
+			if (dest is null || dest == ValueArray<T>.EmptyDnMat)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
 			if (source is null || source.LongLength == 0)
 				throw new ArgumentNullException(nameof(source), Resource.ArrayCannotNull);
@@ -745,20 +745,20 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copy values of a certain range of a column-major matrix in C# array form into an destination matrix pointer.
 		/// </summary>
-		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="dest">destination <see cref="PureArray{T}"/></param>
+		/// <typeparam name="T">see <see cref="ValueArray{T}"/> for supported data types</typeparam>
+		/// <param name="dest">destination <see cref="ValueArray{T}"/></param>
 		/// <param name="source">source column-major C# array</param>
 		/// <param name="destLeadDim">lead dimension of <paramref name="dest"/></param>
 		/// <param name="sourceLeadDim">lead dimension of <paramref name="source"/></param>
 		/// <param name="copyCols">number of columns to copy</param>
 		/// <param name="copyRows">number of rows to copy</param>
 		/// <param name="offsetDest">offset to <paramref name="dest"/>, in the count of <typeparamref name="T"/> rather than bytes</param>
-		public static void CopyIntoColumnMajorMatrix<T>(this PureArray<T> dest, T[] source, long destLeadDim, long sourceLeadDim, long copyCols, long copyRows, long offsetDest = 0) where T : struct, IComparable<T>
+		public static void CopyIntoColumnMajorMatrix<T>(this ValueArray<T> dest, T[] source, long destLeadDim, long sourceLeadDim, long copyCols, long copyRows, long offsetDest = 0) where T : struct, IComparable<T>
 		{
 			CopyIntoColumnMajorMatrix(dest.Pointer, source, destLeadDim, sourceLeadDim, copyCols, copyRows, offsetDest);
 		}
 		#endregion
 
-			#endregion
+		#endregion
 	}
 }

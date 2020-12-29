@@ -23,7 +23,7 @@ namespace Althea.Arrays
 		public override long LastIndex => this.Size[0] - 1;
 
 		/// <summary>
-		/// Total actual length of the array in memory, in <typeparamref name="T"/> rather than bytes. Override <see cref="PureArray{T}.ActualLength"/>.
+		/// Total actual length of the array in memory, in <typeparamref name="T"/> rather than bytes. Override <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
 		public override long ActualLength => this.Size[0];
 		#endregion
@@ -71,8 +71,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="refArray">original array</param>
 		/// <param name="newLength">size of the new vector</param>
-		/// <param name="offset">offset to the <see cref="PureArray{T}.Pointer"/> in T rather than bytes</param>
-		public DenseVector(PureArray<T> refArray, long newLength, long offset = 0) : base(refArray, newLength, newLength, offset) { }
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in T rather than bytes</param>
+		public DenseVector(ValueArray<T> refArray, long newLength, long offset = 0) : base(refArray, newLength, newLength, offset) { }
 		#endregion
 
 
@@ -122,8 +122,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert this array to another memory.
 		/// </summary>
-		/// <returns>a new <see cref="PureArray{T}"/> with same value as this one if this array is on host memory</returns>
-		public override PureArray<T> ToTheOtherMemory()
+		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one if this array is on host memory</returns>
+		public override ValueArray<T> ToTheOtherMemory()
 		{
 			var newVec = new DenseVector<T>(this.Length, !this.OnHost);
 			try
@@ -178,7 +178,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">the new data type</typeparam>
 		/// <returns>the new array</returns>
-		public override PureArray<TOut> NewArrayAlike<TOut>() => new DenseVector<TOut>(this.Length, this.OnHost);
+		public override ValueArray<TOut> NewArrayAlike<TOut>() => new DenseVector<TOut>(this.Length, this.OnHost);
 		#endregion
 
 

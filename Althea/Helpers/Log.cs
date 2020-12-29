@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Timers;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Timers;
 
 
-namespace Althea
+namespace Althea.Log
 {
 	/// <summary>
 	/// The logging level enumerate
@@ -42,9 +43,10 @@ namespace Althea
 	/// </summary>
 	public static class Log
 	{
+		// TODO: add destroyer
 		static Log()
 		{
-			dynamic settings = Newtonsoft.Json.JsonConvert.DeserializeObject(File.ReadAllText("Althea.json"));
+			dynamic settings = JsonSerializer.Deserialize<Log>(File.ReadAllText("Althea.json"));
 
 			LogPath = settings.Trace.LogPath + LogPath;
 
@@ -176,7 +178,7 @@ namespace Althea
 			{
 				if (line.Length + words[i].Length > limit)
 				{
-					newSentence.Append(line.ToString());
+					newSentence.Append(line);
 					newSentence.Append(Environment.NewLine);
 					newSentence.Append(indentStr);
 					line.Clear();
@@ -185,7 +187,7 @@ namespace Althea
 			}
 
 			if (line.Length > 0)
-				newSentence.Append(line.ToString());
+				newSentence.Append(line);
 
 			return newSentence.ToString();
 		}

@@ -71,10 +71,10 @@ namespace Althea.Arrays
 
 
 	/// <summary>
-	/// The abstract matrix class that inherit the <see cref="PureArray{T}"/>.
+	/// The abstract matrix class that inherit the <see cref="ValueArray{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public abstract class MatrixBase<T> : PureArray<T>, IMatrix<MatrixBase<T>, VectorBase<T>, T> where T : struct, IComparable<T>
+	public abstract class MatrixBase<T> : ValueArray<T>, IMatrix<MatrixBase<T>, VectorBase<T>, T> where T : struct, IComparable<T>
 	{
 		#region new members (mostly from IMatrix<TMat, TVec, T>)
 		/// <summary>
@@ -141,8 +141,8 @@ namespace Althea.Arrays
 		/// <param name="rows">new number of rows</param>
 		/// <param name="cols">new number of columns</param>
 		/// <param name="herm">the new matrix is Hermitian or not, if <paramref name="refArray"/> is <see cref="MatrixBase{T}"/>, its <see cref="MatrixBase{T}.Hermitian"/> will be used</param>
-		/// <param name="offset">offset to the <see cref="PureArray{T}.Pointer"/> in T rather than bytes</param>
-		protected MatrixBase(PureArray<T> refArray, long actualLength, long rows, long cols, bool herm = false, long offset = 0) : base(refArray, actualLength, new[] { rows, cols }, offset)
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in T rather than bytes</param>
+		protected MatrixBase(ValueArray<T> refArray, long actualLength, long rows, long cols, bool herm = false, long offset = 0) : base(refArray, actualLength, new[] { rows, cols }, offset)
 		{
 			if (refArray is MatrixBase<T> m)
 				this.Hermitian = rows == cols && m.Hermitian;
