@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Althea.Arrays;
+using Althea.Array;
 using Althea.Linq;
 using Althea.Memory;
 

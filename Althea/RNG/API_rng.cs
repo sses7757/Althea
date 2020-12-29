@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Althea.Arrays;
+using Althea.Array;
 
 
 namespace Althea.Rng

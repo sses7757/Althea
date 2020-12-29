@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 using Althea.Linq;
-using Althea.Arrays;
+using Althea.Array;
 
 
 namespace Althea.Tensor

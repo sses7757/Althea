@@ -6,7 +6,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
 
-using Althea.Arrays;
+using Althea.Array;
 using Althea.Linq;
 
 
@@ -234,7 +234,7 @@ namespace Althea.Memory
 						throw new IOException("Corrupted");
 				}
 				// to host array first
-				var hostArray = Arrays.PureArrayFactory.Reconstruct<T>(head.type, head.size, dict, otherInfo: head.otherInfo);
+				var hostArray = Array.PureArrayFactory.Reconstruct<T>(head.type, head.size, dict, otherInfo: head.otherInfo);
 				forceOnHost ??= head.onHost;
 				if (forceOnHost.Value)
 					return hostArray;

@@ -2,20 +2,39 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-using Althea.NativeType;
+using Althea.NativeTypes;
 
 
-namespace Althea.NativeType
+namespace Althea.NativeTypes
 {
+	#region complex interface
+	/// <summary>
+	/// The complex interface for any possible real data type
+	/// </summary>
+	/// <typeparam name="T">the data type of corresponding real number, usually an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
+	public interface IComplex<T> : IFormattable where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+	{
+		/// <summary>
+		/// Get the real part
+		/// </summary>
+		T Real { get; }
+
+		/// <summary>
+		/// Get the imaginary part
+		/// </summary>
+		T Imag { get; }
+	}
+	#endregion
+
 	#region generic complex type
 	/// <summary>
-	/// The general complex type
+	/// The general complex type for built-in types
 	/// </summary>
 	/// <typeparam name="T">the data type of corresponding real number</typeparam>
 	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
 	/// I do not recommend one to use any data type conversions or arithmetic operations in heavy load like loop over a <c><see cref="Complex{T}"/>[]</c> even though the dynamic functions will be optimized by the JIT to have performance way better than boxing and unboxing <typeparamref name="T"/>, they may still perform a lot worse than operations with compile-time-known <typeparamref name="T"/>.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> : ICustomNativeType<Complex<T>>, IFormattable, IEquatable<Complex<T>> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+	public struct Complex<T> : IComplex<T>, ICustomNativeType<Complex<T>>, IEquatable<Complex<T>> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 	{
 		#region basic
 		private readonly T real, imag;
@@ -23,12 +42,12 @@ namespace Althea.NativeType
 		/// <summary>
 		/// Get the real part
 		/// </summary>
-		public T Real() => this.real;
+		public T Real => this.real;
 
 		/// <summary>
 		/// Get the imaginary part
 		/// </summary>
-		public T Imag() => this.imag;
+		public T Imag => this.imag;
 
 		/// <summary>
 		/// Constructor from real and imaginary parts
@@ -529,11 +548,8 @@ namespace Althea.NativeType
 		public string ToString(string format, IFormatProvider formatProvider = null)
 		{
 			formatProvider ??= Resource.Culture;
-			string r = this.real.ToString(format, formatProvider), i = this.imag.ToString(format, formatProvider);
-			if (!r.StartsWith('-'))
-				r = " " + r;
-			if (!i.StartsWith('-'))
-				i = " " + i;
+			string r = this.real.ToString(format, formatProvider);
+			string i = this.imag.ToString(format, formatProvider);
 			return $"({r},{i})";
 		}
 		#endregion

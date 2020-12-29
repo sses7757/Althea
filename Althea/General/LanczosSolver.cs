@@ -6,7 +6,7 @@ using System.Text;
 using RT = Althea.Runtime.API;
 using Althea.Memory;
 using Althea.Linq;
-using Althea.Arrays;
+using Althea.Array;
 
 
 namespace Althea.General

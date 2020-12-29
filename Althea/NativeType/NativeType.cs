@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-namespace Althea.NativeType
+namespace Althea.NativeTypes
 {
 	#region custom native type interface
 	/// <summary>
@@ -164,7 +164,7 @@ namespace Althea.NativeType
 		/// <param name="a">input number</param>
 		/// <returns><c><paramref name="a"/> == 0</c> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsZero<T>(this T a) where T : unmanaged
+		public static bool IsZero<T>(this T a) where T : unmanaged, IEquatable<T>
 		{
 			return a.Equals(default);
 		}
@@ -176,7 +176,7 @@ namespace Althea.NativeType
 		/// <param name="a">input number</param>
 		/// <returns><c><paramref name="a"/> == 1</c> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsOne<T>(this T a) where T : unmanaged
+		public static bool IsOne<T>(this T a) where T : unmanaged, IEquatable<T>
 		{
 			return a.Equals(Scalars<T>.One);
 		}
@@ -379,7 +379,15 @@ namespace Althea.NativeType
 			// cache
 			if (!_complexCache.ContainsKey(type))
 			{
-				bool isComplex = type.GenericTypeArguments.Length == 1 && type.FullName == typeof(Complex<float>).FullName;
+				bool isComplex = type.GenericTypeArguments.Length == 1;
+				try
+				{
+					isComplex = isComplex && typeof(IComplex<float>).MakeGenericType(type.GenericTypeArguments).IsAssignableFrom(type);
+				}
+				catch (Exception)
+				{
+					isComplex = false;
+				}
 				_complexCache.Add(type, isComplex);
 			}
 			return _complexCache[type];
@@ -396,16 +404,16 @@ namespace Althea.NativeType
 				return false;
 			// built-in float types
 			if (type == typeof(double) || type == typeof(float))
-				return true;
+				return false;
 			// built-in integer types
 			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
-				return true;
+				return false;
 			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong))
+				return false;
+			// complex float types
+			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
 				return true;
-			// built-in complex float types
-			else if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
-				return true;
-			// built-in complex integer types
+			// complex integer types
 			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
 				return true;
 			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<uint>) || type == typeof(Complex<ulong>))
@@ -482,10 +490,10 @@ namespace Althea.NativeType
 				return true;
 			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong))
 				return true;
-			// built-in complex float types
-			else if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
+			// complex float types
+			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
 				return true;
-			// built-in complex integer types
+			// complex integer types
 			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
 				return true;
 			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<uint>) || type == typeof(Complex<ulong>))
@@ -563,6 +571,14 @@ namespace Althea.NativeType
 				return DataTypeClassification.SignedInteger;
 			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong))
 				return DataTypeClassification.UnsignedInteger;
+			// complex float types
+			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
+				return DataTypeClassification.FloatPoint;
+			// complex integer types
+			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
+				return DataTypeClassification.SignedInteger;
+			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<uint>) || type == typeof(Complex<ulong>))
+				return DataTypeClassification.UnsignedInteger;
 			// other primitive types are null
 			return GetClassificationDirect(type);
 		}
@@ -582,6 +598,11 @@ namespace Althea.NativeType
 				// built-in integer types
 				sbyte or short or int or long => DataTypeClassification.SignedInteger,
 				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
+				// built-in complex float types
+				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint,
+				// built-in complex integer types
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => DataTypeClassification.SignedInteger,
+				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => DataTypeClassification.FloatPoint,
 				// otherwise
 				_ => GetClassificationDirect(typeof(T)),
 			};

@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-using Althea.NativeType;
-
 
 namespace Althea.Linq
 {
@@ -1229,7 +1227,7 @@ namespace Althea.Linq
 
 			if (list is T[] a)
 			{
-				return Array.TrueForAll(a, predicator);
+				return System.Array.TrueForAll(a, predicator);
 			}
 			else if (list is List<T> l)
 			{

@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Althea.NativeType
+namespace Althea.NativeTypes
 {
 	#region data type enum
 	/// <summary>

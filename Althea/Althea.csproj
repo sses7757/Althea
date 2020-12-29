@@ -63,10 +63,10 @@
     <None Update="Althea.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="BlasSupplementCPU.dll">
+    <None Update="BlasSupplementOMP.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="BlasSupplementGPU.dll">
+    <None Update="BlasSupplementCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="cuTT.dll">

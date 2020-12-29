@@ -18,7 +18,7 @@
   <ItemGroup>
     <ClInclude Include="complex.h" />
     <ClInclude Include="datatype.h" />
-    <ClInclude Include="macro.h" />
+    <ClInclude Include="blasSupp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

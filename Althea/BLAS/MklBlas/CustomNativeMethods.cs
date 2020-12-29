@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 using Althea.Runtime;
-using Althea.Arrays;
+using Althea.Array;
 
 
 namespace Althea.Blas.Mkl.Customs

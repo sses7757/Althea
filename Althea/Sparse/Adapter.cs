@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-using Althea.Arrays;
+using Althea.Array;
 using Althea.Memory;
 
 

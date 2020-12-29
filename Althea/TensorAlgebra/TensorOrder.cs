@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
+using Althea.Arrays;
 
 
-namespace Althea.Arrays
+namespace Althea.TensorAlgebra
 {
 	/// <summary>
 	/// The permutation order struct of tensors.
@@ -170,7 +171,7 @@ namespace Althea.Arrays
 				Span<int> temp = stackalloc int[rank];
 				span.CopyTo(temp);
 				difference.CopyTo(span.Slice(index, difference.Length));
-				temp.Slice(index + 1).CopyTo(span.Slice(index + difference.Length));
+				temp[(index + 1)..].CopyTo(span[(index + difference.Length)..]);
 				actualRank = rank;
 			}
 			// check partial

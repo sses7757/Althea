@@ -86,8 +86,8 @@ namespace Althea.General
 		/// <param name="makeResultHermation">force the result to be Hermitian or not</param>
 		/// <returns>$\alpha \cdot (A \oplus B) \cdot \vec{v}_{\text{this}} = \alpha (V A^T + B V)$ where $V=$<c>this.ToMatrix(<paramref name="B"/>.LeadDim)</c>. If both <paramref name="A"/> and <paramref name="B"/> are Hermitian or <paramref name="makeResultHermation"/> is false, only $V A^T + B V$ will be calculated; otherwise, the rank-k update $\alpha [V(A^T+\bar{A})+(B+B^H)V]/2$ will be used.</returns>
 		public static TVec KroneckerSumTimesThis<TMat, TVec, T>(this TVec vec, TMat A, TMat B, T α, bool makeResultHermation = false)
-			where TMat : Arrays.PureArray<T>, IMatrix<TMat, TVec, T>
-			where TVec : Arrays.PureArray<T>, IVector<TVec, TMat, T>
+			where TMat : Array.PureArray<T>, IMatrix<TMat, TVec, T>
+			where TVec : Array.PureArray<T>, IVector<TVec, TMat, T>
 			where T : struct, IComparable<T>
 		{
 			if (vec is null)
@@ -181,8 +181,8 @@ namespace Althea.General
 		/// <param name="α">scalar to multiply the result</param>
 		/// <returns>$\alpha (A \otimes B) \cdot \vec{v}_{\text{this}} = \alpha (B V A^T)$ where $V=$<c>this.ToMatrix(<paramref name="B"/>.SecondDim)</c>.</returns>
 		public static TVec KroneckerProdTimesThis<TMat, TVec, T>(this TVec vec, TMat A, TMat B, T α)
-			where TMat : Arrays.PureArray<T>, IMatrix<TMat, TVec, T> 
-			where TVec : Arrays.PureArray<T>, IVector<TVec, TMat, T>
+			where TMat : Array.PureArray<T>, IMatrix<TMat, TVec, T> 
+			where TVec : Array.PureArray<T>, IVector<TVec, TMat, T>
 			where T : struct, IComparable<T>
 		{
 			if (vec is null)
@@ -204,10 +204,10 @@ namespace Althea.General
 			try
 			{
 				// calculate V * A^T
-				V_At = Arrays.PureArrayFactory.Create<T>(A.GetType(), new[] { B.NCols, A.NRows }, A.OnHost, A.GetOtherInfo()) as TMat;
+				V_At = Array.PureArrayFactory.Create<T>(A.GetType(), new[] { B.NCols, A.NRows }, A.OnHost, A.GetOtherInfo()) as TMat;
 				V_At.Mulβ_AddBy_αAB(A: V, B: A, α: Scalars<T>.One, opB: MatrixOperation.Transpose);
 				// calculate B * V * A^T
-				B_V_At = Arrays.PureArrayFactory.Create<T>(A.GetType(), new[] { B.NCols, A.NRows }, A.OnHost, A.GetOtherInfo()) as TMat;
+				B_V_At = Array.PureArrayFactory.Create<T>(A.GetType(), new[] { B.NCols, A.NRows }, A.OnHost, A.GetOtherInfo()) as TMat;
 				B_V_At.Mulβ_AddBy_αAB(A: B, B: V_At, α: α);
 				V_At.Dispose();
 			}

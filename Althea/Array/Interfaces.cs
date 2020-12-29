@@ -1,9 +1,11 @@
-﻿using Althea.Arrays;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
+using Althea.NativeTypes;
+using Althea.TensorAlgebra; // TensorOrder
 
-namespace Althea
+
+namespace Althea.Arrays
 {
 	/// <summary>
 	/// The interface for mutable device / host arrays whose value arrays can be filled with different values
@@ -691,7 +693,7 @@ namespace Althea
 		/// (Conjugate) transpose this tensor <b>out-of-place</b>.
 		/// </summary>
 		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="conjugate">conjugate or not, default null means true for complex type (<see cref="IComplex{T}"/>)</param>
+		/// <param name="conjugate">conjugate or not, default null means true for complex type (<see cref="Complex{T}"/>)</param>
 		/// <returns>the (conjugate) transpose of this tensor with <c>Size = this.Size[<paramref name="partition"/>..] concatenate this.Size[..<paramref name="partition"/>]</c></returns>
 		TTen Transpose(Index partition, bool? conjugate = null);
 

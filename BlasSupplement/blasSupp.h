@@ -41,8 +41,8 @@
 
 // compile options
 // ignore spelling: nvcc Xcompiler bigobj openmp
-// nvcc -o BlasSupplementGPU.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj"
-// nvcc -o BlasSupplementCPU.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
+// nvcc -o BlasSupplementCUDA.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj"
+// nvcc -o BlasSupplementOMP.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
 #undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
 #include <thrust/system/omp/execution_policy.h>

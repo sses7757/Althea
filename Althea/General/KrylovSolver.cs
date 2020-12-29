@@ -49,9 +49,9 @@ namespace Althea.General
 
 
 		#region inner loop
-		private delegate (bool converge, T[][] convergedVectors) DelegateConvergence<T>(int sizeH, Arrays.DenseMatrix<T> H, double beta, double tol) where T : struct, IComparable<T>;
+		private delegate (bool converge, T[][] convergedVectors) DelegateConvergence<T>(int sizeH, Array.DenseMatrix<T> H, double beta, double tol) where T : struct, IComparable<T>;
 
-		private static (bool converge, T[][] convergedVectors) KrylovSchurInner<TVec, T>(Func<TVec, TVec> MatMulVecFunc, int maxIter, bool robustOrthogonalize, double tol, T[] a, ref double β, Arrays.DenseMatrix<T> H, ref TVec r, ref List<TVec> qs, DelegateConvergence<T> convergenceTest = null)
+		private static (bool converge, T[][] convergedVectors) KrylovSchurInner<TVec, T>(Func<TVec, TVec> MatMulVecFunc, int maxIter, bool robustOrthogonalize, double tol, T[] a, ref double β, Array.DenseMatrix<T> H, ref TVec r, ref List<TVec> qs, DelegateConvergence<T> convergenceTest = null)
 			where TVec : AbstractArray<T>, IKrylovVector<TVec, T>, new()
 			where T : struct, IComparable<T>
 		{
@@ -104,7 +104,7 @@ namespace Althea.General
 
 
 		#region convergence check
-		private static (bool converge, T[][] convergedVectors) LinearSolveConvergenceCheck<T>(int sizeH, Arrays.DenseMatrix<T> H, double β0, double β, double tol, double normB, bool forceCalc = false) where T : struct, IComparable<T>
+		private static (bool converge, T[][] convergedVectors) LinearSolveConvergenceCheck<T>(int sizeH, Array.DenseMatrix<T> H, double β0, double β, double tol, double normB, bool forceCalc = false) where T : struct, IComparable<T>
 		{
 			DoubleComplex[] eigenvalues;
 			if (H.IsSingleType)
@@ -117,7 +117,7 @@ namespace Althea.General
 				using var eig = H.GetSubmatrix(..sizeH, ..sizeH).Eigenvalue<DoubleComplex>();
 				eigenvalues = eig.ToFortranOrderArray();
 			}
-			using var HH = new Arrays.DenseMatrix<T>(sizeH + 1, sizeH, H.OnHost);
+			using var HH = new Array.DenseMatrix<T>(sizeH + 1, sizeH, H.OnHost);
 			HH.FillWithZeros();
 			RT.CopyMatrixTo(source: H, dest: HH, copyNRows: sizeH, copyNCols: sizeH);
 			HH[^1, ^1] = β.FromDouble<T>();
@@ -131,20 +131,20 @@ namespace Althea.General
 					//tex: calculate ${\vec{y}}_n=\beta_1\left(R^{\left(n\right)}\right)^{-1}\left(U_{1,1:n}^{\left(n\right)}\right)^\ast$
 					using var invR = R.Inverse();
 					using var u = Q.GetRowAt(0);
-					using var yy = new Arrays.DenseVector<T>(R.NRows, onHost: H.OnHost);
-					yy.Mulβ_AddBy_αopAx(invR, u[0..^1] as Arrays.DenseVector<T>, β0.FromDouble<T>());
+					using var yy = new Array.DenseVector<T>(R.NRows, onHost: H.OnHost);
+					yy.Mulβ_AddBy_αopAx(invR, u[0..^1] as Array.DenseVector<T>, β0.FromDouble<T>());
 					return (converge, new[] { RT.CopyOutArray(yy) });
 				}
 				return default;
 			}
 		}
 
-		private static ((DoubleComplex val, DoubleComplex[] vec)[] ordered, List<int> convergedInd, double[] errorBounds) GetConverge<T>(Arrays.DenseMatrix<T> H, double beta, double tol, WhichEigenvalues which, bool useGap = true)
+		private static ((DoubleComplex val, DoubleComplex[] vec)[] ordered, List<int> convergedInd, double[] errorBounds) GetConverge<T>(Array.DenseMatrix<T> H, double beta, double tol, WhichEigenvalues which, bool useGap = true)
 			where T : struct, IComparable<T>
 		{
 			#region Schur decomposition first
-			using var Hc = H.Clone() as Arrays.DenseMatrix<T>;
-			using var USchur = Hc.NewArrayAlike() as Arrays.DenseMatrix<T>;
+			using var Hc = H.Clone() as Array.DenseMatrix<T>;
+			using var USchur = Hc.NewArrayAlike() as Array.DenseMatrix<T>;
 			Solver.API.Schur(Hc, U: USchur);
 			int[] conjugatePairs = new int[Hc.NRows];
 			int _countPair = 1;
@@ -172,16 +172,16 @@ namespace Althea.General
 				var (eigvalSingle, _eigvecL, eigvecSingle) = Hc.Eigensystem<FloatComplex>();
 				using (eigvalSingle) using (eigvecSingle) using (_eigvecL)
 				{
-					using var eigvecReal = eigvecSingle.NewArrayAlike() as Arrays.DenseMatrix<FloatComplex>;
+					using var eigvecReal = eigvecSingle.NewArrayAlike() as Array.DenseMatrix<FloatComplex>;
 					if (Hc.IsRealType) // X = U * X
 					{
-						using var Ucomp = new Arrays.DenseMatrix<FloatComplex>(H.NRows, H.NRows, onHost: true);
+						using var Ucomp = new Array.DenseMatrix<FloatComplex>(H.NRows, H.NRows, onHost: true);
 						Blas.API.PointWiseToComplex(src: USchur.AsDenseVector(), dst: Ucomp.AsDenseVector());
 						eigvecReal.Mulβ_AddBy_αAB(Ucomp, eigvecSingle, 1);
 					}
 					else
 					{
-						eigvecReal.Mulβ_AddBy_αAB(USchur as Arrays.DenseMatrix<FloatComplex>, eigvecSingle, 1);
+						eigvecReal.Mulβ_AddBy_αAB(USchur as Array.DenseMatrix<FloatComplex>, eigvecSingle, 1);
 					}
 					var valSingle = RT.CopyOutArray(eigvalSingle);
 					var vecSingle = RT.CopyOutArray(eigvecReal);
@@ -194,16 +194,16 @@ namespace Althea.General
 				var (eigvalDouble, _eigvecL, eigvecDouble) = Hc.Eigensystem<DoubleComplex>();
 				using (eigvalDouble) using (eigvecDouble) using (_eigvecL)
 				{
-					using var eigvecReal = eigvecDouble.NewArrayAlike() as Arrays.DenseMatrix<DoubleComplex>;
+					using var eigvecReal = eigvecDouble.NewArrayAlike() as Array.DenseMatrix<DoubleComplex>;
 					if (Hc.IsRealType) // X = U * X
 					{
-						using var Ucomp = new Arrays.DenseMatrix<DoubleComplex>(H.NRows, H.NRows, onHost: true);
+						using var Ucomp = new Array.DenseMatrix<DoubleComplex>(H.NRows, H.NRows, onHost: true);
 						Blas.API.PointWiseToComplex(src: USchur.AsDenseVector(), dst: Ucomp.AsDenseVector());
 						eigvecReal.Mulβ_AddBy_αAB(Ucomp, eigvecDouble, 1);
 					}
 					else
 					{
-						eigvecReal.Mulβ_AddBy_αAB(USchur as Arrays.DenseMatrix<DoubleComplex>, eigvecDouble, 1);
+						eigvecReal.Mulβ_AddBy_αAB(USchur as Array.DenseMatrix<DoubleComplex>, eigvecDouble, 1);
 					}
 					vals = RT.CopyOutArray(eigvalDouble);
 					vecs = RT.CopyOutArray(eigvecReal).ToJagged(vals.Length);
@@ -314,7 +314,7 @@ namespace Althea.General
 			double beta = initial.Norm();
 			T[] a = new[] { beta.FromDouble<T>() };
 			List<TVec> qs = new List<TVec>(iterPerRestart);
-			Arrays.DenseMatrix<T> H = new Arrays.DenseMatrix<T>(iterPerRestart, iterPerRestart, onHost: true);
+			Array.DenseMatrix<T> H = new Array.DenseMatrix<T>(iterPerRestart, iterPerRestart, onHost: true);
 			H.FillWithZeros();
 			initial = initial.Clone() as TVec; // preserve original initial vector
 			#endregion
@@ -395,7 +395,7 @@ namespace Althea.General
 
 					#region Schur decomposition and prepare for restart
 					// Ignore Spelling: \left \right
-					using var X = new Arrays.DenseMatrix<T>(H.NRows, H.NCols, onHost: true);
+					using var X = new Array.DenseMatrix<T>(H.NRows, H.NCols, onHost: true);
 					int actualLen = Solver.API.Schur(H, orderVal: preserveVals, U: X);
 					var X1 = X.GetColumnRange(..actualLen);
 					//tex:${\vec{a}}^\ast={\vec{a}}^\ast X^\prime$
@@ -593,7 +593,7 @@ namespace Althea.General
 			Log.Write($"Starting with matrix size = {size}, iterations per restart = {iterPerRestart}");
 
 			// projection matrix
-			Arrays.DenseMatrix<T> H = new Arrays.DenseMatrix<T>(iterPerRestart, iterPerRestart, onHost: /*(b is Arrays.PureArray<T> p) ? p.OnHost : */true);
+			Array.DenseMatrix<T> H = new Array.DenseMatrix<T>(iterPerRestart, iterPerRestart, onHost: /*(b is Arrays.PureArray<T> p) ? p.OnHost : */true);
 			H.FillWithZeros();
 
 			// calculate first r
