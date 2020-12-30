@@ -2,107 +2,51 @@
 // Notice: Do not change the section names.
 
 {
-  "Lanczos": {
-    // The maximum ratio of free memory that Lanczos algorithm uses. For safety reasons,
-    // you should leave some memory so that a few of your crucial arrays can be allocated correctly and safely.
-    "FreeMemoryRatio": 0.95,
-    // When ((basis vectors' inner product) > MachinePrecision^ReorthogonizePower), re-orthogonalization will be performed
-    "ReorthogonizePower": 0.75,
-    // How often will the tridiagonal matrix be constructed and the convergence be checked
-    "CheckConvergePer": 1,
-    // The hard limit of iterations per restart for Hermitian problem
-    "IterPerRestartHardLimitHerm": 30,
-    // The hard limit of iterations per restart for non-Hermitian problem
-    "IterPerRestartHardLimitNonHerm": 20
-  },
-
-  "Trace": {
+  "LogSettings": {
     // whether the log file output should be suppressed
     "SuppressLog": true,
     // Buffer size used for output
     "BufferSize": 1024,
     // The maximum width (in characters) of a printed line
-    "WrapLimit":  125,
+    "WrapLimit": 125,
     // The directory that log file should be
-    "LogPath": "F:\\git\\CudaCSharp\\",
-
-    "PrintError": true,
-    "PrintWarning": true,
-    "PrintInformation": true,
-    "PrintTrace": false,
-    "BufferError": false,
-    "BufferWarning": false,
-    "BufferInformation": false,
-    "BufferTrace": true
+    "LogPath": "F:\\git\\CudaCSharp\\Althea.log",
+    // The printing levels
+    "PrintLevels": [
+      "Error",
+      "Warning",
+      "Information"
+    ],
+    // The buffer levels
+    "BufferLevels": [
+      "Trace",
+      "Debug"
+    ]
   },
 
-  "Print": {
-    // how many digital numbers will be printed out for a real-precision number
+  "PrintSettings": {
+    // How many digital numbers will be printed out for a supported data type
     "Precision": 8,
-    // the maximum number of printed vector's / sparse matrix's elements restriction
-    "MaxArrayLength": 64,
-    // the maximum number of printed matrix's rows restriction
-    "MaxMatrixRow": 32,
-    // the maximum number of printed matrix's columns restriction
-    "MaxMatrixColumn": 32
+    // The maximum number of lines of printed vectors and sparse matrices
+    "ArrayLength": 64,
+    // The maximum number of rows of printed matrices
+    "MatrixRow": 32,
+    // The maximum number of columns of printed matrices
+    "MatrixColumn": 32
   },
 
-  "Threshold": {
-    // When comparing if the array is all approximately equal to 0, this threshold is used for judgment.
-    "Equality": 1e-10,
-    // If a sparse matrix has size less than this, whether the occupancy of space larger than dense will not be checked
-    "SparseMatrixUncheck": 64
-  },
-
-  "Automation": {
-    // if DetectHermitian = false,
-    // only the O(1) time complexity method is used to determine whether the new matrix is Hermitian or not,
-    // this may lead to a lot of false negatives (it is Hermitian and the judgment says it's not).
-    "DetectHermitian": false,
-    // Whether the GC.Collect() will be called when memory becomes insufficient.
-    // If this option is turned on, there will be performance loss;
-    // otherwise, you should carefully calling the AbstractArray<T>.Dispose().
-    "GarbageCollection": true,
-    // Calculate array's check sum code before writing to files and reading from files, this may cause a significant performance loss if the array is large
-    "FileCheck": false
-  },
-
-  "UserDefinedStorage": {
-    // user-defined storage factory class that implements `CudaCSharp.Memory.IStorageFactory`
-    "StorageFactory": null,
-    // user-defined swappable storage class that implements `CudaCSharp.Memory.Storage<T>` and `CudaCSharp.Memory.ISwappablePointer`
-    "SwappableStorage": null,
-    // user-defined unswappable storage class that implements `CudaCSharp.Memory.Storage<T>` and `CudaCSharp.Memory.IUnswappablePointer`
-    "UnswappableStorage": null
-  },
-
-  "UserDefinedCPU": {
-    // user-defined Runtime class that implements `CudaCSharp.Runtime.IRuntime`
-    "RuntimeClass": null,
-    // user-defined BLAS class that implements `CudaCSharp.Blas.IBlas`
-    "BLASClass": null,
-    // user-defined Sparse class that implements `CudaCSharp.Sparse.ISparseBlas`
-    "SparseClass": null,
-    // user-defined Random Generator class that implements `CudaCSharp.Rand.IRand`
-    "RandClass": null,
-    // user-defined Solver class that implements `CudaCSharp.Solve.ISolver`
-    "SolverClass": null,
-    // user-defined Tensor class that implements `CudaCSharp.Tensor.ITensor`
-    "TensorClass": "TTGT.HpTT.HPTensor, TTGT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-  },
-
-  "UserDefinedGPU": {
-    // user-defined Runtime class that implements `CudaCSharp.Runtime.IRuntime`
-    "RuntimeClass": null,
-    // user-defined BLAS class that implements `CudaCSharp.Blas.IBlas`
-    "BLASClass": null, // "CudaCSharp.Blas.Xt.CudaBlasXt, CudaCSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-    // user-defined Sparse class that implements `CudaCSharp.Sparse.ISparseBlas`
-    "SparseClass": null,
-    // user-defined Random Generator class that implements `CudaCSharp.Rand.IRand`
-    "RandClass": null,
-    // user-defined Solver class that implements `CudaCSharp.Solve.ISolver`
-    "SolverClass": null,
-    // user-defined Tensor class that implements `CudaCSharp.Tensor.ITensor`
-    "TensorClass": "TTGT.CuTT.CUTensor, TTGT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+  "ImplementationSettings": {
+    // When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not? If not, this library will try to convert the memory to fit the given condition. If conversion still fails, an error will be thrown.
+    "UseRecentImplementation": true,
+    // Which memory / storage implementation to use
+    "Memory": null,
+    // Which linear algebra implementation to use
+    "LinearAlgebra": null,
+    // Which tensor algebra implementation to use
+    "TensorAlgebra": null, //"TTGT.HpTT.HPTensor (CUTensor), TTGT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+    // Which statistics implementation to use
+    "Statistics": null,
+    // Which general solver implementation to use
+    "Solver": null
   }
 }

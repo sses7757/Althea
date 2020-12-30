@@ -4,13 +4,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
 
+using Althea.Linq;
 
-namespace Althea.Log
+
+namespace Althea.Helpers
 {
+	#region setting classes
 	/// <summary>
 	/// The logging level enumerate
 	/// </summary>
@@ -38,95 +40,45 @@ namespace Althea.Log
 		Debug = -1
 	}
 
-	/// <summary>
-	/// The static class provides basic write log file and output to console feature
-	/// </summary>
-	public static class Log
+	// for JSON serialization
+	internal struct JsonLogSettings
 	{
-		// TODO: add destroyer
-		static Log()
+		public bool Suppress;
+		public int BufferSize;
+		public int WrapLimit;
+		public string Path;
+
+		public LogLevel[] PrintLevels;
+		public LogLevel[] BufferLevels;
+
+		internal JsonLogSettings(bool _)
 		{
-			dynamic settings = JsonSerializer.Deserialize<Log>(File.ReadAllText("Althea.json"));
+			Suppress = false; BufferSize = 1024; WrapLimit = 125; Path = "Althea.log";
+			PrintLevels = new[] { LogLevel.Error, LogLevel.Warning };
+			BufferLevels = new[] { LogLevel.Trace, LogLevel.Debug };
+		}
+	}
+	#endregion
 
-			LogPath = settings.Trace.LogPath + LogPath;
-
-			WrapLimit = settings.Trace.WrapLimit;
-
-			BufferSize = settings.Trace.BufferSize;
-			buffers = new Queue<(string msg, string category, LogLevel level)>(BufferSize);
-
-			var levels = new List<LogLevel>();
-			if ((bool)settings.Trace.PrintError) levels.Add(LogLevel.Error);
-			if ((bool)settings.Trace.PrintWarning) levels.Add(LogLevel.Warning);
-			if ((bool)settings.Trace.PrintInformation) levels.Add(LogLevel.Information);
-			if ((bool)settings.Trace.PrintTrace) levels.Add(LogLevel.Trace);
-#if DEBUG
-			levels.Add(LogLevel.Debug);
-#endif
-			OutputLevel = levels.ToArray();
-			levels.Clear();
-
-			if ((bool)settings.Trace.SuppressLog)
+	#region logger classes
+	internal sealed class Logger
+	{
+		~Logger()
+		{
+			while (buffers.Count != 0)
 			{
-				SuppressLog = true;
-				return;
-			}
-
-			if ((bool)settings.Trace.BufferError) levels.Add(LogLevel.Error);
-			if ((bool)settings.Trace.BufferWarning) levels.Add(LogLevel.Warning);
-			if ((bool)settings.Trace.BufferInformation) levels.Add(LogLevel.Information);
-			if ((bool)settings.Trace.BufferTrace) levels.Add(LogLevel.Trace);
-			BufferLevel = levels.ToArray();
-
-			var listener = new LogTraceListener();
-			if (!Trace.Listeners.Contains(listener))
-			{
-				Trace.Listeners.Clear();
-				Trace.Listeners.Add(listener);
+				var (msg, category, level) = buffers.Dequeue();
+				// wait synchronously
+				ActualWrite(msg, category, level).GetAwaiter().GetResult();
 			}
 		}
 
-		/// <summary>
-		/// Whether the log file output should be suppressed
-		/// </summary>
-		public static bool SuppressLog { get; set; } = false;
+		private readonly Queue<(string msg, string category, LogLevel level)> buffers =
+							new Queue<(string msg, string category, LogLevel level)>(Log.BufferSize);
 
-		/// <summary>
-		/// The directory and file name of the log file
-		/// </summary>
-		public static string LogPath { get; } = "Althea.log";
+		private int maxCategoryLength = 10;
 
-		/// <summary>
-		/// Buffer size used for output
-		/// </summary>
-		public static int BufferSize { get; } = 1024;
-
-		/// <summary>
-		/// The maximum width (in characters) of a printed line
-		/// </summary>
-		public static int WrapLimit { get; set; } = 125;
-
-		private static ICollection<LogLevel> OutputLevel { get; } = new[] { LogLevel.Information, LogLevel.Warning, LogLevel.Error };
-
-		private static ICollection<LogLevel> BufferLevel { get; } = new[] { LogLevel.Trace };
-
-		/// <summary>
-		/// Time interval between two Lanczos information level output
-		/// </summary>
-		internal static TimeSpan LanczosInfoInterval { private set; get; } = TimeSpan.Parse("0:0:10.0", Resource.Culture);
-
-		private static readonly Queue<(string msg, string category, LogLevel level)> buffers =
-							new Queue<(string msg, string category, LogLevel level)>(BufferSize);
-
-		private static int maxCategoryLength = 10;
-
-		/// <summary>
-		/// Write the message of certain category and message level.
-		/// </summary>
-		/// <param name="msg">message to write</param>
-		/// <param name="category">if <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
-		/// <param name="level">message log level</param>
-		public static async void Write(string msg, [CallerMemberName] string category = null, LogLevel level = LogLevel.Information)
+		internal async Task Write(string msg, string category = null, LogLevel level = LogLevel.Information)
 		{
 			bool showHeader = true;
 			if (string.IsNullOrEmpty(category))
@@ -140,34 +92,35 @@ namespace Althea.Log
 					category = stackTrace.GetFrame(1).GetMethod().Name;
 				}
 			}
-			if (!BufferLevel.Contains(level) && OutputLevel.Contains(level))
+			if (!Log.BufferLevels.Contains(level) && Log.PrintLevels.Contains(level))
 			{
 				if (showHeader)
 					maxCategoryLength = Math.Max(maxCategoryLength, category.Length);
 				if (level == LogLevel.Error)
 				{
 					if (showHeader)
-						Console.Error.WriteLine(category.PadRight(maxCategoryLength) + $" {level,11/*length of 'Information'*/}: {msg.Wrap(30, WrapLimit)}");
+						Console.Error.WriteLine(category.PadRight(maxCategoryLength) + $" {level,11/*length of 'Information'*/}: {Wrap(msg, 30, Log.WrapLimit)}");
 					else
 						Console.Error.WriteLine(msg);
 				}
 				else
 				{
 					if (showHeader)
-						Console.Out.WriteLine(category.PadRight(maxCategoryLength) + $" { level,11/*length of 'Information'*/}: {msg.Wrap(30, WrapLimit)}");
+						Console.Out.WriteLine(category.PadRight(maxCategoryLength) + $" { level,11/*length of 'Information'*/}: {Wrap(msg, 30, Log.WrapLimit)}");
 					else
 						Console.Out.WriteLine(msg);
 				}
 			}
 			// only console write but not log to file
-			if (SuppressLog) return;
+			if (Log.SuppressLog)
+				return;
 
 			buffers.Enqueue((msg, category, level));
-			if (!writing && buffers.Count >= BufferSize * 2 / 3)
+			if (!writing && buffers.Count >= Log.BufferSize * 2 / 3)
 				await BufferWrite();
 		}
 
-		private static string Wrap(this string sentence, int indent, int limit)
+		private static string Wrap(string sentence, int indent, int limit)
 		{
 			string[] words = sentence.Split(' ');
 			string indentStr = new string(' ', indent);
@@ -192,9 +145,9 @@ namespace Althea.Log
 			return newSentence.ToString();
 		}
 
-		private static bool writing = false;
+		private bool writing = false;
 
-		private static async Task BufferWrite()
+		private async Task BufferWrite()
 		{
 			while (writing)
 				await Task.Delay(100).ConfigureAwait(true);
@@ -204,7 +157,7 @@ namespace Althea.Log
 			{
 				return;
 			}
-			while (buffers.Count >= BufferSize / 5)
+			while (buffers.Count >= Log.BufferSize / 5)
 			{
 				var (msg, category, level) = buffers.Dequeue();
 				await ActualWrite(msg, category, level).ConfigureAwait(true);
@@ -222,13 +175,13 @@ namespace Althea.Log
 						Trace.WriteLine($"Trace\tMethod {category}: {msg}");
 						break;
 					case LogLevel.Information:
-						Trace.TraceInformation("Method {0}: {1}", category, msg);
+						Trace.TraceInformation($"Method {category}: {msg}");
 						break;
 					case LogLevel.Warning:
-						Trace.TraceWarning("Method {0}: {1}", category, msg);
+						Trace.TraceWarning($"Method {category}: {msg}");
 						break;
 					case LogLevel.Error:
-						Trace.TraceError("Method {0}: {1}", category, msg);
+						Trace.TraceError($"Method {category}: {msg}");
 						break;
 					case LogLevel.Debug:
 						Debug.WriteLine(msg, category);
@@ -239,13 +192,49 @@ namespace Althea.Log
 			};
 			await Task.Run(run).ConfigureAwait(true);
 		}
+	}
+
+	internal class LogTraceListener : TraceListener
+	{
+		private readonly Timer timer = new Timer(3000);
+
+		private readonly StreamWriter stream = null;
+
+		~LogTraceListener()
+		{
+			this.timer.Dispose();
+			this.stream?.Dispose();
+		}
+
+		internal LogTraceListener()
+		{
+			if (!File.Exists(Log.FilePath) || this.stream is null)
+				this.stream = new StreamWriter(File.Create(Log.FilePath, 1 << 15, FileOptions.Asynchronous));
+			timer.Enabled = true;
+			timer.Elapsed += Timer_Elapsed;
+		}
+
+		private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+		{
+			_ = GlobalLock(stream.FlushAsync);
+		}
+
+		public override void Write(string message)
+		{
+			_ = GlobalLock(stream.WriteAsync, message);
+		}
+
+		public override void WriteLine(string message)
+		{
+			_ = GlobalLock(stream.WriteLineAsync, message);
+		}
 
 
 		private static object lockObj = null;
 
-		private static async Task GlobalLock<T>(this Func<T, Task> func, T parameter)
+		private static async Task GlobalLock<T>(Func<T, Task> func, T parameter)
 		{
-			while (lockObj != null)
+			while (lockObj is not null)
 			{
 				await Task.Delay(100).ConfigureAwait(true);
 			}
@@ -258,9 +247,9 @@ namespace Althea.Log
 			//				$"\t{DateTime.Now.Second}:{DateTime.Now.Millisecond}");
 		}
 
-		private static async Task GlobalLock(this Func<Task> func)
+		private static async Task GlobalLock(Func<Task> func)
 		{
-			while (lockObj != null)
+			while (lockObj is not null)
 			{
 				await Task.Delay(100).ConfigureAwait(true);
 			}
@@ -272,41 +261,96 @@ namespace Althea.Log
 			//Debug.WriteLine($"Global lock of {func.Method.Name} end:" +
 			//				$"\t{DateTime.Now.Second}:{DateTime.Now.Millisecond}");
 		}
+	}
+	#endregion
 
-		private class LogTraceListener : TraceListener
+	/// <summary>
+	/// The static class provides basic write log file and output to console feature
+	/// </summary>
+	public static class Log
+	{
+		#region log settings
+		/// <summary>
+		/// Whether the log file output should be suppressed
+		/// </summary>
+		public static bool SuppressLog {
+			get => Settings.singletonSettings.LogSettings.Suppress;
+			set => Settings.singletonSettings.LogSettings.Suppress = value;
+		}
+
+		/// <summary>
+		/// The directory and file name of the log file
+		/// </summary>
+		public static string FilePath {
+			get => Settings.singletonSettings.LogSettings.Path;
+			set => Settings.singletonSettings.LogSettings.Path = value;
+		}
+
+		/// <summary>
+		/// Buffer size used for output
+		/// </summary>
+		public static int BufferSize {
+			get => Settings.singletonSettings.LogSettings.BufferSize;
+			set => Settings.singletonSettings.LogSettings.BufferSize = value;
+		}
+
+		/// <summary>
+		/// The maximum width (in characters) of a printed line
+		/// </summary>
+		public static int WrapLimit {
+			get => Settings.singletonSettings.LogSettings.WrapLimit;
+			set => Settings.singletonSettings.LogSettings.WrapLimit = value;
+		}
+
+		/// <summary>
+		/// The <see cref="LogLevel"/>s to print
+		/// </summary>
+		public static LogLevel[] PrintLevels {
+			get => Settings.singletonSettings.LogSettings.PrintLevels;
+			set => Settings.singletonSettings.LogSettings.PrintLevels = value;
+		}
+
+		/// <summary>
+		/// The <see cref="LogLevel"/>s to buffer
+		/// </summary>
+		public static LogLevel[] BufferLevels {
+			get => Settings.singletonSettings.LogSettings.BufferLevels;
+			set => Settings.singletonSettings.LogSettings.BufferLevels = value;
+		}
+		#endregion
+
+		#region singleton logger
+		private static readonly Logger logger = new Logger();
+
+		static Log()
 		{
-			private readonly Timer timer = new Timer(3000);
-
-			private readonly StreamWriter stream = null;
-
-			~LogTraceListener()
+			if (SuppressLog)
 			{
-				this.timer.Dispose();
-				this.stream?.Dispose();
+				return;
 			}
-
-			internal LogTraceListener()
+#if DEBUG
+			if (!PrintLevels.Contains(LogLevel.Debug))
+				PrintLevels = PrintLevels.Append(LogLevel.Debug).ToArray();
+#endif
+			// configure the System.Diagnostics.Trace
+			var listener = new LogTraceListener();
+			if (!Trace.Listeners.Contains(listener))
 			{
-				if (!File.Exists(LogPath) || this.stream is null)
-					this.stream = new StreamWriter(File.Create(LogPath, 1 << 15, FileOptions.Asynchronous));
-				timer.Enabled = true;
-				timer.Elapsed += Timer_Elapsed;
+				Trace.Listeners.Clear();
+				Trace.Listeners.Add(listener);
 			}
+		}
+		#endregion
 
-			private void Timer_Elapsed(object sender, ElapsedEventArgs e)
-			{
-				_ = GlobalLock(stream.FlushAsync);
-			}
-
-			public override void Write(string message)
-			{
-				_ = GlobalLock(stream.WriteAsync, message);
-			}
-
-			public override void WriteLine(string message)
-			{
-				_ = GlobalLock(stream.WriteLineAsync, message);
-			}
+		/// <summary>
+		/// Write the message of certain category and message level.
+		/// </summary>
+		/// <param name="msg">message to write</param>
+		/// <param name="category">if <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
+		/// <param name="level">message log level</param>
+		public static async void Write(string msg, [CallerMemberName] string category = null, LogLevel level = LogLevel.Information)
+		{
+			await logger.Write(msg, category, level);
 		}
 	}
 }

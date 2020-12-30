@@ -19,35 +19,6 @@ namespace Althea.Helpers
 			}
 		}
 
-		// TODO: edit CheckOnHost
-		internal static bool CheckOnHost<T>(params Arrays.ValueArray<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arrays is null || arrays.Length == 0)
-				throw new ArgumentNullException(nameof(arrays));
-			if (arrays.Any(a => a.Disposed))
-				throw new ObjectDisposedException(nameof(arrays));
-			if (arrays.All(a => a.Length == 0 || !a.OnHost)) // empty array can be any where
-				return false;
-			if (arrays.All(a => a.Length == 0 || a.OnHost))
-				return true;
-			// else
-			throw new ArgumentException(Resource.RequireSamePos);
-		}
-
-		internal static bool CheckOnHost<T>(params Memory.Storage<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arrays is null || arrays.Length == 0)
-				throw new ArgumentNullException(nameof(arrays));
-			////if (arrays.Any(a => a.AlreadyDisposed))
-			////	throw new ObjectDisposedException(nameof(arrays));
-			if (arrays.All(a => !a.OnHost))
-				return false;
-			if (arrays.All(a => a.OnHost))
-				return true;
-			// else
-			throw new ArgumentException(Resource.RequireSamePos);
-		}
-
 		// TODO: move to Althea.LinearAlgebra
 		internal static MatrixOperation CheckOP<T>(this MatrixOperation input, Arrays.IMatrix<T> mat) where T : unmanaged, IFormattable, IEquatable<T>
 		{
@@ -211,6 +182,7 @@ namespace Althea.Helpers
 			if (x == 1) return true;
 			return (x > 1) && ((x & (x - 1)) == 0);
 		}
+
 		/// <summary>
 		/// Whether the number is a power of 2
 		/// </summary>
@@ -221,6 +193,7 @@ namespace Althea.Helpers
 			if (x == 1) return true;
 			return (x > 1) && ((x & (x - 1)) == 0);
 		}
+
 		/// <summary>
 		/// Whether the number is a power of 2
 		/// </summary>
@@ -231,6 +204,7 @@ namespace Althea.Helpers
 			if (x == 1) return true;
 			return (x > 1) && ((x & (x - 1)) == 0);
 		}
+
 		/// <summary>
 		/// Whether the number is a power of 2
 		/// </summary>
@@ -257,6 +231,7 @@ namespace Althea.Helpers
 			x |= x >> 16;
 			return x + 1;
 		}
+
 		/// <summary>
 		/// Get the nearest power of 2 number of the input number
 		/// </summary>
@@ -267,6 +242,7 @@ namespace Althea.Helpers
 			uint x = unchecked((uint)input);
 			return Convert.ToInt32(x.NearestPowerOfTwo());
 		}
+
 		/// <summary>
 		/// Get the nearest power of 2 number of the input number
 		/// </summary>
@@ -283,6 +259,7 @@ namespace Althea.Helpers
 			x |= x >> 32;
 			return x + 1;
 		}
+
 		/// <summary>
 		/// Get the nearest power of 2 number of the input number
 		/// </summary>
@@ -292,6 +269,222 @@ namespace Althea.Helpers
 		{
 			ulong x = unchecked((ulong)input);
 			return Convert.ToInt64(x.NearestPowerOfTwo());
+		}
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		public static sbyte Log2(this int input)
+		{
+			if (input <= 0)
+				return -1;
+			sbyte targetlevel = 0;
+			while ((input >>= 1) != 0)
+				++targetlevel;
+			return targetlevel;
+		}
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		public static sbyte Log2(this uint input)
+		{
+			if (input <= 0)
+				return -1;
+			sbyte targetlevel = 0;
+			while ((input >>= 1) != 0)
+				++targetlevel;
+			return targetlevel;
+		}
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		public static sbyte Log2(this long input)
+		{
+			if (input <= 0)
+				return -1;
+			sbyte targetlevel = 0;
+			while ((input >>= 1) != 0)
+				++targetlevel;
+			return targetlevel;
+		}
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		public static sbyte Log2(this ulong input)
+		{
+			if (input <= 0)
+				return -1;
+			sbyte targetlevel = 0;
+			while ((input >>= 1) != 0)
+				++targetlevel;
+			return targetlevel;
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static bool IsBitSet(this int input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(int) * 8)
+				return false;
+			return (input & (1 << bit)) == 0;
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static bool IsBitSet(this uint input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(uint) * 8)
+				return false;
+			return (input & (1U << bit)) == 0;
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static bool IsBitSet(this long input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(long) * 8)
+				return false;
+			return (input & (1L << bit)) == 0;
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static bool IsBitSet(this ulong input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(ulong) * 8)
+				return false;
+			return (input & (1UL << bit)) == 0;
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static int SetBit(this int input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(int) * 8)
+				return -1;
+			return input | (1 << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static uint SetBit(this uint input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(uint) * 8)
+				return 0;
+			return input | (1U << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static long SetBit(this long input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(long) * 8)
+				return -1;
+			return input | (1L << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static ulong SetBit(this ulong input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(ulong) * 8)
+				return 0;
+			return input | (1UL << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static int ResetBit(this int input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(int) * 8)
+				return -1;
+			return input & ~(1 << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static uint ResetBit(this uint input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(uint) * 8)
+				return 0;
+			return input & ~(1U << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static long ResetBit(this long input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(long) * 8)
+				return -1;
+			return input & ~(1L << bit);
+		}
+
+		/// <summary>
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		public static ulong ResetBit(this ulong input, sbyte bit)
+		{
+			if (bit <= 0 || bit >= sizeof(ulong) * 8)
+				return 0;
+			return input & ~(1UL << bit);
 		}
 		#endregion
 
@@ -379,7 +572,7 @@ namespace Althea.Helpers
 		private static string GetFormatString(ref int precision)
 		{
 			// TODO: edit way of settings
-			precision = precision <= 0 ? Settings.PrintConfig[PrintSetting.Precision] : precision;
+			precision = precision <= 0 ? Settings.PrintPrecision : precision;
 			return "G" + precision;
 		}
 

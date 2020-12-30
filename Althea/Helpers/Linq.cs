@@ -1355,6 +1355,23 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Append an <paramref name="element"/> to the end of <paramref name="list"/>
+		/// </summary>
+		/// <typeparam name="T">data type</typeparam>
+		/// <param name="list">the list to be appended</param>
+		/// <param name="element">the value to append</param>
+		/// <returns>a new list after appending <paramref name="element"/></returns>
+		public static IReadOnlyList<T> Append<T>(this IReadOnlyList<T> list, T element)
+		{
+			if (list is null || list.Count == 0)
+				return new[] { element };
+			T[] newArray = new T[list.Count + 1];
+			Array.Copy(list.ToArray(), newArray, list.Count);
+			newArray[^1] = element;
+			return newArray;
+		}
+
+		/// <summary>
 		/// General list converter.
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>

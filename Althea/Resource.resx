@@ -159,6 +159,9 @@
   <data name="DuplicateIndices" xml:space="preserve">
     <value>There exists duplicate indices which is not allowed.</value>
   </data>
+  <data name="ErrorOccur" xml:space="preserve">
+    <value>An error happened:</value>
+  </data>
   <data name="FolderIllegal" xml:space="preserve">
     <value>The target folder / file is not a legal array storage.</value>
   </data>
@@ -266,6 +269,9 @@
   </data>
   <data name="TensorWrongSize" xml:space="preserve">
     <value>The tensor(s) with incompatible size(s) cannot perform this operation.</value>
+  </data>
+  <data name="UseDefault" xml:space="preserve">
+    <value>Use default settings instead...</value>
   </data>
   <data name="VectorLength" xml:space="preserve">
     <value>The input/output vector should be of length {0}.</value>

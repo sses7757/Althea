@@ -187,6 +187,15 @@ namespace Althea {
         }
         
         /// <summary>
+        ///   查找类似 An error happened: 的本地化字符串。
+        /// </summary>
+        internal static string ErrorOccur {
+            get {
+                return ResourceManager.GetString("ErrorOccur", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The target folder / file is not a legal array storage. 的本地化字符串。
         /// </summary>
         internal static string FolderIllegal {
@@ -507,6 +516,15 @@ namespace Althea {
         internal static string TensorWrongSize {
             get {
                 return ResourceManager.GetString("TensorWrongSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Use default settings instead... 的本地化字符串。
+        /// </summary>
+        internal static string UseDefault {
+            get {
+                return ResourceManager.GetString("UseDefault", resourceCulture);
             }
         }
         

@@ -6,12 +6,14 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Linq;
+using Althea.Helpers;
 
 using RT = Althea.Runtime.API;
 
 
 namespace Althea.Memory
 {
+	#region storage position
 	/// <summary>
 	/// The enum of the storage position, a bit flag
 	/// </summary>
@@ -32,9 +34,17 @@ namespace Althea.Memory
 		/// </summary>
 		URI = 1 << 2,
 		/// <summary>
-		/// Storage at platform-specific local memory other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+		/// Storage at platform-specific local memory (with custom order the 1st) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
 		/// </summary>
-		OtherMemory = 1 << 3,
+		OtherMemory_1 = 1 << 3,
+		/// <summary>
+		/// Storage at platform-specific local memory (with custom order the 2nd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+		/// </summary>
+		OtherMemory_2 = 1 << 4,
+		/// <summary>
+		/// Storage at platform-specific local memory (with custom order the 3rd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+		/// </summary>
+		OtherMemory_3 = 1 << 5,
 	}
 
 	/// <summary>
@@ -43,15 +53,100 @@ namespace Althea.Memory
 	public static class StoragePositionExtension
 	{
 		/// <summary>
+		/// Check whether the given <see cref="StoragePosition"/> is a pure flag
+		/// </summary>
+		/// <param name="position">the <see cref="StoragePosition"/></param>
+		/// <returns>true for pure flag <paramref name="position"/></returns>
+		public static bool IsPureFlag(this StoragePosition position)
+		{
+			return ((int)position).IsPowerOfTwo();
+		}
+
+		/// <summary>
+		/// Get the ID (order) for the given flag <see cref="StoragePosition"/> if it represents a storage position in other memory types like <see cref="StoragePosition.OtherMemory_1"/>
+		/// </summary>
+		/// <param name="position">the flag <see cref="StoragePosition"/></param>
+		/// <returns>-1 if <paramref name="position"/> is not a flag or it is not a memory of other types</returns>
+		public static int OtherMemoryTypeID(this StoragePosition position)
+		{
+			if (position < StoragePosition.OtherMemory_1 || !position.IsPureFlag())
+				return -1;
+			int id = ((int)position).Log2() - 2;
+			return id;
+		}
+
+		/// <summary>
+		/// Decompose the given <see cref="StoragePosition"/> to flags
+		/// </summary>
+		/// <param name="position">the <see cref="StoragePosition"/></param>
+		/// <returns>the flags in <see cref="StoragePosition"/></returns>
+		public static StoragePosition[] Decompose(this StoragePosition position)
+		{
+			int pos = (int)position;
+			sbyte max = pos.Log2();
+			List<StoragePosition> flags = new List<StoragePosition>(max) { (StoragePosition)max };
+			while ((pos = pos.ResetBit(max)) != 0)
+			{
+				max = pos.Log2();
+				flags.Add((StoragePosition)max);
+			}
+			return flags.ToArray();
+		}
+
+		/// <summary>
 		/// Get the string representation of a given <see cref="StoragePosition"/>
 		/// </summary>
 		/// <param name="position">the <see cref="StoragePosition"/></param>
 		/// <returns>the string representation of <paramref name="position"/></returns>
 		public static string StringRepr(this StoragePosition position)
 		{
-
+			if (position.IsPureFlag())
+			{
+				return position switch
+				{
+					StoragePosition.CpuMemory => "CPU_Memory",
+					StoragePosition.GpuMemory => "GPU_Memory",
+					StoragePosition.URI => "Uniform_Resource_Identifier",
+					_ => $"Other_Device_Memory(ID={position.OtherMemoryTypeID()})",
+				};
+			}
+			else
+			{
+				return string.Join(" & ", position.Decompose().Select(p => p.StringRepr()).ToArray());
+			}
 		}
+
+		// TODO: edit CheckOnHost
+		internal static bool CheckOnHost<T>(params Arrays.ValueArray<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (arrays is null || arrays.Length == 0)
+				throw new ArgumentNullException(nameof(arrays));
+			if (arrays.Any(a => a.Disposed))
+				throw new ObjectDisposedException(nameof(arrays));
+			if (arrays.All(a => a.Length == 0 || !a.OnHost)) // empty array can be any where
+				return false;
+			if (arrays.All(a => a.Length == 0 || a.OnHost))
+				return true;
+			// else
+			throw new ArgumentException(Resource.RequireSamePos);
+		}
+
+		internal static bool CheckOnHost<T>(params Memory.Storage<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (arrays is null || arrays.Length == 0)
+				throw new ArgumentNullException(nameof(arrays));
+			////if (arrays.Any(a => a.AlreadyDisposed))
+			////	throw new ObjectDisposedException(nameof(arrays));
+			if (arrays.All(a => !a.OnHost))
+				return false;
+			if (arrays.All(a => a.OnHost))
+				return true;
+			// else
+			throw new ArgumentException(Resource.RequireSamePos);
+		}
+
 	}
+	#endregion
 
 
 	#region pointer interface
