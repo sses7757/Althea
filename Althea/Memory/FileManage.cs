@@ -45,12 +45,12 @@ namespace Althea.Memory
 
 		private const string PointerExtension = ".ptr", HeadFileName = "head.json";
 
-		private static void WriteFile(string folder, string key, IPointer value)
+		private static void WriteFile(string folder, string key, IStorage value)
 		{
 			NativeMethods.hostToFile(value.Ptr, value.LengthInBytes, Path.Join(folder, key + PointerExtension)).Check();
 		}
 
-		private unsafe static IReadOnlyList<KeyValuePair<string, byte[]>> CheckCode(IReadOnlyDictionary<string, IPointer> pointers)
+		private unsafe static IReadOnlyList<KeyValuePair<string, byte[]>> CheckCode(IReadOnlyDictionary<string, IStorage> pointers)
 		{
 			var hash = new List<KeyValuePair<string, byte[]>>();
 			using var sha = System.Security.Cryptography.SHA256.Create();
@@ -168,7 +168,7 @@ namespace Althea.Memory
 			}
 		}
 
-		private static IPointer ReadFile(string file)
+		private static IStorage ReadFile(string file)
 		{
 			long size = 0;
 			NativeMethods.hostFromFileGetSize(ref size, file).Check();
@@ -218,7 +218,7 @@ namespace Althea.Memory
 				string json = File.ReadAllText(Path.Join(folder, HeadFileName));
 				var head = Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ArrayHeadInfo)) as ArrayHeadInfo;
 				// read pointers
-				var dict = new Dictionary<string, IPointer>();
+				var dict = new Dictionary<string, IStorage>();
 				foreach (var ptr in Directory.GetFiles(folder, "*" + PointerExtension))
 				{
 					var key = Path.GetFileNameWithoutExtension(ptr);

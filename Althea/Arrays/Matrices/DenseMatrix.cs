@@ -1969,7 +1969,7 @@ namespace Althea.Arrays
 		/// Get the pointers of this instance.
 		/// </summary>
 		/// <returns>the pointers</returns>
-		public override IReadOnlyDictionary<string, IPointer> GetPointers() => DenseMatrixFactory.GetPointers(this);
+		public override IReadOnlyDictionary<string, IStorage> GetPointers() => DenseMatrixFactory.GetPointers(this);
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing this array.

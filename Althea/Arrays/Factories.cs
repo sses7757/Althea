@@ -32,9 +32,9 @@ namespace Althea.Arrays
 		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array</returns>
-		ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
+		ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
 
-		internal delegate ValueArray<T> DelegateReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
+		internal delegate ValueArray<T> DelegateReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
 	}
 
 	/// <summary>
@@ -142,7 +142,7 @@ namespace Althea.Arrays
 		/// <exception cref="TypeLoadException">if <typeparamref name="TArray"/>'s factory cannot be loaded</exception>
 		/// <exception cref="System.Reflection.AmbiguousMatchException">if <typeparamref name="TArray"/>'s factory has multiple method named <see cref="IArrayFactory.ReconstructArray"/></exception>
 		/// <exception cref="MissingMethodException">if <typeparamref name="TArray"/>'s factory has no method <see cref="IArrayFactory.ReconstructArray"/></exception>
-		public static TArray Reconstruct<TArray, T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where TArray : ValueArray<T>, new() where T : struct, IComparable<T>
+		public static TArray Reconstruct<TArray, T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where TArray : ValueArray<T>, new() where T : struct, IComparable<T>
 		{
 			var delegateReconstruct = GetDelegate<IArrayFactory.DelegateReconstructArray<T>>(typeof(TArray), nameof(IArrayFactory.ReconstructArray), cacheReconstruct);
 			return delegateReconstruct(size, pointers, otherInfo) as TArray;
@@ -163,7 +163,7 @@ namespace Althea.Arrays
 		/// <exception cref="TypeLoadException">if <paramref name="arrayType"/>'s factory cannot be loaded</exception>
 		/// <exception cref="System.Reflection.AmbiguousMatchException">if <paramref name="arrayType"/>'s factory has multiple method named <see cref="IArrayFactory.ReconstructArray"/></exception>
 		/// <exception cref="MissingMethodException">if <paramref name="arrayType"/>'s factory has no method <see cref="IArrayFactory.ReconstructArray"/></exception>
-		public static ValueArray<T> Reconstruct<T>(Type arrayType, IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public static ValueArray<T> Reconstruct<T>(Type arrayType, IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (arrayType is null || !arrayType.IsSubclassOf(typeof(ValueArray<T>)) || arrayType.IsAbstract)
 				throw new ArgumentNullException(nameof(arrayType));
@@ -274,7 +274,7 @@ namespace Althea.Arrays
 		/// <param name="name">pointer name to check</param>
 		/// <param name="size">the size to check, default 0 means do not check</param>
 		/// <returns>the casted <see cref="Storage{T}"/></returns>
-		public static Storage<T> CheckPointer<T>(IReadOnlyDictionary<string, IPointer> pointers, string name, long size = 0) where T : struct
+		public static Storage<T> CheckPointer<T>(IReadOnlyDictionary<string, IStorage> pointers, string name, long size = 0) where T : struct
 		{
 			if (pointers is null || !pointers.ContainsKey(name))
 				throw new ArgumentNullException(nameof(pointers));
@@ -309,7 +309,7 @@ namespace Althea.Arrays
 			return new DenseVector<T>(size[0], onHost);
 		}
 
-		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count != 1)
 				throw new ArgumentNullException(nameof(size));
@@ -318,9 +318,9 @@ namespace Althea.Arrays
 			return new DenseVector<T>(data, size[0]);
 		}
 
-		internal static IReadOnlyDictionary<string, IPointer> GetPointers<T>(DenseVector<T> vec) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(DenseVector<T> vec) where T : struct, IComparable<T>
 		{
-			return new Dictionary<string, IPointer> 
+			return new Dictionary<string, IStorage> 
 			{ 
 				[ValueArray<T>.PointerName] = vec.Pointer
 			};
@@ -346,7 +346,7 @@ namespace Althea.Arrays
 			return nnz;
 		}
 
-		private static (Storage<T> value, Storage<int> index) Check<T>(IReadOnlyDictionary<string, IPointer> pointers) where T : struct, IComparable<T>
+		private static (Storage<T> value, Storage<int> index) Check<T>(IReadOnlyDictionary<string, IStorage> pointers) where T : struct, IComparable<T>
 		{
 			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName);
 			var index = PureArrayFactory.CheckPointer<int>(pointers, IndexPointerName);
@@ -359,15 +359,15 @@ namespace Althea.Arrays
 			return new SparseVector<T>(size[0], nonZeros: nnz, onHost);
 		}
 
-		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (value, index) = Check<T>(pointers);
 			return new SparseVector<T>(size[0], value, index);
 		}
 
-		internal static IReadOnlyDictionary<string, IPointer> GetPointers<T>(SparseVector<T> vec) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(SparseVector<T> vec) where T : struct, IComparable<T>
 		{
-			return new Dictionary<string, IPointer>
+			return new Dictionary<string, IStorage>
 			{
 				[ValueArray<T>.PointerName] = vec.Pointer,
 				[IndexPointerName] = vec.IndexPointer
@@ -399,7 +399,7 @@ namespace Althea.Arrays
 			return type == typeof(bool) ? (bool)otherInfo[HermitianName] : throw new ArgumentNullException(nameof(otherInfo));
 		}
 
-		private static (long ld, bool herm, Storage<T> data) Check<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo) where T : struct, IComparable<T>
+		private static (long ld, bool herm, Storage<T> data) Check<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count != 2)
 				throw new ArgumentNullException(nameof(size));
@@ -436,15 +436,15 @@ namespace Althea.Arrays
 			return new DenseMatrix<T>(size[0], size[1], onHost, herm);
 		}
 
-		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (ld, herm, data) = Check<T>(size, pointers, otherInfo);
 			return new DenseMatrix<T>(data, size[0], size[1], ld, herm);
 		}
 
-		internal static IReadOnlyDictionary<string, IPointer> GetPointers<T>(DenseMatrix<T> mat) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(DenseMatrix<T> mat) where T : struct, IComparable<T>
 		{
-			return new Dictionary<string, IPointer>
+			return new Dictionary<string, IStorage>
 			{
 				[ValueArray<T>.PointerName] = mat.Pointer
 			};
@@ -506,7 +506,7 @@ namespace Althea.Arrays
 			return (nnz, format, herm);
 		}
 
-		private static (SparseMatrixFormat format, bool herm, Storage<T> value, Storage<int> row, Storage<int> col) Check<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo) where T : struct, IComparable<T>
+		private static (SparseMatrixFormat format, bool herm, Storage<T> value, Storage<int> row, Storage<int> col) Check<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count != 2)
 				throw new ArgumentNullException(nameof(size));
@@ -619,15 +619,15 @@ namespace Althea.Arrays
 			return new SparseMatrix<T>(size[0], size[1], nnz, format, onHost, herm);
 		}
 
-		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (format, herm, value, row, col) = Check<T>(size, pointers, otherInfo);
 			return new SparseMatrix<T>(size[0], size[1], value, row, col, format, herm);
 		}
 
-		internal static IReadOnlyDictionary<string, IPointer> GetPointers<T>(SparseMatrix<T> mat) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(SparseMatrix<T> mat) where T : struct, IComparable<T>
 		{
-			return new Dictionary<string, IPointer>
+			return new Dictionary<string, IStorage>
 			{
 				[ValueArray<T>.PointerName] = mat.Pointer,
 				[RowIndexName] = mat.RowPointer,
@@ -677,7 +677,7 @@ namespace Althea.Arrays
 			return new DenseTensor<T>(size, GetLabel(otherInfo), onHost);
 		}
 
-		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IPointer> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
+		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			if (size is null || size.Count == 0)
 				throw new ArgumentNullException(nameof(size));
@@ -690,9 +690,9 @@ namespace Althea.Arrays
 			return result;
 		}
 
-		internal static IReadOnlyDictionary<string, IPointer> GetPointers<T>(DenseTensor<T> ten) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(DenseTensor<T> ten) where T : struct, IComparable<T>
 		{
-			return new Dictionary<string, IPointer>
+			return new Dictionary<string, IStorage>
 			{
 				[ValueArray<T>.PointerName] = ten.Pointer
 			};

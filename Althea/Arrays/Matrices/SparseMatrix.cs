@@ -2892,7 +2892,7 @@ namespace Althea.Arrays
 		/// Get the pointers of this instance.
 		/// </summary>
 		/// <returns>the pointers</returns>
-		public override IReadOnlyDictionary<string, IPointer> GetPointers() => SparseMatrixFactory.GetPointers(this);
+		public override IReadOnlyDictionary<string, IStorage> GetPointers() => SparseMatrixFactory.GetPointers(this);
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing this array.

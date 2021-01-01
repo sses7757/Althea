@@ -13,101 +13,121 @@ using RT = Althea.Runtime.API;
 
 namespace Althea.Memory
 {
-	#region storage position
+	#region storage location
 	/// <summary>
-	/// The enum of the storage position, a bit flag
+	/// The enum of the storage location, a bit flag
 	/// </summary>
-	/// <remarks>Use <c>.<see cref="Enum.ToString(string?)">ToString</see>("F")</c> or <c>.<see cref="Enum.ToString(string?)">ToString</see>("G")</c> to get a <see cref="FlagsAttribute"/>'s actual string representation</remarks>
+	/// <remarks>Use <see cref="StorageLocationExtension.StringRepr(StorageLocation)"/> to get the real string representations.<br/>
+	/// Other memory locations with higher ranks are not explicitly written (such as 1 &lt;&lt; 5), but they will still be correctly dealt with.</remarks>
 	[Flags]
-	public enum StoragePosition
+	public enum StorageLocation
 	{
+		/// <summary>
+		/// The "memory" storage determined by a <see cref="Uri"/>. The value 0 means when no other flag is set, the storage location is <see cref="URI"/>.
+		/// </summary>
+		URI = 0,
 		/// <summary>
 		/// Storage at local CPU memory
 		/// </summary>
-		CpuMemory = 1,
+		CpuMemory = 1 << 0,
 		/// <summary>
 		/// Storage at local GPU memory
 		/// </summary>
 		GpuMemory = 1 << 1,
 		/// <summary>
-		/// Storage determined by a Uniform Resource Identifier <see cref="string"/> such as <c>"file:///home/file_name.tmp"</c> or <c>"ftp://192.108.1.1/share/file_name.tmp"</c>
-		/// </summary>
-		URI = 1 << 2,
-		/// <summary>
 		/// Storage at platform-specific local memory (with custom order the 1st) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
 		/// </summary>
-		OtherMemory_1 = 1 << 3,
+		OtherMemory_1 = 1 << 2,
 		/// <summary>
 		/// Storage at platform-specific local memory (with custom order the 2nd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
 		/// </summary>
-		OtherMemory_2 = 1 << 4,
+		OtherMemory_2 = 1 << 3,
 		/// <summary>
 		/// Storage at platform-specific local memory (with custom order the 3rd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
 		/// </summary>
-		OtherMemory_3 = 1 << 5,
+		OtherMemory_3 = 1 << 4,
 	}
 
 	/// <summary>
-	/// The static class that contains several extension methods for <see cref="StoragePosition"/>
+	/// The static class that contains several extension methods for <see cref="StorageLocation"/>
 	/// </summary>
-	public static class StoragePositionExtension
+	public static class StorageLocationExtension
 	{
+		private static readonly Dictionary<StorageLocation, string> _otherMemoryNames = new Dictionary<StorageLocation, string>();
+
 		/// <summary>
-		/// Check whether the given <see cref="StoragePosition"/> is a pure flag
+		/// Set the name used for <see cref="StringRepr(StorageLocation)"/> of the given flag <see cref="StorageLocation"/> if it represents a storage position in other memory types like <see cref="StorageLocation.OtherMemory_1"/>
 		/// </summary>
-		/// <param name="position">the <see cref="StoragePosition"/></param>
+		/// <param name="position">the flag <see cref="StorageLocation"/> of a storage position in other memory types</param>
+		/// <param name="name">the name as a <see cref="string"/> to set; notice that all the spaces will be replaced by '_'</param>
+		/// <returns>success or not</returns>
+		public static bool SetOtherMemoryName(this StorageLocation position, string name)
+		{
+			if (position < StorageLocation.OtherMemory_1 || !position.IsPureFlag())
+				return false;
+			_otherMemoryNames[position] = name.Replace(' ', '_');
+			return true;
+		}
+
+		/// <summary>
+		/// Check whether the given <see cref="StorageLocation"/> is a pure flag
+		/// </summary>
+		/// <param name="position">the <see cref="StorageLocation"/></param>
 		/// <returns>true for pure flag <paramref name="position"/></returns>
-		public static bool IsPureFlag(this StoragePosition position)
+		public static bool IsPureFlag(this StorageLocation position)
 		{
 			return ((int)position).IsPowerOfTwo();
 		}
 
 		/// <summary>
-		/// Get the ID (order) for the given flag <see cref="StoragePosition"/> if it represents a storage position in other memory types like <see cref="StoragePosition.OtherMemory_1"/>
+		/// Get the ID (order) for the given flag <see cref="StorageLocation"/> if it represents a storage position in other memory types like <see cref="StorageLocation.OtherMemory_1"/>
 		/// </summary>
-		/// <param name="position">the flag <see cref="StoragePosition"/></param>
+		/// <param name="position">the flag <see cref="StorageLocation"/> of a storage position in other memory types</param>
 		/// <returns>-1 if <paramref name="position"/> is not a flag or it is not a memory of other types</returns>
-		public static int OtherMemoryTypeID(this StoragePosition position)
+		public static int OtherMemoryTypeID(this StorageLocation position)
 		{
-			if (position < StoragePosition.OtherMemory_1 || !position.IsPureFlag())
+			if (position < StorageLocation.OtherMemory_1 || !position.IsPureFlag())
 				return -1;
-			int id = ((int)position).Log2() - 2;
+			int id = ((int)position).Log2() - 1;
 			return id;
 		}
 
 		/// <summary>
-		/// Decompose the given <see cref="StoragePosition"/> to flags
+		/// Decompose the given <see cref="StorageLocation"/> to flags
 		/// </summary>
-		/// <param name="position">the <see cref="StoragePosition"/></param>
-		/// <returns>the flags in <see cref="StoragePosition"/></returns>
-		public static StoragePosition[] Decompose(this StoragePosition position)
+		/// <param name="position">the <see cref="StorageLocation"/></param>
+		/// <returns>the flags in <see cref="StorageLocation"/></returns>
+		public static StorageLocation[] Decompose(this StorageLocation position)
 		{
 			int pos = (int)position;
 			sbyte max = pos.Log2();
-			List<StoragePosition> flags = new List<StoragePosition>(max) { (StoragePosition)max };
+			List<StorageLocation> flags = new List<StorageLocation>(max) { (StorageLocation)max };
 			while ((pos = pos.ResetBit(max)) != 0)
 			{
 				max = pos.Log2();
-				flags.Add((StoragePosition)max);
+				flags.Add((StorageLocation)max);
 			}
 			return flags.ToArray();
 		}
 
 		/// <summary>
-		/// Get the string representation of a given <see cref="StoragePosition"/>
+		/// Get the string representation of a given <see cref="StorageLocation"/>
 		/// </summary>
-		/// <param name="position">the <see cref="StoragePosition"/></param>
+		/// <param name="position">the <see cref="StorageLocation"/></param>
 		/// <returns>the string representation of <paramref name="position"/></returns>
-		public static string StringRepr(this StoragePosition position)
+		public static string StringRepr(this StorageLocation position)
 		{
-			if (position.IsPureFlag())
+			if (position == StorageLocation.URI)
+			{
+				return "URI";
+			}
+			else if (position.IsPureFlag())
 			{
 				return position switch
 				{
-					StoragePosition.CpuMemory => "CPU_Memory",
-					StoragePosition.GpuMemory => "GPU_Memory",
-					StoragePosition.URI => "Uniform_Resource_Identifier",
-					_ => $"Other_Device_Memory(ID={position.OtherMemoryTypeID()})",
+					StorageLocation.CpuMemory => "CPU_Memory",
+					StorageLocation.GpuMemory => "GPU_Memory",
+					_ => _otherMemoryNames.GetValueOrDefault(position) ?? $"Other_Device_Memory(ID={position.OtherMemoryTypeID()})",
 				};
 			}
 			else
@@ -149,21 +169,21 @@ namespace Althea.Memory
 	#endregion
 
 
-	#region pointer interface
+	#region storage interfaces
 	/// <summary>
-	/// The interface for any data type of pointer
+	/// The interface for a storage of any type at any location
 	/// </summary>
-	public interface IPointer : IDisposable
+	public interface IStorage : IDisposable
 	{
+		/// <summary>
+		/// The <see cref="StorageLocation"/> of this storage
+		/// </summary>
+		StorageLocation Location { get; }
+
 		/// <summary>
 		/// The raw pointer as a <see cref="IntPtr"/>
 		/// </summary>
 		IntPtr Ptr { get; }
-
-		/// <summary>
-		/// This pointer is on host or device memory
-		/// </summary>
-		bool OnHost { get; }
 
 		/// <summary>
 		/// The length of this pointer's underlying array in bytes
@@ -172,45 +192,45 @@ namespace Althea.Memory
 	}
 
 	/// <summary>
-	/// The interface for any data type swappable pointer (contains unmanaged resources)
+	/// The interface for a storage of data type <typeparamref name="T"/> at any location
 	/// </summary>
-	public interface ISwappablePointer : IPointer
+	/// <typeparam name="T">any unmanaged struct</typeparam>
+	public interface IStorage<T> : IStorage where T : unmanaged
 	{
 		/// <summary>
-		/// The time tick when this pointer was last used. Internally modified by <see cref="AutoSwapMemory"/>.
+		/// The C# managed pointer as a <c>ref <typeparamref name="T"/></c>
 		/// </summary>
-		long LastUsedTime { get; internal set; }
+		ref T Pointer { get; }
 
 		/// <summary>
-		/// The initial location (when not swapped yet) of this pointer
-		/// </summary>
-		bool DirectOnHost { get; }
-
-		/// <summary>
-		/// <b>In-place</b> move this pointer to the other memory
-		/// </summary>
-		void ToOtherMemory();
-	}
-
-	/// <summary>
-	/// The interface for any data type unswappable pointer (does not directly contain unmanaged resources)
-	/// </summary>
-	public interface IUnswappablePointer : IPointer
-	{
-		/// <summary>
-		/// The pointer this one references to, i.e. the pointer of interface <see cref="ISwappablePointer"/> that directly contains unmanaged resources.
-		/// </summary>
-		ISwappablePointer Root { get; }
-
-		/// <summary>
-		/// The offset of this pointer compared to <see cref="Root"/> in bytes.
-		/// </summary>
-		long OffsetInBytes { get; }
-
-		/// <summary>
-		/// The presenting length of this pointer in <b>real data type</b> rather than bytes.
+		/// The length of this pointer's underlying array in <typeparamref name="T"/> rather than bytes
 		/// </summary>
 		long Length { get; }
+
+		/// <summary>
+		/// Get the size of <typeparamref name="T"/> in memory in bytes
+		/// </summary>
+		public static unsafe int SizeOfT { get; } = sizeof(T);
+
+		/// <summary>
+		/// Make a reference <see cref="IStorage{T}"/> with the same pointer as this one while <see cref="Length"/> is changed to <paramref name="newLength"/>
+		/// </summary>
+		/// <param name="newLength">the new length of referenced <see cref="Storage{T}"/></param>
+		/// <returns>a referenced <see cref="IStorage{T}"/>with different <see cref="Length"/></returns>
+		IStorage<T> MakeReferenceWithSize(long newLength);
+
+		/// <summary>
+		/// Resize this <see cref="Storage{T}"/> <b>in-place</b>, if <c><paramref name="newLength"/> &lt; <see cref="Length"/></c>, the elements with larger offsets will be removed; otherwise, some new arbitrary elements will be attached to the end.
+		/// </summary>
+		/// <param name="newLength">the new length to resize to</param>
+		void Resize(long newLength);
+
+		/// <summary>
+		/// Convert this <see cref="IStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>a referenced <see cref="IStorage{TOut}"/></returns>
+		Storage<TOut> As<TOut>() where TOut : unmanaged;
 	}
 	#endregion
 
@@ -218,11 +238,11 @@ namespace Althea.Memory
 	/// <summary>
 	/// The abstract wrapper class of raw device / host pointer <see cref="IntPtr"/>.
 	/// </summary>
-	/// <typeparam name="T">any certain memory layout <c><see cref="StructLayoutAttribute"/>(<see cref="LayoutKind.Sequential"/>)</c> or <c><see cref="StructLayoutAttribute"/>(<see cref="LayoutKind.Explicit"/>)</c> struct</typeparam>
+	/// <typeparam name="T">any unmanaged struct</typeparam>
 	/// <remarks>I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class that inherits <see cref="ISwappablePointer"/> shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
-	public abstract class Storage<T> : IPointer, IEquatable<Storage<T>> where T : struct
+	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>> where T : unmanaged
 	{
 		#region properties
 		/// <summary>
@@ -335,9 +355,9 @@ namespace Althea.Memory
 
 		static Storage()
 		{
-			if (!(GlobalSettings.StorageFactory is null))
+			if (!(Settings.StorageFactory is null))
 			{
-				if (GlobalSettings.StorageFactory is IStorageFactory factory)
+				if (Settings.StorageFactory is IStorageFactory factory)
 				{
 					CreateNew = factory.CreateNew<T>;
 					CreateNewWith = factory.CreateNewWith<T>;
@@ -345,32 +365,32 @@ namespace Althea.Memory
 					CreateReferenceFull = factory.CreateReferenceFull<T>;
 				}
 			}
-			else if (!(GlobalSettings.SwappableStorage is null))
+			else if (!(Settings.SwappableStorage is null))
 			{
 				{
 					var @params = new[] { Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = GlobalSettings.SwappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
+					var ctor = Settings.SwappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
 					var lambda = Expression.Lambda<DelegateCreateNew>(Expression.New(ctor, @params), @params);
 					CreateNew = lambda.Compile();
 				}
 				{
 					var @params = new[] { Expression.Parameter(typeof(IntPtr)), Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = GlobalSettings.SwappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
+					var ctor = Settings.SwappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
 					var lambda = Expression.Lambda<DelegateCreateNewWith>(Expression.New(ctor, @params), @params);
 					CreateNewWith = lambda.Compile();
 				}
 			}
-			else if (!(GlobalSettings.UnswappableStorage is null))
+			else if (!(Settings.UnswappableStorage is null))
 			{
 				{
 					var @params = new[] { Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = GlobalSettings.UnswappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
+					var ctor = Settings.UnswappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
 					var lambda = Expression.Lambda<DelegateCreateReference>(Expression.New(ctor, @params), @params);
 					CreateReference = lambda.Compile();
 				}
 				{
 					var @params = new[] { Expression.Parameter(typeof(IntPtr)), Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = GlobalSettings.UnswappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
+					var ctor = Settings.UnswappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
 					var lambda = Expression.Lambda<DelegateCreateReferenceFull>(Expression.New(ctor, @params), @params);
 					CreateReferenceFull = lambda.Compile();
 				}
@@ -603,15 +623,15 @@ namespace Althea.Memory
 		/// <param name="lhs">the left operator pointer of type <see cref="Storage{T}"/></param>
 		/// <param name="rhs">the right operator pointer of type <see cref="Storage{T}"/></param>
 		/// <returns>The difference as <see cref="long"/> (counted in <typeparamref name="T"/>)</returns>
-		public static long operator -(Storage<T> lhs, Storage<T> rhs) => lhs - (IPointer)rhs;
+		public static long operator -(Storage<T> lhs, Storage<T> rhs) => lhs - (IStorage)rhs;
 
 		/// <summary>
-		/// Calculate the difference of a <see cref="Storage{T}"/> and a <see cref="IPointer"/> (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
+		/// Calculate the difference of a <see cref="Storage{T}"/> and a <see cref="IStorage"/> (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
 		/// </summary>
 		/// <param name="lhs">the left operator pointer of type <see cref="Storage{T}"/></param>
 		/// <param name="rhs">the right operator pointer of type <see cref="Storage{T}"/></param>
 		/// <returns>The difference as <see cref="long"/> (counted in <typeparamref name="T"/>)</returns>
-		public static long operator -(Storage<T> lhs, IPointer rhs)
+		public static long operator -(Storage<T> lhs, IStorage rhs)
 		{
 			if (lhs is null)
 				throw new ArgumentNullException(nameof(lhs));
@@ -627,12 +647,12 @@ namespace Althea.Memory
 		}
 
 		/// <summary>
-		/// Calculate the difference of a <see cref="IPointer"/> and a<see cref="Storage{T}"/> (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
+		/// Calculate the difference of a <see cref="IStorage"/> and a<see cref="Storage{T}"/> (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
 		/// </summary>
 		/// <param name="lhs">the left operator pointer of type <see cref="Storage{T}"/></param>
 		/// <param name="rhs">the right operator pointer of type <see cref="Storage{T}"/></param>
 		/// <returns>The difference as <see cref="long"/> (counted in <typeparamref name="T"/>)</returns>
-		public static long operator -(IPointer lhs, Storage<T> rhs) => -(rhs - lhs);
+		public static long operator -(IStorage lhs, Storage<T> rhs) => -(rhs - lhs);
 
 		/// <summary>
 		/// Implicit convert <see cref="Storage{T}"/> to <see cref="IntPtr"/>
@@ -856,7 +876,7 @@ namespace Althea.Memory
 					Exception exception = err == CudaError.ErrorOutOfMemory ?
 						new InsufficientMemoryException($"{locationInfo} since you have ran out of memory.") :
 						(Exception)new AccessViolationException($"{locationInfo} because of other error '{err}'.");
-					if (!GlobalSettings.AutoGCWhenOutOfMemory || !(exception is InsufficientMemoryException))
+					if (!Settings.AutoGCWhenOutOfMemory || !(exception is InsufficientMemoryException))
 						throw exception;
 
 					GC.Collect();

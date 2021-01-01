@@ -558,7 +558,7 @@ namespace Althea.Arrays
 		/// Get the pointer in the class-defined order, the first one must be <see cref="Pointer"/> to the value data.
 		/// </summary>
 		/// <returns>the pointers</returns>
-		public abstract IReadOnlyDictionary<string, IPointer> GetPointers();
+		public abstract IReadOnlyDictionary<string, IStorage> GetPointers();
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing this array, in the class-defined order
