@@ -909,11 +909,49 @@ namespace Althea.Linq
 		/// <param name="selector">the selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static uint Sum<T>(this IReadOnlyList<T> list, Converter<T, uint> selector)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+			uint sum = 0;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List summation by <paramref name="selector"/>
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static long Sum<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			long sum = 0;
+			for (int i = 0; i < list.Count; i++)
+			{
+				sum += selector(list[i]);
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List summation by <paramref name="selector"/>
+		/// </summary>
+		/// <param name="list"></param>
+		/// <param name="selector">the selector to apply to each element</param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static ulong Sum<T>(this IReadOnlyList<T> list, Converter<T, ulong> selector)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+			ulong sum = 0;
 			for (int i = 0; i < list.Count; i++)
 			{
 				sum += selector(list[i]);

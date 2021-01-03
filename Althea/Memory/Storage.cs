@@ -1,141 +1,347 @@
-﻿using System;
+﻿using Althea.Helpers;
+using Althea.Linq;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-using Althea.Linq;
-using Althea.Helpers;
-
 using RT = Althea.Runtime.API;
-
 
 namespace Althea.Memory
 {
 	#region storage location
 	/// <summary>
-	/// The enum of the storage location, a bit flag
+	/// The struct of a storage location
 	/// </summary>
-	/// <remarks>Use <see cref="StorageLocationExtension.StringRepr(StorageLocation)"/> to get the real string representations.<br/>
-	/// Other memory locations with higher ranks are not explicitly written (such as 1 &lt;&lt; 5), but they will still be correctly dealt with.</remarks>
-	[Flags]
-	public enum StorageLocation
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly struct StorageLocation : IEquatable<StorageLocation>
 	{
+		#region basic
 		/// <summary>
-		/// The "memory" storage determined by a <see cref="Uri"/>. The value 0 means when no other flag is set, the storage location is <see cref="URI"/>.
+		/// The enum of the location, all values larger than <see cref="OtherMemory_0"/> are all considered as some platform-specific local memories.
 		/// </summary>
-		URI = 0,
-		/// <summary>
-		/// Storage at local CPU memory
-		/// </summary>
-		CpuMemory = 1 << 0,
-		/// <summary>
-		/// Storage at local GPU memory
-		/// </summary>
-		GpuMemory = 1 << 1,
-		/// <summary>
-		/// Storage at platform-specific local memory (with custom order the 1st) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
-		/// </summary>
-		OtherMemory_1 = 1 << 2,
-		/// <summary>
-		/// Storage at platform-specific local memory (with custom order the 2nd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
-		/// </summary>
-		OtherMemory_2 = 1 << 3,
-		/// <summary>
-		/// Storage at platform-specific local memory (with custom order the 3rd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
-		/// </summary>
-		OtherMemory_3 = 1 << 4,
-	}
+		public enum LocationEnum : byte
+		{
+			/// <summary>
+			/// Represents an unknown storage position
+			/// </summary>
+			Unknown = 0,
+			/// <summary>
+			/// Storage at local CPU memory
+			/// </summary>
+			CpuMemory = 1,
+			/// <summary>
+			/// Storage at local GPU memory
+			/// </summary>
+			GpuMemory = 2,
+			/// <summary>
+			/// Storage at platform-specific local memory (with custom order the 1st) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+			/// </summary>
+			OtherMemory_0 = 3,
+			/// <summary>
+			/// Storage at platform-specific local memory (with custom order the 2nd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+			/// </summary>
+			OtherMemory_1 = 4,
+			/// <summary>
+			/// Storage at platform-specific local memory (with custom order the 3rd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
+			/// </summary>
+			OtherMemory_2 = 5,
+		}
 
-	/// <summary>
-	/// The static class that contains several extension methods for <see cref="StorageLocation"/>
-	/// </summary>
-	public static class StorageLocationExtension
-	{
-		private static readonly Dictionary<StorageLocation, string> _otherMemoryNames = new Dictionary<StorageLocation, string>();
+		private readonly LocationEnum location;
+
+		private readonly byte deviceID;
 
 		/// <summary>
-		/// Set the name used for <see cref="StringRepr(StorageLocation)"/> of the given flag <see cref="StorageLocation"/> if it represents a storage position in other memory types like <see cref="StorageLocation.OtherMemory_1"/>
+		/// The location of this <see cref="StorageLocation"/>
 		/// </summary>
-		/// <param name="position">the flag <see cref="StorageLocation"/> of a storage position in other memory types</param>
+		public LocationEnum Location => location;
+
+		/// <summary>
+		/// The device ID of the given <see cref="Location"/>
+		/// </summary>
+		public byte DeviceID => deviceID;
+
+		/// <summary>
+		/// Create with given location and device ID
+		/// </summary>
+		/// <param name="location">The location of this <see cref="StorageLocation"/></param>
+		/// <param name="deviceID">The device ID of the given <paramref name="location"/></param>
+		public StorageLocation(LocationEnum location, byte deviceID)
+		{
+			this.location = location; this.deviceID = deviceID;
+		}
+
+		/// <summary>
+		/// Get the order for this <see cref="StorageLocation"/>'s <see cref="LocationEnum"/> if it represents a storage position in other memory types like <see cref="LocationEnum.OtherMemory_0"/>
+		/// </summary>
+		/// <returns>0 if this is not a memory of other types, otherwise the order for this <see cref="StorageLocation"/>'s <see cref="LocationEnum"/></returns>
+		public byte OrderOfOtherMemoryType()
+		{
+			if (this.location < LocationEnum.OtherMemory_0)
+				return 0;
+			return this.location - LocationEnum.OtherMemory_0;
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="StorageLocation"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		public bool Equals(StorageLocation other)
+		{
+			return this.location == other.location && this.deviceID == other.deviceID;
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		public override bool Equals(object obj)
+		{
+			return obj is StorageLocation location1 && Equals(location1);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StorageLocation"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(this.location, this.deviceID);
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(StorageLocation left, StorageLocation right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(StorageLocation left, StorageLocation right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		private static readonly Dictionary<LocationEnum, string> static_OtherMemoryNames = new Dictionary<LocationEnum, string>();
+
+		/// <summary>
+		/// Set the name used for <see cref="ToString"/> of this if it represents a storage position in other memory types like <see cref="LocationEnum.OtherMemory_0"/>
+		/// </summary>
+		/// <param name="location">the <see cref="LocationEnum"/> of a storage position in other memory types</param>
 		/// <param name="name">the name as a <see cref="string"/> to set; notice that all the spaces will be replaced by '_'</param>
 		/// <returns>success or not</returns>
-		public static bool SetOtherMemoryName(this StorageLocation position, string name)
+		public static bool SetOtherMemoryName(LocationEnum location, string name)
 		{
-			if (position < StorageLocation.OtherMemory_1 || !position.IsPureFlag())
+			if (location < LocationEnum.OtherMemory_0)
 				return false;
-			_otherMemoryNames[position] = name.Replace(' ', '_');
+			static_OtherMemoryNames[location] = name.Replace(' ', '_');
 			return true;
 		}
 
 		/// <summary>
-		/// Check whether the given <see cref="StorageLocation"/> is a pure flag
+		/// Return the string representation of this <see cref="StorageLocation"/>
 		/// </summary>
-		/// <param name="position">the <see cref="StorageLocation"/></param>
-		/// <returns>true for pure flag <paramref name="position"/></returns>
-		public static bool IsPureFlag(this StorageLocation position)
+		/// <returns>the string representation of this <see cref="StorageLocation"/></returns>
+		public override string ToString()
 		{
-			return ((int)position).IsPowerOfTwo();
+			return this.location switch
+			{
+				LocationEnum.CpuMemory => "CPU_Memory",
+				LocationEnum.GpuMemory => "GPU_Memory",
+				_ => static_OtherMemoryNames.GetValueOrDefault(this.location) ?? $"Other_Device_Memory_Order_{this.OrderOfOtherMemoryType()}",
+			} + $"(ID={this.deviceID})";
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// The struct of a pointer at a certain unmanaged memory block
+	/// </summary>
+	/// <remarks>This struct <b>does not</b> respond for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly struct StoragePointer : IEquatable<StoragePointer>
+	{
+		#region basic
+		private readonly StorageLocation location;
+
+		private readonly IntPtr pointer;
+
+		private readonly ulong length;
+
+		/// <summary>
+		/// The <see cref="StorageLocation"/> of this <see cref="StoragePointer"/>
+		/// </summary>
+		public StorageLocation Location => location;
+
+		/// <summary>
+		/// The raw pointer of this <see cref="StoragePointer"/>
+		/// </summary>
+		public IntPtr Pointer => pointer;
+
+		/// <summary>
+		/// The <b>unchecked</b> length of this <see cref="StoragePointer"/>
+		/// </summary>
+		public ulong Length => length;
+
+		/// <summary>
+		/// Create with given location, pointer and length
+		/// </summary>
+		/// <param name="location">The location of this <see cref="StorageLocation"/></param>
+		/// <param name="pointer">The pointer at the given <paramref name="location"/></param>
+		/// <param name="length">The length of the given <paramref name="pointer"/></param>
+		public StoragePointer(StorageLocation location, IntPtr pointer, ulong length)
+		{
+			this.location = location; this.pointer = pointer; this.length = length;
 		}
 
 		/// <summary>
-		/// Get the ID (order) for the given flag <see cref="StorageLocation"/> if it represents a storage position in other memory types like <see cref="StorageLocation.OtherMemory_1"/>
+		/// Create with given location and pointer
 		/// </summary>
-		/// <param name="position">the flag <see cref="StorageLocation"/> of a storage position in other memory types</param>
-		/// <returns>-1 if <paramref name="position"/> is not a flag or it is not a memory of other types</returns>
-		public static int OtherMemoryTypeID(this StorageLocation position)
+		/// <param name="location">The location of this <see cref="StorageLocation"/></param>
+		/// <param name="pointer">The pointer at the given <paramref name="location"/></param>
+		/// <param name="length">The length of the given <paramref name="pointer"/></param>
+		public unsafe StoragePointer(StorageLocation location, void* pointer, ulong length) : this(location, new IntPtr(pointer), length) { }
+
+		/// <summary>
+		/// Create with given <see cref="StoragePointer"/> <paramref name="storage"/> and <paramref name="offset"/> to the <paramref name="storage"/>'s <see cref="Pointer"/>
+		/// </summary>
+		/// <param name="storage">The <see cref="StoragePointer"/> to copy info from</param>
+		/// <param name="offset">The offset to the <paramref name="storage"/>'s <see cref="Pointer"/></param>
+		public StoragePointer(StoragePointer storage, long offset) : this(storage.location, new IntPtr(storage.pointer.ToInt64() + offset), offset >= 0 ? storage.length - (ulong)offset : storage.length + ((ulong)-offset)) { }
+
+		/// <summary>
+		/// Create with given <see cref="StoragePointer"/> <paramref name="storage"/> and new <see cref="Length"/>
+		/// </summary>
+		/// <param name="storage">The <see cref="StoragePointer"/> to copy info from</param>
+		/// <param name="newLength">The new <see cref="Length"/></param>
+		public StoragePointer(StoragePointer storage, ulong newLength) : this(storage.location, storage.pointer, newLength) { }
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="StoragePointer"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		public bool Equals(StoragePointer other)
 		{
-			if (position < StorageLocation.OtherMemory_1 || !position.IsPureFlag())
-				return -1;
-			int id = ((int)position).Log2() - 1;
-			return id;
+			return this.location == other.location && this.pointer == other.pointer;
 		}
 
 		/// <summary>
-		/// Decompose the given <see cref="StorageLocation"/> to flags
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
 		/// </summary>
-		/// <param name="position">the <see cref="StorageLocation"/></param>
-		/// <returns>the flags in <see cref="StorageLocation"/></returns>
-		public static StorageLocation[] Decompose(this StorageLocation position)
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		public override bool Equals(object obj)
 		{
-			int pos = (int)position;
-			sbyte max = pos.Log2();
-			List<StorageLocation> flags = new List<StorageLocation>(max) { (StorageLocation)max };
-			while ((pos = pos.ResetBit(max)) != 0)
-			{
-				max = pos.Log2();
-				flags.Add((StorageLocation)max);
-			}
-			return flags.ToArray();
+			return obj is StoragePointer storage1 && Equals(storage1);
 		}
 
 		/// <summary>
-		/// Get the string representation of a given <see cref="StorageLocation"/>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StoragePointer"/>.
 		/// </summary>
-		/// <param name="position">the <see cref="StorageLocation"/></param>
-		/// <returns>the string representation of <paramref name="position"/></returns>
-		public static string StringRepr(this StorageLocation position)
+		/// <returns>The hash code</returns>
+		public override int GetHashCode()
 		{
-			if (position == StorageLocation.URI)
-			{
-				return "URI";
-			}
-			else if (position.IsPureFlag())
-			{
-				return position switch
-				{
-					StorageLocation.CpuMemory => "CPU_Memory",
-					StorageLocation.GpuMemory => "GPU_Memory",
-					_ => _otherMemoryNames.GetValueOrDefault(position) ?? $"Other_Device_Memory(ID={position.OtherMemoryTypeID()})",
-				};
-			}
-			else
-			{
-				return string.Join(" & ", position.Decompose().Select(p => p.StringRepr()).ToArray());
-			}
+			return HashCode.Combine(this.location, this.pointer);
 		}
 
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(StoragePointer left, StoragePointer right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(StoragePointer left, StoragePointer right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region to string
+		/// <summary>
+		/// Return the string representation of this <see cref="StoragePointer"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="StoragePointer"/></returns>
+		public override string ToString()
+		{
+			return $"0x{this.pointer:X} on {this.location}";
+		}
+		#endregion
+
+		#region operator
+		/// <summary>
+		/// Get the managed pointer (a <c>ref <typeparamref name="T"/></c>) of this <see cref="StoragePointer"/> of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <returns>the managed pointer (a <c>ref <typeparamref name="T"/></c>) of this <see cref="StoragePointer"/></returns>
+		public unsafe ref T AsManagedPointer<T>() where T : unmanaged => ref Unsafe.AsRef<T>(this.pointer.ToPointer());
+
+		/// <summary>
+		/// Get the <see cref="Span{T}"/> representation of this <see cref="StoragePointer"/> of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <returns>the <see cref="Span{T}"/> representation of this <see cref="StoragePointer"/></returns>
+		public unsafe Span<T> AsSpan<T>() where T : unmanaged => new Span<T>(this.pointer.ToPointer(), checked((int)this.length));
+
+		/// <summary>
+		/// Implicit convert <see cref="StoragePointer"/> to <see cref="IntPtr"/>
+		/// </summary>
+		/// <param name="storage">the <see cref="StoragePointer"/> to be converted</param>
+		/// <returns>The <see cref="IntPtr"/> of the start memory position of <paramref name="storage"/></returns>
+		public static implicit operator IntPtr(StoragePointer storage) => storage.pointer;
+
+		/// <summary>
+		/// Add offset (in bytes) to a <see cref="StoragePointer"/> to get another.
+		/// </summary>
+		/// <param name="storage">the <see cref="StoragePointer"/></param>
+		/// <param name="offset">the offset of type <see cref="long"/></param>
+		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		public static StoragePointer operator +(StoragePointer storage, long offset) => new StoragePointer(storage, offset);
+
+		/// <summary>
+		/// Subtract offset (in bytes) to a <see cref="StoragePointer"/> to get another.
+		/// </summary>
+		/// <param name="storage">the <see cref="StoragePointer"/></param>
+		/// <param name="offset">the offset of type <see cref="long"/></param>
+		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		public static StoragePointer operator -(StoragePointer storage, long offset) => new StoragePointer(storage, -offset);
+
+		/// <summary>
+		/// Get the pointer's difference (in bytes) of two <see cref="StoragePointer"/>s.
+		/// </summary>
+		/// <param name="left">the left <see cref="StoragePointer"/></param>
+		/// <param name="right">the right <see cref="StoragePointer"/></param>
+		/// <returns>If <paramref name="left"/> and <paramref name="right"/> have different <see cref="Location"/>s, return <see cref="long.MinValue"/>; otherwise, return a <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
+		public static long operator -(StoragePointer left, StoragePointer right) => left.location != right.location ? long.MinValue : left.pointer.ToInt64() - right.pointer.ToInt64();
+		#endregion
+	}
+	#endregion
+
+
+
+	/// <summary>
+	/// The static class that contains several extension methods for <see cref="StorageLocation"/>
+	/// </summary>
+	public static class StorageExtension
+	{
 		// TODO: edit CheckOnHost
 		internal static bool CheckOnHost<T>(params Arrays.ValueArray<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
 		{
@@ -166,351 +372,95 @@ namespace Althea.Memory
 		}
 
 	}
-	#endregion
 
 
-	#region storage interfaces
+	#region base storage class
 	/// <summary>
-	/// The interface for a storage of any type at any location
+	/// The abstract wrapper class of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s).
 	/// </summary>
-	public interface IStorage : IDisposable
-	{
-		/// <summary>
-		/// The <see cref="StorageLocation"/> of this storage
-		/// </summary>
-		StorageLocation Location { get; }
-
-		/// <summary>
-		/// The raw pointer as a <see cref="IntPtr"/>
-		/// </summary>
-		IntPtr Ptr { get; }
-
-		/// <summary>
-		/// The length of this pointer's underlying array in bytes
-		/// </summary>
-		long LengthInBytes { get; }
-	}
-
-	/// <summary>
-	/// The interface for a storage of data type <typeparamref name="T"/> at any location
-	/// </summary>
-	/// <typeparam name="T">any unmanaged struct</typeparam>
-	public interface IStorage<T> : IStorage where T : unmanaged
-	{
-		/// <summary>
-		/// The C# managed pointer as a <c>ref <typeparamref name="T"/></c>
-		/// </summary>
-		ref T Pointer { get; }
-
-		/// <summary>
-		/// The length of this pointer's underlying array in <typeparamref name="T"/> rather than bytes
-		/// </summary>
-		long Length { get; }
-
-		/// <summary>
-		/// Get the size of <typeparamref name="T"/> in memory in bytes
-		/// </summary>
-		public static unsafe int SizeOfT { get; } = sizeof(T);
-
-		/// <summary>
-		/// Make a reference <see cref="IStorage{T}"/> with the same pointer as this one while <see cref="Length"/> is changed to <paramref name="newLength"/>
-		/// </summary>
-		/// <param name="newLength">the new length of referenced <see cref="Storage{T}"/></param>
-		/// <returns>a referenced <see cref="IStorage{T}"/>with different <see cref="Length"/></returns>
-		IStorage<T> MakeReferenceWithSize(long newLength);
-
-		/// <summary>
-		/// Resize this <see cref="Storage{T}"/> <b>in-place</b>, if <c><paramref name="newLength"/> &lt; <see cref="Length"/></c>, the elements with larger offsets will be removed; otherwise, some new arbitrary elements will be attached to the end.
-		/// </summary>
-		/// <param name="newLength">the new length to resize to</param>
-		void Resize(long newLength);
-
-		/// <summary>
-		/// Convert this <see cref="IStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
-		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
-		/// <returns>a referenced <see cref="IStorage{TOut}"/></returns>
-		Storage<TOut> As<TOut>() where TOut : unmanaged;
-	}
-	#endregion
-
-
-	/// <summary>
-	/// The abstract wrapper class of raw device / host pointer <see cref="IntPtr"/>.
-	/// </summary>
-	/// <typeparam name="T">any unmanaged struct</typeparam>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
 	/// <remarks>I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
-	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class that inherits <see cref="ISwappablePointer"/> shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
+	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class(es) shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
-	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>> where T : unmanaged
+	public abstract class Storage<T> : IDisposable, IEquatable<Storage<T>>, IReadOnlyList<StoragePointer> where T : unmanaged
 	{
 		#region properties
 		/// <summary>
-		/// The raw pointer
-		/// </summary>
-		public abstract IntPtr Ptr { get; protected set; }
-
-		/// <summary>
-		/// The length of this pointer's underlying array in <typeparamref name="T"/>
-		/// </summary>
-		public abstract long Length { get; protected set; }
-
-		/// <summary>
-		/// The length of this pointer's underlying array in bytes
-		/// </summary>
-		public long LengthInBytes => this.Length * SizeOfT;
-
-		/// <summary>
-		/// This pointer is on host or device memory
-		/// </summary>
-		public abstract bool OnHost { get; protected set; }
-
-		/// <summary>
 		/// Get the size of <typeparamref name="T"/> in memory in bytes
 		/// </summary>
-		public static long SizeOfT { get; } = System.Runtime.InteropServices.Marshal.SizeOf(typeof(T));
-		#endregion
-
-		#region memory copy kind info
-		/// <summary>
-		/// Get the <see cref="MemoryCopyKind"/> for copying to another <see cref="Storage{T}"/>.
-		/// </summary>
-		/// <param name="another">the <see cref="Storage{T}"/> to copy to</param>
-		/// <returns>the corresponding <see cref="MemoryCopyKind"/></returns>
-		public MemoryCopyKind CopyToKind(Storage<T> another)
-		{
-			if (another is null || another.Ptr == default)
-				throw new ArgumentNullException(nameof(another));
-			return this.CopyToKind(another.OnHost);
-		}
+		public static unsafe int SizeOfT => sizeof(T);
 
 		/// <summary>
-		/// Get the <see cref="MemoryCopyKind"/> for copying to another position.
+		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
-		/// <param name="anotherOnHost">the position to copy to is on host memory or device</param>
-		/// <returns>the corresponding <see cref="MemoryCopyKind"/></returns>
-		public MemoryCopyKind CopyToKind(bool anotherOnHost)
-		{
-			return CopyKind(this.OnHost, anotherOnHost);
-		}
+		public virtual ulong Length => this.Sum(s => s.Length) / (ulong)SizeOfT;
 
 		/// <summary>
-		/// Get the <see cref="MemoryCopyKind"/> for copying from another position.
+		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		/// <param name="anotherOnHost">the position to copy from is on host memory or device</param>
-		/// <returns>the corresponding <see cref="MemoryCopyKind"/></returns>
-		public MemoryCopyKind CopyFromKind(bool anotherOnHost)
-		{
-			return CopyKind(anotherOnHost, this.OnHost);
-		}
+		public abstract int Count { get; }
 
-		private static MemoryCopyKind CopyKind(bool fromOnHost, bool toOnHost)
-		{
-			if (fromOnHost && toOnHost)
-				return MemoryCopyKind.HostToHost;
-			if (fromOnHost && !toOnHost)
-				return MemoryCopyKind.HostToDevice;
-			if (!fromOnHost && toOnHost)
-				return MemoryCopyKind.DeviceToHost;
-			if (!fromOnHost && !toOnHost)
-				return MemoryCopyKind.DeviceToDevice;
-			return MemoryCopyKind.Default;
-		}
+		/// <summary>
+		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
+		public abstract StoragePointer this[int index] { get; }
 		#endregion
 
 		#region dispose
 		/// <summary>
-		/// If this storage is disposed or not
+		/// Is this <see cref="Storage{T}"/> disposed or not
 		/// </summary>
-		protected bool Disposed { get; set; }
+		public bool Disposed { get; private set; } = false;
 
 		/// <summary>
-		/// Dispose method to release resources.
+		/// Dispose this storage
 		/// </summary>
 		public void Dispose()
 		{
 			this.Dispose(true);
+			this.Disposed = true;
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
-		/// The actual dispose method
+		/// The function that actually dispose this storage
 		/// </summary>
-		/// <param name="disposeManaged">dispose managed resource or not</param>
+		/// <param name="disposeManaged">dispose managed resources or not</param>
 		protected abstract void Dispose(bool disposeManaged);
 		#endregion
 
-		#region create
-		internal delegate Storage<T> DelegateCreateNew(long length, bool onHost = false);
-
-		internal delegate Storage<T> DelegateCreateNewWith(IntPtr ptr, long length, bool onHost = false);
-
-		internal delegate Storage<T> DelegateCreateReference(Storage<T> storage, long offset);
-
-		internal delegate Storage<T> DelegateCreateReferenceFull(ISwappablePointer root, long offsetInBytes, long length = -1);
-
-		private static readonly DelegateCreateNew CreateNew = DefaultStorageFactory.Singleton.CreateNew<T>;
-		private static readonly DelegateCreateNewWith CreateNewWith = DefaultStorageFactory.Singleton.CreateNewWith<T>;
-		private static readonly DelegateCreateReference CreateReference = DefaultStorageFactory.Singleton.CreateReference<T>;
-		private static readonly DelegateCreateReferenceFull CreateReferenceFull = DefaultStorageFactory.Singleton.CreateReferenceFull<T>;
-
-		static Storage()
+		#region enumerator
+		IEnumerator<StoragePointer> IEnumerable<StoragePointer>.GetEnumerator()
 		{
-			if (!(Settings.StorageFactory is null))
+			for (int i = 0; i < this.Count; i++)
 			{
-				if (Settings.StorageFactory is IStorageFactory factory)
-				{
-					CreateNew = factory.CreateNew<T>;
-					CreateNewWith = factory.CreateNewWith<T>;
-					CreateReference = factory.CreateReference<T>;
-					CreateReferenceFull = factory.CreateReferenceFull<T>;
-				}
-			}
-			else if (!(Settings.SwappableStorage is null))
-			{
-				{
-					var @params = new[] { Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = Settings.SwappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
-					var lambda = Expression.Lambda<DelegateCreateNew>(Expression.New(ctor, @params), @params);
-					CreateNew = lambda.Compile();
-				}
-				{
-					var @params = new[] { Expression.Parameter(typeof(IntPtr)), Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = Settings.SwappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
-					var lambda = Expression.Lambda<DelegateCreateNewWith>(Expression.New(ctor, @params), @params);
-					CreateNewWith = lambda.Compile();
-				}
-			}
-			else if (!(Settings.UnswappableStorage is null))
-			{
-				{
-					var @params = new[] { Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = Settings.UnswappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
-					var lambda = Expression.Lambda<DelegateCreateReference>(Expression.New(ctor, @params), @params);
-					CreateReference = lambda.Compile();
-				}
-				{
-					var @params = new[] { Expression.Parameter(typeof(IntPtr)), Expression.Parameter(typeof(long)), Expression.Parameter(typeof(bool)) };
-					var ctor = Settings.UnswappableStorage.GetConstructor(Array.ConvertAll(@params, p => p.Type));
-					var lambda = Expression.Lambda<DelegateCreateReferenceFull>(Expression.New(ctor, @params), @params);
-					CreateReferenceFull = lambda.Compile();
-				}
+				yield return this[i];
 			}
 		}
-
-		/// <summary>
-		/// Create a new <see cref="Storage{T}"/> and allocate memory of given size <paramref name="length"/> on memory position <paramref name="onHost"/>.
-		/// </summary>
-		/// <param name="length">the size in <typeparamref name="T"/> of pointer to create</param>
-		/// <param name="onHost">the memory position, on host (CPU) memory or device (GPU) memory</param>
-		/// <returns>the created <see cref="Storage{T}"/></returns>
-		public static Storage<T> Create(long length, bool onHost = false)
-		{
-			return CreateNew(length, onHost);
-		}
-
-		/// <summary>
-		/// Create a new <see cref="Storage{T}"/> with given pointer <paramref name="ptr"/>, size <paramref name="length"/> and memory position <paramref name="onHost"/>.
-		/// </summary>
-		/// <param name="ptr">the allocate pointer as a <see cref="IntPtr"/></param>
-		/// <param name="length">the size in <typeparamref name="T"/> of pointer to create</param>
-		/// <param name="onHost">the memory position, on host (CPU) memory or device (GPU) memory</param>
-		/// <returns>the created <see cref="Storage{T}"/></returns>
-		public static Storage<T> Create(IntPtr ptr, long length, bool onHost = false)
-		{
-			return CreateNewWith(ptr, length, onHost);
-		}
+		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<StoragePointer>)this).GetEnumerator();
 		#endregion
 
-		#region reference
+		#region other methods
 		/// <summary>
-		/// <b>In-place</b> move this storage to the other memory
-		/// </summary>
-		public abstract void ToOtherMemory();
-
-		/// <summary>
-		/// Replace this <see cref="Storage{T}"/> by <paramref name="another"/> one and destroy <paramref name="another"/> afterwards.
-		/// </summary>
-		/// <param name="another">the <see cref="Storage{T}"/> to replace</param>
-		/// <remarks>only works when both <see cref="Storage{T}"/>s are <see cref="ISwappablePointer"/>s</remarks>
-		public void ReplaceBy(Storage<T> another)
-		{
-			if (!(this is ISwappablePointer) || !(another is ISwappablePointer))
-				throw new InvalidOperationException();
-			// release original unmanaged resources of this one
-			this.Dispose();
-			// re-register disposition of this one
-			this.Disposed = false;
-			GC.ReRegisterForFinalize(this);
-			// change pointer of this one
-			this.Ptr = another.Ptr;
-			this.Length = another.Length;
-			this.OnHost = another.OnHost;
-			// "dispose" another one
-			another.Disposed = true;
-			AutoSwapMemory.NotifyDisposeStorage((ISwappablePointer)another);
-		}
-
-		/// <summary>
-		/// Create a <see cref="Storage{T}"/> as a reference of <paramref name="another"/>
-		/// </summary>
-		/// <param name="another">another <see cref="Storage{T}"/> to refer</param>
-		/// <returns>the created <see cref="StorageView{T}"/></returns>
-		/// <remarks>if this is a <see cref="ISwappablePointer"/>, this will be disposed</remarks>
-		public Storage<T> MakeRefOf(Storage<T> another)
-		{
-			if (this is ISwappablePointer at)
-			{
-				this.Dispose();
-				AutoSwapMemory.NotifyDisposeStorage(at);
-			}
-			return CreateReferenceFull(another.GetRoot(), another.GetOffset(), another.Length);
-		}
-		#endregion
-
-		#region resize
-		/// <summary>
-		/// Get the root <see cref="ISwappablePointer"/> of this <see cref="Storage{T}"/> (this one if it is <see cref="ISwappablePointer"/>).
-		/// </summary>
-		/// <returns>the root <see cref="ISwappablePointer"/> of this <see cref="Storage{T}"/></returns>
-		public ISwappablePointer GetRoot() => this is ISwappablePointer at ? at : ((IUnswappablePointer)this).Root;
-
-		/// <summary>
-		/// Get the offset in bytes of this <see cref="Storage{T}"/> (zero if it is <see cref="ISwappablePointer"/>).
-		/// </summary>
-		/// <returns>the offset in bytes of this <see cref="Storage{T}"/></returns>
-		public long GetOffset() => this is ISwappablePointer ? 0 : ((IUnswappablePointer)this).OffsetInBytes;
-
-		/// <summary>
-		/// Make a reference <see cref="Storage{T}"/> with the same <see cref="Ptr"/> as this one while <see cref="Length"/> is changed to <paramref name="newLength"/>
+		/// Make a referenced <see cref="Storage{T}"/> with the same pointer as this one while <see cref="Length"/> is changed to <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="newLength">the new length of referenced <see cref="Storage{T}"/></param>
-		/// <returns>a referenced <see cref="Storage{T}"/> (<see cref="IUnswappablePointer"/>) with different <see cref="Length"/></returns>
-		public Storage<T> MakeSize(long newLength)
+		/// <returns>a referenced <see cref="Storage{T}"/> with different <see cref="Length"/></returns>
+		public Storage<T> MakeReferenceOfSize(ulong newLength)
 		{
 			if (newLength == this.Length)
 				return this;
-			return CreateReferenceFull(this.GetRoot(), this.GetOffset(), newLength);
+			return new ReferenceStorage<T>(this, newLength: newLength);
 		}
 
 		/// <summary>
-		/// Resize this <see cref="Storage{T}"/> <b>in-place</b>, if <c><paramref name="newLength"/> &lt; <see cref="Length"/></c>, the elements with larger offsets will be removed; otherwise, some new arbitrary elements will be attached to the end.
-		/// </summary>
-		/// <param name="newLength">the new length to resize to</param>
-		/// <exception cref="InvalidOperationException">if this is an <see cref="IUnswappablePointer"/></exception>
-		public abstract void Resize(long newLength);
-
-		/// <summary>
-		/// Convert this <see cref="Storage{T}"/> to another one with different type <typeparamref name="TOut"/>
+		/// Convert this <see cref="Storage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">the output data type</typeparam>
-		/// <returns>a referenced <see cref="Storage{TOut}"/> (<see cref="IUnswappablePointer"/>)</returns>
-		public Storage<TOut> As<TOut>() where TOut : struct
-		{
-			if (this.LengthInBytes % Storage<TOut>.SizeOfT != 0)
-				throw new ArgumentException(Resource.CannotDivide);
-			AutoSwapMemory.NotifyUsage(this.GetRoot());
-			return Storage<TOut>.CreateReferenceFull(this.GetRoot(), this.GetOffset());
-		}
+		/// <returns>a referenced <see cref="Storage{TOut}"/></returns>
+		public abstract Storage<TOut> As<TOut>() where TOut : unmanaged;
 		#endregion
 
 		#region equality
@@ -529,23 +479,13 @@ namespace Althea.Memory
 		/// </summary>
 		/// <param name="obj">another object</param>
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public bool Equals(Storage<T> obj)
-		{
-			if (ReferenceEquals(this, obj))
-				return true;
-			if (obj is null)
-				return false;
-			return this == obj;
-		}
+		public abstract bool Equals(Storage<T> obj);
 
 		/// <summary>
 		/// Get the hash code of this <see cref="Storage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.Ptr);
-		}
+		public abstract override int GetHashCode();
 
 		/// <summary>
 		/// Equality operator
@@ -559,7 +499,7 @@ namespace Althea.Memory
 				return true;
 			if ((left is null) != (right is null))
 				return false;
-			return left.Ptr == right.Ptr;
+			return left.Equals(right);
 		}
 
 		/// <summary>
@@ -569,102 +509,6 @@ namespace Althea.Memory
 		/// <param name="right"></param>
 		/// <returns>not-equals or equals</returns>
 		public static bool operator !=(Storage<T> left, Storage<T> right) => !(left == right);
-
-		/// <summary>
-		/// Check if this <see cref="Storage{T}"/> shares some memory with <paramref name="b"/>
-		/// </summary>
-		/// <param name="b">another <see cref="Storage{T}"/> to check</param>
-		/// <returns>shares or not</returns>
-		public bool ShareMemoryWith(Storage<T> b)
-		{
-			var a = this;
-			if (a.OnHost != b.OnHost)
-				return false;
-			if (a is ISwappablePointer aa1 && b is ISwappablePointer bb1)
-				return aa1.Ptr == bb1.Ptr;
-			else if (a is IUnswappablePointer aa2 && b is ISwappablePointer bb2)
-				return aa2.Root.Ptr == bb2.Ptr;
-			else if (a is ISwappablePointer aa3 && b is IUnswappablePointer bb3)
-				return aa3.Ptr == bb3.Root.Ptr;
-			else if (a is IUnswappablePointer aa4 && b is IUnswappablePointer bb4)
-				return aa4.Root.Ptr == bb4.Root.Ptr;
-			else
-				throw new NotSupportedException();
-		}
-		#endregion
-
-		#region operator
-		/// <summary>
-		/// Add offset (in size of <typeparamref name="T"/>) to a <see cref="Storage{T}"/> to get another.
-		/// </summary>
-		/// <param name="storage">the pointer of type <see cref="Storage{T}"/></param>
-		/// <param name="offset">the offset of type <see cref="long"/></param>
-		/// <returns>a <see cref="Storage{T}"/> (<see cref="IUnswappablePointer"/>) with <paramref name="offset"/> added to the pointer</returns>
-		public static Storage<T> operator +(Storage<T> storage, long offset)
-		{
-			if (storage is null)
-				throw new ArgumentNullException(nameof(storage));
-
-			AutoSwapMemory.NotifyUsage(storage.GetRoot());
-			return CreateReference(storage, offset);
-		}
-
-		/// <summary>
-		/// Subtract an offset (in size of <typeparamref name="T"/>) from a <see cref="Storage{T}"/> to get another.
-		/// </summary>
-		/// <param name="storage">the pointer of type <see cref="Storage{T}"/></param>
-		/// <param name="offset">the offset of type <see cref="long"/></param>
-		/// <returns>a <see cref="IntPtr"/> with <paramref name="offset"/> subtracted</returns>
-		public static Storage<T> operator -(Storage<T> storage, long offset) => storage + (-offset);
-
-		/// <summary>
-		/// Calculate the difference of two <see cref="Storage{T}"/>s (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
-		/// </summary>
-		/// <param name="lhs">the left operator pointer of type <see cref="Storage{T}"/></param>
-		/// <param name="rhs">the right operator pointer of type <see cref="Storage{T}"/></param>
-		/// <returns>The difference as <see cref="long"/> (counted in <typeparamref name="T"/>)</returns>
-		public static long operator -(Storage<T> lhs, Storage<T> rhs) => lhs - (IStorage)rhs;
-
-		/// <summary>
-		/// Calculate the difference of a <see cref="Storage{T}"/> and a <see cref="IStorage"/> (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
-		/// </summary>
-		/// <param name="lhs">the left operator pointer of type <see cref="Storage{T}"/></param>
-		/// <param name="rhs">the right operator pointer of type <see cref="Storage{T}"/></param>
-		/// <returns>The difference as <see cref="long"/> (counted in <typeparamref name="T"/>)</returns>
-		public static long operator -(Storage<T> lhs, IStorage rhs)
-		{
-			if (lhs is null)
-				throw new ArgumentNullException(nameof(lhs));
-			if (rhs is null)
-				throw new ArgumentNullException(nameof(rhs));
-
-			AutoSwapMemory.NotifyUsage(lhs.GetRoot());
-			AutoSwapMemory.NotifyUsage((rhs as Storage<T>)?.GetRoot() ?? (rhs as ISwappablePointer));
-			long diff = lhs.Ptr.ToInt64() - rhs.Ptr.ToInt64();
-			if (diff % SizeOfT != 0)
-				throw new ArgumentException(Resource.CannotDivide);
-			return diff / SizeOfT;
-		}
-
-		/// <summary>
-		/// Calculate the difference of a <see cref="IStorage"/> and a<see cref="Storage{T}"/> (<c><paramref name="lhs"/> - <paramref name="rhs"/></c>), in <typeparamref name="T"/> rather bytes.
-		/// </summary>
-		/// <param name="lhs">the left operator pointer of type <see cref="Storage{T}"/></param>
-		/// <param name="rhs">the right operator pointer of type <see cref="Storage{T}"/></param>
-		/// <returns>The difference as <see cref="long"/> (counted in <typeparamref name="T"/>)</returns>
-		public static long operator -(IStorage lhs, Storage<T> rhs) => -(rhs - lhs);
-
-		/// <summary>
-		/// Implicit convert <see cref="Storage{T}"/> to <see cref="IntPtr"/>
-		/// </summary>
-		/// <param name="storage">the <see cref="Storage{T}"/> to be converted</param>
-		public static implicit operator IntPtr(Storage<T> storage)
-		{
-			if (storage is null)
-				return default;
-			AutoSwapMemory.NotifyUsage(storage.GetRoot());
-			return storage.Ptr;
-		}
 		#endregion
 
 		#region string
@@ -675,402 +519,181 @@ namespace Althea.Memory
 		/// <returns>string representation</returns>
 		public override string ToString()
 		{
-			return $"0x{this.ToHexString()} on {(this.OnHost ? "host" : "device")}{(this.Disposed ? " (disposed)" : "")} [type={typeof(T).Name}, length={this.Length}]";
+			return $"{{{string.Join(", ", this)}}} [type={typeof(T).Name}, total_length={this.Length}]";
 		}
+		#endregion
+
+		#region operator
+		/// <summary>
+		/// Add offset (in bytes) to a <see cref="Storage{T}"/> to get another.
+		/// </summary>
+		/// <param name="storage">the <see cref="Storage{T}"/></param>
+		/// <param name="offset">the offset of type <see cref="long"/></param>
+		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		public static Storage<T> operator +(Storage<T> storage, long offset) => new ReferenceStorage<T>(storage, offset);
 
 		/// <summary>
-		/// Get the hex string representation of <see cref="Ptr"/> of this <see cref="Storage{T}"/>
+		/// Subtract offset (in bytes) to a <see cref="Storage{T}"/> to get another.
 		/// </summary>
-		/// <returns>the hex string</returns>
-		public string ToHexString() => this.Ptr.ToString("X");
+		/// <param name="storage">the <see cref="Storage{T}"/></param>
+		/// <param name="offset">the offset of type <see cref="long"/></param>
+		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		public static Storage<T> operator -(Storage<T> storage, long offset) => new ReferenceStorage<T>(storage, -offset);
 		#endregion
 	}
 
-
-	#region storage factory
 	/// <summary>
-	/// The interface for factories of <see cref="Storage{T}"/>
+	/// The storage class that reference to a <see cref="Storage{T}"/>
 	/// </summary>
-	public interface IStorageFactory
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public sealed class ReferenceStorage<T> : Storage<T> where T : unmanaged
 	{
-		/// <summary>
-		/// Create a new <see cref="Storage{T}"/> and allocate memory of given size <paramref name="length"/> on memory position <paramref name="onHost"/>.
-		/// </summary>
-		/// <param name="length">the size in <typeparamref name="T"/> of pointer to create</param>
-		/// <param name="onHost">the memory position, on host (CPU) memory or device (GPU) memory</param>
-		/// <returns>the created <see cref="Storage{T}"/>, shall be a <see cref="ISwappablePointer"/></returns>
-		Storage<T> CreateNew<T>(long length, bool onHost = false) where T : struct;
+		#region basic
+		private readonly Storage<T> reference;
+
+		private readonly long totalOffset;
+
+		private readonly int start;
+
+		private readonly ulong startOffsetBytes;
+		private readonly ulong endLengthBytes;
 
 		/// <summary>
-		/// Create a new <see cref="Storage{T}"/> with given pointer <paramref name="ptr"/>, size <paramref name="length"/> and memory position <paramref name="onHost"/>.
+		/// Override <see cref="Storage{T}.Length"/> to show the new presenting length
 		/// </summary>
-		/// <param name="ptr">the allocate pointer as a <see cref="IntPtr"/></param>
-		/// <param name="length">the size in <typeparamref name="T"/> of pointer to create</param>
-		/// <param name="onHost">the memory position, on host (CPU) memory or device (GPU) memory</param>
-		/// <returns>the created <see cref="Storage{T}"/>, shall be a <see cref="ISwappablePointer"/></returns>
-		Storage<T> CreateNewWith<T>(IntPtr ptr, long length, bool onHost = false) where T : struct;
+		public override ulong Length { get; }
 
 		/// <summary>
-		/// Create a referenced <see cref="Storage{T}"/> from a general <see cref="Storage{T}"/> as origin and <paramref name="offset"/> as offset.
+		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
-		/// <param name="storage">the <see cref="Storage{T}"/> to refer to</param>
-		/// <param name="offset">the offset to pointer of <paramref name="storage"/></param>
-		/// <returns>the created <see cref="Storage{T}"/>, shall be a <see cref="IUnswappablePointer"/></returns>
-		Storage<T> CreateReference<T>(Storage<T> storage, long offset) where T : struct;
+		/// <param name="storage">the <see cref="Storage{T}"/> to be referenced</param>
+		/// <param name="offset">the offset as a <see cref="long"/></param>
+		/// <param name="newLength">the new presenting length, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		public ReferenceStorage(Storage<T> storage, long offset = 0, ulong newLength = 0)
+		{
+			// dereference first
+			while (storage is ReferenceStorage<T> @ref)
+			{
+				storage = @ref.reference;
+				offset += @ref.totalOffset;
+			}
+			// check
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset));
+			if (newLength == 0)
+				newLength = storage.Length - (ulong)offset;
+			else if (storage.Length != (ulong)offset + newLength)
+				throw new ArgumentOutOfRangeException(nameof(offset));
+			// set offsets
+			ulong totalOffset = (ulong)offset;
+			bool setStart = true;
+			for (int i = 0; i < storage.Count; i++)
+			{
+				ulong lengthOfI = storage[i].Length / (ulong)SizeOfT;
+				if (totalOffset < lengthOfI)
+				{
+					if (setStart)
+					{
+						this.start = i; this.startOffsetBytes = totalOffset * (ulong)SizeOfT;
+						totalOffset += newLength;
+					}
+					else
+					{
+						this.endLengthBytes = totalOffset * (ulong)SizeOfT;
+						break;
+					}
+				}
+				else
+				{
+					totalOffset -= lengthOfI;
+				}
+			}
+		}
+
+		private ReferenceStorage(Storage<T> storage, long totalOffset, int start, ulong startOffset, ulong endLength)
+		{
+			this.reference = storage; this.totalOffset = totalOffset; this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
+		/// </summary>
+		/// <param name="disposeManaged">dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged)
+		{
+			// since this is a reference, we shall do nothing
+		}
 
 		/// <summary>
-		/// Create a referenced <see cref="Storage{T}"/> with given <paramref name="root"/>, <paramref name="offsetInBytes"/> and presenting <paramref name="length"/>.
+		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
-		/// <param name="root">the root storage as an <see cref="ISwappablePointer"/></param>
-		/// <param name="offsetInBytes">the offset in bytes to the pointer of <paramref name="root"/></param>
-		/// <param name="length">the presenting length of created <see cref="Storage{T}"/>, negative means auto calculate</param>
-		/// <returns>the created <see cref="Storage{T}"/>, shall be a <see cref="IUnswappablePointer"/></returns>
-		Storage<T> CreateReferenceFull<T>(ISwappablePointer root, long offsetInBytes, long length = -1) where T : struct;
-	}
-
-	internal readonly struct DefaultStorageFactory : IStorageFactory
-	{
-		internal static readonly DefaultStorageFactory Singleton = new DefaultStorageFactory();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Storage<T> CreateNew<T>(long length, bool onHost = false) where T : struct
-		{
-			return new ActualStorage<T>(length, onHost);
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
+		public override StoragePointer this[int index] {
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				StoragePointer pointer = this.reference[index - start];
+				if (index == 0)
+				{
+					pointer = new StoragePointer(pointer, offset: (long)this.startOffsetBytes);
+				}
+				else if (index == Count - 1)
+				{
+					pointer = new StoragePointer(pointer, newLength: this.endLengthBytes);
+				}
+				return pointer;
+			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Storage<T> CreateNewWith<T>(IntPtr ptr, long length, bool onHost = false) where T : struct
+		/// <summary>
+		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => this.reference.Count - this.start;
+
+		/// <summary>
+		/// Convert this <see cref="ReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>a referenced <see cref="ReferenceStorage{TOut}"/></returns>
+		public override ReferenceStorage<TOut> As<TOut>()
 		{
-			return new ActualStorage<T>(ptr, length, onHost);
+			long offset = this.totalOffset * SizeOfT;
+			if (offset % Storage<TOut>.SizeOfT != 0)
+				throw new InvalidCastException();
+			offset /= Storage<TOut>.SizeOfT;
+			return new ReferenceStorage<TOut>(this.reference.As<TOut>(), offset, this.start, this.startOffsetBytes, this.endLengthBytes);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Storage<T> CreateReference<T>(Storage<T> storage, long offset) where T : struct
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">another object</param>
+		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		public override bool Equals(Storage<T> obj)
 		{
-			return new StorageView<T>(storage, offset);
+			if (obj is not null && obj is ReferenceStorage<T> @ref)
+			{
+				return this.reference == @ref.reference && this.start == @ref.start && this.startOffsetBytes == @ref.startOffsetBytes && this.endLengthBytes == @ref.endLengthBytes;
+			}
+			return false;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Storage<T> CreateReferenceFull<T>(ISwappablePointer root, long offsetInBytes, long length = -1) where T : struct
-		{
-			return new StorageView<T>(root, offsetInBytes, length);
-		}
+		/// <summary>
+		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
+		/// </summary>
+		/// <returns>the hash code</returns>
+		public override int GetHashCode() => HashCode.Combine(this.reference, this.start, this.startOffsetBytes, this.endLengthBytes);
+		#endregion
 	}
 	#endregion
 
 
-	/// <summary>
-	/// The implementation of <see cref="Storage{T}"/> and <see cref="ISwappablePointer"/>
-	/// </summary>
-	/// <typeparam name="T">any sequential memory layout struct</typeparam>
-	internal sealed class ActualStorage<T> : Storage<T>, ISwappablePointer where T : struct
-	{
-		#region properties
-		/// <summary>
-		/// The raw pointer
-		/// </summary>
-		public override IntPtr Ptr { get; protected set; }
+	#region actual storage class
 
-		/// <summary>
-		/// The length of this pointer's underlying array in <typeparamref name="T"/>
-		/// </summary>
-		public override long Length { get; protected set; }
-
-		/// <summary>
-		/// This pointer is on host or device memory
-		/// </summary>
-		public override bool OnHost { get; protected set; }
-
-		/// <summary>
-		/// The initial location (when not swapped yet) of this pointer
-		/// </summary>
-		public bool DirectOnHost { get; }
-
-		/// <summary>
-		/// The time tick when this pointer was last used.
-		/// </summary>
-		long ISwappablePointer.LastUsedTime { get; set; } = AutoSwapMemory.timer.ElapsedTicks;
-		#endregion
-
-		#region initialize
-		/// <summary>
-		/// Initialize with a exist pointer.
-		/// </summary>
-		/// <param name="ptr">pre-allocated <see cref="IntPtr"/></param>
-		/// <param name="length">length of the array</param>
-		/// <param name="onHost">allocate the pointer on host or on device, default on device</param>
-		public ActualStorage(IntPtr ptr, long length, bool onHost = false)
-		{
-			if (this.Length < 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Resource.ParaCannotNegative);
-			this.Ptr = ptr;
-			this.OnHost = this.DirectOnHost = onHost;
-			this.Length = length;
-			if (this.Length > 0)
-				GC.AddMemoryPressure(this.LengthInBytes);
-			AutoSwapMemory.NotifyNewStorage(this);
-		}
-
-		/// <summary>
-		/// Initialize with a given length in <typeparamref name="T"/> and allocate it on device memory.
-		/// </summary>
-		/// <param name="length">length of the array to allocate</param>
-		/// <param name="onHost">allocate the pointer on host or on device, default on device</param>
-		public ActualStorage(long length, bool onHost = false)
-		{
-			if (length > 0)
-			{
-				this.Ptr = Allocate(length, onHost);
-				this.OnHost = this.DirectOnHost = onHost;
-				this.Length = length;
-				GC.AddMemoryPressure(this.LengthInBytes);
-				AutoSwapMemory.NotifyNewStorage(this);
-			}
-			else
-			{
-				this.Ptr = IntPtr.Zero;
-			}
-		}
-
-		/// <summary>
-		/// Allocate memory on host or device.
-		/// </summary>
-		/// <param name="length">memory length in <typeparamref name="T"/> to allocate</param>
-		/// <param name="onHost">allocate the pointer on host or on device</param>
-		/// <returns>allocated address as <see cref="IntPtr"/></returns>
-		/// <exception cref="OverflowException">if the <paramref name="length"/> * <see cref="Storage{T}.SizeOfT"/> triggers overflow</exception>
-		/// <exception cref="InsufficientMemoryException">if this size of memory cannot be allocated anymore</exception>
-		/// <exception cref="AccessViolationException">if the memory cannot be allocated because of other reasons</exception>
-		private static IntPtr Allocate(long length, bool onHost)
-		{
-			var pointer = new IntPtr();
-			if (length <= 0)
-				return pointer;
-			long count;
-			checked // check overflow for the first time
-			{
-				count = SizeOfT * length;
-			}
-
-			string locationInfo = $"Cannot allocate {(SizeOfT * length / 1024.0 / 1024.0):N1}MiB memory on " + (onHost ? "host" : ("GPU" + RT.DeviceNo));
-			if (onHost)
-			{
-				pointer = Runtime.Mkl.NativeMethods.MKL_malloc(count, 256);
-				
-				if (pointer == IntPtr.Zero)
-				{
-					GC.Collect();
-					GC.WaitForPendingFinalizers();
-					pointer = Runtime.Mkl.NativeMethods.MKL_malloc(count, 256);
-					if (pointer == IntPtr.Zero)
-						throw new AccessViolationException($"{locationInfo} because of other error.");
-					else
-						Log.Write($"Out of memory detected, GC is performed.", category: "Array allocation", level: LogLevel.Error);
-				}
-			}
-			else
-			{
-				CudaError err = Runtime.Cuda.NativeMethods.cudaMalloc(ref pointer, count);
-				if (err != CudaError.Success || pointer == IntPtr.Zero)
-				{
-					Exception exception = err == CudaError.ErrorOutOfMemory ?
-						new InsufficientMemoryException($"{locationInfo} since you have ran out of memory.") :
-						(Exception)new AccessViolationException($"{locationInfo} because of other error '{err}'.");
-					if (!Settings.AutoGCWhenOutOfMemory || !(exception is InsufficientMemoryException))
-						throw exception;
-
-					GC.Collect();
-					GC.WaitForPendingFinalizers();
-					AutoSwapMemory.NotifyNewDeviceMemory(count);
-					err = Runtime.Cuda.NativeMethods.cudaMalloc(ref pointer, count);
-					if (err != CudaError.Success)
-						throw exception;
-					else
-						Log.Write($"Out of memory detected, GC is performed.", category: "Array allocation", level: LogLevel.Error);
-				}
-			}
-			return pointer;
-		}
-		#endregion
-
-		#region dispose
-		/// <summary>
-		/// Finalizer
-		/// </summary>
-		~ActualStorage() => this.Dispose(false);
-
-		/// <summary>
-		/// The actual dispose method
-		/// </summary>
-		/// <param name="disposeManaged">dispose managed resource or not</param>
-		protected override void Dispose(bool disposeManaged)
-		{
-			if (!this.Disposed && this.Ptr != default && this.Length > 0)
-			{
-				if (this.OnHost)
-					Runtime.Mkl.NativeMethods.MKL_free(this.Ptr);
-				else
-				{
-					var err = Runtime.Cuda.NativeMethods.cudaFree(this.Ptr);
-					if (err != CudaError.Success)
-						Log.Write(string.Format(Resource.Culture, Resource.FreeFail, "GPU" + RT.DeviceNo, this.Ptr.ToInt64()), level: LogLevel.Error);
-				}
-				AutoSwapMemory.NotifyDisposeStorage(this);
-				GC.RemoveMemoryPressure(this.LengthInBytes);
-			}
-			this.Disposed = true;
-			GC.SuppressFinalize(this);
-		}
-		#endregion
-
-		#region override
-		/// <summary>
-		/// <b>In-place</b> move this storage to the other memory, only works for <see cref="ActualStorage{T}"/>
-		/// </summary>
-		public override void ToOtherMemory()
-		{
-			// create temp and copy
-			using var tempStorate = new ActualStorage<T>(this.Length, !this.OnHost); // will not be disposed
-			RT.CopyTo(source: this, dest: tempStorate, this.Length);
-			// release original unmanaged resources of this one
-			this.Dispose();
-			// re-register disposition of this one
-			this.Disposed = false;
-			GC.ReRegisterForFinalize(this);
-			// change pointer of this one
-			this.Ptr = tempStorate.Ptr;
-			this.OnHost = !this.OnHost;
-			// make sure temp will not be disposed
-			tempStorate.Disposed = true;
-			GC.SuppressFinalize(tempStorate);
-		}
-
-		/// <summary>
-		/// Resize this <see cref="Storage{T}"/> <b>in-place</b>
-		/// </summary>
-		/// <param name="newLength">the new length to resize to</param>
-		public override void Resize(long newLength)
-		{
-			AutoSwapMemory.NotifyUsage(this);
-			// create temp and copy
-			using var tempStorate = new ActualStorage<T>(newLength, this.OnHost);
-			RT.CopyTo(source: this, dest: tempStorate, Math.Min(newLength, this.Length));
-			// release original unmanaged resources of this one
-			this.Dispose();
-			// re-register disposition of this one
-			this.Disposed = false;
-			GC.ReRegisterForFinalize(this);
-			// change pointer of this one
-			this.Ptr = tempStorate.Ptr;
-			this.Length = newLength;
-			// make sure temp will not be disposed
-			tempStorate.Disposed = true;
-			GC.SuppressFinalize(tempStorate);
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The reference implementation of <see cref="Storage{T}"/> and <see cref="IUnswappablePointer"/>
-	/// </summary>
-	/// <typeparam name="T">any sequential memory layout struct</typeparam>
-	internal sealed class StorageView<T> : Storage<T>, IUnswappablePointer where T : struct
-	{
-		#region properties
-		/// <summary>
-		/// The root pointer, i.e. the pointer of interface <see cref="ISwappablePointer"/> that directly contains unmanaged resources.
-		/// </summary>
-		public ISwappablePointer Root { get; }
-
-		/// <summary>
-		/// The offset of this pointer compared to <see cref="Root"/> in bytes.
-		/// </summary>
-		public long OffsetInBytes { get; }
-
-		/// <summary>
-		/// The raw pointer
-		/// </summary>
-		public override IntPtr Ptr {
-			get => new IntPtr(this.Root.Ptr.ToInt64() + this.OffsetInBytes);
-			protected set => throw new InvalidOperationException();
-		}
-
-		/// <summary>
-		/// The length of this pointer's underlying array in <typeparamref name="T"/>
-		/// </summary>
-		public override long Length { get; protected set; }
-
-		/// <summary>
-		/// This pointer is on host or device memory
-		/// </summary>
-		public override bool OnHost {
-			get => this.Root.OnHost;
-			protected set => throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region initialize
-		/// <summary>
-		/// Create a new <see cref="StorageView{T}"/> from a general <see cref="Storage{T}"/> and its <paramref name="offset"/>
-		/// </summary>
-		/// <param name="storage">the <see cref="Storage{T}"/> to refer to</param>
-		/// <param name="offset">the offset to pointer of <paramref name="storage"/></param>
-		public StorageView(Storage<T> storage, long offset)
-		{
-			if (storage is null || storage.Ptr == IntPtr.Zero)
-				return;
-			var root = storage.GetRoot();
-			long totalOffset = (storage - root) + offset;
-			long lengthRoot = root.LengthInBytes / SizeOfT;
-			if (totalOffset >= lengthRoot || totalOffset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset));
-			this.Root = root;
-			this.OffsetInBytes = totalOffset * SizeOfT;
-			this.Length = lengthRoot - totalOffset;
-		}
-
-		/// <summary>
-		/// Full constructor
-		/// </summary>
-		public StorageView(ISwappablePointer root, long offsetInBytes, long length = -1)
-		{
-			this.Root = root;
-			this.OffsetInBytes = offsetInBytes;
-			this.Length = length < 0 ? (root.LengthInBytes - offsetInBytes) / SizeOfT : length;
-		}
-		#endregion
-
-		#region dispose
-		/// <summary>
-		/// The actual dispose method
-		/// </summary>
-		/// <param name="disposeManaged">dispose managed resource or not</param>
-		protected override void Dispose(bool disposeManaged)
-		{
-			// do nothing
-		}
-		#endregion
-
-		#region override
-		/// <summary>
-		/// <b>In-place</b> move this storage to the other memory, only works for <see cref="ActualStorage{T}"/>
-		/// </summary>
-		public override void ToOtherMemory()
-		{
-			throw new InvalidOperationException();
-		}
-
-		/// <summary>
-		/// Resize this <see cref="Storage{T}"/> <b>in-place</b>
-		/// </summary>
-		/// <param name="newLength">the new length to resize to</param>
-		public override void Resize(long newLength)
-		{
-			throw new InvalidOperationException();
-		}
-		#endregion
-	}
+	#endregion
 
 
 	/// <summary>
