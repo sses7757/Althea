@@ -50,7 +50,7 @@ namespace Althea.Arrays
 				if (value.Count != this.Rank)
 					throw new ArgumentException(Resource.TensorWrongSize, nameof(value));
 				if (value.Distinct().Count != value.Count)
-					throw new ArgumentException(Resource.LabelDuplicate, nameof(value));
+					throw new ArgumentException(Resource.DuplicateLabels, nameof(value));
 				this._label = value;
 			}
 		}

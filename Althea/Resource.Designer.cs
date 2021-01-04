@@ -187,6 +187,24 @@ namespace Althea {
         }
         
         /// <summary>
+        ///   查找类似 Duplicate labels for tensors are not allowed. 的本地化字符串。
+        /// </summary>
+        internal static string DuplicateLabels {
+            get {
+                return ResourceManager.GetString("DuplicateLabels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The parameter contains duplicate values, which is not allowed. 的本地化字符串。
+        /// </summary>
+        internal static string DuplicateValue {
+            get {
+                return ResourceManager.GetString("DuplicateValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 An error happened: 的本地化字符串。
         /// </summary>
         internal static string ErrorOccur {
@@ -273,15 +291,6 @@ namespace Althea {
         internal static string InsertSparse {
             get {
                 return ResourceManager.GetString("InsertSparse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Duplicate labels for tensors are not allowed. 的本地化字符串。
-        /// </summary>
-        internal static string LabelDuplicate {
-            get {
-                return ResourceManager.GetString("LabelDuplicate", resourceCulture);
             }
         }
         
@@ -381,6 +390,15 @@ namespace Althea {
         internal static string ParaMustPositive {
             get {
                 return ResourceManager.GetString("ParaMustPositive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The given parameter has incompatible size. 的本地化字符串。
+        /// </summary>
+        internal static string ParamWrongSize {
+            get {
+                return ResourceManager.GetString("ParamWrongSize", resourceCulture);
             }
         }
         
@@ -516,6 +534,15 @@ namespace Althea {
         internal static string TensorWrongSize {
             get {
                 return ResourceManager.GetString("TensorWrongSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The parameter has unexpected value(s). 的本地化字符串。
+        /// </summary>
+        internal static string UnexpectedValue {
+            get {
+                return ResourceManager.GetString("UnexpectedValue", resourceCulture);
             }
         }
         

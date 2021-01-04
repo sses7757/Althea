@@ -975,5 +975,64 @@ namespace Althea.Helpers
 			return true;
 		}
 		#endregion
+
+		#region disposable array extends
+		/// <summary>
+		/// Clear a general array
+		/// </summary>
+		/// <typeparam name="TArr">the array type</typeparam>
+		/// <param name="array">the array to clear</param>
+		public static void ClearList<TArr>(this TArr[] array) where TArr : IDisposable
+		{
+			if (array is null)
+				return;
+			array.ForEach(l => l?.Dispose());
+			Array.Clear(array, 0, array.Length);
+		}
+
+		/// <summary>
+		/// Clear a general list
+		/// </summary>
+		/// <typeparam name="TArr">the array type</typeparam>
+		/// <param name="list">the list to clear</param>
+		public static void ClearList<TArr>(this List<TArr> list) where TArr : IDisposable
+		{
+			if (list is null)
+				return;
+			list.ForEach(l => l?.Dispose());
+			list.Clear();
+		}
+
+		/// <summary>
+		/// Dispose a general read-only list
+		/// </summary>
+		/// <typeparam name="TArr">the array type</typeparam>
+		/// <param name="list">the read-only list to dispose</param>
+		public static void ClearList<TArr>(this IReadOnlyList<TArr> list) where TArr : IDisposable
+		{
+			if (list is null)
+				return;
+			for (int i = 0; i < list.Count; i++)
+			{
+				list[i]?.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// Dispose a general dictionary
+		/// </summary>
+		/// <typeparam name="T">the dictionary key type</typeparam>
+		/// <typeparam name="TArr">the array type</typeparam>
+		/// <param name="dict">the dictionary to dispose</param>
+		public static void ClearDict<T, TArr>(this IReadOnlyDictionary<T, TArr> dict) where TArr : IDisposable
+		{
+			if (dict is null)
+				return;
+			foreach (var item in dict)
+			{
+				item.Value?.Dispose();
+			}
+		}
+		#endregion
 	}
 }

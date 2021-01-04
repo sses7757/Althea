@@ -1,16 +1,84 @@
-﻿using Althea.Helpers;
-using Althea.Linq;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using RT = Althea.Runtime.API;
+
+using Althea.Linq;
+
 
 namespace Althea.Memory
 {
 	#region storage location
+	/// <summary>
+	/// The enum of the memory location, all values larger than <see cref="OtherRam_0"/> are all considered as some platform-specific local RAMs.
+	/// </summary>
+	public enum MemoryLocation : byte
+	{
+		/// <summary>
+		/// Represents a storage location represented by Universal Resource Identifier.
+		/// </summary>
+		/// <remarks>It has different logic than other memory based <see cref="MemoryLocation"/>s.</remarks>
+		Uri = 0,
+		/// <summary>
+		/// Storage at local CPU RAM
+		/// </summary>
+		CpuRam = 1,
+		/// <summary>
+		/// Storage at local GPU RAM
+		/// </summary>
+		GpuRam = 2,
+		/// <summary>
+		/// Storage at platform-specific local RAM (with custom order the 1st) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
+		/// </summary>
+		OtherRam_0 = 3,
+		/// <summary>
+		/// Storage at platform-specific local RAM (with custom order the 2nd) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
+		/// </summary>
+		OtherRam_1 = 4,
+		/// <summary>
+		/// Storage at platform-specific local RAM (with custom order the 3rd) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
+		/// </summary>
+		OtherRam_2 = 5,
+	}
+
+	/// <summary>
+	/// The enum representing the URI schemes which can be used as memories.
+	/// </summary>
+	/// <remarks>See <see cref="Uri.UriSchemeFile"/>, etc.</remarks>
+	public enum UriScheme : byte
+	{
+		/// <summary>
+		/// Specifies that the URI is a pointer to a file
+		/// </summary>
+		File,
+		/// <summary>
+		/// Specifies that the URI is accessed through the File Transfer Protocol (FTP).
+		/// </summary>
+		FTP,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Gopher protocol.
+		/// </summary>
+		Gopher,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Hypertext Transfer Protocol (HTTP).
+		/// </summary>
+		HTTP,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Secure Hypertext Transfer Protocol (HTTPS).
+		/// </summary>
+		HTTPS,
+		/// <summary>
+		/// Specifies that the URI is accessed through the NetPipe scheme used by Windows Communication Foundation (WCF). 
+		/// </summary>
+		NetPipe,
+		/// <summary>
+		/// Specifies that the URI is accessed through the NetTcp scheme used by Windows Communication Foundation (WCF).
+		/// </summary>
+		NetTcp,
+	}
+
 	/// <summary>
 	/// The struct of a storage location
 	/// </summary>
@@ -18,70 +86,39 @@ namespace Althea.Memory
 	public readonly struct StorageLocation : IEquatable<StorageLocation>
 	{
 		#region basic
-		/// <summary>
-		/// The enum of the location, all values larger than <see cref="OtherMemory_0"/> are all considered as some platform-specific local memories.
-		/// </summary>
-		public enum LocationEnum : byte
-		{
-			/// <summary>
-			/// Represents an unknown storage position
-			/// </summary>
-			Unknown = 0,
-			/// <summary>
-			/// Storage at local CPU memory
-			/// </summary>
-			CpuMemory = 1,
-			/// <summary>
-			/// Storage at local GPU memory
-			/// </summary>
-			GpuMemory = 2,
-			/// <summary>
-			/// Storage at platform-specific local memory (with custom order the 1st) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
-			/// </summary>
-			OtherMemory_0 = 3,
-			/// <summary>
-			/// Storage at platform-specific local memory (with custom order the 2nd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
-			/// </summary>
-			OtherMemory_1 = 4,
-			/// <summary>
-			/// Storage at platform-specific local memory (with custom order the 3rd) other than <see cref="CpuMemory"/> and <see cref="GpuMemory"/>. For example, a RAM associated with a FPGA.
-			/// </summary>
-			OtherMemory_2 = 5,
-		}
+		private readonly MemoryLocation location;
 
-		private readonly LocationEnum location;
-
-		private readonly byte deviceID;
+		private readonly byte locationDetail;
 
 		/// <summary>
 		/// The location of this <see cref="StorageLocation"/>
 		/// </summary>
-		public LocationEnum Location => location;
+		public MemoryLocation Location => location;
 
 		/// <summary>
-		/// The device ID of the given <see cref="Location"/>
+		/// The detail information of the <see cref="Location"/>. <see cref="LocationDetail"/> shall be the device ID if the <see cref="Location"/> is a RAM, or the <see cref="UriScheme"/> if it is a <see cref="MemoryLocation.Uri"/>.
 		/// </summary>
-		public byte DeviceID => deviceID;
+		public byte LocationDetail => locationDetail;
 
 		/// <summary>
 		/// Create with given location and device ID
 		/// </summary>
 		/// <param name="location">The location of this <see cref="StorageLocation"/></param>
-		/// <param name="deviceID">The device ID of the given <paramref name="location"/></param>
-		public StorageLocation(LocationEnum location, byte deviceID)
+		/// <param name="locationDetail">The detail information of the given <paramref name="location"/>. <paramref name="locationDetail"/> shall be the device ID if the given <paramref name="location"/> is a RAM, or the <see cref="UriScheme"/> if it is a <see cref="MemoryLocation.Uri"/>.</param>
+		public StorageLocation(MemoryLocation location, byte locationDetail)
 		{
-			this.location = location; this.deviceID = deviceID;
+			this.location = location; this.locationDetail = locationDetail;
 		}
 
 		/// <summary>
-		/// Get the order for this <see cref="StorageLocation"/>'s <see cref="LocationEnum"/> if it represents a storage position in other memory types like <see cref="LocationEnum.OtherMemory_0"/>
+		/// Get the order for this <see cref="StorageLocation"/>'s <see cref="MemoryLocation"/> if it represents a storage position in other memory types like <see cref="MemoryLocation.OtherRam_0"/>
 		/// </summary>
-		/// <returns>0 if this is not a memory of other types, otherwise the order for this <see cref="StorageLocation"/>'s <see cref="LocationEnum"/></returns>
+		/// <returns>0 if this is not a memory of other types, otherwise the order for this <see cref="StorageLocation"/>'s <see cref="MemoryLocation"/></returns>
 		public byte OrderOfOtherMemoryType()
 		{
-			if (this.location < LocationEnum.OtherMemory_0)
+			if (this.location < MemoryLocation.OtherRam_0)
 				return 0;
-			return this.location - LocationEnum.OtherMemory_0;
+			return this.location - MemoryLocation.OtherRam_0;
 		}
 		#endregion
 
@@ -93,7 +130,7 @@ namespace Althea.Memory
 		/// <returns>this == <paramref name="other"/></returns>
 		public bool Equals(StorageLocation other)
 		{
-			return this.location == other.location && this.deviceID == other.deviceID;
+			return this.location == other.location && this.locationDetail == other.locationDetail;
 		}
 
 		/// <summary>
@@ -112,7 +149,7 @@ namespace Althea.Memory
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(this.location, this.deviceID);
+			return HashCode.Combine(this.location, this.locationDetail);
 		}
 
 		/// <summary>
@@ -133,17 +170,17 @@ namespace Althea.Memory
 		#endregion
 
 		#region string related
-		private static readonly Dictionary<LocationEnum, string> static_OtherMemoryNames = new Dictionary<LocationEnum, string>();
+		private static readonly Dictionary<MemoryLocation, string> static_OtherMemoryNames = new Dictionary<MemoryLocation, string>();
 
 		/// <summary>
-		/// Set the name used for <see cref="ToString"/> of this if it represents a storage position in other memory types like <see cref="LocationEnum.OtherMemory_0"/>
+		/// Set the name used for <see cref="ToString"/> of this if it represents a storage position in other memory types like <see cref="MemoryLocation.OtherRam_0"/>
 		/// </summary>
-		/// <param name="location">the <see cref="LocationEnum"/> of a storage position in other memory types</param>
+		/// <param name="location">the <see cref="MemoryLocation"/> of a storage position in other memory types</param>
 		/// <param name="name">the name as a <see cref="string"/> to set; notice that all the spaces will be replaced by '_'</param>
 		/// <returns>success or not</returns>
-		public static bool SetOtherMemoryName(LocationEnum location, string name)
+		public static bool SetOtherMemoryName(MemoryLocation location, string name)
 		{
-			if (location < LocationEnum.OtherMemory_0)
+			if (location < MemoryLocation.OtherRam_0)
 				return false;
 			static_OtherMemoryNames[location] = name.Replace(' ', '_');
 			return true;
@@ -157,10 +194,11 @@ namespace Althea.Memory
 		{
 			return this.location switch
 			{
-				LocationEnum.CpuMemory => "CPU_Memory",
-				LocationEnum.GpuMemory => "GPU_Memory",
+				MemoryLocation.Uri => "URI_" + (UriScheme)this.locationDetail,
+				MemoryLocation.CpuRam => "CPU_Memory",
+				MemoryLocation.GpuRam => "GPU_Memory",
 				_ => static_OtherMemoryNames.GetValueOrDefault(this.location) ?? $"Other_Device_Memory_Order_{this.OrderOfOtherMemoryType()}",
-			} + $"(ID={this.deviceID})";
+			} + $"(ID={this.locationDetail})";
 		}
 		#endregion
 	}
@@ -168,7 +206,7 @@ namespace Althea.Memory
 	/// <summary>
 	/// The struct of a pointer at a certain unmanaged memory block
 	/// </summary>
-	/// <remarks>This struct <b>does not</b> respond for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
+	/// <remarks>This struct <b>is not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct StoragePointer : IEquatable<StoragePointer>
 	{
@@ -190,16 +228,16 @@ namespace Althea.Memory
 		public IntPtr Pointer => pointer;
 
 		/// <summary>
-		/// The <b>unchecked</b> length of this <see cref="StoragePointer"/>
+		/// The <b>unchecked</b> length of this <see cref="StoragePointer"/> in bytes
 		/// </summary>
-		public ulong Length => length;
+		public ulong LengthInBytes => length;
 
 		/// <summary>
 		/// Create with given location, pointer and length
 		/// </summary>
 		/// <param name="location">The location of this <see cref="StorageLocation"/></param>
 		/// <param name="pointer">The pointer at the given <paramref name="location"/></param>
-		/// <param name="length">The length of the given <paramref name="pointer"/></param>
+		/// <param name="length">The length in bytes of the given <paramref name="pointer"/></param>
 		public StoragePointer(StorageLocation location, IntPtr pointer, ulong length)
 		{
 			this.location = location; this.pointer = pointer; this.length = length;
@@ -221,10 +259,10 @@ namespace Althea.Memory
 		public StoragePointer(StoragePointer storage, long offset) : this(storage.location, new IntPtr(storage.pointer.ToInt64() + offset), offset >= 0 ? storage.length - (ulong)offset : storage.length + ((ulong)-offset)) { }
 
 		/// <summary>
-		/// Create with given <see cref="StoragePointer"/> <paramref name="storage"/> and new <see cref="Length"/>
+		/// Create with given <see cref="StoragePointer"/> <paramref name="storage"/> and new <see cref="LengthInBytes"/>
 		/// </summary>
 		/// <param name="storage">The <see cref="StoragePointer"/> to copy info from</param>
-		/// <param name="newLength">The new <see cref="Length"/></param>
+		/// <param name="newLength">The new <see cref="LengthInBytes"/></param>
 		public StoragePointer(StoragePointer storage, ulong newLength) : this(storage.location, storage.pointer, newLength) { }
 		#endregion
 
@@ -374,7 +412,18 @@ namespace Althea.Memory
 	}
 
 
-	#region base storage class
+	#region storage classes
+	/// <summary>
+	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
+	/// </summary>
+	public interface IStorage : IDisposable, IReadOnlyList<StoragePointer>
+	{
+		/// <summary>
+		/// The total length of the presenting array in  bytes
+		/// </summary>
+		public virtual ulong LengthInBytes => this.Sum(s => s.LengthInBytes);
+	}
+
 	/// <summary>
 	/// The abstract wrapper class of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s).
 	/// </summary>
@@ -382,7 +431,7 @@ namespace Althea.Memory
 	/// <remarks>I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class(es) shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
-	public abstract class Storage<T> : IDisposable, IEquatable<Storage<T>>, IReadOnlyList<StoragePointer> where T : unmanaged
+	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>> where T : unmanaged
 	{
 		#region properties
 		/// <summary>
@@ -393,7 +442,7 @@ namespace Althea.Memory
 		/// <summary>
 		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
-		public virtual ulong Length => this.Sum(s => s.Length) / (ulong)SizeOfT;
+		public virtual ulong Length => ((IStorage)this).LengthInBytes / (ulong)SizeOfT;
 
 		/// <summary>
 		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
@@ -412,7 +461,7 @@ namespace Althea.Memory
 		/// <summary>
 		/// Is this <see cref="Storage{T}"/> disposed or not
 		/// </summary>
-		public bool Disposed { get; private set; } = false;
+		protected bool Disposed { get; private set; } = false;
 
 		/// <summary>
 		/// Dispose this storage
@@ -447,7 +496,7 @@ namespace Althea.Memory
 		/// Make a referenced <see cref="Storage{T}"/> with the same pointer as this one while <see cref="Length"/> is changed to <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="newLength">the new length of referenced <see cref="Storage{T}"/></param>
-		/// <returns>a referenced <see cref="Storage{T}"/> with different <see cref="Length"/></returns>
+		/// <returns>if <paramref name="newLength"/> == this.<see cref="Length"/>, return this; otherwise, return a <see cref="ReferenceStorage{T}"/> with <paramref name="newLength"/></returns>
 		public Storage<T> MakeReferenceOfSize(ulong newLength)
 		{
 			if (newLength == this.Length)
@@ -460,6 +509,7 @@ namespace Althea.Memory
 		/// </summary>
 		/// <typeparam name="TOut">the output data type</typeparam>
 		/// <returns>a referenced <see cref="Storage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public abstract Storage<TOut> As<TOut>() where TOut : unmanaged;
 		#endregion
 
@@ -519,7 +569,14 @@ namespace Althea.Memory
 		/// <returns>string representation</returns>
 		public override string ToString()
 		{
-			return $"{{{string.Join(", ", this)}}} [type={typeof(T).Name}, total_length={this.Length}]";
+			if (this.Count == 1)
+			{
+				return $"{this[0]} [type={typeof(T).Name}, length={this.Length}]";
+			}
+			else
+			{
+				return $"{{{string.Join(", ", this)}}} [type={typeof(T).Name}, total_length={this.Length}]";
+			}
 		}
 		#endregion
 
@@ -549,7 +606,7 @@ namespace Althea.Memory
 	public sealed class ReferenceStorage<T> : Storage<T> where T : unmanaged
 	{
 		#region basic
-		private readonly Storage<T> reference;
+		private readonly IStorage reference;
 
 		private readonly long totalOffset;
 
@@ -567,9 +624,9 @@ namespace Althea.Memory
 		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
 		/// <param name="storage">the <see cref="Storage{T}"/> to be referenced</param>
-		/// <param name="offset">the offset as a <see cref="long"/></param>
-		/// <param name="newLength">the new presenting length, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
-		public ReferenceStorage(Storage<T> storage, long offset = 0, ulong newLength = 0)
+		/// <param name="offset">the offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		public ReferenceStorage(IStorage storage, long offset = 0, ulong newLength = 0)
 		{
 			// dereference first
 			while (storage is ReferenceStorage<T> @ref)
@@ -581,15 +638,15 @@ namespace Althea.Memory
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			if (newLength == 0)
-				newLength = storage.Length - (ulong)offset;
-			else if (storage.Length != (ulong)offset + newLength)
+				newLength = storage.LengthInBytes - (ulong)(SizeOfT * offset);
+			else if (storage.LengthInBytes != (ulong)offset + newLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			// set offsets
 			ulong totalOffset = (ulong)offset;
 			bool setStart = true;
 			for (int i = 0; i < storage.Count; i++)
 			{
-				ulong lengthOfI = storage[i].Length / (ulong)SizeOfT;
+				ulong lengthOfI = storage[i].LengthInBytes / (ulong)SizeOfT;
 				if (totalOffset < lengthOfI)
 				{
 					if (setStart)
@@ -610,7 +667,7 @@ namespace Althea.Memory
 			}
 		}
 
-		private ReferenceStorage(Storage<T> storage, long totalOffset, int start, ulong startOffset, ulong endLength)
+		private ReferenceStorage(IStorage storage, long totalOffset, int start, ulong startOffset, ulong endLength)
 		{
 			this.reference = storage; this.totalOffset = totalOffset; this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
 		}
@@ -658,13 +715,14 @@ namespace Althea.Memory
 		/// </summary>
 		/// <typeparam name="TOut">the output data type</typeparam>
 		/// <returns>a referenced <see cref="ReferenceStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override ReferenceStorage<TOut> As<TOut>()
 		{
 			long offset = this.totalOffset * SizeOfT;
 			if (offset % Storage<TOut>.SizeOfT != 0)
 				throw new InvalidCastException();
 			offset /= Storage<TOut>.SizeOfT;
-			return new ReferenceStorage<TOut>(this.reference.As<TOut>(), offset, this.start, this.startOffsetBytes, this.endLengthBytes);
+			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes);
 		}
 
 		/// <summary>
@@ -688,76 +746,267 @@ namespace Althea.Memory
 		public override int GetHashCode() => HashCode.Combine(this.reference, this.start, this.startOffsetBytes, this.endLengthBytes);
 		#endregion
 	}
-	#endregion
-
-
-	#region actual storage class
-
-	#endregion
-
 
 	/// <summary>
-	/// Some extension methods of list of arrays
+	/// The abstract storage class as a base class for all non-referenced <see cref="Storage{T}"/> classes
 	/// </summary>
-	public static class ListOfArraysExtension
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public abstract class ActualStorage<T> : Storage<T> where T : unmanaged
 	{
+		#region memory
 		/// <summary>
-		/// Clear a general array
+		/// The finalizer of <see cref="ActualStorage{T}"/>
 		/// </summary>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="array">the array to clear</param>
-		public static void ClearList<TArr>(this TArr[] array) where TArr : IDisposable
+		~ActualStorage()
 		{
-			if (array is null)
-				return;
-			array.ForEach(l => l?.Dispose());
-			Array.Clear(array, 0, array.Length);
+			this.Dispose(false);
 		}
 
 		/// <summary>
-		/// Clear a general list
+		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="list">the list to clear</param>
-		public static void ClearList<TArr>(this List<TArr> list) where TArr : IDisposable
+		/// <param name="disposeManaged">dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged)
 		{
-			if (list is null)
-				return;
-			list.ForEach(l => l?.Dispose());
-			list.Clear();
-		}
-
-		/// <summary>
-		/// Dispose a general read-only list
-		/// </summary>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="list">the read-only list to dispose</param>
-		public static void ClearList<TArr>(this IReadOnlyList<TArr> list) where TArr : IDisposable
-		{
-			if (list is null)
-				return;
-			for (int i = 0; i < list.Count; i++)
+			for (int i = 0; i < this.Count; i++)
 			{
-				list[i]?.Dispose();
+				var ptr = this[i];
+				// TODO: adapter dispose
 			}
 		}
 
 		/// <summary>
-		/// Dispose a general dictionary
+		/// Allocate a <see cref="StoragePointer"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
 		/// </summary>
-		/// <typeparam name="T">the dictionary key type</typeparam>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="dict">the dictionary to dispose</param>
-		public static void ClearDict<T, TArr>(this IReadOnlyDictionary<T, TArr> dict) where TArr : IDisposable
+		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
+		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
+		protected static StoragePointer Allocate(StorageLocation location, ulong length)
 		{
-			if (dict is null)
-				return;
-			foreach (var item in dict)
-			{
-				item.Value?.Dispose();
-			}
+			IntPtr ptr = default;
+			// TODO: adapter create
+			return new StoragePointer(location, ptr, length);
 		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// Convert this <see cref="ActualStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>a <see cref="ReferenceStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		public override ReferenceStorage<TOut> As<TOut>()
+		{
+			if (((IStorage)this).LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
+				throw new InvalidCastException();
+			ulong newLength = ((IStorage)this).LengthInBytes / (ulong)Storage<TOut>.SizeOfT;
+			return new ReferenceStorage<TOut>(this, newLength: newLength);
+		}
+
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">another object</param>
+		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		public override bool Equals(Storage<T> obj)
+		{
+			if (obj is not null && obj is ActualStorage<T> another)
+			{
+				if (this.Count != another.Count)
+					return false;
+				for (int i = 0; i < this.Count; i++)
+				{
+					if (this[i] != another[i])
+						return false;
+				}
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Get the hash code of this <see cref="PureStorage{T}"/>
+		/// </summary>
+		/// <returns>the hash code</returns>
+		public override int GetHashCode() => this.HashCodeOfArray();
+		#endregion
 	}
+
+	/// <summary>
+	/// Represents a storage of a contiguous memory block on a certain memory location, inherits <see cref="Storage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public class PureStorage<T> : ActualStorage<T> where T : unmanaged
+	{
+		#region basic
+		private readonly StoragePointer pointer;
+
+		/// <summary>
+		/// <b>Allocate</b> and create a <see cref="PureStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
+		/// </summary>
+		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
+		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
+		public PureStorage(StorageLocation location, ulong length)
+		{
+			this.pointer = Allocate(location, length);
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => 1;
+
+		/// <summary>
+		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
+		public override StoragePointer this[int index] {
+			get {
+				if (index < 0 || index >= 1)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				return pointer;
+			}
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// Represents a storage of several contiguous memory blocks on different memory locations with fixed sizes, inherits <see cref="Storage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public class MixedStorage<T> : ActualStorage<T> where T : unmanaged
+	{
+		#region basic
+		private readonly StoragePointer[] pointers;
+
+		/// <summary>
+		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
+		/// </summary>
+		/// <param name="param">the <see cref="IEnumerable{T}"/> of given lengths and <see cref="StorageLocation"/>s</param>
+		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="param"/> or not</param>
+		public MixedStorage(IEnumerable<(StorageLocation location, ulong length)> param, bool allowSameLocation = true)
+		{
+			var temp = new List<StoragePointer>();
+			foreach (var (location, length) in param)
+			{
+				if (!allowSameLocation && temp.Contains(location, selector: p => p.Location))
+					throw new ArgumentOutOfRangeException(nameof(param), Resource.DuplicateValue);
+				temp.Add(Allocate(location, length));
+			}
+			if (temp.Count <= 1)
+				throw new ArgumentOutOfRangeException(nameof(param), Resource.ParamWrongSize);
+			this.pointers = temp.ToArray();
+		}
+
+		/// <summary>
+		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
+		/// </summary>
+		/// <param name="param">the <see cref="Array"/> of given <see cref="Storage{T}.Length"/>s on given <see cref="StorageLocation"/>s</param>
+		public MixedStorage(params (StorageLocation location, ulong length)[] param) : this(param as IEnumerable<(StorageLocation location, ulong length)>) { }
+
+		/// <summary>
+		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
+		/// </summary>
+		/// <param name="locations">the <see cref="IEnumerable{T}"/> of given <see cref="StorageLocation"/>s</param>
+		/// <param name="lengths">the <see cref="IEnumerable{T}"/> of given lengths</param>
+		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="locations"/> or not</param>
+		public MixedStorage(IEnumerable<StorageLocation> locations, IEnumerable<ulong> lengths, bool allowSameLocation = true) : this(System.Linq.Enumerable.Zip(locations, lengths), allowSameLocation) { }
+		#endregion
+
+		#region override
+		/// <summary>
+		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => this.pointers.Length;
+
+		/// <summary>
+		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
+		public override StoragePointer this[int index] {
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				return this.pointers[index];
+			}
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// Represents a storage of several contiguous memory blocks on different memory locations with variable sizes purposed to cache memories of higher performance, inherits <see cref="Storage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public class CachedStorage<T> : ActualStorage<T> where T : unmanaged
+	{
+		#region basic
+		private readonly StoragePointer[] pointers;
+
+		private readonly Uri uri;
+
+		/// <summary>
+		/// <b>Allocate</b> and create a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
+		/// </summary>
+		/// <param name="priorities">the <see cref="IEnumerable{T}"/> of <see cref="StorageLocation"/>s to represent the priorities from higher-performance memories to lower ones</param>
+		/// <param name="totalLength">the desired total length (in <typeparamref name="T"/>) of presenting array</param>
+		public CachedStorage(IEnumerable<StorageLocation> priorities, ulong totalLength)
+		{
+			var temp = new List<StoragePointer>();
+			foreach (var location in priorities)
+			{
+				if (temp.Contains(location, selector: p => p.Location))
+					throw new ArgumentOutOfRangeException(nameof(priorities), Resource.DuplicateValue);
+				// do not allocate here
+				temp.Add(new StoragePointer(location, default(IntPtr), 0));
+			}
+			if (temp.Count <= 1)
+				throw new ArgumentOutOfRangeException(nameof(priorities), Resource.ParamWrongSize);
+			this.pointers = temp.ToArray();
+			if (this.pointers[..^1].Any(p => p.Location.Location == MemoryLocation.Uri))
+				throw new ArgumentException(Resource.UnexpectedValue, nameof(priorities));
+			// allocate here
+			// TODO
+			IntPtr ptr = Marshal.StringToHGlobalUni(this.uri.AbsoluteUri);
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
+		/// </summary>
+		/// <param name="disposeManaged">dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged)
+		{
+			base.Dispose(disposeManaged);
+			if (this.uri is not null)
+				Marshal.FreeHGlobal(this.pointers[^1].Pointer);
+		}
+
+		/// <summary>
+		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => this.pointers.Length;
+
+		/// <summary>
+		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
+		public override StoragePointer this[int index] {
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				return this.pointers[index];
+			}
+		}
+		#endregion
+	}
+	#endregion
+
 
 	internal static class AutoSwapMemory
 	{

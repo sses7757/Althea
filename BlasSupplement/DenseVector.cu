@@ -1,5 +1,5 @@
 // self defined macro
-#include "macro.h"
+#include "blasSupp.h"
 
 
 #pragma region get GPU properties

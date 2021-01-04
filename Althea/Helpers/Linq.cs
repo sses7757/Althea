@@ -2512,6 +2512,30 @@ namespace Althea.Linq
 		/// <typeparam name="T">the data type</typeparam>
 		/// <param name="list">list to check in</param>
 		/// <param name="element">element to check</param>
+		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
+		public static bool Contains<T>(this IReadOnlyList<T> list, T element) where T : IEquatable<T>
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+
+			if (list is List<T> l)
+			{
+				return l.Contains(element);
+			}
+			for (int i = 0; i < list.Count; i++)
+			{
+				if (element.Equals(list[i]))
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <param name="list">list to check in</param>
+		/// <param name="element">element to check</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T>(this IReadOnlyList<T> list, T element, IEqualityComparer<T> comparer = null)
@@ -2530,6 +2554,52 @@ namespace Althea.Linq
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (comparer.Equals(list[i], element))
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="TCompare">the type used to compare</typeparam>
+		/// <param name="list">list to check in</param>
+		/// <param name="element">element to check</param>
+		/// <param name="selector">the converter applied to <paramref name="list"/> before comparisons</param>
+		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
+		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector, IEqualityComparer<TCompare> comparer = null)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+
+			comparer ??= EqualityComparer<TCompare>.Default;
+			for (int i = 0; i < list.Count; i++)
+			{
+				if (comparer.Equals(selector(list[i]), element))
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="TCompare">the type used to compare</typeparam>
+		/// <param name="list">list to check in</param>
+		/// <param name="element">element to check</param>
+		/// <param name="selector">the converter applied to <paramref name="list"/> before comparisons</param>
+		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
+		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector) where TCompare : IEquatable<TCompare>
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				if (element.Equals(selector(list[i])))
 					return true;
 			}
 			return false;
