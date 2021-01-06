@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -77,6 +77,36 @@ namespace Althea.Memory
 		/// Specifies that the URI is accessed through the NetTcp scheme used by Windows Communication Foundation (WCF).
 		/// </summary>
 		NetTcp,
+	}
+
+	/// <summary>
+	/// The static class for extension methods of <see cref="UriScheme"/>
+	/// </summary>
+	public static class UriSchemeExtension
+	{
+		/// <summary>
+		/// Get the <see cref="UriScheme"/> from a <see cref="Uri"/>
+		/// </summary>
+		/// <param name="uri">the <see cref="Uri"/></param>
+		/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or null if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
+		public static UriScheme? GetScheme(this Uri uri)
+		{
+			if (uri.Scheme == Uri.UriSchemeFile)
+				return UriScheme.File;
+			if (uri.Scheme == Uri.UriSchemeFtp)
+				return UriScheme.FTP;
+			if (uri.Scheme == Uri.UriSchemeHttp)
+				return UriScheme.HTTP;
+			if (uri.Scheme == Uri.UriSchemeHttps)
+				return UriScheme.HTTPS;
+			if (uri.Scheme == Uri.UriSchemeGopher)
+				return UriScheme.Gopher;
+			if (uri.Scheme == Uri.UriSchemeNetPipe)
+				return UriScheme.NetPipe;
+			if (uri.Scheme == Uri.UriSchemeNetPipe)
+				return UriScheme.NetPipe;
+			return null;
+		}
 	}
 
 	/// <summary>
@@ -374,44 +404,6 @@ namespace Althea.Memory
 	#endregion
 
 
-
-	/// <summary>
-	/// The static class that contains several extension methods for <see cref="StorageLocation"/>
-	/// </summary>
-	public static class StorageExtension
-	{
-		// TODO: edit CheckOnHost
-		internal static bool CheckOnHost<T>(params Arrays.ValueArray<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arrays is null || arrays.Length == 0)
-				throw new ArgumentNullException(nameof(arrays));
-			if (arrays.Any(a => a.Disposed))
-				throw new ObjectDisposedException(nameof(arrays));
-			if (arrays.All(a => a.Length == 0 || !a.OnHost)) // empty array can be any where
-				return false;
-			if (arrays.All(a => a.Length == 0 || a.OnHost))
-				return true;
-			// else
-			throw new ArgumentException(Resource.RequireSamePos);
-		}
-
-		internal static bool CheckOnHost<T>(params Memory.Storage<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arrays is null || arrays.Length == 0)
-				throw new ArgumentNullException(nameof(arrays));
-			////if (arrays.Any(a => a.AlreadyDisposed))
-			////	throw new ObjectDisposedException(nameof(arrays));
-			if (arrays.All(a => !a.OnHost))
-				return false;
-			if (arrays.All(a => a.OnHost))
-				return true;
-			// else
-			throw new ArgumentException(Resource.RequireSamePos);
-		}
-
-	}
-
-
 	#region storage classes
 	/// <summary>
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
@@ -421,7 +413,7 @@ namespace Althea.Memory
 		/// <summary>
 		/// The total length of the presenting array in  bytes
 		/// </summary>
-		public virtual ulong LengthInBytes => this.Sum(s => s.LengthInBytes);
+		ulong LengthInBytes { get; }
 	}
 
 	/// <summary>
@@ -442,7 +434,12 @@ namespace Althea.Memory
 		/// <summary>
 		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
-		public virtual ulong Length => ((IStorage)this).LengthInBytes / (ulong)SizeOfT;
+		public abstract ulong Length { get; }
+
+		/// <summary>
+		/// The total length of the presenting array in  bytes
+		/// </summary>
+		public virtual ulong LengthInBytes => this.Length * (ulong)SizeOfT;
 
 		/// <summary>
 		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
@@ -599,16 +596,27 @@ namespace Althea.Memory
 		#endregion
 	}
 
+	internal interface IReferenceStorage
+	{
+		IStorage Reference { get; }
+
+		long TotalOffset { get; }
+	}
+
 	/// <summary>
 	/// The storage class that reference to a <see cref="Storage{T}"/>
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public sealed class ReferenceStorage<T> : Storage<T> where T : unmanaged
+	public sealed class ReferenceStorage<T> : Storage<T>, IReferenceStorage where T : unmanaged
 	{
 		#region basic
 		private readonly IStorage reference;
 
 		private readonly long totalOffset;
+
+		IStorage IReferenceStorage.Reference => this.reference;
+
+		long IReferenceStorage.TotalOffset => this.totalOffset;
 
 		private readonly int start;
 
@@ -629,10 +637,10 @@ namespace Althea.Memory
 		public ReferenceStorage(IStorage storage, long offset = 0, ulong newLength = 0)
 		{
 			// dereference first
-			while (storage is ReferenceStorage<T> @ref)
+			while (storage is IReferenceStorage @ref)
 			{
-				storage = @ref.reference;
-				offset += @ref.totalOffset;
+				storage = @ref.Reference;
+				offset += @ref.TotalOffset;
 			}
 			// check
 			if (offset < 0)
@@ -641,6 +649,8 @@ namespace Althea.Memory
 				newLength = storage.LengthInBytes - (ulong)(SizeOfT * offset);
 			else if (storage.LengthInBytes != (ulong)offset + newLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
+			// set length
+			this.Length = newLength;
 			// set offsets
 			ulong totalOffset = (ulong)offset;
 			bool setStart = true;
@@ -667,9 +677,11 @@ namespace Althea.Memory
 			}
 		}
 
-		private ReferenceStorage(IStorage storage, long totalOffset, int start, ulong startOffset, ulong endLength)
+		private ReferenceStorage(IStorage storage, long totalOffset, int start, ulong startOffset, ulong endLength, ulong newLength)
 		{
-			this.reference = storage; this.totalOffset = totalOffset; this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
+			this.reference = storage; this.totalOffset = totalOffset;
+			this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
+			this.Length = newLength;
 		}
 		#endregion
 
@@ -722,7 +734,7 @@ namespace Althea.Memory
 			if (offset % Storage<TOut>.SizeOfT != 0)
 				throw new InvalidCastException();
 			offset /= Storage<TOut>.SizeOfT;
-			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes);
+			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes, this.Length);
 		}
 
 		/// <summary>
@@ -754,6 +766,22 @@ namespace Althea.Memory
 	public abstract class ActualStorage<T> : Storage<T> where T : unmanaged
 	{
 		#region memory
+		/// <summary>
+		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>
+		/// </summary>
+		public override ulong Length { get; }
+
+		/// <summary>
+		/// Create an <see cref="ActualStorage{T}"/> with given length of presenting array
+		/// </summary>
+		/// <param name="length">the length of presenting array <typeparamref name="T"/></param>
+		protected ActualStorage(ulong length)
+		{
+			if (length == 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Resource.ParaMustPositive);
+			this.Length = length;
+		}
+
 		/// <summary>
 		/// The finalizer of <see cref="ActualStorage{T}"/>
 		/// </summary>
@@ -846,7 +874,7 @@ namespace Althea.Memory
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
-		public PureStorage(StorageLocation location, ulong length)
+		public PureStorage(StorageLocation location, ulong length) : base(length)
 		{
 			this.pointer = Allocate(location, length);
 		}
@@ -885,27 +913,27 @@ namespace Althea.Memory
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
-		/// <param name="param">the <see cref="IEnumerable{T}"/> of given lengths and <see cref="StorageLocation"/>s</param>
+		/// <param name="param">the <see cref="IReadOnlyList{T}"/> of given lengths and <see cref="StorageLocation"/>s</param>
 		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="param"/> or not</param>
-		public MixedStorage(IEnumerable<(StorageLocation location, ulong length)> param, bool allowSameLocation = true)
+		public MixedStorage(IReadOnlyList<(StorageLocation location, ulong length)> param, bool allowSameLocation = true) : base(param.Sum(p => p.length))
 		{
-			var temp = new List<StoragePointer>();
-			foreach (var (location, length) in param)
-			{
-				if (!allowSameLocation && temp.Contains(location, selector: p => p.Location))
-					throw new ArgumentOutOfRangeException(nameof(param), Resource.DuplicateValue);
-				temp.Add(Allocate(location, length));
-			}
-			if (temp.Count <= 1)
+			if (param.Count <= 1)
 				throw new ArgumentOutOfRangeException(nameof(param), Resource.ParamWrongSize);
-			this.pointers = temp.ToArray();
+			this.pointers = new StoragePointer[param.Count];
+			for (int i = 0; i < param.Count; i++)
+			{
+				var (location, length) = param[i];
+				if (!allowSameLocation && pointers.Contains(location, selector: p => p.Location))
+					throw new ArgumentOutOfRangeException(nameof(param), Resource.DuplicateValue);
+				this.pointers[i] = Allocate(location, length);
+			}
 		}
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
 		/// <param name="param">the <see cref="Array"/> of given <see cref="Storage{T}.Length"/>s on given <see cref="StorageLocation"/>s</param>
-		public MixedStorage(params (StorageLocation location, ulong length)[] param) : this(param as IEnumerable<(StorageLocation location, ulong length)>) { }
+		public MixedStorage(params (StorageLocation location, ulong length)[] param) : this(param as IReadOnlyList<(StorageLocation location, ulong length)>) { }
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
@@ -913,7 +941,7 @@ namespace Althea.Memory
 		/// <param name="locations">the <see cref="IEnumerable{T}"/> of given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">the <see cref="IEnumerable{T}"/> of given lengths</param>
 		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="locations"/> or not</param>
-		public MixedStorage(IEnumerable<StorageLocation> locations, IEnumerable<ulong> lengths, bool allowSameLocation = true) : this(System.Linq.Enumerable.Zip(locations, lengths), allowSameLocation) { }
+		public MixedStorage(IReadOnlyList<StorageLocation> locations, IReadOnlyList<ulong> lengths, bool allowSameLocation = true) : this(locations.Zip(lengths), allowSameLocation) { }
 		#endregion
 
 		#region override
@@ -938,6 +966,196 @@ namespace Althea.Memory
 	}
 
 	/// <summary>
+	/// Represents a storage of a "memory" block represented by a <see cref="Uri"/>, inherits <see cref="Storage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public class UriStorage<T> : ActualStorage<T> where T : unmanaged
+	{
+		#region basic
+		private readonly Uri uri;
+
+		private ulong lengthInBytes;
+
+		private StorageLocation Location => new StorageLocation(MemoryLocation.Uri, (byte)uri.GetScheme().Value);
+
+		/// <summary>
+		/// <b>Allocate</b> and create a <see cref="UriStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="Uri"/> 
+		/// </summary>
+		/// <param name="uri">a <see cref="Uri"/> to represent the resource name to create</param>
+		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
+		public UriStorage(Uri uri, ulong length) : base(length)
+		{
+			if (!uri.GetScheme().HasValue)
+				throw new ArgumentOutOfRangeException(nameof(uri));
+		}
+
+		/// <summary>
+		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
+		/// </summary>
+		/// <param name="disposeManaged">dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged)
+		{
+			// TODO
+		}
+		#endregion
+
+		#region methods
+		/// <summary>
+		/// Resize this <see cref="UriStorage{T}"/>
+		/// </summary>
+		/// <param name="newLength">the new length in <typeparamref name="T"/></param>
+		public void Resize(ulong newLength)
+		{
+			// TODO
+			this.lengthInBytes = newLength * (ulong)SizeOfT;
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">another object</param>
+		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		public override bool Equals(Storage<T> obj)
+		{
+			if (obj is not null && obj is UriStorage<T> another)
+			{
+				return this.uri == another.uri;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Get the hash code of this <see cref="PureStorage{T}"/>
+		/// </summary>
+		/// <returns>the hash code</returns>
+		public override int GetHashCode() => this.uri.GetHashCode();
+
+		/// <summary>
+		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => 1;
+
+		/// <summary>
+		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
+		public override StoragePointer this[int index] {
+			get {
+				if (index < 0 || index >= 1)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				return new StoragePointer(this.Location, default(IntPtr), this.lengthInBytes);
+			}
+		}
+		#endregion
+	}
+
+	#region cache policy
+	/// <summary>
+	/// The struct for caching policies
+	/// </summary>
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly struct CachePolicy : IEquatable<CachePolicy>
+	{
+		#region basic
+		/// <summary>
+		/// The ratio of the length of memory block in this cache level and the length of memory block in next (lower performance) cache level cannot exceed <see cref="MaxPortionOfLowerOne"/>. Must be within range (0.0, 1.0).
+		/// </summary>
+		public readonly double MaxPortionOfLowerOne;
+
+		/// <summary>
+		/// The absolute length (in bytes) of memory block in this cache level cannot exceed <see cref="MaxLengthInBytes"/>. 0 means no limit.
+		/// </summary>
+		public readonly ulong MaxLengthInBytes;
+
+		/// <summary>
+		/// Create with given max portion and max length
+		/// </summary>
+		/// <param name="maxPortionOfLowerOne">see <see cref="MaxPortionOfLowerOne"/></param>
+		/// <param name="maxLength">see <see cref="MaxLengthInBytes"/></param>
+		public CachePolicy(double maxPortionOfLowerOne, ulong maxLength)
+		{
+			this.MaxPortionOfLowerOne = maxPortionOfLowerOne; this.MaxLengthInBytes = maxLength;
+		}
+
+		/// <summary>
+		/// Static converter from a <see cref="ValueTuple{T1, T2}"/>
+		/// </summary>
+		/// <param name="tuple">a <see cref="ValueTuple{T1, T2}"/> of type <see cref="double"/> and <see cref="ulong"/></param>
+		/// <returns>a <see cref="CachePolicy"/> with same values as <paramref name="tuple"/></returns>
+		public static implicit operator CachePolicy(ValueTuple<double, ulong> tuple) => new CachePolicy(tuple.Item1, tuple.Item2);
+
+		/// <summary>
+		/// Static converter to a <see cref="ValueTuple{T1, T2}"/>
+		/// </summary>
+		/// <param name="policy">a<see cref="CachePolicy"/></param>
+		/// <returns>a <see cref="ValueTuple{T1, T2}"/> of type <see cref="double"/> and <see cref="ulong"/> with same values as <paramref name="policy"/></returns>
+		public static implicit operator ValueTuple<double, ulong>(CachePolicy policy) => (policy.MaxPortionOfLowerOne, policy.MaxLengthInBytes);
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="CachePolicy"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		public bool Equals(CachePolicy other)
+		{
+			return this.MaxPortionOfLowerOne == other.MaxPortionOfLowerOne && this.MaxLengthInBytes == other.MaxLengthInBytes;
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		public override bool Equals(object obj)
+		{
+			return obj is CachePolicy policy && Equals(policy);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="CachePolicy"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(this.MaxPortionOfLowerOne, this.MaxLengthInBytes);
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(CachePolicy left, CachePolicy right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(CachePolicy left, CachePolicy right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		/// <summary>
+		/// Return the string representation of this <see cref="StorageLocation"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="StorageLocation"/></returns>
+		public override string ToString()
+		{
+			return $"{nameof(CachePolicy)}[max_portion_of_lower_one={this.MaxPortionOfLowerOne}, max_length={this.MaxLengthInBytes}]";
+		}
+		#endregion
+	}
+	#endregion
+
+	/// <summary>
 	/// Represents a storage of several contiguous memory blocks on different memory locations with variable sizes purposed to cache memories of higher performance, inherits <see cref="Storage{T}"/>
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
@@ -946,46 +1164,68 @@ namespace Althea.Memory
 		#region basic
 		private readonly StoragePointer[] pointers;
 
-		private readonly Uri uri;
+		private readonly Stream uriStream;
 
 		/// <summary>
-		/// <b>Allocate</b> and create a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
+		/// <b>Allocate</b> and create a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s and <see cref="ulong"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="priorities">the <see cref="IEnumerable{T}"/> of <see cref="StorageLocation"/>s to represent the priorities from higher-performance memories to lower ones</param>
+		/// <param name="priorities">the <see cref="IEnumerable{T}"/> of <see cref="StorageLocation"/>s and <see cref="ulong"/>s to represent the priorities from higher-performance memories to lower ones (cannot contain <see cref="MemoryLocation.Uri"/> or any duplicate locations)</param>
 		/// <param name="totalLength">the desired total length (in <typeparamref name="T"/>) of presenting array</param>
-		public CachedStorage(IEnumerable<StorageLocation> priorities, ulong totalLength)
+		/// <param name="cacheUri">the final caching indicated by a <see cref="Uri"/>, default null means do not cache to URI</param>
+		/// <exception cref="ArgumentException">if <paramref name="priorities"/> has unexpected value(s) or is of wrong size</exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="totalLength"/> or <paramref name="cacheUri"/> has unexpected value(s)</exception>
+		public CachedStorage(IEnumerable<(StorageLocation location, ulong maxLengthInBytes)> priorities, ulong totalLength, Uri cacheUri = null) : base(totalLength)
 		{
 			var temp = new List<StoragePointer>();
-			foreach (var location in priorities)
+			foreach (var (location, maxLengthInBytes) in priorities)
 			{
+				if (location.Location == MemoryLocation.Uri)
+					throw new ArgumentException(Resource.UnexpectedValue, nameof(priorities));
 				if (temp.Contains(location, selector: p => p.Location))
-					throw new ArgumentOutOfRangeException(nameof(priorities), Resource.DuplicateValue);
+					throw new ArgumentException(Resource.DuplicateValue, nameof(priorities));
+				ulong length = 0; // TODO: adapter get available length on 'location'
+				if (maxLengthInBytes != 0 && maxLengthInBytes < length)
+				{
+					length = maxLengthInBytes;
+				}
 				// do not allocate here
-				temp.Add(new StoragePointer(location, default(IntPtr), 0));
+				temp.Add(new StoragePointer(location, default(IntPtr), length));
 			}
 			if (temp.Count <= 1)
-				throw new ArgumentOutOfRangeException(nameof(priorities), Resource.ParamWrongSize);
+				throw new ArgumentException(Resource.ParamWrongSize, nameof(priorities));
+			ulong allowedTotalLength = temp.Sum(p => p.LengthInBytes);
+			if (allowedTotalLength <= totalLength && cacheUri is null)
+				throw new ArgumentOutOfRangeException(nameof(totalLength), Resource.UnexpectedValue);
+			// deal with URI
+			if (cacheUri is not null)
+			{
+				UriScheme? scheme = cacheUri.GetScheme();
+				if (!scheme.HasValue)
+					throw new ArgumentOutOfRangeException(nameof(cacheUri), Resource.UnexpectedValue);
+				// do not allocate here
+				temp.Add(new StoragePointer(new StorageLocation(MemoryLocation.Uri, (byte)scheme.Value), default(IntPtr), totalLength <= allowedTotalLength ? 0 : totalLength - allowedTotalLength));
+			}
 			this.pointers = temp.ToArray();
-			if (this.pointers[..^1].Any(p => p.Location.Location == MemoryLocation.Uri))
-				throw new ArgumentException(Resource.UnexpectedValue, nameof(priorities));
 			// allocate here
 			// TODO
-			IntPtr ptr = Marshal.StringToHGlobalUni(this.uri.AbsoluteUri);
 		}
-		#endregion
 
-		#region override
 		/// <summary>
-		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
+		/// The function that actually dispose this storage, override <see cref="ActualStorage{T}.Dispose(bool)"/>
 		/// </summary>
 		/// <param name="disposeManaged">dispose managed resources or not</param>
 		protected override void Dispose(bool disposeManaged)
 		{
 			base.Dispose(disposeManaged);
-			if (this.uri is not null)
-				Marshal.FreeHGlobal(this.pointers[^1].Pointer);
+			this.uriStream?.Dispose();
+			if (disposeManaged)
+			{
+				this.uriStream?.Close();
+			}
 		}
+		#endregion
 
+		#region override
 		/// <summary>
 		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
@@ -1008,68 +1248,40 @@ namespace Althea.Memory
 	#endregion
 
 
-	internal static class AutoSwapMemory
+
+	/// <summary>
+	/// The static class that contains several extension methods for <see cref="StorageLocation"/>
+	/// </summary>
+	public static class StorageExtension
 	{
-		internal static readonly Stopwatch timer = Stopwatch.StartNew();
-
-		private static readonly List<ISwappablePointer> devicePointers = new List<ISwappablePointer>(), swappedPointers = new List<ISwappablePointer>();
-
-		internal static void NotifyNewStorage(ISwappablePointer pointer)
+		// TODO: edit CheckOnHost
+		internal static bool CheckOnHost<T>(params Arrays.ValueArray<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
 		{
-			if (!pointer.DirectOnHost)
-				devicePointers.Add(pointer);
-		}
-
-		internal static void NotifyDisposeStorage(ISwappablePointer pointer)
-		{
-			if (!pointer.DirectOnHost)
-				devicePointers.Remove(pointer);
-			else
-				swappedPointers.Remove(pointer);
-		}
-
-		internal static void NotifyUsage(ISwappablePointer pointer)
-		{
-			if (pointer is null)
-				return;
-			pointer.LastUsedTime = timer.ElapsedTicks;
-			if (pointer.DirectOnHost && swappedPointers.Contains(pointer))
-			{
-				bool success = NotifyNewDeviceMemory(pointer.LengthInBytes);
-				if (!success)
-				{
-					GC.Collect(); GC.WaitForPendingFinalizers();
-					success = NotifyNewDeviceMemory(pointer.LengthInBytes);
-				}
-				if (!success) // still fails to make enough room
-					throw new InsufficientMemoryException($"Cannot swap {(pointer.LengthInBytes / 1024.0 / 1024.0):N1}MiB memory back to device.");
-				pointer.ToOtherMemory();
-			}
-		}
-
-		internal static bool NotifyNewDeviceMemory(long lenghtInBytes)
-		{
-			var (free, total) = RT.DeviceFreeAndTotalMemory;
-			if (free + lenghtInBytes < total)
-				return true;
-			long lengthNeed = lenghtInBytes - free;
-			var ordered = devicePointers.OrderBy(p => p.LastUsedTime);
-			long len = 0; int i;
-			for (i = 0; i < ordered.Count; i++)
-			{
-				len += ordered[i].LengthInBytes;
-				if (len >= lengthNeed)
-					break;
-			}
-			if (i + 1 == ordered.Count)
+			if (arrays is null || arrays.Length == 0)
+				throw new ArgumentNullException(nameof(arrays));
+			if (arrays.Any(a => a.Disposed))
+				throw new ObjectDisposedException(nameof(arrays));
+			if (arrays.All(a => a.Length == 0 || !a.OnHost)) // empty array can be any where
 				return false;
-			for (int j = 0; j <= i; j++)
-			{
-				ordered[j].ToOtherMemory();
-				swappedPointers.Add(ordered[j]);
-				devicePointers.Remove(ordered[j]);
-			}
-			return true;
+			if (arrays.All(a => a.Length == 0 || a.OnHost))
+				return true;
+			// else
+			throw new ArgumentException(Resource.RequireSamePos);
 		}
+
+		internal static bool CheckOnHost<T>(params Memory.Storage<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (arrays is null || arrays.Length == 0)
+				throw new ArgumentNullException(nameof(arrays));
+			////if (arrays.Any(a => a.AlreadyDisposed))
+			////	throw new ObjectDisposedException(nameof(arrays));
+			if (arrays.All(a => !a.OnHost))
+				return false;
+			if (arrays.All(a => a.OnHost))
+				return true;
+			// else
+			throw new ArgumentException(Resource.RequireSamePos);
+		}
+
 	}
 }
