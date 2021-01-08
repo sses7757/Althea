@@ -177,9 +177,6 @@
   <data name="FormatNotAtomic" xml:space="preserve">
     <value>The format(s) must be atomic to perform this operation.</value>
   </data>
-  <data name="FormatNotSupport" xml:space="preserve">
-    <value>Other format(s) are not supported yet.</value>
-  </data>
   <data name="FreeFail" xml:space="preserve">
     <value>Free {0} array memory failed since 0x{1:X} is not a valid array pointer.</value>
   </data>
@@ -210,8 +207,20 @@
   <data name="NotErrors" xml:space="preserve">
     <value>The underlying statuses are not errors.</value>
   </data>
-  <data name="OtherArrayNotSupport" xml:space="preserve">
+  <data name="NotSupportedFormat" xml:space="preserve">
+    <value>Other format(s) are not supported yet.</value>
+  </data>
+  <data name="NotSupportedLocation" xml:space="preserve">
+    <value>The given location(s) is/are not supported.</value>
+  </data>
+  <data name="NotSupportedOtherArray" xml:space="preserve">
     <value>Not dense neither sparse array(s) is/are not supported yet.</value>
+  </data>
+  <data name="NotSupportedRoutine" xml:space="preserve">
+    <value>Other routine(s) is/are not supported yet.</value>
+  </data>
+  <data name="NotSupportedTensor" xml:space="preserve">
+    <value>Tensors are not supported yet.</value>
   </data>
   <data name="ParaCannotNegative" xml:space="preserve">
     <value>The parameter(s) cannot be less than zero.</value>
@@ -255,9 +264,6 @@
   <data name="RoutineNotLoaded" xml:space="preserve">
     <value>The target routine is not loaded.</value>
   </data>
-  <data name="RoutineNotSupport" xml:space="preserve">
-    <value>Other routine(s) is/are not supported yet.</value>
-  </data>
   <data name="SpMatMustFormat" xml:space="preserve">
     <value>The sparse matrix(matrices) must be of {0} format to perform this operation.</value>
   </data>
@@ -266,9 +272,6 @@
   </data>
   <data name="SpVecTooDense" xml:space="preserve">
     <value>The sparse vector with too large number of non-zero values performs worse than the dense one.</value>
-  </data>
-  <data name="TensorNotSupport" xml:space="preserve">
-    <value>Tensors are not supported yet.</value>
   </data>
   <data name="TensorWrongIndex" xml:space="preserve">
     <value>The tensor(s) with incompatible index(indices) cannot perform this operation.</value>

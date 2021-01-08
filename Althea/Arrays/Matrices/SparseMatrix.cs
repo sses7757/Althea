@@ -867,7 +867,7 @@ namespace Althea.Arrays
 						return allNewCols.GetRowRange(rowRange, overwrite);
 					}
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 		}
 
@@ -1093,7 +1093,7 @@ namespace Althea.Arrays
 				SparseMatrixFormat.COOC => SparseMatrixFormat.COOR,
 				SparseMatrixFormat.CSR => SparseMatrixFormat.CSC,
 				SparseMatrixFormat.CSC => SparseMatrixFormat.CSR,
-				_ => throw new NotSupportedException(Resource.FormatNotSupport),
+				_ => throw new NotSupportedException(Resource.NotSupportedFormat),
 			};
 		}
 
@@ -1472,7 +1472,7 @@ namespace Althea.Arrays
 						return allNewCols.GetRowRange(rowRange, overwrite);
 					}
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 		}
 
@@ -1994,7 +1994,7 @@ namespace Althea.Arrays
 					}
 					break;
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 			return mat;
 		}
@@ -2486,7 +2486,7 @@ namespace Althea.Arrays
 						return -1;
 					return findx;
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 		}
 
@@ -2746,7 +2746,7 @@ namespace Althea.Arrays
 						throw new ArgumentException(Resource.VectorWrongSize);
 					break;
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 			var mat = new SparseMatrix<T>(rows, cols, nnz, format, onHost, herm: false);
 			try
@@ -2851,7 +2851,7 @@ namespace Althea.Arrays
 					}
 					break;
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 			return (rowInd, colInd, res);
 		}

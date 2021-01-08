@@ -241,15 +241,6 @@ namespace Althea {
         }
         
         /// <summary>
-        ///   查找类似 Other format(s) are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string FormatNotSupport {
-            get {
-                return ResourceManager.GetString("FormatNotSupport", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Free {0} array memory failed since 0x{1:X} is not a valid array pointer. 的本地化字符串。
         /// </summary>
         internal static string FreeFail {
@@ -340,11 +331,47 @@ namespace Althea {
         }
         
         /// <summary>
+        ///   查找类似 Other format(s) are not supported yet. 的本地化字符串。
+        /// </summary>
+        internal static string NotSupportedFormat {
+            get {
+                return ResourceManager.GetString("NotSupportedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The given location(s) is/are not supported. 的本地化字符串。
+        /// </summary>
+        internal static string NotSupportedLocation {
+            get {
+                return ResourceManager.GetString("NotSupportedLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Not dense neither sparse array(s) is/are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string OtherArrayNotSupport {
+        internal static string NotSupportedOtherArray {
             get {
-                return ResourceManager.GetString("OtherArrayNotSupport", resourceCulture);
+                return ResourceManager.GetString("NotSupportedOtherArray", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Other routine(s) is/are not supported yet. 的本地化字符串。
+        /// </summary>
+        internal static string NotSupportedRoutine {
+            get {
+                return ResourceManager.GetString("NotSupportedRoutine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Tensors are not supported yet. 的本地化字符串。
+        /// </summary>
+        internal static string NotSupportedTensor {
+            get {
+                return ResourceManager.GetString("NotSupportedTensor", resourceCulture);
             }
         }
         
@@ -475,15 +502,6 @@ namespace Althea {
         }
         
         /// <summary>
-        ///   查找类似 Other routine(s) is/are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string RoutineNotSupport {
-            get {
-                return ResourceManager.GetString("RoutineNotSupport", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 The sparse matrix(matrices) must be of {0} format to perform this operation. 的本地化字符串。
         /// </summary>
         internal static string SpMatMustFormat {
@@ -507,15 +525,6 @@ namespace Althea {
         internal static string SpVecTooDense {
             get {
                 return ResourceManager.GetString("SpVecTooDense", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Tensors are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string TensorNotSupport {
-            get {
-                return ResourceManager.GetString("TensorNotSupport", resourceCulture);
             }
         }
         

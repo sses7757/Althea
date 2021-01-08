@@ -1599,7 +1599,7 @@ namespace Althea.SparseBlas.Cuda
 						SparseMatrixFormat.COOC => this.COOToFormat(m, n, M, thisCOOR: false, ref target),
 						SparseMatrixFormat.CSR => this.CompressedToFormat(m, n, M, thisCSR: true, ref target),
 						SparseMatrixFormat.CSC => this.CompressedToFormat(m, n, M, thisCSR: false, ref target),
-						_ => throw new NotSupportedException(Resource.FormatNotSupport),
+						_ => throw new NotSupportedException(Resource.NotSupportedFormat),
 					};
 					return res;
 				}
@@ -2042,7 +2042,7 @@ namespace Althea.SparseBlas.Cuda
 					rowN = M.Values.Length; colN = M.Values.Length + 1;
 					break;
 				default:
-					throw new NotSupportedException(Resource.FormatNotSupport);
+					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
 			NativeMethods.cusparseCreateIdentityPermutation(this.handle, checked((int)rowN), M.Row).Check();
 			NativeMethods.cusparseCreateIdentityPermutation(this.handle, checked((int)colN), M.Column).Check();

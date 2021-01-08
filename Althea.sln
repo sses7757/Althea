@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BlasSupplement", "BlasSuppl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "UnitTest\UnitTest.csproj", "{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostUtilities", "HostUtilities\HostUtilities.vcxproj", "{83996965-8731-4CD5-928C-96D45CD1567F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,14 +35,6 @@ Global
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.ActiveCfg = Release|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.Build.0 = Release|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x86.ActiveCfg = Release|x64
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Debug|x64.ActiveCfg = Debug|x64
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Debug|x64.Build.0 = Debug|x64
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Debug|x86.ActiveCfg = Debug|Win32
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Debug|x86.Build.0 = Debug|Win32
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Release|x64.ActiveCfg = Release|x64
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Release|x64.Build.0 = Release|x64
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Release|x86.ActiveCfg = Release|Win32
-		{83996965-8731-4CD5-928C-96D45CD1567F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

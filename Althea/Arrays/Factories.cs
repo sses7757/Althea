@@ -561,7 +561,7 @@ namespace Althea.Arrays
 				else if (colLen == size[1] + 1 && rowLen == nnz)
 					format = SparseMatrixFormat.CSC;
 				else
-					throw new ArgumentException(Resource.FormatNotSupport, nameof(otherInfo));
+					throw new ArgumentException(Resource.NotSupportedFormat, nameof(otherInfo));
 			}
 			else if (nnz == 0)
 			{

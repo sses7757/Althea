@@ -265,7 +265,7 @@ namespace Althea.Memory
 	/// <summary>
 	/// The struct of a pointer at a certain unmanaged memory block
 	/// </summary>
-	/// <remarks>This struct <b>is not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
+	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct StoragePointer : IEquatable<StoragePointer>
 	{
@@ -323,6 +323,20 @@ namespace Althea.Memory
 		/// <param name="storage">The <see cref="StoragePointer"/> to copy info from</param>
 		/// <param name="newLength">The new <see cref="LengthInBytes"/></param>
 		public StoragePointer(StoragePointer storage, ulong newLength) : this(storage.location, storage.pointer, newLength) { }
+
+		/// <summary>
+		/// Create a new <see cref="StoragePointer"/> with given new <see cref="LengthInBytes"/>
+		/// </summary>
+		/// <param name="newLength">The new <see cref="LengthInBytes"/></param>
+		/// <returns>The new <see cref="StoragePointer"/></returns>
+		public StoragePointer SetLength(ulong newLength) => new StoragePointer(this, newLength);
+
+		/// <summary>
+		/// Create a new <see cref="StoragePointer"/> with given new <paramref name="offset"/>
+		/// </summary>
+		/// <param name="offset">The offset</param>
+		/// <returns>The new <see cref="StoragePointer"/></returns>
+		public StoragePointer SetOffset(long offset) => new StoragePointer(this, offset);
 		#endregion
 
 		#region equality
@@ -384,6 +398,12 @@ namespace Althea.Memory
 		#endregion
 
 		#region operator
+		/// <summary>
+		/// Get the unmanaged pointer (a <c>void*</c>) of this <see cref="StoragePointer"/>
+		/// </summary>
+		/// <returns>the unmanaged pointer as a <c>void*</c></returns>
+		public unsafe void* UnmangedPointer => this.pointer.ToPointer();
+
 		/// <summary>
 		/// Get the managed pointer (a <c>ref <typeparamref name="T"/></c>) of this <see cref="StoragePointer"/> of type <typeparamref name="T"/>
 		/// </summary>
