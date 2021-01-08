@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using Althea.Linq;
 using Althea.Helpers;
 
+
 namespace Althea.Memory
 {
 	#region storage location
@@ -329,14 +330,14 @@ namespace Althea.Memory
 		/// </summary>
 		/// <param name="newLength">The new <see cref="LengthInBytes"/></param>
 		/// <returns>The new <see cref="StoragePointer"/></returns>
-		public StoragePointer SetLength(ulong newLength) => new StoragePointer(this, newLength);
+		public StoragePointer AsLength(ulong newLength) => new StoragePointer(this, newLength);
 
 		/// <summary>
 		/// Create a new <see cref="StoragePointer"/> with given new <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset</param>
 		/// <returns>The new <see cref="StoragePointer"/></returns>
-		public StoragePointer SetOffset(long offset) => new StoragePointer(this, offset);
+		public StoragePointer AsOffset(long offset) => new StoragePointer(this, offset);
 		#endregion
 
 		#region equality
@@ -493,10 +494,10 @@ namespace Althea.Memory
 		/// <summary>
 		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
-		public abstract ulong Length { get; protected set; }
+		public abstract ulong Length { get; }
 
 		/// <summary>
-		/// The total length of the presenting array in  bytes
+		/// The total length of the presenting array in bytes
 		/// </summary>
 		public virtual ulong LengthInBytes => this.Length * (ulong)SizeOfT;
 
@@ -677,7 +678,7 @@ namespace Althea.Memory
 		/// <summary>
 		/// Override <see cref="Storage{T}.Length"/> to show the new presenting length
 		/// </summary>
-		public override ulong Length { get; protected set; }
+		public override ulong Length { get; }
 
 		/// <summary>
 		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
@@ -783,7 +784,7 @@ namespace Althea.Memory
 		{
 			long offset = this.totalOffset * SizeOfT;
 			if (offset % Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException();
+				throw new InvalidCastException(Resource.CannotDivide);
 			offset /= Storage<TOut>.SizeOfT;
 			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes, this.Length);
 		}
@@ -820,7 +821,7 @@ namespace Althea.Memory
 		/// <summary>
 		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>
 		/// </summary>
-		public override ulong Length { get; protected set; }
+		public override ulong Length { get; }
 
 		/// <summary>
 		/// Create an <see cref="ActualStorage{T}"/> with given length of presenting array
@@ -862,7 +863,7 @@ namespace Althea.Memory
 		protected static StoragePointer Allocate(MemoryLocation location, ulong length)
 		{
 			IntPtr ptr = default;
-			// TODO: adapter create
+			// TODO: adapter allocate
 			return new StoragePointer(location, ptr, length);
 		}
 		#endregion
@@ -876,9 +877,9 @@ namespace Althea.Memory
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override ReferenceStorage<TOut> As<TOut>()
 		{
-			if (((IStorage)this).LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException();
-			ulong newLength = ((IStorage)this).LengthInBytes / (ulong)Storage<TOut>.SizeOfT;
+			if (this.LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
+				throw new InvalidCastException(Resource.CannotDivide);
+			ulong newLength = this.LengthInBytes / (ulong)Storage<TOut>.SizeOfT;
 			return new ReferenceStorage<TOut>(this, newLength: newLength);
 		}
 
@@ -1020,12 +1021,22 @@ namespace Althea.Memory
 	/// Represents a storage of a "memory" block represented by a <see cref="Uri"/>, inherits <see cref="Storage{T}"/>
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public class UriStorage<T> : ActualStorage<T>, IAsyncDisposable where T : unmanaged
+	public class UriStorage<T> : Storage<T>, IAsyncDisposable where T : unmanaged
 	{
 		#region basic
-		private readonly Uri uri;
+		/// <summary>
+		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>
+		/// </summary>
+		public override ulong Length => this.LengthInBytes / (ulong)SizeOfT;
 
-		private MemoryLocation Location => new MemoryLocation(StorageLocation.Uri, (byte)uri.GetScheme().Value);
+		/// <summary>
+		/// The total length of the presenting array in bytes, override <see cref="Storage{T}.LengthInBytes"/>
+		/// </summary>
+		public override ulong LengthInBytes => this.wrapper.Length;
+
+		private readonly IUriWrapper wrapper;
+
+		private MemoryLocation Location => new MemoryLocation(StorageLocation.Uri, (byte)this.wrapper.OriginalUri.GetScheme().Value);
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="UriStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="Uri"/> 
@@ -1033,12 +1044,17 @@ namespace Althea.Memory
 		/// <param name="uri">a <see cref="Uri"/> to represent the resource name to create</param>
 		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> has unsupported scheme</exception>
-		public UriStorage(Uri uri, ulong length) : base(length)
+		public UriStorage(Uri uri, ulong length)
 		{
 			if (!uri.GetScheme().HasValue)
 				throw new ArgumentOutOfRangeException(nameof(uri));
-			this.uri = uri;
-			// TODO
+			// TODO: adapter create
+			////this.wrapper = uri;
+		}
+
+		private UriStorage(IUriWrapper wrapper)
+		{
+			this.wrapper = wrapper;
 		}
 		#endregion
 
@@ -1049,16 +1065,16 @@ namespace Althea.Memory
 		/// <param name="disposeManaged">dispose managed resources or not</param>
 		protected override void Dispose(bool disposeManaged)
 		{
-			// TODO
+			this.wrapper.Dispose();
 		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources asynchronously.
 		/// </summary>
 		/// <returns>A task that represents the asynchronous dispose operation.</returns>
-		public ValueTask DisposeAsync()
+		public async ValueTask DisposeAsync()
 		{
-			return new ValueTask(Task.Run(() => this.Dispose(true)));
+			await this.wrapper.DisposeAsync();
 		}
 
 		/// <summary>
@@ -1067,12 +1083,33 @@ namespace Althea.Memory
 		/// <param name="newLength">the new length in <typeparamref name="T"/></param>
 		public void Resize(ulong newLength)
 		{
-			// TODO
-			this.Length = newLength;
+			this.wrapper.Resize(newLength);
+		}
+
+		/// <summary>
+		/// Resize this <see cref="UriStorage{T}"/> asynchronously
+		/// </summary>
+		/// <param name="newLength">the new length in <typeparamref name="T"/></param>
+		public async ValueTask ResizeAsync(ulong newLength)
+		{
+			await this.wrapper.ResizeAsync(newLength);
 		}
 		#endregion
 
 		#region override
+		/// <summary>
+		/// Convert this <see cref="ActualStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>a <see cref="UriStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		public override UriStorage<TOut> As<TOut>()
+		{
+			if (this.LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
+				throw new InvalidCastException(Resource.CannotDivide);
+			return new UriStorage<TOut>(this.wrapper);
+		}
+
 		/// <summary>
 		/// Determines whether the specified object is equal to the current object.
 		/// </summary>
@@ -1082,7 +1119,7 @@ namespace Althea.Memory
 		{
 			if (obj is not null && obj is UriStorage<T> another)
 			{
-				return this.uri == another.uri;
+				return this.wrapper.OriginalUri == another.wrapper.OriginalUri;
 			}
 			return false;
 		}
@@ -1091,7 +1128,7 @@ namespace Althea.Memory
 		/// Get the hash code of this <see cref="PureStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
-		public override int GetHashCode() => this.uri.GetHashCode();
+		public override int GetHashCode() => this.wrapper.OriginalUri.GetHashCode();
 
 		/// <summary>
 		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
@@ -1107,7 +1144,7 @@ namespace Althea.Memory
 			get {
 				if (index < 0 || index >= 1)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				return new StoragePointer(this.Location, default(IntPtr), ((IStorage)this).LengthInBytes);
+				return new StoragePointer(this.Location, default(IntPtr), this.LengthInBytes);
 			}
 		}
 		#endregion
@@ -1122,7 +1159,7 @@ namespace Althea.Memory
 		#region basic
 		private readonly StoragePointer[] pointers;
 
-		private readonly Stream uriStream;
+		private readonly UriStorage<T> uriStorage;
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="CachedStorage{T}"/> of given <see cref="MemoryLocation"/>s and <see cref="ulong"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
@@ -1165,7 +1202,7 @@ namespace Althea.Memory
 			}
 			this.pointers = temp.ToArray();
 			// allocate here
-			// TODO
+			// TODO: adapter allocate
 		}
 
 		/// <summary>
@@ -1175,11 +1212,7 @@ namespace Althea.Memory
 		protected override void Dispose(bool disposeManaged)
 		{
 			base.Dispose(disposeManaged);
-			this.uriStream?.Dispose();
-			if (disposeManaged)
-			{
-				this.uriStream?.Close();
-			}
+			this.uriStorage?.Dispose();
 		}
 		#endregion
 
@@ -1204,42 +1237,4 @@ namespace Althea.Memory
 		#endregion
 	}
 	#endregion
-
-
-
-	/// <summary>
-	/// The static class that contains several extension methods for <see cref="MemoryLocation"/>
-	/// </summary>
-	public static class StorageExtension
-	{
-		// TODO: edit CheckOnHost
-		internal static bool CheckOnHost<T>(params Arrays.ValueArray<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arrays is null || arrays.Length == 0)
-				throw new ArgumentNullException(nameof(arrays));
-			if (arrays.Any(a => a.Disposed))
-				throw new ObjectDisposedException(nameof(arrays));
-			if (arrays.All(a => a.Length == 0 || !a.OnHost)) // empty array can be any where
-				return false;
-			if (arrays.All(a => a.Length == 0 || a.OnHost))
-				return true;
-			// else
-			throw new ArgumentException(Resource.RequireSamePos);
-		}
-
-		internal static bool CheckOnHost<T>(params Memory.Storage<T>[] arrays) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arrays is null || arrays.Length == 0)
-				throw new ArgumentNullException(nameof(arrays));
-			////if (arrays.Any(a => a.AlreadyDisposed))
-			////	throw new ObjectDisposedException(nameof(arrays));
-			if (arrays.All(a => !a.OnHost))
-				return false;
-			if (arrays.All(a => a.OnHost))
-				return true;
-			// else
-			throw new ArgumentException(Resource.RequireSamePos);
-		}
-
-	}
 }

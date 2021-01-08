@@ -555,17 +555,6 @@ namespace Althea.NativeTypes
 		#endregion
 	}
 	#endregion
-
-
-	#region complex type extension methods
-	/// <summary>
-	/// A static class which contains some extension methods for <see cref="Complex{T}"/>
-	/// </summary>
-	public static class ComplexExtension
-	{
-		
-	}
-	#endregion
 }
 
 
