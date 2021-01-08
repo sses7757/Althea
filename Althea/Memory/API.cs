@@ -2,27 +2,35 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Althea.Linq;
+using Althea.Helpers;
+
 
 namespace Althea.Memory
 {
-	/// <summary>
-	/// The abstract class for runtime memory API routines.
-	/// </summary>
-	public abstract partial class AbstractMemoryApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
 		#region static methods for dispatching
+		/// <summary>
+		/// Get the current using <see cref="AbstractApi"/>.
+		/// </summary>
+		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+		public static AbstractApi Current => RecentApi.First.Value;
 
+		private static readonly LinkedList<AbstractApi> RecentApi = new LinkedList<AbstractApi>();
+
+		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentApi, implementation);
 		#endregion
 	}
 
 	/// <summary>
 	/// The abstract class for runtime memory API routines 
 	/// </summary>
-	public abstract partial class AbstractMemoryApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
 		#region support information
 		/// <summary>
-		/// Get list of the supported memory locations for all ternary operations. Since <see cref="AbstractMemoryApi"/> has no definition of ternary operations, this returns null.
+		/// Get list of the supported memory locations for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this returns null.
 		/// </summary>
 		public override IReadOnlyList<StorageLocation> SupportedTernaryLocations => null;
 
@@ -35,16 +43,16 @@ namespace Althea.Memory
 		protected override IReadOnlyList<StorageLocation> Direct_SupportedNaryLocations(int N) => null;
 
 		/// <summary>
-		/// Get the supported URI direct transfer dictionary. Each value indicates that this <see cref="AbstractMemoryApi"/> supports the <b>direct</b> data transfer between the given <see cref="StorageLocation"/> (combination of flags) and the given <see cref="UriScheme"/>.
+		/// Get the supported URI direct transfer dictionary. Each value indicates that this <see cref="AbstractApi"/> supports the <b>direct</b> data transfer between the given <see cref="StorageLocation"/> (combination of flags) and the given <see cref="UriScheme"/>.
 		/// </summary>
 		public abstract IReadOnlyDictionary<UriScheme, StorageLocation> SupportedUriTransfers { get; }
 
 		/// <summary>
-		/// Check if the direct data transfer of given <paramref name="location"/> and given <paramref name="uriScheme"/> is supported by this <see cref="AbstractMemoryApi"/> or not.
+		/// Check if the direct data transfer of given <paramref name="location"/> and given <paramref name="uriScheme"/> is supported by this <see cref="AbstractApi"/> or not.
 		/// </summary>
 		/// <param name="location">the given <see cref="StorageLocation"/></param>
 		/// <param name="uriScheme">the given <see cref="UriScheme"/></param>
-		/// <returns>Whether the direct data transfer of <paramref name="location"/> and <paramref name="uriScheme"/> is supported by this <see cref="AbstractMemoryApi"/>.</returns>
+		/// <returns>Whether the direct data transfer of <paramref name="location"/> and <paramref name="uriScheme"/> is supported by this <see cref="AbstractApi"/>.</returns>
 		public virtual bool IsSupportedTransfer(StorageLocation location, UriScheme uriScheme) => location != StorageLocation.Uri && (this.SupportedUriTransfers[uriScheme] & location) == location;
 		#endregion
 
@@ -84,15 +92,6 @@ namespace Althea.Memory
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
 		/// </summary>
-		/// <param name="location">the <see cref="MemoryLocation"/> to allocate on</param>
-		/// <param name="length">length to allocate in bytes</param>
-		/// <returns>The allocated pointer as a <see cref="IntPtr"/></returns>
-		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
-		public delegate IntPtr DelegateAllocate(MemoryLocation location, ulong length);
-
-		/// <summary>
-		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
-		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="location">the <see cref="MemoryLocation"/> to allocate on</param>
 		/// <param name="length">length to allocate in <typeparamref name="T"/> rather than bytes</param>
@@ -110,14 +109,6 @@ namespace Althea.Memory
 		public abstract bool Free(MemoryLocation location, IntPtr ptr);
 
 		/// <summary>
-		/// Free a storage indicated by a given <paramref name="ptr"/> on a given <paramref name="location"/>
-		/// </summary>
-		/// <param name="location">the <see cref="MemoryLocation"/> to free on</param>
-		/// <param name="ptr">the pointer as a <see cref="IntPtr"/> to free</param>
-		/// <returns>If <paramref name="location"/> is not supported or <paramref name="ptr"/> is not valid, return false; otherwise, return true.</returns>
-		public delegate bool DelegateFree(MemoryLocation location, IntPtr ptr);
-
-		/// <summary>
 		/// Free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">the <see cref="StoragePointer"/> to free</param>
@@ -133,14 +124,6 @@ namespace Althea.Memory
 		public abstract void SetMemoryValue(StoragePointer storage, byte value);
 
 		/// <summary>
-		/// Fill the <paramref name="storage"/> by same <paramref name="value"/>, byte by byte.
-		/// </summary>
-		/// <param name="storage">pointer to be filled</param>
-		/// <param name="value">value to set</param>
-		/// <exception cref="NotSupportedException">if <paramref name="storage"/> is not supported</exception>
-		public delegate void DelegateSetMemoryValue(StoragePointer storage, byte value);
-
-		/// <summary>
 		/// Fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
@@ -150,15 +133,6 @@ namespace Althea.Memory
 		public abstract void SetMemoryValue<T>(StoragePointer storage, T value) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
-		/// Fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.
-		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="storage">pointer to be filled</param>
-		/// <param name="value">value to set</param>
-		/// <exception cref="NotSupportedException">if <paramref name="storage"/> is not supported</exception>
-		public delegate void DelegateSetMemoryValue<T>(StoragePointer storage, T value) where T : unmanaged, IEquatable<T>;
-
-		/// <summary>
 		/// Copy memory from <paramref name="source"/> to <paramref name="dest"/>.
 		/// </summary>
 		/// <param name="source">source pointer to copy from</param>
@@ -166,15 +140,6 @@ namespace Althea.Memory
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="dest"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
 		public abstract void MemoryCopy(StoragePointer source, StoragePointer dest);
-
-		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="dest"/>.
-		/// </summary>
-		/// <param name="source">source pointer to copy from</param>
-		/// <param name="dest">destination pointer to copy into</param>
-		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="dest"/> is used as the actual copy length in bytes</remarks>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
-		public delegate void DelegateMemoryCopy(StoragePointer source, StoragePointer dest);
 
 		/// <summary>
 		/// Copies 2D data from <paramref name="source"/> to <paramref name="dest"/>.
@@ -188,19 +153,6 @@ namespace Althea.Memory
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="dest"/> are ignored</remarks>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
 		public abstract void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer dest, ulong destLD, ulong height, ulong width);
-
-		/// <summary>
-		/// Copies 2D data from <paramref name="source"/> to <paramref name="dest"/>.
-		/// </summary>
-		/// <param name="source">the source pointer</param>
-		/// <param name="sourceLD">source array actual height (actual leading dimension) in bytes</param>
-		/// <param name="dest">the destination pointer</param>
-		/// <param name="destLD">destination array actual height (actual leading dimension) in bytes</param>
-		/// <param name="height">height to copy in bytes</param>
-		/// <param name="width">width to copy in bytes</param>
-		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="dest"/> are ignored</remarks>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
-		public delegate void DelegateMemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer dest, ulong destLD, ulong height, ulong width);
 		#endregion
 
 		#region URI related

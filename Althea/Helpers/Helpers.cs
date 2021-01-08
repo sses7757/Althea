@@ -85,7 +85,7 @@ namespace Althea.Helpers
 	}
 	#endregion
 
-	#region reflection
+	#region reflection helpers
 	/// <summary>
 	/// A static class that contains helper functions using reflections
 	/// </summary>

@@ -132,6 +132,9 @@
   <data name="CannotDivide" xml:space="preserve">
     <value>Cannot perform lossless integer division.</value>
   </data>
+  <data name="CannotInitialize" xml:space="preserve">
+    <value>The initialization procedure cannot be performed.</value>
+  </data>
   <data name="CannotLocateSource" xml:space="preserve">
     <value>Cannot locate the source of input array(s).</value>
   </data>

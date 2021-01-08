@@ -106,6 +106,15 @@ namespace Althea {
         }
         
         /// <summary>
+        ///   查找类似 The initialization procedure cannot be performed. 的本地化字符串。
+        /// </summary>
+        internal static string CannotInitialize {
+            get {
+                return ResourceManager.GetString("CannotInitialize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cannot locate the source of input array(s). 的本地化字符串。
         /// </summary>
         internal static string CannotLocateSource {

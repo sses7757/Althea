@@ -13,9 +13,9 @@ using Althea.Memory;
 namespace Althea.CSharp.Memory
 {
 	/// <summary>
-	/// The C# back-end of <see cref="AbstractMemoryApi"/>. <b>Can</b> be inherited.
+	/// The C# back-end of <see cref="AbstractApi"/>. <b>Can</b> be inherited.
 	/// </summary>
-	public class MemoryApi : AbstractMemoryApi
+	public class MemoryApi : AbstractApi
 	{
 		#region basic
 		/// <summary>
@@ -26,9 +26,9 @@ namespace Althea.CSharp.Memory
 			// do nothing
 		}
 
-		public override void Dispose()
+		protected override void Dispose(bool disposeManaged)
 		{
-			GC.SuppressFinalize(this);
+			// do nothing
 		}
 		#endregion
 

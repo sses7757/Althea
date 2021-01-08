@@ -27,12 +27,40 @@ namespace Althea.Helpers
 
 			public string Memory, LinearAlgebra, TensorAlgebra, Statistics, Solver;
 
-			// TODO: add notify change of implementation to target module
-			internal Type MemoryType { get => Type.GetType(Memory); set => Memory = value.AssemblyQualifiedName; }
-			internal Type LinearAlgebraType { get => Type.GetType(LinearAlgebra); set => LinearAlgebra = value.AssemblyQualifiedName; }
-			internal Type TensorAlgebraType { get => Type.GetType(TensorAlgebra); set => TensorAlgebra = value.AssemblyQualifiedName; }
-			internal Type StatisticsType { get => Type.GetType(Statistics); set => Statistics = value.AssemblyQualifiedName; }
-			internal Type SolverType { get => Type.GetType(Solver); set => Solver = value.AssemblyQualifiedName; }
+			internal Type MemoryType { get => Type.GetType(Memory);
+				set {
+					if (Althea.Memory.AbstractApi.SetImplementation(value))
+						Memory = value.AssemblyQualifiedName;
+				}
+			}
+
+			internal Type LinearAlgebraType { get => Type.GetType(LinearAlgebra);
+				set {
+					if (Althea.LinearAlgebra.AbstractApi.SetImplementation(value))
+						Memory = value.AssemblyQualifiedName;
+				}
+			}
+
+			internal Type TensorAlgebraType { get => Type.GetType(TensorAlgebra);
+				set {
+					if (Althea.TensorAlgebra.AbstractApi.SetImplementation(value))
+						Memory = value.AssemblyQualifiedName;
+				}
+			}
+
+			internal Type StatisticsType { get => Type.GetType(Statistics);
+				set {
+					if (Althea.Statistics.AbstractApi.SetImplementation(value))
+						Memory = value.AssemblyQualifiedName;
+				}
+			}
+
+			internal Type SolverType { get => Type.GetType(Solver);
+				set {
+					if (Althea.Solver.AbstractApi.SetImplementation(value))
+						Memory = value.AssemblyQualifiedName;
+				}
+			}
 
 			internal JsonImplementationSettings(bool _)
 			{
