@@ -458,6 +458,18 @@ namespace Althea.Memory
 
 	#region interfaces
 	/// <summary>
+	/// The interface for checking validness of a pointer-like object
+	/// </summary>
+	public interface ICheckValidness
+	{
+		/// <summary>
+		/// Check whether this object is valid or not
+		/// </summary>
+		/// <returns>The validness of this object</returns>
+		bool IsValid();
+	}
+
+	/// <summary>
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="MemoryLocation"/>(s) of any data type
 	/// </summary>
 	public interface IStorage : IDisposable, IReadOnlyList<StoragePointer>
