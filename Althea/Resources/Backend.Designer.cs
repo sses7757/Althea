@@ -68,5 +68,14 @@ namespace Althea.Resources {
                 return ResourceManager.GetString("CannotInitialize", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似 There is no suitable backend implementation currently available. 的本地化字符串。
+        /// </summary>
+        internal static string NotAvailable {
+            get {
+                return ResourceManager.GetString("NotAvailable", resourceCulture);
+            }
+        }
     }
 }

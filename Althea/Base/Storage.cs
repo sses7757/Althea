@@ -10,7 +10,7 @@ using Althea.Helpers;
 using Althea.Resources;
 
 
-namespace Althea.Memory
+namespace Althea
 {
 	#region storage location
 
@@ -18,6 +18,7 @@ namespace Althea.Memory
 	/// <summary>
 	/// The enum of the storage locations, all flag values larger than <see cref="OtherRam_0"/> are all considered as some platform-specific local RAMs.
 	/// </summary>
+	/// <remarks>Use <see cref="StorageLocationExtension.StringRepr(StorageLocation)"/> to get the correct string representation.</remarks>
 	[Flags]
 	public enum StorageLocation : int
 	{
@@ -97,6 +98,48 @@ namespace Althea.Memory
 				j++;
 			}
 			return locations;
+		}
+
+		/// <summary>
+		/// Set the name of other memory types used in <see cref="StringRepr(StorageLocation)"/>
+		/// </summary>
+		/// <param name="location">The <see cref="StorageLocation"/> to set. Must be a flag ≥ <see cref="StorageLocation.OtherRam_0"/>.</param>
+		/// <param name="name">The name to set. Must not be empty. The consecutive spaces will be replaced by single underscores.</param>
+		/// <returns>Success or not</returns>
+		public static bool SetName(this StorageLocation location, string name)
+		{
+			if (!location.IsFlag() || string.IsNullOrWhiteSpace(name))
+				return false;
+			if (location < StorageLocation.OtherRam_0)
+				return false;
+			names[location] = string.Join('_', name.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+			return true;
+		}
+
+		private static readonly Dictionary<StorageLocation, string> names = new Dictionary<StorageLocation, string>();
+
+		/// <summary>
+		/// Get the string representation of a <see cref="StorageLocation"/>
+		/// </summary>
+		/// <param name="location">The <see cref="StorageLocation"/></param>
+		/// <returns>The string representation of <paramref name="location"/></returns>
+		/// <remarks>To set the string representation of other memory types, use <see cref="SetName(StorageLocation, string)"/>.</remarks>
+		public static string StringRepr(this StorageLocation location)
+		{
+			if (location == StorageLocation.Uri || location.IsFlag())
+			{
+				return location switch
+				{
+					StorageLocation.Uri => "URI",
+					StorageLocation.CpuRam => "CPU_Memory",
+					StorageLocation.GpuRam => "GPU_Memory",
+					_ => names.GetValueOrDefault(location, $"Other_Memory_Type_{location.OrderOfOtherMemoryType()}"),
+				};
+			}
+			else
+			{
+				return string.Join(" & ", location.Decompose().Select(l => l.StringRepr()).ToArray());
+			}
 		}
 	}
 
@@ -480,6 +523,20 @@ namespace Althea.Memory
 		/// <param name="newLength">the length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/></returns>
 		bool IsOffsetValid(long offset, ulong newLength = 0);
+
+		/// <summary>
+		/// Check the given storage and throw exception if check failed.
+		/// </summary>
+		/// <exception cref="ArgumentException">if this storage has invalid value</exception>
+		/// <exception cref="ArgumentOutOfRangeException">if offset and length breach the boundary of this storage</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Check(long offset = 0, ulong length = 0)
+		{
+			if (!this.IsValid())
+				throw new ArgumentException(Parameter.InvalidValue);
+			if ((offset != 0 || length != 0) && !this.IsOffsetValid(offset, length))
+				throw new ArgumentOutOfRangeException($"{nameof(offset)}, {nameof(length)}", Parameter.UnexpectedValue);
+		}
 	}
 
 	internal interface IReferenceStorage
@@ -846,7 +903,7 @@ namespace Althea.Memory
 		{
 			long offset = this.totalOffset * SizeOfT;
 			if (offset % Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Arithmetic.CannotDivide);
+				throw new InvalidCastException(Other.CannotDivide);
 			offset /= Storage<TOut>.SizeOfT;
 			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes, this.Length);
 		}
@@ -940,7 +997,7 @@ namespace Althea.Memory
 		public override ReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Arithmetic.CannotDivide);
+				throw new InvalidCastException(Other.CannotDivide);
 			ulong newLength = this.LengthInBytes / (ulong)Storage<TOut>.SizeOfT;
 			return new ReferenceStorage<TOut>(this, newLength: newLength);
 		}
@@ -1096,7 +1153,7 @@ namespace Althea.Memory
 		/// </summary>
 		public override ulong LengthInBytes => this.wrapper.Length;
 
-		private readonly IUriWrapper wrapper;
+		private readonly Memory.IUriWrapper wrapper;
 
 		private MemoryLocation Location => new MemoryLocation(StorageLocation.Uri, (byte)this.wrapper.OriginalUri.GetScheme().Value);
 
@@ -1114,7 +1171,7 @@ namespace Althea.Memory
 			////this.wrapper = uri;
 		}
 
-		private UriStorage(IUriWrapper wrapper)
+		private UriStorage(Memory.IUriWrapper wrapper)
 		{
 			this.wrapper = wrapper;
 		}
@@ -1168,7 +1225,7 @@ namespace Althea.Memory
 		public override UriStorage<TOut> As<TOut>()
 		{
 			if (this.LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Arithmetic.CannotDivide);
+				throw new InvalidCastException(Other.CannotDivide);
 			return new UriStorage<TOut>(this.wrapper);
 		}
 

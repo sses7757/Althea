@@ -132,6 +132,9 @@
   <data name="EnumNotFlag" xml:space="preserve">
     <value>The given enum parameter must be a bit flag.</value>
   </data>
+  <data name="InvalidValue" xml:space="preserve">
+    <value>The given parameter has invalid value.</value>
+  </data>
   <data name="MustNegative" xml:space="preserve">
     <value>The given parameter cannot be larger than or equal to zero.</value>
   </data>

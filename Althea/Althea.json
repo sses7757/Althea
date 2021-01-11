@@ -36,8 +36,10 @@
   },
 
   "ImplementationSettings": {
-    // When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not? If not, this library will try to convert the memory to fit the given condition. If conversion still fails, an error will be thrown.
+    // When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not? If so, an error will be thrown when there is no suitable implementation. If not, this library will try to create temporary memory which fits the current implementation (may cause significant performance loss). If memory allocation or copies fails, an error will be thrown.
     "UseRecentImplementation": true,
+    // When a new implementation is indicated, whether elder ones will be disposed or not. If the value is true while 'UseRecentImplementation' is true, there may be creations and dispositions of implementation classes. If the value is false and some implementation classes maintains large memory blocks (such as handle of cuBLAS), they will be maintained until this value is set to false.
+    "DisposeNotCurrentImplementation": true,
     // Which memory / storage implementation to use
     "Memory": null,
     // Which linear algebra implementation to use

@@ -45,10 +45,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\Arithmetic.Designer.cs">
+    <Compile Update="Resources\Other.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Arithmetic.resx</DependentUpon>
+      <DependentUpon>Other.resx</DependentUpon>
     </Compile>
     <Compile Update="Resources\Backend.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -73,9 +73,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\Arithmetic.resx">
+    <EmbeddedResource Update="Resources\Other.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Arithmetic.Designer.cs</LastGenOutput>
+      <LastGenOutput>Other.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Backend.resx">
       <Generator>ResXFileCodeGenerator</Generator>

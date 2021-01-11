@@ -61,9 +61,9 @@ namespace Althea.Helpers
 	#endregion
 
 	#region logger classes
-	internal sealed class Logger
+	internal sealed class Logger : IDisposable
 	{
-		~Logger()
+		public void Dispose()
 		{
 			while (buffers.Count != 0)
 			{
@@ -71,6 +71,12 @@ namespace Althea.Helpers
 				// wait synchronously
 				ActualWrite(msg, category, level).GetAwaiter().GetResult();
 			}
+			GC.SuppressFinalize(this);
+		}
+
+		~Logger()
+		{
+			this.Dispose();
 		}
 
 		private readonly Queue<(string msg, string category, LogLevel level)> buffers =

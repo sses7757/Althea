@@ -123,4 +123,10 @@
   <data name="CannotParseComplex" xml:space="preserve">
     <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
   </data>
+  <data name="ErrorOccur" xml:space="preserve">
+    <value>An error happened:</value>
+  </data>
+  <data name="UseDefault" xml:space="preserve">
+    <value>Use default settings instead...</value>
+  </data>
 </root>

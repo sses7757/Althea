@@ -22,14 +22,14 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Arithmetic {
+    internal class Other {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Arithmetic() {
+        internal Other() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Althea.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Arithmetic", typeof(Arithmetic).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Other", typeof(Other).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -75,6 +75,24 @@ namespace Althea.Resources {
         internal static string CannotParseComplex {
             get {
                 return ResourceManager.GetString("CannotParseComplex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 An error happened: 的本地化字符串。
+        /// </summary>
+        internal static string ErrorOccur {
+            get {
+                return ResourceManager.GetString("ErrorOccur", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Use default settings instead... 的本地化字符串。
+        /// </summary>
+        internal static string UseDefault {
+            get {
+                return ResourceManager.GetString("UseDefault", resourceCulture);
             }
         }
     }

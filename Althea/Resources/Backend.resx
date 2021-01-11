@@ -120,4 +120,7 @@
   <data name="CannotInitialize" xml:space="preserve">
     <value>The initialization procedure of selected backend implementation cannot be performed.</value>
   </data>
+  <data name="NotAvailable" xml:space="preserve">
+    <value>There is no suitable backend implementation currently available.</value>
+  </data>
 </root>

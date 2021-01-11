@@ -8,6 +8,9 @@ using Althea.Helpers;
 
 namespace Althea.Memory
 {
+	/// <summary>
+	/// The abstract class for runtime memory API routines 
+	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
 		#region static methods for dispatching
@@ -15,32 +18,18 @@ namespace Althea.Memory
 		/// Get the current using <see cref="AbstractApi"/>.
 		/// </summary>
 		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
-		public static AbstractApi Current => RecentApi.First.Value;
+		public static AbstractApi Current => RecentAPIs.First?.Value;
 
-		private static readonly LinkedList<AbstractApi> RecentApi = new LinkedList<AbstractApi>();
+		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
 
-		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentApi, implementation);
+		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
 		#endregion
-	}
 
-	/// <summary>
-	/// The abstract class for runtime memory API routines 
-	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
-	{
 		#region support information
 		/// <summary>
-		/// Get list of the supported memory locations for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this returns null.
+		/// Get list of the supported memory locations for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
 		/// </summary>
-		public override IReadOnlyList<StorageLocation> SupportedTernaryLocations => null;
-
-		// Ignore Spelling: N-ary
-		/// <summary>
-		/// Get list of the supported memory locations for all N-ary operations. This method will only be invoked internally with <paramref name="N"/> &gt; 3.
-		/// </summary>
-		/// <param name="N">the number of operands</param>
-		/// <returns>The list of the supported memory locations for all N-ary operations.</returns>
-		protected override IReadOnlyList<StorageLocation> Direct_SupportedNaryLocations(int N) => null;
+		public override IReadOnlyList<ImmutableThreeElementSet<StorageLocation>> SupportedTernaryLocations => null;
 
 		/// <summary>
 		/// Get the supported URI direct transfer dictionary. Each value indicates that this <see cref="AbstractApi"/> supports the <b>direct</b> data transfer between the given <see cref="StorageLocation"/> (combination of flags) and the given <see cref="UriScheme"/>.

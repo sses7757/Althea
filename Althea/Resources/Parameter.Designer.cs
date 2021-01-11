@@ -106,6 +106,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given parameter has invalid value. 的本地化字符串。
+        /// </summary>
+        internal static string InvalidValue {
+            get {
+                return ResourceManager.GetString("InvalidValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given parameter cannot be larger than or equal to zero. 的本地化字符串。
         /// </summary>
         internal static string MustNegative {
