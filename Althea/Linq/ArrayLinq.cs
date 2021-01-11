@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Althea.Resources;
+
 
 namespace Althea.Linq
 {
@@ -1702,7 +1704,7 @@ namespace Althea.Linq
 			if (list2 is null || list2.Count == 0)
 				throw new ArgumentNullException(nameof(list2));
 			if (list1.Count != list2.Count)
-				throw new ArgumentException(Resource.ArraySize);
+				throw new ArgumentException(Parameter.NotSameSize);
 
 			var res = new (T1, T2)[list1.Count];
 			for (int i = 0; i < list1.Count; i++)
@@ -1729,7 +1731,7 @@ namespace Althea.Linq
 			if (list2 is null || list2.Count == 0)
 				throw new ArgumentNullException(nameof(list2));
 			if (list1.Count != list2.Count)
-				throw new ArgumentException(Resource.ArraySize);
+				throw new ArgumentException(Parameter.NotSameSize);
 			if (func is null)
 				throw new ArgumentNullException(nameof(func));
 			var res = new TOut[list1.Count];
@@ -1761,7 +1763,7 @@ namespace Althea.Linq
 			if (list3 is null || list3.Count == 0)
 				throw new ArgumentNullException(nameof(list3));
 			if (list1.Count != list2.Count || list1.Count != list3.Count)
-				throw new ArgumentException(Resource.ArraySize);
+				throw new ArgumentException(Parameter.NotSameSize);
 			if (func is null)
 				throw new ArgumentNullException(nameof(func));
 
@@ -2780,7 +2782,7 @@ namespace Althea.Linq
 		public static IReadOnlyList<T> Repeat<T>(T val, int count)
 		{
 			if (count < 0)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resource.ParaCannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.CannotNegative);
 			if (count == 0)
 				return Array.Empty<T>();
 			var res = new T[count];
@@ -2839,7 +2841,7 @@ namespace Althea.Linq
 		public static IReadOnlyList<long> Range(long start, long count, long step = 1)
 		{
 			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
 			var res = new long[count];
 			for (long i = 0; i < count; i++)
 			{
@@ -2858,7 +2860,7 @@ namespace Althea.Linq
 		public static IReadOnlyList<int> Range(int start, int count, int step = 1)
 		{
 			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
 			var res = new int[count];
 			for (int i = 0; i < count; i++)
 			{
@@ -2877,7 +2879,7 @@ namespace Althea.Linq
 		public static IReadOnlyList<char> Range(char start, int count, int step = 1)
 		{
 			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
 
 			var res = new char[count];
 			for (int i = 0; i < count; i++)

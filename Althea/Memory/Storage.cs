@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Runtime.InteropServices;
 
 using Althea.Linq;
 using Althea.Helpers;
+using Althea.Resources;
 
 
 namespace Althea.Memory
@@ -177,7 +177,7 @@ namespace Althea.Memory
 		public MemoryLocation(StorageLocation location, int deviceID)
 		{
 			if (!location.IsFlag())
-				throw new ArgumentOutOfRangeException(nameof(location));
+				throw new ArgumentOutOfRangeException(nameof(location), Parameter.EnumNotFlag);
 			this.location = location; this.deviceID = deviceID;
 		}
 		#endregion
@@ -458,18 +458,6 @@ namespace Althea.Memory
 
 	#region interfaces
 	/// <summary>
-	/// The interface for checking validness of a pointer-like object
-	/// </summary>
-	public interface ICheckValidness
-	{
-		/// <summary>
-		/// Check whether this object is valid or not
-		/// </summary>
-		/// <returns>The validness of this object</returns>
-		bool IsValid();
-	}
-
-	/// <summary>
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="MemoryLocation"/>(s) of any data type
 	/// </summary>
 	public interface IStorage : IDisposable, IReadOnlyList<StoragePointer>
@@ -478,6 +466,20 @@ namespace Althea.Memory
 		/// The total length of the presenting array in  bytes
 		/// </summary>
 		ulong LengthInBytes { get; }
+
+		/// <summary>
+		/// Check whether this storage is valid or not
+		/// </summary>
+		/// <returns>The validness of this storage</returns>
+		bool IsValid();
+
+		/// <summary>
+		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
+		/// </summary>
+		/// <param name="offset">the offset to move</param>
+		/// <param name="newLength">the length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
+		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/></returns>
+		bool IsOffsetValid(long offset, ulong newLength = 0);
 	}
 
 	internal interface IReferenceStorage
@@ -580,6 +582,54 @@ namespace Althea.Memory
 		/// <returns>a referenced <see cref="Storage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public abstract Storage<TOut> As<TOut>() where TOut : unmanaged;
+
+		/// <summary>
+		/// Check whether this storage is valid or not. The default implementation does not suit the URI storage (like <see cref="UriStorage{T}"/>) case.
+		/// </summary>
+		/// <returns>The validness of this storage</returns>
+		public virtual bool IsValid()
+		{
+			if (this.Disposed)
+			{
+				return false;
+			}
+			for (int i = 0; i < this.Count; i++)
+			{
+				var pointer = this[i];
+				if (pointer.Pointer == default || pointer.LengthInBytes == 0 || !pointer.Location.Location.IsFlag())
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>. The default implementation works for <see cref="ReferenceStorage{T}"/>, <see cref="ActualStorage{T}"/> and <see cref="UriStorage{T}"/>.
+		/// </summary>
+		/// <param name="offset">the offset to move</param>
+		/// <param name="newLength">the length to check in bytes</param>
+		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/></returns>
+		public virtual bool IsOffsetValid(long offset, ulong newLength = 0)
+		{
+			if (this is IReferenceStorage reference)
+			{
+				offset += reference.TotalOffset;
+				if (offset < 0 || (ulong)offset >= reference.Reference.LengthInBytes)
+					return false;
+				if (newLength > 0 && newLength + (ulong)offset >= reference.Reference.LengthInBytes)
+					return false;
+				return true;
+			}
+			else
+			{
+				if (offset < 0 || (ulong)offset >= this.LengthInBytes)
+					return false;
+				if (newLength > 0 && newLength + (ulong)offset >= this.LengthInBytes)
+					return false;
+				return true;
+			}
+		}
 		#endregion
 
 		#region equality
@@ -796,7 +846,7 @@ namespace Althea.Memory
 		{
 			long offset = this.totalOffset * SizeOfT;
 			if (offset % Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Resource.CannotDivide);
+				throw new InvalidCastException(Arithmetic.CannotDivide);
 			offset /= Storage<TOut>.SizeOfT;
 			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes, this.Length);
 		}
@@ -842,7 +892,7 @@ namespace Althea.Memory
 		protected ActualStorage(ulong length)
 		{
 			if (length == 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Resource.ParaMustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
 			this.Length = length;
 		}
 
@@ -890,7 +940,7 @@ namespace Althea.Memory
 		public override ReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Resource.CannotDivide);
+				throw new InvalidCastException(Arithmetic.CannotDivide);
 			ulong newLength = this.LengthInBytes / (ulong)Storage<TOut>.SizeOfT;
 			return new ReferenceStorage<TOut>(this, newLength: newLength);
 		}
@@ -982,13 +1032,13 @@ namespace Althea.Memory
 		public MixedStorage(IReadOnlyList<(MemoryLocation location, ulong length)> param, bool allowSameLocation = true) : base(param.Sum(p => p.length))
 		{
 			if (param.Count <= 1)
-				throw new ArgumentOutOfRangeException(nameof(param), Resource.ParamWrongSize);
+				throw new ArgumentOutOfRangeException(nameof(param), Parameter.WrongSize);
 			this.pointers = new StoragePointer[param.Count];
 			for (int i = 0; i < param.Count; i++)
 			{
 				var (location, length) = param[i];
 				if (!allowSameLocation && pointers.Contains(location, selector: p => p.Location))
-					throw new ArgumentOutOfRangeException(nameof(param), Resource.DuplicateValue);
+					throw new ArgumentOutOfRangeException(nameof(param), Parameter.DuplicateValue);
 				this.pointers[i] = Allocate(location, length);
 			}
 		}
@@ -1055,11 +1105,11 @@ namespace Althea.Memory
 		/// </summary>
 		/// <param name="uri">a <see cref="Uri"/> to represent the resource name to create</param>
 		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> has unsupported scheme</exception>
+		/// <exception cref="NotSupportedException">if <paramref name="uri"/> has unsupported scheme</exception>
 		public UriStorage(Uri uri, ulong length)
 		{
 			if (!uri.GetScheme().HasValue)
-				throw new ArgumentOutOfRangeException(nameof(uri));
+				throw new NotSupportedException(Support.Location);
 			// TODO: adapter create
 			////this.wrapper = uri;
 		}
@@ -1118,7 +1168,7 @@ namespace Althea.Memory
 		public override UriStorage<TOut> As<TOut>()
 		{
 			if (this.LengthInBytes % (ulong)Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Resource.CannotDivide);
+				throw new InvalidCastException(Arithmetic.CannotDivide);
 			return new UriStorage<TOut>(this.wrapper);
 		}
 
@@ -1159,6 +1209,12 @@ namespace Althea.Memory
 				return new StoragePointer(this.Location, default(IntPtr), this.LengthInBytes);
 			}
 		}
+
+		/// <summary>
+		/// Check whether this storage is valid or not. The default implementation does not suit the URI storage (like <see cref="UriStorage{T}"/>) case.
+		/// </summary>
+		/// <returns>The validness of this storage</returns>
+		public override bool IsValid() => !this.Disposed && this.wrapper is not null;
 		#endregion
 	}
 
@@ -1187,9 +1243,9 @@ namespace Althea.Memory
 			foreach (var (location, maxLengthInBytes) in priorities)
 			{
 				if (location.Location == StorageLocation.Uri)
-					throw new ArgumentException(Resource.UnexpectedValue, nameof(priorities));
+					throw new ArgumentException(Parameter.UnexpectedValue, nameof(priorities));
 				if (temp.Contains(location, selector: p => p.Location))
-					throw new ArgumentException(Resource.DuplicateValue, nameof(priorities));
+					throw new ArgumentException(Parameter.DuplicateValue, nameof(priorities));
 				ulong length = 0; // TODO: adapter get available length on 'location'
 				if (maxLengthInBytes != 0 && maxLengthInBytes < length)
 				{
@@ -1199,16 +1255,16 @@ namespace Althea.Memory
 				temp.Add(new StoragePointer(location, default(IntPtr), length));
 			}
 			if (temp.Count <= 1)
-				throw new ArgumentException(Resource.ParamWrongSize, nameof(priorities));
+				throw new ArgumentException(Parameter.WrongSize, nameof(priorities));
 			ulong allowedTotalLength = temp.Sum(p => p.LengthInBytes);
 			if (allowedTotalLength <= totalLength && cacheUri is null)
-				throw new ArgumentOutOfRangeException(nameof(totalLength), Resource.UnexpectedValue);
+				throw new ArgumentOutOfRangeException(nameof(totalLength), Parameter.UnexpectedValue);
 			// deal with URI
 			if (cacheUri is not null)
 			{
 				UriScheme? scheme = cacheUri.GetScheme();
 				if (!scheme.HasValue)
-					throw new ArgumentOutOfRangeException(nameof(cacheUri), Resource.UnexpectedValue);
+					throw new ArgumentOutOfRangeException(nameof(cacheUri), Parameter.UnexpectedValue);
 				// do not allocate here
 				temp.Add(new StoragePointer(new MemoryLocation(StorageLocation.Uri, (byte)scheme.Value), default(IntPtr), totalLength <= allowedTotalLength ? 0 : totalLength - allowedTotalLength));
 			}

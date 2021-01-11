@@ -120,20 +120,8 @@
   <data name="ArrayCannotNull" xml:space="preserve">
     <value>The input/output array(s) cannot be null.</value>
   </data>
-  <data name="ArraySize" xml:space="preserve">
-    <value>The input/output array(s) has(have) incompatible size.</value>
-  </data>
-  <data name="BaseNotSupport" xml:space="preserve">
-    <value> is/are not supported yet.</value>
-  </data>
   <data name="BuiltInClassImp" xml:space="preserve">
     <value>The built-in class `{0}` has no need to implement this method.</value>
-  </data>
-  <data name="CannotDivide" xml:space="preserve">
-    <value>Cannot perform lossless integer division.</value>
-  </data>
-  <data name="CannotInitialize" xml:space="preserve">
-    <value>The initialization procedure cannot be performed.</value>
   </data>
   <data name="CannotLocateSource" xml:space="preserve">
     <value>Cannot locate the source of input array(s).</value>
@@ -141,17 +129,11 @@
   <data name="CannotOperate" xml:space="preserve">
     <value>Matrices/vectors with incompatible sizes cannot perform such operation; </value>
   </data>
-  <data name="CannotParseComplex" xml:space="preserve">
-    <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
-  </data>
   <data name="ClassConcrete" xml:space="preserve">
     <value>The class should be a concrete one.</value>
   </data>
   <data name="ClassMustBeSubOf" xml:space="preserve">
     <value>The class should be a sub class of `{0}`.</value>
-  </data>
-  <data name="DataTypeNotSupport" xml:space="preserve">
-    <value>Other data type(s) are not supported yet.</value>
   </data>
   <data name="DimMustOne" xml:space="preserve">
     <value>The length of size (the dimensionality) of the array must be one.</value>
@@ -164,9 +146,6 @@
   </data>
   <data name="DuplicateLabels" xml:space="preserve">
     <value>Duplicate labels for tensors are not allowed.</value>
-  </data>
-  <data name="DuplicateValue" xml:space="preserve">
-    <value>The parameter contains duplicate values, which is not allowed.</value>
   </data>
   <data name="ErrorOccur" xml:space="preserve">
     <value>An error happened:</value>
@@ -210,39 +189,6 @@
   <data name="NotErrors" xml:space="preserve">
     <value>The underlying statuses are not errors.</value>
   </data>
-  <data name="NotSupportedFormat" xml:space="preserve">
-    <value>Other format(s) are not supported yet.</value>
-  </data>
-  <data name="NotSupportedLocation" xml:space="preserve">
-    <value>The given location(s) is/are not supported.</value>
-  </data>
-  <data name="NotSupportedOtherArray" xml:space="preserve">
-    <value>Not dense neither sparse array(s) is/are not supported yet.</value>
-  </data>
-  <data name="NotSupportedRoutine" xml:space="preserve">
-    <value>Other routine(s) is/are not supported yet.</value>
-  </data>
-  <data name="NotSupportedTensor" xml:space="preserve">
-    <value>Tensors are not supported yet.</value>
-  </data>
-  <data name="ParaCannotNegative" xml:space="preserve">
-    <value>The parameter(s) cannot be less than zero.</value>
-  </data>
-  <data name="ParaCannotPositive" xml:space="preserve">
-    <value>The parameter(s) cannot be larger than zero.</value>
-  </data>
-  <data name="ParaCannotZero" xml:space="preserve">
-    <value>The parameter(s) cannot be zero.</value>
-  </data>
-  <data name="ParaMustNegative" xml:space="preserve">
-    <value>The parameter(s) cannot be larger than or equal to zero.</value>
-  </data>
-  <data name="ParaMustPositive" xml:space="preserve">
-    <value>The parameter(s) cannot be less than or equal to zero.</value>
-  </data>
-  <data name="ParamWrongSize" xml:space="preserve">
-    <value>The given parameter has incompatible size.</value>
-  </data>
   <data name="PerfectSquare" xml:space="preserve">
     <value>Since the length of array is not a perfect square, cannot auto reshape to a matrix.</value>
   </data>
@@ -281,9 +227,6 @@
   </data>
   <data name="TensorWrongSize" xml:space="preserve">
     <value>The tensor(s) with incompatible size(s) cannot perform this operation.</value>
-  </data>
-  <data name="UnexpectedValue" xml:space="preserve">
-    <value>The parameter has unexpected value(s).</value>
   </data>
   <data name="UseDefault" xml:space="preserve">
     <value>Use default settings instead...</value>

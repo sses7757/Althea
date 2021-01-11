@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Althea {
+namespace Althea.Resources {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Althea {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resource", typeof(Resource).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Resource", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -70,47 +70,11 @@ namespace Althea {
         }
         
         /// <summary>
-        ///   查找类似 The input/output array(s) has(have) incompatible size. 的本地化字符串。
-        /// </summary>
-        internal static string ArraySize {
-            get {
-                return ResourceManager.GetString("ArraySize", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似  is/are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string BaseNotSupport {
-            get {
-                return ResourceManager.GetString("BaseNotSupport", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 The built-in class `{0}` has no need to implement this method. 的本地化字符串。
         /// </summary>
         internal static string BuiltInClassImp {
             get {
                 return ResourceManager.GetString("BuiltInClassImp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Cannot perform lossless integer division. 的本地化字符串。
-        /// </summary>
-        internal static string CannotDivide {
-            get {
-                return ResourceManager.GetString("CannotDivide", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The initialization procedure cannot be performed. 的本地化字符串。
-        /// </summary>
-        internal static string CannotInitialize {
-            get {
-                return ResourceManager.GetString("CannotInitialize", resourceCulture);
             }
         }
         
@@ -133,15 +97,6 @@ namespace Althea {
         }
         
         /// <summary>
-        ///   查找类似 Cannot parse &apos;{0}&apos; to a complex number with real type {1}. 的本地化字符串。
-        /// </summary>
-        internal static string CannotParseComplex {
-            get {
-                return ResourceManager.GetString("CannotParseComplex", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 The class should be a concrete one. 的本地化字符串。
         /// </summary>
         internal static string ClassConcrete {
@@ -156,15 +111,6 @@ namespace Althea {
         internal static string ClassMustBeSubOf {
             get {
                 return ResourceManager.GetString("ClassMustBeSubOf", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Other data type(s) are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string DataTypeNotSupport {
-            get {
-                return ResourceManager.GetString("DataTypeNotSupport", resourceCulture);
             }
         }
         
@@ -201,15 +147,6 @@ namespace Althea {
         internal static string DuplicateLabels {
             get {
                 return ResourceManager.GetString("DuplicateLabels", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter contains duplicate values, which is not allowed. 的本地化字符串。
-        /// </summary>
-        internal static string DuplicateValue {
-            get {
-                return ResourceManager.GetString("DuplicateValue", resourceCulture);
             }
         }
         
@@ -340,105 +277,6 @@ namespace Althea {
         }
         
         /// <summary>
-        ///   查找类似 Other format(s) are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string NotSupportedFormat {
-            get {
-                return ResourceManager.GetString("NotSupportedFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The given location(s) is/are not supported. 的本地化字符串。
-        /// </summary>
-        internal static string NotSupportedLocation {
-            get {
-                return ResourceManager.GetString("NotSupportedLocation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Not dense neither sparse array(s) is/are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string NotSupportedOtherArray {
-            get {
-                return ResourceManager.GetString("NotSupportedOtherArray", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Other routine(s) is/are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string NotSupportedRoutine {
-            get {
-                return ResourceManager.GetString("NotSupportedRoutine", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Tensors are not supported yet. 的本地化字符串。
-        /// </summary>
-        internal static string NotSupportedTensor {
-            get {
-                return ResourceManager.GetString("NotSupportedTensor", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter(s) cannot be less than zero. 的本地化字符串。
-        /// </summary>
-        internal static string ParaCannotNegative {
-            get {
-                return ResourceManager.GetString("ParaCannotNegative", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter(s) cannot be larger than zero. 的本地化字符串。
-        /// </summary>
-        internal static string ParaCannotPositive {
-            get {
-                return ResourceManager.GetString("ParaCannotPositive", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter(s) cannot be zero. 的本地化字符串。
-        /// </summary>
-        internal static string ParaCannotZero {
-            get {
-                return ResourceManager.GetString("ParaCannotZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter(s) cannot be larger than or equal to zero. 的本地化字符串。
-        /// </summary>
-        internal static string ParaMustNegative {
-            get {
-                return ResourceManager.GetString("ParaMustNegative", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter(s) cannot be less than or equal to zero. 的本地化字符串。
-        /// </summary>
-        internal static string ParaMustPositive {
-            get {
-                return ResourceManager.GetString("ParaMustPositive", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The given parameter has incompatible size. 的本地化字符串。
-        /// </summary>
-        internal static string ParamWrongSize {
-            get {
-                return ResourceManager.GetString("ParamWrongSize", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Since the length of array is not a perfect square, cannot auto reshape to a matrix. 的本地化字符串。
         /// </summary>
         internal static string PerfectSquare {
@@ -552,15 +390,6 @@ namespace Althea {
         internal static string TensorWrongSize {
             get {
                 return ResourceManager.GetString("TensorWrongSize", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The parameter has unexpected value(s). 的本地化字符串。
-        /// </summary>
-        internal static string UnexpectedValue {
-            get {
-                return ResourceManager.GetString("UnexpectedValue", resourceCulture);
             }
         }
         

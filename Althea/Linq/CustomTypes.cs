@@ -372,7 +372,7 @@ namespace Althea.Linq
 		public ImmutableTwoElementSet(T data1, T data2)
 		{
 			if (EqualityComparer<T>.Default.Equals(data1, data2))
-				throw new InvalidOperationException(Resource.DuplicateValue);
+				throw new InvalidOperationException(Resources.Parameter.DuplicateValue);
 			this.data1 = data1; this.data2 = data2;
 		}
 		#endregion
@@ -421,7 +421,7 @@ namespace Althea.Linq
 
 		public override int GetHashCode()
 		{
-			return unchecked(HashCode.Combine(this.data1, this.data2) + HashCode.Combine(this.data2, this.data1));
+			return unchecked(this.data1.GetHashCode() + this.data2.GetHashCode());
 		}
 		#endregion
 
@@ -549,7 +549,7 @@ namespace Althea.Linq
 		{
 			var c = EqualityComparer<T>.Default;
 			if (c.Equals(data1, data2) || c.Equals(data2, data3))
-				throw new InvalidOperationException(Resource.DuplicateValue);
+				throw new InvalidOperationException(Resources.Parameter.DuplicateValue);
 			this.data1 = data1; this.data2 = data2; this.data3 = data3;
 		}
 		#endregion
@@ -600,12 +600,7 @@ namespace Althea.Linq
 
 		public override int GetHashCode()
 		{
-			return unchecked(HashCode.Combine(this.data1, this.data2, this.data3) +
-							 HashCode.Combine(this.data1, this.data3, this.data2) +
-							 HashCode.Combine(this.data2, this.data1, this.data3) +
-							 HashCode.Combine(this.data2, this.data3, this.data1) +
-							 HashCode.Combine(this.data3, this.data1, this.data2) +
-							 HashCode.Combine(this.data3, this.data2, this.data1));
+			return unchecked(this.data1.GetHashCode() + this.data2.GetHashCode() + this.data3.GetHashCode());
 		}
 		#endregion
 

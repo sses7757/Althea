@@ -226,6 +226,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">the supported data type</typeparam>
 		/// <param name="a">input number</param>
 		/// <returns>complex conjugate of the number</returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GenericConjugate<T>(this T a) where T : unmanaged
 		{
@@ -251,7 +252,7 @@ namespace Althea.NativeTypes
 				return result.Value;
 			}
 			if (!typeof(T).IsSupportedDirect())
-				throw new ArgumentException(Resource.DataTypeNotSupport, nameof(a));
+				throw new NotSupportedException(Resources.Support.DataType);
 			if (typeof(T).IsComplexDirect())
 				return (T)((dynamic)a).Conjugate();
 			else

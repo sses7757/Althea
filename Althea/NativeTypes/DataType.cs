@@ -280,6 +280,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">the data type to convert</typeparam>
 		/// <param name="value">a instance value of type <typeparamref name="T"/></param>
 		/// <returns>the corresponding <see cref="DataType"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		public unsafe static DataType ToDataType<T>(this T value) where T : unmanaged
 		{
 			return value switch
@@ -308,7 +309,7 @@ namespace Althea.NativeTypes
 				Complex<uint> _ => DataType.ComplexUInt32,
 				Complex<ulong> _ => DataType.ComplexUInt64,
 				// otherwise
-				_ => !typeof(T).IsSupportedDirect() ? throw new NotSupportedException(Resource.DataTypeNotSupport)
+				_ => !typeof(T).IsSupportedDirect() ? throw new NotSupportedException(Resources.Support.DataType)
 						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), sizeof(T)),
 			};
 		}

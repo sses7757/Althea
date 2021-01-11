@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Resources;
 
 
 namespace Althea.Helpers
@@ -53,30 +54,30 @@ namespace Althea.Helpers
 
 
 		// TODO: move to native codes?
-		private static readonly double doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
+		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
 										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int ApproxIndexOfSingle(this DoubleComplex[] array, DoubleComplex value)
+		internal static int ApproxIndexOfSingle(this Complex<double>[] array, Complex<double> value)
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
 				var diff = array[i] - value;
-				double diffMax = Math.Max(Math.Abs(diff.Real()), Math.Abs(diff.Imaginary()));
-				double max = Math.Max(Math.Abs(array[i].Real()), Math.Abs(array[i].Imaginary()));
+				double diffMax = Math.Max(Math.Abs(diff.Real), Math.Abs(diff.Imag));
+				double max = Math.Max(Math.Abs(array[i].Real), Math.Abs(array[i].Imag));
 				if (diffMax / max < singlePrecision23)
 					return i;
 			}
 			return -1;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int ApproxIndexOfDouble(this DoubleComplex[] array, DoubleComplex value)
+		internal static int ApproxIndexOfDouble(this Complex<double>[] array, Complex<double> value)
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
 				var diff = array[i] - value;
-				double diffMax = Math.Max(Math.Abs(diff.Real()), Math.Abs(diff.Imaginary()));
-				double max = Math.Max(Math.Abs(array[i].Real()), Math.Abs(array[i].Imaginary()));
+				double diffMax = Math.Max(Math.Abs(diff.Real), Math.Abs(diff.Imag));
+				double max = Math.Max(Math.Abs(array[i].Real), Math.Abs(array[i].Imag));
 				if (diffMax / max < doublePrecision13)
 					return i;
 			}
@@ -758,7 +759,7 @@ namespace Althea.Helpers
 		{
 			string format = GetFormatString(ref precision);
 			var toStringFunc = GetDelegateOfGetNumberString<T>();
-			string func(int i, T a) => string.Format(Resource.Culture, "{0} -> {1}", i, toStringFunc(a, format, precision));
+			string func(int i, T a) => string.Format("{0} -> {1}", i, toStringFunc(a, format, precision));
 			return string.Join(Environment.NewLine, ind.Zip(input, func));
 		}
 
@@ -773,7 +774,7 @@ namespace Althea.Helpers
 		public static string ToMatrixString<T>(this T[,] arr, bool hasMore, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
 			if (arr is null)
-				throw new ArgumentNullException(nameof(arr), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(arr));
 
 			string format = GetFormatString(ref precision);
 			var toStringFunc = GetDelegateOfGetNumberString<T>();
@@ -806,15 +807,15 @@ namespace Althea.Helpers
 		public static string ToSparseMatrixString<T>(this T[] input, int[] indx, int[] indy, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
 			if (input is null)
-				throw new ArgumentNullException(nameof(input), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(input));
 			if (indx is null)
-				throw new ArgumentNullException(nameof(indx), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(indx));
 			if (indy is null)
-				throw new ArgumentNullException(nameof(indy), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(indy));
 
 			string format = GetFormatString(ref precision);
 			var toStringFunc = GetDelegateOfGetNumberString<T>();
-			string func(int ix, int iy, T val) => string.Format(Resource.Culture, "({0}, {1}) -> {2}", ix, iy, toStringFunc(val, format, precision));
+			string func(int ix, int iy, T val) => string.Format("({0}, {1}) -> {2}", ix, iy, toStringFunc(val, format, precision));
 			return string.Join(Environment.NewLine, indx.Zip(indy, input, func));
 		}
 		#endregion
@@ -1072,7 +1073,7 @@ namespace Althea.Helpers
 		public static T[] ColumnTake<T>(this T[,] arr)
 		{
 			if (arr is null)
-				throw new ArgumentNullException(nameof(arr), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(arr));
 
 			var (rows, columns) = arr.GetRowColumns();
 			T[] oneDim = new T[rows * columns];
@@ -1091,7 +1092,7 @@ namespace Althea.Helpers
 		public static void ForEach<T>(this T[,] arr, Action<T, int, int> action)
 		{
 			if (arr is null)
-				throw new ArgumentNullException(nameof(arr), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(arr));
 
 			var (rows, cols) = arr.GetRowColumns();
 			for (int i = 0; i < rows; i++)
@@ -1108,7 +1109,7 @@ namespace Althea.Helpers
 		public static bool IsHermitian<T>(this T[,] arr) where T : unmanaged, IFormattable, IEquatable<T>
 		{
 			if (arr is null)
-				throw new ArgumentNullException(nameof(arr), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(arr));
 
 			var (rows, cols) = arr.GetRowColumns();
 			if (rows != cols)

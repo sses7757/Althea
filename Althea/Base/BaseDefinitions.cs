@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Althea.Linq;
 using Althea.Memory;
+using Althea.Resources;
 
 
 namespace Althea
@@ -38,7 +39,7 @@ namespace Althea
 			{
 				var constructors = type.GetConstructors();
 				if (constructors.Length == 0 || !constructors.Contains(0, c => c.GetParameters().Length))
-					throw new InvalidOperationException(Resource.CannotInitialize);
+					throw new InvalidOperationException(Backend.CannotInitialize);
 				return constructors.Where(c => c.GetParameters().Length == 0)[0].Invoke(Array.Empty<object>()) as T;
 			}
 		}
@@ -105,22 +106,22 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Select the most recent implementation in <paramref name="recentApi"/> which fits a given <paramref name="pointer"/>
+		/// Select the most recent implementation in <paramref name="recentApi"/> which fits a given <paramref name="storage"/>
 		/// </summary>
 		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recentApi">the <see cref="LinkedList{T}"/> to select in</param>
-		/// <param name="pointer">the given <see cref="StoragePointer"/> to work with</param>
+		/// <param name="storage">the given <see cref="IStorage"/> to work with</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="pointer"/> has a invalid <see cref="StoragePointer.Pointer"/> or <see cref="StoragePointer.LengthInBytes"/></exception>
-		protected static T SelectImplementation<T>(LinkedList<T> recentApi, StoragePointer pointer) where T : AbstractRuntimeApi
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage"/> has a invalid <see cref="StoragePointer.Pointer"/> or <see cref="StoragePointer.LengthInBytes"/></exception>
+		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
+		protected static T SelectImplementation<T>(LinkedList<T> recentApi, IStorage storage) where T : AbstractRuntimeApi
 		{
-			// TODO: StoragePointer -> ICheckValidness ?
-			if (pointer.Pointer == default || pointer.LengthInBytes == 0)
-				throw new ArgumentOutOfRangeException(nameof(pointer), Resource.UnexpectedValue);
+			if (storage.IsValid())
+				throw new ArgumentOutOfRangeException(nameof(storage), Parameter.UnexpectedValue);
 			if (recentApi.Count == 0)
-				return null;
+				throw new InvalidOperationException(Backend.CannotInitialize);
 			var current = recentApi.First;
-			if (current.Value.IsSupportedUnitary(pointer.Location.Location))
+			if (current.Value.IsSupportedUnitary(storage.Location.Location))
 			{
 				return current.Value;
 			}
@@ -129,7 +130,7 @@ namespace Althea
 				while ((current = current.Next) is not null)
 				{
 					Initialize(current);
-					if (current.Value.IsSupportedUnitary(pointer.Location.Location))
+					if (current.Value.IsSupportedUnitary(storage.Location.Location))
 					{
 						return current.Value;
 					}
@@ -150,9 +151,9 @@ namespace Althea
 		protected static T SelectImplementation<T>(LinkedList<T> recentApi, StoragePointer pointer1, StoragePointer pointer2) where T : AbstractRuntimeApi
 		{
 			if (pointer1.Pointer == default || pointer1.LengthInBytes == 0)
-				throw new ArgumentOutOfRangeException(nameof(pointer1), Resource.UnexpectedValue);
+				throw new ArgumentOutOfRangeException(nameof(pointer1), Parameter.UnexpectedValue);
 			if (pointer2.Pointer == default || pointer2.LengthInBytes == 0)
-				throw new ArgumentOutOfRangeException(nameof(pointer2), Resource.UnexpectedValue);
+				throw new ArgumentOutOfRangeException(nameof(pointer2), Parameter.UnexpectedValue);
 			if (recentApi.Count == 0)
 				return null;
 			var current = recentApi.First;
@@ -194,64 +195,62 @@ namespace Althea
 
 		#region support information
 		/// <summary>
-		/// Get the supported storage locations for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain storage locations. Or null if there are no unary operations.
+		/// Get the supported memory locations for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
 		/// </summary>
-		public abstract IReadOnlyList<ImmutableZeroOneElementSet<StorageLocation>> SupportedUnaryLocations { get; }
+		public abstract IReadOnlyList<ImmutableZeroOneElementSet<MemoryLocation>> SupportedUnaryLocations { get; }
 
 		/// <summary>
-		/// Get list of the supported storage locations for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) storage locations. Or null if there are no binary operations.
+		/// Get list of the supported memory locations for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.
 		/// </summary>
-		public abstract IReadOnlyList<ImmutableTwoElementSet<StorageLocation>> SupportedBinaryLocations { get; }
+		public abstract IReadOnlyList<ImmutableTwoElementSet<MemoryLocation>> SupportedBinaryLocations { get; }
 
 		/// <summary>
-		/// Get list of the supported storage locations for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) storage locations. Or null if there are no ternary operations.
+		/// Get list of the supported memory locations for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) memory locations. Or null if there are no ternary operations.
 		/// </summary>
-		public abstract IReadOnlyList<ImmutableThreeElementSet<StorageLocation>> SupportedTernaryLocations { get; }
+		public abstract IReadOnlyList<ImmutableThreeElementSet<MemoryLocation>> SupportedTernaryLocations { get; }
 
 		// Ignore Spelling: N-ary
 		/// <summary>
-		/// Get list of the supported storage locations for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain (mixed) storage locations. Or null if there are no N-ary operations.
+		/// Get list of the supported memory locations for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain (mixed) memory locations. Or null if there are no N-ary operations.
 		/// </summary>
 		/// <param name="N">the number of operands, must be <paramref name="N"/> &gt; 3</param>
 		/// <returns>The list of the supported memory locations for all N-ary operations. Or null if there are no N-ary operations.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="N"/> &lt;= 3</exception>
-		public abstract IReadOnlyList<IImmutableSet<StorageLocation>> SupportedNaryLocations(int N);
+		public abstract IReadOnlyList<IImmutableSet<MemoryLocation>> SupportedNaryLocations(int N);
 
 		/// <summary>
 		/// Check if the given <paramref name="location"/> is supported by unary operations of this <see cref="AbstractRuntimeApi"/> or not.
 		/// </summary>
 		/// <param name="location">the given <see cref="StorageLocation"/> (can be a combination of flags)</param>
 		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		public virtual bool IsSupportedUnitary(StorageLocation location) => location != StorageLocation.Uri && this.SupportedUnaryLocations.Contains(location);
+		public virtual bool IsSupportedUnitary(MemoryLocation location) => this.SupportedUnaryLocations.Contains(location);
 
 		/// <summary>
-		/// Check if the given <see cref="StorageLocation"/>s are supported by binary operations of this <see cref="AbstractRuntimeApi"/> or not.
+		/// Check if the given <see cref="MemoryLocation"/>s are supported by binary operations of this <see cref="AbstractRuntimeApi"/> or not.
 		/// </summary>
-		/// <param name="location1">the first given <see cref="StorageLocation"/> (can be a combination of flags)</param>
-		/// <param name="location2">the second given <see cref="StorageLocation"/> (can be a combination of flags)</param>
+		/// <param name="location1">the first given <see cref="MemoryLocation"/> (can be a combination of flags)</param>
+		/// <param name="location2">the second given <see cref="MemoryLocation"/> (can be a combination of flags)</param>
 		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		public virtual bool IsSupportedBinary(StorageLocation location1, StorageLocation location2)
-			=> location1 != StorageLocation.Uri && location2 != StorageLocation.Uri && this.SupportedBinaryLocations.Contains((location1, location2));
+		public virtual bool IsSupportedBinary(MemoryLocation location1, MemoryLocation location2)
+			=> this.SupportedBinaryLocations.Contains((location1, location2));
 
 		/// <summary>
-		/// Check if the given <see cref="StorageLocation"/>s are supported by ternary operations of this <see cref="AbstractRuntimeApi"/> or not.
+		/// Check if the given <see cref="MemoryLocation"/>s are supported by ternary operations of this <see cref="AbstractRuntimeApi"/> or not.
 		/// </summary>
-		/// <param name="location1">the first given <see cref="StorageLocation"/> (must be a flag)</param>
-		/// <param name="location2">the second given <see cref="StorageLocation"/> (must be a flag)</param>
-		/// <param name="location3">the third given <see cref="StorageLocation"/> (must be a flag)</param>
+		/// <param name="location1">the first given <see cref="MemoryLocation"/> (must be a flag)</param>
+		/// <param name="location2">the second given <see cref="MemoryLocation"/> (must be a flag)</param>
+		/// <param name="location3">the third given <see cref="MemoryLocation"/> (must be a flag)</param>
 		/// <returns>Whether ternary operations between <paramref name="location1"/> and <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		public virtual bool IsSupportedBinary(StorageLocation location1, StorageLocation location2, StorageLocation location3)
-			=> location1 != StorageLocation.Uri && location2 != StorageLocation.Uri && location3 != StorageLocation.Uri &&
-				this.SupportedTernaryLocations.Contains((location1, location2, location3));
+		public virtual bool IsSupportedBinary(MemoryLocation location1, MemoryLocation location2, MemoryLocation location3)
+			=> this.SupportedTernaryLocations.Contains((location1, location2, location3));
 
 		/// <summary>
 		/// Check if the given <paramref name="locations"/> are supported by N-ary operations of this <see cref="AbstractRuntimeApi"/> or not.
 		/// </summary>
-		/// <param name="locations">the given <see cref="StorageLocation"/>s (must has exactly one or two flags)</param>
+		/// <param name="locations">the given <see cref="MemoryLocation"/>s (must has exactly one or two flags)</param>
 		/// <returns>Whether N-ary operations between <paramref name="locations"/> are supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		public virtual bool IsSupportedNary(params StorageLocation[] locations)
-			=> locations.All(l => l != StorageLocation.Uri) && locations.ElementsUnique() &&
-				this.SupportedNaryLocations(locations.Length).Contains(new ImmutableSet<StorageLocation>(locations));
+		public virtual bool IsSupportedNary(params MemoryLocation[] locations)
+			=> this.SupportedNaryLocations(locations.Length).Contains(new ImmutableSet<MemoryLocation>(locations));
 		#endregion
 	}
 }

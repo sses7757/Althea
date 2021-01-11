@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+using Althea.Resources;
 using Althea.NativeTypes;
 
 
@@ -73,11 +74,11 @@ namespace Althea.NativeTypes
 		{
 			// generic type check
 			if (typeof(T).IsGenericType)
-				throw new InvalidOperationException(Resource.DataTypeNotSupport);
+				throw new InvalidOperationException(Support.DataType);
 			// native type check
 			_Classification = default(T).GetClassification();
 			if (_Classification == DataTypeClassification.NotSupported)
-				throw new InvalidOperationException(Resource.DataTypeNotSupport);
+				throw new InvalidOperationException(Support.DataType);
 		}
 
 		private static unsafe readonly int _sizeofT = sizeof(T);
@@ -238,7 +239,7 @@ namespace Althea.NativeTypes
 				throw new ArgumentNullException(nameof(str));
 			bool success = TryParse(str, out Complex<T> result);
 			if (!success)
-				throw new ArgumentException(string.Format(Resource.Culture, Resource.CannotParseComplex, str, typeof(T).Name), nameof(str));
+				throw new ArgumentException(string.Format(Arithmetic.CannotParseComplex, str, typeof(T).Name), nameof(str));
 			return result;
 		}
 		#endregion

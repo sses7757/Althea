@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+using Althea.Resources;
+
 
 namespace Althea.Linq
 {
@@ -22,7 +24,7 @@ namespace Althea.Linq
 			if (array is null)
 				throw new ArgumentNullException(nameof(array));
 			if (span.Length != array.Count)
-				throw new ArgumentException(Resource.VectorLength, nameof(array));
+				throw new ArgumentException(Parameter.NotSameSize);
 
 			for (int i = 0; i < span.Length; i++)
 			{
@@ -42,7 +44,7 @@ namespace Althea.Linq
 			if (destArray is null)
 				throw new ArgumentNullException(nameof(destArray));
 			if (span.Length != destArray.Length)
-				throw new ArgumentException(Resource.VectorLength, nameof(destArray));
+				throw new ArgumentException(Parameter.NotSameSize);
 
 			for (int i = 0; i < span.Length; i++)
 			{
@@ -61,7 +63,7 @@ namespace Althea.Linq
 			if (destArray is null)
 				throw new ArgumentNullException(nameof(destArray));
 			if (span.Length != destArray.Length)
-				throw new ArgumentException(Resource.VectorLength, nameof(destArray));
+				throw new ArgumentException(Parameter.NotSameSize);
 
 			for (int i = 0; i < span.Length; i++)
 			{
@@ -872,7 +874,7 @@ namespace Althea.Linq
 		public static void FillWithRange(this Span<char> span, char start, int step = 1)
 		{
 			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
 
 			for (int i = 0; i < span.Length; i++)
 			{
@@ -889,7 +891,7 @@ namespace Althea.Linq
 		public static void FillWithRange(this Span<int> span, int start, int step = 1)
 		{
 			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
 
 			for (int i = 0; i < span.Length; i++)
 			{
@@ -906,7 +908,7 @@ namespace Althea.Linq
 		public static void FillWithRange(this Span<long> span, long start, long step = 1)
 		{
 			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
 
 			for (int i = 0; i < span.Length; i++)
 			{
