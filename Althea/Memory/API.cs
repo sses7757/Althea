@@ -36,6 +36,15 @@ namespace Althea.Memory
 		/// </summary>
 		public abstract IReadOnlyDictionary<UriScheme, StorageLocation> SupportedUriTransfers { get; }
 
+		// Ignore Spelling: N-ary
+		/// <summary>
+		/// Get list of the supported memory locations for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain (mixed) memory locations. Or null if there are no N-ary operations.
+		/// </summary>
+		/// <param name="N">the number of operands, must be <paramref name="N"/> &gt; 3</param>
+		/// <returns>The list of the supported memory locations for all N-ary operations. Or null if there are no N-ary operations.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="N"/> &lt;= 3</exception>
+		public override IReadOnlyList<IImmutableSet<StorageLocation>> SupportedNaryLocations(int N) => null;
+
 		/// <summary>
 		/// Check if the direct data transfer of given <paramref name="location"/> and given <paramref name="uriScheme"/> is supported by this <see cref="AbstractApi"/> or not.
 		/// </summary>
@@ -68,7 +77,17 @@ namespace Althea.Memory
 		public abstract (ulong free, ulong total) FreeAndTotalMemory(MemoryLocation location);
 		#endregion
 
-		#region memory related
+		#region URI related
+		/// <summary>
+		/// Create a <see cref="IUriWrapper"/> of given <paramref name="uri"/> which supports data transfer defined in <see cref="SupportedUriTransfers"/>
+		/// </summary>
+		/// <param name="uri">the given <see cref="Uri"/></param>
+		/// <returns>A instance of <see cref="IUriWrapper"/> of given <paramref name="uri"/></returns>
+		/// <exception cref="NotSupportedException">if <paramref name="uri"/> is not supported</exception>
+		public abstract IUriWrapper CreateUriStream(Uri uri);
+		#endregion
+
+		#region low-level memory operations
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
 		/// </summary>
@@ -138,20 +157,65 @@ namespace Althea.Memory
 		/// <param name="dest">the destination pointer</param>
 		/// <param name="destLD">destination array actual height (actual leading dimension) in bytes</param>
 		/// <param name="height">height to copy in bytes</param>
-		/// <param name="width">width to copy in bytes</param>
+		/// <param name="width">width to copy in the real type</param>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="dest"/> are ignored</remarks>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
 		public abstract void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer dest, ulong destLD, ulong height, ulong width);
-		#endregion
 
-		#region URI related
 		/// <summary>
-		/// Create a <see cref="IUriWrapper"/> of given <paramref name="uri"/> which supports data transfer defined in <see cref="SupportedUriTransfers"/>
+		/// Copy out the first element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="uri">the given <see cref="Uri"/></param>
-		/// <returns>A instance of <see cref="IUriWrapper"/> of given <paramref name="uri"/></returns>
-		/// <exception cref="NotSupportedException">if <paramref name="uri"/> is not supported</exception>
-		public abstract IUriWrapper CreateUriStream(Uri uri);
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
+		/// <returns>The first element in <paramref name="source"/>.</returns>
+		public abstract T ToManaged<T>(StoragePointer source) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Overwrite the first element in unmanaged pointer <paramref name="dest"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="dest">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
+		public abstract void FromManaged<T>(StoragePointer dest, T value) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">the source <see cref="StoragePointer"/> to copy from</param>
+		/// <param name="dest">the managed array of type <typeparamref name="T"/> to copy to</param>
+		public abstract void ToManaged<T>(StoragePointer source, T[] dest) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Overwrite the first few elements in unmanaged pointer <paramref name="dest"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="dest">the destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="values">the managed array of type <typeparamref name="T"/> to copy from</param>
+		public abstract void FromManaged<T>(StoragePointer dest, T[] values) where T : unmanaged, IEquatable<T>;
+
+		// Ignore Spelling: sizeof
+		/// <summary>
+		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">the source <see cref="StoragePointer"/> to copy from</param>
+		/// <param name="leadDim">the actual height (actual leading dimension) in bytes of <paramref name="source"/></param>
+		/// <param name="height">height to copy in bytes</param>
+		/// <param name="width">width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="dest">the managed array of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> / sizeof(T) * <paramref name="width"/></c></param>
+		public abstract void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, T[] dest) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Overwrite some of the elements in unmanaged pointer <paramref name="dest"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="dest">the destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="leadDim">the actual height (actual leading dimension) in bytes of <paramref name="dest"/></param>
+		/// <param name="height">height to copy in bytes</param>
+		/// <param name="width">width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="values">the managed array of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> / sizeof(T) * <paramref name="width"/></c></param>
+		public abstract void FromManaged2D<T>(StoragePointer dest, ulong leadDim, ulong height, ulong width, T[] values) where T : unmanaged, IEquatable<T>;
 		#endregion
 	}
 

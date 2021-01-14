@@ -8,11 +8,11 @@ using Althea.Resources;
 namespace Althea
 {
 	/// <summary>
-	/// The base interface for all runtime APIs defined in this assembly
+	/// The base abstract class for all runtime API classes defined in and out of this assembly
 	/// </summary>
 	/// <remarks>
-	/// Typically, the <b>caller</b> are responsible for checking the input parameters of these methods. <br/>
-	/// Typically, the inherited concrete classes shall perform lazy initializations if possible, because the instances created by default constructors will be held by the abstract API classes for a long time such that they can find the suitable candidates easily.
+	/// Typically, the <b>caller</b> are responsible for checking the input parameters of these methods.<br/>
+	/// Typically, the inherited concrete classes shall perform lazy initializations if possible, because the instances created by default constructors may be held by the abstract API classes for a long time such that they can find the suitable candidates easily.
 	/// </remarks>
 	public abstract class AbstractRuntimeApi : IDisposable
 	{
@@ -194,7 +194,7 @@ namespace Althea
 		/// <summary>
 		/// Get the supported memory locations for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
 		/// </summary>
-		public abstract IReadOnlyList<ImmutableZeroOneElementSet<StorageLocation>> SupportedUnaryLocations { get; }
+		public abstract IReadOnlyList<StorageLocation> SupportedUnaryLocations { get; }
 
 		/// <summary>
 		/// Get list of the supported memory locations for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.

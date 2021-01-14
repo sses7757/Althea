@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Memory;
+using Althea.Linq;
+using Althea.Resources;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -33,9 +35,9 @@ namespace Althea.CSharp.Memory
 		#endregion
 
 		#region support
-		public override StorageLocation SupportedUnaryLocations => StorageLocation.CpuRam;
+		public override IReadOnlyList<StorageLocation> SupportedUnaryLocations { get; } = new[] { StorageLocation.CpuRam };
 
-		public override IReadOnlyList<StorageLocation> SupportedBinaryLocations { get; } = new[] { StorageLocation.CpuRam };
+		public override IReadOnlyList<ImmutableTwoElementSet<StorageLocation>> SupportedBinaryLocations { get; } = new[] { new ImmutableTwoElementSet<StorageLocation>(StorageLocation.CpuRam, StorageLocation.CpuRam) };
 
 		public override IReadOnlyDictionary<UriScheme, StorageLocation> SupportedUriTransfers { get; } = new Dictionary<UriScheme, StorageLocation>
 		{
@@ -58,8 +60,13 @@ namespace Althea.CSharp.Memory
 		public override int MaxDeviceNumber(StorageLocation location) => 1;
 		#endregion
 
-		#region memory
-		public override IntPtr Allocate(MemoryLocation location, ulong length) => location.Location == StorageLocation.CpuRam ? Marshal.AllocHGlobal(checked((int)length)) : throw new ArgumentOutOfRangeException(nameof(location), Resource.NotSupportedLocation);
+		#region low-level memory operations
+		public override IntPtr Allocate(MemoryLocation location, ulong length)
+		{
+			if (location.Location != StorageLocation.CpuRam)
+				throw new NotSupportedException(Support.Location);
+			return Marshal.AllocHGlobal(checked((int)length));
+		}
 
 		public override bool Free(MemoryLocation location, IntPtr ptr)
 		{
@@ -149,15 +156,15 @@ namespace Althea.CSharp.Memory
 		{
 			// checks
 			if (uri.Scheme != Uri.UriSchemeFile)
-				throw new NotSupportedException(Resource.NotSupportedLocation);
+				throw new NotSupportedException(Support.Location);
 			string path = uri.LocalPath;
 			if (Directory.Exists(path))
-				throw new ArgumentOutOfRangeException(nameof(uri), Resource.NotSupportedLocation);
+				throw new NotSupportedException(Support.Location);
 			else if (File.Exists(path))
 			{
 				var flags = File.GetAttributes(path);
 				if ((flags & (FileAttributes.ReadOnly | FileAttributes.System | FileAttributes.Directory)) != 0)
-					throw new ArgumentOutOfRangeException(nameof(uri), Resource.NotSupportedLocation);
+					throw new NotSupportedException(Support.Location);
 			}
 			// create
 			file = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
@@ -251,7 +258,7 @@ namespace Althea.CSharp.Memory
 			}
 			else
 			{
-				throw new ArgumentException(Resource.NotSupportedLocation, nameof(stream));
+				throw new NotSupportedException(Support.Location);
 			}
 		}
 
@@ -266,7 +273,7 @@ namespace Althea.CSharp.Memory
 			}
 			else
 			{
-				throw new ArgumentException(Resource.NotSupportedLocation, nameof(stream));
+				throw new NotSupportedException(Support.Location);
 			}
 		}
 
@@ -275,7 +282,7 @@ namespace Althea.CSharp.Memory
 			if (offset + pointer.LengthInBytes >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			if (pointer.Location.Location != StorageLocation.CpuRam)
-				throw new NotSupportedException(Resource.NotSupportedLocation);
+				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
 			this.file.Read(pointer.AsSpan<byte>());
@@ -286,7 +293,7 @@ namespace Althea.CSharp.Memory
 			if (offset + pointer.LengthInBytes >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			if (pointer.Location.Location != StorageLocation.CpuRam)
-				throw new NotSupportedException(Resource.NotSupportedLocation);
+				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
 			await ReadStreamAsync(this.file, pointer.Pointer, pointer.LengthInBytes);
@@ -297,7 +304,7 @@ namespace Althea.CSharp.Memory
 			if (offset >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			if (pointer.Location.Location != StorageLocation.CpuRam)
-				throw new NotSupportedException(Resource.NotSupportedLocation);
+				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
 			this.file.Write(pointer.AsSpan<byte>());
@@ -309,7 +316,7 @@ namespace Althea.CSharp.Memory
 			if (offset >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			if (pointer.Location.Location != StorageLocation.CpuRam)
-				throw new NotSupportedException(Resource.NotSupportedLocation);
+				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
 			await WriteStreamAsync(this.file, pointer.Pointer, pointer.LengthInBytes);

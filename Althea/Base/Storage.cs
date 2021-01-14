@@ -243,7 +243,7 @@ namespace Althea
 		/// <returns>this == <paramref name="obj"/></returns>
 		public override bool Equals(object obj)
 		{
-			return obj is MemoryLocation location1 && Equals(location1);
+			return obj is MemoryLocation location1 && this.Equals(location1);
 		}
 
 		/// <summary>
@@ -302,6 +302,126 @@ namespace Althea
 				StorageLocation.GpuRam => "GPU_Memory",
 				_ => static_OtherMemoryNames.GetValueOrDefault(this.location) ?? $"Other_Device_Memory_Order_{this.location.OrderOfOtherMemoryType()}",
 			} + $"(ID={this.deviceID})";
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// The description of a combination of storage location(s)
+	/// </summary>
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly struct StorageLocationsDescription : IEquatable<StorageLocationsDescription>
+	{
+		#region enum
+		/// <summary>
+		/// The enum for the type of the description the combination of storage locations
+		/// </summary>
+		public enum DescriptionType : short
+		{
+			/// <summary>
+			/// Storage composed of only one memory location (pure) or a <b>set</b> of several memory locations (mixed). The first bit 0 indicates that this represents a set.
+			/// </summary>
+			PureOrMixed = 0 | 0,
+			/// <summary>
+			/// Storage composed of several <b>ordered</b> memory locations and a possible URI. The first bit 1 indicates that this represents a list.
+			/// </summary>
+			Cached = 0 | 1,
+		}
+		#endregion
+
+		#region basic
+		/// <summary>
+		/// Get a <see cref="bool"/> to indicate whether this <see cref="StorageLocationsDescription"/>'s underlying data is a set or a list.
+		/// </summary>
+		/// <returns>Whether the underlying data is a set or a list.</returns>
+		public bool IsASet() => !((short)this.type).IsBitSet(0);
+
+		private readonly DescriptionType type;
+
+		private readonly FixedBuffer_30<ushort> data;
+
+		/// <summary>
+		/// Create a <see cref="StorageLocationsDescription"/> with given <see cref="DescriptionType"/> (whether <paramref name="type"/> represents a set or a list is defined inside), and a <see cref="ReadOnlySpan{T}"/> containing the actual data
+		/// </summary>
+		/// <param name="type">The <see cref="DescriptionType"/></param>
+		/// <param name="data">A <see cref="ReadOnlySpan{T}"/> containing the actual data, must has length between 1 and 15</param>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="data"/> has incompatible size</exception>
+		public StorageLocationsDescription(DescriptionType type, ReadOnlySpan<ushort> data)
+		{
+			if (data.Length > 15 || data.Length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(data), Parameter.WrongSize);
+			// initialize
+			this.type = type;
+			this.data = new FixedBuffer_30<ushort>();
+			// set the values of data
+			Span<ushort> span = stackalloc ushort[data.Length];
+			data.CopyTo(span);
+			if (!this.IsASet())
+			{
+				span.Sort();
+			}
+			for (int i = 0; i < 15; i++)
+			{
+				this.data[i] = span[i];
+			}
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="StorageLocationsDescription"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		public bool Equals(StorageLocationsDescription other)
+		{
+			return this.type == other.type && this.data == other.data;
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		public override bool Equals(object obj)
+		{
+			return obj is StorageLocationsDescription descr && this.Equals(descr);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StorageLocationsDescription"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(this.type, this.data);
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(StorageLocationsDescription left, StorageLocationsDescription right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(StorageLocationsDescription left, StorageLocationsDescription right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		/// <summary>
+		/// Return the string representation of this <see cref="StorageLocationsDescription"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="StorageLocationsDescription"/></returns>
+		public override string ToString()
+		{
+			return $"Description of Storage Locations [type={this.type}, data={this.data}]";
 		}
 		#endregion
 	}
@@ -506,9 +626,14 @@ namespace Althea
 	public interface IStorage : IDisposable, IReadOnlyList<StoragePointer>
 	{
 		/// <summary>
-		/// The total length of the presenting array in  bytes
+		/// The total length of the presenting array in bytes
 		/// </summary>
 		ulong LengthInBytes { get; }
+
+		/// <summary>
+		/// The description of the storage locations of this storage class as a <see cref="StorageLocationsDescription"/>
+		/// </summary>
+		StorageLocationsDescription LocationsDescription { get; }
 
 		/// <summary>
 		/// Check whether this storage is valid or not
@@ -571,6 +696,11 @@ namespace Althea
 		/// The total length of the presenting array in bytes
 		/// </summary>
 		public virtual ulong LengthInBytes => this.Length * (ulong)SizeOfT;
+
+		/// <summary>
+		/// The description of the storage locations of this storage class as a <see cref="StorageLocationsDescription"/>
+		/// </summary>
+		public abstract StorageLocationsDescription LocationsDescription { get; }
 
 		/// <summary>
 		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
@@ -798,6 +928,11 @@ namespace Althea
 		/// Override <see cref="Storage{T}.Length"/> to show the new presenting length
 		/// </summary>
 		public override ulong Length { get; }
+
+		/// <summary>
+		/// The description of the storage locations of this storage class as a <see cref="StorageLocationsDescription"/>
+		/// </summary>
+		public override StorageLocationsDescription LocationsDescription => ;
 
 		/// <summary>
 		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
