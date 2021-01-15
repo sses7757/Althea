@@ -23,7 +23,7 @@ namespace Althea.Helpers
 
 		internal struct JsonImplementationSettings
 		{
-			public bool UseRecentImplementation;
+			////public bool UseRecentImplementation;
 
 			public bool DisposeNotCurrentImplementation;
 
@@ -31,7 +31,7 @@ namespace Althea.Helpers
 
 			internal JsonImplementationSettings(bool _)
 			{
-				UseRecentImplementation = true;
+				////UseRecentImplementation = true;
 				DisposeNotCurrentImplementation = true;
 				Memory = null;
 				LinearAlgebra = null;
@@ -93,15 +93,15 @@ namespace Althea.Helpers
 		#endregion
 
 		#region implementation settings
-		/// <summary>
-		/// When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not?<br/>
-		/// If so, this library will try to find suitable implementation used before during this running. an error will be thrown when there is no suitable implementation.<br/>
-		/// If not, this library will try to create temporary memory which fits the current implementation (may cause significant performance loss). If memory allocation or copies fails, an error will be thrown.
-		/// </summary>
-		public static bool UseRecentImplementation {
-			get => singletonSettings.ImplementationSettings.UseRecentImplementation;
-			set => singletonSettings.ImplementationSettings.UseRecentImplementation = value;
-		}
+		/////// <summary>
+		/////// When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not?<br/>
+		/////// If so, this library will try to find suitable implementation used before during this running. An error will be thrown when there is no suitable implementation.<br/>
+		/////// If not, this library will try to create temporary memory which fits the current implementation (may cause significant performance loss). If memory allocation or copies fails, an error will be thrown.
+		/////// </summary>
+		////public static bool UseRecentImplementation {
+		////	get => singletonSettings.ImplementationSettings.UseRecentImplementation;
+		////	set => singletonSettings.ImplementationSettings.UseRecentImplementation = value;
+		////}
 
 		/// <summary>
 		/// When a new implementation is indicated, whether elder ones will be disposed or not.<br/>
@@ -167,6 +167,19 @@ namespace Althea.Helpers
 					singletonSettings.ImplementationSettings.Solver = value.AssemblyQualifiedName;
 			}
 		}
+
+		/// <summary>
+		/// Set all back-end implementations at once
+		/// </summary>
+		/// <param name="backend">The <see cref="Backend.ISetBackend"/> used to set all back-ends</param>
+		public static void SetBackend(Backend.ISetBackend backend)
+		{
+			MemoryImplementation = backend.MemoryImplementation;
+			LinearAlgebraImplementation = backend.LinearAlgebraImplementation;
+			TensorAlgebraImplementation = backend.TensorAlgebraImplementation;
+			StatisticsImplementation = backend.StatisticsImplementation;
+			SolverImplementation = backend.SolverImplementation;
+		}
 		#endregion
 
 		#region import and export
@@ -221,23 +234,11 @@ namespace Althea.Helpers
 			Import(logError: true);
 			// set default implementations
 			// C# implementations
-			MemoryImplementation = typeof(CSharp.Memory.MemoryApi);
-			LinearAlgebraImplementation = typeof(CSharp.LinearAlgebra.LinearAlgebraApi);
-			TensorAlgebraImplementation = typeof(CSharp.TensorAlgebra.TensorAlgebraApi);
-			StatisticsImplementation = typeof(CSharp.Statistics.StatisticsApi);
-			SolverImplementation = typeof(CSharp.Solver.SolverApi);
+			SetBackend(new Backend.CSharp.CSharpImplementations());
 			// CUDA implementations
-			MemoryImplementation = typeof(Cuda.Memory.MemoryApi);
-			LinearAlgebraImplementation = typeof(Cuda.LinearAlgebra.LinearAlgebraApi);
-			TensorAlgebraImplementation = typeof(Cuda.TensorAlgebra.TensorAlgebraApi);
-			StatisticsImplementation = typeof(Cuda.Statistics.StatisticsApi);
-			SolverImplementation = typeof(Cuda.Solver.SolverApi);
+			SetBackend(new Backend.Cuda.CudaImplementations());
 			// MKL implementations, the real default implementation
-			MemoryImplementation = typeof(Mkl.Memory.MemoryApi);
-			LinearAlgebraImplementation = typeof(Mkl.LinearAlgebra.LinearAlgebraApi);
-			TensorAlgebraImplementation = typeof(Mkl.TensorAlgebra.TensorAlgebraApi);
-			StatisticsImplementation = typeof(Mkl.Statistics.StatisticsApi);
-			SolverImplementation = typeof(Mkl.Solver.SolverApi);
+			SetBackend(new Backend.Mkl.MklImplementations());
 		}
 
 		/// <summary>

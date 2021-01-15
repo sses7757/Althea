@@ -12,7 +12,7 @@ using Althea.Resources;
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 
-namespace Althea.CSharp.Memory
+namespace Althea.Backend.CSharp.Memory
 {
 	/// <summary>
 	/// The C# back-end of <see cref="AbstractApi"/>. <b>Can</b> be inherited.
@@ -49,7 +49,7 @@ namespace Althea.CSharp.Memory
 		public override (int major, int minor) DriverVersion(StorageLocation location) => default;
 
 		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
-		public override (ulong free, ulong total) FreeAndTotalMemory(MemoryLocation location)
+		public override (ulong free, ulong total) FreeAndTotalMemory(StorageDetail location)
 		{
 			var memoryInfo = GC.GetGCMemoryInfo();
 			ulong total = unchecked((ulong)memoryInfo.TotalAvailableMemoryBytes);
@@ -61,14 +61,14 @@ namespace Althea.CSharp.Memory
 		#endregion
 
 		#region low-level memory operations
-		public override IntPtr Allocate(MemoryLocation location, ulong length)
+		public override IntPtr Allocate(StorageDetail location, ulong length)
 		{
 			if (location.Location != StorageLocation.CpuRam)
 				throw new NotSupportedException(Support.Location);
 			return Marshal.AllocHGlobal(checked((int)length));
 		}
 
-		public override bool Free(MemoryLocation location, IntPtr ptr)
+		public override bool Free(StorageDetail location, IntPtr ptr)
 		{
 			if (location.Location == StorageLocation.CpuRam)
 			{

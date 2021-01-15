@@ -70,11 +70,11 @@ namespace Althea.Memory
 		public abstract int MaxDeviceNumber(StorageLocation location);
 
 		/// <summary>
-		/// Get the available and total memory in bytes for device indicated by a supported <see cref="MemoryLocation"/>.
+		/// Get the available and total memory in bytes for device indicated by a supported <see cref="StorageDetail"/>.
 		/// </summary>
-		/// <param name="location">the given supported <see cref="MemoryLocation"/></param>
+		/// <param name="location">the given supported <see cref="StorageDetail"/></param>
 		/// <returns>The available and total memory in bytes of device of given <paramref name="location"/></returns>
-		public abstract (ulong free, ulong total) FreeAndTotalMemory(MemoryLocation location);
+		public abstract (ulong free, ulong total) FreeAndTotalMemory(StorageDetail location);
 		#endregion
 
 		#region URI related
@@ -91,30 +91,30 @@ namespace Althea.Memory
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
 		/// </summary>
-		/// <param name="location">the <see cref="MemoryLocation"/> to allocate on</param>
+		/// <param name="location">the <see cref="StorageDetail"/> to allocate on</param>
 		/// <param name="length">length to allocate in bytes</param>
 		/// <returns>The allocated pointer as a <see cref="IntPtr"/></returns>
 		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
-		public abstract IntPtr Allocate(MemoryLocation location, ulong length);
+		public abstract IntPtr Allocate(StorageDetail location, ulong length);
 
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="location">the <see cref="MemoryLocation"/> to allocate on</param>
+		/// <param name="location">the <see cref="StorageDetail"/> to allocate on</param>
 		/// <param name="length">length to allocate in <typeparamref name="T"/> rather than bytes</param>
 		/// <returns>The allocated pointer as a <see cref="IntPtr"/></returns>
 		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
-		public IntPtr Allocate<T>(MemoryLocation location, ulong length) where T : unmanaged, IEquatable<T>
+		public IntPtr Allocate<T>(StorageDetail location, ulong length) where T : unmanaged, IEquatable<T>
 			=> this.Allocate(location, length * (ulong)Storage<T>.SizeOfT);
 
 		/// <summary>
 		/// Free a storage indicated by a given <paramref name="ptr"/> on a given <paramref name="location"/>
 		/// </summary>
-		/// <param name="location">the <see cref="MemoryLocation"/> to free on</param>
+		/// <param name="location">the <see cref="StorageDetail"/> to free on</param>
 		/// <param name="ptr">the pointer as a <see cref="IntPtr"/> to free</param>
 		/// <returns>If <paramref name="location"/> is not supported or <paramref name="ptr"/> is not valid, return false; otherwise, return true.</returns>
-		public abstract bool Free(MemoryLocation location, IntPtr ptr);
+		public abstract bool Free(StorageDetail location, IntPtr ptr);
 
 		/// <summary>
 		/// Free a storage indicated by a given <paramref name="pointer"/>

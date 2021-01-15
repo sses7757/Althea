@@ -32,6 +32,26 @@ namespace Althea.Linq
 			}
 		}
 
+		/// <summary>
+		/// Copy <paramref name="array"/> to <paramref name="span"/>.
+		/// </summary>
+		/// <typeparam name="TIn">the type of <paramref name="array"/></typeparam>
+		/// <typeparam name="TOut">the type of <paramref name="span"/></typeparam>
+		/// <param name="span">the <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="array">the destination array to be copied</param>
+		/// <param name="selector">the converter to each element</param>
+		public static void CopyTo<TIn, TOut>(this IReadOnlyList<TIn> array, Span<TOut> span, Converter<TIn, TOut> selector)
+		{
+			if (array is null)
+				throw new ArgumentNullException(nameof(array));
+			if (span.Length != array.Count)
+				throw new ArgumentException(Parameter.NotSameSize);
+
+			for (int i = 0; i < span.Length; i++)
+			{
+				span[i] = selector(array[i]);
+			}
+		}
 
 		/// <summary>
 		/// Copy <paramref name="span"/> to <paramref name="destArray"/>.
@@ -39,7 +59,7 @@ namespace Althea.Linq
 		/// <typeparam name="T">the type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
 		/// <param name="span">the <see cref="Span{T}"/> to be copied</param>
 		/// <param name="destArray">the destination array to be copied into</param>
-		public static void CopyTo<T>(this Span<T> span, T[] destArray)
+		public static void CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
 		{
 			if (destArray is null)
 				throw new ArgumentNullException(nameof(destArray));
@@ -53,21 +73,23 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Copy <paramref name="span"/> to <paramref name="destArray"/>.
+		/// Copy <paramref name="span"/> to <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="T">the type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
-		/// <param name="span">the <see cref="ReadOnlySpan{T}"/> to be copied</param>
-		/// <param name="destArray">the destination array to be copied into</param>
-		public static void CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
+		/// <typeparam name="TIn">the type of <paramref name="span"/></typeparam>
+		/// <typeparam name="TOut">the type of <paramref name="array"/></typeparam>
+		/// <param name="span">the <see cref="Span{T}"/> to be copied from</param>
+		/// <param name="array">the destination array to be copied into</param>
+		/// <param name="selector">the converter to each element</param>
+		public static void CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, TOut[] array, Converter<TIn, TOut> selector)
 		{
-			if (destArray is null)
-				throw new ArgumentNullException(nameof(destArray));
-			if (span.Length != destArray.Length)
+			if (array is null)
+				throw new ArgumentNullException(nameof(array));
+			if (span.Length != array.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
 
 			for (int i = 0; i < span.Length; i++)
 			{
-				destArray[i] = span[i];
+				array[i] = selector(span[i]);
 			}
 		}
 		#endregion
