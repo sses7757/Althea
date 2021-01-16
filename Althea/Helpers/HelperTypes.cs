@@ -113,7 +113,7 @@ namespace Althea.Helpers
 		/// <returns>the string representation of this <see cref="FixedBuffer_60{T}"/></returns>
 		public override string ToString()
 		{
-			return string.Join(',', this);
+			return $"Fixed Buffer [{string.Join(", ", this)}]";
 		}
 		#endregion
 	}

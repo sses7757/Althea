@@ -35,21 +35,23 @@ namespace Althea.Backend.CSharp.Memory
 		#endregion
 
 		#region support
-		public override IReadOnlyList<StorageLocation> SupportedUnaryLocations { get; } = new[] { StorageLocation.CpuRam };
+		private static readonly CombinationOfLocations CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
 
-		public override IReadOnlyList<ImmutableTwoElementSet<StorageLocation>> SupportedBinaryLocations { get; } = new[] { new ImmutableTwoElementSet<StorageLocation>(StorageLocation.CpuRam, StorageLocation.CpuRam) };
+		public override IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations { get; } = new[] { CpuAlone };
 
-		public override IReadOnlyDictionary<UriScheme, StorageLocation> SupportedUriTransfers { get; } = new Dictionary<UriScheme, StorageLocation>
+		public override IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations { get; } = new[] { new ImmutableTwoElementSet<CombinationOfLocations>(CpuAlone, CpuAlone) };
+
+		public override IReadOnlyDictionary<UriScheme, LocationType> SupportedUriTransfers { get; } = new Dictionary<UriScheme, LocationType>
 		{
-			[UriScheme.File] = StorageLocation.CpuRam,
+			[UriScheme.File] = LocationType.CpuRam,
 		};
 		#endregion
 
 		#region properties
-		public override (int major, int minor) DriverVersion(StorageLocation location) => default;
+		public override (int major, int minor) DriverVersion(LocationType location) => default;
 
 		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
-		public override (ulong free, ulong total) FreeAndTotalMemory(StorageDetail location)
+		public override (ulong free, ulong total) FreeAndTotalMemory(StorageLocation location)
 		{
 			var memoryInfo = GC.GetGCMemoryInfo();
 			ulong total = unchecked((ulong)memoryInfo.TotalAvailableMemoryBytes);
@@ -57,20 +59,20 @@ namespace Althea.Backend.CSharp.Memory
 			return (free, total);
 		}
 
-		public override int MaxDeviceNumber(StorageLocation location) => 1;
+		public override int MaxDeviceNumber(LocationType location) => 1;
 		#endregion
 
 		#region low-level memory operations
-		public override IntPtr Allocate(StorageDetail location, ulong length)
+		public override IntPtr Allocate(StorageLocation location, ulong length)
 		{
-			if (location.Location != StorageLocation.CpuRam)
+			if (location.Location != LocationType.CpuRam)
 				throw new NotSupportedException(Support.Location);
 			return Marshal.AllocHGlobal(checked((int)length));
 		}
 
-		public override bool Free(StorageDetail location, IntPtr ptr)
+		public override bool Free(StorageLocation location, IntPtr ptr)
 		{
-			if (location.Location == StorageLocation.CpuRam)
+			if (location.Location == LocationType.CpuRam)
 			{
 				Marshal.FreeHGlobal(ptr);
 				return true;
@@ -80,8 +82,8 @@ namespace Althea.Backend.CSharp.Memory
 
 		public override void SetMemoryValue(StoragePointer storage, byte value)
 		{
-			if (storage.Location.Location != StorageLocation.CpuRam)
-				throw new ArgumentOutOfRangeException(nameof(storage));
+			if (storage.Location.Location != LocationType.CpuRam)
+				throw new NotSupportedException(Support.Location);
 			unsafe
 			{
 				Unsafe.InitBlock(storage.UnmangedPointer, value, checked((uint)storage.LengthInBytes));
@@ -90,17 +92,15 @@ namespace Althea.Backend.CSharp.Memory
 
 		public override void SetMemoryValue<T>(StoragePointer storage, T value)
 		{
-			if (storage.Location.Location != StorageLocation.CpuRam)
-				throw new ArgumentOutOfRangeException(nameof(storage));
+			if (storage.Location.Location != LocationType.CpuRam)
+				throw new NotSupportedException(Support.Location);
 			storage.AsSpan<T>().Fill(value);
 		}
 
 		public override void MemoryCopy(StoragePointer source, StoragePointer dest)
 		{
-			if (source.Location.Location != StorageLocation.CpuRam)
-				throw new ArgumentOutOfRangeException(nameof(source));
-			if (dest.Location.Location != StorageLocation.CpuRam)
-				throw new ArgumentOutOfRangeException(nameof(dest));
+			if (source.Location.Location != LocationType.CpuRam || dest.Location.Location != LocationType.CpuRam)
+				throw new NotSupportedException(Support.Location);
 			unsafe
 			{
 				Unsafe.CopyBlock(source.UnmangedPointer, dest.UnmangedPointer, checked((uint)Math.Min(source.LengthInBytes, dest.LengthInBytes)));
@@ -109,10 +109,18 @@ namespace Althea.Backend.CSharp.Memory
 
 		public override void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer dest, ulong destLD, ulong height, ulong width)
 		{
-			if (source.Location.Location != StorageLocation.CpuRam)
-				throw new ArgumentOutOfRangeException(nameof(source));
-			if (dest.Location.Location != StorageLocation.CpuRam)
-				throw new ArgumentOutOfRangeException(nameof(dest));
+			if (source.Location.Location != LocationType.CpuRam || dest.Location.Location != LocationType.CpuRam)
+				throw new NotSupportedException(Support.Location);
+			if (sourceLD == 0)
+				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
+			if (destLD == 0)
+				throw new ArgumentOutOfRangeException(nameof(destLD), Resources.Parameter.MustPositive);
+			if (width == 0)
+				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+			if (height == 0)
+				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+			if (height > sourceLD || height > destLD)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
 
 			if (sourceLD == destLD && sourceLD == height)
 			{
@@ -281,7 +289,7 @@ namespace Althea.Backend.CSharp.Memory
 		{
 			if (offset + pointer.LengthInBytes >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			if (pointer.Location.Location != StorageLocation.CpuRam)
+			if (pointer.Location.Location != LocationType.CpuRam)
 				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
@@ -292,7 +300,7 @@ namespace Althea.Backend.CSharp.Memory
 		{
 			if (offset + pointer.LengthInBytes >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			if (pointer.Location.Location != StorageLocation.CpuRam)
+			if (pointer.Location.Location != LocationType.CpuRam)
 				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
@@ -303,7 +311,7 @@ namespace Althea.Backend.CSharp.Memory
 		{
 			if (offset >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			if (pointer.Location.Location != StorageLocation.CpuRam)
+			if (pointer.Location.Location != LocationType.CpuRam)
 				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
@@ -315,7 +323,7 @@ namespace Althea.Backend.CSharp.Memory
 
 			if (offset >= this.Length)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			if (pointer.Location.Location != StorageLocation.CpuRam)
+			if (pointer.Location.Location != LocationType.CpuRam)
 				throw new NotSupportedException(Support.Location);
 
 			this.Offset = offset;
