@@ -830,7 +830,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the hash code of an span using CRC method
 		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
+		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="span">span to get hash code</param>
 		/// <returns>the hash code of <paramref name="span"/></returns>
 		public static int HashCodeOfSpan<T>(this ReadOnlySpan<T> span) where T : struct
@@ -847,6 +847,24 @@ namespace Althea.Linq
 		#endregion
 
 		#region set operations
+		/// <summary>
+		/// Get the hash code of a set (order-independent) using ADD method
+		/// </summary>
+		/// <typeparam name="T">any struct</typeparam>
+		/// <param name="set">set to get hash code</param>
+		/// <returns>the hash code of <paramref name="set"/></returns>
+		public static int HashCodeOfSet<T>(this ReadOnlySpan<T> set) where T : struct
+		{
+			if (set.Length == 0)
+				return 0; // hash code of null
+			int hc = 0;
+			for (int i = 0; i < set.Length; ++i)
+			{
+				hc = unchecked(hc + set[i].GetHashCode());
+			}
+			return hc;
+		}
+
 		/// <summary>
 		/// Count the distinct element(s) in <paramref name="list"/>
 		/// </summary>

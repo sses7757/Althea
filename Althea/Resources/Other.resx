@@ -126,6 +126,9 @@
   <data name="ErrorOccur" xml:space="preserve">
     <value>An error happened:</value>
   </data>
+  <data name="InvalidGeneric" xml:space="preserve">
+    <value>The given generic type is invalid.</value>
+  </data>
   <data name="UseDefault" xml:space="preserve">
     <value>Use default settings instead...</value>
   </data>

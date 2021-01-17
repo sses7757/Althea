@@ -88,6 +88,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given generic type is invalid. 的本地化字符串。
+        /// </summary>
+        internal static string InvalidGeneric {
+            get {
+                return ResourceManager.GetString("InvalidGeneric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Use default settings instead... 的本地化字符串。
         /// </summary>
         internal static string UseDefault {
