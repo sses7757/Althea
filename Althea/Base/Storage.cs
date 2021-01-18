@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -9,40 +8,68 @@ using Althea.Linq;
 using Althea.Helpers;
 using Althea.Resources;
 
+using MEM = Althea.Storage.AbstractApi;
+
 
 namespace Althea
 {
 	#region storage location enum
 	/// <summary>
-	/// The enum of the storage location types, all values larger than <see cref="OtherRam_0"/> are all considered as some platform-specific local RAMs.
+	/// The enum of the storage location types
 	/// </summary>
 	public enum LocationType : byte
 	{
 		/// <summary>
 		/// Represents a storage location represented by Universal Resource Identifier.
 		/// </summary>
-		/// <remarks>It has different logic than other memory based <see cref="LocationType"/>s.</remarks>
-		Uri = 0,
+		Uri = 0 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassStream,
 		/// <summary>
 		/// Storage at local CPU RAM
 		/// </summary>
-		CpuRam = 1,
+		CpuRam = 0 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassMemory,
 		/// <summary>
 		/// Storage at local GPU RAM
 		/// </summary>
-		GpuRam = 2,
+		GpuRam = 1 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassMemory,
 		/// <summary>
 		/// Storage at platform-specific local RAM (with custom order the 1st) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
 		/// </summary>
-		OtherRam_0 = 3,
+		OtherRam_0 = 2 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassMemory,
+	}
+
+	/// <summary>
+	/// Extension class for <see cref="LocationType"/>
+	/// </summary>
+	public static class LocationTypeExtension
+	{
 		/// <summary>
-		/// Storage at platform-specific local RAM (with custom order the 2nd) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
+		/// The classification mask end bit of <see cref="LocationType"/>
 		/// </summary>
-		OtherRam_1 = 4,
+		public const int ClassificationEnd = 3;
+		
 		/// <summary>
-		/// Storage at platform-specific local RAM (with custom order the 3rd) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
+		/// The classification mask of <see cref="LocationType"/>
 		/// </summary>
-		OtherRam_2 = 5,
+		public const int ClassificationMask = 0b111;
+
+		/// <summary>
+		/// The classification of stream typed <see cref="LocationType"/>
+		/// </summary>
+		/// <remarks>Other classifications are not presented here but they are also supported.</remarks>
+		public const int ClassStream = 0b000;
+
+		/// <summary>
+		/// The classification of memory typed <see cref="LocationType"/>
+		/// </summary>
+		/// <remarks>Other classifications are not presented here but they are also supported.</remarks>
+		public const int ClassMemory = 0b001;
+
+		/// <summary>
+		/// Get the classification of given <see cref="LocationType"/>
+		/// </summary>
+		/// <param name="locationType">The given <see cref="LocationType"/></param>
+		/// <returns>The classification as a <see cref="byte"/></returns>
+		public static byte GetClassification(this LocationType locationType) => (byte)(((byte)locationType) & ClassificationMask);
 	}
 
 	/// <summary>
@@ -51,13 +78,48 @@ namespace Althea
 	public enum CombinationType : short
 	{
 		/// <summary>
-		/// Storage composed of only one memory location (pure) or a <b>set</b> of several memory locations (mixed). The first bit 0 indicates that this represents a set.
+		/// Storage composed of only one memory location (pure) or a <b>set</b> of several memory locations (mixed).
 		/// </summary>
-		PureOrMixed = 0 | 0,
+		PureOrMixed = 0 << CombinationTypeExtension.ClassificationEnd | CombinationTypeExtension.ClassUnordered,
 		/// <summary>
-		/// Storage composed of several <b>ordered</b> memory locations and a possible URI. The first bit 1 indicates that this represents a list.
+		/// Storage composed of several <b>ordered</b> memory locations and a possible URI.
 		/// </summary>
-		Cached = 0 | 1,
+		Cached = 0 << CombinationTypeExtension.ClassificationEnd | CombinationTypeExtension.ClassOrdered,
+	}
+
+	/// <summary>
+	/// Extension class for <see cref="CombinationType"/>
+	/// </summary>
+	public static class CombinationTypeExtension
+	{
+		/// <summary>
+		/// The classification mask end bit of <see cref="CombinationType"/>
+		/// </summary>
+		public const int ClassificationEnd = 1;
+
+		/// <summary>
+		/// The classification mask of <see cref="CombinationType"/>
+		/// </summary>
+		public const int ClassificationMask = 0b1;
+
+		/// <summary>
+		/// The classification of unordered typed <see cref="CombinationType"/>
+		/// </summary>
+		/// <remarks>Other classifications are not supported.</remarks>
+		public const int ClassUnordered = 0b0;
+
+		/// <summary>
+		/// The classification of ordered typed <see cref="CombinationType"/>
+		/// </summary>
+		/// <remarks>Other classifications are not supported.</remarks>
+		public const int ClassOrdered = 0b1;
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether the given <see cref="CombinationType"/> is an ordered one or a unordered one.
+		/// </summary>
+		/// <param name="combinationType">The given <see cref="CombinationType"/></param>
+		/// <returns>Whether the given <see cref="CombinationType"/> is an ordered one or a unordered one</returns>
+		public static bool IsOrdered(this CombinationType combinationType) => ((int)combinationType).IsBitSet(0);
 	}
 	#endregion
 
@@ -226,12 +288,6 @@ namespace Althea
 		public int Count => this.count;
 
 		/// <summary>
-		/// Get a <see cref="bool"/> to indicate whether this <see cref="CombinationOfLocations"/>'s underlying data is a set or a list.
-		/// </summary>
-		/// <returns>Whether the underlying data is a set or a list.</returns>
-		public bool IsASet() => !((short)this.type).IsBitSet(0);
-
-		/// <summary>
 		/// The <see cref="CombinationType"/> of this <see cref="CombinationOfLocations"/>
 		/// </summary>
 		public CombinationType Type => this.type;
@@ -253,7 +309,7 @@ namespace Althea
 			// set the values of data
 			Span<StorageLocation> span = stackalloc StorageLocation[data.Length];
 			data.CopyTo(span);
-			if (!this.IsASet())
+			if (type.IsOrdered())
 			{
 				span.Sort();
 			}
@@ -303,10 +359,10 @@ namespace Althea
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
 		{
-			if (this.IsASet())
-				return HashCode.Combine(this.type, ((ReadOnlySpan<StorageLocation>)this.data.AsSpan()).HashCodeOfSet());
-			else
+			if (this.type.IsOrdered())
 				return HashCode.Combine(this.type, this.data);
+			else
+				return HashCode.Combine(this.type, ((ReadOnlySpan<StorageLocation>)this.data.AsSpan()).HashCodeOfSet());
 		}
 
 		/// <summary>
@@ -420,11 +476,6 @@ namespace Althea
 		bool IsValidLocation(StorageLocation location);
 
 		/// <summary>
-		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be read or written with offset or not
-		/// </summary>
-		bool CanSeek { get; }
-
-		/// <summary>
 		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be read or not
 		/// </summary>
 		bool CanRead { get; }
@@ -433,6 +484,16 @@ namespace Althea
 		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be written or not
 		/// </summary>
 		bool CanWrite { get; }
+
+		/// <summary>
+		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be read with offset or not
+		/// </summary>
+		bool CanReadOffset { get; }
+
+		/// <summary>
+		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be written with offset or not
+		/// </summary>
+		bool CanWriteOffset { get; }
 
 		/// <summary>
 		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be resized in-place or not
@@ -763,17 +824,6 @@ namespace Althea
 		protected abstract void Dispose(bool disposeManaged);
 		#endregion
 
-		#region enumerator
-		IEnumerator<StoragePointer> IEnumerable<StoragePointer>.GetEnumerator()
-		{
-			for (int i = 0; i < this.Count; i++)
-			{
-				yield return this[i];
-			}
-		}
-		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<StoragePointer>)this).GetEnumerator();
-		#endregion
-
 		#region other methods
 		/// <summary>
 		/// Make a referenced <see cref="IStorage"/> with the starting pointer moving <paramref name="offset"/> and <see cref="LengthInBytes"/> changing to <paramref name="newLength"/>
@@ -795,7 +845,7 @@ namespace Althea
 		public abstract Storage<TOut> As<TOut>() where TOut : unmanaged;
 
 		/// <summary>
-		/// Check whether this storage is valid or not. The default implementation does not suit the URI storage case.
+		/// Check whether this storage is valid or not.
 		/// </summary>
 		/// <returns>The validness of this storage</returns>
 		public virtual bool IsValid()
@@ -816,7 +866,7 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>. The default implementation works for <see cref="ReferenceStorage{T}"/> and actual storage class(es).
+		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">the offset to move</param>
 		/// <param name="newLength">the length to check in bytes</param>
@@ -841,6 +891,17 @@ namespace Althea
 				return true;
 			}
 		}
+		#endregion
+
+		#region enumerator
+		IEnumerator<StoragePointer> IEnumerable<StoragePointer>.GetEnumerator()
+		{
+			for (int i = 0; i < this.Count; i++)
+			{
+				yield return this[i];
+			}
+		}
+		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<StoragePointer>)this).GetEnumerator();
 		#endregion
 
 		#region equality
@@ -870,9 +931,6 @@ namespace Althea
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="right"></param>
-		/// <returns>equals or not</returns>
 		public static bool operator ==(Storage<T> left, Storage<T> right)
 		{
 			if (left is null && right is null)
@@ -883,11 +941,8 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Non-equality operator
+		/// Inequality operator
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="right"></param>
-		/// <returns>not-equals or equals</returns>
 		public static bool operator !=(Storage<T> left, Storage<T> right) => !(left == right);
 		#endregion
 

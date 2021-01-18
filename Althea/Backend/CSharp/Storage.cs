@@ -12,18 +12,51 @@ using Althea.Resources;
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 
-namespace Althea.Backend.CSharp.Memory
+namespace Althea.Backend.CSharp.Storage
 {
+	#region concrete pointers
+	/// <summary>
+	/// The implementation of <see cref="IMemoryPointer"/>
+	/// </summary>
+	public struct MemoryPointer : IMemoryPointer
+	{
+		private readonly IntPtr pointer;
+
+		private readonly ulong length;
+
+		/// <summary>
+		/// Get the raw pointer of this <see cref="IMemoryPointer"/> as a <see cref="IntPtr"/>
+		/// </summary>
+		public IntPtr Pointer => this.pointer;
+
+		/// <summary>
+		/// Get the original length of this pointer's underlying storage in bytes
+		/// </summary>
+		public ulong LengthInBytes => this.length;
+
+		/// <summary>
+		/// Create a new <see cref="MemoryPointer"/> with given allocated <paramref name="pointer"/> and corresponding <paramref name="length"/>
+		/// </summary>
+		/// <param name="pointer">The allocated pointer</param>
+		/// <param name="length">The length in bytes</param>
+		public MemoryPointer(IntPtr pointer, ulong length)
+		{
+			this.pointer = pointer; this.length = length;
+		}
+	}
+	#endregion
+
+
 	/// <summary>
 	/// The C# back-end of <see cref="AbstractApi"/>. <b>Can</b> be inherited.
 	/// </summary>
-	public class MemoryApi : AbstractApi
+	public class StorageApi : AbstractApi
 	{
 		#region basic
 		/// <summary>
 		/// The default constructor used by reflection
 		/// </summary>
-		public MemoryApi()
+		public StorageApi()
 		{
 			// do nothing
 		}

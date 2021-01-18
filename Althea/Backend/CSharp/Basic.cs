@@ -8,7 +8,7 @@ namespace Althea.Backend.CSharp
 	/// </summary>
 	public sealed class CSharpImplementations : ISetBackend
 	{
-		Type ISetBackend.MemoryImplementation => typeof(Memory.MemoryApi);
+		Type ISetBackend.MemoryImplementation => typeof(Storage.StorageApi);
 
 		Type ISetBackend.LinearAlgebraImplementation => typeof(LinearAlgebra.LinearAlgebraApi);
 

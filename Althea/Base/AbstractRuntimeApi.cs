@@ -136,39 +136,41 @@ namespace Althea
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void Check<T>(LinkedList<T> recents, IStorage storage1) where T : AbstractRuntimeApi
+		private static void Check<T>(LinkedList<T> recents) where T : AbstractRuntimeApi
 		{
 			if (recents.Count == 0)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+			DisposeNotCurrent(recents);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Check<T>(LinkedList<T> recents, IStorage storage1) where T : AbstractRuntimeApi
+		{
 			if (storage1.IsValid())
 				throw new ArgumentOutOfRangeException(nameof(storage1), Resources.Parameter.InvalidValue);
-			DisposeNotCurrent(recents);
+			Check(recents);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Check<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2) where T : AbstractRuntimeApi
 		{
-			if (recents.Count == 0)
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (storage1.IsValid())
 				throw new ArgumentOutOfRangeException(nameof(storage1), Resources.Parameter.InvalidValue);
 			if (storage2.IsValid())
 				throw new ArgumentOutOfRangeException(nameof(storage2), Resources.Parameter.InvalidValue);
-			DisposeNotCurrent(recents);
+			Check(recents);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Check<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, IStorage storage3) where T : AbstractRuntimeApi
 		{
-			if (recents.Count == 0)
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (storage1.IsValid())
 				throw new ArgumentOutOfRangeException(nameof(storage1), Resources.Parameter.InvalidValue);
 			if (storage2.IsValid())
 				throw new ArgumentOutOfRangeException(nameof(storage2), Resources.Parameter.InvalidValue);
 			if (storage3.IsValid())
 				throw new ArgumentOutOfRangeException(nameof(storage3), Resources.Parameter.InvalidValue);
-			DisposeNotCurrent(recents);
+			Check(recents);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -178,8 +180,38 @@ namespace Althea
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (storages.Any(s => !s.IsValid()))
 				throw new ArgumentOutOfRangeException(nameof(storages), Resources.Parameter.InvalidValue);
-			DisposeNotCurrent(recents);
+			Check(recents);
 		}
+
+		/// <summary>
+		/// Select the most recent implementation in <paramref name="recents"/> which fits a given <paramref name="location"/>
+		/// </summary>
+		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
+		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
+		/// <param name="location">The given <see cref="StorageLocation"/> to work with.</param>
+		/// <returns>The suitable most recent implementation or null if not found.</returns>
+		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
+		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
+		protected static T SelectImplementation<T>(LinkedList<T> recents, StorageLocation location) where T : AbstractRuntimeApi
+		{
+			Check(recents);
+
+			var current = recents.First;
+			if (current.Value.IsSupportedUnitary(location))
+			{
+				return current.Value;
+			}
+			while ((current = current.Next) is not null)
+			{
+				Initialize(current);
+				if (current.Value.IsSupportedUnitary(location))
+				{
+					return current.Value;
+				}
+			}
+			throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
 
 		/// <summary>
 		/// Select the most recent implementation in <paramref name="recents"/> which fits a given <paramref name="storage"/>

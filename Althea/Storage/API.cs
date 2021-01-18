@@ -32,24 +32,19 @@ namespace Althea.Storage
 		protected static void DisposeNotCurrent() => DisposeNotCurrent(RecentAPIs);
 
 		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, StorageLocation)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation(StorageLocation location) => SelectImplementation(RecentAPIs, location);
+
+		/// <summary>
 		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
 		/// </summary>
-		protected static AbstractApi SelectImplementation(IStorage storage) => SelectImplementation(RecentAPIs, storage);
+		public static AbstractApi SelectImplementation<T>(Storage<T> storage) where T : unmanaged => SelectImplementation(RecentAPIs, storage);
 
 		/// <summary>
 		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
 		/// </summary>
-		protected static AbstractApi SelectImplementation(IStorage storage1, IStorage storage2) => SelectImplementation(RecentAPIs, storage1, storage2);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
-		/// </summary>
-		protected static AbstractApi SelectImplementation(IStorage storage1, IStorage storage2, IStorage storage3) => SelectImplementation(RecentAPIs, storage1, storage2, storage3);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage[])"/>
-		/// </summary>
-		protected static AbstractApi SelectImplementation(params IStorage[] storages) => SelectImplementation(RecentAPIs, storages);
+		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2);
 		#endregion
 
 		#region support information
@@ -130,9 +125,9 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in bytes</param>
-		/// <returns>The allocated pointer as a <see cref="IntPtr"/></returns>
+		/// <returns>The allocated pointer as a <see cref="StoragePointer"/></returns>
 		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
-		public abstract IntPtr Allocate(StorageLocation location, ulong length);
+		public abstract StoragePointer Allocate(StorageLocation location, ulong length);
 
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
@@ -140,25 +135,17 @@ namespace Althea.Storage
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in <typeparamref name="T"/> rather than bytes</param>
-		/// <returns>The allocated pointer as a <see cref="IntPtr"/></returns>
+		/// <returns>The allocated pointer as a <see cref="StoragePointer"/></returns>
 		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
-		public virtual IntPtr Allocate<T>(StorageLocation location, ulong length) where T : unmanaged, IEquatable<T>
-			=> this.Allocate(location, length * (ulong)Storage<T>.SizeOfT);
-
-		/// <summary>
-		/// Free a storage indicated by a given <paramref name="ptr"/> on a given <paramref name="location"/>
-		/// </summary>
-		/// <param name="location">The <see cref="StorageLocation"/> to free on</param>
-		/// <param name="ptr">The pointer as a <see cref="IntPtr"/> to free</param>
-		/// <returns>If <paramref name="location"/> is not supported or <paramref name="ptr"/> is not valid, return false; otherwise, return true.</returns>
-		public abstract bool Free(StorageLocation location, IntPtr ptr);
+		public virtual StoragePointer Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
 
 		/// <summary>
 		/// Free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">The <see cref="StoragePointer"/> to free</param>
+		/// <param name="disposeManaged">dispose managed resources or not</param>
 		/// <returns>If <paramref name="pointer"/> is not supported or <paramref name="pointer"/> is not valid, return false; otherwise, return true.</returns>
-		public virtual bool Free(StoragePointer pointer) => pointer.LengthInBytes != 0 && pointer.Pointer != default && pointer.Location != default && this.Free(pointer.Location, pointer.Pointer);
+		public abstract bool Free(StoragePointer pointer, bool disposeManaged = true);
 
 		/// <summary>
 		/// Fill the <paramref name="storage"/> by same <paramref name="value"/>, byte by byte.
@@ -175,7 +162,7 @@ namespace Althea.Storage
 		/// <param name="storage">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="storage"/> is not supported</exception>
-		public abstract void SetMemoryValue<T>(StoragePointer storage, T value) where T : unmanaged, IEquatable<T>;
+		public abstract void SetMemoryValue<T>(StoragePointer storage, T value) where T : unmanaged;
 
 		/// <summary>
 		/// Copy memory from <paramref name="source"/> to <paramref name="dest"/>.
@@ -208,7 +195,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/>.</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		public abstract T ToManaged<T>(StoragePointer source) where T : unmanaged, IEquatable<T>;
+		public abstract T ToManaged<T>(StoragePointer source) where T : unmanaged;
 
 		/// <summary>
 		/// Overwrite the first element in unmanaged pointer <paramref name="dest"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
@@ -217,7 +204,7 @@ namespace Althea.Storage
 		/// <param name="dest">The destination <see cref="StoragePointer"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="dest"/> is not supported</exception>
-		public abstract void FromManaged<T>(StoragePointer dest, T value) where T : unmanaged, IEquatable<T>;
+		public abstract void FromManaged<T>(StoragePointer dest, T value) where T : unmanaged;
 
 		/// <summary>
 		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
@@ -226,7 +213,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
 		/// <param name="dest">The managed array of type <typeparamref name="T"/> to copy to</param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		public abstract void ToManaged<T>(StoragePointer source, T[] dest) where T : unmanaged, IEquatable<T>;
+		public abstract void ToManaged<T>(StoragePointer source, T[] dest) where T : unmanaged;
 
 		/// <summary>
 		/// Overwrite the first few elements in unmanaged pointer <paramref name="dest"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
@@ -235,7 +222,7 @@ namespace Althea.Storage
 		/// <param name="dest">The destination <see cref="StoragePointer"/> to copy to</param>
 		/// <param name="values">The managed array of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="dest"/> is not supported</exception>
-		public abstract void FromManaged<T>(StoragePointer dest, T[] values) where T : unmanaged, IEquatable<T>;
+		public abstract void FromManaged<T>(StoragePointer dest, T[] values) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
@@ -248,7 +235,7 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="dest">The managed array of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> / sizeof(T) * <paramref name="width"/></c></param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		public abstract void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, T[] dest) where T : unmanaged, IEquatable<T>;
+		public abstract void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, T[] dest) where T : unmanaged;
 
 		/// <summary>
 		/// Overwrite some of the elements in unmanaged pointer <paramref name="dest"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
@@ -260,7 +247,7 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="values">The managed array of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> / sizeof(T) * <paramref name="width"/></c></param>
 		/// <exception cref="NotSupportedException">if <paramref name="dest"/> is not supported</exception>
-		public abstract void FromManaged2D<T>(StoragePointer dest, ulong leadDim, ulong height, ulong width, T[] values) where T : unmanaged, IEquatable<T>;
+		public abstract void FromManaged2D<T>(StoragePointer dest, ulong leadDim, ulong height, ulong width, T[] values) where T : unmanaged;
 		#endregion
 
 		#region high-level storage operations
@@ -289,7 +276,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or empty</exception>
-		public virtual void SetMemoryValue<T>(IStorage storage, T value) where T : unmanaged, IEquatable<T>
+		public virtual void SetMemoryValue<T>(IStorage storage, T value) where T : unmanaged
 		{
 			if (storage is null || storage.Count == 0)
 				throw new ArgumentNullException(nameof(storage));
