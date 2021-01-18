@@ -361,26 +361,26 @@ namespace Althea
 
 		#region support information
 		/// <summary>
-		/// Get the supported locations for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
+		/// Get the supported <see cref="CombinationOfLocations"/> for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
 		/// </summary>
 		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
 		public abstract IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations { get; }
 
 		/// <summary>
-		/// Get list of the supported locations for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.
+		/// Get list of the supported <see cref="CombinationOfLocations"/> for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.
 		/// </summary>
 		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
 		public abstract IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations { get; }
 
 		/// <summary>
-		/// Get list of the supported locations for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) memory locations. Or null if there are no ternary operations.
+		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) memory locations. Or null if there are no ternary operations.
 		/// </summary>
 		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
 		public abstract IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations { get; }
 
 		// Ignore Spelling: N-ary
 		/// <summary>
-		/// Get list of the supported locations for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain (mixed) memory locations. Or null if there are no N-ary operations.
+		/// Get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.
 		/// </summary>
 		/// <param name="N">the number of operands, must be <paramref name="N"/> &gt; 0</param>
 		/// <returns>The list of the supported locations for all N-ary operations. Or null if there are no N-ary operations.</returns>

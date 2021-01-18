@@ -320,6 +320,14 @@ namespace Althea
 		}
 
 		/// <summary>
+		/// Create a <see cref="CombinationOfLocations"/> with given <see cref="CombinationType"/> (whether <paramref name="type"/> represents a set or a list is defined inside), and an array containing the actual data
+		/// </summary>
+		/// <param name="type">The <see cref="CombinationType"/></param>
+		/// <param name="data">An array of <see cref="StorageLocation"/> containing the actual storage details, must has length between 1 and 15</param>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="data"/> has incompatible size</exception>
+		public CombinationOfLocations(CombinationType type, params StorageLocation[] data) : this(type, (ReadOnlySpan<StorageLocation>)data) { }
+
+		/// <summary>
 		/// Create a <see cref="CombinationOfLocations"/> from a single <see cref="StorageLocation"/>
 		/// </summary>
 		/// <param name="memoryLocation">the given <see cref="StorageLocation"/></param>
@@ -456,17 +464,12 @@ namespace Althea
 	/// <summary>
 	/// The interface for an immutable pointer at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
-	public interface IPointer : IPrintable
+	public interface IPointer : IMainPropertyFormat, ICheckValid
 	{
 		/// <summary>
 		/// The original length of this pointer's underlying storage in bytes
 		/// </summary>
 		ulong LengthInBytes { get; }
-
-		/// <summary>
-		/// Check whether this pointer contains a valid storage or not
-		/// </summary>
-		bool IsValid { get; }
 
 		/// <summary>
 		/// <b>Statically</b> check whether given <paramref name="location"/> is a supported one for this pointer
@@ -507,7 +510,7 @@ namespace Althea
 	/// </summary>
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
 	[StructLayout(LayoutKind.Explicit, Size = 32)]
-	public readonly struct StoragePointer : IEquatable<StoragePointer>, IPrintable
+	public readonly struct StoragePointer : IEquatable<StoragePointer>, IMainPropertyFormat, ICheckValid
 	{
 		#region basic
 		[FieldOffset(0)]
@@ -525,7 +528,7 @@ namespace Althea
 		/// <summary>
 		/// Check whether this pointer is a valid pointer or not
 		/// </summary>
-		public bool IsValid => this.pointer is not null && this.pointer.IsValid;
+		public bool IsValid() => this.pointer is not null && this.pointer.IsValid();
 
 		/// <summary>
 		/// The <see cref="StorageLocation"/> of this <see cref="StoragePointer"/>
@@ -652,9 +655,9 @@ namespace Althea
 		#endregion
 
 		#region to string
-		string IPrintable.PrintableMain => this.pointer.PrintableMain;
+		string IMainPropertyFormat.StringMain => this.pointer.StringMain;
 
-		IReadOnlyDictionary<string, string> IPrintable.PrintableProperties => this.offset == 0 ? new Dictionary<string, string>
+		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => this.offset == 0 ? new Dictionary<string, string>
 		{
 			["location"] = this.location.ToString(),
 			["length"] = this.length.ToString(),
@@ -669,7 +672,7 @@ namespace Althea
 		/// Return the string representation of this <see cref="StoragePointer"/>
 		/// </summary>
 		/// <returns>the string representation of this <see cref="StoragePointer"/></returns>
-		public override string ToString() => ((IPrintable)this).ToString();
+		public override string ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 
 		#region operator
@@ -707,7 +710,7 @@ namespace Althea
 	/// <summary>
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
 	/// </summary>
-	public interface IStorage : IDisposable, IReadOnlyList<StoragePointer>
+	public interface IStorage : IReadOnlyList<StoragePointer>, ICheckValid, IDisposable
 	{
 		/// <summary>
 		/// The total length of the presenting array in bytes
@@ -718,12 +721,6 @@ namespace Althea
 		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		CombinationOfLocations LocationDescription { get; }
-
-		/// <summary>
-		/// Check whether this storage is valid or not
-		/// </summary>
-		/// <returns>The validness of this storage</returns>
-		bool IsValid();
 
 		/// <summary>
 		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
@@ -765,7 +762,7 @@ namespace Althea
 	/// <remarks>I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class(es) shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
-	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, IPrintable where T : unmanaged
+	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, IMainPropertyFormat where T : unmanaged
 	{
 		#region properties
 		/// <summary>
@@ -850,14 +847,14 @@ namespace Althea
 		/// <returns>The validness of this storage</returns>
 		public virtual bool IsValid()
 		{
-			if (this.Disposed)
+			if (this.Disposed || this.Count == 0)
 			{
 				return false;
 			}
 			for (int i = 0; i < this.Count; i++)
 			{
 				var pointer = this[i];
-				if (!pointer.IsValid)
+				if (!pointer.IsValid())
 				{
 					return false;
 				}
@@ -947,9 +944,9 @@ namespace Althea
 		#endregion
 
 		#region string
-		string IPrintable.PrintableMain => this.Count == 1 ? ((IPrintable)this[0]).PrintableMain : string.Join(", ", ((IPrintable)this).PrintableMain);
+		string IMainPropertyFormat.StringMain => this.Count == 1 ? ((IMainPropertyFormat)this[0]).StringMain : string.Join(", ", ((IMainPropertyFormat)this).StringMain);
 
-		IReadOnlyDictionary<string, string> IPrintable.PrintableProperties => new Dictionary<string, string>
+		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
 		{
 			["type"] = typeof(T).Name,
 			[this.Count == 1 ?"length" : "total_length"] = this.Length.ToString(),
@@ -961,12 +958,17 @@ namespace Althea
 		/// <returns>string representation</returns>
 		public override string ToString()
 		{
-			string main = this.Count == 1 ? ((IPrintable)this).PrintableMain : ('{' + string.Join(", ", this) + '}');
-			return IPrintable.Combine(main, ((IPrintable)this).PrintableProperties);
+			string main = this.Count == 1 ? ((IMainPropertyFormat)this).StringMain : ('{' + string.Join(", ", this) + '}');
+			return IMainPropertyFormat.Combine(main, ((IMainPropertyFormat)this).StringProperties);
 		}
 		#endregion
 
 		#region operator
+		/// <summary>
+		/// An empty <see cref="Storage{T}"/>
+		/// </summary>
+		public static readonly Storage<T> Empty = new ReferenceStorage<T>();
+
 		/// <summary>
 		/// Add offset (in bytes) to a <see cref="Storage{T}"/> to get another.
 		/// </summary>
@@ -1079,6 +1081,8 @@ namespace Althea
 			this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
 			this.Length = newLength;
 		}
+
+		internal ReferenceStorage() : this(null, 0, 0, 0, 0, 0) { }
 		#endregion
 
 		#region override

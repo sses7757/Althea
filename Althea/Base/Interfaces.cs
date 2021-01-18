@@ -5,19 +5,31 @@ using System.Collections.Generic;
 namespace Althea
 {
 	/// <summary>
-	/// The interface for a printable object
+	/// The interface for a 
 	/// </summary>
-	public interface IPrintable
+	public interface ICheckValid
+	{
+		/// <summary>
+		/// Check whether this object is a valid one or not
+		/// </summary>
+		/// <returns>The validness of this object</returns>
+		bool IsValid();
+	}
+
+	/// <summary>
+	/// The interface for an object which can convert to string by principle string representation and string representation of properties
+	/// </summary>
+	public interface IMainPropertyFormat
 	{
 		/// <summary>
 		/// Get the string representation of the principle value of this object as a <see cref="string"/>
 		/// </summary>
-		string PrintableMain { get; }
+		string StringMain { get; }
 
 		/// <summary>
 		/// Get the string representation of printable properties of this object as a <see cref="IReadOnlyDictionary{TKey, TValue}"/>
 		/// </summary>
-		IReadOnlyDictionary<string, string> PrintableProperties { get; }
+		IReadOnlyDictionary<string, string> StringProperties { get; }
 
 		/// <summary>
 		/// Combine the string representation of the principle value (<paramref name="main"/>) and the string representation of printable properties (<paramref name="properties"/>)
@@ -49,16 +61,16 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Get the string representation of this object by printing <see cref="PrintableMain"/>, <see cref="PrintableProperties"/>
+		/// Get the string representation of this object by printing <see cref="StringMain"/>, <see cref="StringProperties"/>
 		/// </summary>
 		/// <returns>The string representation of this object</returns>
-		string ToString() => Combine(this.PrintableMain, this.PrintableProperties);
+		string ToString() => Combine(this.StringMain, this.StringProperties);
 
 		/// <summary>
-		/// Get the string representation of this object by printing not only <see cref="PrintableMain"/> and <see cref="PrintableProperties"/> but also <paramref name="otherProperties"/>
+		/// Get the string representation of this object by printing not only <see cref="StringMain"/> and <see cref="StringProperties"/> but also <paramref name="otherProperties"/>
 		/// </summary>
 		/// <param name="otherProperties">The string representation of other printable properties as a <see cref="IReadOnlyDictionary{TKey, TValue}"/></param>
 		/// <returns>The combined string representation</returns>
-		string ToString(IReadOnlyDictionary<string, string> otherProperties) => Combine(this.PrintableMain, this.PrintableProperties, otherProperties);
+		string ToString(IReadOnlyDictionary<string, string> otherProperties) => Combine(this.StringMain, this.StringProperties, otherProperties);
 	}
 }

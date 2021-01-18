@@ -1,10 +1,8 @@
 using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
-using Althea.Helpers;
 
 
 namespace Althea.Storage
@@ -12,7 +10,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract class for runtime memory API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	/// <remarks>The default implementations of methods about <see cref="Storage{T}"/> ensure that you can only implement the basic low-level memory operations of "pure" storages while the high-level methods about <see cref="Storage{T}"/> work fine automatically. However, if there are native supports, it is still recommended to overwrite these methods.</remarks>
+	public abstract class AbstractApi : AbstractRuntimeApi
 	{
 		#region static methods for dispatching
 		/// <summary>
@@ -47,15 +46,16 @@ namespace Althea.Storage
 		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2);
 		#endregion
 
+
 		#region support information
 		/// <summary>
-		/// Get list of the supported memory locations for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
+		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
 		/// </summary>
 		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => null;
 
 		// Ignore Spelling: N-ary
 		/// <summary>
-		/// Get list of the supported memory locations for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain (mixed) memory locations. Or null if there are no N-ary operations.
+		/// Get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. Each value in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.
 		/// </summary>
 		/// <param name="N">The number of operands, must be <paramref name="N"/> &gt; 0</param>
 		/// <returns>The list of the supported memory locations for all N-ary operations. Or null if there are no N-ary operations.</returns>
@@ -73,17 +73,16 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Get the supported URI direct transfer dictionary. Each value indicates that this <see cref="AbstractApi"/> supports the <b>direct</b> data transfer between the given <see cref="LocationType"/> (combination of flags) and the given <see cref="UriScheme"/>.
+		/// Get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
 		/// </summary>
-		public abstract IReadOnlyDictionary<UriScheme, LocationType> SupportedUriTransfers { get; }
+		public abstract IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer { get; }
 
 		/// <summary>
-		/// Check if the direct data transfer of given <paramref name="location"/> and given <paramref name="uriScheme"/> is supported by this <see cref="AbstractApi"/> or not.
+		/// Check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation
 		/// </summary>
-		/// <param name="location">The given <see cref="LocationType"/>, must not be a <see cref="LocationType.Uri"/>.</param>
-		/// <param name="uriScheme">The given <see cref="UriScheme"/>.</param>
-		/// <returns>Whether the direct data transfer of <paramref name="location"/> and <paramref name="uriScheme"/> is supported by this <see cref="AbstractApi"/>.</returns>
-		public virtual bool IsSupportedTransfer(LocationType location, UriScheme uriScheme) => location != LocationType.Uri && (this.SupportedUriTransfers[uriScheme] & location) == location;
+		/// <param name="locations">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
+		/// <returns>Whether this implementation supports data transfer between <paramref name="locations"/> and C# managed memory</returns>
+		public virtual bool IsSupportedTransfer(CombinationOfLocations locations) => this.SupportedManagedTransfer.Contains(locations);
 		#endregion
 
 		#region properties
@@ -109,24 +108,15 @@ namespace Althea.Storage
 		public abstract (ulong free, ulong total) FreeAndTotalMemory(StorageLocation location);
 		#endregion
 
-		#region URI related
-		/// <summary>
-		/// Create a <see cref="IUriWrapper"/> of given <paramref name="uri"/> which supports data transfer defined in <see cref="SupportedUriTransfers"/>
-		/// </summary>
-		/// <param name="uri">The given <see cref="Uri"/> used to create wrapper</param>
-		/// <returns>A instance of <see cref="IUriWrapper"/> of given <paramref name="uri"/></returns>
-		/// <exception cref="NotSupportedException">if <paramref name="uri"/> is not supported</exception>
-		public abstract IUriWrapper CreateUriStream(Uri uri);
-		#endregion
-
-		#region low-level memory operations
+		#region low-level storage operations
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
 		/// </summary>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in bytes</param>
 		/// <returns>The allocated pointer as a <see cref="StoragePointer"/></returns>
-		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
+		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
+		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		public abstract StoragePointer Allocate(StorageLocation location, ulong length);
 
 		/// <summary>
@@ -136,7 +126,8 @@ namespace Althea.Storage
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in <typeparamref name="T"/> rather than bytes</param>
 		/// <returns>The allocated pointer as a <see cref="StoragePointer"/></returns>
-		/// <exception cref="NotSupportedException">if <paramref name="location"/> is not supported</exception>
+		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
+		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		public virtual StoragePointer Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
 
 		/// <summary>
@@ -148,81 +139,96 @@ namespace Althea.Storage
 		public abstract bool Free(StoragePointer pointer, bool disposeManaged = true);
 
 		/// <summary>
-		/// Fill the <paramref name="storage"/> by same <paramref name="value"/>, byte by byte.
+		/// Fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.
 		/// </summary>
-		/// <param name="storage">The pointer to be filled</param>
+		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="storage"/> is not supported</exception>
-		public abstract void SetMemoryValue(StoragePointer storage, byte value);
+		/// <exception cref="NotSupportedException">If <paramref name="pointer"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="pointer"/> is invalid</exception>
+		public abstract void SetMemoryValue(StoragePointer pointer, byte value);
 
 		/// <summary>
-		/// Fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.
+		/// Fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="storage">The pointer to be filled</param>
+		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="storage"/> is not supported</exception>
-		public abstract void SetMemoryValue<T>(StoragePointer storage, T value) where T : unmanaged;
+		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="pointer"/> is invalid</exception>
+		public abstract void SetMemoryValue<T>(StoragePointer pointer, T value) where T : unmanaged;
 
 		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="dest"/>.
+		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source pointer to copy from</param>
-		/// <param name="dest">The destination pointer to copy into</param>
-		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="dest"/> is used as the actual copy length in bytes</remarks>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
-		public abstract void MemoryCopy(StoragePointer source, StoragePointer dest);
+		/// <param name="destination">The destination pointer to copy into</param>
+		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
+		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		public abstract void MemoryCopy(StoragePointer source, StoragePointer destination);
 
 		/// <summary>
-		/// Copies 2D data from <paramref name="source"/> to <paramref name="dest"/>.
+		/// Copies 2D data from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source pointer</param>
 		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
-		/// <param name="dest">The destination pointer</param>
+		/// <param name="destination">The destination pointer</param>
 		/// <param name="destLD">The destination array actual height (actual leading dimension) in bytes</param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in the real type</param>
-		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="dest"/> are ignored</remarks>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
+		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
+		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
-		public abstract void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer dest, ulong destLD, ulong height, ulong width);
+		/// <exception cref="ArgumentException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
+		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
+		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
+		/// </exception>
+		public abstract void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer destination, ulong destLD, ulong height, ulong width);
+		#endregion
 
+		#region low-level storage and managed operations
 		/// <summary>
-		/// Copy out the first element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
+		/// Copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/>.</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
 		public abstract T ToManaged<T>(StoragePointer source) where T : unmanaged;
 
 		/// <summary>
-		/// Overwrite the first element in unmanaged pointer <paramref name="dest"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
+		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="dest">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="destination">The destination <see cref="StoragePointer"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
-		/// <exception cref="NotSupportedException">if <paramref name="dest"/> is not supported</exception>
-		public abstract void FromManaged<T>(StoragePointer dest, T value) where T : unmanaged;
+		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		public abstract void FromManaged<T>(StoragePointer destination, T value) where T : unmanaged;
 
 		/// <summary>
 		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
-		/// <param name="dest">The managed array of type <typeparamref name="T"/> to copy to</param>
+		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		public abstract void ToManaged<T>(StoragePointer source, T[] dest) where T : unmanaged;
+		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		public abstract void ToManaged<T>(StoragePointer source, ArraySegment<T> destination) where T : unmanaged;
 
 		/// <summary>
-		/// Overwrite the first few elements in unmanaged pointer <paramref name="dest"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
+		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="dest">The destination <see cref="StoragePointer"/> to copy to</param>
-		/// <param name="values">The managed array of type <typeparamref name="T"/> to copy from</param>
-		/// <exception cref="NotSupportedException">if <paramref name="dest"/> is not supported</exception>
-		public abstract void FromManaged<T>(StoragePointer dest, T[] values) where T : unmanaged;
+		/// <param name="destination">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		public abstract void FromManaged<T>(StoragePointer destination, ArraySegment<T> values) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
@@ -233,34 +239,47 @@ namespace Althea.Storage
 		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="source"/></param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="dest">The managed array of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> / sizeof(T) * <paramref name="width"/></c></param>
+		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		public abstract void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, T[] dest) where T : unmanaged;
+		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="StoragePointer.Pointer">Pointer</see>.<see cref="StoragePointer.LengthInBytes">Length</see></c>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public abstract void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) where T : unmanaged;
 
 		/// <summary>
-		/// Overwrite some of the elements in unmanaged pointer <paramref name="dest"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="dest">The destination <see cref="StoragePointer"/> to copy to</param>
-		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="dest"/></param>
+		/// <param name="destination">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="destination"/></param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="values">The managed array of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> / sizeof(T) * <paramref name="width"/></c></param>
-		/// <exception cref="NotSupportedException">if <paramref name="dest"/> is not supported</exception>
-		public abstract void FromManaged2D<T>(StoragePointer dest, ulong leadDim, ulong height, ulong width, T[] values) where T : unmanaged;
+		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="StoragePointer.Pointer">Pointer</see>.<see cref="StoragePointer.LengthInBytes">Length</see></c>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public abstract void FromManaged2D<T>(StoragePointer destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) where T : unmanaged;
 		#endregion
 
 		#region high-level storage operations
 		/// <summary>
 		/// Fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.
 		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="storage">The <see cref="IStorage"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or empty</exception>
-		public virtual void SetMemoryValue(IStorage storage, byte value)
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+		public virtual void SetMemoryValue<T>(Storage<T> storage, byte value) where T : unmanaged
 		{
-			if (storage is null || storage.Count == 0)
+			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
 			for (int i = 0; i < storage.Count; i++)
 			{
@@ -275,10 +294,10 @@ namespace Althea.Storage
 		/// <param name="storage">The <see cref="IStorage"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or empty</exception>
-		public virtual void SetMemoryValue<T>(IStorage storage, T value) where T : unmanaged
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+		public virtual void SetMemoryValue<T>(Storage<T> storage, T value) where T : unmanaged
 		{
-			if (storage is null || storage.Count == 0)
+			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
 			for (int i = 0; i < storage.Count; i++)
 			{
@@ -287,34 +306,35 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="dest"/>.
+		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="IServiceProvider"/> to copy from</param>
-		/// <param name="dest">The <see cref="IServiceProvider"/> pointer to copy into</param>
-		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="dest"/> is used as the actual copy length in bytes</remarks>
-		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="dest"/> is null or empty</exception>
-		public virtual void MemoryCopy(IStorage source, IStorage dest)
+		/// <param name="destination">The <see cref="IServiceProvider"/> pointer to copy into</param>
+		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
+		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		public virtual void MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
 		{
-			if (source is null || source.Count == 0)
+			if (source is null || !source.IsValid())
 				throw new ArgumentNullException(nameof(source));
-			if (dest is null || dest.Count == 0)
-				throw new ArgumentNullException(nameof(dest));
+			if (destination is null || !destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
 
-			if (source.Count == 1 && dest.Count == 1)
+			if (source.Count == 1 && destination.Count == 1)
 			{
-				this.MemoryCopy(source[0], dest[0]);
+				this.MemoryCopy(source[0], destination[0]);
 				return;
 			}
-			StoragePointer src = source[0], dst = dest[0];
+			StoragePointer src = source[0], dst = destination[0];
 			bool incSrc = false, incDst = false;
 			int i = 0, j = 0;
-			while (i < source.Count && j < dest.Count)
+			while (i < source.Count && j < destination.Count)
 			{
 				if (incSrc)
 					src = source[i];
 				if (incDst)
-					dst = dest[j];
+					dst = destination[j];
 				this.MemoryCopy(src, dst);
 				if (src.LengthInBytes > dst.LengthInBytes)
 				{
@@ -337,25 +357,30 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Copies 2D data from <paramref name="source"/> to <paramref name="dest"/>.
+		/// Copies 2D data from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="IStorage"/></param>
 		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
-		/// <param name="dest">The destination <see cref="IStorage"/></param>
+		/// <param name="destination">The destination <see cref="IStorage"/></param>
 		/// <param name="destLD">The destination array actual height (actual leading dimension) in bytes</param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in the real type</param>
-		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="dest"/> are <b>not</b> ignored</remarks>
-		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="dest"/> is not supported</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="dest"/> is null or empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>, or <paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see>, or <paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="dest"/>.<see cref="IStorage.LengthInBytes">Length</see></exception>
+		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are <b>not</b> ignored</remarks>
+		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
-		public virtual void MemoryCopy2D(IStorage source, ulong sourceLD, IStorage dest, ulong destLD, ulong height, ulong width)
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
+		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
+		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
+		/// </exception>
+		public virtual void MemoryCopy2D<T>(Storage<T> source, ulong sourceLD, Storage<T> destination, ulong destLD, ulong height, ulong width) where T : unmanaged
 		{
-			if (source is null || source.Count == 0)
+			if (source is null || !source.IsValid())
 				throw new ArgumentNullException(nameof(source));
-			if (dest is null || dest.Count == 0)
-				throw new ArgumentNullException(nameof(dest));
+			if (destination is null || !destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
 			if (destLD == 0)
@@ -368,112 +393,209 @@ namespace Althea.Storage
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
 			if (sourceLD * width > source.LengthInBytes)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(source));
-			if (destLD * width > dest.LengthInBytes)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(dest));
+			if (destLD * width > destination.LengthInBytes)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
 
-			if (source.Count == 1 && dest.Count == 1)
+			if (source.Count == 1 && destination.Count == 1)
 			{
-				this.MemoryCopy2D(source[0], sourceLD, dest[0], destLD, height, width);
+				this.MemoryCopy2D(source[0], sourceLD, destination[0], destLD, height, width);
 				return;
 			}
-			ulong copiedLength = 0;
 			long srcLD = (long)sourceLD, dstLD = (long)destLD;
-			while (copiedLength < sourceLD * width && copiedLength < destLD * width)
+			source = source.MakeReference(newLength: height);
+			destination = destination.MakeReference(newLength: height);
+			for (ulong column = 0; column < width - 1; column++)
 			{
-				this.MemoryCopy(source, dest);
+				this.MemoryCopy(source, destination);
+				source = source.MakeReference(offset: srcLD, newLength: height);
+				destination = destination.MakeReference(offset: dstLD, newLength: height);
 			}
+			// copy last column
+			this.MemoryCopy(source, destination);
 		}
 
 		#endregion
-	}
 
-	/// <summary>
-	/// The interface for a readable and writable URI wrapper
-	/// </summary>
-	public interface IUriWrapper : IAsyncDisposable, IDisposable
-	{
-		#region properties
+		#region high-level storage and managed operations
 		/// <summary>
-		/// Get the original <see cref="Uri"/> of this wrapper
+		/// Copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
 		/// </summary>
-		Uri OriginalUri { get; }
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <returns>The first element in <paramref name="source"/>.</returns>
+		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		public virtual T ToManaged<T>(Storage<T> source) where T : unmanaged
+		{
+			if (source is null || !source.IsValid())
+				throw new ArgumentNullException(nameof(source));
 
-		/// <summary>
-		/// Get the current length of this wrapper
-		/// </summary>
-		ulong Length { get; }
-		#endregion
-
-		#region synchronous methods
-		/// <summary>
-		/// Reads the bytes from the current wrapper and writes them to another wrapper.
-		/// </summary>
-		/// <param name="wrapper">another <see cref="IUriWrapper"/> of same type</param>
-		/// <param name="offset">the copy start offset in bytes</param>
-		/// <param name="length">the copy length in bytes</param>
-		/// <exception cref="ArgumentException">if <paramref name="wrapper"/> does not have same type as this one</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offset"/> or <paramref name="length"/> exceeds the boundary of this wrapper</exception>
-		void CopyTo(IUriWrapper wrapper, ulong offset, ulong length);
+			return this.ToManaged<T>(source[0]);
+		}
 
 		/// <summary>
-		/// Reads the bytes from the current wrapper and writes them to a memory pointer.
+		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="pointer">the supported <see cref="StoragePointer"/> to be overwritten</param>
-		/// <param name="offset">the read start offset of this wrapper in bytes</param>
-		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offset"/> or <paramref name="pointer"/>.<see cref="StoragePointer.LengthInBytes">Length</see> exceed the boundary of this wrapper</exception>
-		void Read(StoragePointer pointer, ulong offset);
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
+		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
+		public virtual void FromManaged<T>(Storage<T> destination, T value) where T : unmanaged
+		{
+			if (destination is null || !destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+
+			this.FromManaged(destination[0], value);
+		}
 
 		/// <summary>
-		/// Reads the bytes a memory pointer and write them to this wrapper. Some bytes will be appended (and <see cref="Length"/> will grow) if necessary.
+		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="pointer">the supported <see cref="StoragePointer"/> to be overwritten</param>
-		/// <param name="offset">the write start offset of this wrapper in bytes</param>
-		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offset"/> exceeds the boundary of this wrapper</exception>
-		void Write(StoragePointer pointer, ulong offset);
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		public virtual void ToManaged<T>(Storage<T> source, ArraySegment<T> destination) where T : unmanaged
+		{
+			if (source is null || !source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+
+			int offset = 0;
+			for (int i = 0; i < source.Count; i++)
+			{
+				this.ToManaged(source[i], destination[offset..]);
+				if (offset >= destination.Count)
+					return;
+				offset += (int)(source[i].LengthInBytes / Storage<T>.SizeOfT);
+			}
+		}
 
 		/// <summary>
-		/// Resize this wrapper to fit in the <paramref name="newLength"/>. If <paramref name="newLength"/> is smaller than current one,a truncation of the trailer part will be performed.
+		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="newLength">the new <see cref="Length"/> of this wrapper</param>
-		void Resize(ulong newLength);
-		#endregion
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		public virtual void FromManaged<T>(Storage<T> destination, ArraySegment<T> values) where T : unmanaged
+		{
+			if (destination is null || !destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
 
-		#region asynchronous methods
-		/// <summary>
-		/// Reads the bytes from the current wrapper and writes them to another wrapper.
-		/// </summary>
-		/// <param name="wrapper">another <see cref="IUriWrapper"/> of same type</param>
-		/// <param name="offset">the copy start offset in bytes</param>
-		/// <param name="length">the copy length in bytes</param>
-		/// <exception cref="ArgumentException">if <paramref name="wrapper"/> does not have same type as this one</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offset"/> or <paramref name="length"/> exceeds the boundary of this wrapper</exception>
-		ValueTask CopyToAsync(IUriWrapper wrapper, ulong offset, ulong length);
-
-		/// <summary>
-		/// Reads the bytes from the current wrapper and writes them to a memory pointer.
-		/// </summary>
-		/// <param name="pointer">the supported <see cref="StoragePointer"/> to be overwritten</param>
-		/// <param name="offset">the read start offset of this wrapper in bytes</param>
-		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offset"/> or <paramref name="pointer"/>.<see cref="StoragePointer.LengthInBytes">Length</see> exceed the boundary of this wrapper</exception>
-		ValueTask ReadAsync(StoragePointer pointer, ulong offset);
+			int offset = 0;
+			for (int i = 0; i < destination.Count; i++)
+			{
+				this.FromManaged(destination[i], values[offset..]);
+				if (offset >= values.Count)
+					return;
+				offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
+			}
+		}
 
 		/// <summary>
-		/// Reads the bytes a memory pointer and write them to this wrapper. Some bytes will be appended (and <see cref="Length"/> will grow) if necessary.
+		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
-		/// <param name="pointer">the supported <see cref="StoragePointer"/> to be overwritten</param>
-		/// <param name="offset">the write start offset of this wrapper in bytes</param>
-		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offset"/> exceeds the boundary of this wrapper</exception>
-		ValueTask WriteAsync(StoragePointer pointer, ulong offset);
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="source"/></param>
+		/// <param name="height">The height to copy in bytes</param>
+		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public virtual void ToManaged2D<T>(Storage<T> source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) where T : unmanaged
+		{
+			if (source is null || !source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (leadDim == 0)
+				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);
+			if (width == 0)
+				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+			if (height == 0)
+				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+			if (height > leadDim)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
+			if (leadDim * width > source.LengthInBytes)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(source));
+			if (leadDim * width > (ulong)destination.Count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+
+			if (source.Count == 1)
+			{
+				this.ToManaged2D(source[0], leadDim, height, width, destination);
+				return;
+			}
+			int h = checked((int)height), ld = checked((int)leadDim);
+			source = source.MakeReference(newLength: height);
+			var dst = destination[..h];
+			for (ulong column = 0; column < width - 1; column++)
+			{
+				this.ToManaged(source, dst);
+				source = source.MakeReference(offset: ld, newLength: height);
+				dst = destination.Slice(dst.Offset + ld, h);
+			}
+			// copy last column
+			this.ToManaged(source, dst);
+		}
 
 		/// <summary>
-		/// Resize this wrapper to fit in the <paramref name="newLength"/>. If <paramref name="newLength"/> is smaller than current one,a truncation of the trailer part will be performed.
+		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
-		/// <param name="newLength">the new <see cref="Length"/> of this wrapper</param>
-		ValueTask ResizeAsync(ulong newLength);
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="destination"/></param>
+		/// <param name="height">The height to copy in bytes</param>
+		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public virtual void FromManaged2D<T>(Storage<T> destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) where T : unmanaged
+		{
+			if (destination is null || !destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+			if (leadDim == 0)
+				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);
+			if (width == 0)
+				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+			if (height == 0)
+				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+			if (height > leadDim)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
+			if (leadDim * width > destination.LengthInBytes)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+			if (leadDim * width > (ulong)values.Count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(values));
+
+			if (destination.Count == 1)
+			{
+				this.FromManaged2D(destination[0], leadDim, height, width, values);
+				return;
+			}
+			int h = checked((int)height), ld = checked((int)leadDim);
+			destination = destination.MakeReference(newLength: height);
+			var source = values[..h];
+			for (ulong column = 0; column < width - 1; column++)
+			{
+				this.FromManaged(destination, source);
+				destination = destination.MakeReference(offset: ld, newLength: height);
+				source = values.Slice(source.Offset + ld, h);
+			}
+			// copy last column
+			this.FromManaged(destination, source);
+		}
 		#endregion
 	}
 }

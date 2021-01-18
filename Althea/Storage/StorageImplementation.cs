@@ -73,7 +73,7 @@ namespace Althea.Storage
 		/// </summary>
 		IntPtr Pointer { get; }
 
-		bool IPointer.IsValid => this.Pointer != default && this.LengthInBytes != 0;
+		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes != 0;
 
 		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassMemory;
 
@@ -87,9 +87,9 @@ namespace Althea.Storage
 
 		bool IPointer.CanResize => false;
 
-		string IPrintable.PrintableMain => this.Pointer.ToString("X");
+		string IMainPropertyFormat.StringMain => this.Pointer.ToString("X");
 
-		IReadOnlyDictionary<string, string> IPrintable.PrintableProperties => new Dictionary<string, string> { ["length"] = this.LengthInBytes.ToString() };
+		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string> { ["length"] = this.LengthInBytes.ToString() };
 	}
 
 	/// <summary>
@@ -107,7 +107,7 @@ namespace Althea.Storage
 		/// </summary>
 		string Description { get; }
 
-		bool IPointer.IsValid => this.Stream is not null && this.LengthInBytes != 0;
+		bool ICheckValid.IsValid() => this.Stream is not null && this.LengthInBytes != 0;
 
 		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
 
@@ -121,9 +121,9 @@ namespace Althea.Storage
 
 		bool IPointer.CanResize => this.Stream.CanWrite;
 
-		string IPrintable.PrintableMain => this.Description;
+		string IMainPropertyFormat.StringMain => this.Description;
 
-		IReadOnlyDictionary<string, string> IPrintable.PrintableProperties => new Dictionary<string, string>
+		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
 		{ 
 			["length"] = this.LengthInBytes.ToString(),
 			["position"] = this.Stream.Position.ToString(),
