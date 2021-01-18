@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 
 using Althea.Linq;
-using Althea.Memory;
+using Althea.Storage;
 
 
 namespace Althea.Tensor

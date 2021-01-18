@@ -1,6 +1,6 @@
 using System;
 
-using Althea.Memory;
+using Althea.Storage;
 
 using RT = Althea.Runtime.API;
 using static Althea.Blas.Mkl.MklBlasExtension;

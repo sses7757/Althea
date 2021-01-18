@@ -9,7 +9,7 @@ namespace Althea.Backend
 	public interface ISetBackend
 	{
 		/// <summary>
-		/// The implementation type of <see cref="Memory.AbstractApi"/>
+		/// The implementation type of <see cref="Storage.AbstractApi"/>
 		/// </summary>
 		Type MemoryImplementation { get; }
 

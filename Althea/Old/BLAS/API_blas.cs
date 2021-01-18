@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Althea.Array;
 using Althea.Linq;
-using Althea.Memory;
+using Althea.Storage;
 
 using RT = Althea.Runtime.API;
 

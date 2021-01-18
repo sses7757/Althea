@@ -119,7 +119,7 @@ namespace Althea.Helpers
 		public static Type MemoryImplementation {
 			get => Type.GetType(singletonSettings.ImplementationSettings.Memory);
 			set {
-				if (Memory.AbstractApi.SetImplementation(value))
+				if (Storage.AbstractApi.SetImplementation(value))
 					singletonSettings.ImplementationSettings.Memory = value.AssemblyQualifiedName;
 			}
 		}

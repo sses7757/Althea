@@ -112,16 +112,16 @@ namespace Althea
 			}
 		}
 
-		internal static void Check(this Memory.ReadFileEnum err, string name)
+		internal static void Check(this Storage.ReadFileEnum err, string name)
 		{
-			if (err != Memory.ReadFileEnum.Success)
+			if (err != Storage.ReadFileEnum.Success)
 			{
 				throw new StatusException(err, name);
 			}
 		}
-		internal static void Check(this Memory.ReadFileEnum err)
+		internal static void Check(this Storage.ReadFileEnum err)
 		{
-			if (err != Memory.ReadFileEnum.Success)
+			if (err != Storage.ReadFileEnum.Success)
 			{
 				throw new StatusException(err, new StackTrace(0));
 			}

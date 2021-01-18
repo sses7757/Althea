@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
-using Althea.Memory;
+using Althea.Storage;
 using BLAS = Althea.Blas.API;
 
 

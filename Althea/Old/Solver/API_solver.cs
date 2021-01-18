@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Althea.Linq;
 using Althea.Array;
 using RT = Althea.Runtime.API;
-using Althea.Memory;
+using Althea.Storage;
 
 namespace Althea.Solver
 {

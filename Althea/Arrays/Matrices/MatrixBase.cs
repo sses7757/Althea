@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using Althea.Memory;
+using Althea.Storage;
 using BLAS = Althea.Blas.API;
 using SOLVE = Althea.Solver.API;
 

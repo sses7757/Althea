@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Memory;
+using Althea.Storage;
 using Althea.Linq;
 using Althea.Resources;
 

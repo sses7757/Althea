@@ -1,7 +1,7 @@
 using System;
 
 using Althea.Linq;
-using Althea.Memory;
+using Althea.Storage;
 
 
 namespace Althea.Blas

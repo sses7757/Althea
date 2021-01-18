@@ -10,7 +10,7 @@ using Althea.Array;
 using Althea.Linq;
 
 
-namespace Althea.Memory
+namespace Althea.Storage
 {
 	/// <summary>
 	/// The file manager static class that provides conversion between <see cref="PureArray{T}"/> and file

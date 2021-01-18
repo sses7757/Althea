@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 using Althea.General;
 using Althea.Linq;
-using Althea.Memory;
+using Althea.Storage;
 using RT = Althea.Runtime.API;
 using BLAS = Althea.Blas.API;
 using SPARSE = Althea.SparseBlas.API;

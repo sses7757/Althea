@@ -220,7 +220,7 @@ namespace Althea.Tensor.Cuda
 		/// <summary>
 		/// Create a <see cref="TensorDescription"/>
 		/// </summary>
-		/// <typeparam name="T">see <see cref="Memory.Storage{T}"/> for supported data types</typeparam>
+		/// <typeparam name="T">see <see cref="Storage.Storage{T}"/> for supported data types</typeparam>
 		/// <param name="handle">the CUDA Tensor library handle</param>
 		/// <param name="op">the <see cref="UnitaryOperation"/> to the tensor in the following computation, default identity</param>
 		/// <param name="size">size/extent of each dimension of the tensor</param>

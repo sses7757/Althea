@@ -7,7 +7,7 @@ using Althea.Linq;
 using Althea.Helpers;
 
 
-namespace Althea.Memory
+namespace Althea.Storage
 {
 	/// <summary>
 	/// The abstract class for runtime memory API routines 

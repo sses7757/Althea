@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using Althea.Memory;
+using Althea.Storage;
 
 
 namespace Althea.Runtime

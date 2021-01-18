@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 using Althea.Linq;
-using Althea.Memory;
+using Althea.Storage;
 
 
 namespace Althea.Arrays

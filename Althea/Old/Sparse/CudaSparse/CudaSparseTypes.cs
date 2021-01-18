@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 using Althea.Array;
-using Althea.Memory;
+using Althea.Storage;
 
 
 namespace Althea.SparseBlas.Cuda

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Text;
 
 using RT = Althea.Runtime.API;
-using Althea.Memory;
+using Althea.Storage;
 using Althea.Linq;
 using Althea.Arrays;
 
