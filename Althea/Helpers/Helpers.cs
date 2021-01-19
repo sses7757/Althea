@@ -132,6 +132,32 @@ namespace Althea.Helpers
 	public static class ExtensionHelper
 	{
 		#region integer related
+		/// <summary>
+		/// Get the combination number of given integers
+		/// </summary>
+		/// <param name="n">The length of any combination</param>
+		/// <param name="N">The number of all potential values</param>
+		/// <returns>0 if <paramref name="n"/> &gt; <paramref name="N"/> or <paramref name="n"/> == 0 or <paramref name="N"/> == 0, the binomial (<paramref name="N"/>, <paramref name="n"/>) otherwise</returns>
+		/// <exception cref="OverflowException">If an overflow happened during the calculation</exception>
+		public static ulong CombinationNumber(this uint n, uint N)
+		{
+			if (n < N || n == 0 || N == 0)
+				return 0;
+			if (n == 1)
+				return N;
+			if (n == N)
+				return 1;
+			// otherwise
+			ulong ret = 1;
+			uint c = N - n;
+			c = Math.Min(c, n);
+			for (uint i = N - c + 1; i <= N; i++)
+				ret = checked(ret * i);
+			for (uint i = 2; i <= c; i++)
+				ret /= i;
+			return ret;
+		}
+
 		// Ignore Spelling: nd
 		/// <summary>
 		/// Output an integer under 100 as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
@@ -468,10 +494,9 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this short input, sbyte bit)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsBitSet(this short input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(short) * 8)
-				return false;
 			return (input & (1 << bit)) == 0;
 		}
 
@@ -481,10 +506,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this ushort input, sbyte bit)
+		public static bool IsBitSet(this ushort input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(ushort) * 8)
-				return false;
 			return (input & (1U << bit)) == 0;
 		}
 
@@ -494,10 +517,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this int input, sbyte bit)
+		public static bool IsBitSet(this int input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(int) * 8)
-				return false;
 			return (input & (1 << bit)) == 0;
 		}
 
@@ -507,10 +528,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this uint input, sbyte bit)
+		public static bool IsBitSet(this uint input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(uint) * 8)
-				return false;
 			return (input & (1U << bit)) == 0;
 		}
 
@@ -520,10 +539,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this long input, sbyte bit)
+		public static bool IsBitSet(this long input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(long) * 8)
-				return false;
 			return (input & (1L << bit)) == 0;
 		}
 
@@ -533,10 +550,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this ulong input, sbyte bit)
+		public static bool IsBitSet(this ulong input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(ulong) * 8)
-				return false;
 			return (input & (1UL << bit)) == 0;
 		}
 
@@ -546,10 +561,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static int SetBit(this int input, sbyte bit)
+		public static int SetBit(this int input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(int) * 8)
-				return -1;
 			return input | (1 << bit);
 		}
 
@@ -559,10 +572,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static uint SetBit(this uint input, sbyte bit)
+		public static uint SetBit(this uint input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(uint) * 8)
-				return 0;
 			return input | (1U << bit);
 		}
 
@@ -572,10 +583,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static long SetBit(this long input, sbyte bit)
+		public static long SetBit(this long input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(long) * 8)
-				return -1;
 			return input | (1L << bit);
 		}
 
@@ -585,10 +594,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static ulong SetBit(this ulong input, sbyte bit)
+		public static ulong SetBit(this ulong input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(ulong) * 8)
-				return 0;
 			return input | (1UL << bit);
 		}
 
@@ -598,10 +605,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static int ResetBit(this int input, sbyte bit)
+		public static int ResetBit(this int input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(int) * 8)
-				return -1;
 			return input & ~(1 << bit);
 		}
 
@@ -611,10 +616,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static uint ResetBit(this uint input, sbyte bit)
+		public static uint ResetBit(this uint input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(uint) * 8)
-				return 0;
 			return input & ~(1U << bit);
 		}
 
@@ -624,10 +627,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static long ResetBit(this long input, sbyte bit)
+		public static long ResetBit(this long input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(long) * 8)
-				return -1;
 			return input & ~(1L << bit);
 		}
 
@@ -637,10 +638,8 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static ulong ResetBit(this ulong input, sbyte bit)
+		public static ulong ResetBit(this ulong input, byte bit)
 		{
-			if (bit <= 0 || bit >= sizeof(ulong) * 8)
-				return 0;
 			return input & ~(1UL << bit);
 		}
 		#endregion

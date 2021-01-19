@@ -37,12 +37,24 @@ namespace Althea.Backend.Storage
 		{
 			this.pointer = pointer; this.length = length;
 		}
+
+		/// <summary>
+		/// Get the unmanaged pointer of this <see cref="MemoryPointer"/>
+		/// </summary>
+		public unsafe void* UnmangedPointer => this.pointer.ToPointer();
+
+		/// <summary>
+		/// Get the <see cref="Span{T}"/> representation of this <see cref="MemoryPointer"/>
+		/// </summary>
+		/// <typeparam name="T">any data type</typeparam>
+		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="MemoryPointer"/></returns>
+		public unsafe Span<T> AsSpan<T>() => new Span<T>(this.UnmangedPointer, checked((int)this.length));
 	}
 
 	/// <summary>
 	/// An implementation of <see cref="IStreamPointer"/>
 	/// </summary>
-	public readonly struct UriStreamPointer : IStreamPointer
+	public class UriStreamPointer : IStreamPointer, IDisposable, IAsyncDisposable
 	{
 		#region basic
 		private readonly Stream stream;
@@ -50,9 +62,9 @@ namespace Althea.Backend.Storage
 		private readonly Uri uri;
 
 		/// <summary>
-		/// Get the raw stream of this <see cref="UriStreamPointer"/> as a <see cref="System.IO.Stream"/>
+		/// Get the raw stream of this <see cref="UriStreamPointer"/> as a <see cref="Stream"/>
 		/// </summary>
-		public Stream Stream => this.stream;
+		public Stream NativeStream => this.stream;
 
 		/// <summary>
 		/// Get the raw URI of this <see cref="UriStreamPointer"/> as a <see cref="Uri"/>
@@ -69,12 +81,15 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		public string Description => this.OriginalUri.ToString();
 
+		bool ICheckValid.IsValid() => this.stream is not null && this.uri is not null && !this.disposed;
+
 		private ulong Offset { set => this.stream.Position = checked((long)value); }
 
 		/// <summary>
 		/// Create a new <see cref="UriStreamPointer"/> with given <see cref="Uri"/>
 		/// </summary>
 		/// <param name="uri">The given <see cref="Uri"/></param>
+		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not supported or the stream cannot be created by given <paramref name="uri"/></exception>
 		public UriStreamPointer(Uri uri)
 		{
 			// checks
@@ -92,6 +107,28 @@ namespace Althea.Backend.Storage
 			// create
 			this.stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
 			this.uri = uri;
+		}
+
+		private bool disposed = false;
+
+		/// <summary>
+		/// Dispose this <see cref="UriStreamPointer"/>
+		/// </summary>
+		public void Dispose()
+		{
+			//this.stream.Close();
+			this.stream.Dispose();
+			this.disposed = true;
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Dispose this <see cref="UriStreamPointer"/> asynchronously
+		/// </summary>
+		/// <returns>The <see cref="ValueTask"/> of this asynchronous operation</returns>
+		public async ValueTask DisposeAsync()
+		{
+			await Task.Run(() => this.Dispose());
 		}
 		#endregion
 

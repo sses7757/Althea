@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -14,7 +15,7 @@ using Althea.Backend.Storage;
 namespace Althea.Backend.CSharp.Storage
 {
 	/// <summary>
-	/// The C# back-end of <see cref="AbstractApi"/>. <b>Can</b> be inherited.
+	/// The C# back-end of <see cref="AbstractApi"/> that support storage locations of CPU and file and (possible) FTP.
 	/// </summary>
 	public class StorageApi : AbstractApi
 	{
@@ -31,31 +32,38 @@ namespace Althea.Backend.CSharp.Storage
 		{
 			// do nothing
 		}
+
+		/// <summary>
+		/// Get or set the folder to put the temporary files, default is <see cref="Path.GetTempPath"/>
+		/// </summary>
+		/// <remarks>If you set an invalid value, there may be exception thrown</remarks>
+		public string TempFileFolder { get; set; } = Path.GetTempPath();
+
+		/// <summary>
+		/// Get or set the host and folder to put the temporary files in FTP, default null means that this <see cref="StorageApi"/> does not support FTP storage location
+		/// </summary>
+		/// <remarks>If you set an invalid value, there may be exception thrown</remarks>
+		public Uri TempFTPFolder { get; set; } = null;
 		#endregion
 
 		#region support
+		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempFTPFolder is not null && location == FTPAlone);
+
 		private static readonly StorageLocation CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
 		private static readonly StorageLocation FileAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
-		private static readonly StorageLocation FTPAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.FTP);
+		private static readonly StorageLocation FTPAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
 
-		public override IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations { get; } = new[]
-		{
-			CpuAlone,
-			FileAlone,
-			FTPAlone,
-			new CombinationOfLocations(CombinationType.PureOrMixed, CpuAlone, FileAlone),
-		};
+		private static readonly IReadOnlyList<CombinationOfLocations> NoFTPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone),
+			WithFTPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone, FTPAlone);
 
-		public override IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations { get; } = new[]
-		{
-			new ImmutableTwoElementSet<CombinationOfLocations>(CpuAlone, CpuAlone)
-		};
-		public override IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer { get; } = new[]
-		{
-			CpuAlone,
-			FileAlone,
-			new CombinationOfLocations(CombinationType.PureOrMixed, new[] { CpuAlone, FileAlone })
-		};
+		private static readonly IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> NoFTPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone),
+			WithFTPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone, FTPAlone);
+
+		public override IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations => this.TempFTPFolder is null ? NoFTPUnary : WithFTPUnary;
+
+		public override IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations => this.TempFTPFolder is null ? NoFTPBinary : WithFTPBinary;
+
+		public override IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer => this.SupportedUnaryLocations;
 		#endregion
 
 		#region properties
@@ -73,45 +81,90 @@ namespace Althea.Backend.CSharp.Storage
 		public override int MaxDeviceNumber(LocationType location) => 1;
 		#endregion
 
-		#region low-level memory operations
+		#region low-level storage operations
 		public override StoragePointer Allocate(StorageLocation location, ulong length)
 		{
-			if (location.Location != LocationType.CpuRam)
+			if (!this.IsSupported(location))
 				throw new NotSupportedException(Support.Location);
-			return Marshal.AllocHGlobal(checked((int)length));
+
+			IPointer pointer; // box struct to interface
+			if (location == CpuAlone)
+			{
+				var ptr = Marshal.AllocHGlobal(checked((int)length));
+				pointer = new MemoryPointer(ptr, length);
+			}
+			else
+			{
+				Uri uri;
+				if (location == FileAlone)
+				{
+					string file = Path.Combine(this.TempFileFolder, Guid.NewGuid().ToString());
+					uri = new Uri(Uri.UriSchemeFile + ":///" + file);
+				}
+				else // FTP
+				{
+					var builder = new UriBuilder(this.TempFTPFolder);
+					builder.Path = Path.Combine(builder.Path, Guid.NewGuid().ToString());
+					uri = builder.Uri;
+				}
+				pointer = new UriStreamPointer(uri);
+			}
+			return new StoragePointer(location, pointer);
 		}
 
 		public override bool Free(StoragePointer pointer, bool disposeManaged)
 		{
-			if (location.Location == LocationType.CpuRam)
+			if (pointer.Location == CpuAlone && pointer.Pointer is MemoryPointer mp)
 			{
-				Marshal.FreeHGlobal(ptr);
+				Marshal.FreeHGlobal(mp.Pointer);
 				return true;
 			}
-			return false;
-		}
-
-		public override void SetMemoryValue(StoragePointer storage, byte value)
-		{
-			if (storage.Location.Location != LocationType.CpuRam)
-				throw new NotSupportedException(Support.Location);
-			unsafe
+			else if (pointer.Pointer is UriStreamPointer sp)
 			{
-				Unsafe.InitBlock(storage.UnmangedPointer, value, checked((uint)storage.LengthInBytes));
+				sp.Dispose();
+				return true;
+			}
+			else
+			{
+				return false;
 			}
 		}
 
-		public override void SetMemoryValue<T>(StoragePointer storage, T value)
+		public unsafe override void SetMemoryValue(StoragePointer pointer, byte value)
 		{
-			if (storage.Location.Location != LocationType.CpuRam)
+			if (pointer.Location == CpuAlone && pointer.Pointer is MemoryPointer mp)
+			{
+				Unsafe.InitBlock(mp.Pointer.ToPointer(), value, checked((uint)pointer.LengthInBytes));
+			}
+			else if (pointer.Pointer is UriStreamPointer sp)
+			{
+				// TODO: UriStreamPointer set value
+			}
+			else
+			{
 				throw new NotSupportedException(Support.Location);
-			storage.AsSpan<T>().Fill(value);
+			}
+		}
+
+		public override void SetMemoryValue<T>(StoragePointer pointer, T value)
+		{
+			if (pointer.Location == CpuAlone && pointer.Pointer is MemoryPointer mp)
+			{
+				mp.AsSpan<T>().Fill(value);
+			}
+			else if (pointer.Pointer is UriStreamPointer sp)
+			{
+				// TODO: UriStreamPointer set value
+			}
+			else
+			{
+				throw new NotSupportedException(Support.Location);
+			}
 		}
 
 		public override void MemoryCopy(StoragePointer source, StoragePointer destination)
 		{
-			if (source.Location.Location != LocationType.CpuRam || destination.Location.Location != LocationType.CpuRam)
-				throw new NotSupportedException(Support.Location);
+			// TODO
 			unsafe
 			{
 				Unsafe.CopyBlock(source.UnmangedPointer, destination.UnmangedPointer, checked((uint)Math.Min(source.LengthInBytes, destination.LengthInBytes)));
@@ -123,21 +176,23 @@ namespace Althea.Backend.CSharp.Storage
 			if (source.Location.Location != LocationType.CpuRam || destination.Location.Location != LocationType.CpuRam)
 				throw new NotSupportedException(Support.Location);
 			if (sourceLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
 			if (destLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(destLD), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destLD), Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
 			if (height > sourceLD || height > destLD)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 
 			if (sourceLD == destLD && sourceLD == height)
 			{
 				MemoryCopy(source.AsLength(height * width), destination.AsLength(height * width));
 				return;
 			}
+
+			// TODO
 			uint h = checked((uint)height);
 			unsafe
 			{
@@ -152,8 +207,18 @@ namespace Althea.Backend.CSharp.Storage
 		}
 		#endregion
 
-		#region URI
-		public override IUriWrapper CreateUriStream(Uri uri) => new UriWrapper(uri);
+		#region low-level storage and manged operations
+		public override T ToManaged<T>(StoragePointer source) => throw new NotImplementedException();
+
+		public override void FromManaged<T>(StoragePointer destination, T value) => throw new NotImplementedException();
+
+		public override void ToManaged<T>(StoragePointer source, ArraySegment<T> destination) => throw new NotImplementedException();
+
+		public override void FromManaged<T>(StoragePointer destination, ArraySegment<T> values) => throw new NotImplementedException();
+
+		public override void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) => throw new NotImplementedException();
+
+		public override void FromManaged2D<T>(StoragePointer destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) => throw new NotImplementedException();
 		#endregion
 	}
 }

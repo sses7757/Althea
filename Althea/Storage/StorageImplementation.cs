@@ -100,33 +100,33 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the raw stream of this <see cref="IStreamPointer"/> as a <see cref="Stream"/>
 		/// </summary>
-		Stream Stream { get; }
+		Stream NativeStream { get; }
 
 		/// <summary>
 		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
 		/// </summary>
 		string Description { get; }
 
-		bool ICheckValid.IsValid() => this.Stream is not null && this.LengthInBytes != 0;
+		bool ICheckValid.IsValid() => this.NativeStream is not null && this.LengthInBytes != 0;
 
 		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
 
-		bool IPointer.CanRead => this.Stream.CanRead;
+		bool IPointer.CanRead => this.NativeStream.CanRead;
 
-		bool IPointer.CanWrite => this.Stream.CanWrite;
+		bool IPointer.CanWrite => this.NativeStream.CanWrite;
 
-		bool IPointer.CanReadOffset => this.Stream.CanSeek && this.Stream.CanRead;
+		bool IPointer.CanReadOffset => this.NativeStream.CanSeek && this.NativeStream.CanRead;
 
-		bool IPointer.CanWriteOffset => this.Stream.CanSeek && this.Stream.CanWrite;
+		bool IPointer.CanWriteOffset => this.NativeStream.CanSeek && this.NativeStream.CanWrite;
 
-		bool IPointer.CanResize => this.Stream.CanWrite;
+		bool IPointer.CanResize => this.NativeStream.CanWrite;
 
 		string IMainPropertyFormat.StringMain => this.Description;
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
 		{ 
 			["length"] = this.LengthInBytes.ToString(),
-			["position"] = this.Stream.Position.ToString(),
+			["position"] = this.NativeStream.Position.ToString(),
 		};
 	}
 	#endregion

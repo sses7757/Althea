@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
+using Althea.Helpers;
 
 
 namespace Althea
@@ -335,6 +336,141 @@ namespace Althea
 			throw new InvalidOperationException(Resources.Backend.NotAvailable);
 		}
 		#endregion
+
+		#region static methods used for support information
+		/// <summary>
+		/// Generate a list of unary <see cref="CombinationOfLocations"/>s from given "pure" <see cref="StorageLocation"/>s by enumerating all possible combinations of all possible lengths
+		/// </summary>
+		/// <param name="locations">The given "pure" <see cref="StorageLocation"/>s</param>
+		/// <returns>The generated list of <see cref="CombinationOfLocations"/>s, or null if <paramref name="locations"/> is null or empty</returns>
+		/// <exception cref="OverflowException">If the length of <paramref name="locations"/> is larger than 64</exception>
+		/// <remarks>Although the functionality of this method can be done by <see cref="GenerateNaryLoactions"/>, this one is specially separated for performance issues.</remarks>
+		protected static IReadOnlyList<CombinationOfLocations> GenerateUnaryLoactions(params StorageLocation[] locations)
+		{
+			if (locations is null || locations.Length == 0)
+				return null;
+
+			byte length = checked((byte)locations.Length);
+			ulong max = checked(1UL << length);
+			CombinationOfLocations[] combinations = new CombinationOfLocations[max - 1];
+			Span<StorageLocation> combination = stackalloc StorageLocation[locations.Length];
+			for (ulong i = 0; i < max; i++)
+			{
+				int k = 0;
+				for (byte j = 0; j < length; j++)
+				{
+					if (i.IsBitSet(j))
+					{
+						combination[k++] = locations[j];
+					}
+				}
+				combinations[i - 1] = new CombinationOfLocations(CombinationType.PureOrMixed, combination[..k]);
+			}
+			return combinations;
+		}
+
+		/// <summary>
+		/// Generate a list of binary (<see cref="CombinationOfLocations"/>1, <see cref="CombinationOfLocations"/>2)s from given "pure" <see cref="StorageLocation"/>s by enumerating all possible combinations of all possible lengths
+		/// </summary>
+		/// <param name="locations">The given "pure" <see cref="StorageLocation"/>s</param>
+		/// <returns>The generated list of <see cref="CombinationOfLocations"/>'s binaries, or null if <paramref name="locations"/> is null or has less than two elements</returns>
+		/// <exception cref="OverflowException">If the length of <paramref name="locations"/> is larger than 32</exception>
+		/// <remarks>Although the functionality of this method can be done by <see cref="GenerateNaryLoactions"/>, this one is specially separated for performance issues.</remarks>
+		protected static IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> GenerateBinaryLoactions(params StorageLocation[] locations)
+		{
+			if (locations is null || locations.Length < 2)
+				return null;
+
+			long unaryLength = locations.LongLength;
+			ulong max = (ulong)unaryLength * (ulong)(unaryLength + 1) / 2; // binomial of (unaryLength + 1, 2)
+			var combinations = new ImmutableTwoElementSet<CombinationOfLocations>[max];
+			var unary = GenerateUnaryLoactions(locations) as CombinationOfLocations[];
+			ulong n = 0;
+			for (long i = 0; i < unaryLength; i++)
+			{
+				for (long j = 0; j <= i; j++)
+				{
+					combinations[n++] = new ImmutableTwoElementSet<CombinationOfLocations>(unary[i], unary[j]);
+				}
+			}
+			return combinations;
+		}
+
+		/// <summary>
+		/// Generate a list of ternary (<see cref="CombinationOfLocations"/>1, <see cref="CombinationOfLocations"/>2, <see cref="CombinationOfLocations"/>3)s from given "pure" <see cref="StorageLocation"/>s by enumerating all possible combinations of all possible lengths
+		/// </summary>
+		/// <param name="locations">The given "pure" <see cref="StorageLocation"/>s</param>
+		/// <returns>The generated list of <see cref="CombinationOfLocations"/>'s ternaries, or null if <paramref name="locations"/> is null or has less than three elements</returns>
+		/// <exception cref="OverflowException">If the length of <paramref name="locations"/> is larger than 21</exception>
+		/// <remarks>Although the functionality of this method can be done by <see cref="GenerateNaryLoactions"/>, this one is specially separated for performance issues.</remarks>
+		protected static IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> GenerateTernaryLoactions(params StorageLocation[] locations)
+		{
+			if (locations is null || locations.Length < 3)
+				return null;
+
+			int unaryLength = locations.Length;
+			ulong max = 3U.CombinationNumber(2 + (uint)unaryLength); // binomial (unaryLength + 2, 3)
+			var combinations = new ImmutableThreeElementSet<CombinationOfLocations>[max];
+			var unary = GenerateUnaryLoactions(locations) as CombinationOfLocations[];
+			ulong n = 0;
+			for (int i = 0; i < unary.Length; i++)
+			{
+				for (int j = 0; j <= i; j++)
+				{
+					for (int k = 0; k <= j; i++)
+					{
+						combinations[n++] = new ImmutableThreeElementSet<CombinationOfLocations>(unary[i], unary[j], unary[k]);
+					}
+				}
+			}
+			return combinations;
+		}
+
+		// Ignore Spelling: N-arys
+		/// <summary>
+		/// Generate a list of N-ary (<see cref="CombinationOfLocations"/>1, ..., <see cref="CombinationOfLocations"/><paramref name="N"/>)s from given "pure" <see cref="StorageLocation"/>s by enumerating all possible combinations of all possible lengths
+		/// </summary>
+		/// <param name="N">The number of operands, must be positive</param>
+		/// <param name="locations">The given "pure" <see cref="StorageLocation"/>s</param>
+		/// <returns>The generated list of <see cref="CombinationOfLocations"/>'s N-arys; null if <paramref name="locations"/> is null, or <paramref name="locations"/> has less than <paramref name="N"/> elements</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="N"/> is not a positive number</exception>
+		/// <exception cref="OverflowException">If the length of <paramref name="locations"/> is larger than 64 / <paramref name="N"/></exception>
+		protected static IReadOnlyList<IImmutableSet<CombinationOfLocations>> GenerateNaryLoactions(int N, params StorageLocation[] locations)
+		{
+			if (N <= 0)
+				throw new ArgumentOutOfRangeException(nameof(N), Resources.Parameter.MustPositive);
+			if (locations is null || locations.Length < N)
+				return null;
+
+			int unaryLength = locations.Length;
+			ulong max = ((uint)N).CombinationNumber((uint)(N + unaryLength - 1)); // binomial (unaryLength + N - 1, N)
+			var combinations = new IImmutableSet<CombinationOfLocations>[max];
+			var unary = GenerateUnaryLoactions(locations) as CombinationOfLocations[];
+			Span<int> indices = stackalloc int[N];
+			for (ulong n = 0; n < max; n++)
+			{
+				CombinationOfLocations[] set = new CombinationOfLocations[N];
+				// create set
+				for (int i = 0; i < N; i++)
+				{
+					set[i] = unary[indices[i]];
+				}
+				// set value
+				combinations[n] = new ImmutableSet<CombinationOfLocations>(set);
+				// increase indices
+				for (int i = N - 1; i > 0; i--)
+				{
+					if (indices[i] > indices[i - 1])
+					{
+						indices[i] = 0;
+						indices[i - 1]++;
+					}
+				}
+			}
+			return combinations;
+		}
+		#endregion
+
 
 		#region basic
 		/// <summary>
