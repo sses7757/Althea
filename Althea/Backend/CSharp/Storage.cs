@@ -47,8 +47,6 @@ namespace Althea.Backend.CSharp.Storage
 		#endregion
 
 		#region support
-		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempFTPFolder is not null && location == FTPAlone);
-
 		private static readonly StorageLocation CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
 		private static readonly StorageLocation FileAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
 		private static readonly StorageLocation FTPAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
@@ -81,8 +79,45 @@ namespace Althea.Backend.CSharp.Storage
 		public override int MaxDeviceNumber(LocationType location) => 1;
 		#endregion
 
+		#region private methods
+		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempFTPFolder is not null && location == FTPAlone);
+		private long GetPointerOffset<T>(PointerSegment pointer, out IMemoryPointer memoryPointer, out IStreamPointer streamPointer, bool @throw = true) where 
+			T : unmanaged
+		{
+			memoryPointer = null; streamPointer = null;
+			// check first
+			if (pointer.OffsetInBytes % Storage<T>.SizeOfT != 0 || pointer.LengthInBytes % Storage<T>.SizeOfT != 0)
+			{
+				if (@throw)
+					throw new NotSupportedException(Support.Location);
+				return 0;
+			}
+			// cast
+			if (pointer.Location == CpuAlone && pointer.Pointer is IMemoryPointer mp)
+			{
+				memoryPointer = mp;
+			}
+			else if (pointer.Location == FileAlone && pointer.Pointer is IStreamPointer sp1)
+			{
+				streamPointer = sp1;
+			}
+			else if (this.TempFTPFolder is not null && pointer.Location == FTPAlone && pointer.Pointer is IStreamPointer sp2)
+			{
+				streamPointer = sp2;
+			}
+			else if (@throw)
+			{
+				throw new NotSupportedException(Support.Location);
+			}
+			return (long)(pointer.OffsetInBytes / Storage<T>.SizeOfT);
+		}
+
+		private long GetPointerOffset(PointerSegment pointer, out IMemoryPointer memoryPointer, out IStreamPointer streamPointer, bool @throw = true) => this.GetPointerOffset<byte>(pointer, out memoryPointer, out streamPointer, @throw);
+
+		#endregion
+
 		#region low-level storage operations
-		public override StoragePointer Allocate(StorageLocation location, ulong length)
+		public override PointerSegment Allocate(StorageLocation location, ulong length)
 		{
 			if (!this.IsSupported(location))
 				throw new NotSupportedException(Support.Location);
@@ -109,19 +144,23 @@ namespace Althea.Backend.CSharp.Storage
 				}
 				pointer = new UriStreamPointer(uri);
 			}
-			return new StoragePointer(location, pointer);
+			return new PointerSegment(location, pointer);
 		}
 
-		public override bool Free(StoragePointer pointer, bool disposeManaged)
+		public override bool Free(PointerSegment pointer, bool disposeManaged)
 		{
-			if (pointer.Location == CpuAlone && pointer.Pointer is MemoryPointer mp)
+			var offset = this.GetPointerOffset(pointer, out IMemoryPointer mp, out IStreamPointer sp, @throw: false);
+			if (offset != 0)
+				return false;
+
+			if (mp is not null)
 			{
 				Marshal.FreeHGlobal(mp.Pointer);
 				return true;
 			}
-			else if (pointer.Pointer is UriStreamPointer sp)
+			else if (sp is not null)
 			{
-				sp.Dispose();
+				sp.NativeStream.Dispose();
 				return true;
 			}
 			else
@@ -130,95 +169,138 @@ namespace Althea.Backend.CSharp.Storage
 			}
 		}
 
-		public unsafe override void SetMemoryValue(StoragePointer pointer, byte value)
+		public unsafe override void SetMemoryValue(PointerSegment pointer, byte value)
 		{
-			if (pointer.Location == CpuAlone && pointer.Pointer is MemoryPointer mp)
+			var offset = this.GetPointerOffset(pointer, out IMemoryPointer mp, out IStreamPointer sp);
+			if (mp is not null)
 			{
-				Unsafe.InitBlock(mp.Pointer.ToPointer(), value, checked((uint)pointer.LengthInBytes));
-			}
-			else if (pointer.Pointer is UriStreamPointer sp)
-			{
-				// TODO: UriStreamPointer set value
+				Unsafe.InitBlock(mp.NativePointer(offset), value, checked((uint)pointer.LengthInBytes));
 			}
 			else
 			{
-				throw new NotSupportedException(Support.Location);
+				sp.SetValues(offset, (long)pointer.LengthInBytes, value);
 			}
 		}
 
-		public override void SetMemoryValue<T>(StoragePointer pointer, T value)
+		public override void SetMemoryValue<T>(PointerSegment pointer, T value)
 		{
-			if (pointer.Location == CpuAlone && pointer.Pointer is MemoryPointer mp)
+			var offset = this.GetPointerOffset<T>(pointer, out IMemoryPointer mp, out IStreamPointer sp);
+			if (mp is not null)
 			{
-				mp.AsSpan<T>().Fill(value);
-			}
-			else if (pointer.Pointer is UriStreamPointer sp)
-			{
-				// TODO: UriStreamPointer set value
+				mp.AsSpan<T>(pointer).Fill(value);
 			}
 			else
 			{
-				throw new NotSupportedException(Support.Location);
+				sp.SetValues(offset, (long)(pointer.LengthInBytes / Storage<T>.SizeOfT), value);
 			}
 		}
 
-		public override void MemoryCopy(StoragePointer source, StoragePointer destination)
+		public override void MemoryCopy(PointerSegment source, PointerSegment destination)
 		{
-			// TODO
-			unsafe
+			long srcOff = this.GetPointerOffset(source, out IMemoryPointer srcMP, out IStreamPointer srcSP);
+			long dstOff = this.GetPointerOffset(destination, out IMemoryPointer dstMP, out IStreamPointer dstSP);
+
+			uint copyLength = checked((uint)Math.Min(source.LengthInBytes, destination.LengthInBytes));
+			if (srcMP is not null && dstMP is not null)
 			{
-				Unsafe.CopyBlock(source.UnmangedPointer, destination.UnmangedPointer, checked((uint)Math.Min(source.LengthInBytes, destination.LengthInBytes)));
+				unsafe
+				{
+					Unsafe.CopyBlock(srcMP.NativePointer(srcOff), dstMP.NativePointer(dstOff), copyLength);
+				}
+			}
+			else if (srcMP is not null && dstSP is not null)
+			{
+				dstSP.Write(dstOff, srcMP.AsSpan<byte>(source));
+			}
+			else if (srcSP is not null && dstMP is not null)
+			{
+				srcSP.Read(srcOff, dstMP.AsSpan<byte>(destination));
+			}
+			else // both stream pointers
+			{
+				srcSP.CopyTo(srcOff, dstSP, dstOff, copyLength);
 			}
 		}
 
-		public override void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer destination, ulong destLD, ulong height, ulong width)
+		public override void MemoryCopy2D(PointerSegment source, ulong sourceLD, PointerSegment destination, ulong destinationLD, ulong height, ulong width)
 		{
-			if (source.Location.Location != LocationType.CpuRam || destination.Location.Location != LocationType.CpuRam)
-				throw new NotSupportedException(Support.Location);
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
-			if (destLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(destLD), Parameter.MustPositive);
+			if (destinationLD == 0)
+				throw new ArgumentOutOfRangeException(nameof(destinationLD), Parameter.MustPositive);
 			if (width == 0)
 				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
 			if (height == 0)
 				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
-			if (height > sourceLD || height > destLD)
+			if (height > sourceLD || height > destinationLD)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
-
-			if (sourceLD == destLD && sourceLD == height)
+			if (sourceLD * width > source.LengthInBytes)
+				throw new ArgumentException(Parameter.WrongSize, nameof(source));
+			if (destinationLD * width > destination.LengthInBytes)
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
+			// shortcut
+			if (sourceLD == destinationLD && sourceLD == height)
 			{
-				MemoryCopy(source.AsLength(height * width), destination.AsLength(height * width));
+				this.MemoryCopy(source.AsLength(height * width), destination.AsLength(height * width));
 				return;
 			}
-
-			// TODO
-			uint h = checked((uint)height);
-			unsafe
+			// normal cases
+			long srcOff = this.GetPointerOffset(source, out IMemoryPointer srcMP, out IStreamPointer srcSP);
+			long dstOff = this.GetPointerOffset(destination, out IMemoryPointer dstMP, out IStreamPointer dstSP);
+			if (srcMP is not null && dstMP is not null)
 			{
-				byte* s = (byte*)source.UnmangedPointer;
-				byte* end = s + sourceLD * width;
-				byte* d = (byte*)destination.UnmangedPointer;
-				for (; s < end; s += sourceLD, d += destLD)
+				uint hh = checked((uint)height);
+				unsafe
 				{
-					Unsafe.CopyBlock(d, s, h);
+					byte* srcPtr = (byte*)srcMP.NativePointer(srcOff);
+					byte* endPtr = srcPtr + sourceLD * width;
+					byte* dstPtr = (byte*)dstMP.NativePointer(dstOff);
+					for (; srcPtr < endPtr; srcPtr += sourceLD, dstPtr += destinationLD)
+					{
+						Unsafe.CopyBlock(dstPtr, srcPtr, hh);
+					}
+				}
+				return;
+			}
+			long end = (long)(source.OffsetInBytes + sourceLD * width);
+			long srcLD = (long)sourceLD, dstLD = (long)destinationLD;
+			int h = checked((int)height);
+			if (srcMP is not null && dstSP is not null)
+			{
+				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
+				{
+					dstSP.Write(dstOff, srcMP.AsSpan<byte>(srcOff, h));
+				}
+			}
+			else if (srcSP is not null && dstMP is not null)
+			{
+				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
+				{
+					srcSP.Read(srcOff, dstMP.AsSpan<byte>(dstOff, h));
+				}
+			}
+			else // both stream pointers
+			{
+				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
+				{
+					srcSP.CopyTo(srcOff, dstSP, dstOff, h);
 				}
 			}
 		}
 		#endregion
 
 		#region low-level storage and manged operations
-		public override T ToManaged<T>(StoragePointer source) => throw new NotImplementedException();
+		public override T ToManaged<T>(PointerSegment source) => throw new NotImplementedException();
 
-		public override void FromManaged<T>(StoragePointer destination, T value) => throw new NotImplementedException();
+		public override void FromManaged<T>(PointerSegment destination, T value) => throw new NotImplementedException();
 
-		public override void ToManaged<T>(StoragePointer source, ArraySegment<T> destination) => throw new NotImplementedException();
+		public override void ToManaged<T>(PointerSegment source, ArraySegment<T> destination) => throw new NotImplementedException();
 
-		public override void FromManaged<T>(StoragePointer destination, ArraySegment<T> values) => throw new NotImplementedException();
+		public override void FromManaged<T>(PointerSegment destination, ArraySegment<T> values) => throw new NotImplementedException();
 
-		public override void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) => throw new NotImplementedException();
+		public override void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) => throw new NotImplementedException();
 
-		public override void FromManaged2D<T>(StoragePointer destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) => throw new NotImplementedException();
+		public override void FromManaged2D<T>(PointerSegment destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) => throw new NotImplementedException();
 		#endregion
 	}
 }

@@ -221,7 +221,7 @@ namespace Althea
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="storage">The given <see cref="IStorage"/> to work with.</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage"/> has invalid value(s), such as <see cref="StoragePointer.Pointer"/> and <see cref="StoragePointer.LengthInBytes"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage"/> has invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
 		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
 		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage) where T : AbstractRuntimeApi
@@ -252,7 +252,7 @@ namespace Althea
 		/// <param name="storage1">The first given <see cref="IStorage"/> to work with.</param>
 		/// <param name="storage2">The second given <see cref="IStorage"/> to work with.</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage1"/> or <paramref name="storage2"/> has invalid value(s), such as <see cref="StoragePointer.Pointer"/> and <see cref="StoragePointer.LengthInBytes"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage1"/> or <paramref name="storage2"/> has invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
 		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
 		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2) where T : AbstractRuntimeApi
@@ -284,7 +284,7 @@ namespace Althea
 		/// <param name="storage2">The second given <see cref="IStorage"/> to work with.</param>
 		/// <param name="storage3">The third given <see cref="IStorage"/> to work with.</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> has invalid value(s), such as <see cref="StoragePointer.Pointer"/> and <see cref="StoragePointer.LengthInBytes"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> has invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
 		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
 		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, IStorage storage3) where T : AbstractRuntimeApi
@@ -314,7 +314,7 @@ namespace Althea
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="storages">The given <see cref="IStorage"/>s to work with.</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storages"/> contains one <see cref="IStorage"/> with invalid value(s), such as <see cref="StoragePointer.Pointer"/> and <see cref="StoragePointer.LengthInBytes"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="storages"/> contains one <see cref="IStorage"/> with invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
 		protected static T SelectImplementation<T>(LinkedList<T> recents, params IStorage[] storages) where T : AbstractRuntimeApi
 		{

@@ -68,6 +68,7 @@ namespace Althea.Storage
 	/// </summary>
 	public interface IMemoryPointer : IPointer
 	{
+		#region basic
 		/// <summary>
 		/// Get the raw pointer of this <see cref="IMemoryPointer"/> as a <see cref="IntPtr"/>
 		/// </summary>
@@ -90,6 +91,41 @@ namespace Althea.Storage
 		string IMainPropertyFormat.StringMain => this.Pointer.ToString("X");
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string> { ["length"] = this.LengthInBytes.ToString() };
+		#endregion
+
+		#region default implementations
+		/// <summary>
+		/// Get the unmanaged pointer of this <see cref="IMemoryPointer"/> with given offset as a <typeparamref name="T"/>*
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="NativePointer"/> of this <see cref="IMemoryPointer"/></param>
+		/// <returns>The unmanaged pointer with given offset as a <typeparamref name="T"/>*</returns>
+		unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged => (T*)this.Pointer.ToPointer() + offset;
+
+		/// <summary>
+		/// Get the native pointer of this <see cref="IMemoryPointer"/> with a given offset as a <see cref="void"/>*
+		/// </summary>
+		/// <param name="offset">The offset in bytes to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/></param>
+		/// <returns>The native pointer with given offset as a <see cref="void"/>*</returns>
+		unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
+
+		/// <summary>
+		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/> before converting to <see cref="Span{T}"/></param>
+		/// <param name="length">The presenting length in <typeparamref name="T"/> of this <see cref="IMemoryPointer"/> before converting to <see cref="Span{T}"/></param>
+		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
+		unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new Span<T>(this.UnmangedPointer<T>(offset), length == 0 ? checked((int)this.LengthInBytes / sizeof(T)) : length);
+
+		/// <summary>
+		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <param name="pointerSegment">Use the given <see cref="PointerSegment"/> to obtain offset and length</param>
+		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
+		Span<T> AsSpan<T>(PointerSegment pointerSegment) where T : unmanaged => this.AsSpan<T>(checked((long)(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT)), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
+		#endregion
 	}
 
 	/// <summary>
@@ -97,6 +133,7 @@ namespace Althea.Storage
 	/// </summary>
 	public interface IStreamPointer : IPointer
 	{
+		#region basic
 		/// <summary>
 		/// Get the raw stream of this <see cref="IStreamPointer"/> as a <see cref="Stream"/>
 		/// </summary>
@@ -106,6 +143,8 @@ namespace Althea.Storage
 		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
 		/// </summary>
 		string Description { get; }
+
+		ulong IPointer.LengthInBytes => (ulong)this.NativeStream.Length;
 
 		bool ICheckValid.IsValid() => this.NativeStream is not null && this.LengthInBytes != 0;
 
@@ -128,6 +167,170 @@ namespace Althea.Storage
 			["length"] = this.LengthInBytes.ToString(),
 			["position"] = this.NativeStream.Position.ToString(),
 		};
+		#endregion
+
+		#region default implementations
+		/// <summary>
+		/// Get the default buffer size in bytes which is divisible by the size of <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <returns>The default buffer size in bytes divisible by the size of <typeparamref name="T"/></returns>
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		protected static unsafe int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / sizeof(T) * sizeof(T);
+
+		/// <summary>
+		/// Set the values of this <see cref="IStreamPointer"/> <typeparamref name="T"/> by <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <param name="offset">The offset in <b><typeparamref name="T"/></b> rather than bytes</param>
+		/// <param name="length">The length to set in <b><typeparamref name="T"/></b> rather than bytes</param>
+		/// <param name="value">The value to set</param>
+		/// <exception cref="ArgumentException">If the <see cref="NativeStream"/> is too short</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="length"/> exceeds the boundary</exception>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
+		void SetValues<T>(long offset, long length, T value) where T : unmanaged
+		{
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+			if ((offset + length) * Storage<T>.SizeOfT > this.NativeStream.Length)
+				throw new ArgumentException(Parameter.WrongSize);
+
+			// positioning
+			length *= Storage<T>.SizeOfT;
+			offset *= Storage<T>.SizeOfT;
+			if (offset != this.NativeStream.Position)
+				this.NativeStream.Position = offset;
+			// writing
+			int BufferSize = BufferSizeInBytes<T>();
+			byte[] buffer = new byte[Math.Min(BufferSize, length)];
+			if (value is byte bv)
+			{
+				Array.Fill(buffer, bv);
+			}
+			else
+			{
+				T[] bufferT = new T[buffer.Length / Storage<T>.SizeOfT];
+				Array.Fill(bufferT, value);
+				Buffer.BlockCopy(bufferT, 0, buffer, 0, buffer.Length);
+			}
+			while (length >= BufferSize)
+			{
+				this.NativeStream.Write(buffer, 0, BufferSize);
+				length -= BufferSize;
+			}
+			this.NativeStream.Write(buffer, 0, (int)length);
+			this.NativeStream.Flush();
+		}
+
+		/// <summary>
+		/// Write values to this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// </summary>
+		/// <param name="offset">The offset in bytes to start writing</param>
+		/// <param name="value">The values to write as a <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking (when <c><see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
+		void Write(long offset, ReadOnlySpan<byte> value)
+		{
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+			if (value.Length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(value), Parameter.MustPositive);
+			if (offset >= this.NativeStream.Length)
+				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.InvalidValue);
+
+			if (offset != this.NativeStream.Position)
+				this.NativeStream.Position = offset;
+			this.NativeStream.Write(value);
+			this.NativeStream.Flush();
+		}
+
+		/// <summary>
+		/// Read values from this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// </summary>
+		/// <param name="offset">The offset in bytes to start reading</param>
+		/// <param name="target">The target <see cref="Span{T}"/> of <see cref="byte"/> to overwrite the read values</param>
+		/// <returns>The actual number of values read</returns>
+		/// <exception cref="ArgumentException">If the <see cref="NativeStream"/> is too short</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking (when <c><see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or reading</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
+		int Read(long offset, Span<byte> target)
+		{
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+			if (target.Length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(target), Parameter.MustPositive);
+			if (offset + target.Length > this.NativeStream.Length)
+				throw new ArgumentException(Parameter.WrongSize);
+
+			if (offset != this.NativeStream.Position)
+				this.NativeStream.Position = offset;
+			return this.NativeStream.Read(target);
+		}
+
+		/// <summary>
+		/// Resize this <see cref="IStreamPointer"/> to a new length in bytes.<br/>
+		/// If <paramref name="newLengthInBytes"/> is smaller than <see cref="IPointer.LengthInBytes"/>, the bytes after <paramref name="newLengthInBytes"/> will be discarded; otherwise, uninitialized (<paramref name="newLengthInBytes"/> - <see cref="IPointer.LengthInBytes"/>) bytes will be added to the end.
+		/// </summary>
+		/// <param name="newLengthInBytes">The new length in bytes</param>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
+		void Resize(ulong newLengthInBytes)
+		{
+			this.NativeStream.SetLength((long)newLengthInBytes);
+			this.NativeStream.Flush();
+		}
+
+		/// <summary>
+		/// Copy to another <see cref="IStreamPointer"/> <paramref name="other"/> with given offsets and length
+		/// </summary>
+		/// <param name="offsetThis">The offset in bytes to start reading of this <see cref="IStreamPointer"/></param>
+		/// <param name="other">The other <see cref="IStreamPointer"/> to write to</param>
+		/// <param name="offsetOther">The offset in bytes to start writing of <paramref name="other"/> <see cref="IStreamPointer"/></param>
+		/// <param name="length">The length in bytes to read/write</param>
+		/// <exception cref="ArgumentException">If either <see cref="NativeStream"/> is too short</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetThis"/> or <paramref name="offsetOther"/> or <paramref name="length"/> exceeds the boundaries</exception>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If either <see cref="NativeStream"/> does not support seeking (when <c>this.<see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetThis"/></c> or <c><paramref name="other"/>.<see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetOther"/></c>) or reading</exception>
+		/// <exception cref="ObjectDisposedException">If either <see cref="NativeStream"/> is already closed</exception>
+		void CopyTo(long offsetThis, IStreamPointer other, long offsetOther, long length)
+		{
+			if (offsetThis < 0)
+				throw new ArgumentOutOfRangeException(nameof(offsetThis), Parameter.CannotNegative);
+			if (offsetOther < 0)
+				throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.CannotNegative);
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+			if (offsetThis + length> this.NativeStream.Length)
+				throw new ArgumentException(Parameter.WrongSize);
+			if (offsetOther >= this.NativeStream.Length)
+				throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.InvalidValue);
+
+			// positioning
+			if (offsetThis != this.NativeStream.Position)
+				this.NativeStream.Position = offsetThis;
+			if (offsetOther != other.NativeStream.Position)
+				other.NativeStream.Position = offsetOther;
+			// writing
+			int BufferSize = BufferSizeInBytes<byte>();
+			byte[] buffer = new byte[Math.Min(BufferSize, length)];
+			while (length > 0)
+			{
+				int read = this.NativeStream.Read(buffer, 0, buffer.Length);
+				other.NativeStream.Write(buffer, 0, read);
+				length -= read;
+			}
+			other.NativeStream.Flush();
+		}
+		#endregion
 	}
 	#endregion
 
@@ -178,11 +381,11 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Allocate a <see cref="StoragePointer"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
+		/// Allocate a <see cref="PointerSegment"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
-		protected static StoragePointer Allocate(StorageLocation location, ulong length)
+		protected static PointerSegment Allocate(StorageLocation location, ulong length)
 		{
 			return MEM.SelectImplementation(location).Allocate<T>(location, length);
 		}
@@ -239,7 +442,7 @@ namespace Althea.Storage
 	public class PureStorage<T> : ActualStorage<T> where T : unmanaged
 	{
 		#region basic
-		private readonly StoragePointer pointer;
+		private readonly PointerSegment pointer;
 
 		/// <summary>
 		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
@@ -259,16 +462,16 @@ namespace Althea.Storage
 
 		#region override
 		/// <summary>
-		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public override int Count => 1;
 
 		/// <summary>
-		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
 		/// <param name="index">the element index</param>
-		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
-		public override StoragePointer this[int index] {
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= 1)
 					throw new ArgumentOutOfRangeException(nameof(index));
@@ -285,7 +488,7 @@ namespace Althea.Storage
 	public class MixedStorage<T> : ActualStorage<T> where T : unmanaged
 	{
 		#region basic
-		private readonly StoragePointer[] pointers;
+		private readonly PointerSegment[] pointers;
 
 		/// <summary>
 		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
@@ -307,7 +510,7 @@ namespace Althea.Storage
 		{
 			if (param.Count <= 1)
 				throw new ArgumentOutOfRangeException(nameof(param), Parameter.WrongSize);
-			this.pointers = new StoragePointer[param.Count];
+			this.pointers = new PointerSegment[param.Count];
 			for (int i = 0; i < param.Count; i++)
 			{
 				var (location, length) = param[i];
@@ -334,16 +537,16 @@ namespace Althea.Storage
 
 		#region override
 		/// <summary>
-		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public override int Count => this.pointers.Length;
 
 		/// <summary>
-		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
 		/// <param name="index">the element index</param>
-		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
-		public override StoragePointer this[int index] {
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index));
@@ -360,7 +563,7 @@ namespace Althea.Storage
 	public class CachedStorage<T> : ActualStorage<T> where T : unmanaged
 	{
 		#region basic
-		private readonly StoragePointer[] pointers;
+		private readonly PointerSegment[] pointers;
 
 		/// <summary>
 		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
@@ -383,7 +586,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="totalLength"/> or <paramref name="cacheUri"/> has unexpected value(s)</exception>
 		public CachedStorage(IEnumerable<(StorageLocation location, ulong maxLengthInBytes)> priorities, ulong totalLength, Uri cacheUri = null) : base(totalLength)
 		{
-			var temp = new List<StoragePointer>();
+			var temp = new List<PointerSegment>();
 			foreach (var (location, maxLengthInBytes) in priorities)
 			{
 				if (location.Location == LocationType.Uri)
@@ -420,16 +623,16 @@ namespace Althea.Storage
 
 		#region override
 		/// <summary>
-		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public override int Count => this.pointers.Length;
 
 		/// <summary>
-		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
 		/// <param name="index">the element index</param>
-		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
-		public override StoragePointer this[int index] {
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index));

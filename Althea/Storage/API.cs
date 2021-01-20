@@ -114,10 +114,10 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in bytes</param>
-		/// <returns>The allocated pointer as a <see cref="StoragePointer"/></returns>
+		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
 		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		public abstract StoragePointer Allocate(StorageLocation location, ulong length);
+		public abstract PointerSegment Allocate(StorageLocation location, ulong length);
 
 		/// <summary>
 		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
@@ -125,18 +125,18 @@ namespace Althea.Storage
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in <typeparamref name="T"/> rather than bytes</param>
-		/// <returns>The allocated pointer as a <see cref="StoragePointer"/></returns>
+		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
 		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		public virtual StoragePointer Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
+		public virtual PointerSegment Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
 
 		/// <summary>
 		/// Free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
-		/// <param name="pointer">The <see cref="StoragePointer"/> to free</param>
+		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
 		/// <param name="disposeManaged">dispose managed resources or not</param>
 		/// <returns>If <paramref name="pointer"/> is not supported or <paramref name="pointer"/> is not valid, return false; otherwise, return true.</returns>
-		public abstract bool Free(StoragePointer pointer, bool disposeManaged = true);
+		public abstract bool Free(PointerSegment pointer, bool disposeManaged = true);
 
 		/// <summary>
 		/// Fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.
@@ -145,7 +145,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
 		/// <exception cref="NotSupportedException">If <paramref name="pointer"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="pointer"/> is invalid</exception>
-		public abstract void SetMemoryValue(StoragePointer pointer, byte value);
+		public abstract void SetMemoryValue(PointerSegment pointer, byte value);
 
 		/// <summary>
 		/// Fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
@@ -155,7 +155,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="pointer"/> is invalid</exception>
-		public abstract void SetMemoryValue<T>(StoragePointer pointer, T value) where T : unmanaged;
+		public abstract void SetMemoryValue<T>(PointerSegment pointer, T value) where T : unmanaged;
 
 		/// <summary>
 		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
@@ -165,7 +165,7 @@ namespace Althea.Storage
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		public abstract void MemoryCopy(StoragePointer source, StoragePointer destination);
+		public abstract void MemoryCopy(PointerSegment source, PointerSegment destination);
 
 		/// <summary>
 		/// Copies 2D data from <paramref name="source"/> to <paramref name="destination"/>.
@@ -173,20 +173,20 @@ namespace Althea.Storage
 		/// <param name="source">The source pointer</param>
 		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
 		/// <param name="destination">The destination pointer</param>
-		/// <param name="destLD">The destination array actual height (actual leading dimension) in bytes</param>
+		/// <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in the real type</param>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
 		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
 		/// <exception cref="ArgumentException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
-		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
+		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
-		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
+		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		public abstract void MemoryCopy2D(StoragePointer source, ulong sourceLD, StoragePointer destination, ulong destLD, ulong height, ulong width);
+		public abstract void MemoryCopy2D(PointerSegment source, ulong sourceLD, PointerSegment destination, ulong destinationLD, ulong height, ulong width);
 		#endregion
 
 		#region low-level storage and managed operations
@@ -194,48 +194,48 @@ namespace Althea.Storage
 		/// Copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/>.</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
-		public abstract T ToManaged<T>(StoragePointer source) where T : unmanaged;
+		public abstract T ToManaged<T>(PointerSegment source) where T : unmanaged;
 
 		/// <summary>
 		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="destination">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
-		public abstract void FromManaged<T>(StoragePointer destination, T value) where T : unmanaged;
+		public abstract void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
 
 		/// <summary>
 		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
-		public abstract void ToManaged<T>(StoragePointer source, ArraySegment<T> destination) where T : unmanaged;
+		public abstract void ToManaged<T>(PointerSegment source, ArraySegment<T> destination) where T : unmanaged;
 
 		/// <summary>
 		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="destination">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
-		public abstract void FromManaged<T>(StoragePointer destination, ArraySegment<T> values) where T : unmanaged;
+		public abstract void FromManaged<T>(PointerSegment destination, ArraySegment<T> values) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
 		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="source">The source <see cref="StoragePointer"/> to copy from</param>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="source"/></param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
@@ -244,16 +244,16 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/>,
-		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="StoragePointer.Pointer">Pointer</see>.<see cref="StoragePointer.LengthInBytes">Length</see></c>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.Pointer">Pointer</see>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void ToManaged2D<T>(StoragePointer source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) where T : unmanaged;
+		public abstract void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) where T : unmanaged;
 
 		/// <summary>
 		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="destination">The destination <see cref="StoragePointer"/> to copy to</param>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="leadDim">The actual height (actual leading dimension) in bytes of <paramref name="destination"/></param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
@@ -262,10 +262,10 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/>,
-		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="StoragePointer.Pointer">Pointer</see>.<see cref="StoragePointer.LengthInBytes">Length</see></c>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.Pointer">Pointer</see>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void FromManaged2D<T>(StoragePointer destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) where T : unmanaged;
+		public abstract void FromManaged2D<T>(PointerSegment destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) where T : unmanaged;
 		#endregion
 
 		#region high-level storage operations
@@ -326,7 +326,7 @@ namespace Althea.Storage
 				this.MemoryCopy(source[0], destination[0]);
 				return;
 			}
-			StoragePointer src = source[0], dst = destination[0];
+			PointerSegment src = source[0], dst = destination[0];
 			bool incSrc = false, incDst = false;
 			int i = 0, j = 0;
 			while (i < source.Count && j < destination.Count)

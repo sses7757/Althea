@@ -806,6 +806,30 @@ namespace Althea.Linq
 
 		#region converter
 		/// <summary>
+		/// Convert the given <paramref name="span"/> from <typeparamref name="TTo"/> to <typeparamref name="TFrom"/> by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
+		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		public static ReadOnlySpan<TTo> As<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : struct where TTo : struct
+		{
+			return MemoryMarshal.Cast<TFrom, TTo>(span);
+		}
+
+		/// <summary>
+		/// Convert the given <paramref name="span"/> from <typeparamref name="TTo"/> to <typeparamref name="TFrom"/> by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
+		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		public static Span<TTo> As<TFrom, TTo>(this Span<TFrom> span) where TFrom : struct where TTo : struct
+		{
+			return MemoryMarshal.Cast<TFrom, TTo>(span);
+		}
+
+		/// <summary>
 		/// Returns a reference to the element of the span at index 0.
 		/// </summary>
 		/// <typeparam name="T">The type of items in the span.</typeparam>

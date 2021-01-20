@@ -458,7 +458,7 @@ namespace Althea
 	#endregion
 
 
-	#region storage pointer
+	#region pointer
 
 	#region interface
 	/// <summary>
@@ -506,11 +506,11 @@ namespace Althea
 	#endregion
 
 	/// <summary>
-	/// The struct of a pointer at a certain unmanaged memory block
+	/// The struct of which delimits a certain section of a certain unmanaged memory block
 	/// </summary>
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
 	[StructLayout(LayoutKind.Explicit, Size = 32)]
-	public readonly struct StoragePointer : IEquatable<StoragePointer>, IMainPropertyFormat, ICheckValid
+	public readonly struct PointerSegment : IEquatable<PointerSegment>, IMainPropertyFormat, ICheckValid
 	{
 		#region basic
 		[FieldOffset(0)]
@@ -531,7 +531,7 @@ namespace Althea
 		public bool IsValid() => this.pointer is not null && this.pointer.IsValid();
 
 		/// <summary>
-		/// The <see cref="StorageLocation"/> of this <see cref="StoragePointer"/>
+		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/>
 		/// </summary>
 		public StorageLocation Location => this.location;
 
@@ -541,12 +541,17 @@ namespace Althea
 		public IPointer Pointer => this.pointer;
 
 		/// <summary>
-		/// The <b>presenting</b> length in bytes of this <see cref="StoragePointer"/>
+		/// The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment"/>
+		/// </summary>
+		public ulong OffsetInBytes => this.offset;
+
+		/// <summary>
+		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment"/>
 		/// </summary>
 		public ulong LengthInBytes => this.length;
 
 		/// <summary>
-		/// Get the raw pointer structure (without offset) of this <see cref="StoragePointer"/> in <typeparamref name="T"/>
+		/// Get the raw pointer structure (without offset) of this <see cref="PointerSegment"/> in <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">The raw pointer structure type</typeparam>
 		/// <returns>The raw pointer structure as a <typeparamref name="T"/></returns>
@@ -555,11 +560,11 @@ namespace Althea
 		/// <summary>
 		/// Create with given location and pointer
 		/// </summary>
-		/// <param name="location">The <see cref="StorageLocation"/> of this <see cref="StoragePointer"/></param>
+		/// <param name="location">The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/></param>
 		/// <param name="pointer">The pointer at the given <paramref name="location"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is a default value</exception>
 		/// <exception cref="ArgumentException">If <paramref name="location"/> is a valid value of <paramref name="pointer"/></exception>
-		public StoragePointer(StorageLocation location, IPointer pointer)
+		public PointerSegment(StorageLocation location, IPointer pointer)
 		{
 			if (pointer.Equals(default))
 				throw new ArgumentNullException(nameof(pointer));
@@ -570,13 +575,13 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Create with given <see cref="StoragePointer"/> <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/> to the <paramref name="storage"/>
+		/// Create with given <see cref="PointerSegment"/> <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/> to the <paramref name="storage"/>
 		/// </summary>
-		/// <param name="storage">The <see cref="StoragePointer"/> to copy info from</param>
+		/// <param name="storage">The <see cref="PointerSegment"/> to copy info from</param>
 		/// <param name="offset">The offset to the <paramref name="storage"/> in bytes</param>
 		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer.LengthInBytes"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public StoragePointer(StoragePointer storage, long offset = 0, ulong newLength = 0)
+		public PointerSegment(PointerSegment storage, long offset = 0, ulong newLength = 0)
 		{
 			offset += (long)storage.offset;
 			if (offset < 0)
@@ -593,27 +598,27 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Create a new <see cref="StoragePointer"/> with given <paramref name="offset"/>
+		/// Create a new <see cref="PointerSegment"/> with given <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to move</param>
-		/// <returns>The new <see cref="StoragePointer"/> moved from this pointer by <paramref name="offset"/> bytes</returns>
-		public StoragePointer MoveBy(long offset) => offset == 0 ? this : new StoragePointer(this, offset);
+		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes</returns>
+		public PointerSegment MoveBy(long offset) => offset == 0 ? this : new PointerSegment(this, offset);
 
 		/// <summary>
-		/// Create a new <see cref="StoragePointer"/> with given <paramref name="newLength"/>
+		/// Create a new <see cref="PointerSegment"/> with given <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="newLength">The new length in bytes to set</param>
-		/// <returns>The new <see cref="StoragePointer"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
-		public StoragePointer AsLength(ulong newLength) => newLength == this.length ? this : new StoragePointer(this, 0, newLength);
+		/// <returns>The new <see cref="PointerSegment"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
+		public PointerSegment AsLength(ulong newLength) => newLength == this.length ? this : new PointerSegment(this, 0, newLength);
 		#endregion
 
 		#region equality
 		/// <summary>
 		/// Whether this == <paramref name="other"/>
 		/// </summary>
-		/// <param name="other">another <see cref="StoragePointer"/> to compare</param>
+		/// <param name="other">another <see cref="PointerSegment"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(StoragePointer other)
+		public bool Equals(PointerSegment other)
 		{
 			return this.location == other.location && this.pointer == other.pointer && this.offset == other.offset;
 		}
@@ -625,11 +630,11 @@ namespace Althea
 		/// <returns>this == <paramref name="obj"/></returns>
 		public override bool Equals(object obj)
 		{
-			return obj is StoragePointer storage && this.Equals(storage);
+			return obj is PointerSegment storage && this.Equals(storage);
 		}
 
 		/// <summary>
-		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StoragePointer"/>.
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="PointerSegment"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
@@ -640,7 +645,7 @@ namespace Althea
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		public static bool operator ==(StoragePointer left, StoragePointer right)
+		public static bool operator ==(PointerSegment left, PointerSegment right)
 		{
 			return left.Equals(right);
 		}
@@ -648,7 +653,7 @@ namespace Althea
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		public static bool operator !=(StoragePointer left, StoragePointer right)
+		public static bool operator !=(PointerSegment left, PointerSegment right)
 		{
 			return !(left == right);
 		}
@@ -669,36 +674,36 @@ namespace Althea
 		};
 
 		/// <summary>
-		/// Return the string representation of this <see cref="StoragePointer"/>
+		/// Return the string representation of this <see cref="PointerSegment"/>
 		/// </summary>
-		/// <returns>the string representation of this <see cref="StoragePointer"/></returns>
+		/// <returns>the string representation of this <see cref="PointerSegment"/></returns>
 		public override string ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 
 		#region operator
 		/// <summary>
-		/// Add offset (in bytes) to a <see cref="StoragePointer"/> to get another.
+		/// Add offset (in bytes) to a <see cref="PointerSegment"/> to get another.
 		/// </summary>
-		/// <param name="storage">the <see cref="StoragePointer"/></param>
+		/// <param name="storage">the <see cref="PointerSegment"/></param>
 		/// <param name="offset">the offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		public static StoragePointer operator +(StoragePointer storage, long offset) => offset == 0 ? storage : new StoragePointer(storage, offset);
+		public static PointerSegment operator +(PointerSegment storage, long offset) => offset == 0 ? storage : new PointerSegment(storage, offset);
 
 		/// <summary>
-		/// Subtract offset (in bytes) to a <see cref="StoragePointer"/> to get another.
+		/// Subtract offset (in bytes) to a <see cref="PointerSegment"/> to get another.
 		/// </summary>
-		/// <param name="storage">the <see cref="StoragePointer"/></param>
+		/// <param name="storage">the <see cref="PointerSegment"/></param>
 		/// <param name="offset">the offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		public static StoragePointer operator -(StoragePointer storage, long offset) => offset == 0 ? storage : new StoragePointer(storage, -offset);
+		public static PointerSegment operator -(PointerSegment storage, long offset) => offset == 0 ? storage : new PointerSegment(storage, -offset);
 
 		/// <summary>
-		/// Get the pointer's difference (in bytes) of two <see cref="StoragePointer"/>s.
+		/// Get the pointer's difference (in bytes) of two <see cref="PointerSegment"/>s.
 		/// </summary>
-		/// <param name="left">the left <see cref="StoragePointer"/></param>
-		/// <param name="right">the right <see cref="StoragePointer"/></param>
+		/// <param name="left">the left <see cref="PointerSegment"/></param>
+		/// <param name="right">the right <see cref="PointerSegment"/></param>
 		/// <returns>If <paramref name="left"/> and <paramref name="right"/> have different references, return <see cref="long.MinValue"/>; otherwise, return a <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
-		public static long operator -(StoragePointer left, StoragePointer right) => left.location != right.location || left.pointer != right.pointer ? long.MinValue : (long)left.offset - (long)right.offset;
+		public static long operator -(PointerSegment left, PointerSegment right) => left.location != right.location || left.pointer != right.pointer ? long.MinValue : (long)left.offset - (long)right.offset;
 		#endregion
 	}
 	#endregion
@@ -710,7 +715,7 @@ namespace Althea
 	/// <summary>
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
 	/// </summary>
-	public interface IStorage : IReadOnlyList<StoragePointer>, ICheckValid, IDisposable
+	public interface IStorage : IReadOnlyList<PointerSegment>, ICheckValid, IDisposable
 	{
 		/// <summary>
 		/// The total length of the presenting array in bytes
@@ -786,16 +791,16 @@ namespace Althea
 		public abstract CombinationOfLocations LocationDescription { get; }
 
 		/// <summary>
-		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public abstract int Count { get; }
 
 		/// <summary>
-		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
 		/// <param name="index">the element index</param>
-		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
-		public abstract StoragePointer this[int index] { get; }
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		public abstract PointerSegment this[int index] { get; }
 		#endregion
 
 		#region dispose
@@ -891,14 +896,14 @@ namespace Althea
 		#endregion
 
 		#region enumerator
-		IEnumerator<StoragePointer> IEnumerable<StoragePointer>.GetEnumerator()
+		IEnumerator<PointerSegment> IEnumerable<PointerSegment>.GetEnumerator()
 		{
 			for (int i = 0; i < this.Count; i++)
 			{
 				yield return this[i];
 			}
 		}
-		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<StoragePointer>)this).GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<PointerSegment>)this).GetEnumerator();
 		#endregion
 
 		#region equality
@@ -1007,7 +1012,7 @@ namespace Althea
 		private readonly ulong startOffsetBytes, endLengthBytes;
 
 		/// <summary>
-		/// The number of <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> 
+		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public override int Count => this.end - this.start;
 
@@ -1096,22 +1101,22 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Indexer of the <see cref="StoragePointer"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
 		/// <param name="index">the element index</param>
-		/// <returns>the <see cref="StoragePointer"/> at <paramref name="index"/></returns>
-		public override StoragePointer this[int index] {
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				StoragePointer pointer = this.reference[index - start];
+				PointerSegment pointer = this.reference[index - start];
 				if (index == 0)
 				{
 					pointer = pointer.MoveBy((long)this.startOffsetBytes);
 				}
 				else if (index == this.Count - 1)
 				{
-					pointer = new StoragePointer(pointer, newLength: this.endLengthBytes);
+					pointer = new PointerSegment(pointer, newLength: this.endLengthBytes);
 				}
 				return pointer;
 			}
