@@ -601,14 +601,17 @@ namespace Althea
 		/// Create a new <see cref="PointerSegment"/> with given <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to move</param>
-		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes</returns>
-		public PointerSegment MoveBy(long offset) => offset == 0 ? this : new PointerSegment(this, offset);
+		/// <param name="newLength">The new length in bytes to set</param>
+		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
+		public PointerSegment MoveBy(long offset, ulong newLength) => offset == 0 ? this : new PointerSegment(this, offset, newLength);
 
 		/// <summary>
 		/// Create a new <see cref="PointerSegment"/> with given <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="newLength">The new length in bytes to set</param>
 		/// <returns>The new <see cref="PointerSegment"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newLength"/> exceeds the boundary</exception>
 		public PointerSegment AsLength(ulong newLength) => newLength == this.length ? this : new PointerSegment(this, 0, newLength);
 		#endregion
 

@@ -86,7 +86,7 @@ namespace Althea.Backend.CSharp.Storage
 		{
 			memoryPointer = null; streamPointer = null;
 			// check first
-			if (pointer.OffsetInBytes % Storage<T>.SizeOfT != 0 || pointer.LengthInBytes % Storage<T>.SizeOfT != 0)
+			if (!pointer.IsValid() || pointer.OffsetInBytes % Storage<T>.SizeOfT != 0 || pointer.LengthInBytes % Storage<T>.SizeOfT != 0)
 			{
 				if (@throw)
 					throw new NotSupportedException(Support.Location);
@@ -253,7 +253,7 @@ namespace Althea.Backend.CSharp.Storage
 				unsafe
 				{
 					byte* srcPtr = (byte*)srcMP.NativePointer(srcOff);
-					byte* endPtr = srcPtr + sourceLD * width;
+					byte* endPtr = srcPtr + (sourceLD * width);
 					byte* dstPtr = (byte*)dstMP.NativePointer(dstOff);
 					for (; srcPtr < endPtr; srcPtr += sourceLD, dstPtr += destinationLD)
 					{
@@ -290,17 +290,155 @@ namespace Althea.Backend.CSharp.Storage
 		#endregion
 
 		#region low-level storage and manged operations
-		public override T ToManaged<T>(PointerSegment source) => throw new NotImplementedException();
+		public override T ToManaged<T>(PointerSegment source)
+		{
+			long offset = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out IStreamPointer sp);
+			if (mp is not null)
+			{
+				unsafe { return Unsafe.Read<T>(mp.UnmangedPointer<T>(offset)); }
+			}
+			else
+			{
+				Span<T> span = stackalloc T[1];
+				sp.Read(offset, span.UncheckAs<T, byte>());
+				return span[0];
+			}
+		}
 
-		public override void FromManaged<T>(PointerSegment destination, T value) => throw new NotImplementedException();
+		public override void FromManaged<T>(PointerSegment destination, T value)
+		{
+			long offset = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out IStreamPointer sp);
+			if (mp is not null)
+			{
+				unsafe { Unsafe.Write(mp.UnmangedPointer<T>(offset), value); }
+			}
+			else
+			{
+				Span<T> span = stackalloc T[1];
+				span[0] = value;
+				sp.Write(offset, span.UncheckAs<T, byte>());
+			}
+		}
 
-		public override void ToManaged<T>(PointerSegment source, ArraySegment<T> destination) => throw new NotImplementedException();
+		public override void ToManaged<T>(PointerSegment source, ArraySegment<T> destination)
+		{
+			long offset = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out IStreamPointer sp);
+			if (mp is not null)
+			{
+				int copyLength = checked((int)Math.Min(source.LengthInBytes / Storage<T>.SizeOfT, (ulong)destination.Count));
+				unsafe { mp.AsSpan<T>(offset, copyLength).CopyTo(destination.AsSpan(0, copyLength)); }
+			}
+			else
+			{
+				sp.Read(offset, destination.AsSpan().UncheckAs<T, byte>());
+			}
+		}
 
-		public override void FromManaged<T>(PointerSegment destination, ArraySegment<T> values) => throw new NotImplementedException();
+		public override void FromManaged<T>(PointerSegment destination, ArraySegment<T> values)
+		{
+			long offset = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out IStreamPointer sp);
+			if (mp is not null)
+			{
+				int copyLength = checked((int)Math.Min(destination.LengthInBytes / Storage<T>.SizeOfT, (ulong)values.Count));
+				unsafe { values.AsSpan(0, copyLength).CopyTo(mp.AsSpan<T>(offset, copyLength)); }
+			}
+			else
+			{
+				sp.Write(offset, values.AsSpan().UncheckAs<T, byte>());
+			}
+		}
 
-		public override void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination) => throw new NotImplementedException();
+		public override void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination, ulong destinationLeadDim = 0)
+		{
+			if (!source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (leadDim == 0)
+				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
+			if (width == 0)
+				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+			if (height == 0)
+				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+			if (height > leadDim || height > destinationLeadDim)
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
+			if (leadDim * width > (source.Pointer.LengthInBytes - source.OffsetInBytes) / Storage<T>.SizeOfT)
+				throw new ArgumentException(Parameter.WrongSize, nameof(source));
+			if (leadDim * width > (ulong)destination.Count)
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
+			if (destinationLeadDim == 0)
+				destinationLeadDim = height;
+			// shortcut
+			if (leadDim == height && destinationLeadDim == height)
+			{
+				this.ToManaged(source.AsLength(height * width), destination);
+				return;
+			}
+			// normal cases
+			long start = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out IStreamPointer sp);
+			int h = checked((int)height), dstLD = checked((int)destinationLeadDim);
+			long srcLD = (long)leadDim, max = (long)(leadDim * width) + start;
+			int dstOffset = 0;
+			
+			if (mp is not null)
+			{
+				for (long srcOffset = start; srcOffset < max; srcOffset += srcLD, dstOffset += dstLD)
+				{
+					unsafe { mp.AsSpan<T>(srcOffset, h).CopyTo(destination.AsSpan(dstOffset, h)); }
+				}
+			}
+			else
+			{
+				for (long srcOffset = 0; srcOffset < max; srcOffset += srcLD, dstOffset += dstLD)
+				{
+					sp.Read(srcOffset, destination.AsSpan(dstOffset, h).UncheckAs<T, byte>());
+				}
+			}
+		}
 
-		public override void FromManaged2D<T>(PointerSegment destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values) => throw new NotImplementedException();
+		public override void FromManaged2D<T>(PointerSegment destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values, ulong valuesLeadDim)
+		{
+			if (!destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+			if (leadDim == 0)
+				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
+			if (width == 0)
+				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+			if (height == 0)
+				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+			if (height > leadDim || height > valuesLeadDim)
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
+			if (leadDim * width > (destination.Pointer.LengthInBytes - destination.OffsetInBytes) / Storage<T>.SizeOfT)
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
+			if (leadDim * width > (ulong)values.Count)
+				throw new ArgumentException(Parameter.WrongSize, nameof(values));
+			if (valuesLeadDim == 0)
+				valuesLeadDim = height;
+			// shortcut
+			if (leadDim == height && valuesLeadDim == height)
+			{
+				this.ToManaged(destination.AsLength(height * width), values);
+				return;
+			}
+			// normal case
+			long start = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out IStreamPointer sp);
+			int h = checked((int)height), srcLD = checked((int)(valuesLeadDim == 0 ? height : valuesLeadDim));
+			long dstLD = (long)leadDim, max = (long)(leadDim * width) + start;
+			int srcOffset = 0;
+
+			if (mp is not null)
+			{
+				for (long dstOffset = start; dstOffset < max; dstOffset += dstLD, srcOffset += srcLD)
+				{
+					unsafe { values.AsSpan(srcOffset, h).CopyTo(mp.AsSpan<T>(dstOffset, h)); }
+				}
+			}
+			else
+			{
+				for (long dstOffset = start; dstOffset < max; dstOffset += dstLD, srcOffset += srcLD)
+				{
+					sp.Write(dstOffset, values.AsSpan(srcOffset, h).UncheckAs<T, byte>());
+				}
+			}
+		}
 		#endregion
 	}
 }

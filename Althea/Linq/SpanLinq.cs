@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 using Althea.Resources;
 
@@ -806,19 +807,52 @@ namespace Althea.Linq
 
 		#region converter
 		/// <summary>
-		/// Convert the given <paramref name="span"/> from <typeparamref name="TTo"/> to <typeparamref name="TFrom"/> by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
 		/// </summary>
 		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
 		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
 		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+		public unsafe static ReadOnlySpan<TTo> UncheckAs<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
+		{
+			long size = (long)span.Length * sizeof(TFrom);
+			if (size % sizeof(TTo) != 0)
+				throw new ArgumentException(Other.CannotDivide);
+			return new ReadOnlySpan<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), (int)(size / sizeof(TTo)));
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
+		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+		public unsafe static Span<TTo> UncheckAs<TFrom, TTo>(this Span<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
+		{
+			long size = (long)span.Length * sizeof(TFrom);
+			if (size % sizeof(TTo) != 0)
+				throw new ArgumentException(Other.CannotDivide);
+			return new Span<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), (int)(size / sizeof(TTo)));
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
+		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		/// <exception cref="ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
 		public static ReadOnlySpan<TTo> As<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : struct where TTo : struct
 		{
 			return MemoryMarshal.Cast<TFrom, TTo>(span);
 		}
 
 		/// <summary>
-		/// Convert the given <paramref name="span"/> from <typeparamref name="TTo"/> to <typeparamref name="TFrom"/> by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
 		/// </summary>
 		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
 		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
