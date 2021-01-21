@@ -479,27 +479,27 @@ namespace Althea
 		bool IsValidLocation(StorageLocation location);
 
 		/// <summary>
-		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be read or not
+		/// Get a <see cref="bool"/> indicating whether this pointer can be read or not
 		/// </summary>
 		bool CanRead { get; }
 
 		/// <summary>
-		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be written or not
+		/// Get a <see cref="bool"/> indicating whether this pointer can be written or not
 		/// </summary>
 		bool CanWrite { get; }
 
 		/// <summary>
-		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be read with offset or not
+		/// Get a <see cref="bool"/> indicating whether this pointer can be read with offset or not
 		/// </summary>
 		bool CanReadOffset { get; }
 
 		/// <summary>
-		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be written with offset or not
+		/// Get a <see cref="bool"/> indicating whether this pointer can be written with offset or not
 		/// </summary>
 		bool CanWriteOffset { get; }
 
 		/// <summary>
-		/// <b>Statically</b> get a <see cref="bool"/> indicating whether this pointer can be resized in-place or not
+		/// Get a <see cref="bool"/> indicating whether this pointer can be resized in-place or not
 		/// </summary>
 		bool CanResize { get; }
 	}

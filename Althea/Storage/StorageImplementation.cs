@@ -129,47 +129,119 @@ namespace Althea.Storage
 	}
 
 	/// <summary>
-	/// The interface for an immutable pointer at any possible stream storage which can be described by a <see cref="System.IO.Stream"/>
+	/// The "interface" for an immutable pointer at any possible stream storage which can be described by a <see cref="Stream"/>
 	/// </summary>
-	public interface IStreamPointer : IPointer
+	public abstract class AbstractStreamPointer : IPointer, IDisposable
 	{
 		#region basic
 		/// <summary>
-		/// Get the raw stream of this <see cref="IStreamPointer"/> as a <see cref="Stream"/>
+		/// Get the raw stream of this <see cref="AbstractStreamPointer"/> used for reading as a <see cref="Stream"/>. Shall be null if this <see cref="AbstractStreamPointer"/> does not support reading.
 		/// </summary>
-		Stream NativeStream { get; }
+		protected abstract Stream ReadStream { get; }
 
 		/// <summary>
-		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
+		/// When implemented by sub-classes, this method shall perform the operations need when a <see cref="ReadStream"/> just stopped using. The default implementation does nothing.
 		/// </summary>
-		string Description { get; }
+		protected virtual void OnReadFinish() { }
 
-		ulong IPointer.LengthInBytes => (ulong)this.NativeStream.Length;
+		/// <summary>
+		/// Get the raw stream of this <see cref="AbstractStreamPointer"/> used for writing as a <see cref="Stream"/>. Shall be null if this <see cref="AbstractStreamPointer"/> does not support writing.
+		/// </summary>
+		protected abstract Stream WriteStream { get; }
 
-		bool ICheckValid.IsValid() => this.NativeStream is not null && this.LengthInBytes != 0;
+		/// <summary>
+		/// When implemented by sub-classes, this method shall perform the operations need when a <see cref="WriteStream"/> just stopped using. The default implementation does nothing.
+		/// </summary>
+		protected virtual void OnWriteFinish() { }
 
-		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
+		/// <summary>
+		/// The basic description of this <see cref="AbstractStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
+		/// </summary>
+		protected abstract string Description { get; }
 
-		bool IPointer.CanRead => this.NativeStream.CanRead;
+		private bool disposed;
 
-		bool IPointer.CanWrite => this.NativeStream.CanWrite;
+		/// <summary>
+		/// The method to be implemented to actually dispose the resources held by this <see cref="AbstractStreamPointer"/>. The default implementation only disposes <see cref="ReadStream"/> and <see cref="WriteStream"/>.
+		/// </summary>
+		/// <param name="disposing">Dispose managed resources or not</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposed)
+			{
+				if (disposing)
+				{
+					// do nothing
+				}
+				this.ReadStream?.Dispose();
+				this.WriteStream?.Dispose();
+				disposed = true;
+			}
+		}
 
-		bool IPointer.CanReadOffset => this.NativeStream.CanSeek && this.NativeStream.CanRead;
+		/// <summary>
+		/// Dispose resources held by this class
+		/// </summary>
+		public void Dispose()
+		{
+			this.Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+		#endregion
 
-		bool IPointer.CanWriteOffset => this.NativeStream.CanSeek && this.NativeStream.CanWrite;
+		#region implemented interfaces
+		/// <summary>
+		/// The original length of this pointer's underlying storage in bytes
+		/// </summary>
+		public virtual ulong LengthInBytes => (ulong)(this.ReadStream ?? this.WriteStream).Length;
 
-		bool IPointer.CanResize => this.NativeStream.CanWrite;
+		/// <summary>
+		/// Check whether this object is a valid one or not
+		/// </summary>
+		/// <returns>The validness of this object</returns>
+		public virtual bool IsValid() => (this.ReadStream is not null || this.WriteStream is not null) && this.LengthInBytes != 0;
+
+		/// <summary>
+		/// <b>Statically</b> check whether given <paramref name="location"/> is a supported one for this pointer
+		/// </summary>
+		/// <param name="location">The given <see cref="StorageLocation"/> to be checked</param>
+		/// <returns>Whether given <paramref name="location"/> is supported or not</returns>
+		public virtual bool IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this pointer can be read or not
+		/// </summary>
+		public virtual bool CanRead => this.ReadStream.CanRead;
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this pointer can be written or not
+		/// </summary>
+		public virtual bool CanWrite => this.WriteStream.CanWrite;
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this pointer can be read with offset or not
+		/// </summary>
+		public virtual bool CanReadOffset => this.ReadStream.CanSeek && this.ReadStream.CanRead;
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this pointer can be written with offset or not
+		/// </summary>
+		public virtual bool CanWriteOffset => this.WriteStream.CanSeek && this.WriteStream.CanWrite;
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this pointer can be resized in-place or not
+		/// </summary>
+		public virtual bool CanResize => this.CanWriteOffset;
 
 		string IMainPropertyFormat.StringMain => this.Description;
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
 		{ 
 			["length"] = this.LengthInBytes.ToString(),
-			["position"] = this.NativeStream.Position.ToString(),
 		};
 		#endregion
 
-		#region default implementations
+		#region new default implementations
 		/// <summary>
 		/// Get the default buffer size in bytes which is divisible by the size of <typeparamref name="T"/>
 		/// </summary>
@@ -179,156 +251,196 @@ namespace Althea.Storage
 		protected static unsafe int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / sizeof(T) * sizeof(T);
 
 		/// <summary>
-		/// Set the values of this <see cref="IStreamPointer"/> <typeparamref name="T"/> by <typeparamref name="T"/>
+		/// Set the values of this <see cref="AbstractStreamPointer"/> <typeparamref name="T"/> by <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged data type</typeparam>
 		/// <param name="offset">The offset in <b><typeparamref name="T"/></b> rather than bytes</param>
 		/// <param name="length">The length to set in <b><typeparamref name="T"/></b> rather than bytes</param>
 		/// <param name="value">The value to set</param>
-		/// <exception cref="ArgumentException">If the <see cref="NativeStream"/> is too short</exception>
+		/// <exception cref="ArgumentException">If the <see cref="ReadStream"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="length"/> exceeds the boundary</exception>
 		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
-		void SetValues<T>(long offset, long length, T value) where T : unmanaged
+		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
+		/// <remarks>When overridden by derived classes, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
+		public virtual void SetValues<T>(long offset, long length, T value) where T : unmanaged
 		{
-			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-			if ((offset + length) * Storage<T>.SizeOfT > this.NativeStream.Length)
-				throw new ArgumentException(Parameter.WrongSize);
+			try
+			{
+				if (offset < 0)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+				if (length <= 0)
+					throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+				if ((offset + length) * Storage<T>.SizeOfT > this.WriteStream.Length)
+					throw new ArgumentException(Parameter.WrongSize);
 
-			// positioning
-			length *= Storage<T>.SizeOfT;
-			offset *= Storage<T>.SizeOfT;
-			if (offset != this.NativeStream.Position)
-				this.NativeStream.Position = offset;
-			// writing
-			int BufferSize = BufferSizeInBytes<T>();
-			byte[] buffer = new byte[Math.Min(BufferSize, length)];
-			if (value is byte bv)
-			{
-				Array.Fill(buffer, bv);
+				// positioning
+				length *= Storage<T>.SizeOfT;
+				offset *= Storage<T>.SizeOfT;
+				if (offset != this.WriteStream.Position)
+					this.WriteStream.Position = offset;
+				// writing
+				int BufferSize = BufferSizeInBytes<T>();
+				byte[] buffer = new byte[Math.Min(BufferSize, length)];
+				if (value is byte bv)
+				{
+					Array.Fill(buffer, bv);
+				}
+				else
+				{
+					T[] bufferT = new T[buffer.Length / Storage<T>.SizeOfT];
+					Array.Fill(bufferT, value);
+					Buffer.BlockCopy(bufferT, 0, buffer, 0, buffer.Length);
+				}
+				while (length >= BufferSize)
+				{
+					this.WriteStream.Write(buffer, 0, BufferSize);
+					length -= BufferSize;
+				}
+				this.WriteStream.Write(buffer, 0, (int)length);
+				this.WriteStream.Flush();
 			}
-			else
+			finally
 			{
-				T[] bufferT = new T[buffer.Length / Storage<T>.SizeOfT];
-				Array.Fill(bufferT, value);
-				Buffer.BlockCopy(bufferT, 0, buffer, 0, buffer.Length);
+				this.OnWriteFinish();
 			}
-			while (length >= BufferSize)
-			{
-				this.NativeStream.Write(buffer, 0, BufferSize);
-				length -= BufferSize;
-			}
-			this.NativeStream.Write(buffer, 0, (int)length);
-			this.NativeStream.Flush();
 		}
 
 		/// <summary>
-		/// Write values to this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// Write values to this <see cref="AbstractStreamPointer"/> starting from <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to start writing</param>
 		/// <param name="value">The values to write as a <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
 		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking (when <c><see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
-		void Write(long offset, ReadOnlySpan<byte> value)
+		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
+		/// <remarks>When overridden by derived classes, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
+		public virtual void Write(long offset, ReadOnlySpan<byte> value)
 		{
-			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-			if (value.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(value), Parameter.MustPositive);
-			if (offset >= this.NativeStream.Length)
-				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.InvalidValue);
+			try
+			{
+				if (offset < 0)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+				if (value.Length <= 0)
+					throw new ArgumentOutOfRangeException(nameof(value), Parameter.MustPositive);
+				if (offset >= this.WriteStream.Length)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.InvalidValue);
 
-			if (offset != this.NativeStream.Position)
-				this.NativeStream.Position = offset;
-			this.NativeStream.Write(value);
-			this.NativeStream.Flush();
+				if (offset != this.WriteStream.Position)
+					this.WriteStream.Position = offset;
+				this.WriteStream.Write(value);
+				this.WriteStream.Flush();
+			}
+			finally
+			{
+				this.OnWriteFinish();
+			}
 		}
 
 		/// <summary>
-		/// Read values from this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// Read values from this <see cref="AbstractStreamPointer"/> starting from <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to start reading</param>
 		/// <param name="target">The target <see cref="Span{T}"/> of <see cref="byte"/> to overwrite the read values</param>
 		/// <returns>The actual number of values read</returns>
-		/// <exception cref="ArgumentException">If the <see cref="NativeStream"/> is too short</exception>
+		/// <exception cref="ArgumentException">If the <see cref="ReadStream"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
 		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking (when <c><see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or reading</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
-		int Read(long offset, Span<byte> target)
+		/// <exception cref="NotSupportedException">If the <see cref="ReadStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or reading</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="ReadStream"/> is already closed</exception>
+		/// <remarks>When overridden by derived classes, <see cref="OnReadFinish"/> shall be invoked at last.</remarks>
+		public virtual int Read(long offset, Span<byte> target)
 		{
-			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-			if (target.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(target), Parameter.MustPositive);
-			if (offset + target.Length > this.NativeStream.Length)
-				throw new ArgumentException(Parameter.WrongSize);
+			try
+			{
+				if (offset < 0)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+				if (target.Length <= 0)
+					throw new ArgumentOutOfRangeException(nameof(target), Parameter.MustPositive);
+				if (offset + target.Length > this.ReadStream.Length)
+					throw new ArgumentException(Parameter.WrongSize);
 
-			if (offset != this.NativeStream.Position)
-				this.NativeStream.Position = offset;
-			return this.NativeStream.Read(target);
+				if (offset != this.ReadStream.Position)
+					this.ReadStream.Position = offset;
+				return this.ReadStream.Read(target);
+			}
+			finally
+			{
+				this.OnReadFinish();
+			}
 		}
 
 		/// <summary>
-		/// Resize this <see cref="IStreamPointer"/> to a new length in bytes.<br/>
+		/// Resize this <see cref="AbstractStreamPointer"/> to a new length in bytes.<br/>
 		/// If <paramref name="newLengthInBytes"/> is smaller than <see cref="IPointer.LengthInBytes"/>, the bytes after <paramref name="newLengthInBytes"/> will be discarded; otherwise, uninitialized (<paramref name="newLengthInBytes"/> - <see cref="IPointer.LengthInBytes"/>) bytes will be added to the end.
 		/// </summary>
 		/// <param name="newLengthInBytes">The new length in bytes</param>
 		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="NativeStream"/> does not support seeking or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="NativeStream"/> is already closed</exception>
-		void Resize(ulong newLengthInBytes)
+		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
+		/// <remarks>When overridden by derived classes, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
+		public virtual void Resize(ulong newLengthInBytes)
 		{
-			this.NativeStream.SetLength((long)newLengthInBytes);
-			this.NativeStream.Flush();
+			try
+			{
+				this.WriteStream.SetLength((long)newLengthInBytes);
+				this.WriteStream.Flush();
+			}
+			finally
+			{
+				this.OnWriteFinish();
+			}
 		}
 
 		/// <summary>
-		/// Copy to another <see cref="IStreamPointer"/> <paramref name="other"/> with given offsets and length
+		/// Copy to another <see cref="AbstractStreamPointer"/> <paramref name="other"/> with given offsets and length
 		/// </summary>
-		/// <param name="offsetThis">The offset in bytes to start reading of this <see cref="IStreamPointer"/></param>
-		/// <param name="other">The other <see cref="IStreamPointer"/> to write to</param>
-		/// <param name="offsetOther">The offset in bytes to start writing of <paramref name="other"/> <see cref="IStreamPointer"/></param>
+		/// <param name="offsetThis">The offset in bytes to start reading of this <see cref="AbstractStreamPointer"/></param>
+		/// <param name="other">The other <see cref="AbstractStreamPointer"/> to write to</param>
+		/// <param name="offsetOther">The offset in bytes to start writing of <paramref name="other"/> <see cref="AbstractStreamPointer"/></param>
 		/// <param name="length">The length in bytes to read/write</param>
-		/// <exception cref="ArgumentException">If either <see cref="NativeStream"/> is too short</exception>
+		/// <exception cref="ArgumentException">If either <see cref="ReadStream"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetThis"/> or <paramref name="offsetOther"/> or <paramref name="length"/> exceeds the boundaries</exception>
 		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If either <see cref="NativeStream"/> does not support seeking (when <c>this.<see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetThis"/></c> or <c><paramref name="other"/>.<see cref="NativeStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetOther"/></c>) or reading</exception>
-		/// <exception cref="ObjectDisposedException">If either <see cref="NativeStream"/> is already closed</exception>
-		void CopyTo(long offsetThis, IStreamPointer other, long offsetOther, long length)
+		/// <exception cref="NotSupportedException">If <see cref="ReadStream"/> of this or <see cref="WriteStream"/> of <paramref name="other"/> does not support seeking (when <c>this.<see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetThis"/></c> or <c><paramref name="other"/>.<see cref="WriteStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetOther"/></c>) or reading</exception>
+		/// <exception cref="ObjectDisposedException">If <see cref="ReadStream"/> of this or <see cref="WriteStream"/> is already closed</exception>
+		/// <remarks>When overridden by derived classes, <see cref="OnReadFinish"/> of this and <see cref="OnWriteFinish"/> of <paramref name="other"/> shall be invoked at last.</remarks>
+		public virtual void CopyTo(long offsetThis, AbstractStreamPointer other, long offsetOther, long length)
 		{
-			if (offsetThis < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetThis), Parameter.CannotNegative);
-			if (offsetOther < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.CannotNegative);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-			if (offsetThis + length> this.NativeStream.Length)
-				throw new ArgumentException(Parameter.WrongSize);
-			if (offsetOther >= this.NativeStream.Length)
-				throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.InvalidValue);
-
-			// positioning
-			if (offsetThis != this.NativeStream.Position)
-				this.NativeStream.Position = offsetThis;
-			if (offsetOther != other.NativeStream.Position)
-				other.NativeStream.Position = offsetOther;
-			// writing
-			int BufferSize = BufferSizeInBytes<byte>();
-			byte[] buffer = new byte[Math.Min(BufferSize, length)];
-			while (length > 0)
+			try
 			{
-				int read = this.NativeStream.Read(buffer, 0, buffer.Length);
-				other.NativeStream.Write(buffer, 0, read);
-				length -= read;
+				if (offsetThis < 0)
+					throw new ArgumentOutOfRangeException(nameof(offsetThis), Parameter.CannotNegative);
+				if (offsetOther < 0)
+					throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.CannotNegative);
+				if (length <= 0)
+					throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+				if (offsetThis + length > this.ReadStream.Length)
+					throw new ArgumentException(Parameter.WrongSize);
+				if (offsetOther >= other.WriteStream.Length)
+					throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.InvalidValue);
+
+				// positioning
+				if (offsetThis != this.ReadStream.Position)
+					this.ReadStream.Position = offsetThis;
+				if (offsetOther != other.WriteStream.Position)
+					other.WriteStream.Position = offsetOther;
+				// writing
+				int BufferSize = BufferSizeInBytes<byte>();
+				byte[] buffer = new byte[Math.Min(BufferSize, length)];
+				while (length > 0)
+				{
+					int read = this.ReadStream.Read(buffer, 0, buffer.Length);
+					other.WriteStream.Write(buffer, 0, read);
+					length -= read;
+				}
+				other.WriteStream.Flush();
 			}
-			other.NativeStream.Flush();
+			finally
+			{
+				this.OnReadFinish(); other.OnWriteFinish();
+			}
 		}
 		#endregion
 	}
