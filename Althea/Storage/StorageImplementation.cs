@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Collections.Generic;
 
 using Althea.Linq;
@@ -26,13 +27,21 @@ namespace Althea.Storage
 		/// </summary>
 		File = 1,
 		/// <summary>
-		/// Specifies that the URI is accessed through the File Transfer Protocol (FTP).
-		/// </summary>
-		FTP = 2,
-		/// <summary>
 		/// Specifies that the URI is accessed through the TCP/IP directly.
 		/// </summary>
-		TCP = 3,
+		TCP = 2,
+		/// <summary>
+		/// Specifies that the URI is accessed through the File Transfer Protocol (FTP).
+		/// </summary>
+		FTP = 3,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Hypertext Transfer Protocol (HTTP).
+		/// </summary>
+		HTTP = 4,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Secure Hypertext Transfer Protocol (HTTPS).
+		/// </summary>
+		HTTPS = 5,
 	}
 
 	/// <summary>
@@ -40,23 +49,69 @@ namespace Althea.Storage
 	/// </summary>
 	public static class UriSchemeExtension
 	{
+		private static readonly Dictionary<UriScheme, string> static_names = new Dictionary<UriScheme, string>();
+
+		private static readonly Dictionary<string, UriScheme> static_names_inv = new Dictionary<string, UriScheme>();
+
+		/// <summary>
+		/// Set the name (string representation) of given <see cref="UriScheme"/>
+		/// </summary>
+		/// <param name="scheme">The given <see cref="UriScheme"/> whose name will be set</param>
+		/// <param name="name">The name (string representation) of given <paramref name="scheme"/></param>
+		/// <returns>If <paramref name="scheme"/> is a pre-defined one,
+		/// or <paramref name="name"/> is null or contains space or non-ASCII characters,
+		/// or <paramref name="name"/> already exists,
+		/// this method returns false;
+		/// otherwise, the name will be set and this method returns true</returns>
+		public static bool SetName(this UriScheme scheme, string name)
+		{
+			if (scheme >= UriScheme.Unknown && scheme <= UriScheme.HTTPS)
+				return false;
+			if (name is null || name.Contains(' ') || Encoding.UTF8.GetByteCount(name) != name.Length) // check ASCII
+				return false;
+			if (static_names_inv.ContainsKey(name))
+				return false;
+			static_names[scheme] = name;
+			static_names_inv[name] = scheme;
+			return true;
+		}
+
+		/// <summary>
+		/// Get the name (string representation) of given <see cref="UriScheme"/> (can be the ones preset by <see cref="SetName(UriScheme, string)"/>
+		/// </summary>
+		/// <param name="scheme">The given <see cref="UriScheme"/> whose name will be get</param>
+		/// <returns>The name (string representation) of <paramref name="scheme"/> or the underlying number if the name cannot be obtained</returns>
+		public static string GetName(this UriScheme scheme)
+		{
+			if (static_names.ContainsKey(scheme))
+				return static_names[scheme];
+			else
+				return scheme.ToString();
+		}
+
 		/// <summary>
 		/// Get the <see cref="UriScheme"/> from a <see cref="Uri"/>
 		/// </summary>
 		/// <param name="uri">the absolute <see cref="Uri"/></param>
-		/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or null if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
+		/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or <see cref="UriScheme.Unknown"/> if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> is not an absolute URI</exception>
-		public static UriScheme? GetScheme(this Uri uri)
+		public static UriScheme GetScheme(this Uri uri)
 		{
 			if (!uri.IsAbsoluteUri)
 				throw new ArgumentOutOfRangeException(nameof(uri));
 			if (uri.Scheme == Uri.UriSchemeFile)
 				return UriScheme.File;
+			if (uri.Scheme == @"tcp" || uri.Scheme == Uri.UriSchemeNetTcp)
+				return UriScheme.TCP;
 			if (uri.Scheme == Uri.UriSchemeFtp)
 				return UriScheme.FTP;
-			if (uri.Scheme == @"tcp")
-				return UriScheme.TCP;
-			return null;
+			if (uri.Scheme == Uri.UriSchemeHttp)
+				return UriScheme.HTTP;
+			if (uri.Scheme == Uri.UriSchemeHttps)
+				return UriScheme.HTTPS;
+			if (static_names_inv.ContainsKey(uri.Scheme))
+				return static_names_inv[uri.Scheme];
+			return UriScheme.Unknown;
 		}
 	}
 	#endregion

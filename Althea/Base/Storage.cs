@@ -253,7 +253,7 @@ namespace Althea
 			};
 			if (this.Location == LocationType.Uri)
 			{
-				str += $"(scheme={(Storage.UriScheme)this.LocationDetail})";
+				str += $"(scheme={Storage.UriSchemeExtension.GetName((Storage.UriScheme)this.LocationDetail)})";
 			}
 			else if (this.Location < LocationType.OtherRam_0)
 			{

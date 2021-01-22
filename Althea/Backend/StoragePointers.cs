@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
+using System.Net.Sockets;
 
 using Althea.Storage;
 using Althea.Resources;
@@ -114,7 +114,7 @@ namespace Althea.Backend.Storage
 	/// <summary>
 	/// An implementation of <see cref="AbstractStreamPointer"/> for FTP. This is implemented as a class to prevent boxing and unboxing.
 	/// </summary>
-	public class FTPStreamPointer : AbstractStreamPointer
+	public class TcpStreamPointer : AbstractStreamPointer
 	{
 		#region URI
 		private readonly Uri uri;
@@ -137,13 +137,14 @@ namespace Althea.Backend.Storage
 
 		private Stream readStream = null;
 
-		private static FtpWebResponse GetResponse(FtpWebRequest request)
+		private static FtpWebResponse GetResponse(FtpWebRequest request, bool @throw = true)
 		{
 			var response = (FtpWebResponse)request.GetResponse();
 			if (response.StatusCode != FtpStatusCode.CommandOK && response.StatusCode != FtpStatusCode.FileActionOK)
 			{
 				response.Close();
-				throw new WebException(response.StatusDescription);
+				if (@throw)
+					throw new WebException(response.StatusDescription);
 			}
 			return response;
 		}
@@ -184,17 +185,17 @@ namespace Althea.Backend.Storage
 		public override bool CanRead => true;
 
 		/// <summary>
-		/// This <see cref="FTPStreamPointer"/> cannot be written since FTP does not support that.
+		/// This <see cref="TcpStreamPointer"/> cannot be written since FTP does not support that.
 		/// </summary>
 		public override bool CanWrite => false;
 
 		/// <summary>
-		/// This <see cref="FTPStreamPointer"/> cannot be read with offset since FTP does not support that.
+		/// This <see cref="TcpStreamPointer"/> cannot be read with offset since FTP does not support that.
 		/// </summary>
 		public override bool CanReadOffset => false;
 
 		/// <summary>
-		/// This <see cref="FTPStreamPointer"/> cannot be written with offset since FTP does not support that.
+		/// This <see cref="TcpStreamPointer"/> cannot be written with offset since FTP does not support that.
 		/// </summary>
 		public override bool CanWriteOffset => false;
 
@@ -221,46 +222,24 @@ namespace Althea.Backend.Storage
 
 		#region create
 		/// <summary>
-		/// Create a new <see cref="FTPStreamPointer"/> with given <see cref="Uri"/> of file
+		/// Create a new <see cref="TcpStreamPointer"/> with given <see cref="Uri"/> of file
 		/// </summary>
-		/// <param name="uri">The given <see cref="Uri"/> of file scheme</param>
+		/// <param name="uri">The given <see cref="Uri"/> of TCP scheme</param>
 		/// <param name="length">The initial length in bytes</param>
-		/// <param name="credential"><see cref="NetworkCredential"/> used to login the FTP server, default null</param>
-		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not FTP or the stream cannot be created by given <paramref name="uri"/></exception>
+		/// <param name="credential"><see cref="NetworkCredential"/> used to login the TCP server, default null</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="uri"/> is null</exception>
+		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not TCP or the stream cannot be created by given <paramref name="uri"/></exception>
 		/// <exception cref="WebException">If an web error occurred</exception>
-		public FTPStreamPointer(Uri uri, ulong length, NetworkCredential credential = null)
+		public TcpStreamPointer(Uri uri, ulong length, NetworkCredential credential = null)
 		{
-			if (uri.Scheme != Uri.UriSchemeFtp)
+			if (uri is null)
+				throw new ArgumentNullException(nameof(uri));
+			if (uri.GetScheme() != UriScheme.TCP)
 				throw new NotSupportedException(Support.Location);
 			// check
-			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(uri.AbsoluteUri);
-			request.Method = WebRequestMethods.Ftp.MakeDirectory;
-			if (credential is not null)
-				request.Credentials = credential;
-			GetResponse(request).Close();
-			
+			TcpClient client = new TcpClient(uri.Host, uri.Port);
+			client.GetStream();
 		}
 		#endregion
 	}
 }
-
-/*
-				Stream CreateStream()
-				{
-					string path = uri.AbsolutePath;
-					string folder = Path.GetDirectoryName(path) ?? "";
-					// create given folder
-					FtpWebRequest request = (FtpWebRequest)WebRequest.Create(uri.AbsoluteUri);
-					request.Method = WebRequestMethods.Ftp.MakeDirectory;
-					if (credential is not null)
-						request.Credentials = credential;
-					using var response = (FtpWebResponse)request.GetResponse();
-					if (response.StatusCode != FtpStatusCode.CommandOK)
-						throw new WebException(response.StatusDescription);
-					WebClient webClient = new WebClient
-					{
-						BaseAddress = uri.Host
-					};
-				}
-				this.initialization = new Task<Stream>(CreateStream);
- */

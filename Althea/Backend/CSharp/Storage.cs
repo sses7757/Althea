@@ -15,7 +15,7 @@ using Althea.Backend.Storage;
 namespace Althea.Backend.CSharp.Storage
 {
 	/// <summary>
-	/// The C# back-end of <see cref="AbstractApi"/> that support storage locations of CPU and file and (possible) FTP.
+	/// The C# back-end of <see cref="AbstractApi"/> that support storage locations of CPU and file and (possible) TCP.
 	/// </summary>
 	public class StorageApi : AbstractApi
 	{
@@ -40,26 +40,26 @@ namespace Althea.Backend.CSharp.Storage
 		public string TempFileFolder { get; set; } = Path.GetTempPath();
 
 		/// <summary>
-		/// Get or set the host and folder to put the temporary files in FTP, default null means that this <see cref="StorageApi"/> does not support FTP storage location
+		/// Get or set the host and folder to put the temporary files using TCP, default null means that this <see cref="StorageApi"/> does not support TCP storage location
 		/// </summary>
 		/// <remarks>If you set an invalid value, there may be exception thrown</remarks>
-		public Uri TempFTPFolder { get; set; } = null;
+		public Uri TempTcpFolder { get; set; } = null;
 		#endregion
 
 		#region support
 		private static readonly StorageLocation CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
 		private static readonly StorageLocation FileAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
-		private static readonly StorageLocation FTPAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
+		private static readonly StorageLocation TCPAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.TCP);
 
-		private static readonly IReadOnlyList<CombinationOfLocations> NoFTPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone),
-			WithFTPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone, FTPAlone);
+		private static readonly IReadOnlyList<CombinationOfLocations> NoTCPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone),
+			WithTCPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone, TCPAlone);
 
-		private static readonly IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> NoFTPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone),
-			WithFTPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone, FTPAlone);
+		private static readonly IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> NoTCPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone),
+			WithTCPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone, TCPAlone);
 
-		public override IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations => this.TempFTPFolder is null ? NoFTPUnary : WithFTPUnary;
+		public override IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations => this.TempTcpFolder is null ? NoTCPUnary : WithTCPUnary;
 
-		public override IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations => this.TempFTPFolder is null ? NoFTPBinary : WithFTPBinary;
+		public override IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations => this.TempTcpFolder is null ? NoTCPBinary : WithTCPBinary;
 
 		public override IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer => this.SupportedUnaryLocations;
 		#endregion
@@ -80,7 +80,7 @@ namespace Althea.Backend.CSharp.Storage
 		#endregion
 
 		#region private methods
-		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempFTPFolder is not null && location == FTPAlone);
+		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempTcpFolder is not null && location == TCPAlone);
 		private long GetPointerOffset<T>(PointerSegment pointer, out IMemoryPointer memoryPointer, out AbstractStreamPointer streamPointer, bool @throw = true) where 
 			T : unmanaged
 		{
@@ -97,11 +97,11 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				memoryPointer = mp;
 			}
-			else if (pointer.Location == FileAlone && pointer.Pointer is AbstractStreamPointer sp1)
+			else if (pointer.Location == FileAlone && pointer.Pointer is AbstractStreamPointer { CanRead: true } sp1)
 			{
 				streamPointer = sp1;
 			}
-			else if (this.TempFTPFolder is not null && pointer.Location == FTPAlone && pointer.Pointer is AbstractStreamPointer sp2)
+			else if (this.TempTcpFolder is not null && pointer.Location == TCPAlone && pointer.Pointer is AbstractStreamPointer sp2)
 			{
 				streamPointer = sp2;
 			}
@@ -133,15 +133,14 @@ namespace Althea.Backend.CSharp.Storage
 				if (location == FileAlone)
 				{
 					string file = Path.Combine(this.TempFileFolder, Guid.NewGuid().ToString());
-					Uri uri = new Uri(Uri.UriSchemeFile + ":///" + file);
+					Uri uri = new Uri(Uri.UriSchemeFile + Uri.SchemeDelimiter + file);
 					pointer = new FileStreamPointer(uri, length);
 				}
-				else // FTP
+				else // TCP
 				{
-					var builder = new UriBuilder(this.TempFTPFolder);
+					var builder = new UriBuilder(this.TempTcpFolder);
 					builder.Path = Path.Combine(builder.Path, Guid.NewGuid().ToString());
-					Uri uri = builder.Uri;
-					pointer = new FTPStreamPointer(uri, length);
+					pointer = new TcpStreamPointer(builder.Uri, length);
 				}
 			}
 			return new PointerSegment(location, pointer);
