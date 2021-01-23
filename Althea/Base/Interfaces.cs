@@ -64,7 +64,7 @@ namespace Althea
 		/// Get the string representation of this object by printing <see cref="StringMain"/>, <see cref="StringProperties"/>
 		/// </summary>
 		/// <returns>The string representation of this object</returns>
-		string ToString() => Combine(this.StringMain, this.StringProperties);
+		string? ToString() => Combine(this.StringMain, this.StringProperties);
 
 		/// <summary>
 		/// Get the string representation of this object by printing not only <see cref="StringMain"/> and <see cref="StringProperties"/> but also <paramref name="otherProperties"/>

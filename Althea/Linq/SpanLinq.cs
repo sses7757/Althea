@@ -816,6 +816,10 @@ namespace Althea.Linq
 		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
 		public unsafe static ReadOnlySpan<TTo> UncheckAs<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
 		{
+			if (sizeof(TTo) == sizeof(TFrom))
+			{
+				return new ReadOnlySpan<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), span.Length);
+			}
 			long size = (long)span.Length * sizeof(TFrom);
 			if (size % sizeof(TTo) != 0)
 				throw new ArgumentException(Other.CannotDivide);
@@ -832,6 +836,10 @@ namespace Althea.Linq
 		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
 		public unsafe static Span<TTo> UncheckAs<TFrom, TTo>(this Span<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
 		{
+			if (sizeof(TTo) == sizeof(TFrom))
+			{
+				return new Span<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), span.Length);
+			}
 			long size = (long)span.Length * sizeof(TFrom);
 			if (size % sizeof(TTo) != 0)
 				throw new ArgumentException(Other.CannotDivide);

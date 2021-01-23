@@ -18,7 +18,7 @@ namespace Althea.Storage
 		/// Get the current using <see cref="AbstractApi"/>.
 		/// </summary>
 		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
-		public static AbstractApi Current => RecentAPIs.First?.Value;
+		public static AbstractApi? Current => RecentAPIs.First?.Value;
 
 		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
 
@@ -51,7 +51,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
 		/// </summary>
-		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => null;
+		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
 
 		// Ignore Spelling: N-ary
 		/// <summary>
@@ -67,7 +67,7 @@ namespace Althea.Storage
 				1 => this.SupportedUnaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
 				2 => this.SupportedBinaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
 				3 => this.SupportedTernaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
-				> 3 => null, // there are no N-ary operations
+				> 3 => Array.Empty<IImmutableSet<CombinationOfLocations>>(), // there are no N-ary operations
 				_ => throw new ArgumentOutOfRangeException(nameof(N)),
 			};
 		}

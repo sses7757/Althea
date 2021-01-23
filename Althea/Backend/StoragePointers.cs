@@ -2,7 +2,9 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Collections.Generic;
 
+using Althea.Linq;
 using Althea.Storage;
 using Althea.Resources;
 
@@ -36,47 +38,87 @@ namespace Althea.Backend.Storage
 		}
 	}
 
-
 	/// <summary>
 	/// An implementation of <see cref="IStreamPointer"/> for files. This is implemented as a class to prevent boxing and unboxing.
 	/// </summary>
-	public class FileStreamPointer : IStreamPointer
+	public class StreamPointer : IStreamPointer
 	{
-		private readonly FileStream stream;
-
-		private readonly Uri uri;
-
 		/// <summary>
-		/// Get the raw stream of this <see cref="FileStreamPointer"/> used for reading as a <see cref="Stream"/>
+		/// The actual <see cref="Althea.Storage.Stream"/> field
 		/// </summary>
-		protected override Stream ReadStream => this.stream;
+		protected readonly Althea.Storage.Stream stream;
 
 		/// <summary>
-		/// Get the raw stream of this <see cref="FileStreamPointer"/> used for writing as a <see cref="Stream"/>
+		/// Get the native stream this <see cref="StreamPointer"/> as a <see cref="Althea.Storage.Stream"/>.
 		/// </summary>
-		protected override Stream WriteStream => this.stream;
+		public Althea.Storage.Stream NativeStream => this.stream;
 
 		/// <summary>
-		/// Get the raw URI of this <see cref="FileStreamPointer"/> as a <see cref="Uri"/>
+		/// Create this <see cref="StreamPointer"/> by given <see cref="Althea.Storage.Stream"/>
 		/// </summary>
-		public Uri OriginalUri => this.uri;
+		/// <param name="stream">The given <see cref="Althea.Storage.Stream"/></param>
+		public StreamPointer(Althea.Storage.Stream stream) => this.stream = stream;
 
 		/// <summary>
-		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
+		/// When implemented by a derived class, dispose unmanaged and managed resources held by this <see cref="StreamPointer"/>
 		/// </summary>
-		protected override string Description => this.OriginalUri.ToString();
+		public virtual void Dispose()
+		{
+			this.stream.Dispose();
+			GC.SuppressFinalize(this);
+		}
+
+		string IMainPropertyFormat.StringMain => this.stream.ToString();
+	}
+
+
+	/// <summary>
+	/// An implementation of <see cref="Althea.Storage.Stream"/> for files.
+	/// </summary>
+	public sealed class FileStream : Althea.Storage.Stream
+	{
+		#region basic
+		private readonly System.IO.FileStream stream;
 
 		/// <summary>
-		/// Create a new <see cref="FileStreamPointer"/> with given <see cref="Uri"/> of file
+		/// Get or set the position (offset) in bytes of this <see cref="FileStream"/>
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Althea.Storage.Stream.Length"/></exception>
+		public override ulong Position {
+			get => (ulong)this.stream.Position;
+			set => this.stream.Seek((long)value, SeekOrigin.Begin);
+		}
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not, always return true.
+		/// </summary>
+		public override bool CanTransferWithManaged => true;
+
+		private static readonly StorageLocation supportedLocation = new StorageLocation(LocationType.CpuRam, 0);
+
+		/// <summary>
+		/// <b>Statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
+		/// </summary>
+		public override IReadOnlyList<StorageLocation> SupportedTransfers { get; } = new[] { supportedLocation };
+
+		/// <summary>
+		/// <b>Statically</b> get a <see cref="bool"/> indicating whether data transfer with given <paramref name="location"/> is supported by this <see cref="Stream"/>. The default implementation utilizes the <see cref="SupportedTransfers"/>.
+		/// </summary>
+		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
+		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
+		public override bool IsSupported(StorageLocation location) => location == supportedLocation;
+
+		/// <summary>
+		/// Create a new <see cref="FileStream"/> with given <see cref="Uri"/> of file
 		/// </summary>
 		/// <param name="uri">The given <see cref="Uri"/> of file scheme</param>
 		/// <param name="length">The initial length in bytes</param>
 		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not file or the stream cannot be created by given <paramref name="uri"/></exception>
 		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="UnauthorizedAccessException">If the give path in <paramref name="uri"/> cannot be created or overwritten</exception>
-		public FileStreamPointer(Uri uri, ulong length)
+		public FileStream(Uri uri, ulong length) : base(length)
 		{
-			if (uri.Scheme != Uri.UriSchemeFile)
+			if (uri.GetScheme() != UriScheme.File)
 				throw new NotSupportedException(Support.Location);
 			// check
 			string path = uri.LocalPath;
@@ -94,211 +136,357 @@ namespace Althea.Backend.Storage
 				Directory.CreateDirectory(folder);
 			}
 			// create
-			this.stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
-			this.uri = uri;
+			this.stream = new System.IO.FileStream(path, FileMode.Create, FileAccess.ReadWrite);
 			this.stream.SetLength((long)length);
 			this.stream.Flush();
 		}
 
-
-
-		#region new default implementations
 		/// <summary>
-		/// Write values to this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// Actually release the unmanaged (and possibly managed) resources held by this class
 		/// </summary>
-		/// <param name="offset">The offset in bytes to start writing</param>
-		/// <param name="value">The values to write as a <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
-		/// <remarks>When overridden by a derived class, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
-		public virtual void Write(long offset, ReadOnlySpan<byte> value)
-		{
-			try
-			{
-				if (offset < 0)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-				if (value.Length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(value), Parameter.MustPositive);
-				if (offset >= this.WriteStream.Length)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.InvalidValue);
+		/// <param name="disposeManaged">Dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged) => this.stream.Dispose();
 
-				if (offset != this.WriteStream.Position)
-					this.WriteStream.Position = offset;
-				this.WriteStream.Write(value);
-				this.WriteStream.Flush();
-			}
-			finally
-			{
-				this.OnWriteFinish();
-			}
+		/// <summary>
+		/// Get the string representation of this <see cref="Stream"/>.
+		/// </summary>
+		/// <returns>The string representation of this <see cref="Stream"/></returns>
+		public override string ToString() => this.stream.Name;
+		#endregion
+
+		#region implementations
+		/// <summary>
+		/// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+		/// </summary>
+		/// <exception cref="IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void Flush()
+		{
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			this.stream.Flush();
 		}
 
 		/// <summary>
-		/// Read values from this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// Read data from this <see cref="Stream"/> started from <see cref="Position"/> byte and write them to the given <see cref="PointerSegment"/> <paramref name="memory"/>.
 		/// </summary>
-		/// <param name="offset">The offset in bytes to start reading</param>
-		/// <param name="target">The target <see cref="Span{T}"/> of <see cref="byte"/> to overwrite the read values</param>
-		/// <returns>The actual number of values read</returns>
-		/// <exception cref="ArgumentException">If the <see cref="ReadStream"/> is too short</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="ReadStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or reading</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="ReadStream"/> is already closed</exception>
-		/// <remarks>When overridden by a derived class, <see cref="OnReadFinish"/> shall be invoked at last.</remarks>
-		public virtual int Read(long offset, Span<byte> target)
+		/// <param name="memory">The <see cref="PointerSegment"/> to write to</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
+		/// <exception cref="IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void ToMemory(PointerSegment memory)
 		{
-			try
-			{
-				if (offset < 0)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-				if (target.Length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(target), Parameter.MustPositive);
-				if (offset + target.Length > this.ReadStream.Length)
-					throw new ArgumentException(Parameter.WrongSize);
+			if (!memory.IsValid())
+				throw new ArgumentNullException(nameof(memory));
+			if (this.IsSupported(memory.Location))
+				throw new NotSupportedException(Support.Location);
+			if (memory.Pointer is not IMemoryPointer mp)
+				throw new NotSupportedException(Support.Location);
+			// other checks in ToManged
+			this.ToManged(mp.AsSpan<byte>(memory));
+		}
 
-				if (offset != this.ReadStream.Position)
-					this.ReadStream.Position = offset;
-				return this.ReadStream.Read(target);
-			}
-			finally
-			{
-				this.OnReadFinish();
-			}
+		/// <summary>
+		/// Read data from this <see cref="Stream"/> started from <see cref="Position"/> and write them to the given <paramref name="managed"/> memory as a<see cref="Span{T}"/>.
+		/// </summary>
+		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to write into</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
+		/// <exception cref="IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void ToManged<T>(Span<T> managed)
+		{
+			////if (!this.CanTransferWithManaged)
+			////	throw new NotSupportedException(Support.Location);
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if ((ulong)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(managed));
+
+			this.stream.Read(managed.UncheckAs<T, byte>());
+		}
+
+		/// <summary>
+		/// Read data from the given <see cref="PointerSegment"/> <paramref name="memory"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/> byte.
+		/// </summary>
+		/// <param name="memory">The <see cref="PointerSegment"/> to read from</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
+		/// <exception cref="IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void FromMemory(PointerSegment memory)
+		{
+			if (!memory.IsValid())
+				throw new ArgumentNullException(nameof(memory));
+			if (this.IsSupported(memory.Location))
+				throw new NotSupportedException(Support.Location);
+			if (memory.Pointer is not IMemoryPointer mp)
+				throw new NotSupportedException(Support.Location);
+			// other checks in FromManged
+			this.FromManged(mp.AsSpan<byte>(memory));
+		}
+
+		/// <summary>
+		/// Read data from the given <paramref name="managed"/> memory as a<see cref="Span{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
+		/// </summary>
+		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to read from</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
+		/// <exception cref="IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void FromManged<T>(Span<T> managed)
+		{
+			////if (!this.CanTransferWithManaged)
+			////	throw new NotSupportedException(Support.Location);
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if ((ulong)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(managed));
+
+			this.stream.Write(managed.UncheckAs<T, byte>());
 		}
 		#endregion
 	}
 
-
 	/// <summary>
-	/// An implementation of <see cref="IStreamPointer"/> for FTP. This is implemented as a class to prevent boxing and unboxing.
+	/// An implementation of <see cref="Althea.Storage.Stream"/> for TCP links.
 	/// </summary>
-	public class TcpStreamPointer : IStreamPointer
+	public sealed class TcpStream : Althea.Storage.Stream
 	{
-		#region URI
+		#region delegates
+		/// <summary>
+		/// The delegate used to generate information needed to initialize a remote file indicated by <paramref name="remotePath"/>.
+		/// </summary>
+		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
+		/// <param name="length">The length in bytes to initialize</param>
+		/// <returns>The information needed to initialize file indicated by <paramref name="remotePath"/> as a <see cref="byte"/> array.</returns>
+		public delegate byte[] InitializationSend(string remotePath, ulong length);
+
+		/// <summary>
+		/// The delegate used to parse the received <paramref name="data"/> from the response of initialization procedure
+		/// </summary>
+		/// <param name="data">The response of initialization procedure as a <see cref="byte"/> array</param>
+		/// <param name="errorMessage">The possible error message of the initialization procedure. May be null if succeeded.</param>
+		/// <returns>Whether the initialization procedure succeeded or not</returns>
+		public delegate bool InitializationAcknowledge(byte[] data, out string? errorMessage);
+
+		/// <summary>
+		/// The delegate used to generate information needed to send before writing to a remote file indicated by <paramref name="remotePath"/> (the actual writing is done by directly sending bytes needed to be written).
+		/// </summary>
+		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
+		/// <param name="offset">The start position in bytes to begin writing</param>
+		/// <param name="length">The length in bytes to write</param>
+		/// <returns>The information needed to send before the real writing procedure as a <see cref="byte"/> array.</returns>
+		public delegate byte[] BeforeWriteSend(string remotePath, ulong offset, ulong length);
+
+		/// <summary>
+		/// The delegate used to parse the received <paramref name="data"/> from the response of <see cref="BeforeWriteSend"/>
+		/// </summary>
+		/// <param name="data">The response of <see cref="BeforeWriteSend"/> as a <see cref="byte"/> array</param>
+		/// <param name="errorMessage">The possible error message of the initialization procedure. May be null if succeeded.</param>
+		/// <returns>Whether the <see cref="BeforeWriteSend"/> succeeded or not</returns>
+		public delegate bool BeforeWriteAcknowledge(byte[] data, out string? errorMessage);
+
+		/// <summary>
+		/// The delegate used to parse the received <paramref name="data"/> from the response of the actual writing procedure
+		/// </summary>
+		/// <param name="data">The response of the actual writing procedure as a <see cref="byte"/> array</param>
+		/// <param name="errorMessage">The possible error message of the initialization procedure. May be null if succeeded.</param>
+		/// <returns>Whether the actual writing procedure succeeded or not</returns>
+		public delegate bool AfterWriteAcknowledge(byte[] data, out string? errorMessage);
+
+		/// <summary>
+		/// The delegate used to generate information needed to send before reading from a remote file indicated by <paramref name="remotePath"/>.
+		/// </summary>
+		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
+		/// <param name="offset">The start position in bytes to begin writing</param>
+		/// <param name="length">The length in bytes to write</param>
+		/// <returns>The information needed to send before the real writing procedure as a <see cref="byte"/> array.</returns>
+		public delegate byte[] BeforeReadSend(string remotePath, ulong offset, ulong length);
+
+		/// <summary>
+		/// The delegate used to parse the received <paramref name="data"/> from the response of <see cref="BeforeReadSend"/>
+		/// </summary>
+		/// <param name="data">The response of <see cref="BeforeReadSend"/> as a <see cref="byte"/> array</param>
+		/// <param name="errorMessage">The possible error message of the initialization procedure. May be null if succeeded.</param>
+		/// <returns>Whether the <see cref="BeforeReadSend"/> succeeded or not</returns>
+		/// <remarks>The actual data read is the response of resending <paramref name="data"/> to the remote server</remarks>
+		public delegate bool BeforeReadAcknowledge(byte[] data, out string? errorMessage);
+		#endregion
+
+		#region basic
+		private readonly NetworkStream stream;
+
+		private readonly TcpClient client;
+
 		private readonly Uri uri;
 
-		/// <summary>
-		/// Get the raw URI of this <see cref="FileStreamPointer"/> as a <see cref="Uri"/>
-		/// </summary>
-		public Uri OriginalUri => this.uri;
 
 		/// <summary>
-		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
+		/// Get or set the position (offset) in bytes of this <see cref="TcpStream"/>
 		/// </summary>
-		protected override string Description => this.OriginalUri.ToString();
-
-		private readonly NetworkCredential credential;
-		#endregion
-
-		#region FTP web
-		private FtpWebResponse read = null;
-
-		private Stream readStream = null;
-
-		private static FtpWebResponse GetResponse(FtpWebRequest request, bool @throw = true)
-		{
-			var response = (FtpWebResponse)request.GetResponse();
-			if (response.StatusCode != FtpStatusCode.CommandOK && response.StatusCode != FtpStatusCode.FileActionOK)
-			{
-				response.Close();
-				if (@throw)
-					throw new WebException(response.StatusDescription);
-			}
-			return response;
-		}
+		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Althea.Storage.Stream.Length"/></exception>
+		public override ulong Position { get; set; }
 
 		/// <summary>
-		/// Get the raw stream of this <see cref="FileStreamPointer"/> used for reading as a <see cref="Stream"/>
+		/// Get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not, always return true.
 		/// </summary>
-		protected override Stream ReadStream {
-			get {
-				if (this.readStream is not null)
-				{
-					return this.readStream;
-				}
-				try
-				{
-					FtpWebRequest request = (FtpWebRequest)WebRequest.Create(uri.AbsoluteUri);
-					request.Method = WebRequestMethods.Ftp.DownloadFile;
-					this.read = GetResponse(request);
-					this.readStream = this.read.GetResponseStream();
-					return this.readStream;
-				}
-				catch (Exception)
-				{
-					this.OnReadFinish();
-					throw;
-				}
-			}
-		}
+		public override bool CanTransferWithManaged => true;
+
+		private static readonly StorageLocation supportedLocation = new StorageLocation(LocationType.CpuRam, 0);
 
 		/// <summary>
-		/// Get the raw stream of this <see cref="FileStreamPointer"/> used for writing as a <see cref="Stream"/>. Always returns null since FTP does not support overwritten part of the file.
+		/// <b>Statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
 		/// </summary>
-		protected override Stream WriteStream => null;
+		public override IReadOnlyList<StorageLocation> SupportedTransfers { get; } = new[] { supportedLocation };
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be read or not
+		/// <b>Statically</b> get a <see cref="bool"/> indicating whether data transfer with given <paramref name="location"/> is supported by this <see cref="Stream"/>. The default implementation utilizes the <see cref="SupportedTransfers"/>.
 		/// </summary>
-		public override bool CanRead => true;
+		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
+		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
+		public override bool IsSupported(StorageLocation location) => location == supportedLocation;
 
 		/// <summary>
-		/// This <see cref="TcpStreamPointer"/> cannot be written since FTP does not support that.
+		/// Create a new <see cref="TcpStream"/> with given <see cref="Uri"/> of TCP
 		/// </summary>
-		public override bool CanWrite => false;
-
-		/// <summary>
-		/// This <see cref="TcpStreamPointer"/> cannot be read with offset since FTP does not support that.
-		/// </summary>
-		public override bool CanReadOffset => false;
-
-		/// <summary>
-		/// This <see cref="TcpStreamPointer"/> cannot be written with offset since FTP does not support that.
-		/// </summary>
-		public override bool CanWriteOffset => false;
-
-		/// <summary>
-		/// The method to be implemented to actually dispose the resources held by this <see cref="IStreamPointer"/>
-		/// </summary>
-		/// <param name="disposing">Dispose managed resources or not</param>
-		protected override void Dispose(bool disposing)
-		{
-			this.OnReadFinish();
-		}
-
-		/// <summary>
-		/// Perform the operations need when a <see cref="ReadStream"/> just stopped using by disconnecting with the remote FTP server.
-		/// </summary>
-		protected override void OnReadFinish()
-		{
-			this.readStream?.Dispose();
-			this.readStream = null;
-			this.read?.Close();
-			this.read = null;
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Create a new <see cref="TcpStreamPointer"/> with given <see cref="Uri"/> of file
-		/// </summary>
-		/// <param name="uri">The given <see cref="Uri"/> of TCP scheme</param>
+		/// <param name="uri">The given <see cref="Uri"/> of file scheme</param>
 		/// <param name="length">The initial length in bytes</param>
-		/// <param name="credential"><see cref="NetworkCredential"/> used to login the TCP server, default null</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="uri"/> is null</exception>
-		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not TCP or the stream cannot be created by given <paramref name="uri"/></exception>
-		/// <exception cref="WebException">If an web error occurred</exception>
-		public TcpStreamPointer(Uri uri, ulong length, NetworkCredential credential = null)
+		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not file or the stream cannot be created by given <paramref name="uri"/></exception>
+		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="UnauthorizedAccessException">If the give path in <paramref name="uri"/> cannot be created or overwritten</exception>
+		public TcpStream(Uri uri, ulong length, ) : base(length)
 		{
-			if (uri is null)
-				throw new ArgumentNullException(nameof(uri));
 			if (uri.GetScheme() != UriScheme.TCP)
 				throw new NotSupportedException(Support.Location);
+
+			this.uri = uri;
+			this.client = new TcpClient(uri.Host, uri.Port);
+			this.stream = this.client.GetStream();
 			// check
-			TcpClient client = new TcpClient(uri.Host, uri.Port);
-			client.GetStream();
+
+			// create
+
+		}
+
+		/// <summary>
+		/// Actually release the unmanaged (and possibly managed) resources held by this class
+		/// </summary>
+		/// <param name="disposeManaged">Dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged)
+		{
+			this.stream.Dispose();
+			this.client.Dispose();
+		}
+
+		/// <summary>
+		/// Get the string representation of this <see cref="Stream"/>.
+		/// </summary>
+		/// <returns>The string representation of this <see cref="Stream"/></returns>
+		public override string ToString() => this.uri.AbsoluteUri;
+		#endregion
+
+		#region implementations
+		/// <summary>
+		/// Clears all buffers for this stream and causes any buffered data to be written to the underlying device. Currently does nothing.
+		/// </summary>
+		public override void Flush() { }
+
+		/// <summary>
+		/// Read data from this <see cref="Stream"/> started from <see cref="Position"/> byte and write them to the given <see cref="PointerSegment"/> <paramref name="memory"/>.
+		/// </summary>
+		/// <param name="memory">The <see cref="PointerSegment"/> to write to</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
+		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void ToMemory(PointerSegment memory)
+		{
+			if (!memory.IsValid())
+				throw new ArgumentNullException(nameof(memory));
+			if (this.IsSupported(memory.Location))
+				throw new NotSupportedException(Support.Location);
+			if (memory.Pointer is not IMemoryPointer mp)
+				throw new NotSupportedException(Support.Location);
+			// other checks in ToManged
+			this.ToManged(mp.AsSpan<byte>(memory));
+		}
+
+		/// <summary>
+		/// Read data from this <see cref="Stream"/> started from <see cref="Position"/> and write them to the given <paramref name="managed"/> memory as a<see cref="Span{T}"/>.
+		/// </summary>
+		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to write into</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
+		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void ToManged<T>(Span<T> managed)
+		{
+			////if (!this.CanTransferWithManaged)
+			////	throw new NotSupportedException(Support.Location);
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if ((ulong)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(managed));
+
+			this.stream.Read(managed.UncheckAs<T, byte>());
+		}
+
+		/// <summary>
+		/// Read data from the given <see cref="PointerSegment"/> <paramref name="memory"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/> byte.
+		/// </summary>
+		/// <param name="memory">The <see cref="PointerSegment"/> to read from</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
+		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void FromMemory(PointerSegment memory)
+		{
+			if (!memory.IsValid())
+				throw new ArgumentNullException(nameof(memory));
+			if (this.IsSupported(memory.Location))
+				throw new NotSupportedException(Support.Location);
+			if (memory.Pointer is not IMemoryPointer mp)
+				throw new NotSupportedException(Support.Location);
+			// other checks in FromManged
+			this.FromManged(mp.AsSpan<byte>(memory));
+		}
+
+		/// <summary>
+		/// Read data from the given <paramref name="managed"/> memory as a<see cref="Span{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
+		/// </summary>
+		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to read from</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
+		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public override void FromManged<T>(Span<T> managed)
+		{
+			////if (!this.CanTransferWithManaged)
+			////	throw new NotSupportedException(Support.Location);
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if ((ulong)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(managed));
+
+			this.stream.Write(managed.UncheckAs<T, byte>());
 		}
 		#endregion
 	}

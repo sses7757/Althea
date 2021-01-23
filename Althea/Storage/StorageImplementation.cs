@@ -185,7 +185,10 @@ namespace Althea.Storage
 	public abstract class Stream : IDisposable, ICheckValid
 	{
 		#region basic
-		private bool disposed = false;
+		/// <summary>
+		/// Whether this class is disposed or not
+		/// </summary>
+		protected bool Disposed { get; private set; } = false;
 
 		/// <summary>
 		/// When implemented by a derived class, actually release the unmanaged (and possibly managed) resources held by this class
@@ -199,7 +202,7 @@ namespace Althea.Storage
 		public void Dispose()
 		{
 			this.Dispose(disposeManaged: true);
-			this.disposed = true;
+			this.Disposed = true;
 			GC.SuppressFinalize(this);
 		}
 
@@ -207,13 +210,13 @@ namespace Althea.Storage
 		/// Check whether this object is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this object</returns>
-		public bool IsValid() => !this.disposed && this.Length != 0;
+		public bool IsValid() => !this.Disposed && this.Length != 0;
 
 		/// <summary>
 		/// When implemented by a derived class, get or set the position (offset) in bytes of this <see cref="Stream"/>
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Length"/></exception>
-		public abstract ulong Position { get; protected set; }
+		public abstract ulong Position { get; set; }
 
 		/// <summary>
 		/// When implemented by a derived class, get or set the length in bytes of this <see cref="Stream"/>
@@ -243,6 +246,12 @@ namespace Althea.Storage
 		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
 		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
 		public virtual bool IsSupported(StorageLocation location) => this.SupportedTransfers.Contains(location);
+
+		/// <summary>
+		/// When implemented by a derived class, get the string representation of this <see cref="Stream"/>.
+		/// </summary>
+		/// <returns>The string representation of this <see cref="Stream"/></returns>
+		public abstract override string ToString();
 		#endregion
 
 		#region read and write
@@ -326,7 +335,7 @@ namespace Althea.Storage
 		{
 			if (length == 0)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-			if (this.disposed)
+			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
 
 			uint bufferSize = BufferSizeInBytes<T>() / Storage<T>.SizeOfT;
@@ -395,7 +404,7 @@ namespace Althea.Storage
 		{
 			if (length == 0)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-			if (this.disposed)
+			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
 			if (this.Position + length > this.Length)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.InvalidValue);
@@ -461,7 +470,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The interface for an immutable pointer at any possible stream storage which can be described by a <see cref="Stream"/>
 	/// </summary>
-	public interface IStreamPointer : IPointer, IDisposable, IEquatable<IStreamPointer>
+	public interface IStreamPointer : IPointer, IDisposable
 	{
 		#region basic
 		/// <summary>
@@ -563,7 +572,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="obj">another object</param>
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T> obj)
+		public override bool Equals(Storage<T>? obj)
 		{
 			if (obj is not null && obj is ActualStorage<T> another)
 			{
@@ -733,10 +742,9 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="priorities">the <see cref="IEnumerable{T}"/> of <see cref="StorageLocation"/>s and <see cref="ulong"/>s to represent the priorities from higher-performance memories to lower ones (cannot contain <see cref="LocationType.Uri"/> or any duplicate locations)</param>
 		/// <param name="totalLength">the desired total length (in <typeparamref name="T"/>) of presenting array</param>
-		/// <param name="cacheUri">the final caching indicated by a <see cref="Uri"/>, default null means do not cache to URI</param>
 		/// <exception cref="ArgumentException">if <paramref name="priorities"/> has unexpected value(s) or is of wrong size</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="totalLength"/> or <paramref name="cacheUri"/> has unexpected value(s)</exception>
-		public CachedStorage(IEnumerable<(StorageLocation location, ulong maxLengthInBytes)> priorities, ulong totalLength, Uri cacheUri = null) : base(totalLength)
+		public CachedStorage(IEnumerable<(StorageLocation location, ulong maxLengthInBytes)> priorities, ulong totalLength) : base(totalLength)
 		{
 			var temp = new List<PointerSegment>();
 			foreach (var (location, maxLengthInBytes) in priorities)
@@ -758,16 +766,6 @@ namespace Althea.Storage
 			ulong allowedTotalLength = temp.Sum(p => p.LengthInBytes);
 			if (allowedTotalLength <= totalLength && cacheUri is null)
 				throw new ArgumentOutOfRangeException(nameof(totalLength));
-			// deal with URI
-			if (cacheUri is not null)
-			{
-				UriScheme? scheme = cacheUri.GetScheme();
-				if (!scheme.HasValue)
-					throw new ArgumentOutOfRangeException(nameof(cacheUri), Parameter.InvalidValue);
-				// do not allocate here
-				temp.Add(new StoragePointer(new StorageLocation(LocationType.Uri, (byte)scheme.Value), default(IntPtr), totalLength <= allowedTotalLength ? 0 : totalLength - allowedTotalLength));
-			}
-			this.pointers = temp.ToArray();
 			// allocate here
 			// TODO: adapter allocate
 		}
