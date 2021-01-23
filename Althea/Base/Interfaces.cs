@@ -73,4 +73,17 @@ namespace Althea
 		/// <returns>The combined string representation</returns>
 		string ToString(IReadOnlyDictionary<string, string> otherProperties) => Combine(this.StringMain, this.StringProperties, otherProperties);
 	}
+
+	/// <summary>
+	/// The interface for a cloneable object
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	public interface ICloneable<T> where T : ICloneable<T>
+	{
+		/// <summary>
+		/// Creates a new object that is a copy of the current instance.
+		/// </summary>
+		/// <returns>A new object that is a copy of the current instance</returns>
+		T Clone();
+	}
 }

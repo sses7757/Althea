@@ -750,10 +750,8 @@ namespace Althea.Linq
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other) where T : IEquatable<T>
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 			for (int i = 0; i < list.Count; i++)
@@ -772,12 +770,10 @@ namespace Althea.Linq
 		/// <param name="other">the other list to compare</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T> comparer = null)
+		public static bool SequenceEqual<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 			comparer ??= EqualityComparer<T>.Default;
@@ -800,10 +796,8 @@ namespace Althea.Linq
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual<TL, TR>(this IReadOnlyList<TL> list, IReadOnlyList<TR> other, EqualComparer<TL, TR> equalityComparer)
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 			if (equalityComparer is null)
@@ -826,10 +820,8 @@ namespace Althea.Linq
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<byte> list, IReadOnlyList<byte> other)
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 
@@ -849,10 +841,8 @@ namespace Althea.Linq
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<char> list, IReadOnlyList<char> other)
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 
@@ -872,10 +862,8 @@ namespace Althea.Linq
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<int> list, IReadOnlyList<int> other)
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 
@@ -895,10 +883,8 @@ namespace Althea.Linq
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<long> list, IReadOnlyList<long> other)
 		{
-			if (object.ReferenceEquals(list, other))
+			if (ReferenceEquals(list, other))
 				return true;
-			if ((list is null) != (other is null))
-				return false;
 			if (list.Count != other.Count)
 				return false;
 
@@ -920,14 +906,9 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static bool All<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			if (predicator is null)
-				throw new ArgumentNullException(nameof(predicator));
-
 			if (list is T[] a)
 			{
-				return System.Array.TrueForAll(a, predicator);
+				return Array.TrueForAll(a, predicator);
 			}
 			else if (list is List<T> l)
 			{
@@ -1041,6 +1022,7 @@ namespace Althea.Linq
 		#endregion
 
 		#region basic SQL statements
+#nullable disable
 		/// <summary>
 		/// Get the first element of <paramref name="list"/> is available or default otherwise
 		/// </summary>
@@ -1053,6 +1035,7 @@ namespace Althea.Linq
 				return default;
 			return list[0];
 		}
+#nullable enable
 
 		/// <summary>
 		/// Append an <paramref name="element"/> to the end of <paramref name="list"/>
@@ -1388,7 +1371,7 @@ namespace Althea.Linq
 		/// <param name="value">the value to find</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the zero-based indices or empty if not founded</returns>
-		public static int[] IndicesOf<T>(this IReadOnlyList<T> list, T value, IEqualityComparer<T> comparer = null)
+		public static int[] IndicesOf<T>(this IReadOnlyList<T> list, T value, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -1409,7 +1392,7 @@ namespace Althea.Linq
 		/// <param name="value">the value to find</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the zero-based index or -1 if not founded</returns>
-		public static int IndexOf<T>(this IReadOnlyList<T> list, T value, IEqualityComparer<T> comparer = null)
+		public static int IndexOf<T>(this IReadOnlyList<T> list, T value, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -1462,7 +1445,7 @@ namespace Althea.Linq
 		/// <param name="value">the value to find</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the zero-based index or -1 if not founded</returns>
-		public static int IndexOf<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector, TOut value, IEqualityComparer<TOut> comparer = null)
+		public static int IndexOf<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector, TOut value, IEqualityComparer<TOut>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -1529,13 +1512,6 @@ namespace Althea.Linq
 		/// <returns>The concatenated <see cref="IReadOnlyList{ValueTuple}"/></returns>
 		public static IReadOnlyList<T> Concat<T>(this IReadOnlyList<T> list1, IReadOnlyList<T> list2)
 		{
-			if (list1 is null && list2 is null)
-				throw new ArgumentNullException(nameof(list1));
-			else if (list2 is null)
-				return list1;
-			else if (list1 is null)
-				return list2;
-
 			var res = new T[list1.Count + list2.Count];
 			if (list1 is T[] a1 && list2 is T[] a2)
 			{
@@ -1783,12 +1759,9 @@ namespace Althea.Linq
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Reverse<T>(this IReadOnlyList<T> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			if (list is T[] a)
 			{
-				var copy = a.Clone() as T[];
+				var copy = (T[])a.Clone();
 				Array.Reverse(copy);
 				return copy;
 			}
@@ -1814,9 +1787,6 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/> itself if it is an array or a copied array</returns>
 		public static T[] ToArray<T>(this IReadOnlyList<T> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			if (list is T[] a)
 				return a;
 			if (list is List<T> l)
@@ -1837,11 +1807,8 @@ namespace Althea.Linq
 		/// <returns>a copied array</returns>
 		public static T[] ToCopiedArray<T>(this IReadOnlyList<T> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			if (list is T[] a)
-				return a.Clone() as T[];
+				return (T[])a.Clone();
 			if (list is List<T> l)
 				return l.ToArray();
 			var res = new T[list.Count];
@@ -2068,7 +2035,7 @@ namespace Althea.Linq
 		/// <param name="list">the list to check</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns></returns>
-		public static bool SetEquals<T>(this IImmutableSet<T> set, IReadOnlyList<T> list, IEqualityComparer<T> comparer = null)
+		public static bool SetEquals<T>(this IImmutableSet<T> set, IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
 			if (set is null)
 				throw new ArgumentNullException(nameof(set));
@@ -2088,7 +2055,7 @@ namespace Althea.Linq
 		/// <param name="list2">the list to check</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns></returns>
-		public static bool SetEquals<T>(this IReadOnlyList<T> list1, IReadOnlyList<T> list2, IEqualityComparer<T> comparer = null)
+		public static bool SetEquals<T>(this IReadOnlyList<T> list1, IReadOnlyList<T> list2, IEqualityComparer<T>? comparer = null)
 		{
 			if (list1 is null)
 				throw new ArgumentNullException(nameof(list1));
@@ -2129,7 +2096,7 @@ namespace Althea.Linq
 		/// <param name="list">list to pick</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
-		public static bool ElementsUnique<T>(this IReadOnlyList<T> list, IEqualityComparer<T> comparer = null)
+		public static bool ElementsUnique<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2153,7 +2120,7 @@ namespace Althea.Linq
 		/// <param name="list">list to pick</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
-		public static IReadOnlyList<T> Distinct<T>(this IReadOnlyList<T> list, IEqualityComparer<T> comparer = null)
+		public static IReadOnlyList<T> Distinct<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2200,7 +2167,7 @@ namespace Althea.Linq
 		/// <param name="element">element to check</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
-		public static bool Contains<T>(this IReadOnlyList<T> list, T element, IEqualityComparer<T> comparer = null)
+		public static bool Contains<T>(this IReadOnlyList<T> list, T element, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2231,7 +2198,7 @@ namespace Althea.Linq
 		/// <param name="selector">the converter applied to <paramref name="list"/> before comparisons</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
-		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector, IEqualityComparer<TCompare> comparer = null)
+		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector, IEqualityComparer<TCompare>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2275,7 +2242,7 @@ namespace Althea.Linq
 		/// <param name="other">the list used to compare</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
-		public static IReadOnlyList<T> Except<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T> comparer = null)
+		public static IReadOnlyList<T> Except<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2296,7 +2263,7 @@ namespace Althea.Linq
 		/// <param name="other">the list used to compare</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
-		public static IReadOnlyList<T> Intersect<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T> comparer = null)
+		public static IReadOnlyList<T> Intersect<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2317,7 +2284,7 @@ namespace Althea.Linq
 		/// <param name="other">second list</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
-		public static IReadOnlyList<T> Union<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T> comparer = null)
+		public static IReadOnlyList<T> Union<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2384,7 +2351,7 @@ namespace Althea.Linq
 			{
 				result[i] = new ReadOnlyGrouping<TKey, TValue>(keys[i], values[i].ToArray());
 			}
-			return result as IReadOnlyList<IReadOnlyGrouping<TKey, TValue>>;
+			return result;
 		}
 		#endregion
 
@@ -2395,7 +2362,7 @@ namespace Althea.Linq
 		/// <typeparam name="T">any type</typeparam>
 		/// <param name="array">the array before permutation</param>
 		/// <param name="target">the array after the permutation</param>
-		/// <returns>the permutation order as an <see cref="int"/> array, or null if <c>∃ a∈<paramref name="target"/>, a∉<paramref name="array"/></c></returns>
+		/// <returns>the permutation order as an <see cref="int"/> array, or empty array if <c>∃ a∈<paramref name="target"/>, a∉<paramref name="array"/></c></returns>
 		public static int[] FindPermutation<T>(this IReadOnlyList<T> array, IReadOnlyList<T> target)
 		{
 			if (array is null)
@@ -2409,7 +2376,7 @@ namespace Althea.Linq
 			{
 				order[i] = Array.IndexOf(arr, target[i]);
 				if (order[i] < 0)
-					return null; // cannot find permutation
+					return Array.Empty<int>(); // cannot find permutation
 			}
 			return order;
 		}
@@ -2420,7 +2387,7 @@ namespace Althea.Linq
 		/// <typeparam name="T">any type</typeparam>
 		/// <param name="sorted">the array before permutation. must be sorted</param>
 		/// <param name="target">the array after the permutation</param>
-		/// <returns>the permutation order as an <see cref="int"/> array, or null if <c>∃ a∈<paramref name="target"/>, a∉<paramref name="sorted"/></c></returns>
+		/// <returns>the permutation order as an <see cref="int"/> array, or empty array if <c>∃ a∈<paramref name="target"/>, a∉<paramref name="sorted"/></c></returns>
 		public static int[] FindPermutationOfSorted<T>(this IReadOnlyList<T> sorted, IReadOnlyList<T> target)
 		{
 			if (sorted is null)
@@ -2434,7 +2401,7 @@ namespace Althea.Linq
 			{
 				order[i] = Array.BinarySearch(arr, target[i]);
 				if (order[i] < 0)
-					return null; // cannot find permutation
+					return Array.Empty<int>(); // cannot find permutation
 			}
 			return order;
 		}
@@ -2535,7 +2502,7 @@ namespace Althea.Linq
 		/// <param name="list">the list to be shuffled</param>
 		/// <param name="rand">random generator <see cref="Random"/>, default null means internal one</param>
 		/// <returns>the new shuffled list</returns>
-		public static IReadOnlyList<T> Shuffle<T>(this IReadOnlyList<T> list, Random rand = null)
+		public static IReadOnlyList<T> Shuffle<T>(this IReadOnlyList<T> list, Random? rand = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2628,7 +2595,7 @@ namespace Althea.Linq
 		/// <param name="list">list to convert</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IImmutableSet{T}"/></returns>
-		public static IImmutableSet<T> ToImmutableSet<T>(this IReadOnlyList<T> list, IEqualityComparer<T> comparer = null)
+		public static IImmutableSet<T> ToImmutableSet<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
@@ -2708,8 +2675,12 @@ namespace Althea.Linq
 				return HashCode.Combine(array); // hash code of null
 			int hc = array.Count;
 			for (int i = 0; i < array.Count; ++i)
-			{
-				hc = unchecked(hc * CRC_CONST + (array[i] is null ? 0 : array[i].GetHashCode())); // CRC
+			{	// CRC
+				var a = array[i];
+				if (a is null)
+					hc = unchecked(hc * CRC_CONST);
+				else
+					hc = unchecked(hc * CRC_CONST + a.GetHashCode());
 			}
 			return hc;
 		}
@@ -2746,7 +2717,10 @@ namespace Althea.Linq
 			int hc = 0;
 			for (int i = 0; i < set.Count; ++i)
 			{
-				hc = unchecked(hc + (set[i] is null ? 0 : set[i].GetHashCode()));
+				// CRC
+				var a = set[i];
+				if (a is not null)
+					hc = unchecked(hc + a.GetHashCode());
 			}
 			return hc;
 		}

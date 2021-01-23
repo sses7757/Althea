@@ -1,7 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.Resources;
@@ -125,23 +125,13 @@ namespace Althea.Storage
 	{
 		#region basic
 		/// <summary>
-		/// Get the raw pointer of this <see cref="IMemoryPointer"/> as a <see cref="IntPtr"/>
+		/// When implemented by a derived class, get the raw pointer of this <see cref="IMemoryPointer"/> as a <see cref="IntPtr"/>
 		/// </summary>
 		IntPtr Pointer { get; }
 
 		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes != 0;
 
 		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassMemory;
-
-		bool IPointer.CanRead => true;
-
-		bool IPointer.CanWrite => true;
-
-		bool IPointer.CanReadOffset => true;
-
-		bool IPointer.CanWriteOffset => true;
-
-		bool IPointer.CanResize => false;
 
 		string IMainPropertyFormat.StringMain => this.Pointer.ToString("X");
 
@@ -155,6 +145,7 @@ namespace Althea.Storage
 		/// <typeparam name="T">any unmanaged data type</typeparam>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="NativePointer"/> of this <see cref="IMemoryPointer"/></param>
 		/// <returns>The unmanaged pointer with given offset as a <typeparamref name="T"/>*</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged => (T*)this.Pointer.ToPointer() + offset;
 
 		/// <summary>
@@ -162,6 +153,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="offset">The offset in bytes to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/></param>
 		/// <returns>The native pointer with given offset as a <see cref="void"/>*</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
 
 		/// <summary>
@@ -171,7 +163,9 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/> before converting to <see cref="Span{T}"/></param>
 		/// <param name="length">The presenting length in <typeparamref name="T"/> of this <see cref="IMemoryPointer"/> before converting to <see cref="Span{T}"/></param>
 		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
-		unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new Span<T>(this.UnmangedPointer<T>(offset), length == 0 ? checked((int)this.LengthInBytes / sizeof(T)) : length);
+		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new Span<T>(this.UnmangedPointer<T>(offset), length == 0 ? checked((int)this.LengthInBytes / sizeof(T)) : length);
 
 		/// <summary>
 		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
@@ -179,324 +173,315 @@ namespace Althea.Storage
 		/// <typeparam name="T">any unmanaged data type</typeparam>
 		/// <param name="pointerSegment">Use the given <see cref="PointerSegment"/> to obtain offset and length</param>
 		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
-		Span<T> AsSpan<T>(PointerSegment pointerSegment) where T : unmanaged => this.AsSpan<T>(checked((long)(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT)), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
+		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected internal Span<T> AsSpan<T>(PointerSegment pointerSegment) where T : unmanaged => this.AsSpan<T>(checked((long)(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT)), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
 		#endregion
 	}
 
 	/// <summary>
-	/// The "interface" for an immutable pointer at any possible stream storage which can be described by a <see cref="Stream"/>
+	/// The abstract class for any possible stream storage
 	/// </summary>
-	public abstract class AbstractStreamPointer : IPointer, IDisposable
+	public abstract class Stream : IDisposable, ICheckValid
 	{
 		#region basic
+		private bool disposed = false;
+
 		/// <summary>
-		/// Get the raw stream of this <see cref="AbstractStreamPointer"/> used for reading as a <see cref="Stream"/>. Shall be null if this <see cref="AbstractStreamPointer"/> does not support reading.
+		/// When implemented by a derived class, actually release the unmanaged (and possibly managed) resources held by this class
 		/// </summary>
-		protected abstract Stream ReadStream { get; }
+		/// <param name="disposeManaged">Dispose managed resources or not</param>
+		protected abstract void Dispose(bool disposeManaged);
 
 		/// <summary>
-		/// When implemented by sub-classes, this method shall perform the operations need when a <see cref="ReadStream"/> just stopped using. The default implementation does nothing.
-		/// </summary>
-		protected virtual void OnReadFinish() { }
-
-		/// <summary>
-		/// Get the raw stream of this <see cref="AbstractStreamPointer"/> used for writing as a <see cref="Stream"/>. Shall be null if this <see cref="AbstractStreamPointer"/> does not support writing.
-		/// </summary>
-		protected abstract Stream WriteStream { get; }
-
-		/// <summary>
-		/// When implemented by sub-classes, this method shall perform the operations need when a <see cref="WriteStream"/> just stopped using. The default implementation does nothing.
-		/// </summary>
-		protected virtual void OnWriteFinish() { }
-
-		/// <summary>
-		/// The basic description of this <see cref="AbstractStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
-		/// </summary>
-		protected abstract string Description { get; }
-
-		private bool disposed;
-
-		/// <summary>
-		/// The method to be implemented to actually dispose the resources held by this <see cref="AbstractStreamPointer"/>. The default implementation only disposes <see cref="ReadStream"/> and <see cref="WriteStream"/>.
-		/// </summary>
-		/// <param name="disposing">Dispose managed resources or not</param>
-		protected virtual void Dispose(bool disposing)
-		{
-			if (!disposed)
-			{
-				if (disposing)
-				{
-					// do nothing
-				}
-				this.ReadStream?.Dispose();
-				this.WriteStream?.Dispose();
-				disposed = true;
-			}
-		}
-
-		/// <summary>
-		/// Dispose resources held by this class
+		/// Dispose the unmanaged and managed resources held by this class
 		/// </summary>
 		public void Dispose()
 		{
-			this.Dispose(disposing: true);
+			this.Dispose(disposeManaged: true);
+			this.disposed = true;
 			GC.SuppressFinalize(this);
 		}
-		#endregion
-
-		#region implemented interfaces
-		/// <summary>
-		/// The original length of this pointer's underlying storage in bytes
-		/// </summary>
-		public virtual ulong LengthInBytes => (ulong)(this.ReadStream ?? this.WriteStream).Length;
 
 		/// <summary>
 		/// Check whether this object is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this object</returns>
-		public virtual bool IsValid() => (this.ReadStream is not null || this.WriteStream is not null) && this.LengthInBytes != 0;
+		public bool IsValid() => !this.disposed && this.Length != 0;
 
 		/// <summary>
-		/// <b>Statically</b> check whether given <paramref name="location"/> is a supported one for this pointer
+		/// When implemented by a derived class, get or set the position (offset) in bytes of this <see cref="Stream"/>
 		/// </summary>
-		/// <param name="location">The given <see cref="StorageLocation"/> to be checked</param>
-		/// <returns>Whether given <paramref name="location"/> is supported or not</returns>
-		public virtual bool IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
+		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Length"/></exception>
+		public abstract ulong Position { get; protected set; }
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be read or not
+		/// When implemented by a derived class, get or set the length in bytes of this <see cref="Stream"/>
 		/// </summary>
-		public virtual bool CanRead => this.ReadStream.CanRead;
+		public ulong Length { get; }
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be written or not
+		/// Create a <see cref="Stream"/> with given <paramref name="length"/> in bytes
 		/// </summary>
-		public virtual bool CanWrite => this.WriteStream.CanWrite;
+		/// <param name="length">The given length in bytes</param>
+		protected Stream(ulong length) => this.Length = length;
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be read with offset or not
+		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not.
 		/// </summary>
-		public virtual bool CanReadOffset => this.ReadStream.CanSeek && this.ReadStream.CanRead;
+		public abstract bool CanTransferWithManaged { get; }
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be written with offset or not
+		/// When implemented by a derived class, <b>statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
 		/// </summary>
-		public virtual bool CanWriteOffset => this.WriteStream.CanSeek && this.WriteStream.CanWrite;
+		/// <remarks>When implemented by a derived class, if this property returns null or empty list, <see cref="NullReferenceException"/> may be thrown</remarks>
+		public abstract IReadOnlyList<StorageLocation> SupportedTransfers { get; }
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be resized in-place or not
+		/// When implemented by a derived class, <b>statically</b> get a <see cref="bool"/> indicating whether data transfer with given <paramref name="location"/> is supported by this <see cref="Stream"/>. The default implementation utilizes the <see cref="SupportedTransfers"/>.
 		/// </summary>
-		public virtual bool CanResize => this.CanWriteOffset;
-
-		string IMainPropertyFormat.StringMain => this.Description;
-
-		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
-		{ 
-			["length"] = this.LengthInBytes.ToString(),
-		};
+		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
+		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
+		public virtual bool IsSupported(StorageLocation location) => this.SupportedTransfers.Contains(location);
 		#endregion
 
-		#region new default implementations
+		#region read and write
+		/// <summary>
+		/// When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+		/// </summary>
+		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public abstract void Flush();
+
+		/// <summary>
+		/// When implemented by a derived class, read data from this <see cref="Stream"/> started from <see cref="Position"/> byte and write them to the given <see cref="PointerSegment"/> <paramref name="memory"/>.
+		/// </summary>
+		/// <param name="memory">The <see cref="PointerSegment"/> to write to</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
+		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public abstract void ToMemory(PointerSegment memory);
+
+		/// <summary>
+		/// When implemented by a derived class, read data from this <see cref="Stream"/> started from <see cref="Position"/> and write them to the given <paramref name="managed"/> memory as a<see cref="Span{T}"/>.
+		/// </summary>
+		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to write into</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
+		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public abstract void ToManged<T>(Span<T> managed) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, read data from the given <see cref="PointerSegment"/> <paramref name="memory"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/> byte.
+		/// </summary>
+		/// <param name="memory">The <see cref="PointerSegment"/> to read from</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
+		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public abstract void FromMemory(PointerSegment memory);
+
+		/// <summary>
+		/// When implemented by a derived class, read data from the given <paramref name="managed"/> memory as a<see cref="Span{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
+		/// </summary>
+		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to read from</param>
+		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
+		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public abstract void FromManged<T>(Span<T> managed) where T : unmanaged;
+		#endregion
+
+		#region default implementation
 		/// <summary>
 		/// Get the default buffer size in bytes which is divisible by the size of <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged data type</typeparam>
 		/// <returns>The default buffer size in bytes divisible by the size of <typeparamref name="T"/></returns>
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		protected static unsafe int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / sizeof(T) * sizeof(T);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static uint BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / Storage<T>.SizeOfT * Storage<T>.SizeOfT;
+
+		private static readonly Dictionary<Type, StorageLocation> cache_single_location = new Dictionary<Type, StorageLocation>();
 
 		/// <summary>
-		/// Set the values of this <see cref="AbstractStreamPointer"/> <typeparamref name="T"/> by <typeparamref name="T"/>
+		/// When overridden in a derived class, fill some values of this <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged data type</typeparam>
-		/// <param name="offset">The offset in <b><typeparamref name="T"/></b> rather than bytes</param>
-		/// <param name="length">The length to set in <b><typeparamref name="T"/></b> rather than bytes</param>
-		/// <param name="value">The value to set</param>
-		/// <exception cref="ArgumentException">If the <see cref="ReadStream"/> is too short</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="length"/> exceeds the boundary</exception>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
-		/// <remarks>When overridden by derived classes, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
-		public virtual void SetValues<T>(long offset, long length, T value) where T : unmanaged
+		/// <param name="value">The value of type <typeparamref name="T"/> to be set</param>
+		/// <param name="length">The length in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
+		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
+		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		public virtual void SetValues<T>(T value, ulong length) where T : unmanaged
 		{
-			try
-			{
-				if (offset < 0)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-				if (length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-				if ((offset + length) * Storage<T>.SizeOfT > this.WriteStream.Length)
-					throw new ArgumentException(Parameter.WrongSize);
+			if (length == 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+			if (this.disposed)
+				throw new ObjectDisposedException(this.GetType().FullName);
 
-				// positioning
-				length *= Storage<T>.SizeOfT;
-				offset *= Storage<T>.SizeOfT;
-				if (offset != this.WriteStream.Position)
-					this.WriteStream.Position = offset;
-				// writing
-				int BufferSize = BufferSizeInBytes<T>();
-				byte[] buffer = new byte[Math.Min(BufferSize, length)];
-				if (value is byte bv)
+			uint bufferSize = BufferSizeInBytes<T>() / Storage<T>.SizeOfT;
+			if (this.CanTransferWithManaged)
+			{
+				int len = checked((int)length);
+				T[] buffer = new T[Math.Min(bufferSize, len)];
+				Array.Fill(buffer, value);
+				while (len > 0)
 				{
-					Array.Fill(buffer, bv);
+					var span = buffer.AsSpan(0, Math.Min(len, buffer.Length));
+					this.FromManged(span);
+					len -= span.Length;
+				}
+			}
+			else
+			{
+				// get StorageLocation cache
+				var key = this.GetType();
+				StorageLocation location;
+				if (cache_single_location.ContainsKey(key))
+				{
+					location = cache_single_location[key];
 				}
 				else
 				{
-					T[] bufferT = new T[buffer.Length / Storage<T>.SizeOfT];
-					Array.Fill(bufferT, value);
-					Buffer.BlockCopy(bufferT, 0, buffer, 0, buffer.Length);
+					cache_single_location.Add(key, this.SupportedTransfers[0]);
+					location = this.SupportedTransfers[0];
 				}
-				while (length >= BufferSize)
+				// copy
+				ulong len = Math.Min(bufferSize, length);
+				var impl = MEM.SelectImplementation(location);
+				var pointer = impl.Allocate(location, len);
+				try
 				{
-					this.WriteStream.Write(buffer, 0, BufferSize);
-					length -= BufferSize;
+					impl.SetMemoryValue(pointer, value);
+					while (len > 0)
+					{
+						if (len < pointer.LengthInBytes)
+							pointer = pointer.AsLength(len);
+						this.FromMemory(pointer);
+						len -= pointer.LengthInBytes;
+					}
 				}
-				this.WriteStream.Write(buffer, 0, (int)length);
-				this.WriteStream.Flush();
-			}
-			finally
-			{
-				this.OnWriteFinish();
-			}
-		}
-
-		/// <summary>
-		/// Write values to this <see cref="AbstractStreamPointer"/> starting from <paramref name="offset"/>
-		/// </summary>
-		/// <param name="offset">The offset in bytes to start writing</param>
-		/// <param name="value">The values to write as a <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
-		/// <remarks>When overridden by derived classes, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
-		public virtual void Write(long offset, ReadOnlySpan<byte> value)
-		{
-			try
-			{
-				if (offset < 0)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-				if (value.Length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(value), Parameter.MustPositive);
-				if (offset >= this.WriteStream.Length)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.InvalidValue);
-
-				if (offset != this.WriteStream.Position)
-					this.WriteStream.Position = offset;
-				this.WriteStream.Write(value);
-				this.WriteStream.Flush();
-			}
-			finally
-			{
-				this.OnWriteFinish();
-			}
-		}
-
-		/// <summary>
-		/// Read values from this <see cref="AbstractStreamPointer"/> starting from <paramref name="offset"/>
-		/// </summary>
-		/// <param name="offset">The offset in bytes to start reading</param>
-		/// <param name="target">The target <see cref="Span{T}"/> of <see cref="byte"/> to overwrite the read values</param>
-		/// <returns>The actual number of values read</returns>
-		/// <exception cref="ArgumentException">If the <see cref="ReadStream"/> is too short</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="ReadStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or reading</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="ReadStream"/> is already closed</exception>
-		/// <remarks>When overridden by derived classes, <see cref="OnReadFinish"/> shall be invoked at last.</remarks>
-		public virtual int Read(long offset, Span<byte> target)
-		{
-			try
-			{
-				if (offset < 0)
-					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
-				if (target.Length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(target), Parameter.MustPositive);
-				if (offset + target.Length > this.ReadStream.Length)
-					throw new ArgumentException(Parameter.WrongSize);
-
-				if (offset != this.ReadStream.Position)
-					this.ReadStream.Position = offset;
-				return this.ReadStream.Read(target);
-			}
-			finally
-			{
-				this.OnReadFinish();
-			}
-		}
-
-		/// <summary>
-		/// Resize this <see cref="AbstractStreamPointer"/> to a new length in bytes.<br/>
-		/// If <paramref name="newLengthInBytes"/> is smaller than <see cref="IPointer.LengthInBytes"/>, the bytes after <paramref name="newLengthInBytes"/> will be discarded; otherwise, uninitialized (<paramref name="newLengthInBytes"/> - <see cref="IPointer.LengthInBytes"/>) bytes will be added to the end.
-		/// </summary>
-		/// <param name="newLengthInBytes">The new length in bytes</param>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking or writing</exception>
-		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
-		/// <remarks>When overridden by derived classes, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
-		public virtual void Resize(ulong newLengthInBytes)
-		{
-			try
-			{
-				this.WriteStream.SetLength((long)newLengthInBytes);
-				this.WriteStream.Flush();
-			}
-			finally
-			{
-				this.OnWriteFinish();
-			}
-		}
-
-		/// <summary>
-		/// Copy to another <see cref="AbstractStreamPointer"/> <paramref name="other"/> with given offsets and length
-		/// </summary>
-		/// <param name="offsetThis">The offset in bytes to start reading of this <see cref="AbstractStreamPointer"/></param>
-		/// <param name="other">The other <see cref="AbstractStreamPointer"/> to write to</param>
-		/// <param name="offsetOther">The offset in bytes to start writing of <paramref name="other"/> <see cref="AbstractStreamPointer"/></param>
-		/// <param name="length">The length in bytes to read/write</param>
-		/// <exception cref="ArgumentException">If either <see cref="ReadStream"/> is too short</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetThis"/> or <paramref name="offsetOther"/> or <paramref name="length"/> exceeds the boundaries</exception>
-		/// <exception cref="IOException">If an I/O error occurs</exception>
-		/// <exception cref="NotSupportedException">If <see cref="ReadStream"/> of this or <see cref="WriteStream"/> of <paramref name="other"/> does not support seeking (when <c>this.<see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetThis"/></c> or <c><paramref name="other"/>.<see cref="WriteStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offsetOther"/></c>) or reading</exception>
-		/// <exception cref="ObjectDisposedException">If <see cref="ReadStream"/> of this or <see cref="WriteStream"/> is already closed</exception>
-		/// <remarks>When overridden by derived classes, <see cref="OnReadFinish"/> of this and <see cref="OnWriteFinish"/> of <paramref name="other"/> shall be invoked at last.</remarks>
-		public virtual void CopyTo(long offsetThis, AbstractStreamPointer other, long offsetOther, long length)
-		{
-			try
-			{
-				if (offsetThis < 0)
-					throw new ArgumentOutOfRangeException(nameof(offsetThis), Parameter.CannotNegative);
-				if (offsetOther < 0)
-					throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.CannotNegative);
-				if (length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-				if (offsetThis + length > this.ReadStream.Length)
-					throw new ArgumentException(Parameter.WrongSize);
-				if (offsetOther >= other.WriteStream.Length)
-					throw new ArgumentOutOfRangeException(nameof(offsetOther), Parameter.InvalidValue);
-
-				// positioning
-				if (offsetThis != this.ReadStream.Position)
-					this.ReadStream.Position = offsetThis;
-				if (offsetOther != other.WriteStream.Position)
-					other.WriteStream.Position = offsetOther;
-				// writing
-				int BufferSize = BufferSizeInBytes<byte>();
-				byte[] buffer = new byte[Math.Min(BufferSize, length)];
-				while (length > 0)
+				finally
 				{
-					int read = this.ReadStream.Read(buffer, 0, buffer.Length);
-					other.WriteStream.Write(buffer, 0, read);
-					length -= read;
+					impl.Free(pointer);
 				}
-				other.WriteStream.Flush();
 			}
-			finally
-			{
-				this.OnReadFinish(); other.OnWriteFinish();
-			}
+			// flush at the end
+			this.Flush();
 		}
+
+		private static readonly Dictionary<ImmutableTwoElementSet<Type>, StorageLocation> cache_double_location = new Dictionary<ImmutableTwoElementSet<Type>, StorageLocation>();
+
+		/// <summary>
+		/// When overridden in a derived class, copy some data from this <see cref="Stream"/> to <paramref name="other"/> <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
+		/// </summary>
+		/// <param name="other">The other <see cref="Stream"/> to copy to</param>
+		/// <param name="length">The length in bytes to copy</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
+		/// <exception cref="NotSupportedException">If there are not common supported data transfers between this and <paramref name="other"/></exception>
+		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
+		/// <exception cref="ObjectDisposedException">If this or <paramref name="other"/> is already disposed</exception>
+		public virtual void CopyTo(Stream other, ulong length)
+		{
+			if (length == 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+			if (this.disposed)
+				throw new ObjectDisposedException(this.GetType().FullName);
+			if (this.Position + length > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.InvalidValue);
+			if (other.Position + length > other.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.InvalidValue);
+
+			uint bufferSize = BufferSizeInBytes<byte>();
+			if (this.CanTransferWithManaged && other.CanTransferWithManaged)
+			{
+				int len = checked((int)length);
+				byte[] buffer = new byte[Math.Min(bufferSize, len)];
+				while (len > 0)
+				{
+					var span = buffer.AsSpan(0, Math.Min(len, buffer.Length));
+					this.ToManged(span);
+					other.FromManged(span);
+					len -= span.Length;
+				}
+			}
+			else
+			{
+				// get StorageLocation cache
+				var key = new ImmutableTwoElementSet<Type>(this.GetType(), other.GetType());
+				StorageLocation value;
+				if (cache_double_location.ContainsKey(key))
+				{
+					value = cache_double_location[key];
+				}
+				else
+				{
+					var intersect = this.SupportedTransfers.Intersect(other.SupportedTransfers);
+					if (intersect.Count == 0)
+						throw new NotSupportedException(Support.Location);
+					cache_double_location.Add(key, intersect[0]);
+					value = intersect[0];
+				}
+				// copy
+				ulong len = Math.Min(bufferSize, length);
+				var impl = MEM.SelectImplementation(value);
+				var pointer = impl.Allocate(value, len);
+				try
+				{
+					while (len > 0)
+					{
+						if (len < pointer.LengthInBytes)
+							pointer = pointer.AsLength(len);
+						this.ToMemory(pointer);
+						other.FromMemory(pointer);
+						len -= pointer.LengthInBytes;
+					}
+				}
+				finally
+				{
+					impl.Free(pointer);
+				}
+			}
+			// flush at the end
+			other.Flush();
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// The interface for an immutable pointer at any possible stream storage which can be described by a <see cref="Stream"/>
+	/// </summary>
+	public interface IStreamPointer : IPointer, IDisposable, IEquatable<IStreamPointer>
+	{
+		#region basic
+		/// <summary>
+		/// When implemented by a derived class, get the native stream this <see cref="IStreamPointer"/> as a <see cref="Stream"/>.
+		/// </summary>
+		public Stream NativeStream { get; }
+		#endregion
+
+		#region implemented interface methods
+		ulong IPointer.LengthInBytes => this.NativeStream.Length;
+
+		bool ICheckValid.IsValid() => this.NativeStream.IsValid();
+
+		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
+
+		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
+		{ 
+			["length"] = this.NativeStream.Length.ToString(),
+			["position"] = this.NativeStream.Position.ToString(),
+		};
 		#endregion
 	}
 	#endregion

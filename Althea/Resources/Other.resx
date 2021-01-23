@@ -120,6 +120,12 @@
   <data name="CannotDivide" xml:space="preserve">
     <value>The given interger(s) cannot perform lossless integer division.</value>
   </data>
+  <data name="CannotFindMethod" xml:space="preserve">
+    <value>Cannot find a mehtod of given requirement(s).</value>
+  </data>
+  <data name="CannotParse" xml:space="preserve">
+    <value>Cannot parse '{0}' to a custom type {1}.</value>
+  </data>
   <data name="CannotParseComplex" xml:space="preserve">
     <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
   </data>

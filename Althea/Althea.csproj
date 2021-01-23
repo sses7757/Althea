@@ -38,6 +38,7 @@
     <RootNamespace>Althea</RootNamespace>
     <AssemblyName>Althea</AssemblyName>
     <AnalysisLevel>latest</AnalysisLevel>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

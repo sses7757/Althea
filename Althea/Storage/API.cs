@@ -134,7 +134,7 @@ namespace Althea.Storage
 		/// Free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
-		/// <param name="disposeManaged">dispose managed resources or not</param>
+		/// <param name="disposeManaged">dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
 		/// <returns>If <paramref name="pointer"/> is not supported or <paramref name="pointer"/> is not valid, return false; otherwise, return true.</returns>
 		public abstract bool Free(PointerSegment pointer, bool disposeManaged = true);
 

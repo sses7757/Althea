@@ -84,18 +84,18 @@ namespace Althea.Helpers
 
 		private int maxCategoryLength = 10;
 
-		internal async Task Write(string msg, string category = null, LogLevel level = LogLevel.Information)
+		internal async Task Write(string msg, string? category = null, LogLevel level = LogLevel.Information)
 		{
 			bool showHeader = true;
-			if (string.IsNullOrEmpty(category))
+			if (string.IsNullOrWhiteSpace(category))
 			{
-				if (category != null && category.Length == 0)
-					showHeader = false;
-				else
+				if (category is not null)
 				{
-					// Get calling method name
-					StackTrace stackTrace = new StackTrace();
-					category = stackTrace.GetFrame(1).GetMethod().Name;
+					showHeader = false;
+				}
+				else
+				{	// Get calling method name
+					category = new StackTrace().GetFrame(1)?.GetMethod()?.Name ?? "";
 				}
 			}
 			if (!Log.BufferLevels.Contains(level) && Log.PrintLevels.Contains(level))
@@ -204,7 +204,7 @@ namespace Althea.Helpers
 	{
 		private readonly Timer timer = new Timer(3000);
 
-		private readonly StreamWriter stream = null;
+		private readonly StreamWriter stream;
 
 		~LogTraceListener()
 		{
@@ -225,18 +225,18 @@ namespace Althea.Helpers
 			_ = GlobalLock(stream.FlushAsync);
 		}
 
-		public override void Write(string message)
+		public override void Write(string? message)
 		{
 			_ = GlobalLock(stream.WriteAsync, message);
 		}
 
-		public override void WriteLine(string message)
+		public override void WriteLine(string? message)
 		{
 			_ = GlobalLock(stream.WriteLineAsync, message);
 		}
 
 
-		private static object lockObj = null;
+		private static object? lockObj = null;
 
 		private static async Task GlobalLock<T>(Func<T, Task> func, T parameter)
 		{

@@ -28,19 +28,23 @@ namespace Althea
 		{
 			if (type.IsGenericType || type.IsAbstract || !type.IsAssignableTo(typeof(T)))
 			{
-				return null;
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(type));
 			}
 			var constructor = type.GetConstructor(Array.Empty<Type>());
 			if (constructor is not null)
 			{
-				return constructor.Invoke(Array.Empty<object>()) as T;
+				if (constructor.Invoke(Array.Empty<object>()) is not T result)
+					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
+				return result;
 			}
 			else
 			{
 				var constructors = type.GetConstructors();
 				if (constructors.Length == 0 || !constructors.Contains(0, c => c.GetParameters().Length))
 					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
-				return constructors.Where(c => c.GetParameters().Length == 0)[0].Invoke(Array.Empty<object>()) as T;
+				if (constructors.Where(c => c.GetParameters().Length == 0)[0].Invoke(Array.Empty<object>()) is not T result)
+					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
+				return result;
 			}
 		}
 
@@ -51,7 +55,9 @@ namespace Althea
 		/// <param name="node">the <see cref="LinkedListNode{T}"/> to initialize</param>
 		protected static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
 		{
-			if (node.Value is not null && !node.Value.Disposed)
+			if (node.Value is null)
+				throw new ArgumentNullException(nameof(node));
+			if (!node.Value.Disposed)
 			{
 				return;
 			}
@@ -74,7 +80,7 @@ namespace Althea
 			recents.Remove(node.Value);
 			node = recents.AddFirst(node.Value);
 			Initialize(node);
-			if (Helpers.Settings.DisposeNotCurrentImplementation)
+			if (Settings.DisposeNotCurrentImplementation)
 			{
 				node.Next?.Value?.Dispose();
 			}
@@ -106,7 +112,7 @@ namespace Althea
 			}
 			// a new implementation
 			var node = recents.AddFirst(Create<T>(implementation));
-			if (Helpers.Settings.DisposeNotCurrentImplementation)
+			if (Settings.DisposeNotCurrentImplementation)
 			{
 				node.Next?.Value?.Dispose();
 			}
@@ -126,12 +132,13 @@ namespace Althea
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static void DisposeNotCurrent<T>(LinkedList<T> recents) where T : AbstractRuntimeApi
 		{
-			if (Helpers.Settings.DisposeNotCurrentImplementation)
+			if (Settings.DisposeNotCurrentImplementation)
 			{
 				var node = recents.First;
-				while ((node = node.Next) is not null)
+				while (node is not null)
 				{
-					node.Value?.Dispose();
+					node.Value.Dispose();
+					node = node.Next;
 				}
 			}
 		}
@@ -198,17 +205,21 @@ namespace Althea
 			Check(recents);
 
 			var current = recents.First;
+			if (current is null)
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (current.Value.IsSupportedUnitary(location))
 			{
 				return current.Value;
 			}
-			while ((current = current.Next) is not null)
+			current = current.Next;
+			while (current is not null)
 			{
 				Initialize(current);
 				if (current.Value.IsSupportedUnitary(location))
 				{
 					return current.Value;
 				}
+				current = current.Next;
 			}
 			throw new InvalidOperationException(Resources.Backend.NotAvailable);
 		}
@@ -229,17 +240,21 @@ namespace Althea
 			Check(recents, storage);
 
 			var current = recents.First;
+			if (current is null)
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (current.Value.IsSupportedUnitary(storage.LocationDescription))
 			{
 				return current.Value;
 			}
-			while ((current = current.Next) is not null)
+			current = current.Next;
+			while (current is not null)
 			{
 				Initialize(current);
 				if (current.Value.IsSupportedUnitary(storage.LocationDescription))
 				{
 					return current.Value;
 				}
+				current = current.Next;
 			}
 			throw new InvalidOperationException(Resources.Backend.NotAvailable);
 		}
@@ -260,17 +275,21 @@ namespace Althea
 			Check(recents, storage1, storage2);
 
 			var current = recents.First;
+			if (current is null)
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (current.Value.IsSupportedBinary(storage1.LocationDescription, storage2.LocationDescription))
 			{
 				return current.Value;
 			}
-			while ((current = current.Next) is not null)
+			current = current.Next;
+			while (current is not null)
 			{
 				Initialize(current);
 				if (current.Value.IsSupportedBinary(storage1.LocationDescription, storage2.LocationDescription))
 				{
 					return current.Value;
 				}
+				current = current.Next;
 			}
 			throw new InvalidOperationException(Resources.Backend.NotAvailable);
 		}
@@ -292,17 +311,21 @@ namespace Althea
 			Check(recents, storage1, storage2, storage3);
 
 			var current = recents.First;
+			if (current is null)
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (current.Value.IsSupportedTernary(storage1.LocationDescription, storage2.LocationDescription, storage3.LocationDescription))
 			{
 				return current.Value;
 			}
-			while ((current = current.Next) is not null)
+			current = current.Next;
+			while (current is not null)
 			{
 				Initialize(current);
 				if (current.Value.IsSupportedTernary(storage1.LocationDescription, storage2.LocationDescription, storage3.LocationDescription))
 				{
 					return current.Value;
 				}
+				current = current.Next;
 			}
 			throw new InvalidOperationException(Resources.Backend.NotAvailable);
 		}
@@ -321,17 +344,21 @@ namespace Althea
 			Check(recents, storages);
 
 			var current = recents.First;
+			if (current is null)
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (current.Value.IsSupportedNary(storages.Select(s => s.LocationDescription).ToArray()))
 			{
 				return current.Value;
 			}
-			while ((current = current.Next) is not null)
+			current = current.Next;
+			while (current is not null)
 			{
 				Initialize(current);
 				if (current.Value.IsSupportedNary(storages.Select(s => s.LocationDescription).ToArray()))
 				{
 					return current.Value;
 				}
+				current = current.Next;
 			}
 			throw new InvalidOperationException(Resources.Backend.NotAvailable);
 		}
@@ -348,7 +375,7 @@ namespace Althea
 		protected static IReadOnlyList<CombinationOfLocations> GenerateUnaryLoactions(params StorageLocation[] locations)
 		{
 			if (locations is null || locations.Length == 0)
-				return null;
+				return Array.Empty<CombinationOfLocations>();
 
 			byte length = checked((byte)locations.Length);
 			ulong max = checked(1UL << length);
@@ -379,12 +406,12 @@ namespace Althea
 		protected static IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> GenerateBinaryLoactions(params StorageLocation[] locations)
 		{
 			if (locations is null || locations.Length < 2)
-				return null;
+				return Array.Empty<ImmutableTwoElementSet<CombinationOfLocations>>();
 
 			long unaryLength = locations.LongLength;
 			ulong max = (ulong)unaryLength * (ulong)(unaryLength + 1) / 2; // binomial of (unaryLength + 1, 2)
 			var combinations = new ImmutableTwoElementSet<CombinationOfLocations>[max];
-			var unary = GenerateUnaryLoactions(locations) as CombinationOfLocations[];
+			var unary = (CombinationOfLocations[])GenerateUnaryLoactions(locations);
 			ulong n = 0;
 			for (long i = 0; i < unaryLength; i++)
 			{
@@ -406,12 +433,12 @@ namespace Althea
 		protected static IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> GenerateTernaryLoactions(params StorageLocation[] locations)
 		{
 			if (locations is null || locations.Length < 3)
-				return null;
+				return Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
 
 			int unaryLength = locations.Length;
 			ulong max = 3U.CombinationNumber(2 + (uint)unaryLength); // binomial (unaryLength + 2, 3)
 			var combinations = new ImmutableThreeElementSet<CombinationOfLocations>[max];
-			var unary = GenerateUnaryLoactions(locations) as CombinationOfLocations[];
+			var unary = (CombinationOfLocations[])GenerateUnaryLoactions(locations);
 			ulong n = 0;
 			for (int i = 0; i < unary.Length; i++)
 			{
@@ -440,12 +467,12 @@ namespace Althea
 			if (N <= 0)
 				throw new ArgumentOutOfRangeException(nameof(N), Resources.Parameter.MustPositive);
 			if (locations is null || locations.Length < N)
-				return null;
+				return Array.Empty<IImmutableSet<CombinationOfLocations>>();
 
 			int unaryLength = locations.Length;
 			ulong max = ((uint)N).CombinationNumber((uint)(N + unaryLength - 1)); // binomial (unaryLength + N - 1, N)
 			var combinations = new IImmutableSet<CombinationOfLocations>[max];
-			var unary = GenerateUnaryLoactions(locations) as CombinationOfLocations[];
+			var unary = (CombinationOfLocations[])GenerateUnaryLoactions(locations);
 			Span<int> indices = stackalloc int[N];
 			for (ulong n = 0; n < max; n++)
 			{

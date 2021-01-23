@@ -32,7 +32,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="str">the <see cref="string"/> to be parsed</param>
 		/// <returns>the output result of type <typeparamref name="T"/>, null means unsuccessful parse</returns>
-		public static object TryParse(string str)
+		public static object? TryParse(string str)
 		{
 			bool success = default(T).TryParse_Internal(str, out T result);
 			return success ? result : null;
@@ -89,7 +89,7 @@ namespace Althea.NativeTypes
 
 		public bool Equals(CustomTypeTest other) => this.low == other.low && this.high == other.high;
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is CustomTypeTest @double && this.Equals(@double);
 		}
@@ -101,7 +101,7 @@ namespace Althea.NativeTypes
 		public CustomTypeTest Multiply(CustomTypeTest another) => throw new NotImplementedException();
 		public CustomTypeTest Divide(CustomTypeTest another) => throw new NotImplementedException();
 
-		public string ToString(string format, IFormatProvider formatProvider) => throw new NotImplementedException();
+		public string ToString(string? format, IFormatProvider? formatProvider) => throw new NotImplementedException();
 		public int CompareTo(CustomTypeTest other) => throw new NotImplementedException();
 
 		public static CustomTypeTest operator +(CustomTypeTest left, CustomTypeTest right) => throw new NotImplementedException();
@@ -143,7 +143,7 @@ namespace Althea.NativeTypes
 		#region internal
 		// not null return means T is a ICustomNativeType<T>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Type MakeCustomNativeType(Type T)
+		internal static Type? MakeCustomNativeType(Type T)
 		{
 			try
 			{
@@ -349,12 +349,13 @@ namespace Althea.NativeTypes
 			Type type = typeof(T);
 			if (!_parseCache.ContainsKey(type))
 			{
-				_parseFunc func;
-				Type custom = MakeCustomNativeType(type);
-				func = custom?.GetMethod(nameof(ICustomNativeType<CustomTypeTest>.TryParse))?.CreateDelegate<_parseFunc>();
+				Type? custom = MakeCustomNativeType(type);
+				var func = custom?.GetMethod(nameof(ICustomNativeType<CustomTypeTest>.TryParse))?.CreateDelegate<_parseFunc>();
+				if (func is null)
+					throw new ArgumentException(string.Format(Resources.Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
 				_parseCache.Add(type, func);
 			}
-			object parseResult = _parseCache[type]?.Invoke(str);
+			object parseResult = _parseCache[type].Invoke(str);
 			if (parseResult == null)
 			{
 				result = default;
@@ -468,7 +469,7 @@ namespace Althea.NativeTypes
 			// cache
 			if (!_supportCache.ContainsKey(type))
 			{
-				Type custom = MakeCustomNativeType(type);
+				Type? custom = MakeCustomNativeType(type);
 				_supportCache.Add(type, custom is not null);
 			}
 			return _supportCache[type];
@@ -548,8 +549,8 @@ namespace Althea.NativeTypes
 			// cache
 			if (!_classificationCache.ContainsKey(type))
 			{
-				Type custom = MakeCustomNativeType(type);
-				DataTypeClassification? result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
+				Type? custom = MakeCustomNativeType(type);
+				var result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
 				_classificationCache.Add(type, result ?? DataTypeClassification.NotSupported);
 			}
 			return _classificationCache[type];

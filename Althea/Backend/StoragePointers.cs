@@ -18,10 +18,7 @@ namespace Althea.Backend.Storage
 
 		private readonly ulong length;
 
-		/// <summary>
-		/// Get the raw pointer of this <see cref="IMemoryPointer"/> as a <see cref="IntPtr"/>
-		/// </summary>
-		public IntPtr Pointer => this.pointer;
+		IntPtr IMemoryPointer.Pointer => this.pointer;
 
 		/// <summary>
 		/// Get the original length of this pointer's underlying storage in bytes
@@ -41,9 +38,9 @@ namespace Althea.Backend.Storage
 
 
 	/// <summary>
-	/// An implementation of <see cref="AbstractStreamPointer"/> for files. This is implemented as a class to prevent boxing and unboxing.
+	/// An implementation of <see cref="IStreamPointer"/> for files. This is implemented as a class to prevent boxing and unboxing.
 	/// </summary>
-	public class FileStreamPointer : AbstractStreamPointer
+	public class FileStreamPointer : IStreamPointer
 	{
 		private readonly FileStream stream;
 
@@ -65,7 +62,7 @@ namespace Althea.Backend.Storage
 		public Uri OriginalUri => this.uri;
 
 		/// <summary>
-		/// The basic description of this <see cref="AbstractStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
+		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
 		/// </summary>
 		protected override string Description => this.OriginalUri.ToString();
 
@@ -103,18 +100,81 @@ namespace Althea.Backend.Storage
 			this.stream.Flush();
 		}
 
+
+
+		#region new default implementations
 		/// <summary>
-		/// The method to be implemented to actually dispose the resources held by this <see cref="FileStreamPointer"/>
+		/// Write values to this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
 		/// </summary>
-		/// <param name="disposing">Dispose managed resources or not</param>
-		protected override void Dispose(bool disposing) => this.stream.Dispose();
+		/// <param name="offset">The offset in bytes to start writing</param>
+		/// <param name="value">The values to write as a <see cref="ReadOnlySpan{T}"/> of <see cref="byte"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If the <see cref="WriteStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or writing</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="WriteStream"/> is already closed</exception>
+		/// <remarks>When overridden by a derived class, <see cref="OnWriteFinish"/> shall be invoked at last.</remarks>
+		public virtual void Write(long offset, ReadOnlySpan<byte> value)
+		{
+			try
+			{
+				if (offset < 0)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+				if (value.Length <= 0)
+					throw new ArgumentOutOfRangeException(nameof(value), Parameter.MustPositive);
+				if (offset >= this.WriteStream.Length)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.InvalidValue);
+
+				if (offset != this.WriteStream.Position)
+					this.WriteStream.Position = offset;
+				this.WriteStream.Write(value);
+				this.WriteStream.Flush();
+			}
+			finally
+			{
+				this.OnWriteFinish();
+			}
+		}
+
+		/// <summary>
+		/// Read values from this <see cref="IStreamPointer"/> starting from <paramref name="offset"/>
+		/// </summary>
+		/// <param name="offset">The offset in bytes to start reading</param>
+		/// <param name="target">The target <see cref="Span{T}"/> of <see cref="byte"/> to overwrite the read values</param>
+		/// <returns>The actual number of values read</returns>
+		/// <exception cref="ArgumentException">If the <see cref="ReadStream"/> is too short</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> exceeds the boundary</exception>
+		/// <exception cref="IOException">If an I/O error occurs</exception>
+		/// <exception cref="NotSupportedException">If the <see cref="ReadStream"/> does not support seeking (when <c><see cref="ReadStream"/>.<see cref="Stream.Position">Offset</see> != <paramref name="offset"/></c>) or reading</exception>
+		/// <exception cref="ObjectDisposedException">If the <see cref="ReadStream"/> is already closed</exception>
+		/// <remarks>When overridden by a derived class, <see cref="OnReadFinish"/> shall be invoked at last.</remarks>
+		public virtual int Read(long offset, Span<byte> target)
+		{
+			try
+			{
+				if (offset < 0)
+					throw new ArgumentOutOfRangeException(nameof(offset), Parameter.CannotNegative);
+				if (target.Length <= 0)
+					throw new ArgumentOutOfRangeException(nameof(target), Parameter.MustPositive);
+				if (offset + target.Length > this.ReadStream.Length)
+					throw new ArgumentException(Parameter.WrongSize);
+
+				if (offset != this.ReadStream.Position)
+					this.ReadStream.Position = offset;
+				return this.ReadStream.Read(target);
+			}
+			finally
+			{
+				this.OnReadFinish();
+			}
+		}
+		#endregion
 	}
 
 
 	/// <summary>
-	/// An implementation of <see cref="AbstractStreamPointer"/> for FTP. This is implemented as a class to prevent boxing and unboxing.
+	/// An implementation of <see cref="IStreamPointer"/> for FTP. This is implemented as a class to prevent boxing and unboxing.
 	/// </summary>
-	public class TcpStreamPointer : AbstractStreamPointer
+	public class TcpStreamPointer : IStreamPointer
 	{
 		#region URI
 		private readonly Uri uri;
@@ -125,7 +185,7 @@ namespace Althea.Backend.Storage
 		public Uri OriginalUri => this.uri;
 
 		/// <summary>
-		/// The basic description of this <see cref="AbstractStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
+		/// The basic description of this <see cref="IStreamPointer"/> as a <see cref="string"/>, such as <see cref="Uri.ToString"/>
 		/// </summary>
 		protected override string Description => this.OriginalUri.ToString();
 
@@ -200,7 +260,7 @@ namespace Althea.Backend.Storage
 		public override bool CanWriteOffset => false;
 
 		/// <summary>
-		/// The method to be implemented to actually dispose the resources held by this <see cref="AbstractStreamPointer"/>
+		/// The method to be implemented to actually dispose the resources held by this <see cref="IStreamPointer"/>
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)

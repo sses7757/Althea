@@ -239,7 +239,7 @@ namespace Althea.NativeTypes
 				throw new ArgumentNullException(nameof(str));
 			bool success = TryParse(str, out Complex<T> result);
 			if (!success)
-				throw new ArgumentException(string.Format(Arithmetic.CannotParseComplex, str, typeof(T).Name), nameof(str));
+				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
 			return result;
 		}
 		#endregion
@@ -321,7 +321,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Override <see cref="object.Equals(object)"/>
 		/// </summary>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			Complex<T> a;
 			if (obj is int @int)
@@ -536,7 +536,7 @@ namespace Althea.NativeTypes
 		/// String representation of this complex number
 		/// </summary>
 		/// <param name="format">format of output</param>
-		public string ToString(string format)
+		public string ToString(string? format)
 		{
 			return this.ToString(format, Resource.Culture);
 		}
@@ -546,7 +546,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="format">format of output</param>
 		/// <param name="formatProvider">The provider to use to format the value.</param>
-		public string ToString(string format, IFormatProvider formatProvider = null)
+		public string ToString(string? format, IFormatProvider? formatProvider = null)
 		{
 			formatProvider ??= Resource.Culture;
 			string r = this.real.ToString(format, formatProvider);
@@ -573,8 +573,6 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="input"/></remarks>
 		public static Complex<T>[] FormComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 		{
-			if (input is null)
-				throw new ArgumentNullException(nameof(input));
 			long length = input.LongLength / 2;
 			var complexArray = new Complex<T>[length];
 			for (long i = 0; i < length; i++)
@@ -593,8 +591,6 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="input"/></remarks>
 		public static Complex<T>[] ToComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 		{
-			if (input is null)
-				throw new ArgumentNullException(nameof(input));
 			var complexArray = new Complex<T>[input.LongLength];
 			for (long i = 0; i < input.LongLength; i++)
 			{

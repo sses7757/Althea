@@ -70,6 +70,24 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Cannot find a mehtod of given requirement(s). 的本地化字符串。
+        /// </summary>
+        internal static string CannotFindMethod {
+            get {
+                return ResourceManager.GetString("CannotFindMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Cannot parse &apos;{0}&apos; to a custom type {1}. 的本地化字符串。
+        /// </summary>
+        internal static string CannotParse {
+            get {
+                return ResourceManager.GetString("CannotParse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cannot parse &apos;{0}&apos; to a complex number with real type {1}. 的本地化字符串。
         /// </summary>
         internal static string CannotParseComplex {

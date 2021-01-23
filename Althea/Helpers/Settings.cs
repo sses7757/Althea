@@ -27,17 +27,17 @@ namespace Althea.Helpers
 
 			public bool DisposeNotCurrentImplementation;
 
-			public string Memory, LinearAlgebra, TensorAlgebra, Statistics, Solver;
+			public string Storage, LinearAlgebra, TensorAlgebra, Statistics, Solver;
 
 			internal JsonImplementationSettings(bool _)
 			{
 				////UseRecentImplementation = true;
 				DisposeNotCurrentImplementation = true;
-				Memory = null;
-				LinearAlgebra = null;
-				TensorAlgebra = null;
-				Statistics = null;
-				Solver = null;
+				Storage = string.Empty;
+				LinearAlgebra = string.Empty;
+				TensorAlgebra = string.Empty;
+				Statistics = string.Empty;
+				Solver = string.Empty;
 			}
 		}
 
@@ -93,16 +93,6 @@ namespace Althea.Helpers
 		#endregion
 
 		#region implementation settings
-		/////// <summary>
-		/////// When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not?<br/>
-		/////// If so, this library will try to find suitable implementation used before during this running. An error will be thrown when there is no suitable implementation.<br/>
-		/////// If not, this library will try to create temporary memory which fits the current implementation (may cause significant performance loss). If memory allocation or copies fails, an error will be thrown.
-		/////// </summary>
-		////public static bool UseRecentImplementation {
-		////	get => singletonSettings.ImplementationSettings.UseRecentImplementation;
-		////	set => singletonSettings.ImplementationSettings.UseRecentImplementation = value;
-		////}
-
 		/// <summary>
 		/// When a new implementation is indicated, whether elder ones will be disposed or not.<br/>
 		/// If the value is true while 'UseRecentImplementation' is true, there may be creations and dispositions of implementation classes.<br/>
@@ -116,55 +106,100 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Which memory / storage implementation to use
 		/// </summary>
-		public static Type MemoryImplementation {
-			get => Type.GetType(singletonSettings.ImplementationSettings.Memory);
+		/// <exception cref="ArgumentNullException">If the given value is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
+		public static Type? StorageImplementation {
+			get => Type.GetType(singletonSettings.ImplementationSettings.Storage);
 			set {
+				if (value is null)
+					throw new ArgumentNullException(nameof(value));
 				if (Storage.AbstractApi.SetImplementation(value))
-					singletonSettings.ImplementationSettings.Memory = value.AssemblyQualifiedName;
+				{
+					var v = value.AssemblyQualifiedName;
+					if (v is null)
+						throw new ArgumentOutOfRangeException(nameof(value));
+					singletonSettings.ImplementationSettings.Storage = v;
+				}
 			}
 		}
 
 		/// <summary>
 		/// Which linear algebra implementation to use
 		/// </summary>
-		public static Type LinearAlgebraImplementation {
+		/// <exception cref="ArgumentNullException">If the given value is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
+		public static Type? LinearAlgebraImplementation {
 			get => Type.GetType(singletonSettings.ImplementationSettings.LinearAlgebra);
 			set {
+				if (value is null)
+					throw new ArgumentNullException(nameof(value));
 				if (LinearAlgebra.AbstractApi.SetImplementation(value))
-					singletonSettings.ImplementationSettings.LinearAlgebra = value.AssemblyQualifiedName;
+				{
+					var v = value.AssemblyQualifiedName;
+					if (v is null)
+						throw new ArgumentOutOfRangeException(nameof(value));
+					singletonSettings.ImplementationSettings.LinearAlgebra = v;
+				}
 			}
 		}
 
 		/// <summary>
 		/// Which tensor algebra implementation to use
 		/// </summary>
-		public static Type TensorAlgebraImplementation {
+		/// <exception cref="ArgumentNullException">If the given value is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
+		public static Type? TensorAlgebraImplementation {
 			get => Type.GetType(singletonSettings.ImplementationSettings.TensorAlgebra);
 			set {
+				if (value is null)
+					throw new ArgumentNullException(nameof(value));
 				if (TensorAlgebra.AbstractApi.SetImplementation(value))
-					singletonSettings.ImplementationSettings.TensorAlgebra = value.AssemblyQualifiedName;
+				{
+					var v = value.AssemblyQualifiedName;
+					if (v is null)
+						throw new ArgumentOutOfRangeException(nameof(value));
+					singletonSettings.ImplementationSettings.TensorAlgebra = v;
+				}
 			}
 		}
 
 		/// <summary>
 		/// Which statistics implementation to use
 		/// </summary>
-		public static Type StatisticsImplementation {
+		/// <exception cref="ArgumentNullException">If the given value is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
+		public static Type? StatisticsImplementation {
 			get => Type.GetType(singletonSettings.ImplementationSettings.Statistics);
 			set {
+				if (value is null)
+					throw new ArgumentNullException(nameof(value));
 				if (Statistics.AbstractApi.SetImplementation(value))
-					singletonSettings.ImplementationSettings.Statistics = value.AssemblyQualifiedName;
+				{
+					var v = value.AssemblyQualifiedName;
+					if (v is null)
+						throw new ArgumentOutOfRangeException(nameof(value));
+					singletonSettings.ImplementationSettings.Statistics = v;
+				}
 			}
 		}
 
 		/// <summary>
 		/// Which general solver implementation to use
 		/// </summary>
-		public static Type SolverImplementation {
+		/// <exception cref="ArgumentNullException">If the given value is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
+		public static Type? SolverImplementation {
 			get => Type.GetType(singletonSettings.ImplementationSettings.Solver);
 			set {
+				if (value is null)
+					throw new ArgumentNullException(nameof(value));
 				if (Solver.AbstractApi.SetImplementation(value))
-					singletonSettings.ImplementationSettings.Solver = value.AssemblyQualifiedName;
+				{
+					var v = value.AssemblyQualifiedName;
+					if (v is null)
+						throw new ArgumentOutOfRangeException(nameof(value));
+					singletonSettings.ImplementationSettings.Solver = v;
+				}
 			}
 		}
 
@@ -174,7 +209,7 @@ namespace Althea.Helpers
 		/// <param name="backend">The <see cref="Backend.ISetBackend"/> used to set all back-ends</param>
 		public static void SetBackend(Backend.ISetBackend backend)
 		{
-			MemoryImplementation = backend.MemoryImplementation;
+			StorageImplementation = backend.MemoryImplementation;
 			LinearAlgebraImplementation = backend.LinearAlgebraImplementation;
 			TensorAlgebraImplementation = backend.TensorAlgebraImplementation;
 			StatisticsImplementation = backend.StatisticsImplementation;

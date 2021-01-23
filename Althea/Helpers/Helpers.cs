@@ -94,8 +94,6 @@ namespace Althea.Helpers
 	{
 		private static readonly Dictionary<(Type t1, Type t2), Delegate> _conversionCache = new Dictionary<(Type t1, Type t2), Delegate>();
 
-		private delegate T2 conversionDelegate<in T1, out T2>(T1 obj);
-
 		/// <summary>
 		/// Generic convert <paramref name="obj"/> of <typeparamref name="T1"/> to <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators.
 		/// </summary>
@@ -116,12 +114,11 @@ namespace Althea.Helpers
 												 .Where(predicator).FirstOrDefault();
 				conversionOperator ??= t2.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
 												 .Where(predicator).FirstOrDefault();
-				_conversionCache.Add((t1, t2), conversionOperator?.CreateDelegate<conversionDelegate<T1, T2>>());
+				if (conversionOperator is null)
+					throw new MethodAccessException(Other.CannotFindMethod);
+				_conversionCache.Add((t1, t2), conversionOperator.CreateDelegate<Converter<T1, T2>>());
 			}
-			if (_conversionCache[(t1, t2)] is null)
-				throw new MethodAccessException();
-			else
-				return ((conversionDelegate<T1, T2>)_conversionCache[(t1, t2)]).Invoke(obj);
+			return ((Converter<T1, T2>)_conversionCache[(t1, t2)]).Invoke(obj);
 		}
 	}
 	#endregion
@@ -705,23 +702,30 @@ namespace Althea.Helpers
 
 		private delegate string getNumberStringDelegate<T>(T input, string format, int precision) where T : unmanaged, IEquatable<T>, IFormattable;
 
-		private static readonly Dictionary<Type, Delegate> _getNumberStringCache = new Dictionary<Type, Delegate>();
+		private static readonly Dictionary<Type, Delegate> cache_getNumberString = new Dictionary<Type, Delegate>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static getNumberStringDelegate<T> GetDelegateOfGetNumberString<T>() where T : unmanaged, IEquatable<T>, IFormattable
 		{
 			Type t = typeof(T);
-			if (!_getNumberStringCache.ContainsKey(t))
+			if (!cache_getNumberString.ContainsKey(t))
 			{
 				bool isTComplex = default(T).IsComplex();
 				getNumberStringDelegate<T> result;
 				if (isTComplex)
-					result = typeof(ExtensionHelper).GetMethod(nameof(GetNumberStringComplex), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).MakeGenericMethod(t.GenericTypeArguments).CreateDelegate<getNumberStringDelegate<T>>();
+				{
+					var temp = typeof(ExtensionHelper).GetMethod(nameof(GetNumberStringComplex), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.MakeGenericMethod(t.GenericTypeArguments)?.CreateDelegate<getNumberStringDelegate<T>>();
+					if (temp is null)
+						throw new InvalidOperationException();
+					result = temp;
+				}
 				else
+				{
 					result = new getNumberStringDelegate<T>(GetNumberStringReal);
-				_getNumberStringCache.Add(t, result);
+				}
+				cache_getNumberString.Add(t, result);
 			}
-			return (getNumberStringDelegate<T>)_getNumberStringCache[t];
+			return (getNumberStringDelegate<T>)cache_getNumberString[t];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -827,9 +831,9 @@ namespace Althea.Helpers
 		/// <param name="array">the array to be acted by <paramref name="action"/></param>
 		/// <param name="action">the <see cref="Action{T}"/> to apply</param>
 		/// <returns>the cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
-		public static T ApplyToClone<T>(this T array, Action<T> action) where T : class, ICloneable, IDisposable
+		public static T ApplyToClone<T>(this T array, Action<T> action) where T : ICloneable<T>, IDisposable
 		{
-			var copy = array.Clone() as T;
+			var copy = array.Clone();
 			try
 			{
 				action(copy);

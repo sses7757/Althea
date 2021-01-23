@@ -7,7 +7,7 @@ namespace Althea.Linq
 {
 	#region immutable set
 
-	#region interface
+	#region interfaces
 	/// <summary>
 	/// The interface for immutable set
 	/// </summary>
@@ -20,7 +20,7 @@ namespace Althea.Linq
 		/// <param name="other">The collection of items to remove from the set.</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>A new set as the result</returns>
-		IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null);
+		IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null);
 
 		/// <summary>
 		/// Pick all elements in the specified set from the current set.
@@ -28,7 +28,7 @@ namespace Althea.Linq
 		/// <param name="other">The collection of items to intersect from the set.</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>A new set as the result</returns>
-		IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null);
+		IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null);
 
 		/// <summary>
 		/// Generate a new set so that it contains all elements that are present in the current set, in the specified set, or in both.
@@ -36,7 +36,7 @@ namespace Althea.Linq
 		/// <param name="other">the other set</param>
 		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>A new set as the result</returns>
-		IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null);
+		IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null);
 
 		/// <summary>
 		/// Convert this set to an array
@@ -45,7 +45,7 @@ namespace Althea.Linq
 		T[] ToArray();
 	}
 
-	internal interface IStructImmutableSet<T> : IImmutableSet<T> where T : struct
+	internal interface IStructImmutableSet<T> : IImmutableSet<T>
 	{
 		ImmutableSet<T> ToNormal() => new ImmutableSet<T>(this.ToArray());
 	}
@@ -70,41 +70,50 @@ namespace Althea.Linq
 		#endregion
 
 		#region equality
-		public bool Equals(ImmutableSet<T> other)
+		public bool Equals(ImmutableSet<T>? other)
 		{
-			if ((this is null) != (other is null))
+			if (other is not null)
+			{
+				if (this.data.Length != other.data.Length)
+					return false;
+				if (this.hash != other.hash)
+					return false;
+				return this.ExceptWith(other, EqualityComparer<T>.Default).Count == 0;
+			}
+			else
+			{
 				return false;
-			if (this is null && other is null)
-				return true;
-			if (this.data.Length != other.data.Length)
-				return false;
-			if (this.hash != other.hash)
-				return false;
-			return this.ExceptWith(other, EqualityComparer<T>.Default).Count == 0;
+			}
 		}
 
-		public bool Equals(IImmutableSet<T> other)
+		public bool Equals(IImmutableSet<T>? other)
 		{
-			if ((this is null) != (other is null))
+			if (other is not null)
+			{
+				if (this.data.Length != other.Count)
+					return false;
+				return this.ExceptWith(other, EqualityComparer<T>.Default).Count == 0;
+			}
+			else
+			{
 				return false;
-			if (this is null && other is null)
-				return true;
-			if (this.data.Length != other.Count)
-				return false;
-			return this.ExceptWith(other, EqualityComparer<T>.Default).Count == 0;
+			}
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return this.Equals(obj as ImmutableSet<T>);
 		}
 
-		public static bool operator ==(ImmutableSet<T> left, ImmutableSet<T> right)
+		public static bool operator ==(ImmutableSet<T>? left, ImmutableSet<T>? right)
 		{
-			return left.Equals(right);
+			if (left is null == right is null)
+				return true;
+			else
+				return (left is not null && left.Equals(right)) || (right is not null && right.Equals(left));
 		}
 
-		public static bool operator !=(ImmutableSet<T> left, ImmutableSet<T> right)
+		public static bool operator !=(ImmutableSet<T>? left, ImmutableSet<T>? right)
 		{
 			return !(left == right);
 		}
@@ -116,7 +125,7 @@ namespace Althea.Linq
 		#endregion
 
 		#region set op
-		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T> comparer)
+		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer)
 		{
 			if (other is null)
 				throw new ArgumentNullException(nameof(other));
@@ -129,7 +138,7 @@ namespace Althea.Linq
 			return new ImmutableSet<T>(res.ToArray());
 		}
 
-		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T> comparer)
+		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer)
 		{
 			if (other is null)
 				throw new ArgumentNullException(nameof(other));
@@ -142,11 +151,11 @@ namespace Althea.Linq
 			return new ImmutableSet<T>(res.ToArray());
 		}
 
-		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T> comparer)
+		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer)
 		{
 			if (other is null)
 				throw new ArgumentNullException(nameof(other));
-			var except = other.ExceptWith(this, comparer) as ImmutableSet<T>;
+			var except = (ImmutableSet<T>)other.ExceptWith(this, comparer);
 			var res = new T[this.Count + except.Count];
 			Array.Copy(this.data, res, this.Count);
 			Array.Copy(except.data, 0, res, this.Count, except.Count);
@@ -157,7 +166,7 @@ namespace Althea.Linq
 		#region other
 		public T[] ToArray()
 		{
-			return this.data.Clone() as T[];
+			return (T[])this.data.Clone();
 		}
 
 		public IEnumerator<T> GetEnumerator()
@@ -180,14 +189,16 @@ namespace Althea.Linq
 	/// The immutable set which only contains zero or one element
 	/// </summary>
 	/// <typeparam name="T">any data type</typeparam>
-	public readonly struct ImmutableZeroOneElementSet<T> : IStructImmutableSet<T>, IEquatable<ImmutableZeroOneElementSet<T>> where T : struct
+	public readonly struct ImmutableZeroOneElementSet<T> : IStructImmutableSet<T>, IEquatable<ImmutableZeroOneElementSet<T>>
 	{
 		#region basic
-		private readonly T? data;
+		private readonly bool hasValue;
 
-		public T this[int index] => this.data.HasValue && index == 0 ? this.data.Value : throw new ArgumentOutOfRangeException(nameof(index));
+		private readonly T data;
 
-		public int Count => this.data.HasValue ? 1 : 0;
+		public T this[int index] => this.hasValue && index == 0 ? this.data : throw new ArgumentOutOfRangeException(nameof(index));
+
+		public int Count => this.hasValue ? 1 : 0;
 
 		/// <summary>
 		/// Create a <see cref="ImmutableZeroOneElementSet{T}"/> with given one element
@@ -195,6 +206,7 @@ namespace Althea.Linq
 		/// <param name="data">the given element</param>
 		public ImmutableZeroOneElementSet(T data)
 		{
+			this.hasValue = true;
 			this.data = data;
 		}
 		#endregion
@@ -204,13 +216,13 @@ namespace Althea.Linq
 		{
 			if (this.Count != other.Count)
 				return false;
-			if (!this.data.HasValue)
+			if (!this.hasValue)
 				return true;
 			var c = EqualityComparer<T>.Default;
-			return c.Equals(this.data.Value, other.data.Value);
+			return c.Equals(this.data, other.data);
 		}
 
-		public bool Equals(IImmutableSet<T> other)
+		public bool Equals(IImmutableSet<T>? other)
 		{
 			if (other is null)
 				return false;
@@ -219,10 +231,10 @@ namespace Althea.Linq
 			if (other is ImmutableZeroOneElementSet<T> set)
 				return this.Equals(set);
 			var c = EqualityComparer<T>.Default;
-			return c.Equals(this.data.Value, other[0]);
+			return c.Equals(this.data, other[0]);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return this.Equals(obj as IImmutableSet<T>);
 		}
@@ -245,43 +257,43 @@ namespace Althea.Linq
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(this.data.GetValueOrDefault());
+			return this.hasValue ? HashCode.Combine(this.data) : 0;
 		}
 		#endregion
 
 		#region set op
-		private bool GetContains(IImmutableSet<T> other, IEqualityComparer<T> comparer)
+		private bool GetContains(IImmutableSet<T> other, IEqualityComparer<T>? comparer)
 		{
 			if (other is null)
 				throw new ArgumentNullException(nameof(other));
-			if (!this.data.HasValue)
+			if (!this.hasValue)
 				return false;
-			bool contain = other.Contains(this.data.Value, comparer);
+			bool contain = other.Contains(this.data, comparer);
 			return contain;
 		}
 
-		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var contain = this.GetContains(other, comparer);
-			if (contain || !this.data.HasValue)
+			if (contain || !this.hasValue)
 				return new ImmutableZeroOneElementSet<T>();
 			else
-				return new ImmutableZeroOneElementSet<T>(this.data.Value);
+				return new ImmutableZeroOneElementSet<T>(this.data);
 		}
 
-		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var contain = this.GetContains(other, comparer);
-			if (!contain && this.data.HasValue)
-				return new ImmutableZeroOneElementSet<T>(this.data.Value);
+			if (!contain && this.hasValue)
+				return new ImmutableZeroOneElementSet<T>(this.data);
 			else
 				return new ImmutableZeroOneElementSet<T>();
 		}
 
-		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var contain = this.GetContains(other, comparer);
-			if (contain || !this.data.HasValue)
+			if (contain || !this.hasValue)
 			{
 				return other;
 			}
@@ -294,15 +306,15 @@ namespace Althea.Linq
 			}
 			else if (other.Count == 2)
 			{
-				return new ImmutableThreeElementSet<T>(this.data.Value, other[0], other[1]);
+				return new ImmutableThreeElementSet<T>(this.data, other[0], other[1]);
 			}
 			else if (other.Count == 1)
 			{
-				return new ImmutableTwoElementSet<T>(this.data.Value, other[0]);
+				return new ImmutableTwoElementSet<T>(this.data, other[0]);
 			}
 			else // other.Count == 0
 			{
-				return new ImmutableZeroOneElementSet<T>(this.data.Value);
+				return new ImmutableZeroOneElementSet<T>(this.data);
 			}
 		}
 		#endregion
@@ -310,13 +322,13 @@ namespace Althea.Linq
 		#region other
 		public T[] ToArray()
 		{
-			return this.data.HasValue ? new[] { this.data.Value } : Array.Empty<T>();
+			return this.hasValue ? new[] { this.data } : Array.Empty<T>();
 		}
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			if (this.data.HasValue)
-				yield return this.data.Value;
+			if (this.hasValue)
+				yield return this.data;
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -328,25 +340,13 @@ namespace Althea.Linq
 		/// Explicitly convert a <see cref="ImmutableZeroOneElementSet{T}"/> to a <typeparamref name="T"/>. The default value will be returned if <paramref name="set"/> is empty.
 		/// </summary>
 		/// <param name="set">The <see cref="ImmutableZeroOneElementSet{T}"/> to convert</param>
-		public static explicit operator T(ImmutableZeroOneElementSet<T> set) => set.data.GetValueOrDefault();
+		public static explicit operator T?(ImmutableZeroOneElementSet<T> set) => set.hasValue ? set.data : default;
 
 		/// <summary>
-		/// Implicitly convert a <see cref="ImmutableZeroOneElementSet{T}"/> to a <see cref="Nullable{T}"/>. The null value will be returned if <paramref name="set"/> is empty.
-		/// </summary>
-		/// <param name="set">The <see cref="ImmutableZeroOneElementSet{T}"/> to convert</param>
-		public static implicit operator T?(ImmutableZeroOneElementSet<T> set) => set.data;
-
-		/// <summary>
-		/// Implicitly convert a <typeparamref name="T"/> to a <see cref="ImmutableZeroOneElementSet{T}"/> with one element.
+		/// Implicitly convert a <typeparamref name="T"/> to a <see cref="ImmutableZeroOneElementSet{T}"/> with zero or one element.
 		/// </summary>
 		/// <param name="data">The <typeparamref name="T"/> to convert</param>
-		public static implicit operator ImmutableZeroOneElementSet<T>(T data) => new ImmutableZeroOneElementSet<T>(data);
-
-		/// <summary>
-		/// Implicitly convert a <see cref="Nullable{T}"/> to a <see cref="ImmutableZeroOneElementSet{T}"/> with zero or one element.
-		/// </summary>
-		/// <param name="data">The <see cref="Nullable{T}"/> to convert</param>
-		public static implicit operator ImmutableZeroOneElementSet<T>(T? data) => data.HasValue ? new ImmutableZeroOneElementSet<T>(data.Value) : new ImmutableZeroOneElementSet<T>();
+		public static implicit operator ImmutableZeroOneElementSet<T>(T? data) => data is null ? new ImmutableZeroOneElementSet<T>() : new ImmutableZeroOneElementSet<T>(data);
 		#endregion
 	}
 
@@ -354,7 +354,7 @@ namespace Althea.Linq
 	/// The immutable set which only contains exactly two elements
 	/// </summary>
 	/// <typeparam name="T">any data type</typeparam>
-	public readonly struct ImmutableTwoElementSet<T> : IImmutableSet<T>, IEquatable<ImmutableTwoElementSet<T>> where T : struct
+	public readonly struct ImmutableTwoElementSet<T> : IImmutableSet<T>, IEquatable<ImmutableTwoElementSet<T>>
 	{
 		#region basic
 		private readonly T data1, data2;
@@ -385,7 +385,7 @@ namespace Althea.Linq
 					(c.Equals(this.data2, other.data1) || c.Equals(this.data2, other.data2));
 		}
 
-		public bool Equals(IImmutableSet<T> other)
+		public bool Equals(IImmutableSet<T>? other)
 		{
 			if (other is null)
 				return false;
@@ -398,7 +398,7 @@ namespace Althea.Linq
 					(c.Equals(this.data2, other[0]) || c.Equals(this.data2, other[1]));
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return this.Equals(obj as IImmutableSet<T>);
 		}
@@ -421,12 +421,12 @@ namespace Althea.Linq
 
 		public override int GetHashCode()
 		{
-			return unchecked(this.data1.GetHashCode() + this.data2.GetHashCode());
+			return unchecked(this.data1?.GetHashCode() ?? 0 + this.data2?.GetHashCode() ?? 0);
 		}
 		#endregion
 
 		#region set op
-		private (bool, bool) GetContains(IImmutableSet<T> other, IEqualityComparer<T> comparer)
+		private (bool, bool) GetContains(IImmutableSet<T> other, IEqualityComparer<T>? comparer)
 		{
 			if (other is null)
 				throw new ArgumentNullException(nameof(other));
@@ -435,7 +435,7 @@ namespace Althea.Linq
 			return (contain1, contain2);
 		}
 
-		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var (contain1, contain2) = this.GetContains(other, comparer);
 			if (contain1 && contain2)
@@ -448,7 +448,7 @@ namespace Althea.Linq
 				return new ImmutableTwoElementSet<T>(this.data1, this.data2);
 		}
 
-		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var (contain1, contain2) = this.GetContains(other, comparer);
 			if (contain1 && contain2)
@@ -461,7 +461,7 @@ namespace Althea.Linq
 				return new ImmutableZeroOneElementSet<T>();
 		}
 
-		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var (contain1, contain2) = this.GetContains(other, comparer);
 			int count = this.Count + other.Count - (contain1 ? 1 : 0) - (contain2 ? 1 : 0);
@@ -489,7 +489,7 @@ namespace Althea.Linq
 			}
 			else // count == 0 or 1 is not possible
 			{
-				return null;
+				return new ImmutableZeroOneElementSet<T>();
 			}
 		}
 		#endregion
@@ -529,7 +529,7 @@ namespace Althea.Linq
 	/// The immutable set which only contains exactly three elements
 	/// </summary>
 	/// <typeparam name="T">any data type</typeparam>
-	public readonly struct ImmutableThreeElementSet<T> : IImmutableSet<T>, IEquatable<ImmutableThreeElementSet<T>> where T : struct
+	public readonly struct ImmutableThreeElementSet<T> : IImmutableSet<T>, IEquatable<ImmutableThreeElementSet<T>>
 	{
 		#region basic
 		private readonly T data1, data2, data3;
@@ -563,7 +563,7 @@ namespace Althea.Linq
 					(c.Equals(this.data3, other.data1) || c.Equals(this.data3, other.data2) || c.Equals(this.data3, other.data3));
 		}
 
-		public bool Equals(IImmutableSet<T> other)
+		public bool Equals(IImmutableSet<T>? other)
 		{
 			if (other is null)
 				return false;
@@ -577,7 +577,7 @@ namespace Althea.Linq
 					(c.Equals(this.data3, other[0]) || c.Equals(this.data3, other[1]) || c.Equals(this.data3, other[2]));
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return this.Equals(obj as IImmutableSet<T>);
 		}
@@ -600,12 +600,12 @@ namespace Althea.Linq
 
 		public override int GetHashCode()
 		{
-			return unchecked(this.data1.GetHashCode() + this.data2.GetHashCode() + this.data3.GetHashCode());
+			return unchecked(this.data1?.GetHashCode() ?? 0 + this.data2?.GetHashCode() ?? 0 + this.data3?.GetHashCode() ?? 0);
 		}
 		#endregion
 
 		#region set op
-		private (bool, bool, bool) GetContains(IImmutableSet<T> other, IEqualityComparer<T> comparer)
+		private (bool, bool, bool) GetContains(IImmutableSet<T> other, IEqualityComparer<T>? comparer)
 		{
 			if (other is null)
 				throw new ArgumentNullException(nameof(other));
@@ -615,7 +615,7 @@ namespace Althea.Linq
 			return (contain1, contain2, contain3);
 		}
 
-		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var (contain1, contain2, contain3) = this.GetContains(other, comparer);
 			if (contain1 && contain2 && contain3)
@@ -636,7 +636,7 @@ namespace Althea.Linq
 				return new ImmutableThreeElementSet<T>(this.data1, this.data2, this.data3);
 		}
 
-		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var (contain1, contain2, contain3) = this.GetContains(other, comparer);
 			if (contain1 && contain2 && contain3)
@@ -657,7 +657,7 @@ namespace Althea.Linq
 				return new ImmutableZeroOneElementSet<T>();
 		}
 
-		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T> comparer = null)
+		public IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null)
 		{
 			var (contain1, contain2, contain3) = this.GetContains(other, comparer);
 			int count = this.Count + other.Count - (contain1 ? 1 : 0) - (contain2 ? 1 : 0) - (contain3 ? 1 : 0);
@@ -674,7 +674,7 @@ namespace Althea.Linq
 			}
 			else // count == 0 or 1 or 2 is not possible
 			{
-				return null;
+				return new ImmutableZeroOneElementSet<T>();
 			}
 		}
 		#endregion
@@ -759,11 +759,11 @@ namespace Althea.Linq
 			return Array.BinarySearch(this.array, value);
 		}
 
-		private int[] _multiplicity = null;
+		private int[]? _multiplicity = null;
 
 		public IReadOnlyList<int> Multiplicities()
 		{
-			if (!(this._multiplicity is null))
+			if (this._multiplicity is not null)
 				return this._multiplicity;
 			var mul = new List<int>(this.array.Length);
 			T now = this.array[0];
@@ -811,7 +811,7 @@ namespace Althea.Linq
 		TKey Key { get; }
 	}
 
-	internal readonly struct ReadOnlyGrouping<TKey, TElement> : IReadOnlyGrouping<TKey, TElement>
+	internal class ReadOnlyGrouping<TKey, TElement> : IReadOnlyGrouping<TKey, TElement>
 	{
 		public TKey Key { get; }
 

@@ -43,7 +43,7 @@ namespace Althea.Backend.CSharp.Storage
 		/// Get or set the host and folder to put the temporary files using TCP, default null means that this <see cref="StorageApi"/> does not support TCP storage location
 		/// </summary>
 		/// <remarks>If you set an invalid value, there may be exception thrown</remarks>
-		public Uri TempTcpFolder { get; set; } = null;
+		public Uri? TempTcpFolder { get; set; } = null;
 		#endregion
 
 		#region support
@@ -81,7 +81,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		#region private methods
 		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempTcpFolder is not null && location == TCPAlone);
-		private long GetPointerOffset<T>(PointerSegment pointer, out IMemoryPointer memoryPointer, out AbstractStreamPointer streamPointer, bool @throw = true) where 
+		private long GetPointerOffset<T>(PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) where 
 			T : unmanaged
 		{
 			memoryPointer = null; streamPointer = null;
@@ -97,11 +97,11 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				memoryPointer = mp;
 			}
-			else if (pointer.Location == FileAlone && pointer.Pointer is AbstractStreamPointer { CanRead: true } sp1)
+			else if (pointer.Location == FileAlone && pointer.Pointer is IStreamPointer /*{ NativeStream: not null }*/ sp1)
 			{
 				streamPointer = sp1;
 			}
-			else if (this.TempTcpFolder is not null && pointer.Location == TCPAlone && pointer.Pointer is AbstractStreamPointer sp2)
+			else if (this.TempTcpFolder is not null && pointer.Location == TCPAlone && pointer.Pointer is IStreamPointer /*{ NativeStream: not null }*/ sp2)
 			{
 				streamPointer = sp2;
 			}
@@ -112,7 +112,7 @@ namespace Althea.Backend.CSharp.Storage
 			return (long)(pointer.OffsetInBytes / Storage<T>.SizeOfT);
 		}
 
-		private long GetPointerOffset(PointerSegment pointer, out IMemoryPointer memoryPointer, out AbstractStreamPointer streamPointer, bool @throw = true) => this.GetPointerOffset<byte>(pointer, out memoryPointer, out streamPointer, @throw);
+		private long GetPointerOffset(PointerSegment pointer, out IMemoryPointer memoryPointer, out IStreamPointer streamPointer, bool @throw = true) => this.GetPointerOffset<byte>(pointer, out memoryPointer, out streamPointer, @throw);
 
 		#endregion
 
@@ -148,7 +148,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		public override bool Free(PointerSegment pointer, bool disposeManaged)
 		{
-			var offset = this.GetPointerOffset(pointer, out IMemoryPointer mp, out AbstractStreamPointer sp, @throw: false);
+			var offset = this.GetPointerOffset(pointer, out IMemoryPointer mp, out IStreamPointer sp, @throw: false);
 			if (offset != 0)
 				return false;
 
@@ -170,7 +170,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		public unsafe override void SetMemoryValue(PointerSegment pointer, byte value)
 		{
-			var offset = this.GetPointerOffset(pointer, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			var offset = this.GetPointerOffset(pointer, out IMemoryPointer mp, out IStreamPointer sp);
 			if (mp is not null)
 			{
 				Unsafe.InitBlock(mp.NativePointer(offset), value, checked((uint)pointer.LengthInBytes));
@@ -183,7 +183,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		public override void SetMemoryValue<T>(PointerSegment pointer, T value)
 		{
-			var offset = this.GetPointerOffset<T>(pointer, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			var offset = this.GetPointerOffset<T>(pointer, out IMemoryPointer mp, out IStreamPointer sp);
 			if (mp is not null)
 			{
 				mp.AsSpan<T>(pointer).Fill(value);
@@ -196,8 +196,8 @@ namespace Althea.Backend.CSharp.Storage
 
 		public override void MemoryCopy(PointerSegment source, PointerSegment destination)
 		{
-			long srcOff = this.GetPointerOffset(source, out IMemoryPointer srcMP, out AbstractStreamPointer srcSP);
-			long dstOff = this.GetPointerOffset(destination, out IMemoryPointer dstMP, out AbstractStreamPointer dstSP);
+			long srcOff = this.GetPointerOffset(source, out IMemoryPointer srcMP, out IStreamPointer srcSP);
+			long dstOff = this.GetPointerOffset(destination, out IMemoryPointer dstMP, out IStreamPointer dstSP);
 
 			uint copyLength = checked((uint)Math.Min(source.LengthInBytes, destination.LengthInBytes));
 			if (srcMP is not null && dstMP is not null)
@@ -244,8 +244,8 @@ namespace Althea.Backend.CSharp.Storage
 				return;
 			}
 			// normal cases
-			long srcOff = this.GetPointerOffset(source, out IMemoryPointer srcMP, out AbstractStreamPointer srcSP);
-			long dstOff = this.GetPointerOffset(destination, out IMemoryPointer dstMP, out AbstractStreamPointer dstSP);
+			long srcOff = this.GetPointerOffset(source, out IMemoryPointer srcMP, out IStreamPointer srcSP);
+			long dstOff = this.GetPointerOffset(destination, out IMemoryPointer dstMP, out IStreamPointer dstSP);
 			if (srcMP is not null && dstMP is not null)
 			{
 				uint hh = checked((uint)height);
@@ -291,7 +291,7 @@ namespace Althea.Backend.CSharp.Storage
 		#region low-level storage and manged operations
 		public override T ToManaged<T>(PointerSegment source)
 		{
-			long offset = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			long offset = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out IStreamPointer sp);
 			if (mp is not null)
 			{
 				unsafe { return Unsafe.Read<T>(mp.UnmangedPointer<T>(offset)); }
@@ -306,7 +306,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		public override void FromManaged<T>(PointerSegment destination, T value)
 		{
-			long offset = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			long offset = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out IStreamPointer sp);
 			if (mp is not null)
 			{
 				unsafe { Unsafe.Write(mp.UnmangedPointer<T>(offset), value); }
@@ -319,7 +319,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 		}
 
-		private static void ToManaged<T>(IMemoryPointer mp, AbstractStreamPointer sp, long offsetSrc, ArraySegment<T> destination, int offsetDst, int copyLength) where T : unmanaged
+		private static void ToManaged<T>(IMemoryPointer mp, IStreamPointer sp, long offsetSrc, ArraySegment<T> destination, int offsetDst, int copyLength) where T : unmanaged
 		{
 			var managedSpan = destination.AsSpan(offsetDst, copyLength);
 			if (mp is not null)
@@ -332,7 +332,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 		}
 
-		private static void FromManaged<T>(IMemoryPointer mp, AbstractStreamPointer sp, long offsetDst, ArraySegment<T> source, int offsetSrc, int copyLength) where T : unmanaged
+		private static void FromManaged<T>(IMemoryPointer mp, IStreamPointer sp, long offsetDst, ArraySegment<T> source, int offsetSrc, int copyLength) where T : unmanaged
 		{
 			var managedSpan = source.AsSpan(offsetSrc, copyLength);
 			if (mp is not null)
@@ -347,14 +347,14 @@ namespace Althea.Backend.CSharp.Storage
 
 		public override void ToManaged<T>(PointerSegment source, ArraySegment<T> destination)
 		{
-			long offset = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			long offset = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out IStreamPointer sp);
 			int copyLength = checked((int)Math.Min(source.LengthInBytes / Storage<T>.SizeOfT, (ulong)destination.Count));
 			ToManaged(mp, sp, offset, destination, 0, copyLength);
 		}
 
 		public override void FromManaged<T>(PointerSegment destination, ArraySegment<T> values)
 		{
-			long offset = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			long offset = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out IStreamPointer sp);
 			int copyLength = checked((int)Math.Min(destination.LengthInBytes / Storage<T>.SizeOfT, (ulong)values.Count));
 			FromManaged(mp, sp, offset, values, 0, copyLength);
 		}
@@ -378,7 +378,7 @@ namespace Althea.Backend.CSharp.Storage
 			if (destinationLeadDim == 0)
 				destinationLeadDim = height;
 			// shortcut
-			long start = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			long start = this.GetPointerOffset<T>(source, out IMemoryPointer mp, out IStreamPointer sp);
 			if (leadDim == height && destinationLeadDim == height)
 			{
 				ToManaged(mp, sp, start, destination, 0, checked((int)(height * width)));
@@ -413,7 +413,7 @@ namespace Althea.Backend.CSharp.Storage
 			if (valuesLeadDim == 0)
 				valuesLeadDim = height;
 			// shortcut
-			long start = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out AbstractStreamPointer sp);
+			long start = this.GetPointerOffset<T>(destination, out IMemoryPointer mp, out IStreamPointer sp);
 			if (leadDim == height && valuesLeadDim == height)
 			{
 				FromManaged(mp, sp, start, values, 0, checked((int)(height * width)));

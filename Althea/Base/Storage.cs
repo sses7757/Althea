@@ -175,7 +175,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is StorageLocation storageDetail && this.Equals(storageDetail);
 		}
@@ -356,7 +356,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is CombinationOfLocations descr && this.Equals(descr);
 		}
@@ -462,46 +462,21 @@ namespace Althea
 
 	#region interface
 	/// <summary>
-	/// The interface for an immutable pointer at any possible storage location, including any type of memory and any scheme of URI.
+	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
 	public interface IPointer : IMainPropertyFormat, ICheckValid
 	{
 		/// <summary>
-		/// The original length of this pointer's underlying storage in bytes
+		/// When implemented by derived classes, get the original length of this pointer's underlying storage in bytes
 		/// </summary>
 		ulong LengthInBytes { get; }
 
 		/// <summary>
-		/// <b>Statically</b> check whether given <paramref name="location"/> is a supported one for this pointer
+		/// When implemented by derived classes, <b>statically</b> check whether given <paramref name="location"/> is a supported one for this pointer
 		/// </summary>
 		/// <param name="location">The given <see cref="StorageLocation"/> to be checked</param>
 		/// <returns>Whether given <paramref name="location"/> is supported or not</returns>
 		bool IsValidLocation(StorageLocation location);
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be read or not
-		/// </summary>
-		bool CanRead { get; }
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be written or not
-		/// </summary>
-		bool CanWrite { get; }
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be read with offset or not
-		/// </summary>
-		bool CanReadOffset { get; }
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be written with offset or not
-		/// </summary>
-		bool CanWriteOffset { get; }
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this pointer can be resized in-place or not
-		/// </summary>
-		bool CanResize { get; }
 	}
 	#endregion
 
@@ -601,10 +576,10 @@ namespace Althea
 		/// Create a new <see cref="PointerSegment"/> with given <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to move</param>
-		/// <param name="newLength">The new length in bytes to set</param>
+		/// <param name="newLength">The new length in bytes to set, default 0 means auto calculation from <paramref name="offset"/></param>
 		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment MoveBy(long offset, ulong newLength) => offset == 0 ? this : new PointerSegment(this, offset, newLength);
+		public PointerSegment MoveBy(long offset, ulong newLength = 0) => offset == 0 && newLength == 0 ? this : new PointerSegment(this, offset, newLength);
 
 		/// <summary>
 		/// Create a new <see cref="PointerSegment"/> with given <paramref name="newLength"/>
@@ -631,7 +606,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is PointerSegment storage && this.Equals(storage);
 		}
@@ -726,16 +701,16 @@ namespace Althea
 		ulong LengthInBytes { get; }
 
 		/// <summary>
-		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
+		/// The description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		CombinationOfLocations LocationDescription { get; }
 
 		/// <summary>
-		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
+		/// Check whether this <see cref="Storage{T}"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="offset">The offset to move in bytes</param>
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
-		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/></returns>
+		/// <returns>The validness of this <see cref="Storage{T}"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
 		bool IsOffsetValid(long offset, ulong newLength = 0);
 
 		/// <summary>
@@ -743,8 +718,8 @@ namespace Althea
 		/// </summary>
 		/// <param name="offset">The offset to move in bytes</param>
 		/// <param name="length">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
-		/// <exception cref="ArgumentException">if this storage has invalid value</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if offset and length breach the boundary of this storage</exception>
+		/// <exception cref="ArgumentException">if this <see cref="Storage{T}"/> has invalid value</exception>
+		/// <exception cref="ArgumentOutOfRangeException">if offset and length breach the boundary of this <see cref="Storage{T}"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Check(long offset = 0, ulong length = 0)
 		{
@@ -755,10 +730,19 @@ namespace Althea
 		}
 	}
 
-	internal interface IReferenceStorage
+	/// <summary>
+	/// The interface for a referenced storage of <see cref="IStorage"/>
+	/// </summary>
+	public interface IReferenceStorage : IStorage
 	{
-		IStorage Reference { get; }
+		/// <summary>
+		/// The referenced storage as a nullable <see cref="IStorage"/>
+		/// </summary>
+		IStorage? Reference { get; }
 
+		/// <summary>
+		/// The total offset compared to the start of <see cref="Reference"/> in bytes
+		/// </summary>
 		long TotalOffset { get; }
 	}
 	#endregion
@@ -779,30 +763,31 @@ namespace Althea
 		public static readonly unsafe uint SizeOfT = (uint)sizeof(T);
 
 		/// <summary>
-		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
+		/// When implemented by a derived class, get the total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
 		public abstract ulong Length { get; }
 
 		/// <summary>
-		/// The total length of the presenting array in bytes
+		/// When implemented by a derived class, get the total length of the presenting array in bytes. The default implementation returns the multiplication of <see cref="Length"/> and <see cref="SizeOfT"/>.
 		/// </summary>
 		public virtual ulong LengthInBytes => this.Length * SizeOfT;
 
 		/// <summary>
-		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
+		/// When implemented by a derived class, get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		public abstract CombinationOfLocations LocationDescription { get; }
 
 		/// <summary>
-		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// When implemented by a derived class, get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public abstract int Count { get; }
 
 		/// <summary>
-		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// When implemented by a derived class, get one of the <see cref="PointerSegment"/> of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
 		/// <param name="index">the element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
 		public abstract PointerSegment this[int index] { get; }
 		#endregion
 
@@ -813,7 +798,7 @@ namespace Althea
 		protected bool Disposed { get; private set; } = false;
 
 		/// <summary>
-		/// Dispose this storage
+		/// Dispose the unmanaged and managed resources held by this <see cref="Storage{T}"/>
 		/// </summary>
 		public void Dispose()
 		{
@@ -823,7 +808,7 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// The function that actually dispose this storage
+		/// When implemented by a derived class, actually unmanaged (and possibly managed) resources held by this <see cref="Storage{T}"/>
 		/// </summary>
 		/// <param name="disposeManaged">dispose managed resources or not</param>
 		protected abstract void Dispose(bool disposeManaged);
@@ -831,9 +816,9 @@ namespace Althea
 
 		#region other methods
 		/// <summary>
-		/// Make a referenced <see cref="IStorage"/> with the starting pointer moving <paramref name="offset"/> and <see cref="LengthInBytes"/> changing to <paramref name="newLength"/>
+		/// When implemented by a derived class, make a referenced <see cref="IStorage"/> with the starting pointer moving <paramref name="offset"/> and <see cref="LengthInBytes"/> changing to <paramref name="newLength"/>. The default implementation returns a <see cref="ReferenceStorage{T}"/>.
 		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this storage as a <see cref="long"/></param>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A referenced <see cref="IStorage"/> of this one</returns>
 		public virtual Storage<T> MakeReference(long offset = 0, ulong newLength = 0)
@@ -842,7 +827,7 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Convert this <see cref="Storage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// When implemented by a derived class, convert this <see cref="Storage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">the output data type</typeparam>
 		/// <returns>a referenced <see cref="Storage{TOut}"/></returns>
@@ -850,9 +835,9 @@ namespace Althea
 		public abstract Storage<TOut> As<TOut>() where TOut : unmanaged;
 
 		/// <summary>
-		/// Check whether this storage is valid or not.
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not. The default implementation checks the <see cref="Disposed"/>, <see cref="Count"/> and the <see cref="ICheckValid.IsValid"/> of each pointer.
 		/// </summary>
-		/// <returns>The validness of this storage</returns>
+		/// <returns>The validness of this <see cref="Storage{T}"/></returns>
 		public virtual bool IsValid()
 		{
 			if (this.Disposed || this.Count == 0)
@@ -871,15 +856,17 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Check whether this storage is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>.
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>. The default implementation works for <see cref="IReferenceStorage"/> and other non-referenced actual storages.
 		/// </summary>
 		/// <param name="offset">the offset to move</param>
 		/// <param name="newLength">the length to check in bytes</param>
-		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/></returns>
+		/// <returns>The validness of this <see cref="Storage{T}"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
 		public virtual bool IsOffsetValid(long offset, ulong newLength = 0)
 		{
 			if (this is IReferenceStorage reference)
 			{
+				if (reference.Reference is null)
+					return false;
 				offset += reference.TotalOffset;
 				if (offset < 0 || (ulong)offset >= reference.Reference.LengthInBytes)
 					return false;
@@ -915,20 +902,20 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object</param>
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return this.Equals(obj as Storage<T>);
 		}
 
 		/// <summary>
-		/// Determines whether the specified object is equal to the current object.
+		/// When implemented by a derived class, determines whether the specified object is equal to the current object.
 		/// </summary>
 		/// <param name="obj">another object</param>
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public abstract bool Equals(Storage<T> obj);
+		public abstract bool Equals(Storage<T>? obj);
 
 		/// <summary>
-		/// Get the hash code of this <see cref="Storage{T}"/>
+		/// When implemented by a derived class, get the hash code of this <see cref="Storage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
 		public abstract override int GetHashCode();
@@ -936,19 +923,20 @@ namespace Althea
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		public static bool operator ==(Storage<T> left, Storage<T> right)
+		public static bool operator ==(Storage<T>? left, Storage<T>? right)
 		{
-			if (left is null && right is null)
+			if (left is not null)
+				return left.Equals(right);
+			else if (right is null)
 				return true;
-			if ((left is null) != (right is null))
-				return false;
-			return left.Equals(right);
+			else
+				return right.Equals(left);
 		}
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		public static bool operator !=(Storage<T> left, Storage<T> right) => !(left == right);
+		public static bool operator !=(Storage<T>? left, Storage<T>? right) => !(left == right);
 		#endregion
 
 		#region string
@@ -961,7 +949,7 @@ namespace Althea
 		};
 
 		/// <summary>
-		/// Override <see cref="object.ToString"/> to get the string representation.
+		/// Override <see cref="object.ToString"/> to get the string representation of this <see cref="Storage{T}"/>.
 		/// </summary>
 		/// <returns>string representation</returns>
 		public override string ToString()
@@ -1002,11 +990,11 @@ namespace Althea
 	public sealed class ReferenceStorage<T> : Storage<T>, IReferenceStorage where T : unmanaged
 	{
 		#region basic
-		private readonly IStorage reference;
+		private readonly IStorage? reference;
 
 		private readonly long totalOffset;
 
-		IStorage IReferenceStorage.Reference => this.reference;
+		IStorage? IReferenceStorage.Reference => this.reference;
 
 		long IReferenceStorage.TotalOffset => this.totalOffset;
 
@@ -1015,19 +1003,19 @@ namespace Althea
 		private readonly ulong startOffsetBytes, endLengthBytes;
 
 		/// <summary>
-		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
 		public override int Count => this.end - this.start;
 
 		/// <summary>
-		/// Override <see cref="Storage{T}.Length"/> to show the new presenting length
+		/// Override <see cref="Storage{T}.Length"/> to get the presenting length
 		/// </summary>
 		public override ulong Length { get; }
 
 		/// <summary>
-		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
+		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.reference.LocationDescription[this.start..this.end];
+		public override CombinationOfLocations LocationDescription => this.reference?.LocationDescription[this.start..this.end] ?? default;
 
 		/// <summary>
 		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
@@ -1035,14 +1023,19 @@ namespace Althea
 		/// <param name="storage">the <see cref="Storage{T}"/> to be referenced</param>
 		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
 		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		public ReferenceStorage(IStorage storage, long offset = 0, ulong newLength = 0)
 		{
 			// dereference first
 			while (storage is IReferenceStorage @ref)
 			{
+				if (@ref.Reference is null)
+					throw new ArgumentNullException(nameof(storage));
 				storage = @ref.Reference;
 				offset += @ref.TotalOffset;
 			}
+			// set reference
+			this.reference = storage;
 			// check
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset));
@@ -1083,7 +1076,7 @@ namespace Althea
 			}
 		}
 
-		private ReferenceStorage(IStorage storage, long totalOffset, int start, ulong startOffset, ulong endLength, ulong newLength)
+		private ReferenceStorage(IStorage? storage, long totalOffset, int start, ulong startOffset, ulong endLength, ulong newLength)
 		{
 			this.reference = storage; this.totalOffset = totalOffset;
 			this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
@@ -1095,7 +1088,7 @@ namespace Althea
 
 		#region override
 		/// <summary>
-		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
+		/// The function that actually dispose this <see cref="ReferenceStorage{T}"/>, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
 		/// <param name="disposeManaged">dispose managed resources or not</param>
 		protected override void Dispose(bool disposeManaged)
@@ -1108,10 +1101,14 @@ namespace Althea
 		/// </summary>
 		/// <param name="index">the element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
+		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="ReferenceStorage{T}"/> is null</exception>
 		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index));
+				if (this.reference is null)
+					throw new InvalidOperationException();
 				PointerSegment pointer = this.reference[index - start];
 				if (index == 0)
 				{
@@ -1145,11 +1142,11 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object</param>
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T> obj)
+		public override bool Equals(Storage<T>? obj)
 		{
 			if (obj is not null && obj is ReferenceStorage<T> @ref)
 			{
-				return this.reference == @ref.reference && this.start == @ref.start && this.startOffsetBytes == @ref.startOffsetBytes && this.endLengthBytes == @ref.endLengthBytes;
+				return this.reference == @ref.reference && this.start == @ref.start && this.end == @ref.end && this.startOffsetBytes == @ref.startOffsetBytes && this.endLengthBytes == @ref.endLengthBytes;
 			}
 			return false;
 		}
@@ -1158,7 +1155,7 @@ namespace Althea
 		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.reference, this.start, this.startOffsetBytes, this.endLengthBytes);
+		public override int GetHashCode() => HashCode.Combine(this.reference, this.start, this.end, this.startOffsetBytes, this.endLengthBytes);
 		#endregion
 	}
 	#endregion

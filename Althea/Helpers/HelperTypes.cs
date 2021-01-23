@@ -194,7 +194,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is FixedBuffer_36<T> buffer && this.Equals(buffer);
 		}
@@ -365,7 +365,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is FixedBuffer_60<T> buffer && this.Equals(buffer);
 		}
