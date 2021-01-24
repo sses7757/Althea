@@ -21,8 +21,6 @@ namespace Althea.Linq
 		/// <returns>the maximum item</returns>
 		public static T Max<T>(this IReadOnlyList<T> list) where T : IComparable<T>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			T maxVal = list[0];
 			for (int i = 0; i < list.Count; i++)
 			{
@@ -43,8 +41,6 @@ namespace Althea.Linq
 		/// <returns>the maximum item</returns>
 		public static TOut Max<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector) where TOut : IComparable<TOut>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (selector is null)
 				throw new ArgumentNullException(nameof(selector));
 			TOut maxVal = selector(list[0]);
@@ -65,8 +61,6 @@ namespace Althea.Linq
 		/// <returns>the minimum item</returns>
 		public static T Min<T>(this IReadOnlyList<T> list) where T : IComparable<T>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			T minVal = list[0];
 			for (int i = 0; i < list.Count; i++)
 			{
@@ -87,8 +81,6 @@ namespace Althea.Linq
 		/// <returns>the minimum item</returns>
 		public static TOut Min<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector) where TOut : IComparable<TOut>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (selector is null)
 				throw new ArgumentNullException(nameof(selector));
 
@@ -112,8 +104,6 @@ namespace Althea.Linq
 		/// <returns>the maximum item</returns>
 		public static T MaxBy<T, TSort>(this IReadOnlyList<T> list, Converter<T, TSort> selector) where TSort : IComparable<TSort>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (selector is null)
 				throw new ArgumentNullException(nameof(selector));
 
@@ -140,8 +130,6 @@ namespace Althea.Linq
 		/// <returns>the minimum item</returns>
 		public static T MinBy<T, TSort>(this IReadOnlyList<T> list, Converter<T, TSort> selector) where TSort : IComparable<TSort>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (selector is null)
 				throw new ArgumentNullException(nameof(selector));
 			TSort minVal = selector(list[0]);
@@ -931,8 +919,6 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static bool Any<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (predicator is null)
 				throw new ArgumentNullException(nameof(predicator));
 
@@ -959,8 +945,6 @@ namespace Althea.Linq
 		/// <returns>any true or not</returns>
 		public static bool AnyTrue(this IReadOnlyList<bool> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (list[i])
@@ -976,8 +960,6 @@ namespace Althea.Linq
 		/// <returns>any false or not</returns>
 		public static bool AnyFalse(this IReadOnlyList<bool> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (!list[i])
@@ -993,8 +975,6 @@ namespace Althea.Linq
 		/// <returns>all true or not</returns>
 		public static bool AllTrue(this IReadOnlyList<bool> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (!list[i])
@@ -1010,8 +990,6 @@ namespace Althea.Linq
 		/// <returns>all false or not</returns>
 		public static bool AllFalse(this IReadOnlyList<bool> list)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (list[i])
@@ -1274,8 +1252,6 @@ namespace Althea.Linq
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Where<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (predicator is null)
 				throw new ArgumentNullException(nameof(predicator));
 
@@ -1305,8 +1281,6 @@ namespace Althea.Linq
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Where<T>(this IReadOnlyList<T> list, IndexPredicator<T> predicator)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (predicator is null)
 				throw new ArgumentNullException(nameof(predicator));
 			var res = new List<T>(list.Count);
@@ -1466,8 +1440,6 @@ namespace Althea.Linq
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> IndexWhere<T>(this IReadOnlyList<T> list, Predicate<int> predicator)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (predicator is null)
 				throw new ArgumentNullException(nameof(predicator));
 
@@ -1489,8 +1461,6 @@ namespace Althea.Linq
 		/// <returns>the count</returns>
 		public static int Count<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (predicator is null)
 				throw new ArgumentNullException(nameof(predicator));
 
@@ -2075,14 +2045,34 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this IReadOnlyList<T> list) where T : IEquatable<T>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			var res = new List<T>(list.Count);
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (!res.Contains(list[i]))
 					res.Add(list[i]);
+				else
+					return false;
+			}
+			return true;
+		}
+
+
+		/// <summary>
+		/// Check if <paramref name="list"/>'s elements are unique by given <paramref name="selector"/>
+		/// </summary>
+		/// <typeparam name="TFrom">the data type of <paramref name="list"/></typeparam>
+		/// <typeparam name="TTo">the data type of output</typeparam>
+		/// <param name="list">list to pick</param>
+		/// <param name="selector">the selector to convert each element in <paramref name="list"/></param>
+		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
+		public static bool ElementsUnique<TFrom, TTo>(this IReadOnlyList<TFrom> list, Converter<TFrom, TTo> selector) where TTo : IEquatable<TTo>
+		{
+			var res = new List<TTo>(list.Count);
+			for (int i = 0; i < list.Count; i++)
+			{
+				TTo v = selector(list[i]);
+				if (!res.Contains(v))
+					res.Add(v);
 				else
 					return false;
 			}
@@ -2098,9 +2088,6 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			comparer ??= EqualityComparer<T>.Default;
 			var res = new List<T>(list.Count);
 			for (int i = 0; i < list.Count; i++)
@@ -2122,9 +2109,6 @@ namespace Althea.Linq
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Distinct<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			comparer ??= EqualityComparer<T>.Default;
 			var res = new List<T>(list.Count);
 			for (int i = 0; i < list.Count; i++)
@@ -2144,9 +2128,6 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T>(this IReadOnlyList<T> list, T element) where T : IEquatable<T>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			if (list is List<T> l)
 			{
 				return l.Contains(element);
@@ -2169,9 +2150,6 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T>(this IReadOnlyList<T> list, T element, IEqualityComparer<T>? comparer = null)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			if (comparer is null)
 			{
 				if (list is List<T> l)
@@ -2200,9 +2178,6 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector, IEqualityComparer<TCompare>? comparer = null)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			comparer ??= EqualityComparer<TCompare>.Default;
 			for (int i = 0; i < list.Count; i++)
 			{
@@ -2223,9 +2198,6 @@ namespace Althea.Linq
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector) where TCompare : IEquatable<TCompare>
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (element.Equals(selector(list[i])))
@@ -2323,8 +2295,6 @@ namespace Althea.Linq
 		/// <returns>an <see cref="IReadOnlyList{T}"/> of <see cref="IReadOnlyGrouping{TKey, TElement}"/>s</returns>
 		public static IReadOnlyList<IReadOnlyGrouping<TKey, TValue>> GroupBy<T, TKey, TValue>(this IReadOnlyList<T> list, Converter<T, TKey> keySelector, Converter<T, TValue> valueSelector)
 		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
 			if (keySelector is null)
 				throw new ArgumentNullException(nameof(keySelector));
 			if (valueSelector is null)

@@ -73,12 +73,12 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
+		/// When implemented by a derived class, get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
 		/// </summary>
 		public abstract IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer { get; }
 
 		/// <summary>
-		/// Check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation
+		/// When implemented by a derived class, check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation
 		/// </summary>
 		/// <param name="locations">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
 		/// <returns>Whether this implementation supports data transfer between <paramref name="locations"/> and C# managed memory</returns>
@@ -87,21 +87,21 @@ namespace Althea.Storage
 
 		#region properties
 		/// <summary>
-		/// Get the underlying driver's version of a supported <see cref="LocationType"/>.
+		/// When implemented by a derived class, get the underlying driver's version of a supported <see cref="LocationType"/>.
 		/// </summary>
 		/// <param name="location">The given supported <see cref="LocationType"/></param>
 		/// <returns>The underlying driver's version of given <paramref name="location"/></returns>
 		public abstract (int major, int minor) DriverVersion(LocationType location);
 
 		/// <summary>
-		/// Get the maximum number of devices available of a supported <see cref="LocationType"/>.
+		/// When implemented by a derived class, get the maximum number of devices available of a supported <see cref="LocationType"/>.
 		/// </summary>
 		/// <param name="location">The given supported <see cref="LocationType"/></param>
 		/// <returns>The maximum number of devices available of given <paramref name="location"/></returns>
 		public abstract int MaxDeviceNumber(LocationType location);
 
 		/// <summary>
-		/// Get the available and total memory in bytes for device indicated by a supported <see cref="StorageLocation"/>.
+		/// When implemented by a derived class, get the available and total memory in bytes for device indicated by a supported <see cref="StorageLocation"/>.
 		/// </summary>
 		/// <param name="location">The given supported <see cref="StorageLocation"/></param>
 		/// <returns>The available and total memory in bytes of device of given <paramref name="location"/></returns>
@@ -110,17 +110,18 @@ namespace Althea.Storage
 
 		#region low-level storage operations
 		/// <summary>
-		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
+		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
 		/// </summary>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in bytes</param>
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
 		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		public abstract PointerSegment Allocate(StorageLocation location, ulong length);
+		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected memory leaks which GC cannot collect due to improper usage.</remarks>
+		protected internal abstract PointerSegment Allocate(StorageLocation location, ulong length);
 
 		/// <summary>
-		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
+		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>.<br/>The default implementation utilizes <see cref="Allocate(StorageLocation, ulong)"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
@@ -128,47 +129,50 @@ namespace Althea.Storage
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
 		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		public virtual PointerSegment Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
+		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected memory leaks which GC cannot collect due to improper usage.</remarks>
+		protected internal virtual PointerSegment Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
 
 		/// <summary>
-		/// Free a storage indicated by a given <paramref name="pointer"/>
+		/// When implemented by a derived class, free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
 		/// <param name="disposeManaged">dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
 		/// <returns>If <paramref name="pointer"/> is not supported or <paramref name="pointer"/> is not valid, return false; otherwise, return true.</returns>
-		public abstract bool Free(PointerSegment pointer, bool disposeManaged = true);
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
+		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected wild pointers due to improper usage.</remarks>
+		protected internal abstract bool Free(PointerSegment pointer, bool disposeManaged = true);
 
 		/// <summary>
-		/// Fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.
+		/// When implemented by a derived class, fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.
 		/// </summary>
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
 		/// <exception cref="NotSupportedException">If <paramref name="pointer"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="pointer"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
 		public abstract void SetMemoryValue(PointerSegment pointer, byte value);
 
 		/// <summary>
-		/// Fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
+		/// When implemented by a derived class, fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="pointer"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
 		public abstract void SetMemoryValue<T>(PointerSegment pointer, T value) where T : unmanaged;
 
 		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source pointer to copy from</param>
 		/// <param name="destination">The destination pointer to copy into</param>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		public abstract void MemoryCopy(PointerSegment source, PointerSegment destination);
 
 		/// <summary>
-		/// Copies 2D data from <paramref name="source"/> to <paramref name="destination"/>.
+		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source pointer</param>
 		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
@@ -178,11 +182,11 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in the real type</param>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
 		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
-		/// <exception cref="ArgumentException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
+		/// or <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
@@ -191,48 +195,48 @@ namespace Althea.Storage
 
 		#region low-level storage and managed operations
 		/// <summary>
-		/// Copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
+		/// When implemented by a derived class, copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/>.</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		public abstract T ToManaged<T>(PointerSegment source) where T : unmanaged;
 
 		/// <summary>
-		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
+		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		public abstract void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
 
 		/// <summary>
-		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
+		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		public abstract void ToManaged<T>(PointerSegment source, ArraySegment<T> destination) where T : unmanaged;
 
 		/// <summary>
-		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
+		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		public abstract void FromManaged<T>(PointerSegment destination, ArraySegment<T> values) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
-		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// When implemented by a derived class, copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
@@ -242,7 +246,7 @@ namespace Althea.Storage
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
@@ -251,7 +255,7 @@ namespace Althea.Storage
 		public abstract void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination, ulong destinationLeadDim = 0) where T : unmanaged;
 
 		/// <summary>
-		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
@@ -261,7 +265,7 @@ namespace Althea.Storage
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
@@ -272,7 +276,7 @@ namespace Althea.Storage
 
 		#region high-level storage operations
 		/// <summary>
-		/// Fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.
+		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="storage">The <see cref="IStorage"/> to be filled</param>
@@ -281,16 +285,26 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		public virtual void SetMemoryValue<T>(Storage<T> storage, byte value) where T : unmanaged
 		{
-			if (storage is null || !storage.IsValid())
+			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
-			for (int i = 0; i < storage.Count; i++)
+
+			if (storage.LocationDescription.Type == CombinationType.PureOrMixed)
 			{
-				this.SetMemoryValue(storage[i], value);
+				for (int i = 0; i < storage.Count; i++)
+				{
+					this.SetMemoryValue(storage[i], value);
+				}
 			}
+			else if (storage.LocationDescription.Type == CombinationType.Cached && storage is CachedStorage<T> cached)
+			{
+				cached.Flush(); this.SetMemoryValue(cached[0], value);
+			}
+			else
+				throw new NotImplementedException();
 		}
 
 		/// <summary>
-		/// Fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.
+		/// When implemented by a derived class, fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="storage">The <see cref="IStorage"/> to be filled</param>
@@ -299,16 +313,26 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		public virtual void SetMemoryValue<T>(Storage<T> storage, T value) where T : unmanaged
 		{
-			if (storage is null || !storage.IsValid())
+			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
-			for (int i = 0; i < storage.Count; i++)
+
+			if (storage.LocationDescription.Type == CombinationType.PureOrMixed)
 			{
-				this.SetMemoryValue(storage[i], value);
+				for (int i = 0; i < storage.Count; i++)
+				{
+					this.SetMemoryValue(storage[i], value);
+				}
 			}
+			else if (storage.LocationDescription.Type == CombinationType.Cached && storage is CachedStorage<T> cached)
+			{
+				cached.Flush(); this.SetMemoryValue(cached[0], value);
+			}
+			else
+				throw new NotImplementedException();
 		}
 
 		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="IServiceProvider"/> to copy from</param>
@@ -318,10 +342,12 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		public virtual void MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
 		{
-			if (source is null || !source.IsValid())
+			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
-			if (destination is null || !destination.IsValid())
+			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
+
+			// TODO: cached storage?
 
 			if (source.Count == 1 && destination.Count == 1)
 			{
@@ -359,7 +385,7 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Copies 2D data from <paramref name="source"/> to <paramref name="destination"/>.
+		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="IStorage"/></param>
@@ -379,9 +405,9 @@ namespace Althea.Storage
 		/// </exception>
 		public virtual void MemoryCopy2D<T>(Storage<T> source, ulong sourceLD, Storage<T> destination, ulong destLD, ulong height, ulong width) where T : unmanaged
 		{
-			if (source is null || !source.IsValid())
+			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
-			if (destination is null || !destination.IsValid())
+			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
@@ -420,7 +446,7 @@ namespace Althea.Storage
 
 		#region high-level storage and managed operations
 		/// <summary>
-		/// Copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
+		/// When implemented by a derived class, copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
@@ -429,14 +455,14 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public virtual T ToManaged<T>(Storage<T> source) where T : unmanaged
 		{
-			if (source is null || !source.IsValid())
+			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
 
 			return this.ToManaged<T>(source[0]);
 		}
 
 		/// <summary>
-		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
+		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
@@ -445,14 +471,14 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
 		public virtual void FromManaged<T>(Storage<T> destination, T value) where T : unmanaged
 		{
-			if (destination is null || !destination.IsValid())
+			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 
 			this.FromManaged(destination[0], value);
 		}
 
 		/// <summary>
-		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
+		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
@@ -461,7 +487,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public virtual void ToManaged<T>(Storage<T> source, ArraySegment<T> destination) where T : unmanaged
 		{
-			if (source is null || !source.IsValid())
+			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
 
 			int offset = 0;
@@ -475,16 +501,16 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
+		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		public virtual void FromManaged<T>(Storage<T> destination, ArraySegment<T> values) where T : unmanaged
 		{
-			if (destination is null || !destination.IsValid())
+			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 
 			int offset = 0;
@@ -498,7 +524,7 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// When implemented by a derived class, copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
@@ -508,7 +534,7 @@ namespace Althea.Storage
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
@@ -516,7 +542,7 @@ namespace Althea.Storage
 		/// </exception>
 		public virtual void ToManaged2D<T>(Storage<T> source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination, ulong destinationLeadDim = 0) where T : unmanaged
 		{
-			if (source is null || !source.IsValid())
+			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
 			if (leadDim == 0)
 				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);
@@ -549,7 +575,7 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
@@ -559,7 +585,7 @@ namespace Althea.Storage
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,
@@ -567,7 +593,7 @@ namespace Althea.Storage
 		/// </exception>
 		public virtual void FromManaged2D<T>(Storage<T> destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values, ulong valuesLeadDim = 0) where T : unmanaged
 		{
-			if (destination is null || !destination.IsValid())
+			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (leadDim == 0)
 				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);

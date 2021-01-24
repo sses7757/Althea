@@ -146,7 +146,11 @@ namespace Althea.Backend.Storage
 		/// Actually release the unmanaged (and possibly managed) resources held by this class
 		/// </summary>
 		/// <param name="disposeManaged">Dispose managed resources or not</param>
-		protected override void Dispose(bool disposeManaged) => this.stream.Dispose();
+		protected override void Dispose(bool disposeManaged)
+		{
+			this.stream.Dispose();
+			File.Delete(this.stream.Name);
+		}
 
 		/// <summary>
 		/// Get the string representation of this <see cref="Stream"/>.
@@ -281,6 +285,13 @@ namespace Althea.Backend.Storage
 		public delegate bool InitializationAcknowledge(byte[] data, out string? errorMessage);
 
 		/// <summary>
+		/// The delegate used to generate information needed to destroy a remote file indicated by <paramref name="remotePath"/>.
+		/// </summary>
+		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
+		/// <returns>The information needed to destroy file indicated by <paramref name="remotePath"/> as a <see cref="byte"/> array.</returns>
+		public delegate byte[] DestroySend(string remotePath);
+
+		/// <summary>
 		/// The delegate used to generate information needed to send before writing to a remote file indicated by <paramref name="remotePath"/> (the actual writing is done by directly sending bytes needed to be written).
 		/// </summary>
 		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
@@ -334,6 +345,10 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		public readonly InitializationAcknowledge initializationAcknowledge;
 		/// <summary>
+		/// The instance of <see cref="DestroySend"/>
+		/// </summary>
+		public readonly DestroySend destroySend;
+		/// <summary>
 		/// The instance of <see cref="BeforeWriteSend"/>
 		/// </summary>
 		public readonly BeforeWriteSend beforeWriteSend;
@@ -365,12 +380,12 @@ namespace Althea.Backend.Storage
 		/// <summary>
 		/// Create a <see cref="TcpProtocol"/> with given initialized delegates
 		/// </summary>
-		public TcpProtocol(	InitializationSend initializationSend, InitializationAcknowledge initializationAcknowledge,
+		public TcpProtocol(	InitializationSend initializationSend, InitializationAcknowledge initializationAcknowledge, DestroySend destroySend,
 							BeforeWriteSend beforeWriteSend, BeforeWriteAcknowledge beforeWriteAcknowledge, AfterWriteAcknowledge afterWriteAcknowledge,
 							BeforeReadSend beforeReadSend, BeforeReadAcknowledge beforeReadAcknowledge,
 							int maxReturnSize, int port)
 		{
-			this.initializationSend = initializationSend; this.initializationAcknowledge = initializationAcknowledge;
+			this.initializationSend = initializationSend; this.initializationAcknowledge = initializationAcknowledge; this.destroySend = destroySend;
 			this.beforeWriteSend = beforeWriteSend; this.beforeWriteAcknowledge = beforeWriteAcknowledge; this.afterWriteAcknowledge = afterWriteAcknowledge;
 			this.beforeReadSend = beforeReadSend; this.beforeReadAcknowledge = beforeReadAcknowledge;
 			this.maxReturnSize = maxReturnSize; this.remotePort = port;
@@ -381,7 +396,7 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <returns>Whether this struct contains valid protocol or not</returns>
 		public bool IsValid() => this.maxReturnSize > 0 && this.remotePort > 0 &&
-			this.initializationSend is not null && this.initializationAcknowledge is not null &&
+			this.initializationSend is not null && this.initializationAcknowledge is not null && this.destroySend is not null &&
 			this.beforeWriteSend is not null && this.beforeWriteAcknowledge is not null && this.afterWriteAcknowledge is not null &&
 			this.beforeReadSend is not null && this.beforeReadAcknowledge is not null;
 		#endregion
@@ -475,8 +490,16 @@ namespace Althea.Backend.Storage
 		/// <param name="disposeManaged">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposeManaged)
 		{
-			this.stream.Dispose();
-			this.client.Dispose();
+			var destroy = this.protocol.destroySend.Invoke(this.RemotePath);
+			try
+			{
+				this.stream.Write(destroy, 0, destroy.Length);
+			}
+			finally
+			{
+				this.stream.Dispose();
+				this.client.Dispose();
+			}
 		}
 
 		/// <summary>
@@ -625,12 +648,17 @@ namespace Althea.Backend.Storage.Tcp
 		/// <summary>
 		/// The remote file path
 		/// </summary>
-		public string? RemotePath { get; init; }
+		public string RemotePath { get; init; } = string.Empty;
 
 		/// <summary>
-		/// Read or write. True for read, false for write, null for initialize
+		/// Initialize or destroy. True for initialize, false for destroy, null for read or write
 		/// </summary>
-		public bool? ReadOrWrite { get; init; }
+		public bool? InitOrDestroy { get; init; } = null;
+
+		/// <summary>
+		/// Read or write. True for read, false for write, null for initialize or destroy
+		/// </summary>
+		public bool? ReadOrWrite { get; init; } = null;
 
 		/// <summary>
 		/// The offset in bytes
@@ -673,7 +701,7 @@ namespace Althea.Backend.Storage.Tcp
 		/// <summary>
 		/// The default <see cref="TcpProtocol"/> which utilize the protocol defined by <see cref="DefaultSendData"/> and <see cref="DefaultReceiveData"/>
 		/// </summary>
-		public static readonly TcpProtocol DefaultTcpProtocol = new TcpProtocol(DefaultInitializationSend, DefaultAcknowledge,
+		public static readonly TcpProtocol DefaultTcpProtocol = new TcpProtocol(DefaultInitializationSend, DefaultAcknowledge, DefaultDestroySend,
 																	DefaultBeforeWriteSend, DefaultAcknowledge, DefaultAcknowledge,
 																	DefaultBeforeReadSend, DefaultAcknowledge,
 																	1 << 16, PORT);
@@ -689,7 +717,7 @@ namespace Althea.Backend.Storage.Tcp
 		/// </summary>
 		public static byte[] DefaultInitializationSend(string remotePath, ulong length)
 		{
-			var data = new DefaultSendData { ReadOrWrite = null, RemotePath = remotePath, Length = length };
+			var data = new DefaultSendData { InitOrDestroy = true, RemotePath = remotePath, Length = length };
 			return DefaultSend(data);
 		}
 
@@ -707,6 +735,15 @@ namespace Althea.Backend.Storage.Tcp
 			}
 			errorMessage = receive.ErrorMessage;
 			return receive.Success;
+		}
+
+		/// <summary>
+		/// The default implementation of <see cref="TcpProtocol.DestroySend"/>
+		/// </summary>
+		public static byte[] DefaultDestroySend(string remotePath)
+		{
+			var data = new DefaultSendData { InitOrDestroy = false, RemotePath = remotePath };
+			return DefaultSend(data);
 		}
 
 		/// <summary>

@@ -61,6 +61,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Some of the ratios between the sizes of caches are too small to have proper performance. 的本地化字符串。
+        /// </summary>
+        internal static string CacheSizeRatioSmall {
+            get {
+                return ResourceManager.GetString("CacheSizeRatioSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cannot deserialize the received message. 的本地化字符串。
         /// </summary>
         internal static string CannotDeserialize {
