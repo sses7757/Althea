@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Net;
+using System.Text;
+using System.Text.Json;
 using System.Net.Sockets;
 using System.Collections.Generic;
 
@@ -258,9 +259,9 @@ namespace Althea.Backend.Storage
 	}
 
 	/// <summary>
-	/// An implementation of <see cref="Althea.Storage.Stream"/> for TCP links.
+	/// The struct for a TCP protocol used by <see cref="TcpStream"/>
 	/// </summary>
-	public sealed class TcpStream : Althea.Storage.Stream
+	public readonly struct TcpProtocol : ICheckValid
 	{
 		#region delegates
 		/// <summary>
@@ -324,18 +325,89 @@ namespace Althea.Backend.Storage
 		#endregion
 
 		#region basic
+		/// <summary>
+		/// The instance of <see cref="InitializationSend"/>
+		/// </summary>
+		public readonly InitializationSend initializationSend;
+		/// <summary>
+		/// The instance of <see cref="InitializationAcknowledge"/>
+		/// </summary>
+		public readonly InitializationAcknowledge initializationAcknowledge;
+		/// <summary>
+		/// The instance of <see cref="BeforeWriteSend"/>
+		/// </summary>
+		public readonly BeforeWriteSend beforeWriteSend;
+		/// <summary>
+		/// The instance of <see cref="BeforeWriteAcknowledge"/>
+		/// </summary>
+		public readonly BeforeWriteAcknowledge beforeWriteAcknowledge;
+		/// <summary>
+		/// The instance of <see cref="AfterWriteAcknowledge"/>
+		/// </summary>
+		public readonly AfterWriteAcknowledge afterWriteAcknowledge;
+		/// <summary>
+		/// The instance of <see cref="BeforeReadSend"/>
+		/// </summary>
+		public readonly BeforeReadSend beforeReadSend;
+		/// <summary>
+		/// The instance of <see cref="BeforeReadAcknowledge"/>
+		/// </summary>
+		public readonly BeforeReadAcknowledge beforeReadAcknowledge;
+		/// <summary>
+		/// The maximum length in bytes of any receive message
+		/// </summary>
+		public readonly int maxReturnSize;
+		/// <summary>
+		/// The remote server's port number
+		/// </summary>
+		public readonly int remotePort;
+
+		/// <summary>
+		/// Create a <see cref="TcpProtocol"/> with given initialized delegates
+		/// </summary>
+		public TcpProtocol(	InitializationSend initializationSend, InitializationAcknowledge initializationAcknowledge,
+							BeforeWriteSend beforeWriteSend, BeforeWriteAcknowledge beforeWriteAcknowledge, AfterWriteAcknowledge afterWriteAcknowledge,
+							BeforeReadSend beforeReadSend, BeforeReadAcknowledge beforeReadAcknowledge,
+							int maxReturnSize, int port)
+		{
+			this.initializationSend = initializationSend; this.initializationAcknowledge = initializationAcknowledge;
+			this.beforeWriteSend = beforeWriteSend; this.beforeWriteAcknowledge = beforeWriteAcknowledge; this.afterWriteAcknowledge = afterWriteAcknowledge;
+			this.beforeReadSend = beforeReadSend; this.beforeReadAcknowledge = beforeReadAcknowledge;
+			this.maxReturnSize = maxReturnSize; this.remotePort = port;
+		}
+
+		/// <summary>
+		/// Check whether this struct contains valid protocol
+		/// </summary>
+		/// <returns>Whether this struct contains valid protocol or not</returns>
+		public bool IsValid() => this.maxReturnSize > 0 && this.remotePort > 0 &&
+			this.initializationSend is not null && this.initializationAcknowledge is not null &&
+			this.beforeWriteSend is not null && this.beforeWriteAcknowledge is not null && this.afterWriteAcknowledge is not null &&
+			this.beforeReadSend is not null && this.beforeReadAcknowledge is not null;
+		#endregion
+	}
+
+	/// <summary>
+	/// An implementation of <see cref="Althea.Storage.Stream"/> for TCP links.
+	/// </summary>
+	public sealed class TcpStream : Althea.Storage.Stream
+	{
+		#region basic
 		private readonly NetworkStream stream;
 
 		private readonly TcpClient client;
 
 		private readonly Uri uri;
 
+		private readonly TcpProtocol protocol;
+
+		private string RemotePath => this.uri.AbsolutePath;
 
 		/// <summary>
 		/// Get or set the position (offset) in bytes of this <see cref="TcpStream"/>
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Althea.Storage.Stream.Length"/></exception>
-		public override ulong Position { get; set; }
+		public override ulong Position { get; set; } = 0;
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not, always return true.
@@ -356,26 +428,45 @@ namespace Althea.Backend.Storage
 		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
 		public override bool IsSupported(StorageLocation location) => location == supportedLocation;
 
+		private readonly byte[] returnCache;
+
 		/// <summary>
-		/// Create a new <see cref="TcpStream"/> with given <see cref="Uri"/> of TCP
+		/// Create a new <see cref="TcpStream"/> with given <see cref="Uri"/> of TCP scheme under given <see cref="TcpProtocol"/>
 		/// </summary>
 		/// <param name="uri">The given <see cref="Uri"/> of file scheme</param>
 		/// <param name="length">The initial length in bytes</param>
+		/// <param name="protocol">The <see cref="TcpProtocol"/> to use</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="protocol"/> is not a valid one</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the <see cref="TcpProtocol.remotePort"/> of <paramref name="protocol"/> is not <see cref="Uri.Port"/> of <paramref name="uri"/> while its <see cref="Uri.IsDefaultPort"/> is false</exception>
 		/// <exception cref="NotSupportedException">If the scheme of <paramref name="uri"/> is not file or the stream cannot be created by given <paramref name="uri"/></exception>
 		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="UnauthorizedAccessException">If the give path in <paramref name="uri"/> cannot be created or overwritten</exception>
-		public TcpStream(Uri uri, ulong length, ) : base(length)
+		public TcpStream(Uri uri, ulong length, TcpProtocol protocol) : base(length)
 		{
 			if (uri.GetScheme() != UriScheme.TCP)
 				throw new NotSupportedException(Support.Location);
+			if (!protocol.IsValid())
+				throw new ArgumentNullException(nameof(protocol));
+			if (!uri.IsDefaultPort && uri.Port != protocol.remotePort)
+				throw new ArgumentOutOfRangeException(nameof(uri), Parameter.InvalidValue);
 
+			// set fields
 			this.uri = uri;
-			this.client = new TcpClient(uri.Host, uri.Port);
+			this.protocol = protocol;
+			this.client = new TcpClient(uri.Host, protocol.remotePort);
 			this.stream = this.client.GetStream();
-			// check
-
-			// create
-
+			this.returnCache = new byte[protocol.maxReturnSize];
+			// create file
+			var init = protocol.initializationSend(this.RemotePath, length);
+			this.stream.Write(init, 0, init.Length);
+			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
+			bool success = protocol.initializationAcknowledge.Invoke(this.returnCache, out string? errorMessage);
+			if (!success)
+			{
+				this.Dispose(true);
+				throw new IOException(errorMessage);
+			}
 		}
 
 		/// <summary>
@@ -409,7 +500,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
 		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
-		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void ToMemory(PointerSegment memory)
 		{
@@ -431,7 +522,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
-		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void ToManged<T>(Span<T> managed)
 		{
@@ -439,10 +530,25 @@ namespace Althea.Backend.Storage
 			////	throw new NotSupportedException(Support.Location);
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
-			if ((ulong)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+			ulong size = (ulong)managed.Length * Storage<T>.SizeOfT;
+			if (size + this.Position > this.Length)
 				throw new ArgumentOutOfRangeException(nameof(managed));
 
-			this.stream.Read(managed.UncheckAs<T, byte>());
+			// before read
+			var data = this.protocol.beforeReadSend.Invoke(this.RemotePath, this.Position, size);
+			this.stream.Write(data, 0, data.Length);
+			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
+			bool success = this.protocol.beforeReadAcknowledge.Invoke(this.returnCache, out string? errorMessage);
+			if (!success)
+				throw new IOException(errorMessage);
+			// read
+			Array.Fill<byte>(this.returnCache, 0, 0, Math.Min(this.returnCache.Length, 1024));
+			this.stream.Write(this.returnCache, 0, Math.Min(this.returnCache.Length, 1024));
+			var read = this.stream.Read(managed.UncheckAs<T, byte>());
+			if ((ulong)read != size)
+				throw new IOException(Parameter.NotSameSize);
+			// advance position
+			this.Position += size;
 		}
 
 		/// <summary>
@@ -453,7 +559,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
 		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
-		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void FromMemory(PointerSegment memory)
 		{
@@ -475,7 +581,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
-		/// <exception cref="SocketException">If other socket error occurred</exception>
+		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void FromManged<T>(Span<T> managed)
 		{
@@ -483,11 +589,142 @@ namespace Althea.Backend.Storage
 			////	throw new NotSupportedException(Support.Location);
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
-			if ((ulong)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+			ulong size = (ulong)managed.Length * Storage<T>.SizeOfT;
+			if (size + this.Position > this.Length)
 				throw new ArgumentOutOfRangeException(nameof(managed));
 
+			// before write
+			var data = this.protocol.beforeWriteSend.Invoke(this.RemotePath, this.Position, size);
+			this.stream.Write(data, 0, data.Length);
+			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
+			bool success = this.protocol.beforeWriteAcknowledge.Invoke(this.returnCache, out string? errorMessage);
+			if (!success)
+				throw new IOException(errorMessage);
+			// write
 			this.stream.Write(managed.UncheckAs<T, byte>());
+			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
+			success = this.protocol.afterWriteAcknowledge.Invoke(this.returnCache, out errorMessage);
+			if (!success)
+				throw new IOException(errorMessage);
+			// advance position
+			this.Position += size;
 		}
 		#endregion
+	}
+}
+
+
+namespace Althea.Backend.Storage.Tcp
+{
+	#region records
+	/// <summary>
+	/// The default send message data
+	/// </summary>
+	public record DefaultSendData
+	{
+		/// <summary>
+		/// The remote file path
+		/// </summary>
+		public string? RemotePath { get; init; }
+
+		/// <summary>
+		/// Read or write. True for read, false for write, null for initialize
+		/// </summary>
+		public bool? ReadOrWrite { get; init; }
+
+		/// <summary>
+		/// The offset in bytes
+		/// </summary>
+		public ulong Offset { get; init; }
+
+		/// <summary>
+		/// The length in bytes
+		/// </summary>
+		public ulong Length { get; init; }
+	}
+
+	/// <summary>
+	/// The default receive message data
+	/// </summary>
+	public record DefaultReceiveData
+	{
+		/// <summary>
+		/// Operation success or not
+		/// </summary>
+		public bool Success { get; init; }
+
+		/// <summary>
+		/// The returned error message with no longer than 65000 bytes
+		/// </summary>
+		public string? ErrorMessage { get; init; }
+	}
+	#endregion
+
+	/// <summary>
+	/// The class containing default TCP stream methods
+	/// </summary>
+	public static class DefaultTcpMethods
+	{
+		/// <summary>
+		/// The remote server port intended to used
+		/// </summary>
+		public const int PORT = 6439;//// new Random().Next(1, ushort.MaxValue);
+
+		/// <summary>
+		/// The default <see cref="TcpProtocol"/> which utilize the protocol defined by <see cref="DefaultSendData"/> and <see cref="DefaultReceiveData"/>
+		/// </summary>
+		public static readonly TcpProtocol DefaultTcpProtocol = new TcpProtocol(DefaultInitializationSend, DefaultAcknowledge,
+																	DefaultBeforeWriteSend, DefaultAcknowledge, DefaultAcknowledge,
+																	DefaultBeforeReadSend, DefaultAcknowledge,
+																	1 << 16, PORT);
+
+		private static byte[] DefaultSend(DefaultSendData data)
+		{
+			var json = JsonSerializer.Serialize(data);
+			return Encoding.UTF8.GetBytes(json);
+		}
+
+		/// <summary>
+		/// The default implementation of <see cref="TcpProtocol.InitializationSend"/>
+		/// </summary>
+		public static byte[] DefaultInitializationSend(string remotePath, ulong length)
+		{
+			var data = new DefaultSendData { ReadOrWrite = null, RemotePath = remotePath, Length = length };
+			return DefaultSend(data);
+		}
+
+		/// <summary>
+		/// The default implementation of <see cref="TcpProtocol.InitializationAcknowledge"/>, <see cref="TcpProtocol.BeforeWriteAcknowledge"/> and <see cref="TcpProtocol.BeforeReadAcknowledge"/>
+		/// </summary>
+		public static bool DefaultAcknowledge(byte[] data, out string? errorMessage)
+		{
+			var json = Encoding.UTF8.GetString(data);
+			var receive = JsonSerializer.Deserialize<DefaultReceiveData>(json);
+			if (receive is null)
+			{
+				errorMessage = Other.CannotDeserialize;
+				return false;
+			}
+			errorMessage = receive.ErrorMessage;
+			return receive.Success;
+		}
+
+		/// <summary>
+		/// The default implementation of <see cref="TcpProtocol.BeforeWriteSend"/>
+		/// </summary>
+		public static byte[] DefaultBeforeWriteSend(string remotePath, ulong offset, ulong length)
+		{
+			var data = new DefaultSendData { ReadOrWrite = false, RemotePath = remotePath, Offset = offset, Length = length };
+			return DefaultSend(data);
+		}
+
+		/// <summary>
+		/// The default implementation of <see cref="TcpProtocol.BeforeReadSend"/>
+		/// </summary>
+		public static byte[] DefaultBeforeReadSend(string remotePath, ulong offset, ulong length)
+		{
+			var data = new DefaultSendData { ReadOrWrite = true, RemotePath = remotePath, Offset = offset, Length = length };
+			return DefaultSend(data);
+		}
 	}
 }

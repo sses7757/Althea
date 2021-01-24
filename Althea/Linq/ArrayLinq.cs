@@ -1035,7 +1035,7 @@ namespace Althea.Linq
 				return default;
 			return list[0];
 		}
-#nullable enable
+#nullable restore
 
 		/// <summary>
 		/// Append an <paramref name="element"/> to the end of <paramref name="list"/>

@@ -78,11 +78,11 @@ namespace Althea
 	public enum CombinationType : short
 	{
 		/// <summary>
-		/// Storage composed of only one memory location (pure) or a <b>set</b> of several memory locations (mixed).
+		/// Storage composed of only one storage location (pure) or a <b>set</b> of storage memory locations (mixed)
 		/// </summary>
 		PureOrMixed = 0 << CombinationTypeExtension.ClassificationEnd | CombinationTypeExtension.ClassUnordered,
 		/// <summary>
-		/// Storage composed of several <b>ordered</b> memory locations and a possible URI.
+		/// Storage composed of several <b>ordered</b> storage locations
 		/// </summary>
 		Cached = 0 << CombinationTypeExtension.ClassificationEnd | CombinationTypeExtension.ClassOrdered,
 	}
@@ -655,7 +655,7 @@ namespace Althea
 		/// Return the string representation of this <see cref="PointerSegment"/>
 		/// </summary>
 		/// <returns>the string representation of this <see cref="PointerSegment"/></returns>
-		public override string ToString() => ((IMainPropertyFormat)this).ToString();
+		public override string? ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 
 		#region operator
@@ -751,8 +751,10 @@ namespace Althea
 	/// The abstract wrapper class of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s).
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	/// <remarks>I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
-	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works, since the concrete class(es) shall be a class with finalizers thus cannot be in GC generation 0, i.e. it will not be immediately disposed when out-of-scope.<br/>
+	/// <remarks>
+	/// I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
+	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works.<br/>
+	/// Since a derived concrete class shall be one with finalizers, it cannot be in GC generation 0, i.e. it will not be immediately disposed.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
 	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, IMainPropertyFormat where T : unmanaged
 	{

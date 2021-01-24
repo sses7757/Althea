@@ -61,6 +61,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Cannot deserialize the received message. 的本地化字符串。
+        /// </summary>
+        internal static string CannotDeserialize {
+            get {
+                return ResourceManager.GetString("CannotDeserialize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given interger(s) cannot perform lossless integer division. 的本地化字符串。
         /// </summary>
         internal static string CannotDivide {

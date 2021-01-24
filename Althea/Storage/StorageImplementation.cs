@@ -743,7 +743,7 @@ namespace Althea.Storage
 		/// <param name="priorities">the <see cref="IEnumerable{T}"/> of <see cref="StorageLocation"/>s and <see cref="ulong"/>s to represent the priorities from higher-performance memories to lower ones (cannot contain <see cref="LocationType.Uri"/> or any duplicate locations)</param>
 		/// <param name="totalLength">the desired total length (in <typeparamref name="T"/>) of presenting array</param>
 		/// <exception cref="ArgumentException">if <paramref name="priorities"/> has unexpected value(s) or is of wrong size</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="totalLength"/> or <paramref name="cacheUri"/> has unexpected value(s)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="totalLength"/> has unexpected value(s)</exception>
 		public CachedStorage(IEnumerable<(StorageLocation location, ulong maxLengthInBytes)> priorities, ulong totalLength) : base(totalLength)
 		{
 			var temp = new List<PointerSegment>();
