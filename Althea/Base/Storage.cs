@@ -136,12 +136,12 @@ namespace Althea
 		private readonly int _data;
 
 		/// <summary>
-		/// The location of this <see cref="StorageLocation"/>
+		/// The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/>
 		/// </summary>
-		public LocationType Location => (LocationType)unchecked((byte)this._data);
+		public LocationType Type => (LocationType)unchecked((byte)this._data);
 
 		/// <summary>
-		/// The location detail of <see cref="Location"/>.
+		/// The location detail of the <see cref="Type"/>.
 		/// </summary>
 		public int LocationDetail => this._data >> 8;
 
@@ -211,7 +211,7 @@ namespace Althea
 		private static readonly Dictionary<LocationType, Func<int, KeyValuePair<string, string>>> static_OtherDetailNames = new Dictionary<LocationType, Func<int, KeyValuePair<string, string>>>();
 
 		/// <summary>
-		/// Set the name of <see cref="Location"/> used for <see cref="ToString"/> of this if it represents a storage position in other types like <see cref="LocationType.OtherRam_0"/>
+		/// Set the name of <see cref="Type"/> used for <see cref="ToString"/> of this if it represents a storage position in other types like <see cref="LocationType.OtherRam_0"/>
 		/// </summary>
 		/// <param name="location">The <see cref="LocationType"/> of a storage position in other types</param>
 		/// <param name="name">The name as a <see cref="string"/> to set; notice that all the spaces will be replaced by '_'</param>
@@ -244,24 +244,24 @@ namespace Althea
 		/// <returns>the string representation of this <see cref="StorageLocation"/></returns>
 		public override string ToString()
 		{
-			var str = this.Location switch
+			var str = this.Type switch
 			{
 				LocationType.Uri => "URI",
 				LocationType.CpuRam => "CPU_Memory",
 				LocationType.GpuRam => "GPU_Memory",
-				_ => static_OtherLocationNames.GetValueOrDefault(this.Location) ?? $"Other_Memory_{this.Location - LocationType.OtherRam_0}",
+				_ => static_OtherLocationNames.GetValueOrDefault(this.Type) ?? $"Other_Memory_{this.Type - LocationType.OtherRam_0}",
 			};
-			if (this.Location == LocationType.Uri)
+			if (this.Type == LocationType.Uri)
 			{
 				str += $"(scheme={Storage.UriSchemeExtension.GetName((Storage.UriScheme)this.LocationDetail)})";
 			}
-			else if (this.Location < LocationType.OtherRam_0)
+			else if (this.Type < LocationType.OtherRam_0)
 			{
 				str += $"(device_ID={this.LocationDetail})";
 			}
 			else
 			{
-				var kv = static_OtherDetailNames[this.Location](this.LocationDetail);
+				var kv = static_OtherDetailNames[this.Type](this.LocationDetail);
 				str += $"({kv.Key}={kv.Value})";
 			}
 			return str;
@@ -464,19 +464,23 @@ namespace Althea
 	/// <summary>
 	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
-	public interface IPointer : IMainPropertyFormat, ICheckValid
+	public interface IPointer : IMainPropertyFormat, ICheckValid, IEquatable<IPointer>
 	{
 		/// <summary>
-		/// When implemented by derived classes, get the original length of this pointer's underlying storage in bytes
+		/// When implemented by derived classes, get the <see cref="StorageLocation"/> of this pointer's underlying storage
+		/// </summary>
+		StorageLocation Location { get; }
+
+		/// <summary>
+		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes
 		/// </summary>
 		ulong LengthInBytes { get; }
 
 		/// <summary>
-		/// When implemented by derived classes, <b>statically</b> check whether given <paramref name="location"/> is a supported one for this pointer
+		/// When implemented by derived classes, get the hash code this <see cref="IPointer"/>.
 		/// </summary>
-		/// <param name="location">The given <see cref="StorageLocation"/> to be checked</param>
-		/// <returns>Whether given <paramref name="location"/> is supported or not</returns>
-		bool IsValidLocation(StorageLocation location);
+		/// <returns>The hash code</returns>
+		int GetHashCode();
 	}
 	#endregion
 
@@ -484,34 +488,28 @@ namespace Althea
 	/// The struct of which delimits a certain section of a certain unmanaged memory block
 	/// </summary>
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
-	[StructLayout(LayoutKind.Explicit, Size = 32)]
+	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct PointerSegment : IEquatable<PointerSegment>, IMainPropertyFormat, ICheckValid
 	{
 		#region basic
-		[FieldOffset(0)]
-		private readonly StorageLocation location;
-
-		[FieldOffset(8)]
 		private readonly IPointer pointer;
 
-		[FieldOffset(16)]
 		private readonly ulong offset;
 
-		[FieldOffset(24)]
 		private readonly ulong length;
 
 		/// <summary>
 		/// Check whether this pointer is a valid pointer or not
 		/// </summary>
-		public bool IsValid() => this.pointer is not null && this.pointer.IsValid();
+		public bool IsValid() => this.length != 0 && this.pointer is not null && this.pointer.IsValid();
 
 		/// <summary>
 		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/>
 		/// </summary>
-		public StorageLocation Location => this.location;
+		public StorageLocation Location => this.pointer.Location;
 
 		/// <summary>
-		/// The raw pointer (without offset) as a <see cref="IPointer"/>
+		/// The native pointer (without offset and presenting length) as a <see cref="IPointer"/>
 		/// </summary>
 		public IPointer Pointer => this.pointer;
 
@@ -533,20 +531,16 @@ namespace Althea
 		public T? GetPointer<T>() where T : struct, IPointer => this.pointer is T t ? t : null;
 
 		/// <summary>
-		/// Create with given location and pointer
+		/// Create with given pointer
 		/// </summary>
-		/// <param name="location">The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/></param>
-		/// <param name="pointer">The pointer at the given <paramref name="location"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is a default value</exception>
-		/// <exception cref="ArgumentException">If <paramref name="location"/> is a valid value of <paramref name="pointer"/></exception>
-		public PointerSegment(StorageLocation location, IPointer pointer)
+		/// <param name="pointer">The pointer</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is not a valid value</exception>
+		public PointerSegment(IPointer pointer)
 		{
-			if (pointer.Equals(default))
+			if (pointer is null || !pointer.IsValid())
 				throw new ArgumentNullException(nameof(pointer));
-			if (!pointer.IsValidLocation(location))
-				throw new ArgumentException(Parameter.InvalidValue, nameof(location));
 
-			this.location = location; this.pointer = pointer; this.offset = 0; this.length = pointer.LengthInBytes;
+			this.pointer = pointer; this.offset = 0; this.length = pointer.LengthInBytes;
 		}
 
 		/// <summary>
@@ -569,7 +563,7 @@ namespace Althea
 			if (off + newLength > storage.pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(newLength));
 
-			this.location = storage.location; this.pointer = storage.pointer; this.offset = off; this.length = newLength;
+			this.pointer = storage.pointer; this.offset = off; this.length = newLength;
 		}
 
 		/// <summary>
@@ -598,7 +592,7 @@ namespace Althea
 		/// <returns>this == <paramref name="other"/></returns>
 		public bool Equals(PointerSegment other)
 		{
-			return this.location == other.location && this.pointer == other.pointer && this.offset == other.offset;
+			return this.pointer.Equals(other.pointer) && this.offset == other.offset;
 		}
 
 		/// <summary>
@@ -617,7 +611,7 @@ namespace Althea
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(this.location, this.pointer, this.offset);
+			return HashCode.Combine(this.pointer.GetHashCode(), this.offset);
 		}
 
 		/// <summary>
@@ -642,11 +636,11 @@ namespace Althea
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => this.offset == 0 ? new Dictionary<string, string>
 		{
-			["location"] = this.location.ToString(),
+			["location"] = this.pointer.Location.ToString(),
 			["length"] = this.length.ToString(),
 		} : new Dictionary<string, string>
 		{
-			["location"] = this.location.ToString(),
+			["location"] = this.pointer.Location.ToString(),
 			["offset"] = this.offset.ToString(),
 			["length"] = this.length.ToString(),
 		};
@@ -681,7 +675,7 @@ namespace Althea
 		/// <param name="left">the left <see cref="PointerSegment"/></param>
 		/// <param name="right">the right <see cref="PointerSegment"/></param>
 		/// <returns>If <paramref name="left"/> and <paramref name="right"/> have different references, return <see cref="long.MinValue"/>; otherwise, return a <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
-		public static long operator -(PointerSegment left, PointerSegment right) => left.location != right.location || left.pointer != right.pointer ? long.MinValue : (long)left.offset - (long)right.offset;
+		public static long operator -(PointerSegment left, PointerSegment right) => left.Location != right.Location || !left.pointer.Equals(right.pointer) ? long.MinValue : (long)left.offset - (long)right.offset;
 		#endregion
 	}
 	#endregion
@@ -693,6 +687,7 @@ namespace Althea
 	/// <summary>
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
 	/// </summary>
+	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; implement <see cref="Storage{T}"/> instead.</remarks>
 	public interface IStorage : IReadOnlyList<PointerSegment>, ICheckValid, IDisposable
 	{
 		/// <summary>
@@ -733,6 +728,7 @@ namespace Althea
 	/// <summary>
 	/// The interface for a referenced storage of <see cref="IStorage"/>
 	/// </summary>
+	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; inherit <see cref="ReferenceStorage{T}"/> instead.</remarks>
 	public interface IReferenceStorage : IStorage
 	{
 		/// <summary>
@@ -743,7 +739,7 @@ namespace Althea
 		/// <summary>
 		/// The total offset compared to the start of <see cref="Reference"/> in bytes
 		/// </summary>
-		long TotalOffset { get; }
+		ulong TotalOffsetInBytes { get; }
 	}
 	#endregion
 
@@ -754,7 +750,6 @@ namespace Althea
 	/// <remarks>
 	/// I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works.<br/>
-	/// Since a derived concrete class shall be one with finalizers, it cannot be in GC generation 0, i.e. it will not be immediately disposed.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
 	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, IMainPropertyFormat where T : unmanaged
 	{
@@ -818,23 +813,103 @@ namespace Althea
 
 		#region other methods
 		/// <summary>
-		/// When implemented by a derived class, make a referenced <see cref="IStorage"/> with the starting pointer moving <paramref name="offset"/> and <see cref="LengthInBytes"/> changing to <paramref name="newLength"/>. The default implementation returns a <see cref="ReferenceStorage{T}"/>.
+		/// <b>Allocate</b> and create a new <see cref="Storage{T}"/> of given <paramref name="combinationType"/> and given locations and lengths. This implementation utilizes the <see cref="Storage.StorageFactory{T}"/>.
 		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="IStorage"/> of this one</returns>
-		public virtual Storage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
+		/// <param name="locationsAndLengths">The given <see cref="StorageLocation"/>s and corresponding lengths in <typeparamref name="T"/></param>
+		/// <returns>The created new <see cref="Storage{T}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="locationsAndLengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="locationsAndLengths"/> has length(s) equals to 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
+		public static Storage<T> Create(CombinationType combinationType, params (StorageLocation location, ulong length)[] locationsAndLengths)
 		{
-			return new ReferenceStorage<T>(this, offset, newLength);
+			if (locationsAndLengths is null || locationsAndLengths.Length == 0)
+				throw new ArgumentNullException(nameof(locationsAndLengths));
+
+			if (locationsAndLengths.Length == 1)
+			{
+				if (locationsAndLengths[0].length == 0)
+					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), Parameter.MustPositive);
+				return Create(locationsAndLengths[0].location, locationsAndLengths[0].length);
+			}
+			else
+			{
+				if (locationsAndLengths.Any(static p => p.length == 0))
+					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), Parameter.MustPositive);
+				Span<StorageLocation> locations = stackalloc StorageLocation[locationsAndLengths.Length];
+				Span<ulong> lengths = stackalloc ulong[locationsAndLengths.Length];
+				for (int i = 0; i < locationsAndLengths.Length; i++)
+				{
+					locations[i] = locationsAndLengths[i].location;
+					lengths[i] = locationsAndLengths[i].length;
+				}
+				return Storage.StorageFactory<T>.Create(combinationType, locations, lengths);
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert this <see cref="Storage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// <b>Allocate</b> and create a new <see cref="Storage{T}"/> on given <paramref name="location"/> with corresponding <paramref name="length"/>. This implementation utilizes the <see cref="Storage.StorageFactory{T}"/>.
+		/// </summary>
+		/// <param name="location">The given <see cref="StorageLocation"/> to create on</param>
+		/// <param name="length">The corresponding length in <typeparamref name="T"/></param>
+		/// <returns>The created new <see cref="Storage{T}"/></returns>
+		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
+		public static Storage<T> Create(StorageLocation location, ulong length)
+		{
+			Span<StorageLocation> locations = SpanLinq.AsSpan(ref location);
+			Span<ulong> lengths = SpanLinq.AsSpan(ref length);
+			return Storage.StorageFactory<T>.Create(CombinationType.PureOrMixed, locations, lengths);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
+		public abstract ReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0);
+
+		/// <summary>
+		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">the output data type</typeparam>
-		/// <returns>a referenced <see cref="Storage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
-		public abstract Storage<TOut> As<TOut>() where TOut : unmanaged;
+		/// <param name="size">The size in <typeparamref name="T"/> to check</param>
+		/// <param name="sizeInBytes">Whether <paramref name="size"/> is in bytes or in <typeparamref name="T"/></param>
+		/// <returns>The <paramref name="size"/> (multiplies the size of <typeparamref name="T"/> then) divides the size of <typeparamref name="TOut"/></returns>
+		/// <exception cref="InvalidCastException">if <paramref name="size"/>( multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
+		protected static long CheckCast<TOut>(long size, bool sizeInBytes = false) where TOut : unmanaged
+		{
+			long newSize = sizeInBytes ? size : (size * SizeOfT);
+			if (size * SizeOfT % Storage<TOut>.SizeOfT != 0)
+				throw new InvalidCastException(Other.CannotDivide);
+			newSize /= Storage<TOut>.SizeOfT;
+			return newSize;
+		}
+		/// <summary>
+		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <param name="size">The size in <typeparamref name="T"/> to check</param>
+		/// <param name="sizeInBytes">Whether <paramref name="size"/> is in bytes or in <typeparamref name="T"/></param>
+		/// <returns>The <paramref name="size"/> (multiplies the size of <typeparamref name="T"/> then) divides the size of <typeparamref name="TOut"/></returns>
+		/// <exception cref="InvalidCastException">if <paramref name="size"/> (multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
+		protected static ulong CheckCast<TOut>(ulong size, bool sizeInBytes = false) where TOut : unmanaged
+		{
+			ulong newSize = sizeInBytes ? size : (size * SizeOfT);
+			if (size * SizeOfT % Storage<TOut>.SizeOfT != 0)
+				throw new InvalidCastException(Other.CannotDivide);
+			newSize /= Storage<TOut>.SizeOfT;
+			return newSize;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, convert this <see cref="Storage{T}"/> to another one with different data type <typeparamref name="TOut"/> without copying data.
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>A <see cref="ReferenceStorage{TOut}"/> of type <typeparamref name="TOut"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+		public abstract ReferenceStorage<TOut> As<TOut>() where TOut : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not. The default implementation checks the <see cref="Disposed"/>, <see cref="Count"/> and the <see cref="ICheckValid.IsValid"/> of each pointer.
@@ -858,7 +933,7 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>. The default implementation works for <see cref="IReferenceStorage"/> and other non-referenced actual storages.
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>. The default implementation works for both <see cref="ReferenceStorage{T}"/> and any non-referenced storage.
 		/// </summary>
 		/// <param name="offset">the offset to move</param>
 		/// <param name="newLength">the length to check in bytes</param>
@@ -869,7 +944,7 @@ namespace Althea
 			{
 				if (reference.Reference is null)
 					return false;
-				offset += reference.TotalOffset;
+				offset += (long)reference.TotalOffsetInBytes;
 				if (offset < 0 || (ulong)offset >= reference.Reference.LengthInBytes)
 					return false;
 				if (newLength > 0 && newLength + (ulong)offset >= reference.Reference.LengthInBytes)
@@ -963,17 +1038,12 @@ namespace Althea
 
 		#region operator
 		/// <summary>
-		/// An empty <see cref="Storage{T}"/>
-		/// </summary>
-		public static readonly Storage<T> Empty = new ReferenceStorage<T>();
-
-		/// <summary>
 		/// Add offset (in bytes) to a <see cref="Storage{T}"/> to get another.
 		/// </summary>
 		/// <param name="storage">the <see cref="Storage{T}"/></param>
 		/// <param name="offset">the offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		public static Storage<T> operator +(Storage<T> storage, long offset) => new ReferenceStorage<T>(storage, offset);
+		public static Storage<T> operator +(Storage<T> storage, long offset) => storage.MakeReference(offset);
 
 		/// <summary>
 		/// Subtract offset (in bytes) to a <see cref="Storage{T}"/> to get another.
@@ -981,111 +1051,71 @@ namespace Althea
 		/// <param name="storage">the <see cref="Storage{T}"/></param>
 		/// <param name="offset">the offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		public static Storage<T> operator -(Storage<T> storage, long offset) => new ReferenceStorage<T>(storage, -offset);
+		public static Storage<T> operator -(Storage<T> storage, long offset) => storage.MakeReference(-offset);
 		#endregion
 	}
 
+
 	/// <summary>
-	/// The storage class that reference to a <see cref="Storage{T}"/>
+	/// The abstract storage class as a bas class for all referenced <see cref="Storage{T}"/> classes
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public sealed class ReferenceStorage<T> : Storage<T>, IReferenceStorage where T : unmanaged
+	public abstract class ReferenceStorage<T> : Storage<T>, IReferenceStorage where T : unmanaged
 	{
 		#region basic
 		private readonly IStorage? reference;
 
-		private readonly long totalOffset;
-
-		IStorage? IReferenceStorage.Reference => this.reference;
-
-		long IReferenceStorage.TotalOffset => this.totalOffset;
-
-		private readonly int start, end;
-
-		private readonly ulong startOffsetBytes, endLengthBytes;
-
 		/// <summary>
-		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// The referenced storage as a nullable <see cref="IStorage"/>
 		/// </summary>
-		public override int Count => this.end - this.start;
+		public IStorage? Reference => this.reference;
 
 		/// <summary>
-		/// Override <see cref="Storage{T}.Length"/> to get the presenting length
+		/// When implemented by a derived class, get the total offset compared to the start of the referenced <see cref="IStorage"/> in bytes. It is not counted in <typeparamref name="T"/> since there may be data type difference between the <see cref="IStorage"/> and this.
+		/// </summary>
+		public virtual ulong TotalOffsetInBytes { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
 		public override ulong Length { get; }
-
-		/// <summary>
-		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
-		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.reference?.LocationDescription[this.start..this.end] ?? default;
 
 		/// <summary>
 		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
 		/// <param name="storage">the <see cref="Storage{T}"/> to be referenced</param>
 		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
-		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
-		public ReferenceStorage(IStorage storage, long offset = 0, ulong newLength = 0)
+		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means the maximum possible value calculate from <paramref name="storage"/> and <paramref name="offset"/></param>
+		protected ReferenceStorage(IStorage? storage, long offset = 0, ulong newLength = 0)
 		{
+			if (storage is null)
+				return;
+			// get offset and new length in bytes
+			ulong offsetInBytes = (ulong)(offset * SizeOfT);
+			ulong newLengthInBytes;
+			if (newLength == 0)
+				newLengthInBytes = storage.LengthInBytes - (ulong)(SizeOfT * offset);
+			else
+				newLengthInBytes = newLength * SizeOfT;
 			// dereference first
 			while (storage is IReferenceStorage @ref)
 			{
 				if (@ref.Reference is null)
-					throw new ArgumentNullException(nameof(storage));
+					return;
 				storage = @ref.Reference;
-				offset += @ref.TotalOffset;
+				offsetInBytes += @ref.TotalOffsetInBytes;
 			}
 			// set reference
 			this.reference = storage;
 			// check
-			if (offset < 0)
+			if (offsetInBytes < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			if (newLength == 0)
-				newLength = storage.LengthInBytes - (ulong)(SizeOfT * offset);
-			else if (storage.LengthInBytes != (ulong)offset + newLength)
-				throw new ArgumentOutOfRangeException(nameof(offset));
-			// set length
-			this.Length = newLength;
-			// set offsets
-			ulong offsetInBytes = (ulong)(offset * SizeOfT);
-			for (int i = 0; i < storage.Count; i++)
-			{
-				ulong lengthOfI = storage[i].LengthInBytes;
-				if (offsetInBytes < lengthOfI)
-				{
-					this.start = i; this.startOffsetBytes = offsetInBytes;
-					break;
-				}
-				else
-				{
-					offsetInBytes -= lengthOfI;
-				}
-			}
-			offsetInBytes += newLength;
-			for (int i = this.start; i < storage.Count; i++)
-			{
-				ulong lengthOfI = storage[i].LengthInBytes;
-				if (offsetInBytes <= lengthOfI)
-				{
-					this.end = i + 1; this.endLengthBytes = offsetInBytes;
-					break;
-				}
-				else
-				{
-					offsetInBytes -= lengthOfI;
-				}
-			}
+			if (storage.LengthInBytes != offsetInBytes + newLengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(newLength));
+			// set offset and length
+			this.TotalOffsetInBytes = offsetInBytes;
+			this.Length = newLengthInBytes / SizeOfT;
 		}
-
-		private ReferenceStorage(IStorage? storage, long totalOffset, int start, ulong startOffset, ulong endLength, ulong newLength)
-		{
-			this.reference = storage; this.totalOffset = totalOffset;
-			this.start = start; this.startOffsetBytes = startOffset; this.endLengthBytes = endLength;
-			this.Length = newLength;
-		}
-
-		internal ReferenceStorage() : this(null, 0, 0, 0, 0, 0) { }
 		#endregion
 
 		#region override
@@ -1093,52 +1123,71 @@ namespace Althea
 		/// The function that actually dispose this <see cref="ReferenceStorage{T}"/>, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
 		/// <param name="disposeManaged">dispose managed resources or not</param>
-		protected override void Dispose(bool disposeManaged)
+		/// <remarks>Since this is a reference, this method does nothing</remarks>
+		protected override void Dispose(bool disposeManaged) { }
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The abstract storage class as a base class for all non-referenced <see cref="Storage{T}"/> classes
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	/// <remarks>Since this class has a finalizer, it cannot be in GC generation 0, i.e., it will not be disposed immediately when out of scope.</remarks>
+	public abstract class ActualStorage<T> : Storage<T> where T : unmanaged
+	{
+		#region memory
+		/// <summary>
+		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>
+		/// </summary>
+		public override ulong Length { get; }
+
+		/// <summary>
+		/// Create an <see cref="ActualStorage{T}"/> with given length of presenting array
+		/// </summary>
+		/// <param name="length">the length of presenting array <typeparamref name="T"/></param>
+		protected ActualStorage(ulong length)
 		{
-			// since this is a reference, we shall do nothing
+			if (length == 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+			this.Length = length;
 		}
 
 		/// <summary>
-		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
-		/// <param name="index">the element index</param>
-		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
-		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="ReferenceStorage{T}"/> is null</exception>
-		public override PointerSegment this[int index] {
-			get {
-				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
-				if (this.reference is null)
-					throw new InvalidOperationException();
-				PointerSegment pointer = this.reference[index - start];
-				if (index == 0)
-				{
-					pointer = pointer.MoveBy((long)this.startOffsetBytes);
-				}
-				else if (index == this.Count - 1)
-				{
-					pointer = new PointerSegment(pointer, newLength: this.endLengthBytes);
-				}
-				return pointer;
+		/// <param name="disposeManaged">dispose managed resources or not</param>
+		protected override void Dispose(bool disposeManaged)
+		{
+			for (int i = 0; i < this.Count; i++)
+			{
+				var ptr = this[i];
+				if (ptr.IsValid())
+					MEM.SelectImplementation(ptr.Location).Free(ptr, disposeManaged);
 			}
 		}
 
 		/// <summary>
-		/// Convert this <see cref="ReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// The finalizer of <see cref="ActualStorage{T}"/>
 		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
-		/// <returns>a referenced <see cref="ReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
-		public override ReferenceStorage<TOut> As<TOut>()
+		~ActualStorage()
 		{
-			long offset = this.totalOffset * SizeOfT;
-			if (offset % Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Other.CannotDivide);
-			offset /= Storage<TOut>.SizeOfT;
-			return new ReferenceStorage<TOut>(this.reference, offset, this.start, this.startOffsetBytes, this.endLengthBytes, this.Length);
+			this.Dispose(false);
 		}
 
+		/// <summary>
+		/// Allocate a <see cref="PointerSegment"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
+		/// </summary>
+		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
+		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
+		/// <exception cref="OutOfMemoryException">If system cannot allocate <paramref name="length"/> on <paramref name="location"/></exception>
+		protected static PointerSegment Allocate(StorageLocation location, ulong length)
+		{
+			return MEM.SelectImplementation(location).Allocate<T>(location, length);
+		}
+		#endregion
+
+		#region override
 		/// <summary>
 		/// Determines whether the specified object is equal to the current object.
 		/// </summary>
@@ -1146,18 +1195,25 @@ namespace Althea
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
 		public override bool Equals(Storage<T>? obj)
 		{
-			if (obj is not null && obj is ReferenceStorage<T> @ref)
+			if (obj is not null && obj is ActualStorage<T> another)
 			{
-				return this.reference == @ref.reference && this.start == @ref.start && this.end == @ref.end && this.startOffsetBytes == @ref.startOffsetBytes && this.endLengthBytes == @ref.endLengthBytes;
+				if (this.Count != another.Count)
+					return false;
+				for (int i = 0; i < this.Count; i++)
+				{
+					if (this[i] != another[i])
+						return false;
+				}
+				return true;
 			}
 			return false;
 		}
 
 		/// <summary>
-		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
+		/// Get the hash code of this <see cref="ActualStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.reference, this.start, this.end, this.startOffsetBytes, this.endLengthBytes);
+		public override int GetHashCode() => this.HashCodeOfArray();
 		#endregion
 	}
 	#endregion

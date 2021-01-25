@@ -144,6 +144,9 @@
   <data name="NotSameSize" xml:space="preserve">
     <value>The given parameters have different size, which is not allowed.</value>
   </data>
+  <data name="UnexpectedType" xml:space="preserve">
+    <value>The given parameter is of an unexpected type.</value>
+  </data>
   <data name="UnexpectedValue" xml:space="preserve">
     <value>The given parameter contains unexpected value(s).</value>
   </data>

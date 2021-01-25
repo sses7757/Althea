@@ -17,26 +17,53 @@ namespace Althea.Backend.Storage
 	/// </summary>
 	public class MemoryPointer : IMemoryPointer
 	{
-		private readonly IntPtr pointer;
-
-		private readonly ulong length;
-
-		IntPtr IMemoryPointer.Pointer => this.pointer;
+		/// <summary>
+		/// The native pointer of this <see cref="MemoryPointer"/> as a <see cref="IntPtr"/>
+		/// </summary>
+		public IntPtr Pointer { get; }
 
 		/// <summary>
 		/// Get the original length of this pointer's underlying storage in bytes
 		/// </summary>
-		public ulong LengthInBytes => this.length;
+		public ulong LengthInBytes { get; }
+
+		/// <summary>
+		/// The storage location of this <see cref="MemoryPointer"/> as a <see cref="StorageLocation"/>
+		/// </summary>
+		public StorageLocation Location { get; }
 
 		/// <summary>
 		/// Create a new <see cref="MemoryPointer"/> with given allocated <paramref name="pointer"/> and corresponding <paramref name="length"/>
 		/// </summary>
 		/// <param name="pointer">The allocated pointer</param>
 		/// <param name="length">The length in bytes</param>
-		public MemoryPointer(IntPtr pointer, ulong length)
+		/// <param name="location">The location of this pointer</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="location"/>'s <see cref="LocationType"/> is not a memory type</exception>
+		public MemoryPointer(IntPtr pointer, ulong length, StorageLocation location)
 		{
-			this.pointer = pointer; this.length = length;
+			if (location.Type.GetClassification() != LocationTypeExtension.ClassMemory)
+				throw new ArgumentOutOfRangeException(nameof(location), Parameter.UnexpectedValue);
+			this.Pointer = pointer; this.LengthInBytes = length; this.Location = location;
 		}
+
+		/// <summary>
+		/// Indicates whether the current object is equal to another object of the same type.
+		/// </summary>
+		/// <param name="other"> An object to compare with this object.</param>
+		/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+		public bool Equals(IPointer? other)
+		{
+			if (other is MemoryPointer mp)
+				return this.Pointer == mp.Pointer && this.Location == mp.Location;
+			else
+				return false;
+		}
+
+		/// <summary>
+		/// Get the hash code of this <see cref="MemoryPointer"/>
+		/// </summary>
+		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
+		public override int GetHashCode() => HashCode.Combine(this.Pointer, this.Location);
 	}
 
 	/// <summary>
@@ -45,31 +72,57 @@ namespace Althea.Backend.Storage
 	public class StreamPointer : IStreamPointer
 	{
 		/// <summary>
-		/// The actual <see cref="Althea.Storage.Stream"/> field
-		/// </summary>
-		protected readonly Althea.Storage.Stream stream;
-
-		/// <summary>
 		/// Get the native stream this <see cref="StreamPointer"/> as a <see cref="Althea.Storage.Stream"/>.
 		/// </summary>
-		public Althea.Storage.Stream NativeStream => this.stream;
+		public Althea.Storage.Stream NativeStream { get; }
+
+		/// <summary>
+		/// The storage location of this <see cref="MemoryPointer"/> as a <see cref="StorageLocation"/>
+		/// </summary>
+		public StorageLocation Location { get; }
 
 		/// <summary>
 		/// Create this <see cref="StreamPointer"/> by given <see cref="Althea.Storage.Stream"/>
 		/// </summary>
 		/// <param name="stream">The given <see cref="Althea.Storage.Stream"/></param>
-		public StreamPointer(Althea.Storage.Stream stream) => this.stream = stream;
+		/// <param name="location">The <see cref="StorageLocation"/> of this <see cref="StreamPointer"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="location"/>'s <see cref="LocationType"/> is not a stream type</exception>
+		public StreamPointer(Althea.Storage.Stream stream, StorageLocation location)
+		{
+			if (location.Type.GetClassification() != LocationTypeExtension.ClassStream)
+				throw new ArgumentOutOfRangeException(nameof(location), Parameter.UnexpectedValue);
+			this.NativeStream = stream; this.Location = location;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, dispose unmanaged and managed resources held by this <see cref="StreamPointer"/>
 		/// </summary>
 		public virtual void Dispose()
 		{
-			this.stream.Dispose();
+			this.NativeStream.Dispose();
 			GC.SuppressFinalize(this);
 		}
 
-		string IMainPropertyFormat.StringMain => this.stream.ToString();
+		string IMainPropertyFormat.StringMain => this.NativeStream.ToString();
+
+		/// <summary>
+		/// Indicates whether the current object is equal to another object of the same type.
+		/// </summary>
+		/// <param name="other"> An object to compare with this object.</param>
+		/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+		public bool Equals(IPointer? other)
+		{
+			if (other is StreamPointer mp)
+				return this.NativeStream == mp.NativeStream && this.Location == mp.Location;
+			else
+				return false;
+		}
+
+		/// <summary>
+		/// Get the hash code of this <see cref="MemoryPointer"/>
+		/// </summary>
+		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
+		public override int GetHashCode() => HashCode.Combine(this.NativeStream, this.Location);
 	}
 
 

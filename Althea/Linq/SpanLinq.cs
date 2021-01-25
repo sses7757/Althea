@@ -20,10 +20,9 @@ namespace Althea.Linq
 		/// <typeparam name="T">the type of <paramref name="span"/> and <paramref name="array"/></typeparam>
 		/// <param name="span">the <see cref="Span{T}"/> to be copied into</param>
 		/// <param name="array">the destination array to be copied</param>
-		public static void CopyTo<T>(this IReadOnlyList<T> array, Span<T> span)
+		/// <returns>The <paramref name="span"/></returns>
+		public static Span<T> CopyTo<T>(this IReadOnlyList<T> array, Span<T> span)
 		{
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
 			if (span.Length != array.Count)
 				throw new ArgumentException(Parameter.NotSameSize);
 
@@ -31,6 +30,7 @@ namespace Althea.Linq
 			{
 				span[i] = array[i];
 			}
+			return span;
 		}
 
 		/// <summary>
@@ -41,10 +41,9 @@ namespace Althea.Linq
 		/// <param name="span">the <see cref="Span{T}"/> to be copied into</param>
 		/// <param name="array">the destination array to be copied</param>
 		/// <param name="selector">the converter to each element</param>
-		public static void CopyTo<TIn, TOut>(this IReadOnlyList<TIn> array, Span<TOut> span, Converter<TIn, TOut> selector)
+		/// <returns>The <paramref name="span"/></returns>
+		public static Span<TOut> CopyTo<TIn, TOut>(this IReadOnlyList<TIn> array, Span<TOut> span, Converter<TIn, TOut> selector)
 		{
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
 			if (span.Length != array.Count)
 				throw new ArgumentException(Parameter.NotSameSize);
 
@@ -52,6 +51,7 @@ namespace Althea.Linq
 			{
 				span[i] = selector(array[i]);
 			}
+			return span;
 		}
 
 		/// <summary>
@@ -60,10 +60,9 @@ namespace Althea.Linq
 		/// <typeparam name="T">the type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
 		/// <param name="span">the <see cref="Span{T}"/> to be copied</param>
 		/// <param name="destArray">the destination array to be copied into</param>
-		public static void CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
+		/// <returns>The <paramref name="destArray"/></returns>
+		public static T[] CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
 		{
-			if (destArray is null)
-				throw new ArgumentNullException(nameof(destArray));
 			if (span.Length != destArray.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
 
@@ -71,6 +70,7 @@ namespace Althea.Linq
 			{
 				destArray[i] = span[i];
 			}
+			return destArray;
 		}
 
 		/// <summary>
@@ -81,10 +81,9 @@ namespace Althea.Linq
 		/// <param name="span">the <see cref="Span{T}"/> to be copied from</param>
 		/// <param name="array">the destination array to be copied into</param>
 		/// <param name="selector">the converter to each element</param>
-		public static void CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, TOut[] array, Converter<TIn, TOut> selector)
+		/// <returns>The <paramref name="array"/></returns>
+		public static TOut[] CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, TOut[] array, Converter<TIn, TOut> selector)
 		{
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
 			if (span.Length != array.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
 
@@ -92,6 +91,7 @@ namespace Althea.Linq
 			{
 				array[i] = selector(span[i]);
 			}
+			return array;
 		}
 		#endregion
 
@@ -528,6 +528,42 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static uint Prod(this Span<uint> list)
+		{
+			if (list.Length == 0)
+				return 1;
+			uint prod = 1;
+			for (int i = 0; i < list.Length; i++)
+			{
+				prod *= list[i];
+			}
+			return prod;
+		}
+
+		/// <summary>
+		/// List product
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static ulong Prod(this Span<ulong> list)
+		{
+			if (list.Length == 0)
+				return 1;
+			ulong prod = 1;
+			for (int i = 0; i < list.Length; i++)
+			{
+				prod *= list[i];
+			}
+			return prod;
+		}
+
+		/// <summary>
+		/// List product
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static float Prod(this Span<float> list)
 		{
 			if (list.Length == 0)
@@ -602,6 +638,42 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static uint Sum(this Span<uint> list)
+		{
+			if (list.Length == 0)
+				return 0;
+			uint sum = 0;
+			for (int i = 0; i < list.Length; i++)
+			{
+				sum += list[i];
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List summation
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static ulong Sum(this Span<ulong> list)
+		{
+			if (list.Length == 0)
+				return 0;
+			ulong sum = 0;
+			for (int i = 0; i < list.Length; i++)
+			{
+				sum += list[i];
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List summation
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static float Sum(this Span<float> list)
 		{
 			if (list.Length == 0)
@@ -663,6 +735,41 @@ namespace Althea.Linq
 			if (list.Length == 0)
 				return 1;
 			long prod = 1;
+			for (int i = 0; i < list.Length; i++)
+			{
+				prod *= list[i];
+			}
+			return prod;
+		}
+		/// <summary>
+		/// List product
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static uint Prod(this ReadOnlySpan<uint> list)
+		{
+			if (list.Length == 0)
+				return 1;
+			uint prod = 1;
+			for (int i = 0; i < list.Length; i++)
+			{
+				prod *= list[i];
+			}
+			return prod;
+		}
+
+		/// <summary>
+		/// List product
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static ulong Prod(this ReadOnlySpan<ulong> list)
+		{
+			if (list.Length == 0)
+				return 1;
+			ulong prod = 1;
 			for (int i = 0; i < list.Length; i++)
 			{
 				prod *= list[i];
@@ -750,6 +857,42 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static uint Sum(this ReadOnlySpan<uint> list)
+		{
+			if (list.Length == 0)
+				return 0;
+			uint sum = 0;
+			for (int i = 0; i < list.Length; i++)
+			{
+				sum += list[i];
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List summation
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
+		public static ulong Sum(this ReadOnlySpan<ulong> list)
+		{
+			if (list.Length == 0)
+				return 0;
+			ulong sum = 0;
+			for (int i = 0; i < list.Length; i++)
+			{
+				sum += list[i];
+			}
+			return sum;
+		}
+
+		/// <summary>
+		/// List summation
+		/// </summary>
+		/// <param name="list"></param>
+		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
+		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static float Sum(this ReadOnlySpan<float> list)
 		{
 			if (list.Length == 0)
@@ -784,6 +927,74 @@ namespace Althea.Linq
 
 		#region predicate
 		/// <summary>
+		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// </summary>
+		/// <param name="span">the span to predicate</param>
+		/// <param name="predicator">the predicator delegate</param>
+		/// <returns>Predicate result</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static bool All<T>(this Span<T> span, Predicate<T> predicator)
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (!predicator(span[i]))
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// </summary>
+		/// <param name="span">the span to predicate</param>
+		/// <param name="predicator">the predicator delegate</param>
+		/// <returns>Predicate result</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static bool All<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (!predicator(span[i]))
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// </summary>
+		/// <param name="span">the span to predicate</param>
+		/// <param name="predicator">the predicator delegate</param>
+		/// <returns>Predicate result</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static bool Any<T>(this Span<T> span, Predicate<T> predicator)
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (predicator(span[i]))
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// </summary>
+		/// <param name="span">the span to predicate</param>
+		/// <param name="predicator">the predicator delegate</param>
+		/// <returns>Predicate result</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static bool Any<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (predicator(span[i]))
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
 		/// Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
@@ -806,6 +1017,17 @@ namespace Althea.Linq
 		#endregion
 
 		#region converter
+		/// <summary>
+		/// Create a <see cref="Span{T}"/> of given reference of <paramref name="value"/> with length 1
+		/// </summary>
+		/// <typeparam name="T">any data type</typeparam>
+		/// <param name="value">The value as a referenced <typeparamref name="T"/></param>
+		/// <returns>The <see cref="Span{T}"/> created from given <paramref name="value"/></returns>
+		public unsafe static Span<T> AsSpan<T>(ref T value)
+		{
+			return new Span<T>(Unsafe.AsPointer(ref value), 1);
+		}
+
 		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
 		/// </summary>
@@ -913,6 +1135,44 @@ namespace Althea.Linq
 		#endregion
 
 		#region set operations
+		/// <summary>
+		/// Check if <paramref name="span"/>'s elements are unique
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <param name="span">span to pick</param>
+		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
+		public static bool ElementsUnique<T>(this Span<T> span) where T : IEquatable<T>
+		{
+			var res = new List<T>(span.Length);
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (!res.Contains(span[i]))
+					res.Add(span[i]);
+				else
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Check if <paramref name="span"/>'s elements are unique
+		/// </summary>
+		/// <typeparam name="T">the data type</typeparam>
+		/// <param name="span">span to pick</param>
+		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
+		public static bool ElementsUnique<T>(this ReadOnlySpan<T> span) where T : IEquatable<T>
+		{
+			var res = new List<T>(span.Length);
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (!res.Contains(span[i]))
+					res.Add(span[i]);
+				else
+					return false;
+			}
+			return true;
+		}
+
 		/// <summary>
 		/// Get the hash code of a set (order-independent) using ADD method
 		/// </summary>

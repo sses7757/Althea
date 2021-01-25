@@ -2056,7 +2056,6 @@ namespace Althea.Linq
 			return true;
 		}
 
-
 		/// <summary>
 		/// Check if <paramref name="list"/>'s elements are unique by given <paramref name="selector"/>
 		/// </summary>

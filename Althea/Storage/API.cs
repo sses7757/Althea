@@ -276,10 +276,34 @@ namespace Althea.Storage
 
 		#region high-level storage operations
 		/// <summary>
+		/// Get the actual storage of the given <paramref name="storage"/> if it is a <see cref="PureOrMixedStorage{T}"/> or a <see cref="CachedStorage{T}"/>.
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <param name="storage">The given <see cref="Storage{T}"/> to dereference</param>
+		/// <param name="mixed">The output nullable <see cref="IPureOrMixedStorage"/></param>
+		/// <param name="cached">The output nullable <see cref="ICachedStorage"/></param>
+		/// <returns>The offset in bytes and the length in bytes</returns>
+		/// <exception cref="NotImplementedException">If <paramref name="storage"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/> or it is <see cref="ReferenceStorage{T}"/> while its dereference is neither <see cref="PureOrMixedStorage{T}"/> nor <see cref="CachedStorage{T}"/></exception>
+		protected static void Cast<T>(Storage<T> storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached) where T : unmanaged
+		{
+			mixed = null; cached = null;
+			if (storage is IPureOrMixedStorage mix)
+			{
+				mixed = mix;
+			}
+			else if (storage is ICachedStorage cache)
+			{
+				cached = cache;
+			}
+			else
+				throw new NotImplementedException();
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="storage">The <see cref="IStorage"/> to be filled</param>
+		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
@@ -288,26 +312,25 @@ namespace Althea.Storage
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
 
-			if (storage.LocationDescription.Type == CombinationType.PureOrMixed)
+			Cast(storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (mixed is not null)
 			{
 				for (int i = 0; i < storage.Count; i++)
 				{
 					this.SetMemoryValue(storage[i], value);
 				}
 			}
-			else if (storage.LocationDescription.Type == CombinationType.Cached && storage is CachedStorage<T> cached)
+			else if (cached is not null)
 			{
 				cached.Flush(); this.SetMemoryValue(cached[0], value);
 			}
-			else
-				throw new NotImplementedException();
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="storage">The <see cref="IStorage"/> to be filled</param>
+		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
@@ -316,44 +339,28 @@ namespace Althea.Storage
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
 
-			if (storage.LocationDescription.Type == CombinationType.PureOrMixed)
+			Cast(storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (mixed is not null)
 			{
 				for (int i = 0; i < storage.Count; i++)
 				{
 					this.SetMemoryValue(storage[i], value);
 				}
 			}
-			else if (storage.LocationDescription.Type == CombinationType.Cached && storage is CachedStorage<T> cached)
+			else if (cached is not null)
 			{
 				cached.Flush(); this.SetMemoryValue(cached[0], value);
 			}
-			else
-				throw new NotImplementedException();
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="IPureOrMixedStorage"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="source">The source <see cref="IServiceProvider"/> to copy from</param>
-		/// <param name="destination">The <see cref="IServiceProvider"/> pointer to copy into</param>
-		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in <typeparamref name="T"/></remarks>
-		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		public virtual void MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
+		/// <param name="source">The source <see cref="IPureOrMixedStorage"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="IPureOrMixedStorage"/> to copy into</param>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		protected virtual void MixedStorageMemoryCopy(IPureOrMixedStorage source, IPureOrMixedStorage destination)
 		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			// TODO: cached storage?
-
-			if (source.Count == 1 && destination.Count == 1)
-			{
-				this.MemoryCopy(source[0], destination[0]);
-				return;
-			}
 			PointerSegment src = source[0], dst = destination[0];
 			bool incSrc = false, incDst = false;
 			int i = 0, j = 0;
@@ -385,12 +392,88 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, copy memory from a <see cref="IPureOrMixedStorage"/> <paramref name="source"/> to a <see cref="ICachedStorage"/> <paramref name="destination"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
+		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		protected virtual void MixedToCachedStorageMemoryCopy(IPureOrMixedStorage source, ICachedStorage destination)
+		{
+			// TODO
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy memory from a <see cref="ICachedStorage"/> <paramref name="source"/> to a <see cref="IPureOrMixedStorage"/> <paramref name="destination"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		protected virtual void CachedToMixedStorageMemoryCopy(ICachedStorage source, IPureOrMixedStorage destination)
+		{
+			// TODO
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="ICachedStorage"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="ICachedStorage"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="ICachedStorage"/> to copy into</param>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		protected virtual void CachedStorageMemoryCopy(ICachedStorage source, ICachedStorage destination)
+		{
+			// TODO
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
-		/// <param name="source">The source <see cref="IStorage"/></param>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> pointer to copy into</param>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		public virtual void MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
+		{
+			if (!source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (!destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+
+			Cast(source, out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
+			Cast(destination, out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
+			// normal cases
+			if (srcMixed is not null && dstMixed is not null)
+			{
+				// shortcut
+				if (source.Count == 1 && destination.Count == 1)
+				{
+					this.MemoryCopy(source[0], destination[0]);
+					return;
+				}
+				this.MixedStorageMemoryCopy(srcMixed, dstMixed);
+			}
+			else if (srcMixed is not null && dstCached is not null)
+			{
+				this.MixedToCachedStorageMemoryCopy(srcMixed, dstCached);
+			}
+			else if (srcCached is not null && dstMixed is not null)
+			{
+				this.CachedToMixedStorageMemoryCopy(srcCached, dstMixed);
+			}
+			else if (srcCached is not null && dstCached is not null)
+			{
+				this.CachedStorageMemoryCopy(srcCached, dstCached);
+			}
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// </summary>
+		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/></param>
 		/// <param name="sourceLD">The source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
-		/// <param name="destination">The destination <see cref="IStorage"/></param>
+		/// <param name="destination">The destination <see cref="Storage{T}"/></param>
 		/// <param name="destLD">The destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in the real type</param>
@@ -400,8 +483,8 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
-		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
-		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
+		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>, 
+		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>
 		/// </exception>
 		public virtual void MemoryCopy2D<T>(Storage<T> source, ulong sourceLD, Storage<T> destination, ulong destLD, ulong height, ulong width) where T : unmanaged
 		{
@@ -424,7 +507,10 @@ namespace Althea.Storage
 			if (destLD * width > destination.LengthInBytes)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
 
-			if (source.Count == 1 && destination.Count == 1)
+			Cast(source, out IPureOrMixedStorage? srcMixed, out ICachedStorage? _);
+			Cast(destination, out IPureOrMixedStorage? dstMixed, out ICachedStorage? _);
+			// shortcut
+			if (srcMixed is not null && dstMixed is not null && source.Count == 1 && destination.Count == 1)
 			{
 				this.MemoryCopy2D(source[0], sourceLD, destination[0], destLD, height, width);
 				return;

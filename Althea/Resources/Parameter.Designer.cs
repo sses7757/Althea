@@ -142,6 +142,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given parameter is of an unexpected type. 的本地化字符串。
+        /// </summary>
+        internal static string UnexpectedType {
+            get {
+                return ResourceManager.GetString("UnexpectedType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given parameter contains unexpected value(s). 的本地化字符串。
         /// </summary>
         internal static string UnexpectedValue {

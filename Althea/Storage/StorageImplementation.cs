@@ -131,8 +131,6 @@ namespace Althea.Storage
 
 		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes != 0;
 
-		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassMemory;
-
 		string IMainPropertyFormat.StringMain => this.Pointer.ToString("X");
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string> { ["length"] = this.LengthInBytes.ToString() };
@@ -484,8 +482,6 @@ namespace Althea.Storage
 
 		bool ICheckValid.IsValid() => this.NativeStream.IsValid();
 
-		bool IPointer.IsValidLocation(StorageLocation location) => location.Location.GetClassification() == LocationTypeExtension.ClassStream;
-
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
 		{ 
 			["length"] = this.NativeStream.Length.ToString(),
@@ -496,77 +492,198 @@ namespace Althea.Storage
 	#endregion
 
 
-	#region concrete storage classes
+	#region pure or mixed storage classes
 	/// <summary>
-	/// The abstract storage class as a base class for all non-referenced <see cref="Storage{T}"/> classes
+	/// The interface for any cached storage, including actual ones and referenced one
+	/// </summary>
+	public interface IPureOrMixedStorage : IStorage { }
+
+	/// <summary>
+	/// The abstract storage class as a base class for all <see cref="Storage{T}"/> classes with <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>. Inherits <see cref="ActualStorage{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public abstract class ActualStorage<T> : Storage<T> where T : unmanaged
+	public abstract class PureOrMixedStorage<T> : ActualStorage<T>, IPureOrMixedStorage where T : unmanaged
 	{
-		#region memory
+		#region basic
 		/// <summary>
-		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>
+		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override ulong Length { get; }
+		public override CombinationOfLocations LocationDescription { get; }
 
 		/// <summary>
-		/// Create an <see cref="ActualStorage{T}"/> with given length of presenting array
+		/// Create (without allocation) a <see cref="PureOrMixedStorage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
-		/// <param name="length">the length of presenting array <typeparamref name="T"/></param>
-		protected ActualStorage(ulong length)
+		/// <param name="locations">The locations as a <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/></param>
+		/// <param name="lengths">The presenting lengths in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="ulong"/></param>
+		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
+		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
+		protected PureOrMixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<ulong> lengths) : base(lengths.Sum())
 		{
-			if (length == 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
-			this.Length = length;
-		}
+			if (locations.Length == 0)
+				throw new ArgumentNullException(nameof(locations));
+			if (lengths.Length == 0)
+				throw new ArgumentNullException(nameof(lengths));
+			if (locations.Length != lengths.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+			if (lengths.Any(l => l == 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
 
-		/// <summary>
-		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
-		/// </summary>
-		/// <param name="disposeManaged">dispose managed resources or not</param>
-		protected override void Dispose(bool disposeManaged)
-		{
-			for (int i = 0; i < this.Count; i++)
-			{
-				var ptr = this[i];
-				if (ptr.IsValid())
-					MEM.SelectImplementation(ptr.Location).Free(ptr, disposeManaged);
-			}
-		}
-
-		/// <summary>
-		/// The finalizer of <see cref="ActualStorage{T}"/>
-		/// </summary>
-		~ActualStorage()
-		{
-			this.Dispose(false);
-		}
-
-		/// <summary>
-		/// Allocate a <see cref="PointerSegment"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
-		/// </summary>
-		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
-		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
-		/// <exception cref="OutOfMemoryException">If system cannot allocate <paramref name="length"/> on <paramref name="location"/></exception>
-		protected static PointerSegment Allocate(StorageLocation location, ulong length)
-		{
-			return MEM.SelectImplementation(location).Allocate<T>(location, length);
+			this.LocationDescription = new CombinationOfLocations(CombinationType.PureOrMixed, locations);
 		}
 		#endregion
 
 		#region override
 		/// <summary>
-		/// Convert this <see cref="ActualStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// Make a <see cref="PureOrMixedReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
+		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		{
+			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
+		}
+
+		/// <summary>
+		/// Convert this <see cref="PureOrMixedStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">the output data type</typeparam>
-		/// <returns>a <see cref="ReferenceStorage{TOut}"/></returns>
+		/// <returns>A <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
-		public override ReferenceStorage<TOut> As<TOut>()
+		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
 		{
-			if (this.LengthInBytes % Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Other.CannotDivide);
-			ulong newLength = this.LengthInBytes / Storage<TOut>.SizeOfT;
-			return new ReferenceStorage<TOut>(this, newLength: newLength);
+			ulong newLength = CheckCast<TOut>(this.Length);
+			return new PureOrMixedReferenceStorage<TOut>(this, newLength: newLength);
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// The storage class that references to a <see cref="PureOrMixedStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public class PureOrMixedReferenceStorage<T> : ReferenceStorage<T>, IReferenceStorage, IPureOrMixedStorage where T : unmanaged
+	{
+		#region basic
+		private readonly int start, end;
+
+		private readonly ulong startOffsetBytes, endOffsetBytes;
+
+		/// <summary>
+		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => this.end - this.start;
+
+		/// <summary>
+		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
+		/// </summary>
+		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription[this.start..this.end] ?? default;
+
+		/// <summary>
+		/// Create a <see cref="PureOrMixedReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
+		/// </summary>
+		/// <param name="storage">the <see cref="PureOrMixedStorage{T}"/> to be referenced</param>
+		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureOrMixedStorage{T}"/></exception>
+		public PureOrMixedReferenceStorage(IStorage storage, long offset = 0, ulong newLength = 0) : base(storage, offset, newLength)
+		{
+			if (this.Reference is null)
+				return;
+			// check 
+			if (this.Reference is not PureOrMixedStorage<T> && !this.Reference.GetType().MakeGenericType(typeof(T)).IsAssignableTo(typeof(PureOrMixedStorage<T>)))
+				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
+			// set offsets
+			ulong offsetInBytes = this.TotalOffsetInBytes;
+			for (int i = 0; i < storage.Count; i++)
+			{
+				ulong lengthOfI = storage[i].LengthInBytes;
+				if (offsetInBytes < lengthOfI)
+				{   // set
+					this.start = i; this.startOffsetBytes = offsetInBytes;
+					break;
+				}
+				else
+				{
+					offsetInBytes -= lengthOfI;
+				}
+			}
+			offsetInBytes += this.LengthInBytes;
+			for (int i = this.start; i < storage.Count; i++)
+			{
+				ulong lengthOfI = storage[i].LengthInBytes;
+				if (offsetInBytes <= lengthOfI)
+				{   // set
+					this.end = i + 1; this.endOffsetBytes = offsetInBytes;
+					break;
+				}
+				else
+				{
+					offsetInBytes -= lengthOfI;
+				}
+			}
+		}
+
+		private PureOrMixedReferenceStorage(IStorage? storage, long offset, ulong newLength, int start, int end, ulong startOffsetBytes, ulong endOffsetBytes) : base(storage, offset, newLength)
+		{
+			this.start = start; this.end = end;
+			this.startOffsetBytes = startOffsetBytes; this.endOffsetBytes = endOffsetBytes;
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="PureOrMixedReferenceStorage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
+		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureOrMixedReferenceStorage{T}"/> is null</exception>
+		public override PointerSegment this[int index] {
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				if (this.Reference is null)
+					throw new InvalidOperationException();
+				PointerSegment pointer = this.Reference[index - this.start];
+				if (index == 0)
+				{
+					pointer = pointer.MoveBy((long)this.startOffsetBytes);
+				}
+				else if (index == this.Count - 1)
+				{   // this.Count cannot be 1
+					pointer = new PointerSegment(pointer, newLength: this.endOffsetBytes);
+				}
+				return pointer;
+			}
+		}
+
+		/// <summary>
+		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
+		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		{
+			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
+		}
+
+		/// <summary>
+		/// Convert this <see cref="PureOrMixedReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>a referenced <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
+		{
+			if (this.Reference is null)
+				return new PureOrMixedReferenceStorage<TOut>(null, 0, 0, 0, 0, 0, 0);
+			long offset = CheckCast<TOut>((long)this.TotalOffsetInBytes, sizeInBytes: true);
+			ulong length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
+			return new PureOrMixedReferenceStorage<TOut>(this.Reference, offset, length);
 		}
 
 		/// <summary>
@@ -576,48 +693,36 @@ namespace Althea.Storage
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
 		public override bool Equals(Storage<T>? obj)
 		{
-			if (obj is not null && obj is ActualStorage<T> another)
+			if (obj is not null && obj is PureOrMixedReferenceStorage<T> @ref)
 			{
-				if (this.Count != another.Count)
-					return false;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (this[i] != another[i])
-						return false;
-				}
-				return true;
+				return this.Reference == @ref.Reference && this.start == @ref.start && this.end == @ref.end && this.startOffsetBytes == @ref.startOffsetBytes && this.endOffsetBytes == @ref.endOffsetBytes;
 			}
 			return false;
 		}
 
 		/// <summary>
-		/// Get the hash code of this <see cref="PureStorage{T}"/>
+		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
-		public override int GetHashCode() => this.HashCodeOfArray();
+		public override int GetHashCode() => HashCode.Combine(this.Reference, this.start, this.end, this.startOffsetBytes, this.endOffsetBytes);
 		#endregion
 	}
 
 	/// <summary>
-	/// Represents a storage of a contiguous memory block on a certain memory location, inherits <see cref="ActualStorage{T}"/>
+	/// Represents a storage of a contiguous memory block on a certain memory location, implements <see cref="PureOrMixedStorage{T}"/>
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public class PureStorage<T> : ActualStorage<T> where T : unmanaged
+	public class PureStorage<T> : PureOrMixedStorage<T> where T : unmanaged
 	{
 		#region basic
 		private readonly PointerSegment pointer;
-
-		/// <summary>
-		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
-		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.pointer.Location;
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="PureStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
-		public PureStorage(StorageLocation location, ulong length) : base(length)
+		public PureStorage(StorageLocation location, ulong length) : base(SpanLinq.AsSpan(ref location), SpanLinq.AsSpan(ref length))
 		{
 			this.pointer = Allocate(location, length);
 		}
@@ -634,66 +739,64 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="index">the element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override PointerSegment this[int index] {
 			get {
-				if (index < 0 || index >= 1)
+				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				return pointer;
+				return this.pointer;
 			}
 		}
 		#endregion
 	}
 
 	/// <summary>
-	/// Represents a storage of several contiguous memory blocks on different memory locations with fixed sizes, inherits <see cref="ActualStorage{T}"/>
+	/// Represents a storage of several contiguous memory blocks on different memory locations with fixed sizes, implements <see cref="ActualStorage{T}"/>
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public class MixedStorage<T> : ActualStorage<T> where T : unmanaged
+	public class MixedStorage<T> : PureOrMixedStorage<T> where T : unmanaged
 	{
 		#region basic
 		private readonly PointerSegment[] pointers;
 
 		/// <summary>
-		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
-		/// </summary>
-		public override CombinationOfLocations LocationDescription { get; }
-
-		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
-		/// <param name="param">the <see cref="IReadOnlyList{T}"/> of given lengths and <see cref="StorageLocation"/>s</param>
-		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="param"/> or not</param>
-		public MixedStorage(IReadOnlyList<(StorageLocation location, ulong length)> param, bool allowSameLocation = true) : base(param.Sum(p => p.length))
+		/// <param name="locations">the <see cref="ReadOnlySpan{T}"/> of given <see cref="StorageLocation"/>s</param>
+		/// <param name="lengths">the <see cref="ReadOnlySpan{T}"/> of given lengths</param>
+		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="locations"/> or not</param>
+		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
+		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same; or <paramref name="allowSameLocation"/> is false while <paramref name="locations"/> contains duplicate value(s)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
+		public MixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<ulong> lengths, bool allowSameLocation = true) : base(locations, lengths)
 		{
-			if (param.Count <= 1)
-				throw new ArgumentOutOfRangeException(nameof(param), Parameter.WrongSize);
+			if (!allowSameLocation && !locations.ElementsUnique())
+				throw new ArgumentException(Parameter.DuplicateValue, nameof(locations));
 
-			this.pointers = new PointerSegment[param.Count];
-			Span<StorageLocation> locations = stackalloc StorageLocation[param.Count];
-			for (int i = 0; i < param.Count; i++)
+			try
 			{
-				var (location, length) = param[i];
-				if (!allowSameLocation && pointers.Contains(location, selector: p => p.Location))
-					throw new ArgumentOutOfRangeException(nameof(param), Parameter.DuplicateValue);
-				this.pointers[i] = Allocate(location, length);
-				locations[i] = location;
+				this.pointers = new PointerSegment[locations.Length];
+				for (int i = 0; i < locations.Length; i++)
+				{
+					this.pointers[i] = Allocate(locations[i], lengths[i]);
+				}
 			}
-			this.LocationDescription = new CombinationOfLocations(CombinationType.Cached, locations);
+			catch (Exception)
+			{
+				this.Dispose(true);
+				throw;
+			}
 		}
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
-		/// <param name="locations">the <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
-		public MixedStorage(params (StorageLocation location, ulong length)[] locations) : this(locations, allowSameLocation: true) { }
-
-		/// <summary>
-		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
-		/// </summary>
-		/// <param name="locations">the <see cref="IEnumerable{T}"/> of given <see cref="StorageLocation"/>s</param>
-		/// <param name="lengths">the <see cref="IEnumerable{T}"/> of given lengths</param>
-		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="locations"/> or not</param>
-		public MixedStorage(IReadOnlyList<StorageLocation> locations, IReadOnlyList<ulong> lengths, bool allowSameLocation = true) : this(locations.Zip(lengths), allowSameLocation) { }
+		/// <param name="param">the <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
+		public MixedStorage(params (StorageLocation location, ulong length)[] param) :
+			this(param.CopyTo(stackalloc StorageLocation[param.Length], static p => p.location),
+				 param.CopyTo(stackalloc ulong[param.Length], static p => p.length),
+				 allowSameLocation: true)
+		{ }
 		#endregion
 
 		#region override
@@ -707,6 +810,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="index">the element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
@@ -716,16 +820,56 @@ namespace Althea.Storage
 		}
 		#endregion
 	}
+	#endregion
+
+
+	#region cached storage classes
+	/// <summary>
+	/// The interface for any cached storage, including actual ones and referenced one
+	/// </summary>
+	public interface ICachedStorage : IStorage
+	{
+		#region new methods
+		/// <summary>
+		/// When implemented by a derived class, get the cache sizes of each level as a <see cref="IReadOnlyList{T}"/> of <see cref="ulong"/>
+		/// </summary>
+		IReadOnlyList<ulong> CacheSizes { get; }
+
+		/// <summary>
+		/// Encapsulates a method that copies <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="PointerSegment"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
+		public delegate void CopyDelegate(PointerSegment source, PointerSegment destination);
+
+		/// <summary>
+		/// When implemented by a derived class, retrieve some part of the data delimited by <paramref name="lengthInBytes"/> and <paramref name="totalOffsetInBytes"/> via promoting them to the highest caching level.
+		/// </summary>
+		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
+		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
+		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation{T}(Storage{T}, Storage{T})"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> or <paramref name="totalOffsetInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than the size of the highest caching level</exception>
+		/// <remarks>
+		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
+		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
+		/// </remarks>
+		PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, CopyDelegate? copy = null);
+
+		/// <summary>
+		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
+		/// </summary>
+		void Flush();
+		#endregion
+	}
 
 	/// <summary>
-	/// An abstract class which represents a storage of several contiguous memory blocks on different memory locations with variable sizes purposed to cache memories of higher performance, inherits <see cref="ActualStorage{T}"/>
+	/// An abstract class which represents a storage of several contiguous memory blocks on different memory locations with variable sizes purposed to cache memories of higher performance. Inherits <see cref="ActualStorage{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public abstract class CachedStorage<T> : ActualStorage<T> where T : unmanaged
+	public abstract class CachedStorage<T> : ActualStorage<T>, ICachedStorage where T : unmanaged
 	{
 		#region basic
-		private readonly PointerSegment[] pointers;
-
 		/// <summary>
 		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
@@ -737,46 +881,35 @@ namespace Althea.Storage
 		public virtual IReadOnlyList<ulong> CacheSizes { get; }
 
 		/// <summary>
-		/// <b>Allocate</b> and create a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s and <see cref="ulong"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
+		/// Create (without allocation) a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s and <see cref="ulong"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="caches">The <see cref="Array"/> of <see cref="StorageLocation"/>s and <see cref="ulong"/>s to represent the priorities from higher-performance memories to lower ones. It cannot contain any duplicate locations or has size less than 2. The last length is the total length.</param>
-		/// <exception cref="ArgumentException">If <paramref name="caches"/> has duplicate value(s) or is of wrong size or has non-increase cache size</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="caches"/> has unexpected value</exception>
-		protected CachedStorage(params (StorageLocation location, ulong maxLength)[] caches) : base(caches[^1].maxLength)
+		/// <param name="locations">The <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/> to represent the caching levels from higher-performance ones to lower ones. It cannot contain any duplicate values or has size less than 2.</param>
+		/// <param name="maxLengths">The <see cref="ReadOnlySpan{T}"/> of <see cref="ulong"/> to represent the maximum size of each caching levels. The last value is the actual length in <typeparamref name="T"/> It must be of same size as <paramref name="locations"/>.</param>
+		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="maxLengths"/> is 0</exception>
+		/// <exception cref="ArgumentException">If <paramref name="locations"/> is of wrong size or has duplicate value(s) or is of wrong size; or if <paramref name="maxLengths"/> is of wrong size or has non-increase cache size</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="maxLengths"/> is 0</exception>
+		protected CachedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<ulong> maxLengths) : base(maxLengths[^1])
 		{
-			if (caches.Length <= 1)
-				throw new ArgumentException(Parameter.WrongSize, nameof(caches));
-			if (!caches.ElementsUnique(c => c.location))
-				throw new ArgumentException(Parameter.DuplicateValue, nameof(caches));
-
-			try
+			if (locations.Length <= 1)
+				throw new ArgumentException(Parameter.WrongSize, nameof(locations));
+			if (maxLengths.Length <= 1)
+				throw new ArgumentException(Parameter.WrongSize, nameof(maxLengths));
+			if (maxLengths.Length != locations.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+			if (!locations.ElementsUnique())
+				throw new ArgumentException(Parameter.DuplicateValue, nameof(locations));
+			if (maxLengths.Any(l => l == 0))
+				throw new ArgumentOutOfRangeException(nameof(maxLengths), Parameter.MustPositive);
+			// check ratios
+			for (int i = 1; i < locations.Length; i++)
 			{
-				var sizes = new ulong[caches.Length];
-				this.pointers = new PointerSegment[caches.Length];
-				Span<StorageLocation> locations = stackalloc StorageLocation[caches.Length];
-				for (int i = 0; i < caches.Length; i++)
-				{
-					var (location, maxLength) = caches[i];
-					if (i > 0)
-					{
-						if (maxLength <= caches[i - 1].maxLength)
-							throw new ArgumentException(Parameter.InvalidValue, nameof(caches));
-						else if (maxLength / caches[i - 1].maxLength < 10)
-							Helpers.Log.Write(Other.CacheSizeRatioSmall, level: Helpers.LogLevel.Warning);
-					}
-					//allocate
-					pointers[i] = Allocate(location, maxLength);
-					locations[i] = location;
-					sizes[i] = maxLength;
-				}
-				this.LocationDescription = new CombinationOfLocations(CombinationType.Cached, locations);
-				this.CacheSizes = sizes;
+				if (maxLengths[i] <= maxLengths[i - 1])
+					throw new ArgumentException(Parameter.InvalidValue, nameof(maxLengths));
+				else if (maxLengths[i] / maxLengths[i - 1] < 10)
+					Helpers.Log.Write(Other.CacheSizeRatioSmall, level: Helpers.LogLevel.Warning);
 			}
-			catch (Exception)
-			{
-				this.Dispose(true);
-				throw;
-			}
+			this.LocationDescription = new CombinationOfLocations(CombinationType.Cached, locations);
+			this.CacheSizes = maxLengths.ToArray();
 		}
 		#endregion
 
@@ -787,9 +920,9 @@ namespace Althea.Storage
 		/// <param name="disposeManaged">dispose managed resources or not</param>
 		protected override void Dispose(bool disposeManaged)
 		{
-			for (int i = 0; i < this.pointers.Length; i++)
+			for (int i = 0; i < this.CacheSizes.Count; i++)
 			{
-				var ptr = this.pointers[i];
+				var ptr = this.GetCacheLevel(i);
 				if (ptr.IsValid())
 					MEM.SelectImplementation(ptr.Location).Free(ptr, disposeManaged);
 			}
@@ -805,33 +938,242 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="index">the element index, must be 0</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
 		public override PointerSegment this[int index] {
 			get {
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				return this.pointers[^1];
+				return this.GetCacheLevel(^1);
 			}
 		}
+		#endregion
+
+		#region new methods
+		/// <summary>
+		/// Get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>
+		/// </summary>
+		/// <param name="index">The <see cref="Index"/> to indicate the level</param>
+		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+		protected abstract PointerSegment GetCacheLevel(Index index);
 
 		/// <summary>
-		/// When implemented by a derived class, retrieve some part of the data indicated by <paramref name="length"/> and <paramref name="totalOffset"/> by promoting them to the highest caching level.
+		/// When implemented by a derived class, retrieve some part of the data delimited by <paramref name="lengthInBytes"/> and <paramref name="totalOffsetInBytes"/> via promoting them to the highest caching level.
 		/// </summary>
-		/// <param name="totalOffset">The total offset (in <typeparamref name="T"/>) in the lowest caching level (the cache level where all the data preserves)</param>
-		/// <param name="length">The length to retrieve in <typeparamref name="T"/></param>
+		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
+		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation{T}(Storage{T}, Storage{T})"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffset"/> or <paramref name="length"/> is out of the boundary, or <paramref name="length"/> is larger than the size of the highest caching level</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> or <paramref name="totalOffsetInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than the size of the highest caching level</exception>
 		/// <remarks>
 		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
-		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.<br/>
+		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
 		/// </remarks>
-		public abstract PointerSegment Retrieve(ulong totalOffset, ulong length);
+		public abstract PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null);
 
 		/// <summary>
 		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
 		public abstract void Flush();
 		#endregion
+	}
+
+	/// <summary>
+	/// The storage class that references to a <see cref="CachedStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public class CachedReferenceStorage<T> : ReferenceStorage<T>, IReferenceStorage, ICachedStorage where T : unmanaged
+	{
+		#region basic
+		/// <summary>
+		/// The cache sizes of each level as a <see cref="IReadOnlyList{T}"/> of <see cref="ulong"/>
+		/// </summary>
+		public virtual IReadOnlyList<ulong> CacheSizes => (this.Reference as ICachedStorage)?.CacheSizes ?? Array.Empty<ulong>();
+
+		/// <summary>
+		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => this.Reference is null ? 0 : 1;
+
+		/// <summary>
+		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
+		/// </summary>
+		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription ?? default;
+
+		/// <summary>
+		/// Create a <see cref="CachedReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
+		/// </summary>
+		/// <param name="storage">the <see cref="CachedStorage{T}"/> to be referenced</param>
+		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorage{T}"/></exception>
+		public CachedReferenceStorage(IStorage? storage, long offset = 0, ulong newLength = 0) : base(storage, offset, newLength)
+		{
+			if (this.Reference is null)
+				return;
+			// check 
+			if (this.Reference is not CachedStorage<T> && !this.Reference.GetType().MakeGenericType(typeof(T)).IsAssignableTo(typeof(CachedStorage<T>)))
+				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="CachedReferenceStorage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">the element index</param>
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
+		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="CachedReferenceStorage{T}"/> is null</exception>
+		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
+		public override PointerSegment this[int index] {
+			get {
+				if (index != 0)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				if (this.Reference is null)
+					throw new InvalidOperationException();
+				return this.Reference[0].MoveBy((long)this.TotalOffsetInBytes, this.LengthInBytes);
+			}
+		}
+
+		/// <summary>
+		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
+		public override CachedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		{
+			return new CachedReferenceStorage<T>(this, offset, newLength);
+		}
+
+		/// <summary>
+		/// Convert this <see cref="CachedReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <returns>a referenced <see cref="CachedReferenceStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		public override CachedReferenceStorage<TOut> As<TOut>()
+		{
+			if (this.Reference is null)
+				return new CachedReferenceStorage<TOut>(null, 0, 0);
+			long offset = CheckCast<TOut>((long)this.TotalOffsetInBytes, sizeInBytes: true);
+			ulong length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
+			return new CachedReferenceStorage<TOut>(this.Reference, offset, length);
+		}
+
+		/// <summary>
+		/// Retrieve some part of the data delimited by <paramref name="lengthInBytes"/> and <paramref name="totalOffsetInBytes"/> via promoting them to the highest caching level.
+		/// </summary>
+		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
+		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation{T}(Storage{T}, Storage{T})"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> or <paramref name="totalOffsetInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than the size of the highest caching level</exception>
+		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(ulong, ulong, ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		public PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
+		{
+			if (this.Reference is ICachedStorage c)
+				return c.Retrieve(this.TotalOffsetInBytes + totalOffsetInBytes, lengthInBytes, copy);
+			else
+				return default;
+		}
+
+		/// <summary>
+		/// Update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
+		/// </summary>
+		/// <remarks>This method utilizes the <see cref="ICachedStorage.Flush()"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		public void Flush()
+		{
+			(this.Reference as ICachedStorage)?.Flush();
+		}
+
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">another object</param>
+		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		public override bool Equals(Storage<T>? obj)
+		{
+			if (obj is not null && obj is CachedReferenceStorage<T> @ref)
+			{
+				return this.Reference == @ref.Reference && this.TotalOffsetInBytes == @ref.TotalOffsetInBytes && this.Length == @ref.Length;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
+		/// </summary>
+		/// <returns>the hash code</returns>
+		public override int GetHashCode() => HashCode.Combine(this.Reference, this.TotalOffsetInBytes, this.Length);
+		#endregion
+	}
+	#endregion
+
+
+	#region factory
+	/// <summary>
+	/// The storage factory for creating concrete storage classes. This is a simple factory pattern.
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	public static class StorageFactory<T> where T : unmanaged
+	{
+		/// <summary>
+		/// Encapsulates a method that allocates and creates a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
+		/// </summary>
+		/// <param name="locations">The given <see cref="CombinationOfLocations"/> indicating the locations</param>
+		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="ulong"/> indicating the length in <typeparamref name="T"/> of each location</param>
+		/// <returns>The created new <see cref="Storage{T}"/></returns>
+		/// <remarks>Independent checks for parameters are not necessary</remarks>
+		public delegate Storage<T> CreateDelegate(Span<StorageLocation> locations, Span<ulong> lengths);
+
+		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new Dictionary<CombinationType, CreateDelegate>
+		{
+			[CombinationType.PureOrMixed] = DefaultCreatePureOrMixed,
+			[CombinationType.Cached] = DefaultCreateCached,
+		};
+
+		private static Storage<T> DefaultCreatePureOrMixed(Span<StorageLocation> locations, Span<ulong> lengths)
+		{
+			if (locations.Length == 1)
+				return new PureStorage<T>(locations[0], lengths[0]);
+			else
+				return new MixedStorage<T>(locations, lengths);
+		}
+
+		private static Storage<T> DefaultCreateCached(Span<StorageLocation> locations, Span<ulong> lengths)
+		{
+
+		}
+
+		/// <summary>
+		/// Set the creation method for a given <see cref="CombinationType"/>
+		/// </summary>
+		/// <param name="combinationType">The given <see cref="CombinationType"/> to set the creation method</param>
+		/// <param name="createDelegate">The creation method as a <see cref="CreateDelegate"/></param>
+		public static void SetCreateMethod(CombinationType combinationType, CreateDelegate createDelegate)
+		{
+			cache_create[combinationType] = createDelegate;
+		}
+
+		/// <summary>
+		/// Allocate and create a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
+		/// </summary>
+		/// <param name="type">The <see cref="CombinationType"/> used to identify which creation method to use</param>
+		/// <param name="locations">The given <see cref="CombinationOfLocations"/> indicating the locations</param>
+		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="ulong"/> indicating the length in <typeparamref name="T"/> of each location</param>
+		/// <returns>The created new <see cref="Storage{T}"/></returns>
+		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/></exception>
+		public static Storage<T> Create(CombinationType type, Span<StorageLocation> locations, Span<ulong> lengths)
+		{
+			if (!cache_create.ContainsKey(type))
+				throw new InvalidOperationException();
+
+			return cache_create[type].Invoke(locations, lengths);
+		}
 	}
 	#endregion
 }
