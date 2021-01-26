@@ -38,12 +38,12 @@ namespace Althea.Storage
 		/// <summary>
 		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
 		/// </summary>
-		public static AbstractApi SelectImplementation<T>(Storage<T> storage) where T : unmanaged => SelectImplementation(RecentAPIs, storage);
+		public static AbstractApi SelectImplementation(IStorage storage) => SelectImplementation(RecentAPIs, storage);
 
 		/// <summary>
 		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
 		/// </summary>
-		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2);
+		public static AbstractApi SelectImplementation(IStorage storage1, IStorage storage2) => SelectImplementation(RecentAPIs, storage1, storage2);
 		#endregion
 
 
@@ -276,30 +276,6 @@ namespace Althea.Storage
 
 		#region high-level storage operations
 		/// <summary>
-		/// Get the actual storage of the given <paramref name="storage"/> if it is a <see cref="PureOrMixedStorage{T}"/> or a <see cref="CachedStorage{T}"/>.
-		/// </summary>
-		/// <typeparam name="T">any unmanaged data type</typeparam>
-		/// <param name="storage">The given <see cref="Storage{T}"/> to dereference</param>
-		/// <param name="mixed">The output nullable <see cref="IPureOrMixedStorage"/></param>
-		/// <param name="cached">The output nullable <see cref="ICachedStorage"/></param>
-		/// <returns>The offset in bytes and the length in bytes</returns>
-		/// <exception cref="NotImplementedException">If <paramref name="storage"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/> or it is <see cref="ReferenceStorage{T}"/> while its dereference is neither <see cref="PureOrMixedStorage{T}"/> nor <see cref="CachedStorage{T}"/></exception>
-		protected static void Cast<T>(Storage<T> storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached) where T : unmanaged
-		{
-			mixed = null; cached = null;
-			if (storage is IPureOrMixedStorage mix)
-			{
-				mixed = mix;
-			}
-			else if (storage is ICachedStorage cache)
-			{
-				cached = cache;
-			}
-			else
-				throw new NotImplementedException();
-		}
-
-		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged struct</typeparam>
@@ -309,10 +285,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		public virtual void SetMemoryValue<T>(Storage<T> storage, byte value) where T : unmanaged
 		{
-			if (!storage.IsValid())
-				throw new ArgumentNullException(nameof(storage));
-
-			Cast(storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
 			{
 				for (int i = 0; i < storage.Count; i++)
@@ -322,7 +295,15 @@ namespace Althea.Storage
 			}
 			else if (cached is not null)
 			{
-				cached.Flush(); this.SetMemoryValue(cached[0], value);
+				if (cached.LengthInBytes <= cached.GetRealLength() * ICachedStorage.CacheSizeRatio)
+				{
+					cached.Flush();
+					this.SetMemoryValue(cached[0], value);
+				}
+				else
+				{
+					cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
+				}
 			}
 		}
 
@@ -336,10 +317,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		public virtual void SetMemoryValue<T>(Storage<T> storage, T value) where T : unmanaged
 		{
-			if (!storage.IsValid())
-				throw new ArgumentNullException(nameof(storage));
-
-			Cast(storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
 			{
 				for (int i = 0; i < storage.Count; i++)
@@ -349,79 +327,16 @@ namespace Althea.Storage
 			}
 			else if (cached is not null)
 			{
-				cached.Flush(); this.SetMemoryValue(cached[0], value);
-			}
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="IPureOrMixedStorage"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="IPureOrMixedStorage"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="IPureOrMixedStorage"/> to copy into</param>
-		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		protected virtual void MixedStorageMemoryCopy(IPureOrMixedStorage source, IPureOrMixedStorage destination)
-		{
-			PointerSegment src = source[0], dst = destination[0];
-			bool incSrc = false, incDst = false;
-			int i = 0, j = 0;
-			while (i < source.Count && j < destination.Count)
-			{
-				if (incSrc)
-					src = source[i];
-				if (incDst)
-					dst = destination[j];
-				this.MemoryCopy(src, dst);
-				if (src.LengthInBytes > dst.LengthInBytes)
+				if (cached.LengthInBytes <= cached.GetRealLength() * ICachedStorage.CacheSizeRatio)
 				{
-					src += (long)dst.LengthInBytes;
-					incDst = true; incSrc = false;
-					j++;
-				}
-				else if (src.LengthInBytes < dst.LengthInBytes)
-				{
-					dst += (long)src.LengthInBytes;
-					incDst = false; incSrc = true;
-					i++;
+					cached.Flush();
+					this.SetMemoryValue(cached[0], value);
 				}
 				else
 				{
-					incDst = true; incSrc = true;
-					i++; j++;
+					cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
 				}
 			}
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, copy memory from a <see cref="IPureOrMixedStorage"/> <paramref name="source"/> to a <see cref="ICachedStorage"/> <paramref name="destination"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
-		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		protected virtual void MixedToCachedStorageMemoryCopy(IPureOrMixedStorage source, ICachedStorage destination)
-		{
-			// TODO
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, copy memory from a <see cref="ICachedStorage"/> <paramref name="source"/> to a <see cref="IPureOrMixedStorage"/> <paramref name="destination"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
-		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		protected virtual void CachedToMixedStorageMemoryCopy(ICachedStorage source, IPureOrMixedStorage destination)
-		{
-			// TODO
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="ICachedStorage"/>. The default implementation utilizes the <see cref="MemoryCopy(PointerSegment, PointerSegment)"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="ICachedStorage"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="ICachedStorage"/> to copy into</param>
-		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		protected virtual void CachedStorageMemoryCopy(ICachedStorage source, ICachedStorage destination)
-		{
-			// TODO
 		}
 
 		/// <summary>
@@ -435,13 +350,8 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		public virtual void MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
 		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			Cast(source, out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
-			Cast(destination, out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
+			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
+			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
 			// normal cases
 			if (srcMixed is not null && dstMixed is not null)
 			{
@@ -449,21 +359,23 @@ namespace Althea.Storage
 				if (source.Count == 1 && destination.Count == 1)
 				{
 					this.MemoryCopy(source[0], destination[0]);
-					return;
 				}
-				this.MixedStorageMemoryCopy(srcMixed, dstMixed);
+				else
+				{
+					srcMixed.StorageMemoryCopy(dstMixed, this.MemoryCopy);
+				}
 			}
 			else if (srcMixed is not null && dstCached is not null)
 			{
-				this.MixedToCachedStorageMemoryCopy(srcMixed, dstCached);
+				srcMixed.StorageMemoryCopy(dstCached, this.MemoryCopy);
 			}
 			else if (srcCached is not null && dstMixed is not null)
 			{
-				this.CachedToMixedStorageMemoryCopy(srcCached, dstMixed);
+				srcCached.StorageMemoryCopy(dstMixed, this.MemoryCopy);
 			}
 			else if (srcCached is not null && dstCached is not null)
 			{
-				this.CachedStorageMemoryCopy(srcCached, dstCached);
+				srcCached.StorageMemoryCopy(dstCached, this.MemoryCopy);
 			}
 		}
 
@@ -488,10 +400,6 @@ namespace Althea.Storage
 		/// </exception>
 		public virtual void MemoryCopy2D<T>(Storage<T> source, ulong sourceLD, Storage<T> destination, ulong destLD, ulong height, ulong width) where T : unmanaged
 		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
 			if (destLD == 0)
@@ -507,8 +415,8 @@ namespace Althea.Storage
 			if (destLD * width > destination.LengthInBytes)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
 
-			Cast(source, out IPureOrMixedStorage? srcMixed, out ICachedStorage? _);
-			Cast(destination, out IPureOrMixedStorage? dstMixed, out ICachedStorage? _);
+			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? _);
+			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? _);
 			// shortcut
 			if (srcMixed is not null && dstMixed is not null && source.Count == 1 && destination.Count == 1)
 			{
@@ -527,7 +435,6 @@ namespace Althea.Storage
 			// copy last column
 			this.MemoryCopy(source, destination);
 		}
-
 		#endregion
 
 		#region high-level storage and managed operations
@@ -541,10 +448,18 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public virtual T ToManaged<T>(Storage<T> source) where T : unmanaged
 		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-
-			return this.ToManaged<T>(source[0]);
+			source.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (mixed is not null)
+			{
+				return this.ToManaged<T>(mixed[0]);
+			}
+			else if (cached is not null)
+			{
+				var temp = cached.Retrieve(0, Storage<T>.SizeOfT);
+				return this.ToManaged<T>(temp);
+			}
+			else // never here
+				return default;
 		}
 
 		/// <summary>
@@ -557,10 +472,16 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
 		public virtual void FromManaged<T>(Storage<T> destination, T value) where T : unmanaged
 		{
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			this.FromManaged(destination[0], value);
+			destination.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (mixed is not null)
+			{
+				this.FromManaged(mixed[0], value);
+			}
+			else if (cached is not null)
+			{
+				var temp = cached.Retrieve(0, Storage<T>.SizeOfT);
+				this.FromManaged(temp, value);
+			}
 		}
 
 		/// <summary>
@@ -573,16 +494,32 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public virtual void ToManaged<T>(Storage<T> source, ArraySegment<T> destination) where T : unmanaged
 		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-
-			int offset = 0;
-			for (int i = 0; i < source.Count; i++)
+			source.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (mixed is not null)
 			{
-				this.ToManaged(source[i], destination[offset..]);
-				if (offset >= destination.Count)
-					return;
-				offset += (int)(source[i].LengthInBytes / Storage<T>.SizeOfT);
+				int offset = 0;
+				for (int i = 0; i < mixed.Count; i++)
+				{
+					this.ToManaged(mixed[i], destination[offset..]);
+					if (offset >= destination.Count)
+						return;
+					offset += (int)(mixed[i].LengthInBytes / Storage<T>.SizeOfT);
+				}
+			}
+			else if (cached is not null)
+			{
+				ulong count = Storage<T>.SizeOfT * (ulong)destination.Count;
+				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
+				{
+					cached.Flush();
+					this.ToManaged(cached[0], destination);
+				}
+				else
+				{
+					cached.ApplyUnaryFunction(this.ToManaged, 0, count, auxiliaryOriginal: destination,
+											  sliceFunc: static (dst, off, len) => dst.Slice((int)(off / Storage<T>.SizeOfT), (int)(len / Storage<T>.SizeOfT)),
+											  copyFunc: this.MemoryCopy, pack: Storage<T>.SizeOfT);
+				}
 			}
 		}
 
@@ -596,16 +533,32 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		public virtual void FromManaged<T>(Storage<T> destination, ArraySegment<T> values) where T : unmanaged
 		{
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			int offset = 0;
-			for (int i = 0; i < destination.Count; i++)
+			destination.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (mixed is not null)
 			{
-				this.FromManaged(destination[i], values[offset..]);
-				if (offset >= values.Count)
-					return;
-				offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
+				int offset = 0;
+				for (int i = 0; i < destination.Count; i++)
+				{
+					this.FromManaged(destination[i], values[offset..]);
+					if (offset >= values.Count)
+						return;
+					offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
+				}
+			}
+			else if (cached is not null)
+			{
+				ulong count = Storage<T>.SizeOfT * (ulong)values.Count;
+				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
+				{
+					cached.Flush();
+					this.FromManaged(cached[0], values);
+				}
+				else
+				{
+					cached.ApplyUnaryFunction(this.FromManaged, 0, count, auxiliaryOriginal: values,
+											  sliceFunc: static (src, off, len) => src.Slice((int)(off / Storage<T>.SizeOfT), (int)(len / Storage<T>.SizeOfT)),
+											  copyFunc: this.MemoryCopy, pack: Storage<T>.SizeOfT);
+				}
 			}
 		}
 

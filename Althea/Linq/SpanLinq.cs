@@ -1018,14 +1018,39 @@ namespace Althea.Linq
 
 		#region converter
 		/// <summary>
-		/// Create a <see cref="Span{T}"/> of given reference of <paramref name="value"/> with length 1
+		/// Set the first element of <see cref="Span{T}"/> to the given <paramref name="value"/>
 		/// </summary>
 		/// <typeparam name="T">any data type</typeparam>
-		/// <param name="value">The value as a referenced <typeparamref name="T"/></param>
-		/// <returns>The <see cref="Span{T}"/> created from given <paramref name="value"/></returns>
-		public unsafe static Span<T> AsSpan<T>(ref T value)
+		/// <param name="span">The <see cref="Span{T}"/> to set</param>
+		/// <param name="value">The value of type <typeparamref name="T"/></param>
+		/// <returns>The <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
+		public static Span<T> SetValue<T>(this Span<T> span, T value)
 		{
-			return new Span<T>(Unsafe.AsPointer(ref value), 1);
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+			span[0] = value;
+			return span;
+		}
+
+		/// <summary>
+		/// Set the first and the second element of <see cref="Span{T}"/> to the given <paramref name="value1"/> and <paramref name="value2"/>
+		/// </summary>
+		/// <typeparam name="T">any data type</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to set</param>
+		/// <param name="value1">The first value of type <typeparamref name="T"/></param>
+		/// <param name="value2">The second value of type <typeparamref name="T"/></param>
+		/// <returns>The <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
+		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2)
+		{
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+			if (span.Length < 2)
+				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+			span[0] = value1; span[1] = value2;
+			return span;
 		}
 
 		/// <summary>
@@ -1123,7 +1148,7 @@ namespace Althea.Linq
 		/// <returns>the hash code of <paramref name="span"/></returns>
 		public static int HashCodeOfSpan<T>(this ReadOnlySpan<T> span) where T : struct
 		{
-			if (span.Length == 0)
+			if (span.IsEmpty)
 				return 0; // hash code of empty
 			int hc = span.Length;
 			for (int i = 0; i < span.Length; ++i)

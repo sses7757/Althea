@@ -637,12 +637,12 @@ namespace Althea
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => this.offset == 0 ? new Dictionary<string, string>
 		{
 			["location"] = this.pointer.Location.ToString(),
-			["length"] = this.length.ToString(),
+			["length_bytes"] = this.length.ToString(),
 		} : new Dictionary<string, string>
 		{
 			["location"] = this.pointer.Location.ToString(),
-			["offset"] = this.offset.ToString(),
-			["length"] = this.length.ToString(),
+			["offset_bytes"] = this.offset.ToString(),
+			["length_bytes"] = this.length.ToString(),
 		};
 
 		/// <summary>
@@ -688,12 +688,17 @@ namespace Althea
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
 	/// </summary>
 	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; implement <see cref="Storage{T}"/> instead.</remarks>
-	public interface IStorage : IReadOnlyList<PointerSegment>, ICheckValid, IDisposable
+	public interface IStorage : IReadOnlyList<PointerSegment>, ICheckValid, IDisposable, IMainPropertyFormat
 	{
 		/// <summary>
 		/// The total length of the presenting array in bytes
 		/// </summary>
 		ulong LengthInBytes { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the total length of the presenting array in its presenting type (rather than bytes)
+		/// </summary>
+		ulong Length { get; }
 
 		/// <summary>
 		/// The description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
@@ -728,7 +733,7 @@ namespace Althea
 	/// <summary>
 	/// The interface for a referenced storage of <see cref="IStorage"/>
 	/// </summary>
-	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; inherit <see cref="ReferenceStorage{T}"/> instead.</remarks>
+	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; implement <see cref="ReferenceStorage{T}"/> instead.</remarks>
 	public interface IReferenceStorage : IStorage
 	{
 		/// <summary>
@@ -751,7 +756,7 @@ namespace Althea
 	/// I must warn you that although C# has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of dot NET.</remarks>
-	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, IMainPropertyFormat where T : unmanaged
+	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>> where T : unmanaged
 	{
 		#region properties
 		/// <summary>
@@ -857,8 +862,10 @@ namespace Althea
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
 		public static Storage<T> Create(StorageLocation location, ulong length)
 		{
-			Span<StorageLocation> locations = SpanLinq.AsSpan(ref location);
-			Span<ulong> lengths = SpanLinq.AsSpan(ref length);
+			Span<StorageLocation> locations = stackalloc StorageLocation[1];
+			locations.SetValue(location);
+			Span<ulong> lengths = stackalloc ulong[1];
+			lengths.SetValue(length);
 			return Storage.StorageFactory<T>.Create(CombinationType.PureOrMixed, locations, lengths);
 		}
 
@@ -1017,23 +1024,19 @@ namespace Althea
 		#endregion
 
 		#region string
-		string IMainPropertyFormat.StringMain => this.Count == 1 ? ((IMainPropertyFormat)this[0]).StringMain : string.Join(", ", ((IMainPropertyFormat)this).StringMain);
+		string IMainPropertyFormat.StringMain => this.Count == 1 ? ((IMainPropertyFormat)this[0]).StringMain : ('{' + string.Join(", ", this) + '}');
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
 		{
 			["type"] = typeof(T).Name,
-			[this.Count == 1 ?"length" : "total_length"] = this.Length.ToString(),
+			[this.Count == 1 ? "length" : "total_length"] = this.Length.ToString(),
 		};
 
 		/// <summary>
-		/// Override <see cref="object.ToString"/> to get the string representation of this <see cref="Storage{T}"/>.
+		/// When implemented by a derived class, get the string representation of this <see cref="Storage{T}"/>. The default implementation utilizes <see cref="IMainPropertyFormat.ToString()"/>
 		/// </summary>
-		/// <returns>string representation</returns>
-		public override string ToString()
-		{
-			string main = this.Count == 1 ? ((IMainPropertyFormat)this).StringMain : ('{' + string.Join(", ", this) + '}');
-			return IMainPropertyFormat.Combine(main, ((IMainPropertyFormat)this).StringProperties);
-		}
+		/// <returns>The string representation</returns>
+		public override string? ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 
 		#region operator
@@ -1185,35 +1188,6 @@ namespace Althea
 		{
 			return MEM.SelectImplementation(location).Allocate<T>(location, length);
 		}
-		#endregion
-
-		#region override
-		/// <summary>
-		/// Determines whether the specified object is equal to the current object.
-		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T>? obj)
-		{
-			if (obj is not null && obj is ActualStorage<T> another)
-			{
-				if (this.Count != another.Count)
-					return false;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (this[i] != another[i])
-						return false;
-				}
-				return true;
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="ActualStorage{T}"/>
-		/// </summary>
-		/// <returns>the hash code</returns>
-		public override int GetHashCode() => this.HashCodeOfArray();
 		#endregion
 	}
 	#endregion

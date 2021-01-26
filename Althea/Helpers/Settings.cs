@@ -57,7 +57,7 @@ namespace Althea.Helpers
 			}
 		}
 
-		internal static JsonSettings singletonSettings;
+		internal static JsonSettings singletonSettings = default;
 		#endregion
 
 		#region print settings
@@ -207,13 +207,17 @@ namespace Althea.Helpers
 		/// Set all back-end implementations at once
 		/// </summary>
 		/// <param name="backend">The <see cref="Backend.ISetBackend"/> used to set all back-ends</param>
-		public static void SetBackend(Backend.ISetBackend backend)
+		/// <return>Success or not</return>
+		public static bool SetBackend(Backend.ISetBackend backend)
 		{
+			if (!backend.Available)
+				return false;
 			StorageImplementation = backend.MemoryImplementation;
 			LinearAlgebraImplementation = backend.LinearAlgebraImplementation;
 			TensorAlgebraImplementation = backend.TensorAlgebraImplementation;
 			StatisticsImplementation = backend.StatisticsImplementation;
 			SolverImplementation = backend.SolverImplementation;
+			return true;
 		}
 		#endregion
 
@@ -266,7 +270,6 @@ namespace Althea.Helpers
 
 		static Settings()
 		{
-			Import(logError: true);
 			// set default implementations
 			// C# implementations
 			SetBackend(new Backend.CSharp.CSharpImplementations());
@@ -274,6 +277,8 @@ namespace Althea.Helpers
 			SetBackend(new Backend.Cuda.CudaImplementations());
 			// MKL implementations, the real default implementation
 			SetBackend(new Backend.Mkl.MklImplementations());
+			// import at last
+			Import(logError: true);
 		}
 
 		/// <summary>

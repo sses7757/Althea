@@ -9,27 +9,32 @@ namespace Althea.Backend
 	public interface ISetBackend
 	{
 		/// <summary>
-		/// The implementation type of <see cref="Storage.AbstractApi"/>
+		/// Check whether all the back-end implementations are available
+		/// </summary>
+		bool Available { get; }
+
+		/// <summary>
+		/// The implementation type of <see cref="Althea.Storage.AbstractApi"/>
 		/// </summary>
 		Type MemoryImplementation { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="LinearAlgebra.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.LinearAlgebra.AbstractApi"/>
 		/// </summary>
 		Type LinearAlgebraImplementation { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="TensorAlgebra.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.TensorAlgebra.AbstractApi"/>
 		/// </summary>
 		Type TensorAlgebraImplementation { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="Statistics.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.Statistics.AbstractApi"/>
 		/// </summary>
 		Type StatisticsImplementation { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="Solver.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.Solver.AbstractApi"/>
 		/// </summary>
 		Type SolverImplementation { get; }
 	}

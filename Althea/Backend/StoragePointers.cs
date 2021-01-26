@@ -326,8 +326,9 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
 		/// <param name="length">The length in bytes to initialize</param>
-		/// <returns>The information needed to initialize file indicated by <paramref name="remotePath"/> as a <see cref="byte"/> array.</returns>
-		public delegate byte[] InitializationSend(string remotePath, ulong length);
+		/// <returns>The information needed to initialize file indicated by <paramref name="remotePath"/> as a <see cref="byte"/> <see cref="Span{T}"/>.</returns>
+		/// <remarks>It is recommended to buffer the return byte array and only return part of it as a <see cref="Span{T}"/> to prevent frequent array allocation and destroy.</remarks>
+		public delegate Span<byte> InitializationSend(string remotePath, ulong length);
 
 		/// <summary>
 		/// The delegate used to parse the received <paramref name="data"/> from the response of initialization procedure
@@ -341,8 +342,9 @@ namespace Althea.Backend.Storage
 		/// The delegate used to generate information needed to destroy a remote file indicated by <paramref name="remotePath"/>.
 		/// </summary>
 		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
-		/// <returns>The information needed to destroy file indicated by <paramref name="remotePath"/> as a <see cref="byte"/> array.</returns>
-		public delegate byte[] DestroySend(string remotePath);
+		/// <returns>The information needed to destroy file indicated by <paramref name="remotePath"/> as a <see cref="byte"/> <see cref="Span{T}"/>.</returns>
+		/// <remarks>It is recommended to buffer the return byte array and only return part of it as a <see cref="Span{T}"/> to prevent frequent array allocation and destroy.</remarks>
+		public delegate Span<byte> DestroySend(string remotePath);
 
 		/// <summary>
 		/// The delegate used to generate information needed to send before writing to a remote file indicated by <paramref name="remotePath"/> (the actual writing is done by directly sending bytes needed to be written).
@@ -350,8 +352,9 @@ namespace Althea.Backend.Storage
 		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
 		/// <param name="offset">The start position in bytes to begin writing</param>
 		/// <param name="length">The length in bytes to write</param>
-		/// <returns>The information needed to send before the real writing procedure as a <see cref="byte"/> array.</returns>
-		public delegate byte[] BeforeWriteSend(string remotePath, ulong offset, ulong length);
+		/// <returns>The information needed to send before the real writing procedure as a <see cref="byte"/> <see cref="Span{T}"/>.</returns>
+		/// <remarks>It is recommended to buffer the return byte array and only return part of it as a <see cref="Span{T}"/> to prevent frequent array allocation and destroy.</remarks>
+		public delegate Span<byte> BeforeWriteSend(string remotePath, ulong offset, ulong length);
 
 		/// <summary>
 		/// The delegate used to parse the received <paramref name="data"/> from the response of <see cref="BeforeWriteSend"/>
@@ -375,8 +378,9 @@ namespace Althea.Backend.Storage
 		/// <param name="remotePath">The remote file path as a <see cref="string"/></param>
 		/// <param name="offset">The start position in bytes to begin writing</param>
 		/// <param name="length">The length in bytes to write</param>
-		/// <returns>The information needed to send before the real writing procedure as a <see cref="byte"/> array.</returns>
-		public delegate byte[] BeforeReadSend(string remotePath, ulong offset, ulong length);
+		/// <returns>The information needed to send before the real writing procedure as a <see cref="byte"/> <see cref="Span{T}"/>.</returns>
+		/// <remarks>It is recommended to buffer the return byte array and only return part of it as a <see cref="Span{T}"/> to prevent frequent array allocation and destroy.</remarks>
+		public delegate Span<byte> BeforeReadSend(string remotePath, ulong offset, ulong length);
 
 		/// <summary>
 		/// The delegate used to parse the received <paramref name="data"/> from the response of <see cref="BeforeReadSend"/>
@@ -527,7 +531,7 @@ namespace Althea.Backend.Storage
 			this.returnCache = new byte[protocol.maxReturnSize];
 			// create file
 			var init = protocol.initializationSend(this.RemotePath, length);
-			this.stream.Write(init, 0, init.Length);
+			this.stream.Write(init);
 			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
 			bool success = protocol.initializationAcknowledge.Invoke(this.returnCache, out string? errorMessage);
 			if (!success)
@@ -546,7 +550,7 @@ namespace Althea.Backend.Storage
 			var destroy = this.protocol.destroySend.Invoke(this.RemotePath);
 			try
 			{
-				this.stream.Write(destroy, 0, destroy.Length);
+				this.stream.Write(destroy);
 			}
 			finally
 			{
@@ -611,8 +615,8 @@ namespace Althea.Backend.Storage
 				throw new ArgumentOutOfRangeException(nameof(managed));
 
 			// before read
-			var data = this.protocol.beforeReadSend.Invoke(this.RemotePath, this.Position, size);
-			this.stream.Write(data, 0, data.Length);
+			var sendData = this.protocol.beforeReadSend.Invoke(this.RemotePath, this.Position, size);
+			this.stream.Write(sendData);
 			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
 			bool success = this.protocol.beforeReadAcknowledge.Invoke(this.returnCache, out string? errorMessage);
 			if (!success)
@@ -670,8 +674,8 @@ namespace Althea.Backend.Storage
 				throw new ArgumentOutOfRangeException(nameof(managed));
 
 			// before write
-			var data = this.protocol.beforeWriteSend.Invoke(this.RemotePath, this.Position, size);
-			this.stream.Write(data, 0, data.Length);
+			var sendData = this.protocol.beforeWriteSend.Invoke(this.RemotePath, this.Position, size);
+			this.stream.Write(sendData);
 			this.stream.Read(this.returnCache, 0, this.returnCache.Length);
 			bool success = this.protocol.beforeWriteAcknowledge.Invoke(this.returnCache, out string? errorMessage);
 			if (!success)
@@ -686,6 +690,50 @@ namespace Althea.Backend.Storage
 			this.Position += size;
 		}
 		#endregion
+	}
+
+
+	/// <summary>
+	/// The static class containing extension methods for <see cref="IMemoryPointer"/>, <see cref="IStreamPointer"/>, <see cref="FileStream"/> and <see cref="TcpStream"/>
+	/// </summary>
+	internal static class ConcretePointersExtension
+	{
+		public static readonly StorageLocation CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
+		public static readonly StorageLocation FileAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
+		public static readonly StorageLocation TcpAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.TCP);
+
+		public static long GetPointerOffset<T>(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) where
+			T : unmanaged
+		{
+			memoryPointer = null; streamPointer = null;
+			// check first
+			if (!pointer.IsValid() || pointer.OffsetInBytes % Storage<T>.SizeOfT != 0 || pointer.LengthInBytes % Storage<T>.SizeOfT != 0)
+			{
+				if (@throw)
+					throw new NotSupportedException(Support.Location);
+				return 0;
+			}
+			// cast
+			if (pointer.Location == CpuAlone && pointer.Pointer is IMemoryPointer mp)
+			{
+				memoryPointer = mp;
+			}
+			else if (pointer.Location == FileAlone && pointer.Pointer is IStreamPointer { NativeStream: FileStream } sp1)
+			{
+				streamPointer = sp1;
+			}
+			else if (pointer.Location == TcpAlone && pointer.Pointer is IStreamPointer { NativeStream: TcpStream } sp2)
+			{
+				streamPointer = sp2;
+			}
+			else if (@throw)
+			{
+				throw new NotSupportedException(Support.Location);
+			}
+			return (long)(pointer.OffsetInBytes / Storage<T>.SizeOfT);
+		}
+
+		public static long GetPointerOffset(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) => GetPointerOffset<byte>(pointer, out memoryPointer, out streamPointer, @throw);
 	}
 }
 
@@ -759,16 +807,20 @@ namespace Althea.Backend.Storage.Tcp
 																	DefaultBeforeReadSend, DefaultAcknowledge,
 																	1 << 16, PORT);
 
-		private static byte[] DefaultSend(DefaultSendData data)
+		private readonly static byte[] static_buffer = new byte[1 << 20];
+
+		private static Span<byte> DefaultSend(DefaultSendData data)
 		{
 			var json = JsonSerializer.Serialize(data);
-			return Encoding.UTF8.GetBytes(json);
+			Span<byte> span = static_buffer;
+			int n = Encoding.UTF8.GetBytes(json, span);
+			return span[..n];
 		}
 
 		/// <summary>
 		/// The default implementation of <see cref="TcpProtocol.InitializationSend"/>
 		/// </summary>
-		public static byte[] DefaultInitializationSend(string remotePath, ulong length)
+		public static Span<byte> DefaultInitializationSend(string remotePath, ulong length)
 		{
 			var data = new DefaultSendData { InitOrDestroy = true, RemotePath = remotePath, Length = length };
 			return DefaultSend(data);
@@ -793,7 +845,7 @@ namespace Althea.Backend.Storage.Tcp
 		/// <summary>
 		/// The default implementation of <see cref="TcpProtocol.DestroySend"/>
 		/// </summary>
-		public static byte[] DefaultDestroySend(string remotePath)
+		public static Span<byte> DefaultDestroySend(string remotePath)
 		{
 			var data = new DefaultSendData { InitOrDestroy = false, RemotePath = remotePath };
 			return DefaultSend(data);
@@ -802,7 +854,7 @@ namespace Althea.Backend.Storage.Tcp
 		/// <summary>
 		/// The default implementation of <see cref="TcpProtocol.BeforeWriteSend"/>
 		/// </summary>
-		public static byte[] DefaultBeforeWriteSend(string remotePath, ulong offset, ulong length)
+		public static Span<byte> DefaultBeforeWriteSend(string remotePath, ulong offset, ulong length)
 		{
 			var data = new DefaultSendData { ReadOrWrite = false, RemotePath = remotePath, Offset = offset, Length = length };
 			return DefaultSend(data);
@@ -811,7 +863,7 @@ namespace Althea.Backend.Storage.Tcp
 		/// <summary>
 		/// The default implementation of <see cref="TcpProtocol.BeforeReadSend"/>
 		/// </summary>
-		public static byte[] DefaultBeforeReadSend(string remotePath, ulong offset, ulong length)
+		public static Span<byte> DefaultBeforeReadSend(string remotePath, ulong offset, ulong length)
 		{
 			var data = new DefaultSendData { ReadOrWrite = true, RemotePath = remotePath, Offset = offset, Length = length };
 			return DefaultSend(data);
