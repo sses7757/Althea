@@ -157,32 +157,25 @@ namespace Althea.Helpers
 
 		// Ignore Spelling: nd
 		/// <summary>
-		/// Output an integer under 100 as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+		/// Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
 		/// </summary>
 		/// <param name="a">the input number</param>
 		/// <returns>the ordinal representation string</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToOrdinal(this int a)
 		{
-			if (a >= 100)
-				throw new ArgumentOutOfRangeException(nameof(a));
+			if (a < 0)
+				throw new ArgumentOutOfRangeException(nameof(a), Parameter.CannotNegative);
 			a++;
-			int b = a % 100 / 10, c = a % 10;
-			if (c <= 3 && b != 1)
+			int c = a % 10;
+			return c switch
 			{
-				return c switch
-				{
-					0 => $"{a}th",
-					1 => $"{a}st",
-					2 => $"{a}nd",
-					3 => $"{a}rd",
-					_ => "",
-				};
-			}
-			else
-			{
-				return $"{a}th";
-			}
+				1 => $"{a}-st",
+				2 => $"{a}-nd",
+				3 => $"{a}-rd",
+				_ => $"{a}-th",
+			};
 		}
 
 		/// <summary>

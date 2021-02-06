@@ -123,7 +123,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>.<br/>The default implementation utilizes <see cref="Allocate(StorageLocation, ulong)"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in <typeparamref name="T"/> rather than bytes</param>
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
@@ -154,7 +154,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
@@ -191,13 +191,27 @@ namespace Althea.Storage
 		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
 		public abstract void MemoryCopy2D(PointerSegment source, ulong sourceLD, PointerSegment destination, ulong destinationLD, ulong height, ulong width);
+
+		/// <summary>
+		/// TWhen implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,бн,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
+		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The <see cref="PointerSegment"/> to copy from</param>
+		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="destination">The <see cref="PointerSegment"/> to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		public abstract void StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged;
 		#endregion
 
 		#region low-level storage and managed operations
 		/// <summary>
 		/// When implemented by a derived class, copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/>.</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
@@ -207,7 +221,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
@@ -217,7 +231,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
@@ -227,7 +241,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
@@ -238,7 +252,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="source"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
@@ -257,7 +271,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
@@ -276,9 +290,26 @@ namespace Althea.Storage
 
 		#region high-level storage operations
 		/// <summary>
+		/// TWhen implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,бн,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
+		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="destination">The <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		public virtual void StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
+		{
+
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
@@ -310,7 +341,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
@@ -342,7 +373,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> pointer to copy into</param>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
@@ -382,7 +413,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/></param>
 		/// <param name="sourceLD">The source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="destination">The destination <see cref="Storage{T}"/></param>
@@ -441,7 +472,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/>.</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
@@ -465,7 +496,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
@@ -487,7 +518,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
@@ -526,7 +557,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
@@ -565,7 +596,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="source"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
@@ -616,7 +647,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
-		/// <typeparam name="T">any unmanaged struct</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>

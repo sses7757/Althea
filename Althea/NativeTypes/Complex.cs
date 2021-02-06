@@ -13,7 +13,7 @@ namespace Althea.NativeTypes
 	/// The complex interface for any possible real data type
 	/// </summary>
 	/// <typeparam name="T">the data type of corresponding real number, usually an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
-	public interface IComplex<T> : IFormattable where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+	public interface IComplex<T> : IFormattable where T : unmanaged
 	{
 		/// <summary>
 		/// Get the real part

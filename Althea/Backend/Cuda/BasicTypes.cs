@@ -1,173 +1,13 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+
+using Althea.NativeTypes;
 
 
-namespace Althea
+namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The format specification enum of sparse matrix
-	/// </summary>
-	// TODO: move to Althea.LinearAlgebra.Sparse
-	[Flags]
-	public enum SparseMatrixFormat
-	{
-		/// <summary>
-		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the row-first order. Value = 000...0001
-		/// </summary>
-		COOR = 1 << 0,
-
-		/// <summary>
-		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the column-first order. Value = 000...0010
-		/// </summary>
-		COOC = 1 << 1,
-
-		/// <summary>
-		/// Since <see cref="COOC"/> and <see cref="COOR"/> are so similar that it can be generalized to the Coordinate Format (COO). Value = 000...0011
-		/// </summary>
-		/// <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
-		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
-		Coordinated = COOR | COOC,
-
-		/// <summary>
-		/// Compressed Sparse Row Format (CSR). The only way the CSR differs from the COO format is that the array containing the row indices is compressed in CSR format, that is, the row index array only stores the <c>LeadDim + 1</c> the end-of-row offsets of the value array. Value = 000...0100
-		/// </summary>
-		CSR = 1 << 2,
-
-		/// <summary>
-		/// Compressed Sparse Column Format (CSC). The only way the CSC differs from the CSR format is that the column index array instead of row indices array stores the end-of-row offsets. Value = 000...01000
-		/// </summary>
-		CSC = 1 << 3,
-
-		/// <summary>
-		/// Since <see cref="CSR"/> and <see cref="CSC"/> are so similar that it can be generalized to the Compressed Format. Value = 000...01100
-		/// </summary>
-		/// <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
-		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
-		Compressed = CSR | CSC,
-
-		/// <summary>
-		/// The row majored formats. Value = 000...0101
-		/// </summary>
-		RowMajor = COOR | CSR,
-
-		/// <summary>
-		/// The column majored formats. Value = 000...01010
-		/// </summary>
-		ColumnMajor = COOC | CSC,
-
-		/// <summary>
-		/// Any of the atomic formats. Value = 111...111
-		/// </summary>
-		/// <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
-		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
-		Any = ~0
-	}
-
-
-	/// <summary>
-	/// The FillMode type indicates which part (lower or upper) of the dense matrix was filled and consequently should be used by the function. <br/>
-	/// Its values correspond to Fortran characters ‘L’ or ‘l’ (lower) and ‘U’ or ‘u’ (upper) that are often used as parameters to legacy BLAS implementations.
-	/// </summary>
-	// TODO: move to Althea.LinearAlgebra.Dense
-	public enum MatrixFillMode
-	{
-		/// <summary>
-		/// the lower part of the matrix is filled
-		/// </summary>
-		Lower = 0,
-		/// <summary>
-		/// the upper part of the matrix is filled
-		/// </summary>
-		Upper = 1
-	}
-
-	/// <summary>
-	/// The DiagType type indicates whether the main diagonal of the dense matrix is unity and consequently should not be touched or modified by the function. <br/>
-	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-unit) and ‘U’ or ‘u’ (unit) that are often used as parameters to legacy BLAS implementations.
-	/// </summary>
-	// TODO: move to Althea.LinearAlgebra.Sparse
-	public enum DiagType
-	{
-		/// <summary>
-		/// the matrix diagonal has non-unit elements
-		/// </summary>
-		NonUnit = 0,
-		/// <summary>
-		/// the matrix diagonal has unit elements
-		/// </summary>
-		Unit = 1
-	}
-
-	/// <summary>
-	/// The SideMode type indicates whether the dense matrix is on the left or right side in the matrix equation solved by a particular function. <br/>
-	/// Its values correspond to Fortran characters ‘L’ or ‘l’ (left) and ‘R’ or ‘r’ (right) that are often used as parameters to legacy BLAS implementations.
-	/// </summary>
-	// TODO: move to Althea.LinearAlgebra.Dense
-	public enum SideMode
-	{
-		/// <summary>
-		/// the matrix is on the left side in the equation
-		/// </summary>
-		Left = 0,
-		/// <summary>
-		/// the matrix is on the right side in the equation
-		/// </summary>
-		Right = 1
-	}
-
-	/// <summary>
-	/// The operation type to indicate which operation needs to be performed with the matrix.
-	/// </summary>
-	/// <remarks>the entry with larger value is less preferred</remarks>
-	// TODO: move to Althea.LinearAlgebra
-	public enum MatrixOperation
-	{
-		/// <summary>
-		/// the non-transpose operation
-		/// </summary>
-		None = 0,
-		/// <summary>
-		/// the transpose operation
-		/// </summary>
-		Transpose = 1,
-		/// <summary>
-		/// the conjugate transpose operation
-		/// </summary>
-		ConjugateTranspose = 2,
-		/// <summary>
-		/// the conjugate only operation
-		/// </summary>
-		Conjugate = 3,
-	}
-
-	/// <summary>
-	/// Used in overloading operators
-	/// </summary>
-	// TODO: move to Althea.LinearAlgebra.Sparse
-	public enum PowerOperation
-	{
-		/// <summary>
-		/// Nothing
-		/// </summary>
-		None = 0,
-		/// <summary>
-		/// Transpose only
-		/// </summary>
-		Transpose = ~0, // -1
-		/// <summary>
-		/// Conjugate only
-		/// </summary>
-		Conjugate = int.MaxValue,
-		/// <summary>
-		/// conjugate transpose
-		/// </summary>
-		Dagger = ~int.MaxValue // int.MinValue
-	}
-
 	/// <summary>
 	/// The <see cref="CudaDataType"/> type is an enum to specify the data precision. It is used when the data reference does not carry the type itself (e.g <see cref="IntPtr"/> alone).
 	/// </summary>
-	// TODO: move to Althea.Cuda, and set to internal
 	public enum CudaDataType
 	{
 		/// <summary>
@@ -187,11 +27,11 @@ namespace Althea
 		/// </summary>
 		RealInt8 = 3,
 		/// <summary>
-		/// <see cref="FloatComplex"/> made of two <see cref="float"/>s
+		/// <see cref="Complex{T}"/> of <see cref="float"/>
 		/// </summary>
 		ComplexFloat32 = 4,
 		/// <summary>
-		/// <see cref="DoubleComplex"/> made of two <see cref="double"/>s
+		/// <see cref="Complex{T}"/> of <see cref="double"/>
 		/// </summary>
 		ComplexFloat64 = 5,
 		/// <summary>
@@ -231,7 +71,6 @@ namespace Althea
 	/// <summary>
 	/// Memory copy enum
 	/// </summary>
-	// TODO: move to Althea.Cuda, and set to internal
 	public enum MemoryCopyKind
 	{
 		/// <summary>
@@ -256,140 +95,9 @@ namespace Althea
 		Default = 4
 	}
 
-
-	/// <summary>
-	/// Binary operations supported by tensor point-wise operations
-	/// </summary>
-	// TODO: move to Althea.TensorAlgebra, and modify
-	public enum BinaryOperation
-	{
-		/// <summary>
-		/// Addition of two elements
-		/// </summary>
-		Add = 3,
-		/// <summary>
-		/// Multiplication of two elements
-		/// </summary>
-		Mul = 5,
-		/// <summary>
-		/// Maximum of two elements
-		/// </summary>
-		Max = 6,
-		/// <summary>
-		/// Minimum of two elements
-		/// </summary>
-		Min = 7
-	}
-
-	/// <summary>
-	/// Unitary operations supported by tensor point-wise operations
-	/// </summary>
-	// TODO: move to Althea.TensorAlgebra, and modify
-	public enum UnitaryOperation
-	{
-		/// <summary>
-		/// Identity operator (i.e., elements are not changed)
-		/// </summary>
-		Identity = 1,
-		/// <summary>
-		/// Square root
-		/// </summary>
-		Sqrt = 2,
-		/// <summary>
-		/// Rectified linear unit (x if x > 0, otherwise 0)
-		/// </summary>
-		ReLU = 8,
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		Conjugate = 9,
-		/// <summary>
-		/// Reciprocal
-		/// </summary>
-		Reciprocate = 10,
-		/// <summary>
-		/// Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
-		/// </summary>
-		Sigmoid = 11,
-		/// <summary>
-		/// Exponentiation
-		/// </summary>
-		Exp = 22,
-		/// <summary>
-		/// Base <c>e</c> logarithm
-		/// </summary>
-		Log = 23,
-		/// <summary>
-		/// Absolute value
-		/// </summary>
-		Abs = 24,
-		/// <summary>
-		/// Negation
-		/// </summary>
-		Negate = 25,
-		/// <summary>
-		/// Sine function
-		/// </summary>
-		Sin = 26,
-		/// <summary>
-		/// Cosine function
-		/// </summary>
-		Cos = 27,
-		/// <summary>
-		/// Tangent function
-		/// </summary>
-		Tan = 28,
-		/// <summary>
-		/// Hyperbolic sine
-		/// </summary>
-		Sinh = 29,
-		/// <summary>
-		/// Hyperbolic cosine
-		/// </summary>
-		Cosh = 30,
-		/// <summary>
-		/// Hyperbolic tangent function
-		/// </summary>
-		Tanh = 12,
-		/// <summary>
-		/// Inverse sine
-		/// </summary>
-		ArcSin = 31,
-		/// <summary>
-		/// Inverse cosine
-		/// </summary>
-		ArcCos = 32,
-		/// <summary>
-		/// Inverse tangent
-		/// </summary>
-		ArcTan = 33,
-		/// <summary>
-		/// Inverse hyperbolic sine
-		/// </summary>
-		ArcSinh = 34,
-		/// <summary>
-		/// Inverse hyperbolic cosine
-		/// </summary>
-		ArcCosh = 35,
-		/// <summary>
-		/// Inverse hyperbolic tangent
-		/// </summary>
-		ArcTanh = 36,
-		/// <summary>
-		/// Ceiling function
-		/// </summary>
-		Ceil = 37,
-		/// <summary>
-		/// Floor function
-		/// </summary>
-		Floor = 38,
-	}
-
-
 	/// <summary>
 	/// Error codes returned by CUDA driver API calls
 	/// </summary>
-	// TODO: move to Althea.Cuda, and set internal
 	public enum CudaError
 	{
 		/// <summary>
@@ -1129,5 +837,137 @@ namespace Althea
 		/// </summary>
 		[Obsolete("deprecated as of CUDA 4.1")]
 		ErrorApiFailureBase = 10000
+	}
+}
+
+
+namespace Althea.Backend.Cuda.TensorAlgebra
+{
+	/// <summary>
+	/// Binary operations supported by tensor point-wise operations
+	/// </summary>
+	// TODO: move to Althea.TensorAlgebra, and modify
+	public enum BinaryOperation
+	{
+		/// <summary>
+		/// Addition of two elements
+		/// </summary>
+		Add = 3,
+		/// <summary>
+		/// Multiplication of two elements
+		/// </summary>
+		Mul = 5,
+		/// <summary>
+		/// Maximum of two elements
+		/// </summary>
+		Max = 6,
+		/// <summary>
+		/// Minimum of two elements
+		/// </summary>
+		Min = 7
+	}
+
+	/// <summary>
+	/// Unitary operations supported by tensor point-wise operations
+	/// </summary>
+	// TODO: move to Althea.TensorAlgebra, and modify
+	public enum UnitaryOperation
+	{
+		/// <summary>
+		/// Identity operator (i.e., elements are not changed)
+		/// </summary>
+		Identity = 1,
+		/// <summary>
+		/// Square root
+		/// </summary>
+		Sqrt = 2,
+		/// <summary>
+		/// Rectified linear unit (x if x > 0, otherwise 0)
+		/// </summary>
+		ReLU = 8,
+		/// <summary>
+		/// Complex conjugate
+		/// </summary>
+		Conjugate = 9,
+		/// <summary>
+		/// Reciprocal
+		/// </summary>
+		Reciprocate = 10,
+		/// <summary>
+		/// Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
+		/// </summary>
+		Sigmoid = 11,
+		/// <summary>
+		/// Exponentiation
+		/// </summary>
+		Exp = 22,
+		/// <summary>
+		/// Base <c>e</c> logarithm
+		/// </summary>
+		Log = 23,
+		/// <summary>
+		/// Absolute value
+		/// </summary>
+		Abs = 24,
+		/// <summary>
+		/// Negation
+		/// </summary>
+		Negate = 25,
+		/// <summary>
+		/// Sine function
+		/// </summary>
+		Sin = 26,
+		/// <summary>
+		/// Cosine function
+		/// </summary>
+		Cos = 27,
+		/// <summary>
+		/// Tangent function
+		/// </summary>
+		Tan = 28,
+		/// <summary>
+		/// Hyperbolic sine
+		/// </summary>
+		Sinh = 29,
+		/// <summary>
+		/// Hyperbolic cosine
+		/// </summary>
+		Cosh = 30,
+		/// <summary>
+		/// Hyperbolic tangent function
+		/// </summary>
+		Tanh = 12,
+		/// <summary>
+		/// Inverse sine
+		/// </summary>
+		ArcSin = 31,
+		/// <summary>
+		/// Inverse cosine
+		/// </summary>
+		ArcCos = 32,
+		/// <summary>
+		/// Inverse tangent
+		/// </summary>
+		ArcTan = 33,
+		/// <summary>
+		/// Inverse hyperbolic sine
+		/// </summary>
+		ArcSinh = 34,
+		/// <summary>
+		/// Inverse hyperbolic cosine
+		/// </summary>
+		ArcCosh = 35,
+		/// <summary>
+		/// Inverse hyperbolic tangent
+		/// </summary>
+		ArcTanh = 36,
+		/// <summary>
+		/// Ceiling function
+		/// </summary>
+		Ceil = 37,
+		/// <summary>
+		/// Floor function
+		/// </summary>
+		Floor = 38,
 	}
 }

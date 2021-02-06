@@ -271,6 +271,37 @@ namespace Althea.Backend.CSharp.Storage
 			else // never not here
 				return;
 		}
+
+		public override void StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination)
+		{
+			ulong srcLen = source.LengthInBytes / Storage<T>.SizeOfT, dstLen = destination.LengthInBytes / Storage<T>.SizeOfT;
+			if (incrementSource <= 0 || (ulong)incrementSource >= srcLen)
+				throw new ArgumentOutOfRangeException(nameof(incrementSource));
+			if (incrementDestination <= 0 || (ulong)incrementDestination >= dstLen)
+				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
+
+			ulong copyLength = Math.Min(srcLen / );
+			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
+			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			if (srcMP is not null && dstMP is not null)
+			{
+				
+			}
+			else if (srcMP is not null && dstSP is not null)
+			{
+				
+			}
+			else if (srcSP is not null && dstMP is not null)
+			{
+				
+			}
+			else if (srcSP is not null && dstSP is not null)
+			{
+				
+			}
+			else // never not here
+				return;
+		}
 		#endregion
 
 		#region low-level storage and manged operations

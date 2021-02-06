@@ -701,63 +701,95 @@ void vecProd(const Datatype::DataType type, void* a, const size_t N, const unsig
 
 #pragma region vector aggregate -- partial sum
 template<typename T>
-inline void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool inclusive)
+inline void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
-	if (stride == 1)
+	if (strideSrc == 1 && strideDst == 1)
 	{
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst, plus_functor<T>());
 		else
 			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(), plus_functor<T>());
 	}
+	else if (strideSrc == 1 && strideDst != 1)
+	{
+		auto stridedDst = make_strided_range(dst, N, strideDst);
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), plus_functor<T>());
+		else
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), T(), plus_functor<T>());
+	}
+	else if (strideSrc != 1 && strideDst == 1)
+	{
+		auto stridedSrc = make_strided_range(src, N, strideSrc);
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, plus_functor<T>());
+		else
+			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, T(), plus_functor<T>());
+	}
 	else
 	{
-		auto strideSrc = make_strided_range(src, N, stride);
-		auto strideDst = make_strided_range(dst, N, stride);
+		auto stridedSrc = make_strided_range(src, N, strideSrc);
+		auto stridedDst = make_strided_range(dst, N, strideDst);
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), plus_functor<T>());
+			thrust::inclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), plus_functor<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), T(), plus_functor<T>());
+			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), T(), plus_functor<T>());
 	}
 }
 
 DLLEXP
-void vecParSum(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int stride, const bool inclusive)
+void vecParSum(const Datatype::DataType type, const void* src, void* dst, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
-	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, void, src, dst, N, stride, inclusive);
+	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, void, src, dst, N, inclusive, strideSrc, strideDst);
 }
 #pragma endregion
 
 
 #pragma region vector aggregate -- partial product
 template<typename T>
-inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool inclusive)
+inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
-	if (stride == 1)
+	if (strideSrc == 1 && strideDst == 1)
 	{
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst, thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(1), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(), thrust::multiplies<T>());
+	}
+	else if (strideSrc == 1 && strideDst != 1)
+	{
+		auto stridedDst = make_strided_range(dst, N, strideDst);
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), thrust::multiplies<T>());
+		else
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), T(), thrust::multiplies<T>());
+	}
+	else if (strideSrc != 1 && strideDst == 1)
+	{
+		auto stridedSrc = make_strided_range(src, N, strideSrc);
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, thrust::multiplies<T>());
+		else
+			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, T(), thrust::multiplies<T>());
 	}
 	else
 	{
-		auto strideSrc = make_strided_range(src, N, stride);
-		auto strideDst = make_strided_range(dst, N, stride);
+		auto stridedSrc = make_strided_range(src, N, strideSrc);
+		auto stridedDst = make_strided_range(dst, N, strideDst);
 		if (inclusive)
-			thrust::inclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), thrust::multiplies<T>());
+			thrust::inclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), T(1), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), T(), thrust::multiplies<T>());
 	}
 }
 
 DLLEXP
-void vecParProd(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int stride, const bool inclusive)
+void vecParProd(const Datatype::DataType type, const void* src, void* dst, const size_t N,const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
-	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, void, src, dst, N, stride, inclusive);
+	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, void, src, dst, N, inclusive, strideSrc, strideDst);
 }
 #pragma endregion

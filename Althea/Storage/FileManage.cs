@@ -1,22 +1,42 @@
 ﻿using System;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.IO.Compression;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
-using System.Threading.Tasks;
 
-using Althea.Array;
 using Althea.Linq;
+using Althea.Arrays;
 
 
 namespace Althea.Storage
 {
 	/// <summary>
-	/// The file manager static class that provides conversion between <see cref="PureArray{T}"/> and file
+	/// The static class as a file manager that provides conversion between arrays and files
 	/// </summary>
 	public static class ArrayFile
 	{
+		internal record ArrayInfo
+		{
+			internal ArrayInfo(string type, ulong[] size, Dictionary<string, object> metaData, params (string name, IStorage storage)[] storages)
+			{
+
+			}
+
+			public string TypeString { get; set; }
+
+			public ulong[] Size { get; set; }
+
+			// string-keyed dictionary can be automatically serialized and deserialized by System.Text.Json
+			public Dictionary<string, object> OtherMetaData { get; set; }
+
+			// string-keyed dictionary can be automatically serialized and deserialized by System.Text.Json
+			// custom IStorage serializer and deserializer is necessary
+			public Dictionary<string, IStorage> Storages { get; set; }
+		}
+
 		internal sealed class ArrayHeadInfo
 		{
 			public readonly Type type;
