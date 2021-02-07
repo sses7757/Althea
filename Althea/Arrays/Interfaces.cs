@@ -2,55 +2,69 @@
 using System.Collections.Generic;
 
 using Althea.NativeTypes;
+using Althea.LinearAlgebra; // MatrixOperation
 using Althea.TensorAlgebra; // TensorOrder
 
 
 namespace Althea.Arrays
 {
+	#region basic
 	/// <summary>
 	/// The interface for mutable array whose value array can be filled with different values
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public interface IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
+	public interface IMutableArray<T> where T : unmanaged, IEquatable<T>
 	{
-		#region fills
+		#region property
 		/// <summary>
-		/// Fill this array's value array with zeros.
+		/// The underlying <see cref="Storage{T}"/> for the value array of this mutable array
 		/// </summary>
-		void FillWithZeros();
+		Storage<T> Storage { get; }
 
 		/// <summary>
-		/// Fill this array's value array with randomly generated numbers.
+		/// The size of this mutable array
 		/// </summary>
-		void FillWithRandoms();
+		IReadOnlyList<long> Size { get; }
+		#endregion
 
+		#region fill
 		/// <summary>
-		/// Fill this array's value array with ones.
+		/// Fill this array's value array with given <paramref name="value"/>.
 		/// </summary>
-		void FillWithOnes();
+		/// <param name="value">The value to fill as a <paramref name="value"/>, default 0</param>
+		public void FillWith(T value = default)
+		{
+			Althea.Storage.AbstractApi.SelectImplementation(this.Storage).SetMemoryValue(this.Storage, value);
+		}
 		#endregion
 	}
 
 	/// <summary>
 	/// Simple interface for sparse array which only contains basic members, additional fillings and .conversions from / to C# arrays
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
-	public interface ISparseArray<T> : IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="TIndex">Any integral-typed unmanaged struct as the index data type</typeparam>
+	public interface ISparseArray<T, TIndex> : IMutableArray<T> where T : unmanaged, IEquatable<T> where TIndex : unmanaged
 	{
-		#region members
+		#region property
 		/// <summary>
-		/// Number of nonzero values of this sparse vector, equal to the size of the index/value array size.
+		/// Number of nonzero values of this sparse vector, equal to the size of the index/value array size. The default implementation returns the length of <see cref="IMutableArray{T}.Storage"/>.
 		/// </summary>
-		long NonZero { get; }
+		ulong NonZero => this.Storage.Length;
+
+		/// <summary>
+		/// The underlying list of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/> for the index array(s) of this sparse array
+		/// </summary>
+		IReadOnlyList<Storage<TIndex>> IndexStorages { get; }
 		#endregion
 
 		#region fills
 		/// <summary>
-		/// Fill this sparse array's index array(s) with arithmetic sequence(s), from <see cref="ISparseArray{T}"/>.
+		/// Fill this sparse array's index array(s) with arithmetic sequence(s).
 		/// </summary>
-		/// <param name="v">start values and steps of the sequence(s), must be of same length as <see cref="AbstractArray{T}.Size"/></param>
+		/// <param name="v">The start values and steps of the sequence(s), must be of same length as <see cref="IMutableArray{T}.Size"/></param>
 		/// <exception cref="ArgumentException">if the lengths/values of <paramref name="v"/> do not follow the rule</exception>
-		void FillIndexWithRange(params (int start, int step)[] v);
+		void FillIndexWithRange(params (TIndex start, TIndex step)[] v);
 		#endregion
 
 		#region to C# arrays
@@ -65,15 +79,8 @@ namespace Althea.Arrays
 		/// Convert the indices of this array to an <see cref="IEnumerable{T}"/> of C# arrays
 		/// </summary>
 		/// <param name="ranges">the range of each index array, default all</param>
-		/// <returns>an <see cref="IEnumerable{T}"/> of C# arrays of type <see cref="int"/></returns>
-		IEnumerable<int[]> IndexToIntArray(params Range[] ranges);
-
-		/// <summary>
-		/// Convert the indices of this array to an <see cref="IEnumerable{T}"/> of C# arrays
-		/// </summary>
-		/// <param name="ranges">the range of each index array, default all</param>
-		/// <returns>an <see cref="IEnumerable{T}"/> of C# arrays of type <see cref="long"/></returns>
-		IEnumerable<long[]> IndexToLongArray(params Range[] ranges);
+		/// <returns>an <see cref="IEnumerable{T}"/> of C# arrays of type <typeparamref name="TIndex"/></returns>
+		IEnumerable<TIndex[]> IndexToArray(params Range[] ranges);
 		#endregion
 
 		#region from C# arrays
@@ -87,32 +94,25 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Copy the <paramref name="indices"/> into this array's index arrays.
 		/// </summary>
-		/// <param name="indices">an <see cref="IEnumerable{T}"/> of C# <see cref="int"/> arrays</param>
+		/// <param name="indices">an <see cref="IEnumerable{T}"/> of <typeparamref name="TIndex"/> arrays</param>
 		/// <param name="ranges">the range of each index array, default all</param>
-		void IndexFromIntArray(IEnumerable<int[]> indices, params Range[] ranges);
-
-		/// <summary>
-		/// Copy the <paramref name="indices"/> into this array's index arrays.
-		/// </summary>
-		/// <param name="indices">an <see cref="IEnumerable{T}"/> of C# <see cref="long"/> arrays</param>
-		/// <param name="ranges">the range of each index array, default all</param>
-		void IndexFromLongArray(IEnumerable<long[]> indices, params Range[] ranges);
+		void IndexFromArray(IEnumerable<TIndex[]> indices, params Range[] ranges);
 		#endregion
 
 		#region dispose
 		/// <summary>
 		/// Dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>.
 		/// </summary>
-		/// <param name="array">the target <see cref="ISparseArray{T}"/> to exclude</param>
-		void DisposeExclude(ISparseArray<T> array);
+		/// <param name="array">the target <see cref="ISparseArray{T, TIndex}"/> to exclude</param>
+		void DisposeExclude(ISparseArray<T, TIndex> array);
 		#endregion
 	}
 
 	/// <summary>
 	/// Simple interface for dense array which contains the conversions from / to C# arrays.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
-	public interface IDenseArray<T> : IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IDenseArray<T> : IMutableArray<T> where T : unmanaged, IEquatable<T>
 	{
 		#region to C# arrays
 		/// <summary>
@@ -132,17 +132,21 @@ namespace Althea.Arrays
 		void FromFortranOrderArray(T[] values, params Range[] ranges);
 		#endregion
 	}
+	#endregion
 
+	#region vectors
 	/// <summary>
 	/// The interface of vector that contains the members, operations and indexers of vector whose inputs and outputs are not relevant with vector.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
-	public interface IVector<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IVector<T> : IMutableArray<T>, IReadOnlyList<T> where T : unmanaged, IEquatable<T>
 	{
+		#region property
 		/// <summary>
 		/// The last index of the vector
 		/// </summary>
 		long LastIndex { get; }
+		#endregion
 
 		#region operation
 		/// <summary>
@@ -167,21 +171,45 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Basic indexer of vector.
 		/// </summary>
-		/// <param name="i">position in <see cref="Index"/> form</param>
+		/// <param name="i">The position as a <see cref="int"/></param>
 		/// <returns>an instance of the data type <typeparamref name="T"/></returns>
 		/// <remarks>Since a value cannot hold reference, altering the retrieved value does not change this array's value at that position.</remarks>
-		T this[Index i] { get; set; }
+		new T this[int i] { get; set; }
+		#endregion
+	}
+
+	/// <summary>
+	/// The interface for dense storage vectors
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IDenseVector<T> : IDenseArray<T>, IVector<T> where T : unmanaged, IEquatable<T>
+	{
+		// empty
+	}
+
+	/// <summary>
+	/// The interface for sparse storage vectors
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="TIndex">Any integer-typed unmanaged struct as the data type of index array</typeparam>
+	public interface ISparseVector<T, TIndex> : ISparseArray<T, TIndex>, IVector<T> where T : unmanaged, IEquatable<T> where TIndex : unmanaged
+	{
+		#region property
+		/// <summary>
+		/// The underlying <see cref="Storage{T}"/> of type <typeparamref name="TIndex"/> for the index array of this sparse vector
+		/// </summary>
+		Storage<TIndex> IndexStorage { get; }
 		#endregion
 	}
 
 	/// <summary>
 	/// The interface of vector that contains the operation needed for Lanczos and Krylov-Schur solver.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
 	public interface IKrylovVector<TVec, T> : IVector<T>
 		where TVec : IKrylovVector<TVec, T> 
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where T : unmanaged, IEquatable<T>
 	{
 		#region operation
 		/// <summary>
@@ -220,11 +248,11 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface of vector that contains the members, operations and indexers of vector whose inputs are relevant with vector.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
 	public interface IVector<TVec, T> : IKrylovVector<TVec, T>
-		where TVec : AbstractArray<T>, IVector<TVec, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TVec : class, IVector<TVec, T>, new()
+		where T : unmanaged, IEquatable<T>
 	{
 		#region operation
 		/// <summary>
@@ -247,13 +275,13 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface of vector that contains the extra operations of vector whose inputs / outputs are also relevant with matrix.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
 	/// <typeparam name="TMat">the matrix type</typeparam>
 	public interface IVector<TVec, TMat, T> : IVector<TVec, T>
-		where TVec : AbstractArray<T>, IVector<TVec, TMat, T>
-		where TMat : AbstractArray<T>, IMatrix<TMat, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TVec : class, IVector<TVec, TMat, T>, new()
+		where TMat : class, IMatrix<TMat, T>, new()
+		where T : unmanaged, IEquatable<T>
 	{
 		#region operation
 		/// <summary>
@@ -273,15 +301,17 @@ namespace Althea.Arrays
 		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
 		/// <param name="overwrite">the <typeparamref name="TMat"/> to overwrite as result, default null</param>
 		/// <returns>The result <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null</returns>
-		TMat OuterProduct(TVec other, bool? conjugateOther = null, TMat overwrite = null);
+		TMat OuterProduct(TVec other, bool? conjugateOther = null, TMat? overwrite = null);
 		#endregion
 	}
+	#endregion
 
+	#region matrices
 	/// <summary>
 	/// The interface of matrix that contains basic members, methods, operations and indexers whose inputs and outputs are not relevant with matrix.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
-	public interface IMatrix<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IMatrix<T> : IMutableArray<T> where T : unmanaged, IEquatable<T>
 	{
 		#region member
 		/// <summary>
@@ -292,12 +322,12 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Leading dimension. In column major, same as the row number.
 		/// </summary>
-		long NRows { get; }
+		ulong NRows { get; }
 
 		/// <summary>
 		/// The secondary dimension. In column major, same as the column number.
 		/// </summary>
-		long NCols { get; }
+		ulong NCols { get; }
 		#endregion
 
 		#region in-place method
@@ -332,13 +362,42 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
+	/// The interface for dense storage matrices
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IDenseMatrix<T> : IDenseArray<T>, IMatrix<T> where T : unmanaged, IEquatable<T>
+	{
+		// empty
+	}
+
+	/// <summary>
+	/// The interface for sparse storage matrices
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="TIndex">Any integer-typed unmanaged struct as the data type of index array</typeparam>
+	public interface ISparseMatrix<T, TIndex> : ISparseArray<T, TIndex>, IMatrix<T> where T : unmanaged, IEquatable<T> where TIndex : unmanaged
+	{
+		#region property
+		/// <summary>
+		/// The underlying <see cref="Storage{T}"/> of type <typeparamref name="TIndex"/> for the row index array of this sparse vector
+		/// </summary>
+		Storage<TIndex> RowIndexStorage { get; }
+
+		/// <summary>
+		/// The underlying <see cref="Storage{T}"/> of type <typeparamref name="TIndex"/> for the column index array of this sparse vector
+		/// </summary>
+		Storage<TIndex> ColumnIndexStorage { get; }
+		#endregion
+	}
+
+	/// <summary>
 	/// The interface of matrix that contains basic members, methods, operations and indexers whose inputs and outputs are relevant with matrix.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TMat">the matrix type</typeparam>
 	public interface IMatrix<TMat, T> : IMatrix<T>, IKrylovVector<TMat, T>
-		where TMat : AbstractArray<T>, IMatrix<TMat, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TMat : class, IMatrix<TMat, T>, new()
+		where T : unmanaged, IEquatable<T>
 	{
 		#region method
 		/// <summary>
@@ -347,7 +406,7 @@ namespace Althea.Arrays
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
 		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these columns. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TMat GetColumnRange(Range columnRange, TMat overwrite = null);
+		TMat GetColumnRange(Range columnRange, TMat? overwrite = null);
 
 		/// <summary>
 		/// Get a new matrix by the row index range.
@@ -355,7 +414,7 @@ namespace Althea.Arrays
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
 		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these rows. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TMat GetRowRange(Range rowRange, TMat overwrite = null);
+		TMat GetRowRange(Range rowRange, TMat? overwrite = null);
 
 		/// <summary>
 		/// Get a sub-matrix by the row and column index ranges.
@@ -364,7 +423,7 @@ namespace Althea.Arrays
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
 		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix (if possible)</param>
 		/// <returns>A sub-matrix in this region. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TMat GetSubmatrix(Range rowRange, Range columnRange, TMat overwrite = null);
+		TMat GetSubmatrix(Range rowRange, Range columnRange, TMat? overwrite = null);
 		#endregion
 
 		#region operation
@@ -373,14 +432,14 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The transposed <typeparamref name="TMat"/>.</returns>
-		TMat Transpose(TMat overwrite = null);
+		TMat Transpose(TMat? overwrite = null);
 
 		/// <summary>
 		/// Calculate the conjugate transpose of this matrix. A new <see cref="IMatrix{T}"/> will be created if the result is not it self.
 		/// </summary>
 		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The conjugate-transposed <typeparamref name="TMat"/>.</returns>
-		TMat ConjugateTranspose(TMat overwrite = null);
+		TMat ConjugateTranspose(TMat? overwrite = null);
 
 		/// <summary>
 		/// Symmetrize this matrix by adding its conjugate transpose out-of-place.
@@ -388,7 +447,7 @@ namespace Althea.Arrays
 		/// <param name="conjugateAtLast">return the original </param>
 		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>If <c><paramref name="conjugateAtLast"/> == false</c>: $B_{\text{result}}=\frac{A + A^H}{2}$; otherwise: $B_{\text{result}}=\frac{\bar{A} + A^T}{2}$</returns>
-		TMat Symmetrize(bool conjugateAtLast = false, TMat overwrite = null);
+		TMat Symmetrize(bool conjugateAtLast = false, TMat? overwrite = null);
 
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$. This method will try to in-place replace this matrix.
@@ -419,7 +478,7 @@ namespace Althea.Arrays
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
 		/// <param name="overwrite">the <typeparamref name="TMat"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker product, a new <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null.</returns>
-		TMat KroneckerProd(TMat other, bool forceHerm = true, TMat overwrite = null);
+		TMat KroneckerProd(TMat other, bool forceHerm = true, TMat? overwrite = null);
 
 		/// <summary>
 		/// Compute Kronecker sum $A \oplus B \equiv A \otimes I + I \otimes B$. If <paramref name="forceHerm"/> is true, then $[(A \otimes I + I \otimes B^H) + (A^H \otimes I + I \otimes B)]/2$ will be calculated.
@@ -428,20 +487,20 @@ namespace Althea.Arrays
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
 		/// <param name="overwrite">the <typeparamref name="TMat"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker sum, a new <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null.</returns>
-		TMat KroneckerSum(TMat other, bool forceHerm = true, TMat overwrite = null);
+		TMat KroneckerSum(TMat other, bool forceHerm = true, TMat? overwrite = null);
 		#endregion
 	}
 
 	/// <summary>
 	/// The interface of matrix that contains extra methods, operations and indexers whose inputs and outputs are also relevant with vector.
 	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TMat">the matrix type</typeparam>
 	/// <typeparam name="TVec">the vector type</typeparam>
 	public interface IMatrix<TMat, TVec, T> : IMatrix<TMat, T>
-		where TMat : AbstractArray<T>, IMatrix<TMat, TVec, T>
-		where TVec : AbstractArray<T>, IVector<TVec, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TMat : class, IMatrix<TMat, TVec, T>, new()
+		where TVec : class, IVector<TVec, T>, new()
+		where T : unmanaged, IEquatable<T>
 	{
 		#region method
 		/// <summary>
@@ -456,7 +515,7 @@ namespace Althea.Arrays
 		/// <param name="colRange">the <see cref="Range"/> of columns</param>
 		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec[] GetColumns(Range colRange, TVec[] overwrite = null);
+		TVec[] GetColumns(Range colRange, TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get part of the row vectors that forms the matrix.
@@ -464,21 +523,21 @@ namespace Althea.Arrays
 		/// <param name="rowRange">the <see cref="Range"/> of rows</param>
 		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec[] GetRows(Range rowRange, TVec[] overwrite = null);
+		TVec[] GetRows(Range rowRange, TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get all of the column vectors that forms the matrix.
 		/// </summary>
 		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec[] GetColumns(TVec[] overwrite = null);
+		TVec[] GetColumns(TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get all of the row vectors that forms the matrix.
 		/// </summary>
 		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec[] GetRows(TVec[] overwrite = null);
+		TVec[] GetRows(TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get one column of the matrix.
@@ -486,7 +545,7 @@ namespace Althea.Arrays
 		/// <param name="index">the <see cref="Index"/> of column</param>
 		/// <param name="overwrite">the output <typeparamref name="TVec"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected column as a <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec GetColumnAt(Index index, TVec overwrite = null);
+		TVec GetColumnAt(Index index, TVec? overwrite = null);
 
 		/// <summary>
 		/// Get one row of the matrix.
@@ -494,7 +553,7 @@ namespace Althea.Arrays
 		/// <param name="index">the <see cref="Index"/> of row</param>
 		/// <param name="overwrite">the output <typeparamref name="TVec"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected row as a <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec GetRowAt(Index index, TVec overwrite = null);
+		TVec GetRowAt(Index index, TVec? overwrite = null);
 		#endregion
 
 		#region diagonal indexer
@@ -504,7 +563,7 @@ namespace Althea.Arrays
 		/// <param name="k">diagonal index, 0 for diag, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
 		/// <param name="overwrite">the output <typeparamref name="TVec"/> to overwrite, default null means creating a new vector</param>
 		/// <returns>A new <typeparamref name="TVec"/> containing the (super-/sub-)diagonal elements. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		TVec GetDiag(long k, TVec overwrite = null);
+		TVec GetDiag(long k, TVec? overwrite = null);
 
 		/// <summary>
 		/// The method to set diagonal elements.
@@ -513,27 +572,8 @@ namespace Althea.Arrays
 		/// <param name="vec">the <typeparamref name="TVec"/></param>
 		void SetDiag(long k, TVec vec);
 		#endregion
-	}
 
-	/// <summary>
-	/// The interface of decomposable matrix that contains EVD, SVD and QR.
-	/// </summary>
-	/// <typeparam name="T">the supported data types</typeparam>
-	/// <typeparam name="TVec">the dense vector type</typeparam>
-	/// <typeparam name="TMat">the matrix type</typeparam>
-	public interface IDecomposable<TMat, TVec, T>
-		where TMat : AbstractArray<T>, new()
-		where TVec : AbstractArray<T>, new()
-		where T : unmanaged, IFormattable, IEquatable<T>
-	{
-		#region methods
-		/// <summary>
-		/// Calculate the inverse of this matrix out-of-place
-		/// </summary>
-		/// <param name="overwrite">the <typeparamref name="TMat"/> to store the inverse matrix, default null means that this method will create a new one and return</param>
-		/// <returns>the inverse matrix</returns>
-		TMat Inverse(TMat overwrite = null);
-
+		#region decompositions
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of this Hermitian matrix for the special eigen-problem -- $A V = V \Lambda$, or matrices pair A, <paramref name="B"/> for the general one -- $A V = \Lambda B V$ or $A B V = \Lambda V$ or $B A V = \Lambda V$ <b>out-of-place</b>. Here, matrix A is this matrix.
 		/// </summary>
@@ -576,7 +616,9 @@ namespace Althea.Arrays
 		(TMat Q, TMat R) QR(bool full = false, TMat overwriteQ = null, TMat overwriteR = null);
 		#endregion
 	}
+	#endregion
 
+	#region tensors
 	/// <summary>
 	/// The interface for tensor that contains basic members (size and label).
 	/// </summary>
@@ -607,7 +649,7 @@ namespace Althea.Arrays
 	/// The interface for tensor that contains basic indexers whose inputs and outputs are not relevant with tensors.
 	/// </summary>
 	/// <typeparam name="T">the data type</typeparam>
-	public interface ITensor<T> : ITensor where T : unmanaged, IFormattable, IEquatable<T>
+	public interface ITensor<T> : ITensor where T : unmanaged, IEquatable<T>
 	{
 		#region indexer
 		/// <summary>
@@ -655,8 +697,8 @@ namespace Althea.Arrays
 	/// <typeparam name="T">the data type</typeparam>
 	/// <typeparam name="TTen">the tensor type</typeparam>
 	public interface ITensor<TTen, T> : ITensor<T>, IKrylovVector<TTen, T>
-		where TTen : AbstractArray<T>, ITensor<TTen, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TTen : class, ITensor<TTen, T>, new()
+		where T : unmanaged, IEquatable<T>
 	{
 		#region operations
 		/// <summary>
@@ -740,8 +782,8 @@ namespace Althea.Arrays
 	/// <typeparam name="T">the data type</typeparam>
 	/// <typeparam name="TTen">the tensor type</typeparam>
 	public interface ITensorAsMatrix<TTen, T>
-		where TTen : AbstractArray<T>, ITensor<TTen, T>, ITensorAsMatrix<TTen, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TTen : class, IDisposable, ITensor<TTen, T>, ITensorAsMatrix<TTen, T>, new()
+		where T : unmanaged, IEquatable<T>
 	{
 		#region basics
 		/// <summary>
@@ -838,4 +880,5 @@ namespace Althea.Arrays
 		}
 		#endregion
 	}
+	#endregion
 }

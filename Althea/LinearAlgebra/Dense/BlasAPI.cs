@@ -8,7 +8,7 @@ using Althea.Linq;
 namespace Althea.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The abstract class for runtime linear algebra API routines 
+	/// The abstract class for runtime dense linear algebra API routines 
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
@@ -30,28 +30,149 @@ namespace Althea.LinearAlgebra.Dense
 		protected static void DisposeNotCurrent() => DisposeNotCurrent(RecentAPIs);
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, StorageLocation)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
 		/// </summary>
-		public static AbstractApi SelectImplementation(StorageLocation location) => SelectImplementation(RecentAPIs, location);
+		public static AbstractApi SelectImplementation<T>(Storage<T> storage) where T : unmanaged => SelectImplementation(RecentAPIs, storage);
 
 		/// <summary>
 		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
 		/// </summary>
-		public static AbstractApi SelectImplementation(IStorage storage) => SelectImplementation(RecentAPIs, storage);
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther);
+			var selectThis = SelectImplementation(RecentAPIs, storage);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2);
+			var selectThis = SelectImplementation(RecentAPIs, storage);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2, storageOther3);
+			var selectThis = SelectImplementation(RecentAPIs, storage);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
 
 		/// <summary>
 		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
 		/// </summary>
-		public static AbstractApi SelectImplementation(IStorage storage1, IStorage storage2) => SelectImplementation(RecentAPIs, storage1, storage2);
+		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2);
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther);
+			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2);
+			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2, storageOther3);
+			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2, storage3);
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther);
+			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2, storage3);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2);
+			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2, storage3);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
+
+		/// <summary>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// </summary>
+		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
+			TOther : unmanaged
+		{
+			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2, storageOther3);
+			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2, storage3);
+			if (ReferenceEquals(selectThis, selectOther))
+				return selectThis;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+		}
 		#endregion
 
 
 		#region support information
-		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
-		/// </summary>
-		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
-
 		// Ignore Spelling: N-ary
 		/// <summary>
 		/// Get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. Each value in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.

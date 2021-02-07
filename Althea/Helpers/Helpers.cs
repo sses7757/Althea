@@ -20,39 +20,6 @@ namespace Althea.Helpers
 			}
 		}
 
-		// TODO: move to Althea.LinearAlgebra
-		internal static MatrixOperation CheckOP<T>(this MatrixOperation input, Arrays.IMatrix<T> mat) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (mat is null)
-				return default;
-			bool isComplex = default(T).IsComplex();
-			switch (input)
-			{
-				case MatrixOperation.Transpose:
-					if (mat.Hermitian && !isComplex)
-						return MatrixOperation.None;
-					else
-						return MatrixOperation.Transpose;
-				case MatrixOperation.ConjugateTranspose:
-					if (mat.Hermitian)
-						return MatrixOperation.None;
-					else if (!isComplex)
-						return MatrixOperation.Transpose;
-					else
-						return MatrixOperation.ConjugateTranspose;
-				case MatrixOperation.Conjugate:
-					if (!isComplex)
-						return MatrixOperation.None;
-					else if (mat.Hermitian)
-						return MatrixOperation.Transpose;
-					else
-						return MatrixOperation.Conjugate;
-				default:
-					return default;
-			}
-		}
-
-
 		// TODO: move to native codes?
 		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
 										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);
@@ -119,6 +86,25 @@ namespace Althea.Helpers
 				_conversionCache.Add((t1, t2), conversionOperator.CreateDelegate<Converter<T1, T2>>());
 			}
 			return ((Converter<T1, T2>)_conversionCache[(t1, t2)]).Invoke(obj);
+		}
+
+		/// <summary>
+		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
+		/// </summary>
+		/// <param name="type">The given <see cref="Type"/> to get name</param>
+		/// <param name="full">Whether to use <see cref="Type.FullName"/> or only <see cref="System.Reflection.MemberInfo.Name"/></param>
+		/// <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
+		public static string? GetGenericString(this Type type, bool full = false)
+		{
+			string? name = full ? type.FullName : type.Name;
+			if (name is null)
+				return null;
+			if (type.IsGenericType)
+			{
+				var args = type.GenericTypeArguments;
+				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString()).ToArray())}>";
+			}
+			return name;
 		}
 	}
 	#endregion

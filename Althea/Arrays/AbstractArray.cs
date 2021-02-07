@@ -11,7 +11,7 @@ namespace Althea.Arrays
 	/// The abstract array class for device / host array. It is the top level abstract of all built-in array classes. It inherits the <see cref="IDisposable"/> and <see cref="ICloneable"/> interface.
 	/// </summary>
 	/// <typeparam name="T">the supported data type</typeparam>
-	public abstract class AbstractArray<T> : IDisposable, ICloneable where T : unmanaged, IFormattable, IEquatable<T>
+	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged
 	{
 		#region members
 		/// <summary>
@@ -82,8 +82,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Whether this object is equal to another, the shapes / sizes are also compared
 		/// </summary>
-		/// <param name="obj">another <see cref="AbstractArray{T}"/></param>
-		public abstract override bool Equals(object obj);
+		/// <param name="obj">The other <see cref="AbstractArray{T}"/> to compare with</param>
+		/// <returns>True if this == <paramref name="obj"/></returns>
+		public abstract override bool Equals(object? obj);
 		#endregion
 
 		#region operators
@@ -133,7 +134,7 @@ namespace Althea.Arrays
 		/// Deep clone the array, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned array</returns>
-		public abstract object Clone();
+		public abstract AbstractArray<T> Clone();
 
 		/// <summary>
 		/// Create a new array with same properties (e.g. <see cref="Size"/>) as this one.
@@ -144,9 +145,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Print out the array.
 		/// </summary>
-		/// <param name="overrideSetting">override global settings <see cref="Settings.PrintConfig"/></param>
+		/// <param name="overrideSetting">override global settings <see cref="Settings.JsonPrintSettings"/></param>
 		/// <returns>detailed string representation</returns>
-		public abstract string Print(IReadOnlyDictionary<PrintSetting, int> overrideSetting = null);
+		public abstract string Print(IReadOnlyDictionary<string, int> overrideSetting = null);
 		#endregion
 
 		#region abstract array operations

@@ -280,12 +280,12 @@ namespace Althea.Backend.CSharp.Storage
 			if (incrementDestination <= 0 || (ulong)incrementDestination >= dstLen)
 				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
 
-			ulong copyLength = Math.Min(srcLen / );
+			ulong copyLength = Math.Min((srcLen - 1) / (ulong)incrementSource + 1, (dstLen - 1) / (ulong)incrementDestination + 1);
 			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcMP is not null && dstMP is not null)
 			{
-				
+				// TODO
 			}
 			else if (srcMP is not null && dstSP is not null)
 			{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
+using Althea.NativeTypes;
 
 
 namespace Althea.Storage
@@ -303,7 +304,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
 		public virtual void StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
 		{
-
+			// TODO
 		}
 
 		/// <summary>
@@ -346,26 +347,34 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		public virtual void SetMemoryValue<T>(Storage<T> storage, T value) where T : unmanaged
+		public virtual void SetMemoryValue<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
 		{
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
 			{
-				for (int i = 0; i < storage.Count; i++)
-				{
-					this.SetMemoryValue(storage[i], value);
-				}
+				if (value.IsZero())
+					for (int i = 0; i < storage.Count; i++)
+						this.SetMemoryValue(storage[i], value);
+				else
+					for (int i = 0; i < storage.Count; i++)
+						this.SetMemoryValue(storage[i], (byte)0);
 			}
 			else if (cached is not null)
 			{
 				if (cached.LengthInBytes <= cached.GetRealLength() * ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
-					this.SetMemoryValue(cached[0], value);
+					if (value.IsZero())
+						this.SetMemoryValue(cached[0], (byte)0);
+					else
+						this.SetMemoryValue(cached[0], value);
 				}
 				else
 				{
-					cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
+					if (value.IsZero())
+						cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: (byte)0, copyFunc: this.MemoryCopy);
+					else
+						cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
 				}
 			}
 		}

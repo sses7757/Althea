@@ -1,28 +1,93 @@
 ﻿using System;
 
+using Althea.Helpers;
+using Althea.NativeTypes;
+
 
 namespace Althea.LinearAlgebra
 {
 	#region exception
 	/// <summary>
-	/// The exception class when a matrix solve method failed due to several reasons
+	/// The exception to be thrown when two generic types are mismatched for some reason
 	/// </summary>
+	[Serializable]
+	public sealed class TypeMismatchException : Exception
+	{
+		/// <summary>
+		/// The enum to indicate the type mismatch reason
+		/// </summary>
+		public enum MismatchReason
+		{
+			/// <summary>
+			/// Cannot convert the first type to the second one
+			/// </summary>
+			CannotConvert,
+			/// <summary>
+			/// The second type is not a real type correspondence of the first one
+			/// </summary>
+			IsNotRealCorrespondence,
+			/// <summary>
+			/// The second type is not a complex type correspondence of the first one
+			/// </summary>
+			IsNotComplexCorrespondence,
+
+		}
+
+		/// <summary>
+		/// Empty <see cref="TypeMismatchException"/>
+		/// </summary>
+		public TypeMismatchException() { }
+
+		/// <summary>
+		/// Create a <see cref="TypeMismatchException"/> with given mismatch types and mismatch reason and inner exception
+		/// </summary>
+		/// <param name="from">The first mismatch type</param>
+		/// <param name="to">The second mismatch type</param>
+		/// <param name="reason">The mismatch reason</param>
+		/// <param name="inner">The inner exception</param>
+		public TypeMismatchException(Type from, Type to, MismatchReason reason, Exception? inner) : base(GetMessage(from, to, reason), inner) { }
+
+		/// <summary>
+		/// Create a <see cref="TypeMismatchException"/> with given mismatch types and mismatch reason
+		/// </summary>
+		/// <param name="from">The first mismatch type</param>
+		/// <param name="to">The second mismatch type</param>
+		/// <param name="reason">The mismatch reason</param>
+		public TypeMismatchException(Type from, Type to, MismatchReason reason) : this(from, to, reason, null) { }
+
+		private static string GetMessage(Type from, Type to, MismatchReason reason)
+		{
+			string format = reason switch
+			{
+				MismatchReason.CannotConvert => Resources.Exception.MismatchCannotConvert,
+				MismatchReason.IsNotRealCorrespondence => Resources.Exception.MismatchNotRealCorrespondence,
+				MismatchReason.IsNotComplexCorrespondence => Resources.Exception.MismatchNotComplexCorrespondence,
+				_ => Resources.Exception.MismatchOtherReason
+			};
+			string? fromString = from.GetGenericString(), toString = to.GetGenericString();
+			return string.Format(format, fromString, toString);
+		}
+	}
+
+	/// <summary>
+	/// The exception to be thrown when a matrix solve method failed due to several reasons
+	/// </summary>
+	[Serializable]
 	public sealed class MatrixSolveAlgorithmException : Exception
 	{
 		private static string GetDescription(SolveMethodKind kind)
 		{
 			return kind switch
 			{
-				SolveMethodKind.Cholesky => "Cholesky factorization failed since leading minor of order {0} is not positive definite.",
-				SolveMethodKind.LU => "LU factorization failed since matrix A (U) is singular, U({0},{0}) = 0.",
-				SolveMethodKind.QR => "QR factorization failed for unknown reasons.",
-				SolveMethodKind.BunchKaufman => "Bunch-Kaufman factorization failed since matrix A is singular, D({0},{0}) = 0.",
-				SolveMethodKind.SVD => "SVD failed to converge, {0} super-diagonal elements of an upper bidiagonal matrix not converged.",
-				SolveMethodKind.Eigenvalue => "Eigenvalue decomposition failed since {0} off-diagonal elements of an intermediate tridiagonal form did not converge to zero",
-				SolveMethodKind.Schur => "Schur decomposition failed to compute all the eigenvalues, or the eigenvalues could not be reordered because some eigenvalues were too close to separate, or after reordering, round-off changed values of some complex eigenvalues so that leading eigenvalues in the Schur form no longer satisfy the input.",
-				// Ignore Spelling: potrf
-				SolveMethodKind.GeneralEigen => "General eigenvalue decomposition failed since either `potrf` or `syevd` is wrong",
-				SolveMethodKind.Jacobi => "Jacobi method does not converge under given tolerance and maximum sweeps.",
+				SolveMethodKind.Cholesky => Resources.Exception.MatrixSolveCholesky,
+				SolveMethodKind.LU => Resources.Exception.MatrixSolveLU,
+				SolveMethodKind.QR => Resources.Exception.MatrixSolveQR,
+				SolveMethodKind.BunchKaufman => Resources.Exception.MatrixSolveBunchKaufman,
+				SolveMethodKind.SVD => Resources.Exception.MatrixSolveSVD,
+				SolveMethodKind.Eigenvalue => Resources.Exception.MatrixSolveEigen,
+				SolveMethodKind.Schur => Resources.Exception.MatrixSolveSchur,
+				SolveMethodKind.GeneralEigen => Resources.Exception.MatrixSolveGeneralEigen,
+				SolveMethodKind.Jacobi => Resources.Exception.MatrixSolveJacobi,
 				_ => "",
 			};
 		}
@@ -37,23 +102,20 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Empty <see cref="MatrixSolveAlgorithmException"/>
 		/// </summary>
-		public MatrixSolveAlgorithmException()
-		{ }
+		public MatrixSolveAlgorithmException() { }
 
 		/// <summary>
 		/// <see cref="MatrixSolveAlgorithmException"/> with custom message
 		/// </summary>
 		/// <param name="message"></param>
-		public MatrixSolveAlgorithmException(string message) : base(message)
-		{ }
+		public MatrixSolveAlgorithmException(string message) : base(message) { }
 
 		/// <summary>
 		/// <see cref="MatrixSolveAlgorithmException"/> with custom message and inner exception
 		/// </summary>
 		/// <param name="message"></param>
 		/// <param name="innerException"></param>
-		public MatrixSolveAlgorithmException(string message, Exception innerException) : base(message, innerException)
-		{ }
+		public MatrixSolveAlgorithmException(string message, Exception innerException) : base(message, innerException) { }
 	}
 	#endregion
 
@@ -130,9 +192,9 @@ namespace Althea.LinearAlgebra
 	}
 
 	/// <summary>
-	/// The <see cref="EigenSolveMode"/> enum indicates which eigenvector matrices obtained from standard or general eigenvalue solver shall be stored
+	/// The <see cref="SolveVectorMode"/> enum indicates which eigen- (or other type of) vector matrices obtained from standard or general eigenvalue solvers or other solvers shall be stored
 	/// </summary>
-	public enum EigenSolveMode
+	public enum SolveVectorMode
 	{
 		/// <summary>
 		/// Do not compute the eigenvectors
@@ -253,6 +315,37 @@ namespace Althea.LinearAlgebra
 				SVDStore.None => (sbyte)'N',
 				_ => throw new NotSupportedException(),
 			};
+		}
+
+		internal static MatrixOperation CheckOP<T>(this MatrixOperation input, Arrays.IMatrix<T> mat) where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			if (mat is null)
+				return default;
+			bool isComplex = default(T).IsComplex();
+			switch (input)
+			{
+				case MatrixOperation.Transpose:
+					if (mat.Hermitian && !isComplex)
+						return MatrixOperation.None;
+					else
+						return MatrixOperation.Transpose;
+				case MatrixOperation.ConjugateTranspose:
+					if (mat.Hermitian)
+						return MatrixOperation.None;
+					else if (!isComplex)
+						return MatrixOperation.Transpose;
+					else
+						return MatrixOperation.ConjugateTranspose;
+				case MatrixOperation.Conjugate:
+					if (!isComplex)
+						return MatrixOperation.None;
+					else if (mat.Hermitian)
+						return MatrixOperation.Transpose;
+					else
+						return MatrixOperation.Conjugate;
+				default:
+					return default;
+			}
 		}
 	}
 	#endregion
