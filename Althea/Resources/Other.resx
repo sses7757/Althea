@@ -120,6 +120,9 @@
   <data name="CacheSizeRatioSmall" xml:space="preserve">
     <value>Some of the ratios between the sizes of caches are too small to have proper performance.</value>
   </data>
+  <data name="CannotAdd" xml:space="preserve">
+    <value>There is not suitable addition operator for the given type.</value>
+  </data>
   <data name="CannotDeserialize" xml:space="preserve">
     <value>Cannot deserialize the received message.</value>
   </data>

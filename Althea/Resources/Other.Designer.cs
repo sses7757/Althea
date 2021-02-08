@@ -70,6 +70,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 There is not suitable addition operator for the given type. 的本地化字符串。
+        /// </summary>
+        internal static string CannotAdd {
+            get {
+                return ResourceManager.GetString("CannotAdd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cannot deserialize the received message. 的本地化字符串。
         /// </summary>
         internal static string CannotDeserialize {

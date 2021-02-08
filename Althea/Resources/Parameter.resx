@@ -126,6 +126,9 @@
   <data name="CannotZero" xml:space="preserve">
     <value>The given parameter cannot be zero.</value>
   </data>
+  <data name="DuplicateIndices" xml:space="preserve">
+    <value>The given parameter contains duplicate indices which is not allowed.</value>
+  </data>
   <data name="DuplicateValue" xml:space="preserve">
     <value>The given parameter contains duplicate values, which is not allowed.</value>
   </data>

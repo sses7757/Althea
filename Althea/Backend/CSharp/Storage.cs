@@ -70,11 +70,11 @@ namespace Althea.Backend.CSharp.Storage
 		public override (int major, int minor) DriverVersion(LocationType location) => default;
 
 		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
-		public override (ulong free, ulong total) FreeAndTotalMemory(StorageLocation location)
+		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
 			var memoryInfo = GC.GetGCMemoryInfo();
-			ulong total = unchecked((ulong)memoryInfo.TotalAvailableMemoryBytes);
-			ulong free = total - unchecked((ulong)Environment.WorkingSet);
+			long total = unchecked(memoryInfo.TotalAvailableMemoryBytes);
+			long free = total - unchecked(Environment.WorkingSet);
 			return (free, total);
 		}
 
@@ -82,7 +82,7 @@ namespace Althea.Backend.CSharp.Storage
 		#endregion
 
 		#region low-level storage operations
-		protected internal override PointerSegment Allocate(StorageLocation location, ulong length)
+		protected internal override PointerSegment Allocate(StorageLocation location, long length)
 		{
 			if (!this.IsSupported(location))
 				throw new NotSupportedException(Support.Location);
@@ -144,7 +144,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			else if (sp is not null)
 			{
-				sp.NativeStream.Position = (ulong)offset;
+				sp.NativeStream.Position = offset;
 				sp.NativeStream.SetValues<byte>(value, pointer.LengthInBytes);
 			}
 			else // never not here
@@ -160,7 +160,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			else if (sp is not null)
 			{
-				sp.NativeStream.Position = (ulong)offset;
+				sp.NativeStream.Position = offset;
 				sp.NativeStream.SetValues<T>(value, pointer.LengthInBytes / Storage<T>.SizeOfT);
 			}
 			else // never not here
@@ -182,25 +182,25 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			else if (srcMP is not null && dstSP is not null)
 			{
-				dstSP.NativeStream.Position = (ulong)dstOff;
+				dstSP.NativeStream.Position = dstOff;
 				dstSP.NativeStream.FromMemory(source);
 			}
 			else if (srcSP is not null && dstMP is not null)
 			{
-				srcSP.NativeStream.Position = (ulong)srcOff;
+				srcSP.NativeStream.Position = srcOff;
 				srcSP.NativeStream.ToMemory(destination);
 			}
 			else if (srcSP is not null && dstSP is not null)
 			{
-				srcSP.NativeStream.Position = (ulong)srcOff;
-				dstSP.NativeStream.Position = (ulong)dstOff;
+				srcSP.NativeStream.Position = srcOff;
+				dstSP.NativeStream.Position = dstOff;
 				srcSP.NativeStream.CopyTo(dstSP.NativeStream, source.LengthInBytes);
 			}
 			else // never not here
 				return;
 		}
 
-		public override void MemoryCopy2D(PointerSegment source, ulong sourceLD, PointerSegment destination, ulong destinationLD, ulong height, ulong width)
+		public override void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
 		{
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
@@ -240,14 +240,14 @@ namespace Althea.Backend.CSharp.Storage
 				}
 				return;
 			}
-			long end = (long)(source.OffsetInBytes + sourceLD * width);
-			long srcLD = (long)sourceLD, dstLD = (long)destinationLD;
+			long end = source.OffsetInBytes + sourceLD * width;
+			long srcLD = sourceLD, dstLD = destinationLD;
 			int h = checked((int)height);
 			if (srcMP is not null && dstSP is not null)
 			{
 				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
 				{
-					dstSP.NativeStream.Position = (ulong)dstOff;
+					dstSP.NativeStream.Position = dstOff;
 					dstSP.NativeStream.FromManged(srcMP.AsSpan<byte>(srcOff, h));
 				}
 			}
@@ -255,7 +255,7 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
 				{
-					srcSP.NativeStream.Position = (ulong)srcOff;
+					srcSP.NativeStream.Position = srcOff;
 					srcSP.NativeStream.ToManged(dstMP.AsSpan<byte>(dstOff, h));
 				}
 			}
@@ -263,8 +263,8 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
 				{
-					srcSP.NativeStream.Position = (ulong)srcOff;
-					dstSP.NativeStream.Position = (ulong)dstOff;
+					srcSP.NativeStream.Position = srcOff;
+					dstSP.NativeStream.Position = dstOff;
 					srcSP.NativeStream.CopyTo(dstSP.NativeStream, height);
 				}
 			}
@@ -274,13 +274,19 @@ namespace Althea.Backend.CSharp.Storage
 
 		public override void StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination)
 		{
-			ulong srcLen = source.LengthInBytes / Storage<T>.SizeOfT, dstLen = destination.LengthInBytes / Storage<T>.SizeOfT;
-			if (incrementSource <= 0 || (ulong)incrementSource >= srcLen)
+			long srcLen = source.LengthInBytes / Storage<T>.SizeOfT, dstLen = destination.LengthInBytes / Storage<T>.SizeOfT;
+			if (incrementSource <= 0 || incrementSource >= srcLen)
 				throw new ArgumentOutOfRangeException(nameof(incrementSource));
-			if (incrementDestination <= 0 || (ulong)incrementDestination >= dstLen)
+			if (incrementDestination <= 0 || incrementDestination >= dstLen)
 				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
 
-			ulong copyLength = Math.Min((srcLen - 1) / (ulong)incrementSource + 1, (dstLen - 1) / (ulong)incrementDestination + 1);
+			// shortcut
+			if (incrementSource == 1 && incrementDestination == 1)
+			{
+
+			}
+
+			long copyLength = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
 			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcMP is not null && dstMP is not null)
@@ -315,7 +321,7 @@ namespace Althea.Backend.CSharp.Storage
 			else if (sp is not null)
 			{
 				Span<T> span = stackalloc T[1];
-				sp.NativeStream.Position = (ulong)offset;
+				sp.NativeStream.Position = offset;
 				sp.NativeStream.ToManged(span);
 				return span[0];
 			}
@@ -334,7 +340,7 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				Span<T> span = stackalloc T[1];
 				span[0] = value;
-				sp.NativeStream.Position = (ulong)offset;
+				sp.NativeStream.Position = offset;
 				sp.NativeStream.FromManged(span);
 			}
 			else // never not here
@@ -350,7 +356,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			else if (sp is not null)
 			{
-				sp.NativeStream.Position = (ulong)offsetSrc;
+				sp.NativeStream.Position = offsetSrc;
 				sp.NativeStream.ToManged(managedSpan);
 			}
 			else // never not here
@@ -366,7 +372,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			else if (sp is not null)
 			{
-				sp.NativeStream.Position = (ulong)offsetSrc;
+				sp.NativeStream.Position = offsetSrc;
 				sp.NativeStream.FromManged(managedSpan);
 			}
 			else // never not here
@@ -376,18 +382,18 @@ namespace Althea.Backend.CSharp.Storage
 		public override void ToManaged<T>(PointerSegment source, ArraySegment<T> destination)
 		{
 			long offset = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
-			int copyLength = checked((int)Math.Min(source.LengthInBytes / Storage<T>.SizeOfT, (ulong)destination.Count));
+			int copyLength = checked((int)Math.Min(source.LengthInBytes / Storage<T>.SizeOfT, destination.Count));
 			ToManaged(mp, sp, offset, destination, 0, copyLength);
 		}
 
 		public override void FromManaged<T>(PointerSegment destination, ArraySegment<T> values)
 		{
 			long offset = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
-			int copyLength = checked((int)Math.Min(destination.LengthInBytes / Storage<T>.SizeOfT, (ulong)values.Count));
+			int copyLength = checked((int)Math.Min(destination.LengthInBytes / Storage<T>.SizeOfT, values.Count));
 			FromManaged(mp, sp, offset, values, 0, copyLength);
 		}
 
-		public override void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination, ulong destinationLeadDim = 0)
+		public override void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, ArraySegment<T> destination, long destinationLeadDim = 0)
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -401,7 +407,7 @@ namespace Althea.Backend.CSharp.Storage
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > (source.Pointer.LengthInBytes - source.OffsetInBytes) / Storage<T>.SizeOfT)
 				throw new ArgumentException(Parameter.WrongSize, nameof(source));
-			if (leadDim * width > (ulong)destination.Count)
+			if (leadDim * width > destination.Count)
 				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
 			if (destinationLeadDim == 0)
 				destinationLeadDim = height;
@@ -414,7 +420,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			// normal cases
 			int h = checked((int)height), dstLD = checked((int)destinationLeadDim);
-			long srcLD = (long)leadDim, max = (long)(leadDim * width) + start;
+			long srcLD = leadDim, max = leadDim * width + start;
 			int dstOffset = 0;
 			for (long srcOffset = start; srcOffset < max; srcOffset += srcLD, dstOffset += dstLD)
 			{
@@ -422,7 +428,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 		}
 
-		public override void FromManaged2D<T>(PointerSegment destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values, ulong valuesLeadDim)
+		public override void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ArraySegment<T> values, long valuesLeadDim)
 		{
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
@@ -436,7 +442,7 @@ namespace Althea.Backend.CSharp.Storage
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > (destination.Pointer.LengthInBytes - destination.OffsetInBytes) / Storage<T>.SizeOfT)
 				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
-			if (leadDim * width > (ulong)values.Count)
+			if (leadDim * width > values.Count)
 				throw new ArgumentException(Parameter.WrongSize, nameof(values));
 			if (valuesLeadDim == 0)
 				valuesLeadDim = height;
@@ -449,7 +455,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			// normal case
 			int h = checked((int)height), srcLD = checked((int)valuesLeadDim);
-			long dstLD = (long)leadDim, max = (long)(leadDim * width) + start;
+			long dstLD = leadDim, max = leadDim * width + start;
 			int srcOffset = 0;
 			for (long dstOffset = start; dstOffset < max; dstOffset += dstLD, srcOffset += srcLD)
 			{

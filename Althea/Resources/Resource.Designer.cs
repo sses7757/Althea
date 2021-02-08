@@ -133,15 +133,6 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 There exists duplicate indices which is not allowed. 的本地化字符串。
-        /// </summary>
-        internal static string DuplicateIndices {
-            get {
-                return ResourceManager.GetString("DuplicateIndices", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Duplicate labels for tensors are not allowed. 的本地化字符串。
         /// </summary>
         internal static string DuplicateLabels {
@@ -246,15 +237,6 @@ namespace Althea.Resources {
         internal static string MatrixWrongSize {
             get {
                 return ResourceManager.GetString("MatrixWrongSize", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 There are less indices than the rank of tensor which is not allowed. 的本地化字符串。
-        /// </summary>
-        internal static string NotEnoughIndices {
-            get {
-                return ResourceManager.GetString("NotEnoughIndices", resourceCulture);
             }
         }
         

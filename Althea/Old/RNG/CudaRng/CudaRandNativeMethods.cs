@@ -28,7 +28,7 @@ namespace Althea.Rng.Cuda
 		/// <returns>Status</returns>
 		[DllImport(CURAND_API_DLL_NAME)]
 		//[NativeMethodBoundary]
-		internal static extern Status curandSetPseudoRandomGeneratorSeed(IntPtr generator, ulong seed);
+		internal static extern Status curandSetPseudoRandomGeneratorSeed(IntPtr generator, long seed);
 
 		/// <summary>
 		/// Set the absolute offset of the pseudo or quasi-random number generator.
@@ -37,7 +37,7 @@ namespace Althea.Rng.Cuda
 		/// </summary>
 		[DllImport(CURAND_API_DLL_NAME)]
 		//[NativeMethodBoundary]
-		internal static extern Status curandSetGeneratorOffset(IntPtr generator, ulong offset);
+		internal static extern Status curandSetGeneratorOffset(IntPtr generator, long offset);
 
 		/// <summary>
 		/// Set the ordering of results of the pseudo or quasi-random number generator.
@@ -67,7 +67,7 @@ namespace Althea.Rng.Cuda
 		/// </summary>
 		[DllImport(CURAND_API_DLL_NAME)]
 		//[NativeMethodBoundary]
-		internal static extern Status curandSetQuasiRandomGeneratorDimensions(IntPtr generator, uint num_dimensions);
+		internal static extern Status curandSetQuasiRandomGeneratorDimensions(IntPtr generator, int num_dimensions);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="num"/> 32-bit results into the device memory at <paramref name="outputPtr"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>

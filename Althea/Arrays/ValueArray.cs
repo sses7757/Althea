@@ -428,7 +428,7 @@ namespace Althea.Arrays
 		{
 			if (a is null || a == EmptyDnVec)
 				return false;
-			using var da = (a.Clone() as ValueArray<T>).ToVector() as ValueArray<T>;
+			using var da = (a.Clone() as ValueArray<T>).ToVector();
 			if (!v.Equals(Scalars<T>.Zero))
 			{
 				using var ones = new DenseVector<T>(da.ActualLength, a.OnHost);

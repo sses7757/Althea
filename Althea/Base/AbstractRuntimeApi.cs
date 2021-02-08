@@ -378,10 +378,10 @@ namespace Althea
 				return Array.Empty<CombinationOfLocations>();
 
 			byte length = checked((byte)locations.Length);
-			ulong max = checked(1UL << length);
+			long max = checked(1 << length);
 			CombinationOfLocations[] combinations = new CombinationOfLocations[max - 1];
 			Span<StorageLocation> combination = stackalloc StorageLocation[locations.Length];
-			for (ulong i = 0; i < max; i++)
+			for (long i = 0; i < max; i++)
 			{
 				int k = 0;
 				for (byte j = 0; j < length; j++)
@@ -409,10 +409,10 @@ namespace Althea
 				return Array.Empty<ImmutableTwoElementSet<CombinationOfLocations>>();
 
 			long unaryLength = locations.LongLength;
-			ulong max = (ulong)unaryLength * (ulong)(unaryLength + 1) / 2; // binomial of (unaryLength + 1, 2)
+			long max = unaryLength * (unaryLength + 1) / 2; // binomial of (unaryLength + 1, 2)
 			var combinations = new ImmutableTwoElementSet<CombinationOfLocations>[max];
 			var unary = (CombinationOfLocations[])GenerateUnaryLoactions(locations);
-			ulong n = 0;
+			long n = 0;
 			for (long i = 0; i < unaryLength; i++)
 			{
 				for (long j = 0; j <= i; j++)
@@ -436,10 +436,10 @@ namespace Althea
 				return Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
 
 			int unaryLength = locations.Length;
-			ulong max = 3U.CombinationNumber(2 + (uint)unaryLength); // binomial (unaryLength + 2, 3)
+			long max = 3.CombinationNumber(2 + unaryLength); // binomial (unaryLength + 2, 3)
 			var combinations = new ImmutableThreeElementSet<CombinationOfLocations>[max];
 			var unary = (CombinationOfLocations[])GenerateUnaryLoactions(locations);
-			ulong n = 0;
+			long n = 0;
 			for (int i = 0; i < unary.Length; i++)
 			{
 				for (int j = 0; j <= i; j++)
@@ -470,11 +470,11 @@ namespace Althea
 				return Array.Empty<IImmutableSet<CombinationOfLocations>>();
 
 			int unaryLength = locations.Length;
-			ulong max = ((uint)N).CombinationNumber((uint)(N + unaryLength - 1)); // binomial (unaryLength + N - 1, N)
+			long max = N.CombinationNumber(N + unaryLength - 1); // binomial (unaryLength + N - 1, N)
 			var combinations = new IImmutableSet<CombinationOfLocations>[max];
 			var unary = (CombinationOfLocations[])GenerateUnaryLoactions(locations);
 			Span<int> indices = stackalloc int[N];
-			for (ulong n = 0; n < max; n++)
+			for (long n = 0; n < max; n++)
 			{
 				CombinationOfLocations[] set = new CombinationOfLocations[N];
 				// create set

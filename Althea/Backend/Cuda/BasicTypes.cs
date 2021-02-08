@@ -59,11 +59,11 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		ComplexInt32 = 11,
 		/// <summary>
-		/// 32 bit unsigned integer <see cref="uint"/>
+		/// 32 bit unsigned integer <see cref="int"/>
 		/// </summary>
 		RealUInt32 = 12,
 		/// <summary>
-		/// complex made of two <see cref="uint"/>s
+		/// complex made of two <see cref="int"/>s
 		/// </summary>
 		ComplexUInt32 = 13
 	}

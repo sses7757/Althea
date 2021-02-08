@@ -141,9 +141,6 @@
   <data name="DimMustTwo" xml:space="preserve">
     <value>The length of size (the dimensionality) of the array must be two.</value>
   </data>
-  <data name="DuplicateIndices" xml:space="preserve">
-    <value>There exists duplicate indices which is not allowed.</value>
-  </data>
   <data name="DuplicateLabels" xml:space="preserve">
     <value>Duplicate labels for tensors are not allowed.</value>
   </data>
@@ -179,9 +176,6 @@
   </data>
   <data name="MatrixWrongSize" xml:space="preserve">
     <value>The matrix(matrices) with incompatible size(s) cannot perform this operation.</value>
-  </data>
-  <data name="NotEnoughIndices" xml:space="preserve">
-    <value>There are less indices than the rank of tensor which is not allowed.</value>
   </data>
   <data name="NotErrors" xml:space="preserve">
     <value>The underlying statuses are not errors.</value>

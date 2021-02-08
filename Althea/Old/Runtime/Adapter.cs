@@ -213,9 +213,9 @@ namespace Althea.Runtime.Mkl
 
 		public (long free, long total) FreeAndTotalMemory {
 			get {
-				ulong free = 0, total = 0;
+				long free = 0, total = 0;
 				NativeMethods.getTotalSystemMemory(ref total, ref free);
-				return (checked((long)free), checked((long)total));
+				return (checked(free), checked(total));
 			}
 		}
 

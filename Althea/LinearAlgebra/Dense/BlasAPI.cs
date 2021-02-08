@@ -184,9 +184,9 @@ namespace Althea.LinearAlgebra.Dense
 		{
 			return N switch
 			{
-				1 => this.SupportedUnaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
-				2 => this.SupportedBinaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
-				3 => this.SupportedTernaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
+				1 => this.SupportedUnaryLocations.Select(static l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
+				2 => this.SupportedBinaryLocations.Select(static l => (IImmutableSet<CombinationOfLocations>)l),
+				3 => this.SupportedTernaryLocations.Select(static l => (IImmutableSet<CombinationOfLocations>)l),
 				> 3 => Array.Empty<IImmutableSet<CombinationOfLocations>>(), // there are no N-ary operations
 				_ => throw new ArgumentOutOfRangeException(nameof(N)),
 			};
@@ -216,7 +216,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The resulting index</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract ulong AbsoluteValueArgMax<T>(Storage<T> x, int incx) where T : unmanaged;
+		public abstract long AbsoluteValueArgMax<T>(Storage<T> x, int incx) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the minimum magnitude.
@@ -227,7 +227,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The resulting index or 0 if <paramref name="incx"/> is less than 1</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract ulong AbsoluteValueArgMin<T>(Storage<T> x, int incx) where T : unmanaged;
+		public abstract long AbsoluteValueArgMin<T>(Storage<T> x, int incx) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
@@ -309,7 +309,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void GeneralMatrixMultiplyVector<T>(MatrixOperation op, ulong m, ulong n, T α, Storage<T> A, ulong lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
+		public abstract void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-vector multiplication:<br/>
@@ -329,7 +329,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void SymmHermMatrixMultiplyVector<T>(MatrixFillMode fillMode, bool hermA, ulong n, T α, Storage<T> A, ulong lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
+		public abstract void SymmHermMatrixMultiplyVector<T>(MatrixFillMode fillMode, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -349,7 +349,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void GenralRankOneUpdate<T>(bool conjY, ulong m, ulong n, T α, Storage<T> x, int incx, Storage<T> y, int incy, T β, Storage<T> A, ulong lda) where T : unmanaged, IEquatable<T>;
+		public abstract void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int incx, Storage<T> y, int incy, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
@@ -367,7 +367,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract void SymmHermRankOneUpdate<T>(MatrixFillMode fillMode, bool conjX, ulong n, T α, Storage<T> x, int incx, T β, Storage<T> A, ulong lda) where T : unmanaged, IEquatable<T>;
+		public abstract void SymmHermRankOneUpdate<T>(MatrixFillMode fillMode, bool conjX, long n, T α, Storage<T> x, int incx, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 3
@@ -390,7 +390,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, ulong m, ulong n, ulong k, T α, Storage<T> A, ulong lda, Storage<T> B, ulong ldb, T β, Storage<T> C, ulong ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-matrix multiplication:<br/>
@@ -411,7 +411,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void SymmHermMatrixMultiplyGeneral<T>(MatrixFillMode fillMode, bool leftA, bool hermA, ulong m, ulong n, T α, Storage<T> A, ulong lda, Storage<T> B, ulong ldb, T β, Storage<T> C, ulong ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void SymmHermMatrixMultiplyGeneral<T>(MatrixFillMode fillMode, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
@@ -430,7 +430,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void RankKUpdate<T>(MatrixFillMode fillMode, MatrixOperation op, bool conjA, ulong n, ulong k, T α, Storage<T> A, ulong lda, T β, Storage<T> C, ulong ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void RankKUpdate<T>(MatrixFillMode fillMode, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 		#endregion
 	}
 }

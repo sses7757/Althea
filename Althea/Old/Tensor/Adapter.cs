@@ -247,7 +247,7 @@ namespace Althea.Tensor.Cuda
 				var descrB = TensorDescription.Create<T>(this.handle, sizeB);
 				var descrC = TensorDescription.Create<T>(this.handle, sizeC);
 				// get alignments
-				uint alignA = 0, alignB = 0, alignC = 0, alignD = 0;
+				int alignA = 0, alignB = 0, alignC = 0, alignD = 0;
 				NativeMethods.cutensorGetAlignmentRequirement(ref this.handle, A, ref descrA, ref alignA).Check();
 				NativeMethods.cutensorGetAlignmentRequirement(ref this.handle, B, ref descrB, ref alignB).Check();
 				NativeMethods.cutensorGetAlignmentRequirement(ref this.handle, C, ref descrC, ref alignC).Check();

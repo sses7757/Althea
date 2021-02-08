@@ -474,7 +474,7 @@ namespace Althea
 		/// <summary>
 		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes
 		/// </summary>
-		ulong LengthInBytes { get; }
+		long LengthInBytes { get; }
 
 		/// <summary>
 		/// When implemented by derived classes, get the hash code this <see cref="IPointer"/>.
@@ -494,14 +494,14 @@ namespace Althea
 		#region basic
 		private readonly IPointer pointer;
 
-		private readonly ulong offset;
+		private readonly long offset;
 
-		private readonly ulong length;
+		private readonly long length;
 
 		/// <summary>
 		/// Check whether this pointer is a valid pointer or not
 		/// </summary>
-		public bool IsValid() => this.length != 0 && this.pointer is not null && this.pointer.IsValid();
+		public bool IsValid() => this.length > 0 && this.pointer is not null && this.pointer.IsValid();
 
 		/// <summary>
 		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/>
@@ -516,12 +516,12 @@ namespace Althea
 		/// <summary>
 		/// The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment"/>
 		/// </summary>
-		public ulong OffsetInBytes => this.offset;
+		public long OffsetInBytes => this.offset;
 
 		/// <summary>
 		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment"/>
 		/// </summary>
-		public ulong LengthInBytes => this.length;
+		public long LengthInBytes => this.length;
 
 		/// <summary>
 		/// Get the raw pointer structure (without offset) of this <see cref="PointerSegment"/> in <typeparamref name="T"/>
@@ -548,17 +548,17 @@ namespace Althea
 		/// </summary>
 		/// <param name="storage">The <see cref="PointerSegment"/> to copy info from</param>
 		/// <param name="offset">The offset to the <paramref name="storage"/> in bytes</param>
-		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer.LengthInBytes"/></param>
+		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer.LengthInBytes"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment(PointerSegment storage, long offset = 0, ulong newLength = 0)
+		public PointerSegment(PointerSegment storage, long offset = 0, long newLength = 0)
 		{
-			offset += (long)storage.offset;
+			offset += storage.offset;
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			ulong off = (ulong)offset;
+			long off = offset;
 			if (off > storage.pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			if (newLength == 0)
+			if (newLength <= 0)
 				newLength = storage.pointer.LengthInBytes - off;
 			if (off + newLength > storage.pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(newLength));
@@ -570,10 +570,10 @@ namespace Althea
 		/// Create a new <see cref="PointerSegment"/> with given <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to move</param>
-		/// <param name="newLength">The new length in bytes to set, default 0 means auto calculation from <paramref name="offset"/></param>
+		/// <param name="newLength">The new length in bytes to set, default 0 means auto calculation from <paramref name="offset"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment MoveBy(long offset, ulong newLength = 0) => offset == 0 && newLength == 0 ? this : new PointerSegment(this, offset, newLength);
+		public PointerSegment MoveBy(long offset, long newLength = 0) => offset == 0 && newLength <= 0 ? this : new PointerSegment(this, offset, newLength);
 
 		/// <summary>
 		/// Create a new <see cref="PointerSegment"/> with given <paramref name="newLength"/>
@@ -581,7 +581,7 @@ namespace Althea
 		/// <param name="newLength">The new length in bytes to set</param>
 		/// <returns>The new <see cref="PointerSegment"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment AsLength(ulong newLength) => newLength == this.length ? this : new PointerSegment(this, 0, newLength);
+		public PointerSegment AsLength(long newLength) => newLength == this.length ? this : new PointerSegment(this, 0, newLength);
 		#endregion
 
 		#region equality
@@ -675,7 +675,7 @@ namespace Althea
 		/// <param name="left">the left <see cref="PointerSegment"/></param>
 		/// <param name="right">the right <see cref="PointerSegment"/></param>
 		/// <returns>If <paramref name="left"/> and <paramref name="right"/> have different references, return <see cref="long.MinValue"/>; otherwise, return a <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
-		public static long operator -(PointerSegment left, PointerSegment right) => left.Location != right.Location || !left.pointer.Equals(right.pointer) ? long.MinValue : (long)left.offset - (long)right.offset;
+		public static long operator -(PointerSegment left, PointerSegment right) => left.Location != right.Location || !left.pointer.Equals(right.pointer) ? long.MinValue : left.offset - right.offset;
 		#endregion
 	}
 	#endregion
@@ -693,12 +693,12 @@ namespace Althea
 		/// <summary>
 		/// The total length of the presenting array in bytes
 		/// </summary>
-		ulong LengthInBytes { get; }
+		long LengthInBytes { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in its presenting type (rather than bytes)
 		/// </summary>
-		ulong Length { get; }
+		long Length { get; }
 
 		/// <summary>
 		/// The description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
@@ -711,7 +711,7 @@ namespace Althea
 		/// <param name="offset">The offset to move in bytes</param>
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this <see cref="Storage{T}"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
-		bool IsOffsetValid(long offset, ulong newLength = 0);
+		bool IsOffsetValid(long offset, long newLength = 0);
 
 		/// <summary>
 		/// Check the given storage and throw exception if check failed.
@@ -721,7 +721,7 @@ namespace Althea
 		/// <exception cref="ArgumentException">if this <see cref="Storage{T}"/> has invalid value</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if offset and length breach the boundary of this <see cref="Storage{T}"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Check(long offset = 0, ulong length = 0)
+		public void Check(long offset = 0, long length = 0)
 		{
 			if (!this.IsValid())
 				throw new ArgumentException(Parameter.InvalidValue);
@@ -744,7 +744,7 @@ namespace Althea
 		/// <summary>
 		/// The total offset compared to the start of <see cref="Reference"/> in bytes
 		/// </summary>
-		ulong TotalOffsetInBytes { get; }
+		long TotalOffsetInBytes { get; }
 	}
 	#endregion
 
@@ -762,17 +762,17 @@ namespace Althea
 		/// <summary>
 		/// Get the size of <typeparamref name="T"/> in memory in bytes
 		/// </summary>
-		public static readonly unsafe uint SizeOfT = (uint)sizeof(T);
+		public static readonly unsafe int SizeOfT = sizeof(T);
 
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
-		public abstract ulong Length { get; }
+		public abstract long Length { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in bytes. The default implementation returns the multiplication of <see cref="Length"/> and <see cref="SizeOfT"/>.
 		/// </summary>
-		public virtual ulong LengthInBytes => this.Length * SizeOfT;
+		public virtual long LengthInBytes => this.Length * SizeOfT;
 
 		/// <summary>
 		/// When implemented by a derived class, get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
@@ -827,7 +827,7 @@ namespace Althea
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="locationsAndLengths"/> has length(s) equals to 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
-		public static Storage<T> Create(CombinationType combinationType, params (StorageLocation location, ulong length)[] locationsAndLengths)
+		public static Storage<T> Create(CombinationType combinationType, params (StorageLocation location, long length)[] locationsAndLengths)
 		{
 			if (locationsAndLengths is null || locationsAndLengths.Length == 0)
 				throw new ArgumentNullException(nameof(locationsAndLengths));
@@ -843,7 +843,7 @@ namespace Althea
 				if (locationsAndLengths.Any(static p => p.length == 0))
 					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), Parameter.MustPositive);
 				Span<StorageLocation> locations = stackalloc StorageLocation[locationsAndLengths.Length];
-				Span<ulong> lengths = stackalloc ulong[locationsAndLengths.Length];
+				Span<long> lengths = stackalloc long[locationsAndLengths.Length];
 				for (int i = 0; i < locationsAndLengths.Length; i++)
 				{
 					locations[i] = locationsAndLengths[i].location;
@@ -860,11 +860,11 @@ namespace Althea
 		/// <param name="length">The corresponding length in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
-		public static Storage<T> Create(StorageLocation location, ulong length)
+		public static Storage<T> Create(StorageLocation location, long length)
 		{
 			Span<StorageLocation> locations = stackalloc StorageLocation[1];
 			locations.SetValue(location);
-			Span<ulong> lengths = stackalloc ulong[1];
+			Span<long> lengths = stackalloc long[1];
 			lengths.SetValue(length);
 			return Storage.StorageFactory<T>.Create(CombinationType.PureOrMixed, locations, lengths);
 		}
@@ -873,9 +873,9 @@ namespace Althea
 		/// When implemented by a derived class, make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
-		public abstract ReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0);
+		public abstract ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0);
 
 		/// <summary>
 		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
@@ -888,22 +888,6 @@ namespace Althea
 		protected static long CheckCast<TOut>(long size, bool sizeInBytes = false) where TOut : unmanaged
 		{
 			long newSize = sizeInBytes ? size : (size * SizeOfT);
-			if (size * SizeOfT % Storage<TOut>.SizeOfT != 0)
-				throw new InvalidCastException(Other.CannotDivide);
-			newSize /= Storage<TOut>.SizeOfT;
-			return newSize;
-		}
-		/// <summary>
-		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
-		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
-		/// <param name="size">The size in <typeparamref name="T"/> to check</param>
-		/// <param name="sizeInBytes">Whether <paramref name="size"/> is in bytes or in <typeparamref name="T"/></param>
-		/// <returns>The <paramref name="size"/> (multiplies the size of <typeparamref name="T"/> then) divides the size of <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">if <paramref name="size"/> (multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		protected static ulong CheckCast<TOut>(ulong size, bool sizeInBytes = false) where TOut : unmanaged
-		{
-			ulong newSize = sizeInBytes ? size : (size * SizeOfT);
 			if (size * SizeOfT % Storage<TOut>.SizeOfT != 0)
 				throw new InvalidCastException(Other.CannotDivide);
 			newSize /= Storage<TOut>.SizeOfT;
@@ -945,24 +929,24 @@ namespace Althea
 		/// <param name="offset">the offset to move</param>
 		/// <param name="newLength">the length to check in bytes</param>
 		/// <returns>The validness of this <see cref="Storage{T}"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
-		public virtual bool IsOffsetValid(long offset, ulong newLength = 0)
+		public virtual bool IsOffsetValid(long offset, long newLength = 0)
 		{
 			if (this is IReferenceStorage reference)
 			{
 				if (reference.Reference is null)
 					return false;
-				offset += (long)reference.TotalOffsetInBytes;
-				if (offset < 0 || (ulong)offset >= reference.Reference.LengthInBytes)
+				offset += reference.TotalOffsetInBytes;
+				if (offset < 0 || offset >= reference.Reference.LengthInBytes)
 					return false;
-				if (newLength > 0 && newLength + (ulong)offset >= reference.Reference.LengthInBytes)
+				if (newLength > 0 && newLength + offset >= reference.Reference.LengthInBytes)
 					return false;
 				return true;
 			}
 			else
 			{
-				if (offset < 0 || (ulong)offset >= this.LengthInBytes)
+				if (offset < 0 || offset >= this.LengthInBytes)
 					return false;
-				if (newLength > 0 && newLength + (ulong)offset >= this.LengthInBytes)
+				if (newLength > 0 && newLength + offset >= this.LengthInBytes)
 					return false;
 				return true;
 			}
@@ -1076,28 +1060,28 @@ namespace Althea
 		/// <summary>
 		/// When implemented by a derived class, get the total offset compared to the start of the referenced <see cref="IStorage"/> in bytes. It is not counted in <typeparamref name="T"/> since there may be data type difference between the <see cref="IStorage"/> and this.
 		/// </summary>
-		public virtual ulong TotalOffsetInBytes { get; }
+		public virtual long TotalOffsetInBytes { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
 		/// </summary>
-		public override ulong Length { get; }
+		public override long Length { get; }
 
 		/// <summary>
 		/// Create a <see cref="ReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
-		/// <param name="storage">the <see cref="Storage{T}"/> to be referenced</param>
-		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
-		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means the maximum possible value calculate from <paramref name="storage"/> and <paramref name="offset"/></param>
-		protected ReferenceStorage(IStorage? storage, long offset = 0, ulong newLength = 0)
+		/// <param name="storage">The <see cref="Storage{T}"/> to be referenced</param>
+		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>. A value less than or equals to 0 means the maximum possible value calculate from <paramref name="storage"/> and <paramref name="offset"/></param>
+		protected ReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0)
 		{
 			if (storage is null)
 				return;
 			// get offset and new length in bytes
-			ulong offsetInBytes = (ulong)(offset * SizeOfT);
-			ulong newLengthInBytes;
-			if (newLength == 0)
-				newLengthInBytes = storage.LengthInBytes - (ulong)(SizeOfT * offset);
+			long offsetInBytes = offset * SizeOfT;
+			long newLengthInBytes;
+			if (newLength <= 0)
+				newLengthInBytes = storage.LengthInBytes - SizeOfT * offset;
 			else
 				newLengthInBytes = newLength * SizeOfT;
 			// dereference first
@@ -1143,13 +1127,13 @@ namespace Althea
 		/// <summary>
 		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>
 		/// </summary>
-		public override ulong Length { get; }
+		public override long Length { get; }
 
 		/// <summary>
 		/// Create an <see cref="ActualStorage{T}"/> with given length of presenting array
 		/// </summary>
 		/// <param name="length">the length of presenting array <typeparamref name="T"/></param>
-		protected ActualStorage(ulong length)
+		protected ActualStorage(long length)
 		{
 			if (length == 0)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
@@ -1184,7 +1168,7 @@ namespace Althea
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
 		/// <exception cref="OutOfMemoryException">If system cannot allocate <paramref name="length"/> on <paramref name="location"/></exception>
-		protected static PointerSegment Allocate(StorageLocation location, ulong length)
+		protected static PointerSegment Allocate(StorageLocation location, long length)
 		{
 			return MEM.SelectImplementation(location).Allocate<T>(location, length);
 		}

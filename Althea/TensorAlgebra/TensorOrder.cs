@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.Arrays;
+using Althea.Helpers;
+using Althea.Resources;
 
 
 namespace Althea.TensorAlgebra
@@ -11,76 +12,144 @@ namespace Althea.TensorAlgebra
 	/// <summary>
 	/// The permutation order struct of tensors.
 	/// </summary>
-	public readonly struct TensorOrder : ICloneable, IEquatable<TensorOrder>
+	public readonly struct TensorOrder : ICloneable<TensorOrder>, IEquatable<TensorOrder>
 	{
+		#region private enum
+		private enum OrderType : int
+		{
+			Empty = 0,
+			Index,
+			Char,
+			RangeAll,
+			RangeStart,
+			RangeEnd
+		}
+		#endregion
+
 		#region initialize and clone
 		/// <summary>
 		/// The identity permutation
 		/// </summary>
-		public static TensorOrder Identity { get => new TensorOrder(new ValueType[] { Range.All }); }
+		public static TensorOrder Identity { get => new TensorOrder(new ValueTuple<Range>(Range.All)); }
 
-		private readonly ValueType[] order;
+		private readonly FixedBuffer_128<(int, OrderType)> order;
 
-		private TensorOrder(ValueType[] order) => this.order = order;
+		private TensorOrder(FixedBuffer_128<(int, OrderType)> order) => this.order = order;
 
 		/// <summary>
 		/// Create an order from a general tuple whose element must be <see cref="short"/>, <see cref="int"/>, <see cref="long"/>, <see cref="Index"/> or <see cref="Range"/> (base-zero order index and range, cannot be negative) or <see cref="char"/> (character label which can only be checked when calling <see cref="GetIntArrayOrder"/> or <see cref="GetCharArrayOrder"/>).
 		/// </summary>
-		/// <param name="tuple">the general tuple of any length to indicate the permutation order; specially, if an element is <see cref="Range.All"/>, it is regarded as the rest of the indices in ascending order.</param>
-		/// <exception cref="ArgumentNullException">if <paramref name="tuple"/> is null or of zero length</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if any of the <paramref name="tuple"/> elements is not of the allowed types</exception>
-		/// <exception cref="ArgumentException">if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="tuple"/></exception>
+		/// <param name="tuple">The general tuple of any length to indicate the permutation order; specially, if an element is <see cref="Range.All"/>, it is regarded as the rest of the indices in ascending order.</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="tuple"/> is null or of zero length</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the <paramref name="tuple"/> elements is not of the allowed types</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="tuple"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="tuple"/></exception>
 		public TensorOrder(ITuple tuple)
 		{
 			if (tuple is null || tuple.Length == 0)
 				throw new ArgumentNullException(nameof(tuple));
-			var temp = new List<ValueType>(tuple.Length);
+			if (tuple.Length > 128 / 8)
+				throw new ArgumentException(Parameter.WrongSize, nameof(tuple));
+
+			this.order = new FixedBuffer_128<(int, OrderType)>();
+			int current = 0;
 			for (int i = 0; i < tuple.Length; i++)
 			{
-				ValueType newOne;
-				if (tuple[i] is int it)
-					newOne = (Index)(it < 0 ? throw new ArgumentOutOfRangeException(nameof(tuple), Resource.ParaCannotNegative) : it);
-				else if (tuple[i] is long lt)
-					newOne = (Index)checked((int)(lt < 0 ? throw new ArgumentOutOfRangeException(nameof(tuple), Resource.ParaCannotNegative) : lt));
-				else if (tuple[i] is short st)
-					newOne = (Index)(st < 0 ? throw new ArgumentOutOfRangeException(nameof(tuple), Resource.ParaCannotNegative) : st);
-				else if (tuple[i] is Index || tuple[i] is char)
-					newOne = (ValueType)tuple[i];
+				var val = tuple[i];
+				if (val is null)
+					throw new ArgumentNullException(nameof(tuple));
+				(int, OrderType) newOne;
+				if (val is byte || val is sbyte || val is short || val is ushort || val is int || val is uint || val is long || val is ulong)
+				{
+					if ((dynamic)val < 0)
+						throw new ArgumentOutOfRangeException(nameof(tuple), Parameter.CannotNegative);
+					newOne = (checked((int)(dynamic)val), OrderType.Index);
+				}
+				else if (val is char c)
+				{
+					newOne = (c, OrderType.Char);
+				}
+				else if (val is Index id)
+				{
+					newOne = (id.IsFromEnd ? ~id.Value : id.Value, OrderType.Index);
+				}
 				else if (tuple[i] is Range r)
 				{
-					if (r.Equals(Range.All) && temp.Contains(Range.All))
-						throw new ArgumentException(Resource.DuplicateIndices, nameof(tuple));
+					if (r.Equals(Range.All) && this.order.Contains(OrderType.RangeAll, static o => o.Item2))
+						throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
+					if (r.Start.Equals(r.End))
+						throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
+					newOne = (r.Start.IsFromEnd ? ~r.Start.Value : r.Start.Value, OrderType.RangeStart);
+					// check
+					if (this.order.Contains(newOne))
+						throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
 					else
-						newOne = r;
+						this.order[current++] = newOne;
+					newOne = (r.End.IsFromEnd ? ~r.End.Value : r.End.Value, OrderType.RangeEnd);
 				}
 				else
-					throw new ArgumentOutOfRangeException(nameof(tuple), "Other kinds of order" + Resource.BaseNotSupport);
+				{
+					throw new NotSupportedException(Support.DataType);
+				}
 				// check
-				if (temp.Contains(newOne))
-					throw new ArgumentException(Resource.DuplicateIndices, nameof(tuple));
+				if (this.order.Contains(newOne))
+					throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
 				else
-					temp.Add(newOne);
+					this.order[current++] = newOne;
 			}
-			this.order = temp.ToArray();
 		}
 
 		/// <summary>
-		/// Create an order from a given <see cref="Index"/> (zero-based) permutation order.
+		/// Create an order from a given (zero-based) permutation order as an array of <see cref="Index"/>.
 		/// </summary>
-		/// <param name="order">the zero-based permutation order</param>
-		/// <exception cref="ArgumentNullException">if <paramref name="order"/> is null or of zero length</exception>
-		public TensorOrder(params Index[] order)
+		/// <param name="indices">The zero-based permutation order as an array of <see cref="Index"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="indices"/> is null or of zero length</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="indices"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="indices"/></exception>
+		public TensorOrder(params Index[] indices)
 		{
-			if (order.Distinct().Count < order.Length)
-				throw new ArgumentException(Resource.DuplicateIndices, nameof(order));
-			this.order = Array.ConvertAll(order, o => (ValueType)o);
+			if (indices.Length > 128 / 8)
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
+
+			this.order = new FixedBuffer_128<(int, OrderType)>();
+			for (int i = 0; i < indices.Length; i++)
+			{
+				var id = indices[i];
+				var newOne = (id.IsFromEnd ? ~id.Value : id.Value, OrderType.Index);
+				// check
+				if (this.order.Contains(newOne))
+					throw new ArgumentException(Parameter.DuplicateIndices, nameof(indices));
+				else
+					this.order[i] = newOne;
+			}
 		}
 
 		/// <summary>
-		/// Clone this order
+		/// Create an order from a given permutation order as an array of <see cref="char"/>.
 		/// </summary>
-		/// <returns>a new <see cref="TensorOrder"/></returns>
-		public object Clone()
+		/// <param name="chars">The permutation order as an array of <see cref="char"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="chars"/></exception>
+		public TensorOrder(params char[] chars)
+		{
+			if (chars.Length > 128 / 8)
+				throw new ArgumentException(Parameter.WrongSize, nameof(chars));
+
+			this.order = new FixedBuffer_128<(int, OrderType)>();
+			for (int i = 0; i < chars.Length; i++)
+			{
+				var newOne = (chars[i], OrderType.Char);
+				// check
+				if (this.order.Contains(newOne))
+					throw new ArgumentException(Parameter.DuplicateIndices, nameof(chars));
+				else
+					this.order[i] = newOne;
+			}
+		}
+
+		/// <summary>
+		/// Clone this structure
+		/// </summary>
+		/// <returns>The cloned new <see cref="TensorOrder"/></returns>
+		public TensorOrder Clone()
 		{
 			return new TensorOrder(this.order);
 		}
@@ -90,66 +159,72 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Get the actual permutation order in <see cref="int"/> <see cref="Span{T}"/> provided with the tensor rank
 		/// </summary>
-		/// <param name="tensor">the target tensor</param>
-		/// <param name="allowPartial">allow the actual permutation order to be a partial one or not, default false</param>
-		/// <param name="span">a <see cref="Span{T}"/> of <see cref="int"/> of base-zero indicating the permutation order</param>
-		/// <param name="actualRank">the actual rank of output <paramref name="span"/>, may be less than <paramref name="tensor"/>'s <see cref="ITensor.Rank"/> if <paramref name="allowPartial"/> is true</param>
-		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> or its <see cref="ITensor.Label"/> is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ITensor.Rank"/> is too small</exception>
-		/// <exception cref="ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order or ts <see cref="ITensor.Label"/> does not contains the label here</exception>
-		public void GetIntSpanOrder(ITensor tensor, Span<int> span, out int actualRank, bool allowPartial = false)
+		/// <param name="tensor">The target tensor</param>
+		/// <param name="allowPartial">Whether to allow the actual permutation order to be a partial order one or not, default false</param>
+		/// <param name="outputPermutation">The preallocated <see cref="Span{T}"/> of <see cref="int"/> used to store the output the permutation order</param>
+		/// <param name="actualRank">The actual rank of output <paramref name="outputPermutation"/>, may be less than <paramref name="tensor"/>'s <see cref="ITensor.Rank"/> if <paramref name="allowPartial"/> is true</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> or its <see cref="ITensor.Label"/> is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="tensor"/>'s <see cref="ITensor.Rank"/> is too small</exception>
+		/// <exception cref="ArgumentException">If <paramref name="tensor"/> leads to duplicated result permutation order or ts <see cref="ITensor.Label"/> does not contains the label here</exception>
+		public void GetIntSpanOrder(ITensor tensor, Span<int> outputPermutation, out int actualRank, bool allowPartial = false)
 		{
 			if (tensor is null)
 				throw new ArgumentNullException(nameof(tensor));
 			int rank = tensor.Rank;
-			if (rank < this.order.Length)
+			int length = this.order.NonDefaults;
+			if (rank < length)
 				throw new ArgumentOutOfRangeException(nameof(tensor));
-			if (span.Length != rank)
-				throw new ArgumentException(Resource.VectorLength, nameof(span));
+			if (outputPermutation.Length != rank)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(outputPermutation));
 			if (tensor.Label is null || tensor.Label.Count != rank)
 				throw new ArgumentNullException(nameof(tensor));
 			var label = tensor.Label.ToList();
 
+			// fill the output permutation
+			var orderSpan = this.order.AsSpan();
 			actualRank = 0;
-			foreach (var item in this.order)
+			int rangeStart = 0;
+			for (int i = 0; i < length; i++)
 			{
-				if (item is Index idx)
+				var item = orderSpan[i];
+				switch (item.Item2)
 				{
-					var offset = idx.GetOffset(rank);
-					if (offset >= rank || offset < 0)
-						throw new ArgumentOutOfRangeException(nameof(tensor));
-					span[actualRank++] = offset;
-				}
-				else if (item is Range range)
-				{
-					if (range.Equals(Range.All))
-					{
-						span[actualRank++] = int.MaxValue; // a place holder
-					}
-					else
-					{
-						var (offset, count) = range.GetOffsetAndLength(rank);
-						if (offset + count > rank || offset < 0)
+					case OrderType.Index:
+						var offset = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
+						if (offset >= rank || offset < 0)
 							throw new ArgumentOutOfRangeException(nameof(tensor));
-						span.Slice(actualRank, count).FillWithRange(offset);
+						outputPermutation[actualRank++] = offset;
+						break;
+					case OrderType.Char:
+						int find = label.IndexOf((char)item.Item1);
+						if (find < 0)
+							throw new ArgumentOutOfRangeException(nameof(tensor));
+						outputPermutation[actualRank++] = find;
+						break;
+					case OrderType.RangeAll:
+						outputPermutation[actualRank++] = int.MaxValue; // a place holder
+						break;
+					case OrderType.RangeStart:
+						rangeStart = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
+						break;
+					case OrderType.RangeEnd:
+						int rangeEnd = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
+						if (rangeEnd <= rangeStart)
+							throw new ArgumentOutOfRangeException(nameof(tensor));
+						int count = rangeEnd - rangeStart;
+						outputPermutation.Slice(actualRank, count).FillWithRange(rangeStart);
 						actualRank += count;
-					}
+						break;
+					default:
+						throw new InvalidOperationException();
 				}
-				else if (item is char c)
-				{
-					int find = label.IndexOf(c);
-					if (find < 0)
-						throw new ArgumentOutOfRangeException(nameof(tensor));
-					span[actualRank++] = find;
-				}
-				else // never here
-					throw new NotSupportedException();
 			}
+
 			// check duplicate
-			if (span.Slice(0, actualRank).DistinctCount() < actualRank)
-				throw new ArgumentException(Resource.DuplicateIndices, nameof(tensor));
+			if (outputPermutation.Slice(0, actualRank).DistinctCount() < actualRank)
+				throw new ArgumentException(Parameter.DuplicateIndices, nameof(tensor));
 			// replace the all range
-			if (span.Contains(int.MaxValue))
+			if (outputPermutation.Contains(int.MaxValue))
 			{
 				Span<int> @explicit = stackalloc int[actualRank - 1];
 				int now = 0;
@@ -157,8 +232,8 @@ namespace Althea.TensorAlgebra
 				int index = 0;
 				for (int i = 0; i < actualRank; i++)
 				{
-					if (span[i] != int.MaxValue)
-						@explicit[now++] = span[i];
+					if (outputPermutation[i] != int.MaxValue)
+						@explicit[now++] = outputPermutation[i];
 					else
 						index = i;
 				}
@@ -169,14 +244,14 @@ namespace Althea.TensorAlgebra
 						difference[now++] = i;
 				}
 				Span<int> temp = stackalloc int[rank];
-				span.CopyTo(temp);
-				difference.CopyTo(span.Slice(index, difference.Length));
-				temp[(index + 1)..].CopyTo(span[(index + difference.Length)..]);
+				outputPermutation.CopyTo(temp);
+				difference.CopyTo(outputPermutation.Slice(index, difference.Length));
+				temp[(index + 1)..].CopyTo(outputPermutation[(index + difference.Length)..]);
 				actualRank = rank;
 			}
 			// check partial
 			if (!allowPartial && actualRank < rank)
-				throw new ArgumentException(Resource.NotEnoughIndices, nameof(tensor));
+				throw new ArgumentException(Parameter.WrongSize, nameof(tensor));
 		}
 
 		/// <summary>
@@ -391,6 +466,7 @@ namespace Althea.TensorAlgebra
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, Range> tuple) => new TensorOrder(tuple);
 		#endregion
 
+		#region other converters
 		/// <summary>
 		/// Implicitly convert from <see cref="Index"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
@@ -401,13 +477,14 @@ namespace Althea.TensorAlgebra
 		/// Implicitly convert from <see cref="int"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
 		/// <param name="order">the <see cref="int"/> array to indicate the permutation order</param>
-		public static implicit operator TensorOrder(int[] order) => new TensorOrder(order.Select(o => (Index)o).ToArray());
+		public static implicit operator TensorOrder(int[] order) => new TensorOrder(order.Select(static o => (Index)o).ToArray());
 
 		/// <summary>
 		/// Implicitly convert from <see cref="char"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
 		/// <param name="order">the <see cref="char"/> array to indicate the permutation order</param>
-		public static implicit operator TensorOrder(char[] order) => new TensorOrder(Array.ConvertAll(order, o => (ValueType)o));
+		public static implicit operator TensorOrder(char[] order) => new TensorOrder(order);
+		#endregion
 		#endregion
 
 		#region equalities
@@ -416,11 +493,12 @@ namespace Althea.TensorAlgebra
 		/// </summary>
 		/// <param name="obj">another <see cref="object"/></param>
 		/// <returns>equal or not</returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
-			if (obj is null || !(obj is TensorOrder))
+			if (obj is TensorOrder o)
+				return this.Equals(o);
+			else
 				return false;
-			return this.Equals((TensorOrder)obj);
 		}
 
 		/// <summary>
@@ -430,40 +508,26 @@ namespace Althea.TensorAlgebra
 		/// <returns>equal or not</returns>
 		public bool Equals(TensorOrder other)
 		{
-			if (this.order is null && other.order is null)
-				return true;
-			else if (this.order is null != other.order is null)
-				return false;
-			else
-				return this.order.SequenceEqual(other.order);
+			return this.order.SequenceEqual(other.order);
 		}
 
 		/// <summary>
 		/// Get the hash code
 		/// </summary>
-		/// <returns>hash code</returns>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(order);
-		}
+		/// <returns>The hash code</returns>
+		public override int GetHashCode() => this.order.GetHashCode();
 
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="right"></param>
-		/// <returns>equal or not</returns>
 		public static bool operator ==(TensorOrder left, TensorOrder right)
 		{
 			return left.Equals(right);
 		}
 
 		/// <summary>
-		/// Not-equality operator
+		/// Inequality operator
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="right"></param>
-		/// <returns>not equal or equal</returns>
 		public static bool operator !=(TensorOrder left, TensorOrder right)
 		{
 			return !(left == right);

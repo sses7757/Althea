@@ -528,42 +528,6 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static uint Prod(this Span<uint> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			uint prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static ulong Prod(this Span<ulong> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			ulong prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static float Prod(this Span<float> list)
 		{
 			if (list.Length == 0)
@@ -625,42 +589,6 @@ namespace Althea.Linq
 			if (list.Length == 0)
 				return 0;
 			long sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static uint Sum(this Span<uint> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			uint sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static ulong Sum(this Span<ulong> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			ulong sum = 0;
 			for (int i = 0; i < list.Length; i++)
 			{
 				sum += list[i];
@@ -741,41 +669,6 @@ namespace Althea.Linq
 			}
 			return prod;
 		}
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static uint Prod(this ReadOnlySpan<uint> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			uint prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static ulong Prod(this ReadOnlySpan<ulong> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			ulong prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
 
 		/// <summary>
 		/// List product
@@ -844,42 +737,6 @@ namespace Althea.Linq
 			if (list.Length == 0)
 				return 0;
 			long sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static uint Sum(this ReadOnlySpan<uint> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			uint sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static ulong Sum(this ReadOnlySpan<ulong> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			ulong sum = 0;
 			for (int i = 0; i < list.Length; i++)
 			{
 				sum += list[i];

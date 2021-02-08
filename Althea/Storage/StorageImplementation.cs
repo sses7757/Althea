@@ -130,7 +130,7 @@ namespace Althea.Storage
 		/// </summary>
 		IntPtr Pointer { get; }
 
-		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes != 0;
+		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes > 0;
 
 		string IMainPropertyFormat.StringMain => this.Pointer.ToString("X");
 
@@ -145,7 +145,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="NativePointer"/> of this <see cref="IMemoryPointer"/></param>
 		/// <returns>The unmanaged pointer with given offset as a <typeparamref name="T"/>*</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged => (T*)this.Pointer.ToPointer() + offset;
+		internal unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged => (T*)this.Pointer.ToPointer() + offset;
 
 		/// <summary>
 		/// Get the native pointer of this <see cref="IMemoryPointer"/> with a given offset as a <see cref="void"/>*
@@ -153,7 +153,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in bytes to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/></param>
 		/// <returns>The native pointer with given offset as a <see cref="void"/>*</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
+		internal unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
 
 		/// <summary>
 		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
@@ -164,7 +164,7 @@ namespace Althea.Storage
 		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
 		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new Span<T>(this.UnmangedPointer<T>(offset), length == 0 ? checked((int)this.LengthInBytes / sizeof(T)) : length);
+		protected internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new Span<T>(this.UnmangedPointer<T>(offset), length <= 0 ? checked((int)(this.LengthInBytes / sizeof(T))) : length);
 
 		/// <summary>
 		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
@@ -174,7 +174,7 @@ namespace Althea.Storage
 		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
 		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal Span<T> AsSpan<T>(PointerSegment pointerSegment) where T : unmanaged => this.AsSpan<T>(checked((long)(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT)), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
+		protected internal Span<T> AsSpan<T>(PointerSegment pointerSegment) where T : unmanaged => this.AsSpan<T>(checked(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
 		#endregion
 	}
 
@@ -215,18 +215,24 @@ namespace Althea.Storage
 		/// When implemented by a derived class, get or set the position (offset) in bytes of this <see cref="Stream"/>
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Length"/></exception>
-		public abstract ulong Position { get; set; }
+		public abstract long Position { get; set; }
 
 		/// <summary>
 		/// When implemented by a derived class, get or set the length in bytes of this <see cref="Stream"/>
 		/// </summary>
-		public ulong Length { get; }
+		public long Length { get; }
 
 		/// <summary>
 		/// Create a <see cref="Stream"/> with given <paramref name="length"/> in bytes
 		/// </summary>
 		/// <param name="length">The given length in bytes</param>
-		protected Stream(ulong length) => this.Length = length;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> is not a positive value</exception>
+		protected Stream(long length)
+		{
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+			this.Length = length;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not.
@@ -317,7 +323,7 @@ namespace Althea.Storage
 		/// <typeparam name="T">any unmanaged data type</typeparam>
 		/// <returns>The default buffer size in bytes divisible by the size of <typeparamref name="T"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static uint BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / Storage<T>.SizeOfT * Storage<T>.SizeOfT;
+		protected static int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / Storage<T>.SizeOfT * Storage<T>.SizeOfT;
 
 		private static readonly Dictionary<Type, StorageLocation> cache_single_location = new Dictionary<Type, StorageLocation>();
 
@@ -330,14 +336,14 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
-		public virtual void SetValues<T>(T value, ulong length) where T : unmanaged
+		public virtual void SetValues<T>(T value, long length) where T : unmanaged
 		{
-			if (length == 0)
+			if (length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
 			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
 
-			uint bufferSize = BufferSizeInBytes<T>() / Storage<T>.SizeOfT;
+			int bufferSize = BufferSizeInBytes<T>() / Storage<T>.SizeOfT;
 			if (this.CanTransferWithManaged)
 			{
 				int len = checked((int)length);
@@ -365,7 +371,7 @@ namespace Althea.Storage
 					location = this.SupportedTransfers[0];
 				}
 				// copy
-				ulong len = Math.Min(bufferSize, length);
+				long len = Math.Min(bufferSize, length);
 				var impl = MEM.SelectImplementation(location);
 				var pointer = impl.Allocate(location, len);
 				try
@@ -399,9 +405,9 @@ namespace Althea.Storage
 		/// <exception cref="NotSupportedException">If there are not common supported data transfers between this and <paramref name="other"/></exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this or <paramref name="other"/> is already disposed</exception>
-		public virtual void CopyTo(Stream other, ulong length)
+		public virtual void CopyTo(Stream other, long length)
 		{
-			if (length == 0)
+			if (length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
 			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
@@ -410,7 +416,7 @@ namespace Althea.Storage
 			if (other.Position + length > other.Length)
 				throw new ArgumentOutOfRangeException(nameof(length), Parameter.InvalidValue);
 
-			uint bufferSize = BufferSizeInBytes<byte>();
+			int bufferSize = BufferSizeInBytes<byte>();
 			if (this.CanTransferWithManaged && other.CanTransferWithManaged)
 			{
 				int len = checked((int)length);
@@ -441,7 +447,7 @@ namespace Althea.Storage
 					value = intersect[0];
 				}
 				// copy
-				ulong len = Math.Min(bufferSize, length);
+				long len = Math.Min(bufferSize, length);
 				var impl = MEM.SelectImplementation(value);
 				var pointer = impl.Allocate(value, len);
 				try
@@ -479,7 +485,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region implemented interface methods
-		ulong IPointer.LengthInBytes => this.NativeStream.Length;
+		long IPointer.LengthInBytes => this.NativeStream.Length;
 
 		bool ICheckValid.IsValid() => this.NativeStream.IsValid();
 
@@ -515,11 +521,11 @@ namespace Althea.Storage
 		/// Create (without allocation) a <see cref="PureOrMixedStorage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
 		/// <param name="locations">The locations as a <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/></param>
-		/// <param name="lengths">The presenting lengths in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="ulong"/></param>
+		/// <param name="lengths">The presenting lengths in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
 		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
-		protected PureOrMixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<ulong> lengths) : base(lengths.Sum())
+		protected PureOrMixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths) : base(lengths.Sum())
 		{
 			if (locations.Length == 0)
 				throw new ArgumentNullException(nameof(locations));
@@ -527,7 +533,7 @@ namespace Althea.Storage
 				throw new ArgumentNullException(nameof(lengths));
 			if (locations.Length != lengths.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
-			if (lengths.Any(static l => l == 0))
+			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
 
 			this.LocationDescription = new CombinationOfLocations(CombinationType.PureOrMixed, locations);
@@ -539,9 +545,9 @@ namespace Althea.Storage
 		/// Make a <see cref="PureOrMixedReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
-		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
 		}
@@ -554,7 +560,7 @@ namespace Althea.Storage
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
 		{
-			ulong newLength = CheckCast<TOut>(this.Length);
+			long newLength = CheckCast<TOut>(this.Length);
 			return new PureOrMixedReferenceStorage<TOut>(this, newLength: newLength);
 		}
 
@@ -597,7 +603,7 @@ namespace Althea.Storage
 		#region basic
 		private readonly int start, end;
 
-		private readonly ulong startOffsetBytes, endOffsetBytes;
+		private readonly long startOffsetBytes, endOffsetBytes;
 
 		/// <summary>
 		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
@@ -617,7 +623,7 @@ namespace Althea.Storage
 		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureOrMixedStorage{T}"/></exception>
-		public PureOrMixedReferenceStorage(IStorage storage, long offset = 0, ulong newLength = 0) : base(storage, offset, newLength)
+		public PureOrMixedReferenceStorage(IStorage storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
 				return;
@@ -625,10 +631,10 @@ namespace Althea.Storage
 			if (this.Reference is not PureOrMixedStorage<T> && !this.Reference.GetType().MakeGenericType(typeof(T)).IsAssignableTo(typeof(PureOrMixedStorage<T>)))
 				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
 			// set offsets
-			ulong offsetInBytes = this.TotalOffsetInBytes;
+			long offsetInBytes = this.TotalOffsetInBytes;
 			for (int i = 0; i < storage.Count; i++)
 			{
-				ulong lengthOfI = storage[i].LengthInBytes;
+				long lengthOfI = storage[i].LengthInBytes;
 				if (offsetInBytes < lengthOfI)
 				{   // set
 					this.start = i; this.startOffsetBytes = offsetInBytes;
@@ -642,7 +648,7 @@ namespace Althea.Storage
 			offsetInBytes += this.LengthInBytes;
 			for (int i = this.start; i < storage.Count; i++)
 			{
-				ulong lengthOfI = storage[i].LengthInBytes;
+				long lengthOfI = storage[i].LengthInBytes;
 				if (offsetInBytes <= lengthOfI)
 				{   // set
 					this.end = i + 1; this.endOffsetBytes = offsetInBytes;
@@ -655,7 +661,7 @@ namespace Althea.Storage
 			}
 		}
 
-		private PureOrMixedReferenceStorage(IStorage? storage, long offset, ulong newLength, int start, int end, ulong startOffsetBytes, ulong endOffsetBytes) : base(storage, offset, newLength)
+		private PureOrMixedReferenceStorage(IStorage? storage, long offset, long newLength, int start, int end, long startOffsetBytes, long endOffsetBytes) : base(storage, offset, newLength)
 		{
 			this.start = start; this.end = end;
 			this.startOffsetBytes = startOffsetBytes; this.endOffsetBytes = endOffsetBytes;
@@ -677,9 +683,9 @@ namespace Althea.Storage
 				if (this.Reference is null)
 					throw new InvalidOperationException();
 				PointerSegment pointer = this.Reference[index - this.start];
-				if (index == 0)
+				if (index <= 0)
 				{
-					pointer = pointer.MoveBy((long)this.startOffsetBytes);
+					pointer = pointer.MoveBy(this.startOffsetBytes);
 				}
 				else if (index == this.Count - 1)
 				{   // this.Count cannot be 1
@@ -693,9 +699,9 @@ namespace Althea.Storage
 		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
-		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
 		}
@@ -711,7 +717,7 @@ namespace Althea.Storage
 			if (this.Reference is null)
 				return new PureOrMixedReferenceStorage<TOut>(null, 0, 0, 0, 0, 0, 0);
 			long offset = CheckCast<TOut>((long)this.TotalOffsetInBytes, sizeInBytes: true);
-			ulong length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
+			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
 			return new PureOrMixedReferenceStorage<TOut>(this.Reference, offset, length);
 		}
 
@@ -751,7 +757,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
-		public PureStorage(StorageLocation location, ulong length) : base(stackalloc StorageLocation[1].SetValue(location), stackalloc ulong[1].SetValue(length))
+		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[1].SetValue(location), stackalloc long[1].SetValue(length))
 		{
 			this.pointer = Allocate(location, length);
 		}
@@ -797,7 +803,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same; or <paramref name="allowSameLocation"/> is false while <paramref name="locations"/> contains duplicate value(s)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
-		public MixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<ulong> lengths, bool allowSameLocation = true) : base(locations, lengths)
+		public MixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths, bool allowSameLocation = true) : base(locations, lengths)
 		{
 			if (!allowSameLocation && !locations.ElementsUnique())
 				throw new ArgumentException(Parameter.DuplicateValue, nameof(locations));
@@ -810,7 +816,7 @@ namespace Althea.Storage
 					this.pointers[i] = Allocate(locations[i], lengths[i]);
 				}
 			}
-			catch (Exception)
+			catch (System.Exception)
 			{
 				this.Dispose(true);
 				throw;
@@ -821,9 +827,9 @@ namespace Althea.Storage
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
 		/// <param name="param">the <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
-		public MixedStorage(params (StorageLocation location, ulong length)[] param) :
+		public MixedStorage(params (StorageLocation location, long length)[] param) :
 			this(param.CopyTo(stackalloc StorageLocation[param.Length], static p => p.location),
-				 param.CopyTo(stackalloc ulong[param.Length], static p => p.length),
+				 param.CopyTo(stackalloc long[param.Length], static p => p.length),
 				 allowSameLocation: true)
 		{ }
 		#endregion
@@ -867,9 +873,9 @@ namespace Althea.Storage
 
 		#region new methods
 		/// <summary>
-		/// When implemented by a derived class, get the cache sizes in bytes of the top level as a <see cref="ulong"/>.
+		/// When implemented by a derived class, get the cache sizes in bytes of the top level as a <see cref="long"/>.
 		/// </summary>
-		ulong TopCacheSizeInBytes { get; }
+		long TopCacheSizeInBytes { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the number of total caching levels, include the actual storage level. The default implementation is <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see>.
@@ -897,7 +903,7 @@ namespace Althea.Storage
 		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
 		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
 		/// </remarks>
-		PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, CopyDelegate? copy = null);
+		PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null);
 
 		/// <summary>
 		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
@@ -945,19 +951,19 @@ namespace Althea.Storage
 		public int CacheLevels => this.LocationDescription.Count;
 
 		/// <summary>
-		/// The cache sizes in bytes of the top level as a <see cref="ulong"/>.
+		/// The cache sizes in bytes of the top level as a <see cref="long"/>.
 		/// </summary>
-		public ulong TopCacheSizeInBytes { get; }
+		public long TopCacheSizeInBytes { get; }
 
 		/// <summary>
-		/// Create (without allocation) a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s and <see cref="ulong"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
+		/// Create (without allocation) a <see cref="CachedStorage{T}"/> of given <see cref="StorageLocation"/>s and <see cref="long"/>s as priorities and total length (<see cref="Storage{T}.Length"/>) in <typeparamref name="T"/>
 		/// </summary>
 		/// <param name="locations">The <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/> to represent the caching levels from higher-performance ones to lower ones. It cannot contain any duplicate values or has size less than 2.</param>
-		/// <param name="maxLengths">The <see cref="ReadOnlySpan{T}"/> of <see cref="ulong"/> to represent the maximum size of each caching levels. The last value is the actual length in <typeparamref name="T"/> It must be of same size as <paramref name="locations"/>.</param>
+		/// <param name="maxLengths">The <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to represent the maximum size of each caching levels. The last value is the actual length in <typeparamref name="T"/> It must be of same size as <paramref name="locations"/>.</param>
 		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="maxLengths"/> is 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="locations"/> is of wrong size or has duplicate value(s) or is of wrong size; or if <paramref name="maxLengths"/> is of wrong size or has non-increase cache size</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="maxLengths"/> is 0</exception>
-		protected CachedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<ulong> maxLengths) : base(maxLengths[^1])
+		protected CachedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> maxLengths) : base(maxLengths[^1])
 		{
 			if (locations.Length <= 1)
 				throw new ArgumentException(Parameter.WrongSize, nameof(locations));
@@ -967,7 +973,7 @@ namespace Althea.Storage
 				throw new ArgumentException(Parameter.NotSameSize);
 			if (!locations.ElementsUnique())
 				throw new ArgumentException(Parameter.DuplicateValue, nameof(locations));
-			if (maxLengths.Any(static l => l == 0))
+			if (maxLengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(maxLengths), Parameter.MustPositive);
 			// check ratios
 			for (int i = 1; i < locations.Length; i++)
@@ -1057,9 +1063,9 @@ namespace Althea.Storage
 		/// Make a <see cref="CachedReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
-		public override CachedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		public override CachedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new CachedReferenceStorage<T>(this, offset, newLength);
 		}
@@ -1072,7 +1078,7 @@ namespace Althea.Storage
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override CachedReferenceStorage<TOut> As<TOut>()
 		{
-			ulong newLength = CheckCast<TOut>(this.Length);
+			long newLength = CheckCast<TOut>(this.Length);
 			return new CachedReferenceStorage<TOut>(this, newLength: newLength);
 		}
 		#endregion
@@ -1099,7 +1105,7 @@ namespace Althea.Storage
 		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
 		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
 		/// </remarks>
-		public abstract PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, CopyDelegate? copy = null);
+		public abstract PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null);
 
 		/// <summary>
 		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
@@ -1117,9 +1123,9 @@ namespace Althea.Storage
 	{
 		#region basic
 		/// <summary>
-		/// The cache sizes in bytes of the top level as a <see cref="ulong"/>.
+		/// The cache sizes in bytes of the top level as a <see cref="long"/>.
 		/// </summary>
-		public ulong TopCacheSizeInBytes => this.Reference is ICachedStorage c ? c.TopCacheSizeInBytes : 0;
+		public long TopCacheSizeInBytes => this.Reference is ICachedStorage c ? c.TopCacheSizeInBytes : 0;
 
 		/// <summary>
 		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
@@ -1144,7 +1150,7 @@ namespace Althea.Storage
 		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorage{T}"/></exception>
-		public CachedReferenceStorage(IStorage? storage, long offset = 0, ulong newLength = 0) : base(storage, offset, newLength)
+		public CachedReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
 				return;
@@ -1183,7 +1189,7 @@ namespace Althea.Storage
 					throw new ArgumentOutOfRangeException(nameof(index));
 				if (this.Reference is null)
 					throw new InvalidOperationException();
-				return this.Reference[0].MoveBy((long)this.TotalOffsetInBytes, this.LengthInBytes);
+				return this.Reference[0].MoveBy(this.TotalOffsetInBytes, this.LengthInBytes);
 			}
 		}
 
@@ -1191,9 +1197,9 @@ namespace Althea.Storage
 		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="ulong"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
-		public override CachedReferenceStorage<T> MakeReference(long offset = 0, ulong newLength = 0)
+		public override CachedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new CachedReferenceStorage<T>(this, offset, newLength);
 		}
@@ -1209,7 +1215,7 @@ namespace Althea.Storage
 			if (this.Reference is null)
 				return new CachedReferenceStorage<TOut>(null, 0, 0);
 			long offset = CheckCast<TOut>((long)this.TotalOffsetInBytes, sizeInBytes: true);
-			ulong length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
+			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
 			return new CachedReferenceStorage<TOut>(this.Reference, offset, length);
 		}
 
@@ -1221,8 +1227,8 @@ namespace Althea.Storage
 		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
-		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
-		public PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, CopyDelegate? copy = null)
+		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		public PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null)
 		{
 			if (this.Reference is not ICachedStorage c)
 				return default;
@@ -1282,8 +1288,8 @@ namespace Althea.Storage
 		/// <param name="maxMemoryCacheSize">The maximum size in <typeparamref name="T"/> allowed in <paramref name="memoryLocation"/></param>
 		/// <param name="length">The actual length of this storage in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memoryLocation"/> is not a memory-typed location or <paramref name="streamLocation"/> is not a stream-typed location</exception>
-		public StreamToMemoryCachedStorage(StorageLocation memoryLocation, StorageLocation streamLocation, ulong maxMemoryCacheSize, ulong length) :
-			base(stackalloc StorageLocation[2].SetValue(memoryLocation, streamLocation), stackalloc ulong[2].SetValue(maxMemoryCacheSize, length))
+		public StreamToMemoryCachedStorage(StorageLocation memoryLocation, StorageLocation streamLocation, long maxMemoryCacheSize, long length) :
+			base(stackalloc StorageLocation[2].SetValue(memoryLocation, streamLocation), stackalloc long[2].SetValue(maxMemoryCacheSize, length))
 		{
 			if (memoryLocation.Type.GetClassification() != LocationTypeExtension.ClassMemory)
 				throw new ArgumentOutOfRangeException(nameof(memoryLocation), Parameter.InvalidValue);
@@ -1295,7 +1301,7 @@ namespace Althea.Storage
 				this.stream = Allocate(streamLocation, length);
 				this.memory = Allocate(memoryLocation, maxMemoryCacheSize);
 			}
-			catch (Exception)
+			catch (System.Exception)
 			{
 				this.Dispose(true);
 				throw;
@@ -1316,7 +1322,7 @@ namespace Althea.Storage
 			if (i < 0 || i >= 2)
 				throw new ArgumentOutOfRangeException(nameof(index));
 
-			if (i == 0)
+			if (i <= 0)
 				return this.memory;
 			else
 				return this.stream;
@@ -1348,17 +1354,17 @@ namespace Althea.Storage
 		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="CachedStorage{T}.TopCacheSizeInBytes"/></exception>
-		public override PointerSegment Retrieve(ulong totalOffsetInBytes, ulong lengthInBytes = 0, CopyDelegate? copy = null)
+		public override PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null)
 		{
 			if (totalOffsetInBytes >= this.stream.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(totalOffsetInBytes));
-			ulong memLen = this.memory.LengthInBytes;
-			if (lengthInBytes == 0)
+			long memLen = this.memory.LengthInBytes;
+			if (lengthInBytes <= 0)
 				lengthInBytes = memLen;
 			if (totalOffsetInBytes + lengthInBytes > this.stream.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(lengthInBytes));
 
-			long offset = (long)totalOffsetInBytes;
+			long offset = totalOffsetInBytes;
 			copy ??= MEM.SelectImplementation(this).MemoryCopy;
 			if (!this.cached)
 			{   // not cached yet
@@ -1368,12 +1374,12 @@ namespace Althea.Storage
 			}
 			// else
 			long offsetDiff = offset - this.streamOffset;
-			ulong offsetDiffU = offsetDiff >= 0 ? (ulong)offsetDiff : (ulong)-offsetDiff;
+			long offsetDiffU = offsetDiff >= 0 ? offsetDiff : -offsetDiff;
 			if (offsetDiff >= 0 && offsetDiffU + lengthInBytes <= memLen)
 			{   // already cached
 				return this.memory.MoveBy(offsetDiff, lengthInBytes);
 			}
-			else if (offsetDiffU >= memLen || offsetDiff + (long)lengthInBytes <= 0)
+			else if (offsetDiffU >= memLen || offsetDiff + lengthInBytes <= 0)
 			{   // no overlap
 				// copy from stream storage to memory cache as much as possible
 				this.Flush(copy);
@@ -1381,20 +1387,20 @@ namespace Althea.Storage
 			}
 			else if (offsetDiff > 0)
 			{   // partial overlap
-				ulong overlapLength = memLen - offsetDiffU;
+				long overlapLength = memLen - offsetDiffU;
 				var stream = this.stream.MoveBy(this.streamOffset);
 				// flush (copy from memory cache to stream storage)
 				copy.Invoke(this.memory.AsLength(offsetDiffU), stream.AsLength(offsetDiffU));
 				// copy inside memory cache
 				copy.Invoke(this.memory.MoveBy(offsetDiff, overlapLength), this.memory.AsLength(overlapLength));
 				// copy from stream storage to memory cache as much as possible
-				copy.Invoke(stream.MoveBy((long)memLen, offsetDiffU), this.memory.MoveBy(offsetDiff, offsetDiffU));
+				copy.Invoke(stream.MoveBy(memLen, offsetDiffU), this.memory.MoveBy(offsetDiff, offsetDiffU));
 				return this.stream.AsLength(lengthInBytes);
 			}
 			else
 			{   // partial overlap, offsetDiff < 0
-				ulong overlapLength = memLen - offsetDiffU;
-				long overlapLengthI = (long)overlapLength;
+				long overlapLength = memLen - offsetDiffU;
+				long overlapLengthI = overlapLength;
 				var stream = this.stream.MoveBy(this.streamOffset);
 				// flush (copy from memory cache to stream storage)
 				copy.Invoke(this.memory.MoveBy(overlapLengthI, offsetDiffU), stream.MoveBy(overlapLengthI, offsetDiffU));
@@ -1452,7 +1458,7 @@ namespace Althea.Storage
 		/// <returns>The real length in bytes of <paramref name="cached"/></returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="cached"/> is a <see cref="IReferenceStorage"/> while its <see cref="IReferenceStorage.Reference"/> is not a <see cref="IPureOrMixedStorage"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ulong GetRealLength(this IPureOrMixedStorage cached)
+		public static long GetRealLength(this IPureOrMixedStorage cached)
 		{
 			if (cached is IReferenceStorage r)
 			{
@@ -1474,7 +1480,7 @@ namespace Althea.Storage
 		/// <returns>The real length in bytes of <paramref name="cached"/></returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="cached"/> is a <see cref="IReferenceStorage"/> while its <see cref="IReferenceStorage.Reference"/> is not a <see cref="ICachedStorage"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ulong GetRealLength(this ICachedStorage cached)
+		public static long GetRealLength(this ICachedStorage cached)
 		{
 			if (cached is IReferenceStorage r)
 			{
@@ -1495,17 +1501,17 @@ namespace Althea.Storage
 		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
 		/// </summary>
 		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose input argument is the result of <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/></param>
+		/// <param name="unaryFunc">The unary function whose input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
 		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
 		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
 		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="count"/> or <paramref name="offset"/> is not divisible by <paramref name="pack"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyUnaryFunction(this ICachedStorage cached, Action<PointerSegment> unaryFunc, ulong offset, ulong count, CopyDelegate? copyFunc = null, uint pack = 1)
+		public static void ApplyUnaryFunction(this ICachedStorage cached, Action<PointerSegment> unaryFunc, long offset, long count, CopyDelegate? copyFunc = null, int pack = 1)
 		{
-			if (pack == 0)
+			if (pack <= 0)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
 			if (pack > count)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
@@ -1516,10 +1522,10 @@ namespace Althea.Storage
 			if (count + offset > cached.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
 
-			ulong maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
 			{
-				ulong getLength = Math.Min(count, maxCacheSize);
+				long getLength = Math.Min(count, maxCacheSize);
 				var temp = cached.Retrieve(offset, count, copyFunc);
 				unaryFunc.Invoke(temp);
 				offset += getLength;
@@ -1532,18 +1538,18 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">any auxiliary data type</typeparam>
 		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/> and the second one is the <paramref name="auxiliary"/></param>
+		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the second one is the <paramref name="auxiliary"/></param>
 		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
 		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
 		/// <param name="auxiliary">The auxiliary data</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
 		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, ulong offset, ulong count, T auxiliary, CopyDelegate? copyFunc = null, uint pack = 1)
+		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, long offset, long count, T auxiliary, CopyDelegate? copyFunc = null, int pack = 1)
 		{
-			if (pack == 0)
+			if (pack <= 0)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
 			if (pack > count)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
@@ -1554,10 +1560,10 @@ namespace Althea.Storage
 			if (count + offset > cached.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
 
-			ulong maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
 			{
-				ulong getLength = Math.Min(count, maxCacheSize);
+				long getLength = Math.Min(count, maxCacheSize);
 				var temp = cached.Retrieve(offset, count, copyFunc);
 				unaryFunc.Invoke(temp, auxiliary);
 				offset += getLength;
@@ -1570,18 +1576,18 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">any auxiliary data type</typeparam>
 		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose second input argument is the result of <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/> and the first one is the <paramref name="auxiliary"/></param>
+		/// <param name="unaryFunc">The unary function whose second input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the first one is the <paramref name="auxiliary"/></param>
 		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
 		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
 		/// <param name="auxiliary">The auxiliary data</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
 		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyReverseUnaryFunction<T>(this ICachedStorage cached, Action<T, PointerSegment> unaryFunc, ulong offset, ulong count, T auxiliary, CopyDelegate? copyFunc = null, uint pack = 1)
+		public static void ApplyReverseUnaryFunction<T>(this ICachedStorage cached, Action<T, PointerSegment> unaryFunc, long offset, long count, T auxiliary, CopyDelegate? copyFunc = null, int pack = 1)
 		{
-			if (pack == 0)
+			if (pack <= 0)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
 			if (pack > count)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
@@ -1592,10 +1598,10 @@ namespace Althea.Storage
 			if (count + offset > cached.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
 
-			ulong maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
 			{
-				ulong getLength = Math.Min(count, maxCacheSize);
+				long getLength = Math.Min(count, maxCacheSize);
 				var temp = cached.Retrieve(offset, count, copyFunc);
 				unaryFunc.Invoke(auxiliary, temp);
 				offset += getLength;
@@ -1608,29 +1614,29 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">any data type which can be sliced</typeparam>
 		/// <param name="originalValue">The original value in <typeparamref name="T"/></param>
-		/// <param name="offset">The offset in <see cref="ulong"/></param>
-		/// <param name="length">The length in <see cref="ulong"/></param>
+		/// <param name="offset">The offset in <see cref="long"/></param>
+		/// <param name="length">The length in <see cref="long"/></param>
 		/// <returns>The <paramref name="originalValue"/> after the slice as a <typeparamref name="T"/></returns>
-		public delegate T SliceDelegate<T>(T originalValue, ulong offset, ulong length);
+		public delegate T SliceDelegate<T>(T originalValue, long offset, long length);
 
 		/// <summary>
 		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
 		/// </summary>
 		/// <typeparam name="T">any auxiliary data type</typeparam>
 		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/> and the second one is the output of <paramref name="sliceFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the second one is the output of <paramref name="sliceFunc"/></param>
 		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
 		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
 		/// <param name="auxiliaryOriginal">The auxiliary data's initial value, used as the first input argument of <paramref name="sliceFunc"/></param>
 		/// <param name="sliceFunc">The <see cref="SliceDelegate{T}"/> used to slice <paramref name="auxiliaryOriginal"/></param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
 		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, ulong offset, ulong count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, CopyDelegate? copyFunc = null, uint pack = 1)
+		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, long offset, long count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, CopyDelegate? copyFunc = null, int pack = 1)
 		{
-			if (pack == 0)
+			if (pack <= 0)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
 			if (pack > count)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
@@ -1641,10 +1647,10 @@ namespace Althea.Storage
 			if (count + offset > cached.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
 
-			ulong maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
 			{
-				ulong getLength = Math.Min(count, maxCacheSize);
+				long getLength = Math.Min(count, maxCacheSize);
 				var temp = cached.Retrieve(offset, count, copyFunc);
 				T val = sliceFunc.Invoke(auxiliaryOriginal, offset, getLength);
 				unaryFunc.Invoke(temp, val);
@@ -1658,19 +1664,19 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">any auxiliary data type</typeparam>
 		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose second input argument is the result of <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/> and the first one is the output of <paramref name="sliceFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose second input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the first one is the output of <paramref name="sliceFunc"/></param>
 		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
 		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
 		/// <param name="auxiliaryOriginal">The auxiliary data's initial value, used as the first input argument of <paramref name="sliceFunc"/></param>
 		/// <param name="sliceFunc">The <see cref="SliceDelegate{T}"/> used to slice <paramref name="auxiliaryOriginal"/></param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
 		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyReverseUnaryFunction<T>(this ICachedStorage cached, Action<T, PointerSegment> unaryFunc, ulong offset, ulong count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, CopyDelegate? copyFunc = null, uint pack = 1)
+		public static void ApplyReverseUnaryFunction<T>(this ICachedStorage cached, Action<T, PointerSegment> unaryFunc, long offset, long count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, CopyDelegate? copyFunc = null, int pack = 1)
 		{
-			if (pack == 0)
+			if (pack <= 0)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
 			if (pack > count)
 				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
@@ -1681,10 +1687,10 @@ namespace Althea.Storage
 			if (count + offset > cached.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
 
-			ulong maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
 			{
-				ulong getLength = Math.Min(count, maxCacheSize);
+				long getLength = Math.Min(count, maxCacheSize);
 				var temp = cached.Retrieve(offset, count, copyFunc);
 				T val = sliceFunc.Invoke(auxiliaryOriginal, offset, getLength);
 				unaryFunc.Invoke(val, temp);
@@ -1724,13 +1730,13 @@ namespace Althea.Storage
 				copyFunc.Invoke(src, dst);
 				if (src.LengthInBytes > dst.LengthInBytes)
 				{
-					src += (long)dst.LengthInBytes;
+					src += dst.LengthInBytes;
 					incDst = true; incSrc = false;
 					j++;
 				}
 				else if (src.LengthInBytes < dst.LengthInBytes)
 				{
-					dst += (long)src.LengthInBytes;
+					dst += src.LengthInBytes;
 					incDst = false; incSrc = true;
 					i++;
 				}
@@ -1747,7 +1753,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void StorageMemoryCopy(this IPureOrMixedStorage source, ICachedStorage destination, CopyDelegate? copyFunc = null)
@@ -1759,13 +1765,13 @@ namespace Althea.Storage
 
 			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
 
-			ulong maxCacheSize = destination.TopCacheSizeInBytes;
-			ulong offset = 0;
+			long maxCacheSize = destination.TopCacheSizeInBytes;
+			long offset = 0;
 			for (int i = 0; i < source.Count; i++)
 			{
-				ulong count = Math.Min(destination.LengthInBytes - offset, source[i].LengthInBytes);
+				long count = Math.Min(destination.LengthInBytes - offset, source[i].LengthInBytes);
 				destination.ApplyReverseUnaryFunction(copyFunc, offset, count, auxiliaryOriginal: source[i],
-													  sliceFunc: static (src, off, len) => src.MoveBy((long)off, len),
+													  sliceFunc: static (src, off, len) => src.MoveBy(off, len),
 													  copyFunc: copyFunc);
 				offset += count;
 				if (offset >= destination.LengthInBytes)
@@ -1778,7 +1784,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void StorageMemoryCopy(this ICachedStorage source, IPureOrMixedStorage destination, CopyDelegate? copyFunc = null)
@@ -1790,13 +1796,13 @@ namespace Althea.Storage
 
 			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
 
-			ulong maxCacheSize = source.TopCacheSizeInBytes;
-			ulong offset = 0;
+			long maxCacheSize = source.TopCacheSizeInBytes;
+			long offset = 0;
 			for (int i = 0; i < destination.Count; i++)
 			{
-				ulong count = Math.Min(source.LengthInBytes - offset, destination[i].LengthInBytes);
+				long count = Math.Min(source.LengthInBytes - offset, destination[i].LengthInBytes);
 				source.ApplyUnaryFunction(copyFunc, offset, count, auxiliaryOriginal: destination[i],
-										  sliceFunc: static (dst, off, len) => dst.MoveBy((long)off, len),
+										  sliceFunc: static (dst, off, len) => dst.MoveBy(off, len),
 										  copyFunc: copyFunc);
 				offset += count;
 				if (offset >= source.LengthInBytes)
@@ -1809,7 +1815,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="source">The source <see cref="ICachedStorage"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="ICachedStorage"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(ulong, ulong, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or empty</exception>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1822,13 +1828,13 @@ namespace Althea.Storage
 
 			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
 
-			ulong maxCacheSize = Math.Min(source.TopCacheSizeInBytes, destination.TopCacheSizeInBytes);
-			ulong count = Math.Min(source.LengthInBytes, destination.LengthInBytes);
-			ulong offset = 0;
+			long maxCacheSize = Math.Min(source.TopCacheSizeInBytes, destination.TopCacheSizeInBytes);
+			long count = Math.Min(source.LengthInBytes, destination.LengthInBytes);
+			long offset = 0;
 			while (count > 0)
 			{
 				// get
-				ulong getLength = Math.Min(count, maxCacheSize);
+				long getLength = Math.Min(count, maxCacheSize);
 				var src = source.Retrieve(offset, getLength, copyFunc);
 				var dst = destination.Retrieve(offset, getLength, copyFunc);
 				// copy
@@ -1855,10 +1861,10 @@ namespace Althea.Storage
 		/// Encapsulates a method that allocates and creates a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
 		/// <param name="locations">The given <see cref="CombinationOfLocations"/> indicating the locations</param>
-		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="ulong"/> indicating the length in <typeparamref name="T"/> of each location</param>
+		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <remarks>Independent checks for parameters are not necessary</remarks>
-		public delegate Storage<T> CreateDelegate(Span<StorageLocation> locations, Span<ulong> lengths);
+		public delegate Storage<T> CreateDelegate(Span<StorageLocation> locations, Span<long> lengths);
 
 		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new Dictionary<CombinationType, CreateDelegate>
 		{
@@ -1866,7 +1872,7 @@ namespace Althea.Storage
 			[CombinationType.Cached] = DefaultCreateCached,
 		};
 
-		private static Storage<T> DefaultCreatePureOrMixed(Span<StorageLocation> locations, Span<ulong> lengths)
+		private static Storage<T> DefaultCreatePureOrMixed(Span<StorageLocation> locations, Span<long> lengths)
 		{
 			if (locations.Length == 1)
 				return new PureStorage<T>(locations[0], lengths[0]);
@@ -1874,7 +1880,7 @@ namespace Althea.Storage
 				return new MixedStorage<T>(locations, lengths);
 		}
 
-		private static Storage<T> DefaultCreateCached(Span<StorageLocation> locations, Span<ulong> lengths)
+		private static Storage<T> DefaultCreateCached(Span<StorageLocation> locations, Span<long> lengths)
 		{
 			if (locations.Length == 2 &&
 				locations[0].Type.GetClassification() == LocationTypeExtension.ClassMemory &&
@@ -1899,10 +1905,10 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="type">The <see cref="CombinationType"/> used to identify which creation method to use</param>
 		/// <param name="locations">The given <see cref="CombinationOfLocations"/> indicating the locations</param>
-		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="ulong"/> indicating the length in <typeparamref name="T"/> of each location</param>
+		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/></exception>
-		public static Storage<T> Create(CombinationType type, Span<StorageLocation> locations, Span<ulong> lengths)
+		public static Storage<T> Create(CombinationType type, Span<StorageLocation> locations, Span<long> lengths)
 		{
 			if (!cache_create.ContainsKey(type))
 				throw new InvalidOperationException();

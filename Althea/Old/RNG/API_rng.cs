@@ -70,15 +70,15 @@ namespace Althea.Rng
 		#endregion
 
 		#region generate
-		private static uint _seed = (uint)new Random().Next();
+		private static int _seed = new Random().Next();
 
 		/// <summary>
 		/// Set seed for all random number generators
 		/// </summary>
 		/// <param name="seed">the seed, default null means a random one</param>
-		public static void SetSeed(uint? seed = null)
+		public static void SetSeed(int? seed = null)
 		{
-			seed ??= (uint)new Random().Next();
+			seed ??= (new Random().Next());
 			_seed = seed.Value;
 			if (_GPUInit.IsValueCreated)
 				GPU.SetSeed(_seed);
@@ -105,10 +105,10 @@ namespace Althea.Rng
 			var onHost = CudaCSharpHelpers.CheckOnHost(array);
 			long length = array.ActualLength;
 			Action<IntPtr, long> func;
-			if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong) || !array.IsRealType)
+			if (typeof(T) == typeof(long) || typeof(T) == typeof(long) || !array.IsRealType)
 				length *= 2;
 			IRand rand = onHost ? CPU : GPU;
-			if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+			if (typeof(T) == typeof(long) || typeof(T) == typeof(long))
 				func = rand.GenerateInt;
 			func = (default(T).ToDataType()) switch
 			{

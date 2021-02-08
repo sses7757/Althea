@@ -122,7 +122,7 @@ namespace Althea.Helpers
 		/// <param name="N">The number of all potential values</param>
 		/// <returns>0 if <paramref name="n"/> &gt; <paramref name="N"/> or <paramref name="n"/> == 0 or <paramref name="N"/> == 0, the binomial (<paramref name="N"/>, <paramref name="n"/>) otherwise</returns>
 		/// <exception cref="OverflowException">If an overflow happened during the calculation</exception>
-		public static ulong CombinationNumber(this uint n, uint N)
+		public static long CombinationNumber(this int n, int N)
 		{
 			if (n < N || n == 0 || N == 0)
 				return 0;
@@ -131,12 +131,12 @@ namespace Althea.Helpers
 			if (n == N)
 				return 1;
 			// otherwise
-			ulong ret = 1;
-			uint c = N - n;
+			long ret = 1;
+			int c = N - n;
 			c = Math.Min(c, n);
-			for (uint i = N - c + 1; i <= N; i++)
+			for (int i = N - c + 1; i <= N; i++)
 				ret = checked(ret * i);
-			for (uint i = 2; i <= c; i++)
+			for (int i = 2; i <= c; i++)
 				ret /= i;
 			return ret;
 		}
@@ -180,29 +180,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">the input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
-		public static bool IsPowerOfTwo(this ulong x)
-		{
-			if (x == 1) return true;
-			return (x > 1) && ((x & (x - 1)) == 0);
-		}
-
-		/// <summary>
-		/// Whether the input integer is a power of 2
-		/// </summary>
-		/// <param name="x">the input integer</param>
-		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
 		public static bool IsPowerOfTwo(this long x)
-		{
-			if (x == 1) return true;
-			return (x > 1) && ((x & (x - 1)) == 0);
-		}
-
-		/// <summary>
-		/// Whether the input integer is a power of 2
-		/// </summary>
-		/// <param name="x">the input integer</param>
-		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
-		public static bool IsPowerOfTwo(this uint x)
 		{
 			if (x == 1) return true;
 			return (x > 1) && ((x & (x - 1)) == 0);
@@ -224,17 +202,6 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">the input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
-		public static bool IsPowerOfTwo(this ushort x)
-		{
-			if (x == 1) return true;
-			return (x > 1) && ((x & (x - 1)) == 0);
-		}
-
-		/// <summary>
-		/// Whether the input integer is a power of 2
-		/// </summary>
-		/// <param name="x">the input integer</param>
-		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
 		public static bool IsPowerOfTwo(this short x)
 		{
 			if (x == 1) return true;
@@ -246,7 +213,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">the input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		public static uint NearestPowerOfTwo(this uint x)
+		public static int NearestPowerOfTwo(this int x)
 		{
 			x--;
 			x |= x >> 1;
@@ -262,18 +229,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">the input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		public static int NearestPowerOfTwo(this int x)
-		{
-			uint xx = unchecked((uint)x);
-			return Convert.ToInt32(xx.NearestPowerOfTwo());
-		}
-
-		/// <summary>
-		/// Get the nearest power of 2 integer of the input integer
-		/// </summary>
-		/// <param name="x">the input integer</param>
-		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		public static ulong NearestPowerOfTwo(this ulong x)
+		public static long NearestPowerOfTwo(this long x)
 		{
 			x--;
 			x |= x >> 1;
@@ -286,22 +242,27 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Get the nearest power of 2 integer of the input integer
+		/// Get the floor round of log2(<paramref name="input"/>)
 		/// </summary>
-		/// <param name="x">the input integer</param>
-		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		public static long NearestPowerOfTwo(this long x)
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		public static short Log2(this short input)
 		{
-			ulong xx = unchecked((ulong)x);
-			return Convert.ToInt64(xx.NearestPowerOfTwo());
+			if (input <= 0)
+				return -1;
+			sbyte targetlevel = 0;
+			while ((input >>= 1) != 0)
+				++targetlevel;
+			return targetlevel;
 		}
+
 
 		/// <summary>
 		/// Get the floor round of log2(<paramref name="input"/>)
 		/// </summary>
 		/// <param name="input">input number</param>
 		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static sbyte Log2(this short input)
+		public static short Log2(this int input)
 		{
 			if (input <= 0)
 				return -1;
@@ -316,67 +277,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="input">input number</param>
 		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static sbyte Log2(this ushort input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static sbyte Log2(this int input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static sbyte Log2(this uint input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static sbyte Log2(this long input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static sbyte Log2(this ulong input)
+		public static short Log2(this long input)
 		{
 			if (input <= 0)
 				return -1;
@@ -407,38 +308,12 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="input">input integer</param>
 		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		public static byte CountBitSet(this ushort input)
-		{
-			byte count = 0;
-			uint i = input;
-			for (; i != 0; count++)
-			{
-				i &= i - 1;
-			}
-			return count;
-		}
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
 		public static byte CountBitSet(this int input)
 		{
-			return unchecked((uint)input).CountBitSet();
-		}
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		public static byte CountBitSet(this uint input)
-		{
-			input -= (input >> 1) & 0x5555_5555U;
-			input = (input & 0x3333_3333U) + ((input >> 2) & 0x3333_3333U);
-			input = (input + (input >> 4)) & 0x0F0F_0F0FU;
-			return (byte)((input * 0x0101_0101U) >> 24);
+			input -= (input >> 1) & 0x5555_5555;
+			input = (input & 0x3333_3333) + ((input >> 2) & 0x3333_3333);
+			input = (input + (input >> 4)) & 0x0F0F_0F0F;
+			return (byte)((input * 0x0101_0101) >> 24);
 		}
 
 		/// <summary>
@@ -448,20 +323,10 @@ namespace Althea.Helpers
 		/// <returns>the number <paramref name="input"/>'s bits set</returns>
 		public static byte CountBitSet(this long input)
 		{
-			return unchecked((ulong)input).CountBitSet();
-		}
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		public static byte CountBitSet(this ulong input)
-		{
-			input -= (input >> 1) & 0x5555_5555_5555_5555UL;
-			input = (input & 0x5555_5555_5555_5555UL) + ((input >> 2) & 0x3333_3333_3333_3333UL);
-			input = (input + (input >> 4)) & 0x0F0F_0F0F_0F0F_0F0FUL;
-			return (byte)((input * 0x0101_0101_0101_0101UL) >> 24);
+			input -= (input >> 1) & 0x5555_5555_5555_5555L;
+			input = (input & 0x5555_5555_5555_5555L) + ((input >> 2) & 0x3333_3333_3333_3333L);
+			input = (input + (input >> 4)) & 0x0F0F_0F0F_0F0F_0F0FL;
+			return (byte)((input * 0x0101_0101_0101_0101L) >> 24);
 		}
 
 		/// <summary>
@@ -482,31 +347,9 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this ushort input, byte bit)
-		{
-			return (input & (1U << bit)) == 0;
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		public static bool IsBitSet(this int input, byte bit)
 		{
 			return (input & (1 << bit)) == 0;
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this uint input, byte bit)
-		{
-			return (input & (1U << bit)) == 0;
 		}
 
 		/// <summary>
@@ -526,31 +369,9 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static bool IsBitSet(this ulong input, byte bit)
-		{
-			return (input & (1UL << bit)) == 0;
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		public static int SetBit(this int input, byte bit)
 		{
 			return input | (1 << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static uint SetBit(this uint input, byte bit)
-		{
-			return input | (1U << bit);
 		}
 
 		/// <summary>
@@ -570,17 +391,6 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static ulong SetBit(this ulong input, byte bit)
-		{
-			return input | (1UL << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		public static int ResetBit(this int input, byte bit)
 		{
 			return input & ~(1 << bit);
@@ -592,31 +402,9 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static uint ResetBit(this uint input, byte bit)
-		{
-			return input & ~(1U << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		public static long ResetBit(this long input, byte bit)
 		{
 			return input & ~(1L << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		public static ulong ResetBit(this ulong input, byte bit)
-		{
-			return input & ~(1UL << bit);
 		}
 		#endregion
 

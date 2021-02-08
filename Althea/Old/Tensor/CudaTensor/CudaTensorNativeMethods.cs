@@ -39,7 +39,7 @@ namespace Althea.Tensor.Cuda
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
 		//[NativeMethodBoundary]
-		internal static extern Status cutensorInitTensorDescriptor(ref Handle handle, ref TensorDescription desc, uint numModes, long[] extent, long[] stride, CudaDataType dataType, UnitaryOperation unaryOp);
+		internal static extern Status cutensorInitTensorDescriptor(ref Handle handle, ref TensorDescription desc, int numModes, long[] extent, long[] stride, CudaDataType dataType, UnitaryOperation unaryOp);
 
 		/// <summary>
 		/// Computes the minimal alignment requirement for a given pointer and descriptor.
@@ -51,7 +51,7 @@ namespace Althea.Tensor.Cuda
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
 		//[NativeMethodBoundary]
-		internal static extern Status cutensorGetAlignmentRequirement(ref Handle handle, IntPtr ptr, ref TensorDescription desc, ref uint alignmentRequirement);
+		internal static extern Status cutensorGetAlignmentRequirement(ref Handle handle, IntPtr ptr, ref TensorDescription desc, ref int alignmentRequirement);
 		#endregion
 
 		#region permute
@@ -183,10 +183,10 @@ namespace Althea.Tensor.Cuda
 		[DllImport(CUTENSOR_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern Status cutensorInitContractionDescriptor(ref Handle handle, ref ContractDescription desc,
-			ref TensorDescription descA, in int modeA, uint alignmentRequirementA,
-			ref TensorDescription descB, in int modeB, uint alignmentRequirementB,
-			ref TensorDescription descC, in int modeC, uint alignmentRequirementC,
-			ref TensorDescription descD, in int modeD, uint alignmentRequirementD, ComputeType computeType);
+			ref TensorDescription descA, in int modeA, int alignmentRequirementA,
+			ref TensorDescription descB, in int modeB, int alignmentRequirementB,
+			ref TensorDescription descC, in int modeC, int alignmentRequirementC,
+			ref TensorDescription descD, in int modeD, int alignmentRequirementD, ComputeType computeType);
 
 		/// <summary>
 		/// Limits the search space of viable candidates (a.k.a. algorithms).

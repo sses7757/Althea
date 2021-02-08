@@ -88,6 +88,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given parameter contains duplicate indices which is not allowed. 的本地化字符串。
+        /// </summary>
+        internal static string DuplicateIndices {
+            get {
+                return ResourceManager.GetString("DuplicateIndices", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given parameter contains duplicate values, which is not allowed. 的本地化字符串。
         /// </summary>
         internal static string DuplicateValue {

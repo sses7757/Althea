@@ -34,7 +34,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store the matrix <paramref name="B"/></param>
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
-		public abstract void GeneralMatricesAdd<T>(MatrixOperation opA, MatrixOperation opB, ulong m, ulong n, T α, Storage<T>? A, ulong lda, T β, Storage<T>? B, ulong ldb, Storage<T> C, ulong ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void GeneralMatricesAdd<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the matrix-matrix multiplication:<br/>
@@ -52,7 +52,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> ≤ 0</exception>
-		public abstract void DiagonalMatrixMultiplyGeneral<T>(bool leftA, ulong m, ulong n, Storage<T> A, ulong lda, Storage<T> x, int incx, Storage<T> C, ulong ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void DiagonalMatrixMultiplyGeneral<T>(bool leftA, long m, long n, Storage<T> A, long lda, Storage<T> x, int incx, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region custom BLAS level 1
@@ -130,10 +130,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector whose values will be set</param>
-		/// <param name="positions">The given positions as a <see cref="ulong"/> array</param>
+		/// <param name="positions">The given positions as a <see cref="long"/> array</param>
 		/// <param name="value">The value to set</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
-		public abstract void SetArrayWithValue<T>(Storage<T> x, T value, Storage<ulong> positions) where T : unmanaged;
+		public abstract void SetArrayWithValue<T>(Storage<T> x, T value, Storage<long> positions) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
@@ -212,7 +212,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		public abstract void MatrixCopyUpperToLowerPart<T>(Storage<T> A, ulong ld, ulong n) where T : unmanaged;
+		public abstract void MatrixCopyUpperToLowerPart<T>(Storage<T> A, long ld, long n) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate matrix Kronecker product <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> ⊗ <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -231,7 +231,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The pre-allocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
 		/// <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void MatrixKronecker<T>(ulong ma, ulong na, ulong mb, ulong nb, T α, Storage<T> A, ulong lda, Storage<T> B, ulong ldb, T β, Storage<T> C, ulong ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void MatrixKronecker<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 		#endregion
 	}
 }

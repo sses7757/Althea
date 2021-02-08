@@ -1,5 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Collections.Generic;
+
+[assembly: CLSCompliant(true)]
 
 
 namespace Althea

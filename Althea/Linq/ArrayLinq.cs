@@ -559,49 +559,11 @@ namespace Althea.Linq
 		/// <param name="selector">the selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static uint Sum<T>(this IReadOnlyList<T> list, Converter<T, uint> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			uint sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static long Sum<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			long sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static ulong Sum<T>(this IReadOnlyList<T> list, Converter<T, ulong> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			ulong sum = 0;
 			for (int i = 0; i < list.Count; i++)
 			{
 				sum += selector(list[i]);
@@ -1963,10 +1925,10 @@ namespace Althea.Linq
 			if (items is null || items.Length == 0)
 				throw new ArgumentNullException(nameof(items));
 
-			var ordered = System.Linq.Enumerable.OrderBy(System.Linq.Enumerable.Zip(keys, items), k => k.First);
+			var ordered = System.Linq.Enumerable.OrderBy(System.Linq.Enumerable.Zip(keys, items), static k => k.First);
 			var temp = System.Linq.Enumerable.ToArray(ordered);
-			var newKeys = Array.ConvertAll(temp, t => t.First);
-			var newItems = Array.ConvertAll(temp, t => t.Second);
+			var newKeys = Array.ConvertAll(temp, static t => t.First);
+			var newItems = Array.ConvertAll(temp, static t => t.Second);
 			Array.Copy(sourceArray: newKeys, destinationArray: keys, length: keys.Length);
 			Array.Copy(sourceArray: newItems, destinationArray: items, length: items.Length);
 		}
@@ -1984,14 +1946,14 @@ namespace Althea.Linq
 				throw new ArgumentNullException(nameof(keys));
 
 			var items = System.Linq.Enumerable.Range(0, keys.Length);
-			var ordered = System.Linq.Enumerable.OrderBy(System.Linq.Enumerable.Zip(keys, items), k => k.First);
+			var ordered = System.Linq.Enumerable.OrderBy(System.Linq.Enumerable.Zip(keys, items), static k => k.First);
 			var temp = System.Linq.Enumerable.ToArray(ordered);
 			if (inPlace)
 			{
-				var newKeys = Array.ConvertAll(temp, t => t.First);
+				var newKeys = Array.ConvertAll(temp, static t => t.First);
 				Array.Copy(sourceArray: newKeys, destinationArray: keys, length: keys.Length);
 			}
-			var newItems = Array.ConvertAll(temp, t => t.Second);
+			var newItems = Array.ConvertAll(temp, static t => t.Second);
 			return newItems;
 		}
 		#endregion
@@ -2575,30 +2537,6 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Convert the input array to a <see cref="long"/> array
-		/// </summary>
-		/// <typeparam name="T">input type that implements <see cref="IConvertible"/></typeparam>
-		/// <param name="array">input <typeparamref name="T"/> array</param>
-		/// <returns>a new <see cref="long"/> array</returns>
-		public static long[] ToLongs<T>(this T[] array) where T : IConvertible => Array.ConvertAll(array, a => a.ToInt64(Resource.Culture));
-
-		/// <summary>
-		/// Convert the input array to a <see cref="int"/> array
-		/// </summary>
-		/// <typeparam name="T">input type that implements <see cref="IConvertible"/></typeparam>
-		/// <param name="array">input <typeparamref name="T"/> array</param>
-		/// <returns>a new <see cref="int"/> array</returns>
-		public static int[] ToInts<T>(this T[] array) where T : IConvertible => Array.ConvertAll(array, a => a.ToInt32(Resource.Culture));
-
-		/// <summary>
-		/// Convert the input array to a <see cref="int"/> array
-		/// </summary>
-		/// <typeparam name="T">input type that implements <see cref="IConvertible"/></typeparam>
-		/// <param name="array">input <typeparamref name="T"/> array</param>
-		/// <returns>a new <see cref="int"/> array</returns>
-		public static int[] ToInts<T>(this IReadOnlyList<T> array) where T : IConvertible => Array.ConvertAll(array.ToArray(), a => a.ToInt32(Resource.Culture));
-
-		/// <summary>
 		/// Act on each element of a list.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
@@ -2755,11 +2693,10 @@ namespace Althea.Linq
 					a++;
 				else
 					a += step;
-
 			}
-			catch (Exception)
+			catch (System.Exception)
 			{
-				throw new InvalidOperationException();
+				throw new InvalidOperationException(Other.CannotAdd);
 			}
 			var res = new T[count];
 			dynamic s = start;

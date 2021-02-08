@@ -131,7 +131,7 @@ namespace Althea.Runtime.Mkl
 		/// <param name="total">output total physical memory</param>
 		/// <param name="free">output free physical memory</param>
 		[DllImport(Blas.Mkl.Customs.NativeMethods.KERNEL_DLL_NAME)]
-		internal static extern void getTotalSystemMemory(ref ulong total, ref ulong free);
+		internal static extern void getTotalSystemMemory(ref long total, ref long free);
 		#endregion
 	}
 

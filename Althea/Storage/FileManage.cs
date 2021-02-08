@@ -20,14 +20,14 @@ namespace Althea.Storage
 	{
 		internal record ArrayInfo
 		{
-			internal ArrayInfo(string type, ulong[] size, Dictionary<string, object> metaData, params (string name, IStorage storage)[] storages)
+			internal ArrayInfo(string type, long[] size, Dictionary<string, object> metaData, params (string name, IStorage storage)[] storages)
 			{
 
 			}
 
 			public string TypeString { get; set; }
 
-			public ulong[] Size { get; set; }
+			public long[] Size { get; set; }
 
 			// string-keyed dictionary can be automatically serialized and deserialized by System.Text.Json
 			public Dictionary<string, object> OtherMetaData { get; set; }

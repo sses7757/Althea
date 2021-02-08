@@ -59,11 +59,11 @@ namespace Althea.Tensor.Cuda
 		/// </summary>
 		ComplexDouble = 1 << 5,
 		/// <summary>
-		/// real as a uint8
+		/// real as a int8
 		/// </summary>
 		UnsignedShort = 1 << 6,
 		/// <summary>
-		/// real as a uint32
+		/// real as a int32
 		/// </summary>
 		UnsignedInteger = 1 << 7,
 		/// <summary>
@@ -235,7 +235,7 @@ namespace Althea.Tensor.Cuda
 
 			var type = default(T).ToDataType().ToCudaDataType();
 			var descr = new TensorDescription();
-			NativeMethods.cutensorInitTensorDescriptor(ref handle, ref descr, (uint)size.Length, size, stride, type, op).Check();
+			NativeMethods.cutensorInitTensorDescriptor(ref handle, ref descr, (int)size.Length, size, stride, type, op).Check();
 			return descr;
 		}
 

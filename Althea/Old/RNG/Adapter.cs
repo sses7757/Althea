@@ -12,7 +12,7 @@ namespace Althea.Rng
 		/// Set seed of this random generator
 		/// </summary>
 		/// <param name="seed">the seed</param>
-		void SetSeed(ulong seed);
+		void SetSeed(long seed);
 
 		/// <summary>
 		/// Fill an array with generated random 32-bit integers (<see cref="int"/>), each bit random.
@@ -50,7 +50,7 @@ namespace Althea.Rng.Cuda
 			this.handle = new IntPtr();
 			NativeMethods.curandCreateGenerator(ref this.handle, GeneratorType.PseudoDefault).Check();
 			NativeMethods.curandSetGeneratorOrdering(this.handle, Ordering.PseudoBest).Check();
-			this.SetSeed((ulong)new Random().Next());
+			this.SetSeed(new Random().Next());
 		}
 
 		/// <summary>
@@ -89,8 +89,8 @@ namespace Althea.Rng.Cuda
 		/// <summary>
 		/// Set seed of random generator.
 		/// </summary>
-		/// <param name="seed">the <see cref="ulong"/> seed to set</param>
-		public void SetSeed(ulong seed)
+		/// <param name="seed">the <see cref="long"/> seed to set</param>
+		public void SetSeed(long seed)
 		{
 			NativeMethods.curandSetPseudoRandomGeneratorSeed(this.handle, seed).Check();
 		}
@@ -99,9 +99,9 @@ namespace Althea.Rng.Cuda
 		/// Set the absolute offset of the pseudo or quasi-random number generator. All values of offset are valid.
 		/// <br/>The offset position is absolute, not relative to the current position in the sequence.
 		/// </summary>
-		/// <param name="offset">the <see cref="ulong"/> offset to set</param>
+		/// <param name="offset">the <see cref="long"/> offset to set</param>
 		/// <exception cref="StatusException">if the returned status is not success</exception>
-		public void SetOffset(ulong offset)
+		public void SetOffset(long offset)
 		{
 			NativeMethods.curandSetGeneratorOffset(this.handle, offset).Check();
 		}
@@ -133,7 +133,7 @@ namespace Althea.Rng.Cuda
 		/// </summary>
 		/// <param name="dimensions">number of dimensions</param>
 		/// <exception cref="StatusException">if the returned status is not success</exception>
-		public void SetDimensions(uint dimensions)
+		public void SetDimensions(int dimensions)
 		{
 			NativeMethods.curandSetQuasiRandomGeneratorDimensions(this.handle, dimensions).Check();
 		}
@@ -162,9 +162,9 @@ namespace Althea.Rng.Mkl
 			Dispose();
 		}
 
-		private void Initialize(uint? seed = null)
+		private void Initialize(int? seed = null)
 		{
-			seed ??= (uint)new Random().Next();
+			seed ??= (new Random().Next());
 			NativeMethods.vslNewStream(ref this.streamDouble, GeneratorType.MT19937, seed.Value).Check();
 			NativeMethods.vslNewStream(ref this.streamSingle, GeneratorType.MT19937, seed.Value).Check();
 			NativeMethods.vslNewStream(ref this.streamInt, GeneratorType.MT19937, seed.Value).Check();
@@ -178,11 +178,11 @@ namespace Althea.Rng.Mkl
 			GC.SuppressFinalize(this);
 		}
 
-		public void SetSeed(ulong seed)
+		public void SetSeed(long seed)
 		{
 			this.Dispose();
 			GC.ReRegisterForFinalize(this);
-			this.Initialize(unchecked((uint)seed));
+			this.Initialize(unchecked((int)seed));
 		}
 		#endregion
 

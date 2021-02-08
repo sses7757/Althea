@@ -23,7 +23,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-		public abstract void EigenSpecialMatrixHermitian<T, TReal>(SolveVectorMode mode, ulong n, Storage<TReal> valOut, Storage<T> A, ulong lda) where T : unmanaged where TReal : unmanaged;
+		public abstract void EigenSpecialMatrixHermitian<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) where T : unmanaged where TReal : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
@@ -40,7 +40,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-		public abstract void EigenGeneralMatrixHermitian<T, TReal>(GeneralEigenType type, SolveVectorMode mode, ulong n, Storage<TReal> valOut, Storage<T> A, ulong lda, Storage<T> B, ulong ldb) where T : unmanaged where TReal : unmanaged;
+		public abstract void EigenGeneralMatrixHermitian<T, TReal>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TReal : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
@@ -58,7 +58,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
-		public abstract void EigenSpecialMatrixGeneral<T, TComplex>(SolveVectorMode mode, ulong n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, ulong ldvl, Storage<TComplex>? rightVec, ulong ldvr, Storage<T> A, ulong lda) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
+		public abstract void EigenSpecialMatrixGeneral<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
@@ -79,7 +79,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
-		public abstract void EigenGeneralMatrixGeneral<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, ulong n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, ulong ldvl, Storage<TComplex>? rightVec, ulong ldvr, Storage<T> A, ulong lda, Storage<T> B, ulong ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
+		public abstract void EigenGeneralMatrixGeneral<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
 		#endregion
 
 		#region SVD
@@ -102,7 +102,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="SVDStore.Overwrite"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-		public abstract void SingularValues<T, TReal>(SVDStore storeU, SVDStore storeV, ulong m, ulong n, Storage<T> A, ulong lda, Storage<TReal> S, Storage<T>? U, ulong ldu, Storage<T>? Vct, ulong ldvct) where T : unmanaged where TReal : unmanaged;
+		public abstract void SingularValues<T, TReal>(SVDStore storeU, SVDStore storeV, long m, long n, Storage<T> A, long lda, Storage<TReal> S, Storage<T>? U, long ldu, Storage<T>? Vct, long ldvct) where T : unmanaged where TReal : unmanaged;
 		#endregion
 
 		#region linear solve
@@ -114,7 +114,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		public abstract void LuDecomposition<T>(ulong n, Storage<T> A, ulong lda) where T : unmanaged;
+		public abstract void LuDecomposition<T>(long n, Storage<T> A, long lda) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, solve a series of linear systems: <paramref name="A"/> X = <paramref name="B"/>. Where each column pair of X and <paramref name="B"/> is a linear system. <br/>
@@ -128,7 +128,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		public abstract void LinearSolve<T>(ulong n, ulong nrhs, Storage<T> A, ulong lda, Storage<T> B, ulong ldb) where T : unmanaged;
+		public abstract void LinearSolve<T>(long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
 		#endregion
 
 		#region other decompositions
@@ -148,7 +148,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldt">The leading dimension of <paramref name="tri"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
-		public abstract void QRDecomposition<T>(bool full, ulong m, ulong n, Storage<T> A, ulong lda, Storage<T> tri, ulong ldt) where T : unmanaged;
+		public abstract void QRDecomposition<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> tri, long ldt) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the Schur decomposition of given matrix <paramref name="A"/>.
@@ -166,7 +166,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
-		public abstract ulong SchurDecomposition<T, TComplex>(SolveVectorMode jobu, ulong n, Storage<T> A, ulong lda, Storage<T>? U, ulong ldu, Storage<TComplex> orderVal = null) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
+		public abstract long SchurDecomposition<T, TComplex>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, Storage<TComplex> orderVal = null) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
 		#endregion
 	}
 }

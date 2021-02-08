@@ -85,11 +85,11 @@ namespace Althea.NativeTypes
 		/// </summary>
 		RealUInt16 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="uint"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="int"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
 		RealUInt32 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="ulong"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="long"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
 		RealUInt64 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
 

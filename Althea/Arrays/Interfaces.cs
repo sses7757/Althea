@@ -50,7 +50,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Number of nonzero values of this sparse vector, equal to the size of the index/value array size. The default implementation returns the length of <see cref="IMutableArray{T}.Storage"/>.
 		/// </summary>
-		ulong NonZero => this.Storage.Length;
+		long NonZero => this.Storage.Length;
 
 		/// <summary>
 		/// The underlying list of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/> for the index array(s) of this sparse array
@@ -322,12 +322,12 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Leading dimension. In column major, same as the row number.
 		/// </summary>
-		ulong NRows { get; }
+		long NRows { get; }
 
 		/// <summary>
 		/// The secondary dimension. In column major, same as the column number.
 		/// </summary>
-		ulong NCols { get; }
+		long NCols { get; }
 		#endregion
 
 		#region in-place method

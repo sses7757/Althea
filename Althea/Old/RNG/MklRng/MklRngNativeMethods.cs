@@ -18,7 +18,7 @@ namespace Althea.Rng.Mkl
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
 		//[NativeMethodBoundary]
-		internal static extern Status vslNewStream(ref IntPtr stream, GeneratorType generator, uint seed);
+		internal static extern Status vslNewStream(ref IntPtr stream, GeneratorType generator, int seed);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
 		//[NativeMethodBoundary]

@@ -106,7 +106,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="location">The given supported <see cref="StorageLocation"/></param>
 		/// <returns>The available and total memory in bytes of device of given <paramref name="location"/></returns>
-		public abstract (ulong free, ulong total) FreeAndTotalMemory(StorageLocation location);
+		public abstract (long free, long total) FreeAndTotalMemory(StorageLocation location);
 		#endregion
 
 		#region low-level storage operations
@@ -119,10 +119,10 @@ namespace Althea.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
 		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected memory leaks which GC cannot collect due to improper usage.</remarks>
-		protected internal abstract PointerSegment Allocate(StorageLocation location, ulong length);
+		protected internal abstract PointerSegment Allocate(StorageLocation location, long length);
 
 		/// <summary>
-		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>.<br/>The default implementation utilizes <see cref="Allocate(StorageLocation, ulong)"/>.
+		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>.<br/>The default implementation utilizes <see cref="Allocate(StorageLocation, long)"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
@@ -131,7 +131,7 @@ namespace Althea.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
 		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected memory leaks which GC cannot collect due to improper usage.</remarks>
-		protected internal virtual PointerSegment Allocate<T>(StorageLocation location, ulong length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
+		protected internal virtual PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
 
 		/// <summary>
 		/// When implemented by a derived class, free a storage indicated by a given <paramref name="pointer"/>
@@ -191,7 +191,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		public abstract void MemoryCopy2D(PointerSegment source, ulong sourceLD, PointerSegment destination, ulong destinationLD, ulong height, ulong width);
+		public abstract void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width);
 
 		/// <summary>
 		/// TWhen implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
@@ -267,7 +267,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void ToManaged2D<T>(PointerSegment source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination, ulong destinationLeadDim = 0) where T : unmanaged;
+		public abstract void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, ArraySegment<T> destination, long destinationLeadDim = 0) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
@@ -286,7 +286,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void FromManaged2D<T>(PointerSegment destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values, ulong valuesLeadDim = 0) where T : unmanaged;
+		public abstract void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ArraySegment<T> values, long valuesLeadDim = 0) where T : unmanaged;
 		#endregion
 
 		#region high-level storage operations
@@ -438,7 +438,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>, 
 		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>
 		/// </exception>
-		public virtual void MemoryCopy2D<T>(Storage<T> source, ulong sourceLD, Storage<T> destination, ulong destLD, ulong height, ulong width) where T : unmanaged
+		public virtual void MemoryCopy2D<T>(Storage<T> source, long sourceLD, Storage<T> destination, long destLD, long height, long width) where T : unmanaged
 		{
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
@@ -463,10 +463,10 @@ namespace Althea.Storage
 				this.MemoryCopy2D(source[0], sourceLD, destination[0], destLD, height, width);
 				return;
 			}
-			long srcLD = (long)sourceLD, dstLD = (long)destLD;
+			long srcLD = sourceLD, dstLD = destLD;
 			source = source.MakeReference(newLength: height);
 			destination = destination.MakeReference(newLength: height);
-			for (ulong column = 0; column < width - 1; column++)
+			for (long column = 0; column < width - 1; column++)
 			{
 				this.MemoryCopy(source, destination);
 				source = source.MakeReference(offset: srcLD, newLength: height);
@@ -548,7 +548,7 @@ namespace Althea.Storage
 			}
 			else if (cached is not null)
 			{
-				ulong count = Storage<T>.SizeOfT * (ulong)destination.Count;
+				long count = Storage<T>.SizeOfT * (long)destination.Count;
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
@@ -587,7 +587,7 @@ namespace Althea.Storage
 			}
 			else if (cached is not null)
 			{
-				ulong count = Storage<T>.SizeOfT * (ulong)values.Count;
+				long count = Storage<T>.SizeOfT * (long)values.Count;
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
@@ -619,7 +619,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public virtual void ToManaged2D<T>(Storage<T> source, ulong leadDim, ulong height, ulong width, ArraySegment<T> destination, ulong destinationLeadDim = 0) where T : unmanaged
+		public virtual void ToManaged2D<T>(Storage<T> source, long leadDim, long height, long width, ArraySegment<T> destination, long destinationLeadDim = 0) where T : unmanaged
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -633,7 +633,7 @@ namespace Althea.Storage
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > source.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(source));
-			if (leadDim * width > (ulong)destination.Count)
+			if (leadDim * width > destination.Count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
 			// shortcut
 			if (source.Count == 1)
@@ -643,7 +643,7 @@ namespace Althea.Storage
 			}
 			// normal case
 			int h = checked((int)height), dstLD = checked((int)(destinationLeadDim == 0 ? height : destinationLeadDim));
-			long srcLD = (long)leadDim, max = (long)(leadDim * width);
+			long srcLD = leadDim, max = leadDim * width;
 			int dstOffset = 0;
 			for (long srcOffset = 0; srcOffset < max; srcOffset += srcLD, dstOffset += dstLD)
 			{
@@ -670,7 +670,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public virtual void FromManaged2D<T>(Storage<T> destination, ulong leadDim, ulong height, ulong width, ArraySegment<T> values, ulong valuesLeadDim = 0) where T : unmanaged
+		public virtual void FromManaged2D<T>(Storage<T> destination, long leadDim, long height, long width, ArraySegment<T> values, long valuesLeadDim = 0) where T : unmanaged
 		{
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
@@ -684,7 +684,7 @@ namespace Althea.Storage
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > destination.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
-			if (leadDim * width > (ulong)values.Count)
+			if (leadDim * width > values.Count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(values));
 			// shortcut
 			if (destination.Count == 1)
@@ -694,7 +694,7 @@ namespace Althea.Storage
 			}
 			// normal case
 			int h = checked((int)height), srcLD = checked((int)(valuesLeadDim == 0 ? height : valuesLeadDim));
-			long dstLD = (long)leadDim, max = (long)(leadDim * width);
+			long dstLD = leadDim, max = leadDim * width;
 			int srcOffset = 0;
 			for (long dstOffset = 0; dstOffset < max; dstOffset += dstLD, srcOffset += srcLD)
 			{
