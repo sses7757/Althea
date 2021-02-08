@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace Althea
 {
 	/// <summary>
-	/// The interface for a 
+	/// The interface for an object whose validness can be checked
 	/// </summary>
 	public interface ICheckValid
 	{

@@ -71,7 +71,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// The sparse vector wrapper
 	/// </summary>
 	/// <typeparam name="T">see <see cref="AbstractArray{T}"/></typeparam>
-	public readonly struct SparseVectorWrapper<T> : IEquatable<SparseVectorWrapper<T>> where T : unmanaged
+	public readonly struct SparseVectorWrapper<T> : IEquatable<SparseVectorWrapper<T>>, ICheckValid where T : unmanaged
 	{
 		/// <summary>
 		/// value array
@@ -82,6 +82,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// index array
 		/// </summary>
 		public Storage<int> Indices { get; }
+
+		/// <summary>
+		/// Check whether this object is a valid one or not
+		/// </summary>
+		/// <returns>The validness of this object</returns>
+		public bool IsValid() => this.Values.IsValid() && this.Indices.IsValid();
 
 		/// <summary>
 		/// Simple constructor from given value array <paramref name="val"/> and index array <paramref name="ind"/>
@@ -139,7 +145,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// The sparse matrix wrapper
 	/// </summary>
 	/// <typeparam name="T">see <see cref="AbstractArray{T}"/></typeparam>
-	public readonly struct SparseMatrixWrapper<T> : IEquatable<SparseMatrixWrapper<T>> where T : unmanaged
+	public readonly struct SparseMatrixWrapper<T> : IEquatable<SparseMatrixWrapper<T>>, ICheckValid where T : unmanaged
 	{
 		/// <summary>
 		/// value array
@@ -155,6 +161,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// column index/pointer array
 		/// </summary>
 		public Storage<int> Column { get; }
+
+		/// <summary>
+		/// Check whether this object is a valid one or not
+		/// </summary>
+		/// <returns>The validness of this object</returns>
+		public bool IsValid() => this.Values.IsValid() && this.Row.IsValid() && this.Column.IsValid();
 
 		/// <summary>
 		/// Simple constructor from given value array <paramref name="val"/> and index arrays <paramref name="row"/> and <paramref name="column"/>

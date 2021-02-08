@@ -126,16 +126,6 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract void PointWiseCast<T, TOut>(Storage<T> source, int incSrc, Storage<TOut> destination, int incDst) where T : unmanaged where TOut : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="x">The vector whose values will be set</param>
-		/// <param name="positions">The given positions as a <see cref="long"/> array</param>
-		/// <param name="value">The value to set</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
-		public abstract void SetArrayWithValue<T>(Storage<T> x, T value, Storage<long> positions) where T : unmanaged;
-
-		/// <summary>
 		/// When implemented by a derived class, truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
@@ -145,7 +135,7 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract void TruncateArray<T>(Storage<T> x, float threshold) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, directly sum the elements in vector <paramref name="x"/>.
+		/// When implemented by a derived class, aggregately sum the elements in vector <paramref name="x"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be summed</param>
@@ -153,10 +143,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		/// <returns>The sum as a <typeparamref name="T"/></returns>
-		public abstract T Sum<T>(Storage<T> x, int stride) where T : unmanaged;
+		public abstract T AggregateSum<T>(Storage<T> x, int stride) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, directly product the elements in vector <paramref name="x"/>.
+		/// When implemented by a derived class, aggregately product the elements in vector <paramref name="x"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be multiplied</param>
@@ -165,10 +155,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The sum as a <typeparamref name="T"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		public abstract T Product<T>(Storage<T> x, int stride) where T : unmanaged;
+		public abstract T AggregateProduct<T>(Storage<T> x, int stride) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, preform partial sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
+		/// When implemented by a derived class, preform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be partially summed</param>
@@ -180,7 +170,7 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract void PartialSum<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, preform partial product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
+		/// When implemented by a derived class, preform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be partially multiplied</param>

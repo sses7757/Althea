@@ -147,7 +147,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offset;
 				sp.NativeStream.SetValues<byte>(value, pointer.LengthInBytes);
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 
@@ -163,7 +163,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offset;
 				sp.NativeStream.SetValues<T>(value, pointer.LengthInBytes / Storage<T>.SizeOfT);
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 
@@ -196,7 +196,7 @@ namespace Althea.Backend.CSharp.Storage
 				dstSP.NativeStream.Position = dstOff;
 				srcSP.NativeStream.CopyTo(dstSP.NativeStream, source.LengthInBytes);
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 
@@ -268,7 +268,7 @@ namespace Althea.Backend.CSharp.Storage
 					srcSP.NativeStream.CopyTo(dstSP.NativeStream, height);
 				}
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 
@@ -283,29 +283,58 @@ namespace Althea.Backend.CSharp.Storage
 			// shortcut
 			if (incrementSource == 1 && incrementDestination == 1)
 			{
-
+				this.MemoryCopy(source, destination);
 			}
-
+			// other cases
 			long copyLength = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
 			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcMP is not null && dstMP is not null)
 			{
-				// TODO
+				Span<T> srcSpan = srcMP.AsSpan<T>(source), dstSpan = dstMP.AsSpan<T>(destination);
+				for (int i = 0; i < copyLength; i++)
+				{
+					dstSpan[i * incrementDestination] = srcSpan[i * incrementSource];
+				}
 			}
 			else if (srcMP is not null && dstSP is not null)
 			{
-				
+				Span<T> srcSpan = srcMP.AsSpan<T>(source);
+				Span<T> temp = stackalloc T[1];
+				for (int i = 0; i < copyLength; i++)
+				{
+					dstSP.NativeStream.Position = dstOff;
+					temp[0] = srcSpan[i * incrementSource];
+					dstSP.NativeStream.FromManged(temp);
+					dstOff += incrementDestination;
+				}
 			}
 			else if (srcSP is not null && dstMP is not null)
 			{
-				
+				Span<T> dstSpan = dstMP.AsSpan<T>(destination);
+				Span<T> temp = stackalloc T[1];
+				for (int i = 0; i < copyLength; i++)
+				{
+					srcSP.NativeStream.Position = srcOff;
+					srcSP.NativeStream.ToManged(temp);
+					dstSpan[i * incrementDestination] = temp[0];
+					srcOff += incrementSource;
+				}
 			}
 			else if (srcSP is not null && dstSP is not null)
 			{
-				
+				Span<T> temp = stackalloc T[1];
+				for (int i = 0; i < copyLength; i++)
+				{
+					srcSP.NativeStream.Position = srcOff;
+					dstSP.NativeStream.Position = dstOff;
+					srcSP.NativeStream.ToManged(temp);
+					dstSP.NativeStream.FromManged(temp);
+					srcOff += incrementSource;
+					dstOff += incrementDestination;
+				}
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 		#endregion
@@ -325,7 +354,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.ToManged(span);
 				return span[0];
 			}
-			else // never not here
+			else // never here
 				return default;
 		}
 
@@ -343,7 +372,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offset;
 				sp.NativeStream.FromManged(span);
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 
@@ -359,7 +388,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offsetSrc;
 				sp.NativeStream.ToManged(managedSpan);
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 
@@ -375,7 +404,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offsetSrc;
 				sp.NativeStream.FromManged(managedSpan);
 			}
-			else // never not here
+			else // never here
 				return;
 		}
 

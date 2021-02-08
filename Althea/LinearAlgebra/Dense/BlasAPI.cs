@@ -316,7 +316,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="A"/>*<paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
-		/// <param name="fillMode">The indicates whether <paramref name="A"/>'s lower or upper part is stored</param>
+		/// <param name="fillLower">The indicates whether <paramref name="A"/>'s lower or upper part is stored</param>
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
@@ -329,7 +329,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void SymmHermMatrixMultiplyVector<T>(MatrixFillMode fillMode, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
+		public abstract void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -356,7 +356,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/><sup>op</sup> + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
-		/// <param name="fillMode">The <see cref="MatrixFillMode"/> of result matrix <paramref name="A"/></param>
+		/// <param name="fillLower">The <see cref="bool"/> of result matrix <paramref name="A"/></param>
 		/// <param name="conjX">Conjugate the second <paramref name="x"/> or not</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
@@ -367,7 +367,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract void SymmHermRankOneUpdate<T>(MatrixFillMode fillMode, bool conjX, long n, T α, Storage<T> x, int incx, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		public abstract void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int incx, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 3
@@ -397,7 +397,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// If <paramref name="leftA"/> is true, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>; otherwise, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="B"/> * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></c>.<br/>
 		/// Where <paramref name="A"/> is a symmetric/hermitian matrix stored in lower or upper mode, <paramref name="B"/> and <paramref name="C"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.
 		/// </summary>
-		/// <param name="fillMode">The <see cref="MatrixFillMode"/> indicates whether matrix <paramref name="A"/> lower or upper part is stored</param>
+		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> lower or upper part is stored</param>
 		/// <param name="leftA">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> is on the left or right of <paramref name="B"/></param>
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or symmetric matrix</param>
 		/// <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
@@ -411,14 +411,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void SymmHermMatrixMultiplyGeneral<T>(MatrixFillMode fillMode, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void SymmHermMatrixMultiplyGeneral<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)<sup>pow</sup> + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
 		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
 		/// </summary>
-		/// <param name="fillMode">The <see cref="MatrixFillMode"/> indicates whether matrix <paramref name="C"/>'s lower or upper part is stored</param>
+		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s lower or upper part is stored</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
 		/// <param name="conjA">Conjugate transpose <paramref name="A"/> or just transpose <paramref name="A"/></param>
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
@@ -430,7 +430,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void RankKUpdate<T>(MatrixFillMode fillMode, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		public abstract void RankKUpdate<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 		#endregion
 	}
 }

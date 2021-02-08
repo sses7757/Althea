@@ -87,115 +87,43 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region vector
 		/// <summary>
-		/// Scatter the sparse vector x to a dense vector y. $\vec{y}[x_{\text{ind}}] = \vec{x}_{\text{val}}$
-		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
-		void VectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
-
-		/// <summary>
-		/// Scatter the sparse vector x to a dense vector y. $\vec{y}[x_{\text{ind}}] = \vec{x}_{\text{val}}$
-		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
-		public delegate void DelegateVectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
-
-		// Ignore Spelling: pos
-		/// <summary>
-		/// Gather the vector <paramref name="x"/> at <paramref name="pos"/> into <paramref name="y"/>: $\vec{y}=\vec{x}[\text{pos}]$.
-		/// </summary>
-		/// <param name="x">vector to gather from</param>
-		/// <param name="pos">indices to gather</param>
-		/// <param name="y">vector to gather to</param>
-		/// <param name="n">length of <paramref name="pos"/></param>
-		void VectorGatherAtIndices<T>(Storage<T> x, Storage<int> pos, Storage<T> y, int n) where T : unmanaged;
-
-		/// <summary>
-		/// Gather the vector <paramref name="x"/> at <paramref name="pos"/> into <paramref name="y"/>: $\vec{y}=\vec{x}[\text{pos}]$.
-		/// </summary>
-		/// <param name="x">vector to gather from</param>
-		/// <param name="pos">indices to gather</param>
-		/// <param name="y">vector to gather to</param>
-		/// <param name="n">length of <paramref name="pos"/></param>
-		public delegate void DelegateVectorGatherAtIndices<T>(Storage<T> x, Storage<int> pos, Storage<T> y, int n) where T : unmanaged;
-
-		/// <summary>
-		/// Convert the dense vector y to sparse vector x with truncation <paramref name="threshold"/>.
-		/// </summary>
-		/// <param name="y">dense vector y</param>
-		/// <param name="n">length of vector</param>
-		/// <param name="threshold">the abs value below it will regarded as zero</param>
-		/// <returns>a <see cref="SparseVectorWrapper{T}"/></returns>
-		SparseVectorWrapper<T> VectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : unmanaged;
-
-		/// <summary>
-		/// Convert the dense vector y to sparse vector x with truncation <paramref name="threshold"/>.
-		/// </summary>
-		/// <param name="y">dense vector y</param>
-		/// <param name="n">length of vector</param>
-		/// <param name="threshold">the abs value below it will regarded as zero</param>
-		/// <returns>a <see cref="SparseVectorWrapper{T}"/></returns>
-		public delegate SparseVectorWrapper<T> DelegateVectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : unmanaged;
-
-		/// <summary>
-		/// Add the sparse vector x to a dense vector y. $y[x_{\text{ind}}] += \alpha x_{\text{val}}$
+		/// When implemented by a derived class, add the sparse vector x to a dense vector y. $y[x_{\text{ind}}] += \alpha x_{\text{val}}$
 		/// </summary>
 		/// <param name="alpha">scalar to multiply x</param>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
-		void VectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
+		public abstract void VectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
-		/// Add the sparse vector x to a dense vector y. $y[x_{\text{ind}}] += \alpha x_{\text{val}}$
+		/// When implemented by a derived class, calculate the dot product of a sparse vector and a dense vector. $\vec{x} \cdot \vec{y}$
 		/// </summary>
-		/// <param name="alpha">scalar to multiply x</param>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
-		public delegate void DelegateVectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
-
-		/// <summary>
-		/// Calculate the dot product of a sparse vector and a dense vector. $\vec{x} \cdot \vec{y}$
-		/// </summary>
-		/// <param name="n">length of vectors</param>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
 		/// <param name="conjX">conjugate <paramref name="x"/> or not</param>
 		/// <returns>output dot result</returns>
-		T VectorSparseDotDense<T>(int n, SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : unmanaged;
+		public abstract T VectorSparseDotDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : unmanaged;
 
 		/// <summary>
-		/// Calculate the dot product of a sparse vector and a dense vector. $\vec{x} \cdot \vec{y}$
-		/// </summary>
-		/// <param name="n">length of vectors</param>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
-		/// <param name="conjX">conjugate <paramref name="x"/> or not</param>
-		/// <returns>output dot result</returns>
-		public delegate T DelegateVectorSparseDotDense<T>(int n, SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : unmanaged;
-
-		/// <summary>
-		/// Add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/>.
+		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/>.
 		/// </summary>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">sparse vector y</param>
 		/// <returns></returns>
-		SparseVectorWrapper<T> VectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : unmanaged;
+		public abstract SparseVectorWrapper<T> VectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : unmanaged;
 
 		/// <summary>
-		/// Add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/>.
-		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">sparse vector y</param>
-		/// <returns></returns>
-		public delegate SparseVectorWrapper<T> DelegateVectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : unmanaged;
-
-		/// <summary>
-		/// Point-wise multiply or divide a sparse vector and a dense vector.
+		/// When implemented by a derived class, point-wise multiply a sparse vector and a dense vector.
 		/// </summary>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
-		/// <param name="multiply">do multiplication or division</param>
-		void VectorSparsePointWiseMultiplyDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool multiply) where T : unmanaged;
+		public abstract void VectorSparsePointWiseMultiplyDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, point-wise divide a sparse vector and a dense vector.
+		/// </summary>
+		/// <param name="x">sparse vector x</param>
+		/// <param name="y">dense vector y</param>
+		public abstract void VectorSparsePointWiseDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 		#endregion
 	}
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -7,7 +9,7 @@ using Althea.Linq;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
-using CopyDelegate = System.Action<Althea.PointerSegment, Althea.PointerSegment>;
+////using CopyDelegate = System.Func<Althea.PointerSegment, Althea.PointerSegment, long>;
 
 
 namespace Althea.Storage
@@ -750,6 +752,17 @@ namespace Althea.Storage
 	public sealed class PureStorage<T> : PureOrMixedStorage<T> where T : unmanaged
 	{
 		#region basic
+		/// <summary>
+		/// Get whether the given <see cref="CombinationType"/> and <see cref="StorageLocation"/>s is supported by this class
+		/// </summary>
+		/// <param name="type">The given <see cref="CombinationType"/></param>
+		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
+		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
+		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
+		{
+			return type == CombinationType.PureOrMixed && locations.Length == 1;
+		}
+
 		private readonly PointerSegment pointer;
 
 		/// <summary>
@@ -792,6 +805,17 @@ namespace Althea.Storage
 	public sealed class MixedStorage<T> : PureOrMixedStorage<T> where T : unmanaged
 	{
 		#region basic
+		/// <summary>
+		/// Get whether the given <see cref="CombinationType"/> and <see cref="StorageLocation"/>s is supported by this class
+		/// </summary>
+		/// <param name="type">The given <see cref="CombinationType"/></param>
+		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
+		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
+		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
+		{
+			return type == CombinationType.PureOrMixed && locations.Length > 1;
+		}
+
 		private readonly PointerSegment[] pointers;
 
 		/// <summary>
@@ -889,6 +913,14 @@ namespace Althea.Storage
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		PointerSegment GetCacheLevel(Index index);
+
+		/// <summary>
+		/// Copy a <see cref="PointerSegment"/> from <paramref name="source"/> to another <see cref="PointerSegment"/> <paramref name="destination"/>
+		/// </summary>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
+		/// <returns>The actual number of bytes copied</returns>
+		public delegate long CopyDelegate(PointerSegment source, PointerSegment destination);
 
 		/// <summary>
 		/// When implemented by a derived class, retrieve some part of the data delimited by <paramref name="lengthInBytes"/> and <paramref name="totalOffsetInBytes"/> via promoting them to the highest caching level.
@@ -1097,7 +1129,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
 		/// <remarks>
@@ -1105,13 +1137,13 @@ namespace Althea.Storage
 		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
 		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
 		/// </remarks>
-		public abstract PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null);
+		public abstract PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null);
 
 		/// <summary>
 		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
-		public abstract void Flush(CopyDelegate? copy = null);
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		public abstract void Flush(ICachedStorage.CopyDelegate? copy = null);
 		#endregion
 	}
 
@@ -1224,11 +1256,11 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
-		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
-		public PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null)
+		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		public PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (this.Reference is not ICachedStorage c)
 				return default;
@@ -1242,9 +1274,9 @@ namespace Althea.Storage
 		/// <summary>
 		/// Update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
-		/// <remarks>This method utilizes the <see cref="ICachedStorage.Flush(CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
-		public void Flush(CopyDelegate? copy = null)
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <remarks>This method utilizes the <see cref="ICachedStorage.Flush(ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		public void Flush(ICachedStorage.CopyDelegate? copy = null)
 		{
 			(this.Reference as ICachedStorage)?.Flush(copy);
 		}
@@ -1278,6 +1310,17 @@ namespace Althea.Storage
 	public sealed class StreamToMemoryCachedStorage<T> : CachedStorage<T> where T : unmanaged
 	{
 		#region basic
+		/// <summary>
+		/// Get whether the given <see cref="CombinationType"/> and <see cref="StorageLocation"/>s is supported by this class
+		/// </summary>
+		/// <param name="type">The given <see cref="CombinationType"/></param>
+		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
+		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
+		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
+		{
+			return type == CombinationType.Cached && locations.Length == 2 && locations[0].Type == LocationType.CpuRam && locations[1].Type == LocationType.Uri;
+		}
+
 		private readonly PointerSegment stream, memory;
 
 		/// <summary>
@@ -1334,8 +1377,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
-		public override void Flush(CopyDelegate? copy = null)
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		public override void Flush(ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (!this.cached)
 				return;
@@ -1351,10 +1394,10 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="CachedStorage{T}.TopCacheSizeInBytes"/></exception>
-		public override PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, CopyDelegate? copy = null)
+		public override PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (totalOffsetInBytes >= this.stream.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(totalOffsetInBytes));
@@ -1416,439 +1459,6 @@ namespace Althea.Storage
 	#endregion
 
 
-	#region extension
-	/// <summary>
-	/// The extension methods for <see cref="IPureOrMixedStorage"/> and <see cref="ICachedStorage"/>
-	/// </summary>
-	internal static class PureMixedAndCachedStorageExtension
-	{
-		#region casting
-		/// <summary>
-		/// Get the actual storage of the given <paramref name="storage"/> if it is a <see cref="PureOrMixedStorage{T}"/> or a <see cref="CachedStorage{T}"/>.
-		/// </summary>
-		/// <typeparam name="T">any unmanaged data type</typeparam>
-		/// <param name="storage">The given <see cref="Storage{T}"/> to dereference</param>
-		/// <param name="mixed">The output nullable <see cref="IPureOrMixedStorage"/></param>
-		/// <param name="cached">The output nullable <see cref="ICachedStorage"/></param>
-		/// <returns>The offset in bytes and the length in bytes</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		/// <exception cref="NotImplementedException">If <paramref name="storage"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/> or it is <see cref="ReferenceStorage{T}"/> while its dereference is neither <see cref="PureOrMixedStorage{T}"/> nor <see cref="CachedStorage{T}"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Cast<T>(this Storage<T> storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached) where T : unmanaged
-		{
-			if (!storage.IsValid())
-				throw new ArgumentNullException(nameof(storage));
-			mixed = null; cached = null;
-			if (storage is IPureOrMixedStorage mix)
-			{
-				mixed = mix;
-			}
-			else if (storage is ICachedStorage cache)
-			{
-				cached = cache;
-			}
-			else
-				throw new NotImplementedException();
-		}
-
-		/// <summary>
-		/// Get the length in bytes of the real / underlying actual storage of given <see cref="IPureOrMixedStorage"/>
-		/// </summary>
-		/// <param name="cached">The given <see cref="IPureOrMixedStorage"/> to obtain length from</param>
-		/// <returns>The real length in bytes of <paramref name="cached"/></returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="cached"/> is a <see cref="IReferenceStorage"/> while its <see cref="IReferenceStorage.Reference"/> is not a <see cref="IPureOrMixedStorage"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long GetRealLength(this IPureOrMixedStorage cached)
-		{
-			if (cached is IReferenceStorage r)
-			{
-				if (r.Reference is IPureOrMixedStorage c)
-					return c.LengthInBytes;
-				else
-					throw new InvalidOperationException();
-			}
-			else
-			{
-				return cached.LengthInBytes;
-			}
-		}
-
-		/// <summary>
-		/// Get the length in bytes of the real / underlying actual storage of given <see cref="ICachedStorage"/>
-		/// </summary>
-		/// <param name="cached">The given <see cref="ICachedStorage"/> to obtain length from</param>
-		/// <returns>The real length in bytes of <paramref name="cached"/></returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="cached"/> is a <see cref="IReferenceStorage"/> while its <see cref="IReferenceStorage.Reference"/> is not a <see cref="ICachedStorage"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long GetRealLength(this ICachedStorage cached)
-		{
-			if (cached is IReferenceStorage r)
-			{
-				if (r.Reference is ICachedStorage c)
-					return c.LengthInBytes;
-				else
-					throw new InvalidOperationException();
-			}
-			else
-			{
-				return cached.LengthInBytes;
-			}
-		}
-		#endregion
-
-		#region apply unary function to a ICachedStorage
-		/// <summary>
-		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
-		/// </summary>
-		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
-		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
-		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
-		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="count"/> or <paramref name="offset"/> is not divisible by <paramref name="pack"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyUnaryFunction(this ICachedStorage cached, Action<PointerSegment> unaryFunc, long offset, long count, CopyDelegate? copyFunc = null, int pack = 1)
-		{
-			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
-			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
-			if (offset % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(offset));
-			if (count % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(count));
-			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
-
-			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
-			while (count > 0)
-			{
-				long getLength = Math.Min(count, maxCacheSize);
-				var temp = cached.Retrieve(offset, count, copyFunc);
-				unaryFunc.Invoke(temp);
-				offset += getLength;
-				count -= getLength;
-			}
-		}
-
-		/// <summary>
-		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
-		/// </summary>
-		/// <typeparam name="T">any auxiliary data type</typeparam>
-		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the second one is the <paramref name="auxiliary"/></param>
-		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
-		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
-		/// <param name="auxiliary">The auxiliary data</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
-		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, long offset, long count, T auxiliary, CopyDelegate? copyFunc = null, int pack = 1)
-		{
-			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
-			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
-			if (offset % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(offset));
-			if (count % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(count));
-			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
-
-			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
-			while (count > 0)
-			{
-				long getLength = Math.Min(count, maxCacheSize);
-				var temp = cached.Retrieve(offset, count, copyFunc);
-				unaryFunc.Invoke(temp, auxiliary);
-				offset += getLength;
-				count -= getLength;
-			}
-		}
-
-		/// <summary>
-		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
-		/// </summary>
-		/// <typeparam name="T">any auxiliary data type</typeparam>
-		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose second input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the first one is the <paramref name="auxiliary"/></param>
-		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
-		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
-		/// <param name="auxiliary">The auxiliary data</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
-		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyReverseUnaryFunction<T>(this ICachedStorage cached, Action<T, PointerSegment> unaryFunc, long offset, long count, T auxiliary, CopyDelegate? copyFunc = null, int pack = 1)
-		{
-			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
-			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
-			if (offset % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(offset));
-			if (count % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(count));
-			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
-
-			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
-			while (count > 0)
-			{
-				long getLength = Math.Min(count, maxCacheSize);
-				var temp = cached.Retrieve(offset, count, copyFunc);
-				unaryFunc.Invoke(auxiliary, temp);
-				offset += getLength;
-				count -= getLength;
-			}
-		}
-
-		/// <summary>
-		/// Encapsulates a method that delimits and returns the given <paramref name="originalValue"/> with <paramref name="offset"/> and <paramref name="length"/>
-		/// </summary>
-		/// <typeparam name="T">any data type which can be sliced</typeparam>
-		/// <param name="originalValue">The original value in <typeparamref name="T"/></param>
-		/// <param name="offset">The offset in <see cref="long"/></param>
-		/// <param name="length">The length in <see cref="long"/></param>
-		/// <returns>The <paramref name="originalValue"/> after the slice as a <typeparamref name="T"/></returns>
-		public delegate T SliceDelegate<T>(T originalValue, long offset, long length);
-
-		/// <summary>
-		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
-		/// </summary>
-		/// <typeparam name="T">any auxiliary data type</typeparam>
-		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the second one is the output of <paramref name="sliceFunc"/></param>
-		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
-		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
-		/// <param name="auxiliaryOriginal">The auxiliary data's initial value, used as the first input argument of <paramref name="sliceFunc"/></param>
-		/// <param name="sliceFunc">The <see cref="SliceDelegate{T}"/> used to slice <paramref name="auxiliaryOriginal"/></param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
-		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, long offset, long count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, CopyDelegate? copyFunc = null, int pack = 1)
-		{
-			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
-			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
-			if (offset % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(offset));
-			if (count % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(count));
-			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
-
-			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
-			while (count > 0)
-			{
-				long getLength = Math.Min(count, maxCacheSize);
-				var temp = cached.Retrieve(offset, count, copyFunc);
-				T val = sliceFunc.Invoke(auxiliaryOriginal, offset, getLength);
-				unaryFunc.Invoke(temp, val);
-				offset += getLength;
-				count -= getLength;
-			}
-		}
-
-		/// <summary>
-		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
-		/// </summary>
-		/// <typeparam name="T">any auxiliary data type</typeparam>
-		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
-		/// <param name="unaryFunc">The unary function whose second input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/> and the first one is the output of <paramref name="sliceFunc"/></param>
-		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
-		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
-		/// <param name="auxiliaryOriginal">The auxiliary data's initial value, used as the first input argument of <paramref name="sliceFunc"/></param>
-		/// <param name="sliceFunc">The <see cref="SliceDelegate{T}"/> used to slice <paramref name="auxiliaryOriginal"/></param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/></param>
-		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ApplyReverseUnaryFunction<T>(this ICachedStorage cached, Action<T, PointerSegment> unaryFunc, long offset, long count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, CopyDelegate? copyFunc = null, int pack = 1)
-		{
-			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
-			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
-			if (offset % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(offset));
-			if (count % pack != 0)
-				throw new ArgumentException(Other.CannotDivide, nameof(count));
-			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
-
-			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
-			while (count > 0)
-			{
-				long getLength = Math.Min(count, maxCacheSize);
-				var temp = cached.Retrieve(offset, count, copyFunc);
-				T val = sliceFunc.Invoke(auxiliaryOriginal, offset, getLength);
-				unaryFunc.Invoke(val, temp);
-				offset += getLength;
-				count -= getLength;
-			}
-		}
-		#endregion
-
-		#region copies between IPureOrMixedStorage and ICachedStorage
-		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="IPureOrMixedStorage"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="IPureOrMixedStorage"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="IPureOrMixedStorage"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
-		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void StorageMemoryCopy(this IPureOrMixedStorage source, IPureOrMixedStorage destination, CopyDelegate? copyFunc = null)
-		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
-
-			PointerSegment src = source[0], dst = destination[0];
-			bool incSrc = false, incDst = false;
-			int i = 0, j = 0;
-			while (i < source.Count && j < destination.Count)
-			{
-				if (incSrc)
-					src = source[i];
-				if (incDst)
-					dst = destination[j];
-				copyFunc.Invoke(src, dst);
-				if (src.LengthInBytes > dst.LengthInBytes)
-				{
-					src += dst.LengthInBytes;
-					incDst = true; incSrc = false;
-					j++;
-				}
-				else if (src.LengthInBytes < dst.LengthInBytes)
-				{
-					dst += src.LengthInBytes;
-					incDst = false; incSrc = true;
-					i++;
-				}
-				else
-				{
-					incDst = true; incSrc = true;
-					i++; j++;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Copy memory from a <see cref="IPureOrMixedStorage"/> <paramref name="source"/> to a <see cref="ICachedStorage"/> <paramref name="destination"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
-		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void StorageMemoryCopy(this IPureOrMixedStorage source, ICachedStorage destination, CopyDelegate? copyFunc = null)
-		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
-
-			long maxCacheSize = destination.TopCacheSizeInBytes;
-			long offset = 0;
-			for (int i = 0; i < source.Count; i++)
-			{
-				long count = Math.Min(destination.LengthInBytes - offset, source[i].LengthInBytes);
-				destination.ApplyReverseUnaryFunction(copyFunc, offset, count, auxiliaryOriginal: source[i],
-													  sliceFunc: static (src, off, len) => src.MoveBy(off, len),
-													  copyFunc: copyFunc);
-				offset += count;
-				if (offset >= destination.LengthInBytes)
-					break;
-			}
-		}
-
-		/// <summary>
-		/// Copy memory from a <see cref="ICachedStorage"/> <paramref name="source"/> to a <see cref="IPureOrMixedStorage"/> <paramref name="destination"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
-		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void StorageMemoryCopy(this ICachedStorage source, IPureOrMixedStorage destination, CopyDelegate? copyFunc = null)
-		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
-
-			long maxCacheSize = source.TopCacheSizeInBytes;
-			long offset = 0;
-			for (int i = 0; i < destination.Count; i++)
-			{
-				long count = Math.Min(source.LengthInBytes - offset, destination[i].LengthInBytes);
-				source.ApplyUnaryFunction(copyFunc, offset, count, auxiliaryOriginal: destination[i],
-										  sliceFunc: static (dst, off, len) => dst.MoveBy(off, len),
-										  copyFunc: copyFunc);
-				offset += count;
-				if (offset >= source.LengthInBytes)
-					break;
-			}
-		}
-
-		/// <summary>
-		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="ICachedStorage"/>.
-		/// </summary>
-		/// <param name="source">The source <see cref="ICachedStorage"/> to copy from</param>
-		/// <param name="destination">The destination <see cref="ICachedStorage"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, CopyDelegate?)"/>, default is the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="MEM.SelectImplementation(IStorage, IStorage)"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or empty</exception>
-		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void StorageMemoryCopy(this ICachedStorage source, ICachedStorage destination, CopyDelegate? copyFunc = null)
-		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
-
-			copyFunc ??= MEM.SelectImplementation(source, destination).MemoryCopy;
-
-			long maxCacheSize = Math.Min(source.TopCacheSizeInBytes, destination.TopCacheSizeInBytes);
-			long count = Math.Min(source.LengthInBytes, destination.LengthInBytes);
-			long offset = 0;
-			while (count > 0)
-			{
-				// get
-				long getLength = Math.Min(count, maxCacheSize);
-				var src = source.Retrieve(offset, getLength, copyFunc);
-				var dst = destination.Retrieve(offset, getLength, copyFunc);
-				// copy
-				copyFunc.Invoke(src, dst);
-				// increase
-				count -= getLength;
-				offset += getLength;
-			}
-		}
-		#endregion
-	}
-	#endregion
-
-
 	#region factory
 	/// <summary>
 	/// The storage factory for creating concrete storage classes. This is a simple factory pattern.
@@ -1860,11 +1470,11 @@ namespace Althea.Storage
 		/// <summary>
 		/// Encapsulates a method that allocates and creates a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
-		/// <param name="locations">The given <see cref="CombinationOfLocations"/> indicating the locations</param>
-		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
+		/// <param name="locations">The given <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/>s indicating the locations</param>
+		/// <param name="lengths">The given <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <remarks>Independent checks for parameters are not necessary</remarks>
-		public delegate Storage<T> CreateDelegate(Span<StorageLocation> locations, Span<long> lengths);
+		public delegate Storage<T> CreateDelegate(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
 
 		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new Dictionary<CombinationType, CreateDelegate>
 		{
@@ -1872,7 +1482,7 @@ namespace Althea.Storage
 			[CombinationType.Cached] = DefaultCreateCached,
 		};
 
-		private static Storage<T> DefaultCreatePureOrMixed(Span<StorageLocation> locations, Span<long> lengths)
+		private static Storage<T> DefaultCreatePureOrMixed(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (locations.Length == 1)
 				return new PureStorage<T>(locations[0], lengths[0]);
@@ -1880,7 +1490,7 @@ namespace Althea.Storage
 				return new MixedStorage<T>(locations, lengths);
 		}
 
-		private static Storage<T> DefaultCreateCached(Span<StorageLocation> locations, Span<long> lengths)
+		private static Storage<T> DefaultCreateCached(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (locations.Length == 2 &&
 				locations[0].Type.GetClassification() == LocationTypeExtension.ClassMemory &&
@@ -1900,19 +1510,105 @@ namespace Althea.Storage
 			cache_create[combinationType] = createDelegate;
 		}
 
+
+		private delegate bool _SupportDelegate(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations);
+
+		private static bool TryFindAndSetCreateMethod(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations)
+		{
+			var thisAssembly = Assembly.GetExecutingAssembly();
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => a != thisAssembly);
+			static IReadOnlyList<Type> GetTypes(Assembly a)
+			{
+				try
+				{
+					return a.GetExportedTypes();
+				}
+				catch (System.Exception)
+				{
+					return Array.Empty<Type>();
+				}
+			}
+			var types = assemblies.SelectMany(GetTypes);
+			Type actualStorageType = typeof(ActualStorage<T>), referenceStorageType = typeof(IReferenceStorage);
+			Type[] supportMethodArgTypes = new[] { typeof(CombinationType), typeof(ReadOnlySpan<StorageLocation>) };
+			Type[] constructorArgTypes = new[] { typeof(ReadOnlySpan<StorageLocation>), typeof(ReadOnlySpan<long>) };
+			for (int i = 0; i < types.Count; i++)
+			{
+				var type = types[i];
+				if (!type.IsGenericType || type.GenericTypeArguments.Length != 1 || type.IsAbstract || type.IsInterface || !type.IsClass)
+					continue;
+				try
+				{
+					type = type.MakeGenericType(typeof(T));
+				}
+				catch (System.Exception)
+				{
+					continue;
+				}
+				if (!type.IsAssignableTo(actualStorageType) || type.IsAssignableTo(referenceStorageType))
+					continue;
+				try
+				{
+					var method = type.GetMethod(nameof(PureStorage<T>.IsSupported), BindingFlags.Public | BindingFlags.Static, null, supportMethodArgTypes, null);
+					if (method is null)
+						continue;
+					if (!method.CreateDelegate<_SupportDelegate>().Invoke(combinationType, locations))
+						continue;
+				}
+				catch (System.Exception)
+				{
+					continue;
+				}
+				try
+				{
+					var ctor = type.GetConstructor(constructorArgTypes);
+					if (ctor is null)
+						continue;
+					DynamicMethod dynamic = new DynamicMethod(string.Empty, type, constructorArgTypes, type);
+					ILGenerator il = dynamic.GetILGenerator();
+					il.DeclareLocal(type);
+					il.Emit(OpCodes.Newobj, ctor);
+					il.Emit(OpCodes.Stloc_0);
+					il.Emit(OpCodes.Ldloc_0);
+					il.Emit(OpCodes.Ret);
+					var func = (CreateDelegate)dynamic.CreateDelegate(typeof(CreateDelegate));
+					if (func is null)
+						continue;
+					// success
+					cache_create.Add(combinationType, func);
+					return true;
+				}
+				catch (System.Exception)
+				{
+					continue;
+				}
+			}
+			// cannot find any
+			return false;
+		}
+
 		/// <summary>
 		/// Allocate and create a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
 		/// <param name="type">The <see cref="CombinationType"/> used to identify which creation method to use</param>
-		/// <param name="locations">The given <see cref="CombinationOfLocations"/> indicating the locations</param>
-		/// <param name="lengths">The given <see cref="Span{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
+		/// <param name="locations">The given <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/> indicating the locations</param>
+		/// <param name="lengths">The given <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
-		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/></exception>
-		public static Storage<T> Create(CombinationType type, Span<StorageLocation> locations, Span<long> lengths)
+		/// <remarks>If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod"/>,<br/>
+		/// this method will try to find the first suitable one by iterating all exported types of all loaded assemblies,<br/>
+		/// (the type with static method like <see cref="PureStorage{T}.IsSupported"/> and constructor using <paramref name="locations"/> and <paramref name="lengths"/>)<br/>
+		/// which can be <b>really</b> slow. Therefore, try to use <see cref="SetCreateMethod"/> before calling this method if possible.</remarks>
+		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/>, and it cannot be obtained from the public constructors of other assemblies</exception>
+		public static Storage<T> Create(CombinationType type, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (!cache_create.ContainsKey(type))
 				throw new InvalidOperationException();
 
+			if (!cache_create.ContainsKey(type))
+			{
+				if (!TryFindAndSetCreateMethod(type, locations))
+					throw new InvalidOperationException();
+			}
 			return cache_create[type].Invoke(locations, lengths);
 		}
 		#endregion

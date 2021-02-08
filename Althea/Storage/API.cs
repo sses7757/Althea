@@ -4,10 +4,524 @@ using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Resources;
 
 
 namespace Althea.Storage
 {
+	#region extension
+	/// <summary>
+	/// The extension methods for <see cref="IPureOrMixedStorage"/> and <see cref="ICachedStorage"/>
+	/// </summary>
+	internal static class PureMixedAndCachedStorageExtension
+	{
+		#region casting
+		/// <summary>
+		/// Get the actual storage of the given <paramref name="storage"/> if it is a <see cref="PureOrMixedStorage{T}"/> or a <see cref="CachedStorage{T}"/>.
+		/// </summary>
+		/// <typeparam name="T">any unmanaged data type</typeparam>
+		/// <param name="storage">The given <see cref="Storage{T}"/> to dereference</param>
+		/// <param name="mixed">The output nullable <see cref="IPureOrMixedStorage"/></param>
+		/// <param name="cached">The output nullable <see cref="ICachedStorage"/></param>
+		/// <returns>The offset in bytes and the length in bytes</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+		/// <exception cref="NotImplementedException">If <paramref name="storage"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/> or it is <see cref="ReferenceStorage{T}"/> while its dereference is neither <see cref="PureOrMixedStorage{T}"/> nor <see cref="CachedStorage{T}"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Cast<T>(this Storage<T> storage, out IPureOrMixedStorage? mixed, out ICachedStorage? cached) where T : unmanaged
+		{
+			if (!storage.IsValid())
+				throw new ArgumentNullException(nameof(storage));
+			mixed = null; cached = null;
+			if (storage is IPureOrMixedStorage mix)
+			{
+				mixed = mix;
+			}
+			else if (storage is ICachedStorage cache)
+			{
+				cached = cache;
+			}
+			else
+				throw new NotImplementedException();
+		}
+
+		/// <summary>
+		/// Get the length in bytes of the real / underlying actual storage of given <see cref="IPureOrMixedStorage"/>
+		/// </summary>
+		/// <param name="cached">The given <see cref="IPureOrMixedStorage"/> to obtain length from</param>
+		/// <returns>The real length in bytes of <paramref name="cached"/></returns>
+		/// <exception cref="InvalidOperationException">If <paramref name="cached"/> is a <see cref="IReferenceStorage"/> while its <see cref="IReferenceStorage.Reference"/> is not a <see cref="IPureOrMixedStorage"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long GetRealLength(this IPureOrMixedStorage cached)
+		{
+			if (cached is IReferenceStorage r)
+			{
+				if (r.Reference is IPureOrMixedStorage c)
+					return c.LengthInBytes;
+				else
+					throw new InvalidOperationException();
+			}
+			else
+			{
+				return cached.LengthInBytes;
+			}
+		}
+
+		/// <summary>
+		/// Get the length in bytes of the real / underlying actual storage of given <see cref="ICachedStorage"/>
+		/// </summary>
+		/// <param name="cached">The given <see cref="ICachedStorage"/> to obtain length from</param>
+		/// <returns>The real length in bytes of <paramref name="cached"/></returns>
+		/// <exception cref="InvalidOperationException">If <paramref name="cached"/> is a <see cref="IReferenceStorage"/> while its <see cref="IReferenceStorage.Reference"/> is not a <see cref="ICachedStorage"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long GetRealLength(this ICachedStorage cached)
+		{
+			if (cached is IReferenceStorage r)
+			{
+				if (r.Reference is ICachedStorage c)
+					return c.LengthInBytes;
+				else
+					throw new InvalidOperationException();
+			}
+			else
+			{
+				return cached.LengthInBytes;
+			}
+		}
+		#endregion
+
+		#region apply unary function to a ICachedStorage
+		/// <summary>
+		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
+		/// </summary>
+		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
+		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="count"/> or <paramref name="offset"/> is not divisible by <paramref name="pack"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void ApplyUnaryFunction(this ICachedStorage cached, Action<PointerSegment> unaryFunc, long offset, long count, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
+		{
+			if (pack <= 0)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+			if (pack > count)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+			if (offset % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(offset));
+			if (count % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(count));
+			if (count + offset > cached.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			while (count > 0)
+			{
+				long getLength = Math.Min(count, maxCacheSize);
+				var temp = cached.Retrieve(offset, count, copyFunc);
+				unaryFunc.Invoke(temp);
+				offset += getLength;
+				count -= getLength;
+			}
+		}
+
+		/// <summary>
+		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
+		/// </summary>
+		/// <typeparam name="TRet">The return type of <paramref name="unaryFunc"/>, not used</typeparam>
+		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
+		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="count"/> or <paramref name="offset"/> is not divisible by <paramref name="pack"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void ApplyUnaryFunction<TRet>(this ICachedStorage cached, Func<PointerSegment, TRet> unaryFunc, long offset, long count, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
+		{
+			if (pack <= 0)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+			if (pack > count)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+			if (offset % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(offset));
+			if (count % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(count));
+			if (count + offset > cached.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			while (count > 0)
+			{
+				long getLength = Math.Min(count, maxCacheSize);
+				var temp = cached.Retrieve(offset, count, copyFunc);
+				unaryFunc.Invoke(temp);
+				offset += getLength;
+				count -= getLength;
+			}
+		}
+
+		/// <summary>
+		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
+		/// </summary>
+		/// <typeparam name="T">any auxiliary data type</typeparam>
+		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/> and the second one is the <paramref name="auxiliary"/></param>
+		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
+		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
+		/// <param name="auxiliary">The auxiliary data</param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, long offset, long count, T auxiliary, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
+		{
+			if (pack <= 0)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+			if (pack > count)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+			if (offset % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(offset));
+			if (count % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(count));
+			if (count + offset > cached.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			while (count > 0)
+			{
+				long getLength = Math.Min(count, maxCacheSize);
+				var temp = cached.Retrieve(offset, count, copyFunc);
+				unaryFunc.Invoke(temp, auxiliary);
+				offset += getLength;
+				count -= getLength;
+			}
+		}
+
+		/// <summary>
+		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
+		/// </summary>
+		/// <typeparam name="T">any auxiliary data type</typeparam>
+		/// <typeparam name="TRet">The return type of <paramref name="unaryFunc"/>, not used</typeparam>
+		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/> and the second one is the <paramref name="auxiliary"/></param>
+		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
+		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
+		/// <param name="auxiliary">The auxiliary data</param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void ApplyUnaryFunction<T, TRet>(this ICachedStorage cached, Func<PointerSegment, T, TRet> unaryFunc, long offset, long count, T auxiliary, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
+		{
+			if (pack <= 0)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+			if (pack > count)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+			if (offset % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(offset));
+			if (count % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(count));
+			if (count + offset > cached.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			while (count > 0)
+			{
+				long getLength = Math.Min(count, maxCacheSize);
+				var temp = cached.Retrieve(offset, count, copyFunc);
+				unaryFunc.Invoke(temp, auxiliary);
+				offset += getLength;
+				count -= getLength;
+			}
+		}
+
+		/// <summary>
+		/// Encapsulates a method that delimits and returns the given <paramref name="originalValue"/> with <paramref name="offset"/> and <paramref name="length"/>
+		/// </summary>
+		/// <typeparam name="T">any data type which can be sliced</typeparam>
+		/// <param name="originalValue">The original value in <typeparamref name="T"/></param>
+		/// <param name="offset">The offset in <see cref="long"/></param>
+		/// <param name="length">The length in <see cref="long"/></param>
+		/// <returns>The <paramref name="originalValue"/> after the slice as a <typeparamref name="T"/></returns>
+		public delegate T SliceDelegate<T>(T originalValue, long offset, long length);
+
+		/// <summary>
+		/// Apply a unary function <paramref name="unaryFunc"/> to the given <see cref="ICachedStorage"/> <paramref name="cached"/>'s <paramref name="count"/> bytes starting from <paramref name="offset"/>
+		/// </summary>
+		/// <typeparam name="T">any auxiliary data type</typeparam>
+		/// <typeparam name="TRet">The return type of <paramref name="unaryFunc"/>, not used</typeparam>
+		/// <param name="cached">The given <see cref="ICachedStorage"/> to be applied by the <paramref name="unaryFunc"/></param>
+		/// <param name="unaryFunc">The unary function whose first input argument is the result of <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/> and the second one is the output of <paramref name="sliceFunc"/></param>
+		/// <param name="offset">The staring offset in bytes of <paramref name="cached"/></param>
+		/// <param name="count">The number of bytes to of <paramref name="cached"/></param>
+		/// <param name="auxiliaryOriginal">The auxiliary data's initial value, used as the first input argument of <paramref name="sliceFunc"/></param>
+		/// <param name="sliceFunc">The <see cref="SliceDelegate{T}"/> used to slice <paramref name="auxiliaryOriginal"/></param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
+		/// <param name="pack">The internal offsets and lengths during the process shall be divisible by this value</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="pack"/> is 0 or larger than <paramref name="count"/>; or <paramref name="count"/> is out of the boundary of <paramref name="cached"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="count"/> is not divisible by <paramref name="pack"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void ApplyUnaryFunction<T, TRet>(this ICachedStorage cached, Func<PointerSegment, T, TRet> unaryFunc, long offset, long count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
+		{
+			if (pack <= 0)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+			if (pack > count)
+				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+			if (offset % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(offset));
+			if (count % pack != 0)
+				throw new ArgumentException(Other.CannotDivide, nameof(count));
+			if (count + offset > cached.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+
+			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+			while (count > 0)
+			{
+				long getLength = Math.Min(count, maxCacheSize);
+				var temp = cached.Retrieve(offset, count, copyFunc);
+				T val = sliceFunc.Invoke(auxiliaryOriginal, offset, getLength);
+				unaryFunc.Invoke(temp, val);
+				offset += getLength;
+				count -= getLength;
+			}
+		}
+		#endregion
+
+		#region copies between IPureOrMixedStorage and ICachedStorage
+		/// <summary>
+		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="IPureOrMixedStorage"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="IPureOrMixedStorage"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="IPureOrMixedStorage"/> to copy into</param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="copyFunc"/>, default 1 means no alignment.</param>
+		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="copyFunc"/>, default 1 means no alignment.</param>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="sourceAlign"/> or <paramref name="destinationAlign"/> is not a positive value or is larger than the lengths of <paramref name="source"/> or <paramref name="destination"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void StorageMemoryCopy(this IPureOrMixedStorage source, IPureOrMixedStorage destination, ICachedStorage.CopyDelegate? copyFunc = null, int sourceAlign = 1, int destinationAlign = 1)
+		{
+			if (!source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (!destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+			if (sourceAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+			if (sourceAlign >= source.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+			if (destinationAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+			if (destinationAlign >= destination.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+
+			copyFunc ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+
+			PointerSegment src = source[0], dst = destination[0];
+			bool incSrc = false, incDst = false;
+			int i = 0, j = 0;
+			long srcOffset = 0, dstOffset = 0;
+			while (i < source.Count && j < destination.Count)
+			{
+				// get next
+				if (incSrc)
+					src = source[i].MoveBy(srcOffset);
+				if (incDst)
+					dst = destination[j].MoveBy(dstOffset);
+				// copy
+				long copyCount = copyFunc.Invoke(src, dst);
+				// check next
+				long srcNextOffset = copyCount * sourceAlign, dstNextOffset = copyCount * destinationAlign;
+				if (srcNextOffset >= src.LengthInBytes)
+				{
+					incSrc = true; i++;
+					srcOffset = srcNextOffset - src.LengthInBytes;
+				}
+				else
+				{
+					incSrc = false;
+					src += srcNextOffset;
+				}
+				if (dstNextOffset >= dst.LengthInBytes)
+				{
+					incDst = true; j++;
+					dstOffset = dstNextOffset - dst.LengthInBytes;
+				}
+				else
+				{
+					incDst = false;
+					dst += dstNextOffset;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Copy memory from a <see cref="IPureOrMixedStorage"/> <paramref name="source"/> to a <see cref="ICachedStorage"/> <paramref name="destination"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
+		/// <param name="alignedCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to aligned copy data, default is the same as <paramref name="blockCopy"/></param>
+		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
+		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
+		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="sourceAlign"/> or <paramref name="destinationAlign"/> is not a positive value or is larger than the lengths of <paramref name="source"/> or <paramref name="destination"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void StorageMemoryCopy(this IPureOrMixedStorage source, ICachedStorage destination, ICachedStorage.CopyDelegate? alignedCopy = null, ICachedStorage.CopyDelegate? blockCopy = null, int sourceAlign = 1, int destinationAlign = 1)
+		{
+			if (!source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (!destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+			if (sourceAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+			if (sourceAlign >= source.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+			if (destinationAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+			if (destinationAlign >= destination.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+
+			blockCopy ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			alignedCopy ??= blockCopy;
+
+			long maxCacheSize = destination.TopCacheSizeInBytes;
+			long count = Math.Min((source.LengthInBytes - 1) / sourceAlign + 1, (destination.LengthInBytes - 1) / destinationAlign + 1);
+			long srcOffset = 0, dstOffset = 0;
+			for (int i = 0; i < source.Count; i++)
+			{
+				var srcOrg = source[i];
+				while (count > 0 && srcOffset < srcOrg.LengthInBytes)
+				{
+					// get
+					long dstGet = Math.Min(count * destinationAlign, maxCacheSize);
+					var src = srcOrg.MoveBy(srcOffset);
+					var dst = destination.Retrieve(dstOffset, dstGet, blockCopy);
+					// copy
+					long copiedCount = alignedCopy.Invoke(src, dst);
+					// increase
+					count -= copiedCount;
+					srcOffset += copiedCount * sourceAlign;
+					dstOffset += copiedCount * destinationAlign;
+				}
+				srcOffset -= srcOrg.LengthInBytes;
+			}
+		}
+
+		/// <summary>
+		/// Copy memory from a <see cref="ICachedStorage"/> <paramref name="source"/> to a <see cref="IPureOrMixedStorage"/> <paramref name="destination"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
+		/// <param name="alignedCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to aligned copy data, default is the same as <paramref name="blockCopy"/></param>
+		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
+		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="sourceAlign"/> or <paramref name="destinationAlign"/> is not a positive value or is larger than the lengths of <paramref name="source"/> or <paramref name="destination"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void StorageMemoryCopy(this ICachedStorage source, IPureOrMixedStorage destination, ICachedStorage.CopyDelegate? alignedCopy = null, ICachedStorage.CopyDelegate? blockCopy = null, int sourceAlign = 1, int destinationAlign = 1)
+		{
+			if (!source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (!destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+			if (sourceAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+			if (sourceAlign >= source.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+			if (destinationAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+			if (destinationAlign >= destination.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+
+			blockCopy ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			alignedCopy ??= blockCopy;
+
+			long maxCacheSize = source.TopCacheSizeInBytes;
+			long count = Math.Min((source.LengthInBytes - 1) / sourceAlign + 1, (destination.LengthInBytes - 1) / destinationAlign + 1);
+			long srcOffset = 0, dstOffset = 0;
+			for (int i = 0; i < destination.Count; i++)
+			{
+				var dstOrg = destination[i];
+				while (count > 0 && dstOffset < dstOrg.LengthInBytes)
+				{
+					// get
+					long srcGet = Math.Min(count * sourceAlign, maxCacheSize);
+					var dst = dstOrg.MoveBy(dstOffset);
+					var src = source.Retrieve(srcOffset, srcGet, blockCopy);
+					// copy
+					long copiedCount = alignedCopy.Invoke(src, dst);
+					// increase
+					count -= copiedCount;
+					srcOffset += copiedCount * sourceAlign;
+					dstOffset += copiedCount * destinationAlign;
+				}
+				dstOffset -= dstOrg.LengthInBytes;
+			}
+		}
+
+		/// <summary>
+		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="ICachedStorage"/>.
+		/// </summary>
+		/// <param name="source">The source <see cref="ICachedStorage"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="ICachedStorage"/> to copy into</param>
+		/// <param name="alignedCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to aligned copy data, default is the same as <paramref name="blockCopy"/></param>
+		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
+		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or empty</exception>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="sourceAlign"/> or <paramref name="destinationAlign"/> is not a positive value or is larger than the lengths of <paramref name="source"/> or <paramref name="destination"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void StorageMemoryCopy(this ICachedStorage source, ICachedStorage destination, ICachedStorage.CopyDelegate? alignedCopy = null, ICachedStorage.CopyDelegate? blockCopy = null, int sourceAlign = 1, int destinationAlign = 1)
+		{
+			if (!source.IsValid())
+				throw new ArgumentNullException(nameof(source));
+			if (!destination.IsValid())
+				throw new ArgumentNullException(nameof(destination));
+			if (sourceAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+			if (sourceAlign >= source.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+			if (destinationAlign <= 0)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+			if (destinationAlign >= destination.LengthInBytes)
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+
+			blockCopy ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			alignedCopy ??= blockCopy;
+
+			long maxCacheSize = Math.Min(source.TopCacheSizeInBytes, destination.TopCacheSizeInBytes);
+			long count = Math.Min((source.LengthInBytes - 1) / sourceAlign + 1, (destination.LengthInBytes - 1) / destinationAlign + 1);
+			long srcOffset = 0, dstOffset = 0;
+			while (count > 0)
+			{
+				// get
+				long srcGet = Math.Min(count * sourceAlign, maxCacheSize), dstGet = Math.Min(count * destinationAlign, maxCacheSize);
+				var src = source.Retrieve(srcOffset, srcGet, blockCopy);
+				var dst = destination.Retrieve(dstOffset, dstGet, blockCopy);
+				// copy
+				long copiedCount = alignedCopy.Invoke(src, dst);
+				// increase
+				count -= copiedCount;
+				srcOffset += copiedCount * sourceAlign;
+				dstOffset += copiedCount * destinationAlign;
+			}
+		}
+		#endregion
+	}
+	#endregion
+
+
 	/// <summary>
 	/// The abstract class for runtime memory API routines 
 	/// </summary>
@@ -167,10 +681,11 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="source">The source pointer to copy from</param>
 		/// <param name="destination">The destination pointer to copy into</param>
+		/// <returns>The number of bytes of actually copied block</returns>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		public abstract void MemoryCopy(PointerSegment source, PointerSegment destination);
+		public abstract long MemoryCopy(PointerSegment source, PointerSegment destination);
 
 		/// <summary>
 		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
@@ -203,9 +718,10 @@ namespace Althea.Storage
 		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
-		public abstract void StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged;
+		public abstract long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged;
 		#endregion
 
 		#region low-level storage and managed operations
@@ -225,9 +741,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public abstract void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
+		public abstract long FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
@@ -235,9 +752,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
-		public abstract void ToManaged<T>(PointerSegment source, ArraySegment<T> destination) where T : unmanaged;
+		public abstract long ToManaged<T>(PointerSegment source, ArraySegment<T> destination) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
@@ -245,9 +763,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public abstract void FromManaged<T>(PointerSegment destination, ArraySegment<T> values) where T : unmanaged;
+		public abstract long FromManaged<T>(PointerSegment destination, ArraySegment<T> values) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
@@ -290,23 +809,6 @@ namespace Althea.Storage
 		#endregion
 
 		#region high-level storage operations
-		/// <summary>
-		/// TWhen implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
-		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,бн,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
-		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="source">The <see cref="Storage{T}"/> to copy from</param>
-		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
-		/// <param name="destination">The <see cref="Storage{T}"/> to copy to</param>
-		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
-		public virtual void StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
-		{
-			// TODO
-		}
-
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
 		/// </summary>
@@ -385,10 +887,11 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> pointer to copy into</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
 		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		public virtual void MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
+		public virtual long MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
 		{
 			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
 			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
@@ -417,6 +920,61 @@ namespace Althea.Storage
 			{
 				srcCached.StorageMemoryCopy(dstCached, this.MemoryCopy);
 			}
+			return Math.Min(source.Length, destination.Length);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,бн,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
+		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="destination">The <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		public virtual long StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
+		{
+			long srcLen = source.Length, dstLen = destination.Length;
+			if (incrementSource <= 0 || incrementSource >= srcLen)
+				throw new ArgumentOutOfRangeException(nameof(incrementSource));
+			if (incrementDestination <= 0 || incrementDestination >= dstLen)
+				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
+
+			int srcAlign = Storage<T>.SizeOfT * incrementSource, dstAlign = Storage<T>.SizeOfT * incrementDestination;
+			long copyFunc(PointerSegment s, PointerSegment d) => this.StridedCopy<T>(s, incrementSource, d, incrementDestination);
+			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
+			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
+			// normal cases
+			if (srcMixed is not null && dstMixed is not null)
+			{
+				// shortcut
+				if (source.Count == 1 && destination.Count == 1)
+				{
+					this.StridedCopy<T>(source[0], incrementSource, destination[0], incrementDestination);
+				}
+				else
+				{
+					srcMixed.StorageMemoryCopy(dstMixed, copyFunc, sourceAlign: srcAlign, destinationAlign: dstAlign);
+				}
+			}
+			else if (srcMixed is not null && dstCached is not null)
+			{
+				srcMixed.StorageMemoryCopy(dstCached, alignedCopy: copyFunc, blockCopy: this.MemoryCopy, sourceAlign: srcAlign, destinationAlign: dstAlign);
+			}
+			else if (srcCached is not null && dstMixed is not null)
+			{
+				srcCached.StorageMemoryCopy(dstMixed, alignedCopy: copyFunc, blockCopy: this.MemoryCopy, sourceAlign: srcAlign, destinationAlign: dstAlign);
+			}
+			else if (srcCached is not null && dstCached is not null)
+			{
+				srcCached.StorageMemoryCopy(dstCached, alignedCopy: copyFunc, blockCopy: this.MemoryCopy, sourceAlign: srcAlign, destinationAlign: dstAlign);
+			}
+			return Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
 		}
 
 		/// <summary>
@@ -530,9 +1088,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		public virtual void ToManaged<T>(Storage<T> source, ArraySegment<T> destination) where T : unmanaged
+		public virtual long ToManaged<T>(Storage<T> source, ArraySegment<T> destination) where T : unmanaged
 		{
 			source.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
@@ -542,7 +1101,7 @@ namespace Althea.Storage
 				{
 					this.ToManaged(mixed[i], destination[offset..]);
 					if (offset >= destination.Count)
-						return;
+						break;
 					offset += (int)(mixed[i].LengthInBytes / Storage<T>.SizeOfT);
 				}
 			}
@@ -560,7 +1119,9 @@ namespace Althea.Storage
 											  sliceFunc: static (dst, off, len) => dst.Slice((int)(off / Storage<T>.SizeOfT), (int)(len / Storage<T>.SizeOfT)),
 											  copyFunc: this.MemoryCopy, pack: Storage<T>.SizeOfT);
 				}
+				return Math.Min(destination.Count, source.Length);
 			}
+			return Math.Min(source.Length, destination.Count);
 		}
 
 		/// <summary>
@@ -569,9 +1130,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public virtual void FromManaged<T>(Storage<T> destination, ArraySegment<T> values) where T : unmanaged
+		public virtual long FromManaged<T>(Storage<T> destination, ArraySegment<T> values) where T : unmanaged
 		{
 			destination.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
@@ -581,7 +1143,7 @@ namespace Althea.Storage
 				{
 					this.FromManaged(destination[i], values[offset..]);
 					if (offset >= values.Count)
-						return;
+						break;
 					offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
 				}
 			}
@@ -600,6 +1162,7 @@ namespace Althea.Storage
 											  copyFunc: this.MemoryCopy, pack: Storage<T>.SizeOfT);
 				}
 			}
+			return Math.Min(destination.Length, values.Count);
 		}
 
 		/// <summary>
