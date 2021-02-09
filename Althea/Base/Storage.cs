@@ -442,6 +442,12 @@ namespace Althea
 		/// </summary>
 		/// <param name="storageDetail">The <see cref="StorageLocation"/> to be converted</param>
 		public static implicit operator CombinationOfLocations(StorageLocation storageDetail) => new CombinationOfLocations(storageDetail);
+
+		/// <summary>
+		/// Explicitly convert a <see cref="CombinationOfLocations"/> to a <see cref="ReadOnlySpan{T}"/> by taking its underlying <see cref="StorageLocation"/>s
+		/// </summary>
+		/// <param name="locations">The <see cref="CombinationOfLocations"/> to be converted</param>
+		public static explicit operator ReadOnlySpan<StorageLocation>(CombinationOfLocations locations) => locations.data.AsSpan()[..locations.count];
 		#endregion
 
 		#region string related
@@ -962,6 +968,13 @@ namespace Althea
 			}
 		}
 		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<PointerSegment>)this).GetEnumerator();
+
+		/// <summary>
+		/// Get the actual <see cref="PointerSegment"/> at the actual index (the index in <see cref="LocationDescription"/>) <paramref name="i"/>
+		/// </summary>
+		/// <param name="i">The actual index</param>
+		/// <returns>The actual <see cref="PointerSegment"/> at <paramref name="i"/></returns>
+		internal protected virtual PointerSegment GetActualPointerAt(int i) => this[i];
 		#endregion
 
 		#region equality

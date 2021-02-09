@@ -173,25 +173,6 @@ namespace Althea.LinearAlgebra.Dense
 
 
 		#region support information
-		// Ignore Spelling: N-ary
-		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. Each value in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.
-		/// </summary>
-		/// <param name="N">The number of operands, must be <paramref name="N"/> &gt; 0</param>
-		/// <returns>The list of the supported memory locations for all N-ary operations. Or null if there are no N-ary operations.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="N"/> &lt;= 0</exception>
-		public override IReadOnlyList<IImmutableSet<CombinationOfLocations>> SupportedNaryLocations(int N)
-		{
-			return N switch
-			{
-				1 => this.SupportedUnaryLocations.Select(static l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
-				2 => this.SupportedBinaryLocations.Select(static l => (IImmutableSet<CombinationOfLocations>)l),
-				3 => this.SupportedTernaryLocations.Select(static l => (IImmutableSet<CombinationOfLocations>)l),
-				> 3 => Array.Empty<IImmutableSet<CombinationOfLocations>>(), // there are no N-ary operations
-				_ => throw new ArgumentOutOfRangeException(nameof(N)),
-			};
-		}
-
 		/// <summary>
 		/// When implemented by a derived class, get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
 		/// </summary>
@@ -333,7 +314,7 @@ namespace Althea.LinearAlgebra.Dense
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
-		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="y"/><sup>op</sup> + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjY"/> ? H : T</c>.<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="y"/>^op + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjY"/> ? H : T</c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> is a scalar.
 		/// </summary>
 		/// <param name="conjY">Conjugate <paramref name="y"/> or not</param>
@@ -353,7 +334,7 @@ namespace Althea.LinearAlgebra.Dense
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
-		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/><sup>op</sup> + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
 		/// <param name="fillLower">The <see cref="bool"/> of result matrix <paramref name="A"/></param>
@@ -415,7 +396,7 @@ namespace Althea.LinearAlgebra.Dense
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
-		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)<sup>pow</sup> + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
 		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
 		/// </summary>
 		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s lower or upper part is stored</param>
@@ -423,7 +404,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="conjA">Conjugate transpose <paramref name="A"/> or just transpose <paramref name="A"/></param>
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
-		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)<sup>pow</sup></param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
 		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>

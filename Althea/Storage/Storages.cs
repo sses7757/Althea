@@ -718,7 +718,7 @@ namespace Althea.Storage
 		{
 			if (this.Reference is null)
 				return new PureOrMixedReferenceStorage<TOut>(null, 0, 0, 0, 0, 0, 0);
-			long offset = CheckCast<TOut>((long)this.TotalOffsetInBytes, sizeInBytes: true);
+			long offset = CheckCast<TOut>(this.TotalOffsetInBytes, sizeInBytes: true);
 			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
 			return new PureOrMixedReferenceStorage<TOut>(this.Reference, offset, length);
 		}
@@ -909,10 +909,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>
 		/// </summary>
-		/// <param name="index">The <see cref="Index"/> to indicate the level</param>
+		/// <param name="index">The index to indicate the cache level</param>
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		PointerSegment GetCacheLevel(Index index);
+		PointerSegment GetCacheLevel(int index);
 
 		/// <summary>
 		/// Copy a <see cref="PointerSegment"/> from <paramref name="source"/> to another <see cref="PointerSegment"/> <paramref name="destination"/>
@@ -1051,9 +1051,16 @@ namespace Althea.Storage
 			get {
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				return this.GetCacheLevel(^1);
+				return this.GetCacheLevel(this.CacheLevels - 1);
 			}
 		}
+
+		/// <summary>
+		/// Get the actual <see cref="PointerSegment"/> at the actual index (the index in <see cref="LocationDescription"/>) <paramref name="i"/>
+		/// </summary>
+		/// <param name="i">The actual index</param>
+		/// <returns>The actual <see cref="PointerSegment"/> at <paramref name="i"/></returns>
+		internal protected override PointerSegment GetActualPointerAt(int i) => this.GetCacheLevel(i);
 
 		/// <summary>
 		/// Determines whether the specified object is equal to the current object.
@@ -1119,10 +1126,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>
 		/// </summary>
-		/// <param name="index">The <see cref="Index"/> to indicate the level</param>
+		/// <param name="index">The index to indicate the cache level</param>
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public abstract PointerSegment GetCacheLevel(Index index);
+		public abstract PointerSegment GetCacheLevel(int index);
 
 		/// <summary>
 		/// When implemented by a derived class, retrieve some part of the data delimited by <paramref name="lengthInBytes"/> and <paramref name="totalOffsetInBytes"/> via promoting them to the highest caching level.
@@ -1194,10 +1201,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>
 		/// </summary>
-		/// <param name="index">The <see cref="Index"/> to indicate the level</param>
+		/// <param name="index">The index to indicate the cache level</param>
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public PointerSegment GetCacheLevel(Index index)
+		public PointerSegment GetCacheLevel(int index)
 		{
 			if (this.Reference is ICachedStorage c)
 				return c.GetCacheLevel(index);
@@ -1246,7 +1253,7 @@ namespace Althea.Storage
 		{
 			if (this.Reference is null)
 				return new CachedReferenceStorage<TOut>(null, 0, 0);
-			long offset = CheckCast<TOut>((long)this.TotalOffsetInBytes, sizeInBytes: true);
+			long offset = CheckCast<TOut>(this.TotalOffsetInBytes, sizeInBytes: true);
 			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
 			return new CachedReferenceStorage<TOut>(this.Reference, offset, length);
 		}
@@ -1356,16 +1363,15 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>
 		/// </summary>
-		/// <param name="index">The <see cref="Index"/> to indicate the level</param>
+		/// <param name="index">The index to indicate the cache level</param>
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public override PointerSegment GetCacheLevel(Index index)
+		public override PointerSegment GetCacheLevel(int index)
 		{
-			int i = index.GetOffset(2);
-			if (i < 0 || i >= 2)
+			if (index < 0 || index >= 2)
 				throw new ArgumentOutOfRangeException(nameof(index));
 
-			if (i <= 0)
+			if (index == 0)
 				return this.memory;
 			else
 				return this.stream;
@@ -1466,7 +1472,7 @@ namespace Althea.Storage
 	/// <typeparam name="T">any unmanaged data type</typeparam>
 	public static class StorageFactory<T> where T : unmanaged
 	{
-		#region factory create
+		#region basic
 		/// <summary>
 		/// Encapsulates a method that allocates and creates a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
@@ -1586,7 +1592,9 @@ namespace Althea.Storage
 			// cannot find any
 			return false;
 		}
+		#endregion
 
+		#region create
 		/// <summary>
 		/// Allocate and create a new <see cref="Storage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
 		/// </summary>
@@ -1610,6 +1618,29 @@ namespace Althea.Storage
 					throw new InvalidOperationException();
 			}
 			return cache_create[type].Invoke(locations, lengths);
+		}
+
+		/// <summary>
+		/// Allocate and create a new <see cref="Storage{T}"/> alike the given <paramref name="storage"/>
+		/// </summary>
+		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
+		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
+		public static Storage<T> CreateAlike(Storage<T> storage)
+		{
+			int sizeT = Storage<T>.SizeOfT;
+			var descr = storage.LocationDescription;
+			CombinationType type = descr.Type;
+			var locations = (ReadOnlySpan<StorageLocation>)descr;
+			Span<long> lengths = stackalloc long[descr.Count];
+			long bytesLeft = 0;
+			for (int i = 0; i < descr.Count; i++)
+			{
+				long lengthInBytes = bytesLeft + storage.GetActualPointerAt(i).LengthInBytes;
+				lengths[i] = lengthInBytes / sizeT;
+				bytesLeft = lengthInBytes - lengths[i];
+				lengths[i] *= sizeT;
+			}
+			return Create(type, locations, lengths);
 		}
 		#endregion
 	}

@@ -195,14 +195,14 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
-		void VectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : struct, IComparable<T>;
+		void VectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// Scatter the sparse vector x to a dense vector y. $\vec{y}[x_{\text{ind}}] = \vec{x}_{\text{val}}$
 		/// </summary>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
-		public delegate void DelegateVectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : struct, IComparable<T>;
+		public delegate void DelegateVectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		// Ignore Spelling: pos
 		/// <summary>
@@ -212,7 +212,7 @@ namespace Althea.SparseBlas
 		/// <param name="pos">indices to gather</param>
 		/// <param name="y">vector to gather to</param>
 		/// <param name="n">length of <paramref name="pos"/></param>
-		void VectorGatherAtIndices<T>(Storage<T> x, Storage<int> pos, Storage<T> y, int n) where T : struct, IComparable<T>;
+		void VectorGatherAtIndices<T>(Storage<T> x, Storage<int> pos, Storage<T> y, int n) where T : unmanaged;
 
 		/// <summary>
 		/// Gather the vector <paramref name="x"/> at <paramref name="pos"/> into <paramref name="y"/>: $\vec{y}=\vec{x}[\text{pos}]$.
@@ -221,7 +221,7 @@ namespace Althea.SparseBlas
 		/// <param name="pos">indices to gather</param>
 		/// <param name="y">vector to gather to</param>
 		/// <param name="n">length of <paramref name="pos"/></param>
-		public delegate void DelegateVectorGatherAtIndices<T>(Storage<T> x, Storage<int> pos, Storage<T> y, int n) where T : struct, IComparable<T>;
+		public delegate void DelegateVectorGatherAtIndices<T>(Storage<T> x, Storage<int> pos, Storage<T> y, int n) where T : unmanaged;
 
 		/// <summary>
 		/// Convert the dense vector y to sparse vector x with truncation <paramref name="threshold"/>.
@@ -230,7 +230,7 @@ namespace Althea.SparseBlas
 		/// <param name="n">length of vector</param>
 		/// <param name="threshold">the abs value below it will regarded as zero</param>
 		/// <returns>a <see cref="SparseVectorWrapper{T}"/></returns>
-		SparseVectorWrapper<T> VectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : struct, IComparable<T>;
+		SparseVectorWrapper<T> VectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : unmanaged;
 
 		/// <summary>
 		/// Convert the dense vector y to sparse vector x with truncation <paramref name="threshold"/>.
@@ -239,7 +239,7 @@ namespace Althea.SparseBlas
 		/// <param name="n">length of vector</param>
 		/// <param name="threshold">the abs value below it will regarded as zero</param>
 		/// <returns>a <see cref="SparseVectorWrapper{T}"/></returns>
-		public delegate SparseVectorWrapper<T> DelegateVectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : struct, IComparable<T>;
+		public delegate SparseVectorWrapper<T> DelegateVectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : unmanaged;
 
 		/// <summary>
 		/// Add the sparse vector x to a dense vector y. $y[x_{\text{ind}}] += \alpha x_{\text{val}}$
@@ -247,7 +247,7 @@ namespace Althea.SparseBlas
 		/// <param name="alpha">scalar to multiply x</param>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
-		void VectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : struct, IComparable<T>;
+		void VectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// Add the sparse vector x to a dense vector y. $y[x_{\text{ind}}] += \alpha x_{\text{val}}$
@@ -255,7 +255,7 @@ namespace Althea.SparseBlas
 		/// <param name="alpha">scalar to multiply x</param>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
-		public delegate void DelegateVectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : struct, IComparable<T>;
+		public delegate void DelegateVectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// Calculate the dot product of a sparse vector and a dense vector. $\vec{x} \cdot \vec{y}$
@@ -265,7 +265,7 @@ namespace Althea.SparseBlas
 		/// <param name="y">dense vector y</param>
 		/// <param name="conjX">conjugate <paramref name="x"/> or not</param>
 		/// <returns>output dot result</returns>
-		T VectorSparseDotDense<T>(int n, SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : struct, IComparable<T>;
+		T VectorSparseDotDense<T>(int n, SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : unmanaged;
 
 		/// <summary>
 		/// Calculate the dot product of a sparse vector and a dense vector. $\vec{x} \cdot \vec{y}$
@@ -275,7 +275,7 @@ namespace Althea.SparseBlas
 		/// <param name="y">dense vector y</param>
 		/// <param name="conjX">conjugate <paramref name="x"/> or not</param>
 		/// <returns>output dot result</returns>
-		public delegate T DelegateVectorSparseDotDense<T>(int n, SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : struct, IComparable<T>;
+		public delegate T DelegateVectorSparseDotDense<T>(int n, SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : unmanaged;
 
 		/// <summary>
 		/// Add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/>.
@@ -283,7 +283,7 @@ namespace Althea.SparseBlas
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">sparse vector y</param>
 		/// <returns></returns>
-		SparseVectorWrapper<T> VectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : struct, IComparable<T>;
+		SparseVectorWrapper<T> VectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// Add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/>.
@@ -291,7 +291,7 @@ namespace Althea.SparseBlas
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">sparse vector y</param>
 		/// <returns></returns>
-		public delegate SparseVectorWrapper<T> DelegateVectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : struct, IComparable<T>;
+		public delegate SparseVectorWrapper<T> DelegateVectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// Point-wise multiply or divide a sparse vector and a dense vector.
@@ -299,7 +299,7 @@ namespace Althea.SparseBlas
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
 		/// <param name="multiply">do multiplication or division</param>
-		void VectorSparsePointWiseMultiplyDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool multiply) where T : struct, IComparable<T>;
+		void VectorSparsePointWiseMultiplyDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool multiply) where T : unmanaged;
 
 		/// <summary>
 		/// Point-wise multiply or divide a sparse vector and a dense vector.
@@ -307,7 +307,7 @@ namespace Althea.SparseBlas
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">dense vector y</param>
 		/// <param name="multiply">do multiplication or division</param>
-		public delegate void DelegateVectorSparsePointWiseMultiplyDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool multiply) where T : struct, IComparable<T>;
+		public delegate void DelegateVectorSparsePointWiseMultiplyDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool multiply) where T : unmanaged;
 		#endregion
 
 		#region vector and matrix
@@ -323,7 +323,7 @@ namespace Althea.SparseBlas
 		/// <param name="y">dense vector y</param>
 		/// <param name="α">scalar to multiply <paramref name="M"/></param>
 		/// <param name="β">scalar to multiply <paramref name="y"/></param>
-		void MatrixVectorSparseMultiplyDense<T>(MatrixOperation op, int m, int n, SparseMatrixWrapper<T> M, SparseMatrixFormat format, Storage<T> x, Storage<T> y, T α, T β) where T : struct, IComparable<T>;
+		void MatrixVectorSparseMultiplyDense<T>(MatrixOperation op, int m, int n, SparseMatrixWrapper<T> M, SparseMatrixFormat format, Storage<T> x, Storage<T> y, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute the sparse matrix dense vector multiplication: $\vec{y} = \alpha \cdot M^\text{op} \vec{x} + \beta \cdot \vec{y}$
@@ -337,7 +337,7 @@ namespace Althea.SparseBlas
 		/// <param name="y">dense vector y</param>
 		/// <param name="α">scalar to multiply <paramref name="M"/></param>
 		/// <param name="β">scalar to multiply <paramref name="y"/></param>
-		public delegate void DelegateMatrixVectorSparseMultiplyDense<T>(MatrixOperation op, int m, int n, SparseMatrixWrapper<T> M, SparseMatrixFormat format, Storage<T> x, Storage<T> y, T α, T β) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixVectorSparseMultiplyDense<T>(MatrixOperation op, int m, int n, SparseMatrixWrapper<T> M, SparseMatrixFormat format, Storage<T> x, Storage<T> y, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute the dense matrix sparse vector multiplication: $\vec{y} = \alpha \cdot M^\text{op} \vec{x} + \beta \cdot \vec{y}$
@@ -351,7 +351,7 @@ namespace Althea.SparseBlas
 		/// <param name="y">dense vector y</param>
 		/// <param name="α">scalar to multiply <paramref name="M"/></param>
 		/// <param name="β">scalar to multiply <paramref name="y"/></param>
-		void MatrixVectorDenseMultiplySparse<T>(MatrixOperation op, int m, int n, Storage<T> M, int ldm, SparseVectorWrapper<T> x, Storage<T> y, T α, T β) where T : struct, IComparable<T>;
+		void MatrixVectorDenseMultiplySparse<T>(MatrixOperation op, int m, int n, Storage<T> M, int ldm, SparseVectorWrapper<T> x, Storage<T> y, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute the dense matrix sparse vector multiplication: $\vec{y} = \alpha \cdot M^\text{op} \vec{x} + \beta \cdot \vec{y}$
@@ -365,7 +365,7 @@ namespace Althea.SparseBlas
 		/// <param name="y">dense vector y</param>
 		/// <param name="α">scalar to multiply <paramref name="M"/></param>
 		/// <param name="β">scalar to multiply <paramref name="y"/></param>
-		public delegate void DelegateMatrixVectorDenseMultiplySparse<T>(MatrixOperation op, int m, int n, Storage<T> M, int ldm, SparseVectorWrapper<T> x, Storage<T> y, T α, T β) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixVectorDenseMultiplySparse<T>(MatrixOperation op, int m, int n, Storage<T> M, int ldm, SparseVectorWrapper<T> x, Storage<T> y, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse vector outer product $M = \vec{x} \otimes \vec{y}$.
@@ -375,7 +375,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">the output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format</param>
 		/// <param name="conjY">conjugate on <paramref name="y"/> or not</param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
-		void VectorSparseOuterSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, SparseMatrixWrapper<T> M, bool conjY = true) where T : struct, IComparable<T>;
+		void VectorSparseOuterSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, SparseMatrixWrapper<T> M, bool conjY = true) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse vector outer product $M = \vec{x} \otimes \vec{y}$.
@@ -385,7 +385,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">the output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format</param>
 		/// <param name="conjY">conjugate on <paramref name="y"/> or not</param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
-		public delegate void DelegateVectorSparseOuterSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, SparseMatrixWrapper<T> M, bool conjY = true) where T : struct, IComparable<T>;
+		public delegate void DelegateVectorSparseOuterSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, SparseMatrixWrapper<T> M, bool conjY = true) where T : unmanaged;
 
 		/// <summary>
 		/// Convert the indices of sparse vector to or from a sparse COO matrix's index arrays.
@@ -419,7 +419,7 @@ namespace Althea.SparseBlas
 		/// <param name="dest">destination dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="dest"/></param>
 		/// <param name="M">source sparse matrix</param>
-		void MatrixSparseCSRToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : struct, IComparable<T>;
+		void MatrixSparseCSRToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a sparse matrix of CSR format to dense matrix.
@@ -429,7 +429,7 @@ namespace Althea.SparseBlas
 		/// <param name="dest">destination dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="dest"/></param>
 		/// <param name="M">source sparse matrix</param>
-		public delegate void DelegateMatrixSparseCSRToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixSparseCSRToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a sparse matrix of CSC format to dense matrix.
@@ -439,7 +439,7 @@ namespace Althea.SparseBlas
 		/// <param name="dest">destination dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="dest"/></param>
 		/// <param name="M">source sparse matrix</param>
-		void MatrixSparseCSCToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : struct, IComparable<T>;
+		void MatrixSparseCSCToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a sparse matrix of CSC format to dense matrix.
@@ -449,7 +449,7 @@ namespace Althea.SparseBlas
 		/// <param name="dest">destination dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="dest"/></param>
 		/// <param name="M">source sparse matrix</param>
-		public delegate void DelegateMatrixSparseCSCToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixSparseCSCToDense<T>(int m, int n, Storage<T> dest, int ld, SparseMatrixWrapper<T> M) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a dense matrix to a sparse matrix with CSR format by removing the explicit zeros.
@@ -459,7 +459,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
-		SparseMatrixWrapper<T> MatrixDenseToSparseCSR<T>(int m, int n, Storage<T> M, int ld) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixDenseToSparseCSR<T>(int m, int n, Storage<T> M, int ld) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a dense matrix to a sparse matrix with CSR format by removing the explicit zeros.
@@ -469,7 +469,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixDenseToSparseCSR<T>(int m, int n, Storage<T> M, int ld) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixDenseToSparseCSR<T>(int m, int n, Storage<T> M, int ld) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a dense matrix to a sparse matrix with CSC format by removing the explicit zeros.
@@ -479,7 +479,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
-		SparseMatrixWrapper<T> MatrixDenseToSparseCSC<T>(int m, int n, Storage<T> M, int ld) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixDenseToSparseCSC<T>(int m, int n, Storage<T> M, int ld) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a dense matrix to a sparse matrix with CSC format by removing the explicit zeros.
@@ -489,7 +489,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixDenseToSparseCSC<T>(int m, int n, Storage<T> M, int ld) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixDenseToSparseCSC<T>(int m, int n, Storage<T> M, int ld) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a dense matrix to a sparse matrix with CSR format by regarding the abs values below <paramref name="threshold"/> as zeros.
@@ -500,7 +500,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
-		SparseMatrixWrapper<T> MatrixDensePruneToSparseCSR<T>(int m, int n, float threshold, Storage<T> M, int ld) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixDensePruneToSparseCSR<T>(int m, int n, float threshold, Storage<T> M, int ld) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a dense matrix to a sparse matrix with CSR format by regarding the abs values below <paramref name="threshold"/> as zeros.
@@ -511,7 +511,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixDensePruneToSparseCSR<T>(int m, int n, float threshold, Storage<T> M, int ld) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixDensePruneToSparseCSR<T>(int m, int n, float threshold, Storage<T> M, int ld) where T : unmanaged;
 
 		/// <summary>
 		/// Prune a sparse compressed (CSR/CSC) matrix to a new CSR/CSC matrix by regarding the abs values below <paramref name="threshold"/> as zeros.
@@ -522,7 +522,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="isCSR">is <paramref name="M"/> a CSR matrix or a CSC one</param>
 		/// <returns>a new sparse matrix</returns>
-		SparseMatrixWrapper<T> MatrixCompressedPruneToCompressed<T>(int m, int n, float threshold, SparseMatrixWrapper<T> M, bool isCSR) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixCompressedPruneToCompressed<T>(int m, int n, float threshold, SparseMatrixWrapper<T> M, bool isCSR) where T : unmanaged;
 
 		/// <summary>
 		/// Prune a sparse compressed (CSR/CSC) matrix to a new CSR/CSC matrix by regarding the abs values below <paramref name="threshold"/> as zeros.
@@ -533,7 +533,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">source dense matrix</param>
 		/// <param name="isCSR">is <paramref name="M"/> a CSR matrix or a CSC one</param>
 		/// <returns>a new sparse matrix</returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixCompressedPruneToCompressed<T>(int m, int n, float threshold, SparseMatrixWrapper<T> M, bool isCSR) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixCompressedPruneToCompressed<T>(int m, int n, float threshold, SparseMatrixWrapper<T> M, bool isCSR) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a sparse matrix to a sparse matrix with different format.
@@ -555,7 +555,7 @@ namespace Althea.SparseBlas
 		/// <param name="format">the format of <paramref name="M"/>, must be atomic</param>
 		/// <param name="target">target format, can be non-atomic, it becomes the actual format at return</param>
 		/// <returns>a new sparse matrix if <paramref name="target"/> does not contains <paramref name="format"/></returns>
-		SparseMatrixWrapper<T> MatrixSparseFormatConvert<T>(int m, int n, MatrixOperation op, SparseMatrixWrapper<T> M, SparseMatrixFormat format, ref SparseMatrixFormat target) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixSparseFormatConvert<T>(int m, int n, MatrixOperation op, SparseMatrixWrapper<T> M, SparseMatrixFormat format, ref SparseMatrixFormat target) where T : unmanaged;
 
 		/// <summary>
 		/// Convert a sparse matrix to a sparse matrix with different format.
@@ -577,7 +577,7 @@ namespace Althea.SparseBlas
 		/// <param name="format">the format of <paramref name="M"/>, must be atomic</param>
 		/// <param name="target">target format, can be non-atomic, it becomes the actual format at return</param>
 		/// <returns>a new sparse matrix if <paramref name="target"/> does not contains <paramref name="format"/></returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseFormatConvert<T>(int m, int n, MatrixOperation op, SparseMatrixWrapper<T> M, SparseMatrixFormat format, ref SparseMatrixFormat target) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseFormatConvert<T>(int m, int n, MatrixOperation op, SparseMatrixWrapper<T> M, SparseMatrixFormat format, ref SparseMatrixFormat target) where T : unmanaged;
 
 		/// <summary>
 		/// Get the non-empty row/column indices of a given CSR/CSC sparse matrix.
@@ -587,7 +587,7 @@ namespace Althea.SparseBlas
 		/// <param name="M">sparse CSR/CSC matrix</param>
 		/// <param name="isCSR">is the sparse matrix CSR format or CSC</param>
 		/// <returns>The indices (in 0-based index) of non-empty rows/columns</returns>
-		Storage<int> MatrixSparseCompressedGetNEI<T>(int m, int n, SparseMatrixWrapper<T> M, bool isCSR) where T : struct, IComparable<T>;
+		Storage<int> MatrixSparseCompressedGetNEI<T>(int m, int n, SparseMatrixWrapper<T> M, bool isCSR) where T : unmanaged;
 
 		/// <summary>
 		/// Get the non-empty row/column indices of a given CSR/CSC sparse matrix.
@@ -597,21 +597,21 @@ namespace Althea.SparseBlas
 		/// <param name="M">sparse CSR/CSC matrix</param>
 		/// <param name="isCSR">is the sparse matrix CSR format or CSC</param>
 		/// <returns>The indices (in 0-based index) of non-empty rows/columns</returns>
-		public delegate Storage<int> DelegateMatrixSparseCompressedGetNEI<T>(int m, int n, SparseMatrixWrapper<T> M, bool isCSR) where T : struct, IComparable<T>;
+		public delegate Storage<int> DelegateMatrixSparseCompressedGetNEI<T>(int m, int n, SparseMatrixWrapper<T> M, bool isCSR) where T : unmanaged;
 
 		/// <summary>
 		/// Fill a sparse matrix with identity.
 		/// </summary>
 		/// <param name="M">the sparse matrix to fill</param>
 		/// <param name="format">the format of the matrix</param>
-		void MatrixFillIdentity<T>(SparseMatrixWrapper<T> M, SparseMatrixFormat format) where T : struct, IComparable<T>;
+		void MatrixFillIdentity<T>(SparseMatrixWrapper<T> M, SparseMatrixFormat format) where T : unmanaged;
 
 		/// <summary>
 		/// Fill a sparse matrix with identity.
 		/// </summary>
 		/// <param name="M">the sparse matrix to fill</param>
 		/// <param name="format">the format of the matrix</param>
-		public delegate void DelegateMatrixFillIdentity<T>(SparseMatrixWrapper<T> M, SparseMatrixFormat format) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixFillIdentity<T>(SparseMatrixWrapper<T> M, SparseMatrixFormat format) where T : unmanaged;
 		#endregion
 
 		#region matrix computation
@@ -630,7 +630,7 @@ namespace Althea.SparseBlas
 		/// <param name="formatB">the format of <paramref name="B"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
-		SparseMatrixWrapper<T> MatrixSparseAddSparse<T>(int m, int n, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, T α, T β, out SparseMatrixFormat target) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixSparseAddSparse<T>(int m, int n, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrices addition: $C = \alpha A^\text{opA} + \beta B^\text{opB}$.
@@ -647,7 +647,7 @@ namespace Althea.SparseBlas
 		/// <param name="formatB">the format of <paramref name="B"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseAddSparse<T>(int m, int n, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, T α, T β, out SparseMatrixFormat target) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseAddSparse<T>(int m, int n, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrices multiplication: $C = \alpha A \cdot B + \beta D$.
@@ -667,7 +667,7 @@ namespace Althea.SparseBlas
 		/// <param name="formatD">the format of <paramref name="D"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
-		SparseMatrixWrapper<T> MatrixSparseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, SparseMatrixWrapper<T> D, SparseMatrixFormat formatD, T α, T β, out SparseMatrixFormat target) where T : struct, IComparable<T>;
+		SparseMatrixWrapper<T> MatrixSparseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, SparseMatrixWrapper<T> D, SparseMatrixFormat formatD, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrices multiplication: $C = \alpha A \cdot B + \beta D$.
@@ -687,7 +687,7 @@ namespace Althea.SparseBlas
 		/// <param name="formatD">the format of <paramref name="D"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
-		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, SparseMatrixWrapper<T> D, SparseMatrixFormat formatD, T α, T β, out SparseMatrixFormat target) where T : struct, IComparable<T>;
+		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, SparseMatrixWrapper<T> D, SparseMatrixFormat formatD, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
 
 		/// <summary>
 		/// Compute dense matrix sparse matrix multiplication: $C = \alpha A \cdot B + \beta C$.
@@ -705,7 +705,7 @@ namespace Althea.SparseBlas
 		/// <param name="formatB">the format of <paramref name="B"/></param>
 		/// <param name="C">the dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
-		void MatrixDenseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, Storage<T> A, int lda, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, Storage<T> C, int ldc, T α, T β) where T : struct, IComparable<T>;
+		void MatrixDenseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, Storage<T> A, int lda, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute dense matrix sparse matrix multiplication: $C = \alpha A \cdot B + \beta C$.
@@ -723,7 +723,7 @@ namespace Althea.SparseBlas
 		/// <param name="formatB">the format of <paramref name="B"/></param>
 		/// <param name="C">the dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
-		public delegate void DelegateMatrixDenseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, Storage<T> A, int lda, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, Storage<T> C, int ldc, T α, T β) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixDenseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, Storage<T> A, int lda, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrix dense matrix multiplication: $C = \alpha A \cdot B + \beta C$.
@@ -742,7 +742,7 @@ namespace Althea.SparseBlas
 		/// <param name="C">the dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
 		/// <returns>A new sparse matrix C</returns>
-		void MatrixSparseMultiplyDense<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, Storage<T> B, int ldb, Storage<T> C, int ldc, T α, T β) where T : struct, IComparable<T>;
+		void MatrixSparseMultiplyDense<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, Storage<T> B, int ldb, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrix dense matrix multiplication: $C = \alpha A \cdot B + \beta C$.
@@ -761,7 +761,7 @@ namespace Althea.SparseBlas
 		/// <param name="C">the dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
 		/// <returns>A new sparse matrix C</returns>
-		public delegate void DelegateMatrixSparseMultiplyDense<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, Storage<T> B, int ldb, Storage<T> C, int ldc, T α, T β) where T : struct, IComparable<T>;
+		public delegate void DelegateMatrixSparseMultiplyDense<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, Storage<T> B, int ldb, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrices Kronecker product $M = A \otimes B$ where all three matrices are of COO format.
@@ -774,7 +774,7 @@ namespace Althea.SparseBlas
 		/// <param name="nb">number of columns of <paramref name="B"/></param>
 		/// <param name="M">output sparse matrix M</param>
 		/// <param name="targetCOOC">the result matrix sorted by column or by row</param>
-		void SparseMatrixKronecker<T>(int ma, int na, int mb, int nb, SparseMatrixWrapper<T> A, SparseMatrixWrapper<T> B, SparseMatrixWrapper<T> M, bool targetCOOC = true) where T : struct, IComparable<T>;
+		void SparseMatrixKronecker<T>(int ma, int na, int mb, int nb, SparseMatrixWrapper<T> A, SparseMatrixWrapper<T> B, SparseMatrixWrapper<T> M, bool targetCOOC = true) where T : unmanaged;
 
 		/// <summary>
 		/// Compute sparse matrices Kronecker product $M = A \otimes B$ where all three matrices are of COO format.
@@ -787,7 +787,7 @@ namespace Althea.SparseBlas
 		/// <param name="nb">number of columns of <paramref name="B"/></param>
 		/// <param name="M">output sparse matrix M</param>
 		/// <param name="targetCOOC">the result matrix sorted by column or by row</param>
-		public delegate void DelegateSparseMatrixKronecker<T>(int ma, int na, int mb, int nb, SparseMatrixWrapper<T> A, SparseMatrixWrapper<T> B, SparseMatrixWrapper<T> M, bool targetCOOC = true) where T : struct, IComparable<T>;
+		public delegate void DelegateSparseMatrixKronecker<T>(int ma, int na, int mb, int nb, SparseMatrixWrapper<T> A, SparseMatrixWrapper<T> B, SparseMatrixWrapper<T> M, bool targetCOOC = true) where T : unmanaged;
 		#endregion
 
 		#region integer operations

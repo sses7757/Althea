@@ -22,9 +22,9 @@ namespace Althea.Arrays
 		Storage<T> Storage { get; }
 
 		/// <summary>
-		/// The size of this mutable array
+		/// The size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
-		IReadOnlyList<long> Size { get; }
+		ReadOnlySpan<long> Size { get; }
 		#endregion
 
 		#region fill

@@ -52,25 +52,6 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
 
-		// Ignore Spelling: N-ary
-		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. Each value in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.
-		/// </summary>
-		/// <param name="N">The number of operands, must be <paramref name="N"/> &gt; 0</param>
-		/// <returns>The list of the supported memory locations for all N-ary operations. Or null if there are no N-ary operations.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="N"/> &lt;= 0</exception>
-		public override IReadOnlyList<IImmutableSet<CombinationOfLocations>> SupportedNaryLocations(int N)
-		{
-			return N switch
-			{
-				1 => this.SupportedUnaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
-				2 => this.SupportedBinaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
-				3 => this.SupportedTernaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
-				> 3 => Array.Empty<IImmutableSet<CombinationOfLocations>>(), // there are no N-ary operations
-				_ => throw new ArgumentOutOfRangeException(nameof(N)),
-			};
-		}
-
 		/// <summary>
 		/// When implemented by a derived class, get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
 		/// </summary>
@@ -87,43 +68,95 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region vector
 		/// <summary>
-		/// When implemented by a derived class, add the sparse vector x to a dense vector y. $y[x_{\text{ind}}] += \alpha x_{\text{val}}$
+		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> scaled by scalar <paramref name="α"/> to a dense vector <paramref name="y"/>: <c><paramref name="y"/> += <paramref name="α"/> * <paramref name="x"/></c>.
 		/// </summary>
-		/// <param name="alpha">scalar to multiply x</param>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
-		public abstract void VectorSparseAddToDense<T>(T alpha, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="α">The scalar to multiply <paramref name="x"/></param>
+		/// <param name="x">The input sparse vector as a <see cref="SparseVectorWrapper{T}"/></param>
+		/// <param name="y">The input/output dense vector as a <see cref="Storage{T}"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		public abstract void VectorSparseAddToDense<T>(T α, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
-		/// When implemented by a derived class, calculate the dot product of a sparse vector and a dense vector. $\vec{x} \cdot \vec{y}$
+		/// When implemented by a derived class, calculate the dot (inner) product of a sparse vector <paramref name="x"/> and a dense vector <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
-		/// <param name="conjX">conjugate <paramref name="x"/> or not</param>
-		/// <returns>output dot result</returns>
-		public abstract T VectorSparseDotDense<T>(SparseVectorWrapper<T> x, Storage<T> y, bool conjX) where T : unmanaged;
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
+		/// <param name="x">The input sparse vector as a <see cref="SparseVectorWrapper{T}"/></param>
+		/// <param name="y">The input dense vector as a <see cref="Storage{T}"/></param>
+		/// <returns>The dot product result as a <typeparamref name="T"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		public abstract T VectorSparseDotDense<T>(bool conjX, SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/>.
+		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/> and put the result in a new sparse vector.
 		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">sparse vector y</param>
-		/// <returns></returns>
-		public abstract SparseVectorWrapper<T> VectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y) where T : unmanaged;
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The input sparse vector x</param>
+		/// <param name="y">The input sparse vector y</param>
+		/// <param name="createFunc">See <see cref="DelegateCreateNew{T}"/></param>
+		/// <returns>The result of sum of <paramref name="x"/> and <paramref name="y"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		public abstract SparseVectorWrapper<T> VectorSparseAddSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, DelegateCreateNew<T>? createFunc = null) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, point-wise multiply a sparse vector and a dense vector.
+		/// When implemented by a derived class, point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
 		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The input/output sparse vector x</param>
+		/// <param name="y">The input dense vector y</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public abstract void VectorSparsePointWiseMultiplyDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, point-wise divide a sparse vector and a dense vector.
+		/// When implemented by a derived class, point-wise divide a sparse vector by a dense vector: <c><paramref name="x"/> /= <paramref name="y"/></c>.
 		/// </summary>
-		/// <param name="x">sparse vector x</param>
-		/// <param name="y">dense vector y</param>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The input/output sparse vector x</param>
+		/// <param name="y">The input dense vector y</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public abstract void VectorSparsePointWiseDivideDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
+		#endregion
+
+		#region vector and matrix
+		/// <summary>
+		/// When implemented by a derived class, compute the sparse matrix dense vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="M"/>^<paramref name="op"/> * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
+		/// </summary>
+		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
+		/// <param name="M">The input sparse matrix M</param>
+		/// <param name="x">The input dense vector x</param>
+		/// <param name="y">The input/output dense vector y</param>
+		/// <param name="α">The scalar to multiply <paramref name="M"/></param>
+		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+		public abstract void MatrixSparseMultiplyVectorDense<T>(MatrixOperation op, T α, SparseMatrixWrapper<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute the dense matrix sparse vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="M"/>^<paramref name="op"/> * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
+		/// </summary>
+		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
+		/// <param name="α">The scalar to multiply <paramref name="M"/></param>
+		/// <param name="m">The number of rows of <paramref name="M"/> before <paramref name="op"/></param>
+		/// <param name="n">The number of columns of <paramref name="M"/> before <paramref name="op"/></param>
+		/// <param name="M">The input dense matrix M</param>
+		/// <param name="x">The input sparse vector x</param>
+		/// <param name="y">The input/output dense vector y</param>
+		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+		public abstract void MatrixDenseMultiplyVectorSparse<T>(MatrixOperation op, T α, long m, long n, Storage<T> M, SparseVectorWrapper<T> x, T β, Storage<T> y) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute sparse vector outer product: <c><paramref name="M"/> = <paramref name="α"/> <paramref name="x"/> * <paramref name="y"/>^op + <paramref name="β"/> * <paramref name="M"/></c>, <c>op = <paramref name="conjY"/> ? H : T</c>.
+		/// </summary>
+		/// <param name="conjY">Whether to conjugate <paramref name="y"/> or not</param>
+		/// <param name="α">The scalar to multiply <paramref name="x"/></param>
+		/// <param name="x">The input sparse vector x</param>
+		/// <param name="y">The input sparse vector y</param>
+		/// <param name="β">The scalar to multiply <paramref name="M"/></param>
+		/// <param name="M">The preallocated input/output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format with <c>non_zeros = <paramref name="x"/>.non_zeros * <paramref name="y"/>.non_zeros</c></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="M"/> is not of <see cref="SparseMatrixFormat.COOC"/> format or has wrong number of non-zero elements</exception>
+		public abstract void VectorSparseOuter<T>(bool conjY, T α, SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, T β, SparseMatrixWrapper<T> M) where T : unmanaged, IEquatable<T>;
 		#endregion
 	}
 }

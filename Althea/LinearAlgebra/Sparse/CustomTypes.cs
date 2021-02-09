@@ -94,8 +94,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		public SparseVectorWrapper(Storage<T> val, Storage<int> ind)
 		{
-			this.Values = val ?? throw new ArgumentNullException(nameof(val));
-			this.Indices = ind ?? throw new ArgumentNullException(nameof(ind));
+			if (val is null || !val.IsValid())
+				throw new ArgumentNullException(nameof(val));
+			if (ind is null || !ind.IsValid())
+				throw new ArgumentNullException(nameof(ind));
+			this.Values = val;
+			this.Indices = ind;
 		}
 
 		/// <summary>
@@ -148,19 +152,24 @@ namespace Althea.LinearAlgebra.Sparse
 	public readonly struct SparseMatrixWrapper<T> : IEquatable<SparseMatrixWrapper<T>>, ICheckValid where T : unmanaged
 	{
 		/// <summary>
-		/// value array
+		/// Get the value array
 		/// </summary>
 		public Storage<T> Values { get; }
 
 		/// <summary>
-		/// row index/pointer array
+		/// Get the row index/pointer array
 		/// </summary>
 		public Storage<int> Row { get; }
 
 		/// <summary>
-		/// column index/pointer array
+		/// Get the column index/pointer array
 		/// </summary>
 		public Storage<int> Column { get; }
+
+		/// <summary>
+		/// Get the sparse format
+		/// </summary>
+		public SparseMatrixFormat Format { get; }
 
 		/// <summary>
 		/// Check whether this object is a valid one or not
@@ -171,11 +180,18 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Simple constructor from given value array <paramref name="val"/> and index arrays <paramref name="row"/> and <paramref name="column"/>
 		/// </summary>
-		public SparseMatrixWrapper(Storage<T> val, Storage<int> row, Storage<int> column)
+		public SparseMatrixWrapper(Storage<T> val, Storage<int> row, Storage<int> column, SparseMatrixFormat format)
 		{
-			this.Values = val ?? throw new ArgumentNullException(nameof(val));
-			this.Row = row ?? throw new ArgumentNullException(nameof(row));
-			this.Column = column ?? throw new ArgumentNullException(nameof(column));
+			if (val is null || !val.IsValid())
+				throw new ArgumentNullException(nameof(val));
+			if (row is null || !row.IsValid())
+				throw new ArgumentNullException(nameof(row));
+			if (column is null || !column.IsValid())
+				throw new ArgumentNullException(nameof(column));
+			this.Values = val;
+			this.Row = row;
+			this.Column = column;
+			this.Format = format;
 		}
 
 		/// <summary>
@@ -183,7 +199,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="other">The other <see cref="SparseMatrixWrapper{T}"/></param>
 		/// <returns>True if obj and this instance are the same type and represent the same value</returns>
-		public bool Equals(SparseMatrixWrapper<T> other) => this.Values == other.Values && this.Row == other.Row && this.Column == other.Column;
+		public bool Equals(SparseMatrixWrapper<T> other) => this.Values == other.Values && this.Row == other.Row && this.Column == other.Column && this.Format == other.Format;
 
 		/// <summary>
 		/// Indicates whether this instance and a specified object are equal.
@@ -202,7 +218,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// Get hash code
 		/// </summary>
 		/// <returns>the hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.Values, this.Row, this.Column);
+		public override int GetHashCode() => HashCode.Combine(this.Values, this.Row, this.Column, this.Format);
 
 		/// <summary>
 		/// Equality operator

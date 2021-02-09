@@ -524,31 +524,41 @@ namespace Althea
 
 		#region support information
 		/// <summary>
-		/// Get the supported <see cref="CombinationOfLocations"/> for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
+		/// When implemented by a derived class, get the supported <see cref="CombinationOfLocations"/> for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
 		/// </summary>
 		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
 		public abstract IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations { get; }
 
 		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.
+		/// When implemented by a derived class, get list of the supported <see cref="CombinationOfLocations"/> for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.
 		/// </summary>
 		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
 		public abstract IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations { get; }
 
 		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) memory locations. Or null if there are no ternary operations.
+		/// When implemented by a derived class, get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) memory locations. Or null if there are no ternary operations.
 		/// </summary>
 		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
 		public abstract IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations { get; }
 
 		// Ignore Spelling: N-ary
 		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. Each in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.
+		/// When implemented by a derived class, get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. The default implementation assumes that there are not <paramref name="N"/>-ary operations with <paramref name="N"/> &gt; 3.
 		/// </summary>
 		/// <param name="N">the number of operands, must be <paramref name="N"/> &gt; 0</param>
-		/// <returns>The list of the supported locations for all N-ary operations. Or null if there are no N-ary operations.</returns>
+		/// <returns>The list whose each value in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="N"/> &lt;= 0</exception>
-		public abstract IReadOnlyList<IImmutableSet<CombinationOfLocations>> SupportedNaryLocations(int N);
+		public virtual IReadOnlyList<IImmutableSet<CombinationOfLocations>> SupportedNaryLocations(int N)
+		{
+			return N switch
+			{
+				1 => this.SupportedUnaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
+				2 => this.SupportedBinaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
+				3 => this.SupportedTernaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
+				> 3 => Array.Empty<IImmutableSet<CombinationOfLocations>>(), // there are no N-ary operations
+				_ => throw new ArgumentOutOfRangeException(nameof(N)),
+			};
+		}
 
 		/// <summary>
 		/// Check if the given <paramref name="location"/> is supported by unary operations of this <see cref="AbstractRuntimeApi"/> or not.
