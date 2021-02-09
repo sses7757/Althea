@@ -782,6 +782,10 @@ namespace Althea.Linq
 		#endregion
 		#endregion
 
+		#region basic LINQ
+
+		#endregion
+
 		#region predicate
 		/// <summary>
 		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>

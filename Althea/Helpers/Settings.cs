@@ -1,59 +1,152 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 
 namespace Althea.Helpers
 {
+	/// <summary>
+	/// The structure for print settings
+	/// </summary>
+	public readonly struct PrintSettings
+	{
+		/// <summary>
+		/// The print precision
+		/// </summary>
+		public readonly int Precision;
+		/// <summary>
+		/// The maximum lines of vectors to print
+		/// </summary>
+		public readonly int ArrayLength;
+		/// <summary>
+		/// The maximum rows of matrices to print
+		/// </summary>
+		public readonly int MatrixRow;
+		/// <summary>
+		/// The maximum columns of matrices to print
+		/// </summary>
+		public readonly int MatrixColumn;
+
+		internal PrintSettings(bool _)
+		{
+			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5;
+		}
+
+		/// <summary>
+		/// Create a new <see cref="PrintSettings"/> with previous settings. The non-positive new value(s) are inherited from <paramref name="previousSettings"/>
+		/// </summary>
+		public PrintSettings(PrintSettings previousSettings, int precision = 0, int arrayLength = 0, int matrixRow = 0, int matrixColumn = 0)
+		{
+			Precision = precision > 0 ? precision : previousSettings.Precision;
+			ArrayLength = arrayLength > 0 ? arrayLength : previousSettings.ArrayLength;
+			MatrixRow = matrixRow > 0 ? matrixRow : previousSettings.MatrixRow;
+			MatrixColumn = matrixColumn > 0 ? matrixColumn : previousSettings.MatrixColumn;
+		}
+
+		[JsonConstructor]
+		internal PrintSettings(int precision, int arrayLength, int matrixRow, int matrixColumn)
+		{
+			Precision = precision; ArrayLength = arrayLength; MatrixRow = matrixRow; MatrixColumn = matrixColumn;
+		}
+	}
+
 	/// <summary>
 	/// The static class for global settings
 	/// </summary>
 	public static partial class Settings
 	{
 		#region class for settings
-		internal struct JsonPrintSettings
+		internal struct ImplementationSettings
 		{
-			public int Precision, ArrayLength, MatrixRow, MatrixColumn;
-			
-			internal JsonPrintSettings(bool _)
-			{
-				Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5;
-			}
-		}
-
-		internal struct JsonImplementationSettings
-		{
-			////public bool UseRecentImplementation;
-
 			public bool DisposeNotCurrentImplementation;
 
-			public string Storage, LinearAlgebra, TensorAlgebra, Statistics, Solver;
+			public Type Storage, LinearAlgebra, TensorAlgebra, Statistics, Solver;
 
-			internal JsonImplementationSettings(bool _)
+			internal ImplementationSettings(bool _)
 			{
-				////UseRecentImplementation = true;
 				DisposeNotCurrentImplementation = true;
-				Storage = string.Empty;
-				LinearAlgebra = string.Empty;
-				TensorAlgebra = string.Empty;
-				Statistics = string.Empty;
-				Solver = string.Empty;
+				Backend.ISetBackend impls = new Backend.CSharp.CSharpImplementations();
+				Storage = impls.StorageImplementation;
+				LinearAlgebra = impls.LinearAlgebraImplementation;
+				TensorAlgebra = impls.TensorAlgebraImplementation;
+				Statistics = impls.StatisticsImplementation;
+				Solver = impls.SolverImplementation;
+			}
+
+			[JsonConstructor]
+			internal ImplementationSettings(bool disposeNotCurrentImplementation, string storage, string linearAlgebra, string tensorAlgebra, string statistics, string solver)
+			{
+				DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
+				Backend.ISetBackend impls = new Backend.CSharp.CSharpImplementations();
+				try
+				{
+					Storage = Type.GetType(storage) ?? impls.StorageImplementation;
+				}
+				catch (Exception)
+				{
+					Storage = impls.StorageImplementation;
+				}
+
+				try
+				{
+					LinearAlgebra = Type.GetType(linearAlgebra) ?? impls.LinearAlgebraImplementation;
+				}
+				catch (Exception)
+				{
+					LinearAlgebra = impls.LinearAlgebraImplementation;
+				}
+
+				try
+				{
+					TensorAlgebra = Type.GetType(tensorAlgebra) ?? impls.TensorAlgebraImplementation;
+				}
+				catch (Exception)
+				{
+					TensorAlgebra = impls.TensorAlgebraImplementation;
+				}
+
+				try
+				{
+					Statistics = Type.GetType(statistics) ?? impls.StatisticsImplementation;
+				}
+				catch (Exception)
+				{
+					Statistics = impls.StatisticsImplementation;
+				}
+
+				try
+				{
+					Solver = Type.GetType(solver) ?? impls.SolverImplementation;
+				}
+				catch (Exception)
+				{
+					Solver = impls.SolverImplementation;
+				}
 			}
 		}
 
 		internal struct JsonSettings
 		{
-			public JsonLogSettings LogSettings;
+			public LogSettings LogSettings;
 
-			public JsonPrintSettings PrintSettings;
+			public PrintSettings PrintSettings;
 
-			public JsonImplementationSettings ImplementationSettings;
+			public ImplementationSettings ImplementationSettings;
 
 			internal JsonSettings(bool _)
 			{
-				LogSettings = new JsonLogSettings(false);
-				PrintSettings = new JsonPrintSettings(false);
-				ImplementationSettings = new JsonImplementationSettings(false);
+				LogSettings = new LogSettings(false);
+				PrintSettings = new PrintSettings(false);
+				ImplementationSettings = new ImplementationSettings(false);
+			}
+
+			[JsonConstructor]
+			internal JsonSettings(LogSettings logSettings, PrintSettings printSettings, ImplementationSettings implementationSettings)
+			{
+				LogSettings = logSettings;
+				PrintSettings = printSettings;
+				ImplementationSettings = implementationSettings;
 			}
 		}
 
@@ -62,33 +155,41 @@ namespace Althea.Helpers
 
 		#region print settings
 		/// <summary>
-		/// How many digital numbers will be printed out for a supported data type
+		/// Get and set the whole <see cref="PrintSettings"/>
 		/// </summary>
-		public static int PrintPrecision {
-			get => singletonSettings.PrintSettings.Precision;
-			set => singletonSettings.PrintSettings.Precision = value;
+		public static PrintSettings PrintSetting {
+			get => singletonSettings.PrintSettings;
+			set => singletonSettings.PrintSettings = value;
 		}
 
 		/// <summary>
-		/// The maximum number of lines of printed vectors and sparse matrices
+		/// Get and set how many digital numbers will be printed out for a supported data type
+		/// </summary>
+		public static int PrintPrecision {
+			get => singletonSettings.PrintSettings.Precision;
+			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, precision: value);
+		}
+
+		/// <summary>
+		/// Get and set the maximum number of lines of printed vectors and sparse matrices
 		/// </summary>
 		public static int PrintArrayLength {
 			get => singletonSettings.PrintSettings.ArrayLength;
-			set => singletonSettings.PrintSettings.ArrayLength = value;
+			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, arrayLength: value);
 		}
 		/// <summary>
-		/// The maximum number of rows of printed matrices
+		/// Get and set the maximum number of rows of printed matrices
 		/// </summary>
 		public static int PrintMatrixRow {
 			get => singletonSettings.PrintSettings.MatrixRow;
-			set => singletonSettings.PrintSettings.MatrixRow = value;
+			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixRow: value);
 		}
 		/// <summary>
-		/// The maximum number of columns of printed matrices
+		/// Get and set the maximum number of columns of printed matrices
 		/// </summary>
 		public static int PrintMatrixColumn {
 			get => singletonSettings.PrintSettings.MatrixColumn;
-			set => singletonSettings.PrintSettings.MatrixColumn = value;
+			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixColumn: value);
 		}
 		#endregion
 
@@ -106,118 +207,70 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Which memory / storage implementation to use
 		/// </summary>
-		/// <exception cref="ArgumentNullException">If the given value is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
-		public static Type? StorageImplementation {
-			get => Type.GetType(singletonSettings.ImplementationSettings.Storage);
-			set {
-				if (value is null)
-					throw new ArgumentNullException(nameof(value));
-				if (Storage.AbstractApi.SetImplementation(value))
-				{
-					var v = value.AssemblyQualifiedName;
-					if (v is null)
-						throw new ArgumentOutOfRangeException(nameof(value));
-					singletonSettings.ImplementationSettings.Storage = v;
-				}
-			}
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type StorageImplementation {
+			get => singletonSettings.ImplementationSettings.Storage;
+			set => singletonSettings.ImplementationSettings.Storage = Storage.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
 		/// Which linear algebra implementation to use
 		/// </summary>
-		/// <exception cref="ArgumentNullException">If the given value is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
-		public static Type? LinearAlgebraImplementation {
-			get => Type.GetType(singletonSettings.ImplementationSettings.LinearAlgebra);
-			set {
-				if (value is null)
-					throw new ArgumentNullException(nameof(value));
-				if (LinearAlgebra.AbstractApi.SetImplementation(value))
-				{
-					var v = value.AssemblyQualifiedName;
-					if (v is null)
-						throw new ArgumentOutOfRangeException(nameof(value));
-					singletonSettings.ImplementationSettings.LinearAlgebra = v;
-				}
-			}
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type LinearAlgebraImplementation {
+			get => singletonSettings.ImplementationSettings.LinearAlgebra;
+			set => singletonSettings.ImplementationSettings.LinearAlgebra = LinearAlgebra.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
 		/// Which tensor algebra implementation to use
 		/// </summary>
-		/// <exception cref="ArgumentNullException">If the given value is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
-		public static Type? TensorAlgebraImplementation {
-			get => Type.GetType(singletonSettings.ImplementationSettings.TensorAlgebra);
-			set {
-				if (value is null)
-					throw new ArgumentNullException(nameof(value));
-				if (TensorAlgebra.AbstractApi.SetImplementation(value))
-				{
-					var v = value.AssemblyQualifiedName;
-					if (v is null)
-						throw new ArgumentOutOfRangeException(nameof(value));
-					singletonSettings.ImplementationSettings.TensorAlgebra = v;
-				}
-			}
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type TensorAlgebraImplementation {
+			get => singletonSettings.ImplementationSettings.TensorAlgebra;
+			set => singletonSettings.ImplementationSettings.TensorAlgebra = TensorAlgebra.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
 		/// Which statistics implementation to use
 		/// </summary>
-		/// <exception cref="ArgumentNullException">If the given value is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
-		public static Type? StatisticsImplementation {
-			get => Type.GetType(singletonSettings.ImplementationSettings.Statistics);
-			set {
-				if (value is null)
-					throw new ArgumentNullException(nameof(value));
-				if (Statistics.AbstractApi.SetImplementation(value))
-				{
-					var v = value.AssemblyQualifiedName;
-					if (v is null)
-						throw new ArgumentOutOfRangeException(nameof(value));
-					singletonSettings.ImplementationSettings.Statistics = v;
-				}
-			}
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type StatisticsImplementation {
+			get => singletonSettings.ImplementationSettings.Statistics;
+			set => singletonSettings.ImplementationSettings.Statistics = Statistics.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
 		/// Which general solver implementation to use
 		/// </summary>
-		/// <exception cref="ArgumentNullException">If the given value is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If the given value has no <see cref="Type.AssemblyQualifiedName"/></exception>
-		public static Type? SolverImplementation {
-			get => Type.GetType(singletonSettings.ImplementationSettings.Solver);
-			set {
-				if (value is null)
-					throw new ArgumentNullException(nameof(value));
-				if (Solver.AbstractApi.SetImplementation(value))
-				{
-					var v = value.AssemblyQualifiedName;
-					if (v is null)
-						throw new ArgumentOutOfRangeException(nameof(value));
-					singletonSettings.ImplementationSettings.Solver = v;
-				}
-			}
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type SolverImplementation {
+			get => singletonSettings.ImplementationSettings.Solver;
+			set => singletonSettings.ImplementationSettings.Solver = Solver.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
 		/// Set all back-end implementations at once
 		/// </summary>
 		/// <param name="backend">The <see cref="Backend.ISetBackend"/> used to set all back-ends</param>
-		/// <return>Success or not</return>
+		/// <return>Success or not. Some implementation may still be changed even if this returns false.</return>
 		public static bool SetBackend(Backend.ISetBackend backend)
 		{
 			if (!backend.Available)
 				return false;
-			StorageImplementation = backend.MemoryImplementation;
-			LinearAlgebraImplementation = backend.LinearAlgebraImplementation;
-			TensorAlgebraImplementation = backend.TensorAlgebraImplementation;
-			StatisticsImplementation = backend.StatisticsImplementation;
-			SolverImplementation = backend.SolverImplementation;
-			return true;
+			try
+			{
+				StorageImplementation = backend.StorageImplementation;
+				LinearAlgebraImplementation = backend.LinearAlgebraImplementation;
+				TensorAlgebraImplementation = backend.TensorAlgebraImplementation;
+				StatisticsImplementation = backend.StatisticsImplementation;
+				SolverImplementation = backend.SolverImplementation;
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 		#endregion
 
@@ -225,9 +278,8 @@ namespace Althea.Helpers
 		private static readonly JsonSerializerOptions options = new JsonSerializerOptions
 		{
 			DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-			IgnoreReadOnlyProperties = true,
 			IncludeFields = true,
-			NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals,
+			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
 			WriteIndented = true,
 		};
 
@@ -242,10 +294,18 @@ namespace Althea.Helpers
 			try
 			{
 				singletonSettings = JsonSerializer.Deserialize<JsonSettings>(File.ReadAllText(fileName), options);
+				// set default back-end
+				SetBackend(new Backend.CSharp.CSharpImplementations());
+				Storage.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Storage);
+				LinearAlgebra.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebra);
+				TensorAlgebra.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebra);
+				Statistics.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Statistics);
+				Solver.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Solver);
 				return true;
 			}
 			catch (Exception e)
 			{
+				singletonSettings = new JsonSettings(false);
 				if (logError)
 				{
 					Log.Write(Resources.Other.ErrorOccur + e.Message, "Initialization of Settings", LogLevel.Error);

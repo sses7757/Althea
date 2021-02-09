@@ -269,7 +269,7 @@ namespace Althea.Runtime
 		/// <returns>the destination matrix; if <paramref name="dest"/>==null, a new matrix is created and returned</returns>
 		public static void CopyMatrixTo<T>(this ValueArray<T> source, ValueArray<T> dest, long srcLD, long dstLD, long copyNRows, long copyNCols, long offsetSouceRow = 0, long offsetSouceCol = 0, long offsetDestRow = 0, long offsetDestCol = 0) where T : struct, IComparable<T>
 		{
-			CopyMatrixTo(source.Pointer, dest.Pointer, srcLD, dstLD, copyNRows, copyNCols, offsetSouceRow, offsetSouceCol, offsetDestRow, offsetDestCol);
+			CopyMatrixTo(source.Storage, dest.Storage, srcLD, dstLD, copyNRows, copyNCols, offsetSouceRow, offsetSouceCol, offsetDestRow, offsetDestCol);
 		}
 
 		/// <summary>
@@ -549,7 +549,7 @@ namespace Althea.Runtime
 				length = Math.Min(source.ActualLength - offsetSource, dest.ActualLength - offsetDest);
 			if (source.ActualLength < offsetSource + length || dest.ActualLength < offsetDest + length)
 				throw new ArgumentOutOfRangeException(nameof(length));
-			CopyTo(source.Pointer, dest.Pointer, length, offsetSource, offsetDest);
+			CopyTo(source.Storage, dest.Storage, length, offsetSource, offsetDest);
 		}
 
 		/// <summary>
@@ -573,7 +573,7 @@ namespace Althea.Runtime
 				throw new ArgumentNullException(nameof(dest), Resource.ArrayCannotNull);
 			if (copyNCols + offsetSouceCol > source.NCols || copyNCols + offsetDestCol > dest.NCols)
 				throw new ArgumentOutOfRangeException(nameof(copyNCols));
-			CopyMatrixTo(source.Pointer, dest.Pointer, source.LeadDim, dest.LeadDim, copyNRows, copyNCols, offsetSouceRow, offsetSouceCol, offsetDestRow, offsetDestCol);
+			CopyMatrixTo(source.Storage, dest.Storage, source.LeadDim, dest.LeadDim, copyNRows, copyNCols, offsetSouceRow, offsetSouceCol, offsetDestRow, offsetDestCol);
 		}
 		#endregion
 
@@ -591,7 +591,7 @@ namespace Althea.Runtime
 			if (offset < 0) offset = 0;
 			if (offset >= source.ActualLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			return CopyOut(source.Pointer, offset);
+			return CopyOut(source.Storage, offset);
 		}
 
 		/// <summary>
@@ -610,7 +610,7 @@ namespace Althea.Runtime
 				length = source.ActualLength - offset;
 			if (offset + length > source.ActualLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			return CopyOutArray(source.Pointer, length, offset);
+			return CopyOutArray(source.Storage, length, offset);
 		}
 
 		/// <summary>
@@ -624,7 +624,7 @@ namespace Althea.Runtime
 		/// <param name="offset">offset to source pointer, in the count of <typeparamref name="T"/> rather than bytes</param>
 		public static T[] CopyOutColumnMajorMatrix<T>(this ValueArray<T> source, long leadDim, long copyCols, long copyRows = 0, long offset = 0) where T : struct, IComparable<T>
 		{
-			return CopyOutColumnMajorMatrix(source.Pointer, leadDim, copyCols, copyRows, offset);
+			return CopyOutColumnMajorMatrix(source.Storage, leadDim, copyCols, copyRows, offset);
 		}
 
 		/// <summary>
@@ -646,7 +646,7 @@ namespace Althea.Runtime
 			if (offset < 0) offset = 0;
 			if (offset >= source.ActualLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			return CopyOutMatrix(source.Pointer, source.LeadDim, cols, copyRows: rows, offset: offset);
+			return CopyOutMatrix(source.Storage, source.LeadDim, cols, copyRows: rows, offset: offset);
 		}
 
 		/// <summary>
@@ -668,7 +668,7 @@ namespace Althea.Runtime
 			if (offset < 0) offset = 0;
 			if (offset >= source.ActualLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			return CopyOutColumnMajorMatrix(source.Pointer, source.LeadDim, cols, copyRows: rows, offset: offset);
+			return CopyOutColumnMajorMatrix(source.Storage, source.LeadDim, cols, copyRows: rows, offset: offset);
 		}
 		#endregion
 
@@ -687,7 +687,7 @@ namespace Althea.Runtime
 			if (offset < 0) offset = 0;
 			if (offset >= dest.ActualLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			CopyInto(dest.Pointer, value, offset);
+			CopyInto(dest.Storage, value, offset);
 		}
 
 		/// <summary>
@@ -707,7 +707,7 @@ namespace Althea.Runtime
 				length = dest.ActualLength - offset;
 			if (offset + length > dest.ActualLength)
 				throw new ArgumentOutOfRangeException(nameof(offset));
-			CopyIntoArray(dest.Pointer, value, length, offset);
+			CopyIntoArray(dest.Storage, value, length, offset);
 		}
 
 		/// <summary>
@@ -739,7 +739,7 @@ namespace Althea.Runtime
 				offsetDest = 0;
 			if (offsetDest > dest.ActualLength - destLeadDim * copyCols)
 				throw new ArgumentOutOfRangeException(nameof(offsetDest));
-			dest.Pointer.CopyIntoColumnMajorMatrix(source, destLeadDim, sourceLeadDim, copyCols, copyRows, offsetDest);
+			dest.Storage.CopyIntoColumnMajorMatrix(source, destLeadDim, sourceLeadDim, copyCols, copyRows, offsetDest);
 		}
 
 		/// <summary>
@@ -755,7 +755,7 @@ namespace Althea.Runtime
 		/// <param name="offsetDest">offset to <paramref name="dest"/>, in the count of <typeparamref name="T"/> rather than bytes</param>
 		public static void CopyIntoColumnMajorMatrix<T>(this ValueArray<T> dest, T[] source, long destLeadDim, long sourceLeadDim, long copyCols, long copyRows, long offsetDest = 0) where T : struct, IComparable<T>
 		{
-			CopyIntoColumnMajorMatrix(dest.Pointer, source, destLeadDim, sourceLeadDim, copyCols, copyRows, offsetDest);
+			CopyIntoColumnMajorMatrix(dest.Storage, source, destLeadDim, sourceLeadDim, copyCols, copyRows, offsetDest);
 		}
 		#endregion
 

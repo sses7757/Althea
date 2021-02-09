@@ -10,7 +10,7 @@ namespace Althea.Backend.CSharp
 	{
 		bool ISetBackend.Available => true;
 
-		Type ISetBackend.MemoryImplementation => typeof(Storage.StorageApi);
+		Type ISetBackend.StorageImplementation => typeof(Storage.StorageApi);
 
 		Type ISetBackend.LinearAlgebraImplementation => typeof(LinearAlgebra.LinearAlgebraApi);
 

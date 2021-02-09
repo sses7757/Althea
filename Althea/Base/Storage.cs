@@ -881,6 +881,7 @@ namespace Althea
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		public abstract ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0);
 
 		/// <summary>
@@ -1086,6 +1087,7 @@ namespace Althea
 		/// <param name="storage">The <see cref="Storage{T}"/> to be referenced</param>
 		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>. A value less than or equals to 0 means the maximum possible value calculate from <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		protected ReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0)
 		{
 			if (storage is null)

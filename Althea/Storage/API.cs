@@ -645,7 +645,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
 		/// <exception cref="NotSupportedException">If <paramref name="pointer"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
-		public abstract void SetMemoryValue(PointerSegment pointer, byte value);
+		public abstract void FillWithValue(PointerSegment pointer, byte value);
 
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
@@ -655,7 +655,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
-		public abstract void SetMemoryValue<T>(PointerSegment pointer, T value) where T : unmanaged;
+		public abstract void FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
@@ -798,14 +798,14 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		public virtual void SetMemoryValue<T>(Storage<T> storage, byte value) where T : unmanaged
+		public virtual void FillWithValue<T>(Storage<T> storage, byte value) where T : unmanaged
 		{
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
 			{
 				for (int i = 0; i < storage.Count; i++)
 				{
-					this.SetMemoryValue(storage[i], value);
+					this.FillWithValue(storage[i], value);
 				}
 			}
 			else if (cached is not null)
@@ -813,11 +813,11 @@ namespace Althea.Storage
 				if (cached.LengthInBytes <= cached.GetRealLength() * ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
-					this.SetMemoryValue(cached[0], value);
+					this.FillWithValue(cached[0], value);
 				}
 				else
 				{
-					cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
+					cached.ApplyUnaryFunction(this.FillWithValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
 				}
 			}
 		}
@@ -830,17 +830,17 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		public virtual void SetMemoryValue<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
+		public virtual void FillWithValue<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
 		{
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
 			{
 				if (value.IsZero())
 					for (int i = 0; i < storage.Count; i++)
-						this.SetMemoryValue(storage[i], value);
+						this.FillWithValue(storage[i], value);
 				else
 					for (int i = 0; i < storage.Count; i++)
-						this.SetMemoryValue(storage[i], (byte)0);
+						this.FillWithValue(storage[i], (byte)0);
 			}
 			else if (cached is not null)
 			{
@@ -848,16 +848,16 @@ namespace Althea.Storage
 				{
 					cached.Flush();
 					if (value.IsZero())
-						this.SetMemoryValue(cached[0], (byte)0);
+						this.FillWithValue(cached[0], (byte)0);
 					else
-						this.SetMemoryValue(cached[0], value);
+						this.FillWithValue(cached[0], value);
 				}
 				else
 				{
 					if (value.IsZero())
-						cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: (byte)0, copyFunc: this.MemoryCopy);
+						cached.ApplyUnaryFunction(this.FillWithValue, 0, cached.LengthInBytes, auxiliary: (byte)0, copyFunc: this.MemoryCopy);
 					else
-						cached.ApplyUnaryFunction(this.SetMemoryValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
+						cached.ApplyUnaryFunction(this.FillWithValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
 				}
 			}
 		}

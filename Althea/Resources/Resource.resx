@@ -180,9 +180,6 @@
   <data name="NotErrors" xml:space="preserve">
     <value>The underlying statuses are not errors.</value>
   </data>
-  <data name="PerfectSquare" xml:space="preserve">
-    <value>Since the length of array is not a perfect square, cannot auto reshape to a matrix.</value>
-  </data>
   <data name="RangeCountWrong" xml:space="preserve">
     <value>The calculated count of 'Range' is out of range.</value>
   </data>

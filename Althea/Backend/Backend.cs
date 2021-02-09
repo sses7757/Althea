@@ -16,7 +16,7 @@ namespace Althea.Backend
 		/// <summary>
 		/// The implementation type of <see cref="Althea.Storage.AbstractApi"/>
 		/// </summary>
-		Type MemoryImplementation { get; }
+		Type StorageImplementation { get; }
 
 		/// <summary>
 		/// The implementation type of <see cref="Althea.LinearAlgebra.AbstractApi"/>

@@ -10,36 +10,6 @@ namespace Althea.Arrays
 {
 	#region basic
 	/// <summary>
-	/// The interface for mutable array whose value array can be filled with different values
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public interface IMutableArray<T> where T : unmanaged, IEquatable<T>
-	{
-		#region property
-		/// <summary>
-		/// The underlying <see cref="Storage{T}"/> for the value array of this mutable array
-		/// </summary>
-		Storage<T> Storage { get; }
-
-		/// <summary>
-		/// The size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
-		/// </summary>
-		ReadOnlySpan<long> Size { get; }
-		#endregion
-
-		#region fill
-		/// <summary>
-		/// Fill this array's value array with given <paramref name="value"/>.
-		/// </summary>
-		/// <param name="value">The value to fill as a <paramref name="value"/>, default 0</param>
-		public void FillWith(T value = default)
-		{
-			Althea.Storage.AbstractApi.SelectImplementation(this.Storage).SetMemoryValue(this.Storage, value);
-		}
-		#endregion
-	}
-
-	/// <summary>
 	/// Simple interface for sparse array which only contains basic members, additional fillings and .conversions from / to C# arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>

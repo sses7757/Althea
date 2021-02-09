@@ -3,20 +3,18 @@ using System.Text;
 using System.Collections.Generic;
 
 using Althea.Linq;
-using Althea.Storage;
+using Althea.Helpers;
 
-using RT = Althea.Runtime.API;
-using BLAS = Althea.Blas.API;
-using RAND = Althea.Rng.API;
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract device array class for array whose <see cref="ValueArray{T}.Pointer"/> only refers to the data array. There may be more pointer(s) standing for different indices in a sparse array, in which case the <see cref="ValueArray{T}.Pointer"/> only refers to the value data array.
+	/// The abstract array class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse array that inherits <see cref="ValueArray{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">the supported data type</typeparam>
-	public abstract class ValueArray<T> : AbstractArray<T>, IMutableArray<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region empty arrays
 		/// <summary>
@@ -41,143 +39,112 @@ namespace Althea.Arrays
 		public static readonly DenseTensor<T> EmptyDnTen = new DenseTensor<T>();
 		#endregion
 
-		#region new device array members
+		#region properties
 		/// <summary>
-		/// The array is on the host memory or on device memory
+		/// Get the raw storage of this array
 		/// </summary>
-		public bool OnHost => this.Pointer.OnHost;
+		public Storage<T> Storage { get; }
 
 		/// <summary>
-		/// The read-only raw data pointer
+		/// Get the total actual length of the value array in memory, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
-		internal protected Storage<T> Pointer { get; internal set; }
+		public virtual long ActualLength => this.Storage.Length;
 
 		/// <summary>
-		/// Total actual length of the value array in memory, in <typeparamref name="T"/> rather than bytes
+		/// Check whether this object is a valid one or not
 		/// </summary>
-		public virtual long ActualLength => this.Pointer.Length;
+		/// <returns>The validness of this object</returns>
+		public virtual bool IsValid() => this.Storage is not null && this.Storage.IsValid();
 		#endregion
 
 		#region initialize and destroy
-		/// <summary>
-		/// Constructor with size indicated alone while the actual array size in memory is a dedicated one.
-		/// </summary>
-		/// <param name="actualLength">the actual size of the array to allocate in device memory, in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="size">size of the new array</param>
-		/// <param name="onHost">allocate one host memory or device memory</param>
-		protected ValueArray(long actualLength, IReadOnlyList<long> size, bool onHost) : base(size)
-		{
-			this.Pointer = Storage<T>.Create(actualLength, onHost: onHost);
-		}
 
 		/// <summary>
-		/// Create using exist <see cref="Storage{T}"/>
+		/// Create a new <see cref="ValueArray{T}"/> using preallocated <paramref name="storage"/> and given <paramref name="size"/>
 		/// </summary>
-		/// <param name="storage">the existing <see cref="Storage{T}"/></param>
-		/// <param name="size">size of this array</param>
-		protected ValueArray(Storage<T> storage, IReadOnlyList<long> size) : base(size)
+		/// <param name="storage">The preallocated <see cref="Storage{T}"/> as the underlying <see cref="Storage"/> of this array</param>
+		/// <param name="size">The presenting size of this array</param>
+		/// <exception cref="ArgumentException">If the product of <paramref name="size"/> is not the same as the length of <paramref name="storage"/></exception>
+		protected ValueArray(Storage<T> storage, ReadOnlySpan<long> size) : base(size)
 		{
 			if (this.Length != storage.Length)
-				throw new ArgumentException(Resource.ArraySize, nameof(size));
-			this.Pointer = storage;
+				throw new ArgumentException(Resources.Parameter.NotSameSize);
+			this.Storage = storage;
 		}
 
 		/// <summary>
-		/// The root reference of this array
+		/// Create a new <see cref="ValueArray{T}"/> using existing <paramref name="refArray"/> with new <paramref name="actualLength"/>, <paramref name="newSize"/> and <paramref name="offset"/>
 		/// </summary>
-		protected readonly ValueArray<T> _root = null;
-
-		/// <summary>
-		/// Reshape constructor.
-		/// </summary>
-		/// <param name="refArray">the original <see cref="ValueArray{T}"/></param>
-		/// <param name="actualLength">the actual size of the array, in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="newSize">the new array's size</param>
-		/// <param name="offset">offset in <typeparamref name="T"/> rather than bytes</param>
-		protected ValueArray(ValueArray<T> refArray, long actualLength, IReadOnlyList<long> newSize, long offset = 0) : base(newSize)
+		/// <param name="refArray">The original <see cref="ValueArray{T}"/> to refer</param>
+		/// <param name="actualLength">The actual size of the array, in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="newSize">The new presenting size of the array</param>
+		/// <param name="offset">The offset to <paramref name="refArray"/> in <typeparamref name="T"/> rather than bytes</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="actualLength"/> is out of boundary</exception>
+		protected ValueArray(ValueArray<T> refArray, long actualLength, ReadOnlySpan<long> newSize, long offset = 0) : base(newSize)
 		{
-			if (refArray is null)
-				throw new ArgumentNullException(nameof(refArray), Resource.ArrayCannotNull);
-			this.Pointer = (refArray.Pointer + offset).MakeSize(actualLength);
-			this._root = refArray._root ?? refArray;
-			////GC.SuppressFinalize(this); // since this is a referenced array
+			if (refArray is null || !refArray.IsValid())
+				throw new ArgumentNullException(nameof(refArray));
+			this.Storage = refArray.Storage.MakeReference(offset, actualLength);
 		}
 
 		/// <summary>
-		/// The function that actually implements the dispose functionality
+		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="Storage"/>
 		/// </summary>
-		/// <param name="disposing">dispose managed resources or not</param>
+		/// <param name="disposing">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)
 		{
-			if (this.Disposed || this.Length == 0 || this.Pointer is null || !(this._root is null))
+			if (this.Disposed || this.Length == 0 || this.Storage is null)
 			{
-				this.Disposed = true;
 				return;
 			}
-			this.Pointer.Dispose();
+			this.Storage.Dispose();
 			if (disposing)
 			{
 				////base.Dispose(true);
 			}
-			this.Disposed = true;
 		}
 		#endregion
 
-		#region IMutableArray<T>
+		#region point-wise operations
 		/// <summary>
-		/// Fill this array's <see cref="Pointer"/> with zeros.
+		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>.
 		/// </summary>
-		public void FillWithZeros()
+		public virtual void FillWith(T value)
 		{
-			RT.SetValue(this.Pointer, 0, this.ActualLength);
-		}
-
-		/// <summary>
-		/// Fill this array's <see cref="Pointer"/> with random numbers in [0, 1).
-		/// </summary>
-		public void FillWithRandoms()
-		{
-			RAND.FillWithRandom(this);
-		}
-
-		/// <summary>
-		/// Fill this array's <see cref="Pointer"/> with ones.
-		/// </summary>
-		public void FillWithOnes()
-		{
-			BLAS.FillWithOnes(this);
+			MEM.SelectImplementation(this.Storage).FillWithValue(this.Storage, value);
 		}
 		#endregion
 
 		#region reshape
 		/// <summary>
-		/// Flatten the array to a vector.
+		/// When implemented by a derived class, get this array's <see cref="Storage"/> and make it a <see cref="DenseVector{T}"/>
 		/// </summary>
-		/// <returns>The flattened vector</returns>
-		public virtual ValueArray<T> ToVector() => new DenseVector<T>(this, this.ActualLength);
+		/// <returns>The referenced <see cref="DenseVector{T}"/> from this array's <see cref="Storage"/></returns>
+		public virtual ValueArray<T> ToVector() => new DenseVector<T>(this.Storage, this.ActualLength);
 
 		/// <summary>
-		/// Check the new size (dimensionality) to reshape to with respect to the original one
-		/// (this one) and find out the uncertain dimension.
+		/// Check the new size (dimensionality) to reshape to with respect to the original one (this one) and find out the uncertain dimension.
 		/// </summary>
-		/// <param name="newSize">new size (dimensionality)</param>
-		/// <returns>the new size without uncertain dimension or throws an error</returns>
-		protected virtual long[] CheckSize(long[] newSize)
+		/// <param name="newSize">The new size (dimensionality) to check</param>
+		/// <param name="removeFlatable">Remove the size-1 dimension in <paramref name="newSize"/> or not</param>
+		/// <returns>The new size without uncertain dimension</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="newSize"/> is of length 0</exception>
+		/// <exception cref="ArgumentException">If <paramref name="newSize"/> is of length 2 and are all non-positive while the length of this array is not a perfect square</exception>
+		protected virtual ReadOnlySpan<long> CheckSize(ReadOnlySpan<long> newSize, bool removeFlatable = true)
 		{
-			if (newSize is null)
-				throw new ArgumentNullException(nameof(newSize));
 			if (newSize.Length == 0)
-				throw new ArgumentException(Resource.RankZero, nameof(newSize));
-			if (newSize.Length == 2 && newSize.All(s => s <= 0)) // try to convert to a square matrix
+				throw new ArgumentNullException(nameof(newSize));
+			if (newSize.Length == 2 && newSize[0] <= 0 && newSize[1] <= 0) // try to convert to a square matrix
 			{
 				if (!this.Length.IsPerfectSquare())
 				{
-					throw new ArgumentException(Resource.PerfectSquare);
+					throw new ArgumentException(Resources.Other.PerfectSquare, nameof(newSize));
 				}
 				var leadDim = Convert.ToInt64(Math.Sqrt(this.Length));
+				
 				return new[] { leadDim, leadDim };
 			}
-			int uncertainCount = newSize.Count(r => r <= 0);
+			int uncertainCount = newSize.Count(static r => r <= 0);
 			if (uncertainCount == 1)
 			{
 				int i = newSize.Select(r => r < 0 ? 0 : r).ToList().IndexOf(0);
@@ -285,7 +252,7 @@ namespace Althea.Arrays
 				}
 				else if(typeOut.IsReal() && !typeT.IsReal()) // cast from complex to real
 				{
-					var srcPtr = this.Pointer.As<TOut>();
+					var srcPtr = this.Storage.As<TOut>();
 					BLAS.VectorGenralCopy(arr, new DenseVector<TOut>(srcPtr, srcPtr.Length), arr.ActualLength, strideSrc: 2);
 				}
 				else
@@ -303,20 +270,20 @@ namespace Althea.Arrays
 
 		#region overrides
 		/// <summary>
-		/// Check if this <see cref="ValueArray{T}"/> share some memory / data with <paramref name="another"/> one
+		/// When implemented by a derived class, check if this <see cref="ValueArray{T}"/> share some storage with the <paramref name="other"/> one
 		/// </summary>
-		/// <param name="another">another <see cref="AbstractArray{T}"/> to check</param>
-		/// <returns>True if they do share some memory / data, false otherwise</returns>
-		/// <remarks>The default implementation only works for arrays with only one <see cref="Pointer"/></remarks>
-		public override bool ShareMemoryWith(AbstractArray<T> another)
+		/// <param name="other">The other <see cref="AbstractArray{T}"/> to check</param>
+		/// <returns>True if they do share some storage, false otherwise</returns>
+		/// <remarks>The default implementation only compares the <see cref="Storage"/>s</remarks>
+		public virtual bool ShareStorageWith(ValueArray<T> other)
 		{
-			if (another is ValueArray<T> arr)
+			if (other is ValueArray<T> arr)
 			{
 				ValueArray<T> a = this._root ?? this, b = arr._root ?? arr;
 				if (a.Equals(b))
 					return true;
 				else
-					return a.Pointer.ShareMemoryWith(b.Pointer);
+					return a.Storage.ShareMemoryWith(b.Storage);
 			}
 			else
 				return false;
@@ -372,7 +339,7 @@ namespace Althea.Arrays
 				output.Append(item switch
 				{
 					StringTerms.DataType => $"data_type={typeof(T).Name}",
-					StringTerms.Address => $"address=0x{this.Pointer.ToHexString()}",
+					StringTerms.Address => $"address=0x{this.Storage.ToHexString()}",
 					StringTerms.Size => $"size={string.Join("x", Size)}",
 					_ => "",
 				});
@@ -400,8 +367,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Override <see cref="AbstractArray{T}.GetHashCode"/> to get the hash code this array.
 		/// </summary>
-		/// <returns>The hash code computed by <see cref="Pointer"/> and <see cref="AbstractArray{T}.Size"/></returns>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer, this.Size.HashCodeOfArray());
+		/// <returns>The hash code computed by <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/></returns>
+		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size.HashCodeOfArray());
 
 		/// <summary>
 		/// Whether this object is equal to another, the shapes / sizes are also compared
@@ -412,7 +379,7 @@ namespace Althea.Arrays
 			if (obj is null || !(obj is ValueArray<T> a))
 				return false;
 			else
-				return this.Pointer == a.Pointer && this.Size.SequenceEqual(a.Size);
+				return this.Storage == a.Storage && this.Size.SequenceEqual(a.Size);
 		}
 		#endregion
 
@@ -535,7 +502,7 @@ namespace Althea.Arrays
 		public double AbsMax()
 		{
 			long ind = this.ArgMaxAbs();
-			return Math.Abs(RT.CopyOut(this.Pointer, ind).ToDouble());
+			return Math.Abs(RT.CopyOut(this.Storage, ind).ToDouble());
 		}
 
 		/// <summary>
@@ -552,10 +519,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The pointer name that <b>shall</b> be used in <see cref="GetPointers"/>.
 		/// </summary>
-		public const string PointerName = nameof(Pointer);
+		public const string PointerName = nameof(Storage);
 
 		/// <summary>
-		/// Get the pointer in the class-defined order, the first one must be <see cref="Pointer"/> to the value data.
+		/// Get the pointer in the class-defined order, the first one must be <see cref="Storage"/> to the value data.
 		/// </summary>
 		/// <returns>the pointers</returns>
 		public abstract IReadOnlyDictionary<string, IStorage> GetPointers();

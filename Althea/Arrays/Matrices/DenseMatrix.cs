@@ -78,7 +78,7 @@ namespace Althea.Arrays
 		/// <param name="newCols">new number of columns</param>
 		/// <param name="newLD">new leading dimension, less than or equal to 0 means that it is equal to <paramref name="newRows"/></param>
 		/// <param name="herm">the new matrix is Hermitian or not, if <paramref name="refArray"/> is <see cref="MatrixBase{T}"/>, its <see cref="MatrixBase{T}.Hermitian"/> will be used</param>
-		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Storage"/> in <typeparamref name="T"/> rather than bytes</param>
 		public DenseMatrix(ValueArray<T> refArray, long newRows, long newCols, long newLD = 0, bool herm = false, long offset = 0) : base(refArray, (newLD > 0 ? newLD : refArray is DenseMatrix<T> m ? m.LeadDim : newRows) * newCols, newRows, newCols, herm, offset)
 		{
 			if (newLD <= 0)

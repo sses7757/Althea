@@ -44,7 +44,7 @@ namespace Althea.Arrays
 		private int IntColIdxLength => checked((int)this.ColumnIndexLength);
 
 		/// <summary>
-		/// Number of nonzero values of this sparse vector, equal to the array size <see cref="ValueArray{T}.Pointer"/>, from <see cref="ISparseArray{T}.NonZero"/>.
+		/// Number of nonzero values of this sparse vector, equal to the array size <see cref="ValueArray{T}.Storage"/>, from <see cref="ISparseArray{T}.NonZero"/>.
 		/// </summary>
 		public long NonZero => this.ActualLength;
 
@@ -104,7 +104,7 @@ namespace Althea.Arrays
 				return;
 			if (!format.IsAtomic())
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
 			}
 			this.Format = format;
@@ -134,27 +134,27 @@ namespace Althea.Arrays
 		{
 			if (!format.IsAtomic())
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
 			}
 			if (colPtr is null)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentNullException(nameof(colPtr));
 			}
 			if (rowPtr is null)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentNullException(nameof(rowPtr));
 			}
 			if (value is null)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentNullException(nameof(value));
 			}
 			if (colPtr.OnHost != rowPtr.OnHost || colPtr.OnHost != value.OnHost)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentException(Resource.RequireSamePos);
 			}
 			this.Format = format;
@@ -175,7 +175,7 @@ namespace Althea.Arrays
 		/// <param name="colPtr">a <see cref="Storage{Int32}"/> to indicate the column index array</param>
 		/// <param name="format">the <see cref="SparseMatrixFormat"/> of this new sparse matrix</param>
 		/// <param name="herm">the new matrix is Hermitian or not</param>
-		/// <param name="offsetRef">offset to the <see cref="ValueArray{T}.Pointer"/> of <paramref name="refArray"/></param>
+		/// <param name="offsetRef">offset to the <see cref="ValueArray{T}.Storage"/> of <paramref name="refArray"/></param>
 		/// <param name="refCol"><paramref name="colPtr"/> a reference or not</param>
 		/// <param name="refRow"><paramref name="rowPtr"/> a reference or not</param>
 		/// <exception cref="ArgumentException">if <c>3 * <see cref="NonZero"/> ≥ <paramref name="rows"/> * <paramref name="cols"/></c> and <paramref name="rows"/> * <paramref name="cols"/> &gt; <see cref="GlobalSettings.SparseMatrixUncheck"/></exception>
@@ -184,22 +184,22 @@ namespace Althea.Arrays
 		{
 			if (!format.IsAtomic())
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
 			}
 			if (colPtr is null)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentNullException(nameof(colPtr));
 			}
 			if (rowPtr is null)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentNullException(nameof(rowPtr));
 			}
 			if (colPtr.OnHost != rowPtr.OnHost || colPtr.OnHost != refArray.OnHost)
 			{
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				throw new ArgumentException(Resource.RequireSamePos);
 			}
 			this.Format = format;
@@ -275,7 +275,7 @@ namespace Althea.Arrays
 		{
 			base.Dispose(disposing); // dispose value array
 			this.vecIndex?.Dispose();
-			if (this.Disposed || this.Length == 0 || this.Pointer is null || !(this._root is null))
+			if (this.Disposed || this.Length == 0 || this.Storage is null || !(this._root is null))
 				return;
 			this.RowPointer.Dispose();
 			this.ColumnPointer.Dispose();
@@ -511,15 +511,15 @@ namespace Althea.Arrays
 				return;
 			if (array is SparseVector<T> sv)
 			{
-				if (this.Pointer != sv.Pointer)
-					this.Pointer.Dispose();
+				if (this.Storage != sv.Storage)
+					this.Storage.Dispose();
 				this.RowPointer.Dispose();
 				this.ColumnPointer.Dispose();
 			}
 			else if (array is SparseMatrix<T> sm)
 			{
-				if (this.Pointer != sm.Pointer)
-					this.Pointer.Dispose();
+				if (this.Storage != sm.Storage)
+					this.Storage.Dispose();
 				if (this.ColumnPointer != sm.ColumnPointer && this.ColumnPointer != sm.RowPointer)
 					this.ColumnPointer.Dispose();
 				if (this.RowPointer != sm.RowPointer && this.RowPointer != sm.ColumnPointer)
@@ -528,7 +528,7 @@ namespace Althea.Arrays
 			else
 			{
 				// other cases cannot share same pointers
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				this.RowPointer.Dispose();
 				this.ColumnPointer.Dispose();
 			}
@@ -722,7 +722,7 @@ namespace Althea.Arrays
 			RT.CopyIntoArray(this.ColumnPointer, colHost);
 			for (long i = 0; i < vecs.LongLength; i++)
 			{
-				RT.CopyTo(source: vecs[i].Pointer, dest: this.Pointer, length: vecs[i].NonZero, offsetDest: colHost[i]);
+				RT.CopyTo(source: vecs[i].Storage, dest: this.Storage, length: vecs[i].NonZero, offsetDest: colHost[i]);
 				RT.CopyTo(source: vecs[i].IndexPointer, dest: this.RowPointer, length: vecs[i].NonZero, offsetDest: colHost[i]);
 			}
 		}
@@ -1112,7 +1112,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				RT.CopyTo(source: this.Pointer, dest: overwrite.Pointer, length: this.NonZero);
+				RT.CopyTo(source: this.Storage, dest: overwrite.Storage, length: this.NonZero);
 				RT.CopyTo(source: this.RowPointer, dest: overwrite.ColumnPointer, length: this.RowIndexLength);
 				RT.CopyTo(source: this.ColumnPointer, dest: overwrite.RowPointer, length: this.ColumnIndexLength);
 				return overwrite;
@@ -1136,7 +1136,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				RT.CopyTo(source: this.Pointer, dest: overwrite.Pointer, length: this.NonZero);
+				RT.CopyTo(source: this.Storage, dest: overwrite.Storage, length: this.NonZero);
 				RT.CopyTo(source: this.RowPointer, dest: overwrite.ColumnPointer, length: this.RowIndexLength);
 				RT.CopyTo(source: this.ColumnPointer, dest: overwrite.RowPointer, length: this.ColumnIndexLength);
 				BLAS.PointWiseConjugate(overwrite);
@@ -1501,7 +1501,7 @@ namespace Althea.Arrays
 				for (long i = 0; i < count; i++)
 				{
 					overwrite[i].FillWithZeros();
-					Sparse.VectorSetAtIndices(src: this.Pointer + colPtr[i], pos: this.RowPointer + colPtr[i], dst: overwrite[i].Pointer, N: newNNZs[i]);
+					Sparse.VectorSetAtIndices(src: this.Storage + colPtr[i], pos: this.RowPointer + colPtr[i], dst: overwrite[i].Storage, N: newNNZs[i]);
 				}
 				return overwrite;
 			}
@@ -1557,7 +1557,7 @@ namespace Althea.Arrays
 				for (long i = 0; i < count; i++)
 				{
 					overwrite[i].FillWithZeros();
-					Sparse.VectorSetAtIndices(src: this.Pointer + rowPtr[i], pos: this.ColumnPointer + rowPtr[i], dst: overwrite[i].Pointer, N: newNNZs[i]);
+					Sparse.VectorSetAtIndices(src: this.Storage + rowPtr[i], pos: this.ColumnPointer + rowPtr[i], dst: overwrite[i].Storage, N: newNNZs[i]);
 				}
 				return overwrite;
 			}
@@ -1621,7 +1621,7 @@ namespace Althea.Arrays
 			{
 				if (overwrite is null) return null; // never here
 				overwrite.FillWithZeros();
-				Sparse.VectorSetAtIndices(src: this.Pointer + fromOffset, pos: this.RowPointer + fromOffset, dst: overwrite.Pointer, N: newNNZ);
+				Sparse.VectorSetAtIndices(src: this.Storage + fromOffset, pos: this.RowPointer + fromOffset, dst: overwrite.Storage, N: newNNZ);
 				return overwrite;
 			}
 		}
@@ -1659,7 +1659,7 @@ namespace Althea.Arrays
 			{
 				if (overwrite is null) return null; // never here
 				overwrite.FillWithZeros();
-				Sparse.VectorSetAtIndices(src: this.Pointer + fromOffset, pos: this.ColumnPointer + fromOffset, dst: overwrite.Pointer, N: newNNZ);
+				Sparse.VectorSetAtIndices(src: this.Storage + fromOffset, pos: this.ColumnPointer + fromOffset, dst: overwrite.Storage, N: newNNZ);
 				return overwrite;
 			}
 		}
@@ -1942,7 +1942,7 @@ namespace Althea.Arrays
 			var newVec = new SparseMatrix<T>(this.NRows, this.NCols, this.NonZero, this.Format, !this.OnHost, this.Hermitian);
 			try
 			{
-				RT.CopyTo(source: this.Pointer, dest: newVec.Pointer, length: this.NonZero);
+				RT.CopyTo(source: this.Storage, dest: newVec.Storage, length: this.NonZero);
 				RT.CopyTo(source: this.RowPointer, dest: newVec.RowPointer, length: this.RowIndexLength);
 				RT.CopyTo(source: this.ColumnPointer, dest: newVec.ColumnPointer, length: this.ColumnIndexLength);
 				return newVec;
@@ -2018,7 +2018,7 @@ namespace Althea.Arrays
 		/// Take out the data array as a new <see cref="DenseVector{T}"/>, override <see cref="ValueArray{T}.AsDenseVector"/>.
 		/// </summary>
 		/// <returns>A new <see cref="DenseVector{T}"/> containing the referenced data array of this one.</returns>
-		public override DenseVector<T> AsDenseVector() => new DenseVector<T>(this.Pointer, this.NonZero);
+		public override DenseVector<T> AsDenseVector() => new DenseVector<T>(this.Storage, this.NonZero);
 
 		/// <summary>
 		/// Create a new array like this one (with same type and other info) while the data type is <typeparamref name="TOut"/>
@@ -2464,7 +2464,7 @@ namespace Althea.Arrays
 					if (vecIndex is null)
 					{
 						this.vecIndex = Storage<int>.Create(this.NonZero, this.OnHost);
-						var temp = new SparseVector<T>(this.Length, this.Pointer + 0, this.vecIndex + 0);
+						var temp = new SparseVector<T>(this.Length, this.Storage + 0, this.vecIndex + 0);
 						Sparse.VectorToFromCOOMatrix(temp, this, toCOO: false);
 					}
 					int find = Sparse.IndexFind(this.vecIndex, this.NonZero, this.Format == SparseMatrixFormat.COOC ? checked((int)(py * this.NRows + px)) : checked((int)(px * this.NCols + py)));
@@ -2771,9 +2771,9 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="another">another <see cref="AbstractArray{T}"/> to check</param>
 		/// <returns>True if they do share some memory / data, false otherwise</returns>
-		public override bool ShareMemoryWith(AbstractArray<T> another)
+		public override bool ShareStorageWith(AbstractArray<T> another)
 		{
-			if (base.ShareMemoryWith(another))
+			if (base.ShareStorageWith(another))
 				return true;
 			else if (another is SparseVector<T> sv)
 			{
@@ -2802,7 +2802,7 @@ namespace Althea.Arrays
 		{
 			if (obj is null || !(obj is ValueArray<T> a))
 				return false;
-			else if (this.Pointer != a.Pointer)
+			else if (this.Storage != a.Storage)
 				return false;
 			if (obj is SparseMatrix<T> s)
 				return this.Format == s.Format && this.NonZero == s.NonZero &&
@@ -2821,7 +2821,7 @@ namespace Althea.Arrays
 		{
 			return base.ToString(new Dictionary<string, object>
 			{ 
-				["value_address"] = $"0x{this.Pointer.ToHexString()}",
+				["value_address"] = $"0x{this.Storage.ToHexString()}",
 				["row_address"] = $"0x{this.RowPointer.ToHexString()}",
 				["column_address"] = $"0x{this.ColumnPointer.ToHexString()}",
 				["non_zeros"] = this.NonZero,
@@ -2833,7 +2833,7 @@ namespace Althea.Arrays
 		{
 			config ??= GlobalSettings.PrintConfig;
 			long length = Math.Min(config[PrintSetting.ArrayLength], this.NonZero);
-			T[] res = RT.CopyOutArray(this.Pointer, length);
+			T[] res = RT.CopyOutArray(this.Storage, length);
 			int[] rowInd, colInd;
 			switch (this.Format)
 			{

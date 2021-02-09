@@ -71,7 +71,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="refArray">original array</param>
 		/// <param name="newLength">size of the new vector</param>
-		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in T rather than bytes</param>
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Storage"/> in T rather than bytes</param>
 		public DenseVector(ValueArray<T> refArray, long newLength, long offset = 0) : base(refArray, newLength, newLength, offset) { }
 		#endregion
 

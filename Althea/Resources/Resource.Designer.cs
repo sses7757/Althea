@@ -250,15 +250,6 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 Since the length of array is not a perfect square, cannot auto reshape to a matrix. 的本地化字符串。
-        /// </summary>
-        internal static string PerfectSquare {
-            get {
-                return ResourceManager.GetString("PerfectSquare", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 The calculated count of &apos;Range&apos; is out of range. 的本地化字符串。
         /// </summary>
         internal static string RangeCountWrong {

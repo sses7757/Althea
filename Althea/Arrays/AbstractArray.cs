@@ -1,54 +1,75 @@
 ﻿using System;
-using System.Collections.Generic;
 
-using Althea.Linq;
 using Althea.Helpers;
 
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract array class for device / host array. It is the top level abstract of all built-in array classes. It inherits the <see cref="IDisposable"/> and <see cref="ICloneable"/> interface.
+	/// The abstract array class for any kind of array. It is the top level abstract of all built-in array classes. It implements the <see cref="IDisposable"/> and <see cref="ICloneable{T}"/> interface.
 	/// </summary>
-	/// <typeparam name="T">the supported data type</typeparam>
-	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
-		/// <summary>
-		/// The array's size, read-only
-		/// </summary>
-		public IReadOnlyList<long> Size { get; }
+		private readonly int m_rank;
 
-		/// <summary>
-		/// The accumulated product result of <see cref="Size"/> (with the last one as the <see cref="Length"/>)
-		/// </summary>
-		protected IReadOnlyList<long> SizeProd { get; }
+		private readonly FixedBuffer_128<long> m_size = new FixedBuffer_128<long>();
+
+		private readonly FixedBuffer_128<long> m_sizeProd = new FixedBuffer_128<long>();
 		#endregion
 
-		#region other properties
+		#region properties
+		/// <summary>
+		/// Get the rank of this array as a <see cref="int"/>
+		/// </summary>
+		public int Rank => this.m_rank;
+
+		/// <summary>
+		/// Get the size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		public ReadOnlySpan<long> Size => this.m_size.AsSpan(this.Rank);
+
+		/// <summary>
+		/// Get the exclusive (the last one is the <see cref="Length"/>) accumulated product (partial product) result of <see cref="Size"/>
+		/// </summary>
+		protected ReadOnlySpan<long> SizeProd => this.m_sizeProd.AsSpan(this.Rank);
+
 		/// <summary>
 		/// Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
-		public long Length => this.SizeProd[^1];
+		public long Length => this.m_sizeProd[this.Rank - 1];
 		#endregion
 
 		#region initialize and dispose
 		/// <summary>
-		/// New instance of <see cref="AbstractArray{T}"/> constructor.
+		/// Create a new instance of <see cref="AbstractArray{T}"/> by indicating the size of each rank.
 		/// </summary>
-		/// <param name="size">size of this abstract array</param>
-		protected AbstractArray(IReadOnlyList<long> size)
+		/// <param name="size">The size of this abstract array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="size"/> is of length 0</exception>
+		/// <exception cref="NotSupportedException">If <paramref name="size"/> has length larger than 16</exception>
+		protected AbstractArray(ReadOnlySpan<long> size)
 		{
-			if (size is null || size.Count == 0)
+			if (size.Length == 0)
 				throw new ArgumentNullException(nameof(size));
-			this.Size = size;
-			this.SizeProd = size.AccumulateProd();
+			if (size.Length >= 16)
+				throw new NotSupportedException(Resources.Parameter.WrongSize);
+
+			this.m_rank = size.Length;
+			size.CopyTo(this.m_size.AsSpan(this.Rank));
+			var sizeProdSpan = this.m_sizeProd.AsSpan(this.Rank);
+			long prod = 1;
+			for (int i = 0; i < this.Rank; i++)
+			{
+				prod *= size[i];
+				sizeProdSpan[i] = prod;
+			}
 		}
 
 		/// <summary>
 		/// This array is disposed or not
 		/// </summary>
-		public bool Disposed { protected internal set; get; } = false;
+		public bool Disposed { private set; get; } = false;
 
 		/// <summary>
 		/// The dispose method invoked by the finalize method (or yourself) to release the memory.
@@ -56,43 +77,44 @@ namespace Althea.Arrays
 		public void Dispose()
 		{
 			this.Dispose(true);
+			this.Disposed = true;
 			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
-		/// The function that actually implements the dispose functionality.
+		/// When implemented by a derived class, actually the dispose this array.
 		/// </summary>
-		/// <param name="disposing">dispose managed resources or not</param>
+		/// <param name="disposing">Dispose managed resources or not</param>
 		protected abstract void Dispose(bool disposing);
 		#endregion
 
 		#region overrides
 		/// <summary>
-		/// Override <see cref="object.ToString"/> to get the string representation of this array.
+		/// When implemented by a derived class, override <see cref="object.ToString"/> to get the string representation of this array.
 		/// </summary>
-		/// <returns>String representation of this array</returns>
+		/// <returns>The string representation of this array</returns>
 		public abstract override string ToString();
 
 		/// <summary>
-		/// Override <see cref="object.GetHashCode"/> to get the hash code this array.
+		/// When implemented by a derived class, override <see cref="object.GetHashCode"/> to get the hash code this array.
 		/// </summary>
-		/// <returns>The hash code</returns>
+		/// <returns>The hash code of this array</returns>
 		public abstract override int GetHashCode();
 
 		/// <summary>
-		/// Whether this object is equal to another, the shapes / sizes are also compared
+		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation <b>only</b> compares the size.
 		/// </summary>
 		/// <param name="obj">The other <see cref="AbstractArray{T}"/> to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>
-		public abstract override bool Equals(object? obj);
+		public override bool Equals(object? obj) => obj is AbstractArray<T> arr && this.m_size == arr.m_size;
 		#endregion
 
 		#region operators
 		/// <summary>
-		/// Whether the two <see cref="AbstractArray{T}"/> are equal, the shapes / sizes are not compared
+		/// Whether the two <see cref="AbstractArray{T}"/> are equal
 		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
+		/// <param name="left">The left operand</param>
+		/// <param name="right">The right operand</param>
 		/// <returns><paramref name="left"/> == <paramref name="right"/></returns>
 		public static bool operator ==(AbstractArray<T> left, AbstractArray<T> right)
 		{
@@ -101,62 +123,47 @@ namespace Althea.Arrays
 			else if (left is null || right is null)
 				return false;
 			else if (left.Length == 0 && right.Length == 0)
-				return true; // zero length arrays are regarded as a different type
+				return true; // zero length arrays are regarded as the same
 			else if (left.Length == 0 || right.Length == 0)
-				return false;
-			else if (!left.Size.SequenceEqual(right.Size))
 				return false;
 			else
 				return left.Equals(right);
 		}
 
 		/// <summary>
-		/// See == of <see cref="AbstractArray{T}"/>
+		/// Whether the two <see cref="AbstractArray{T}"/> are not equal
 		/// </summary>
-		/// <param name="a1"></param>
-		/// <param name="a2"></param>
-		/// <returns><paramref name="a1"/> != <paramref name="a2"/></returns>
-		public static bool operator !=(AbstractArray<T> a1, AbstractArray<T> a2)
-		{
-			return !(a1 == a2);
-		}
+		/// <param name="left">The left operand</param>
+		/// <param name="right">The right operand</param>
+		/// <returns><paramref name="left"/> != <paramref name="right"/></returns>
+		public static bool operator !=(AbstractArray<T> left, AbstractArray<T> right) => !(left == right);
 		#endregion
 
-		#region other abstracts
+		#region abstracts
 		/// <summary>
-		/// Check if this <see cref="AbstractArray{T}"/> share some memory / data with <paramref name="another"/> one
-		/// </summary>
-		/// <param name="another">another <see cref="AbstractArray{T}"/> to check</param>
-		/// <returns>True if they do share some memory / data, false otherwise</returns>
-		public abstract bool ShareMemoryWith(AbstractArray<T> another);
-
-		/// <summary>
-		/// Deep clone the array, the mutable status will not be copied.
+		/// When implemented by a derived class, deep clone the array, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned array</returns>
 		public abstract AbstractArray<T> Clone();
 
 		/// <summary>
-		/// Create a new array with same properties (e.g. <see cref="Size"/>) as this one.
+		/// When implemented by a derived class, create a new array with same properties (e.g. <see cref="Size"/>) as this one.
 		/// </summary>
 		/// <returns>The array alike this one.</returns>
 		public abstract AbstractArray<T> NewArrayAlike();
-
-		/// <summary>
-		/// Print out the array.
-		/// </summary>
-		/// <param name="overrideSetting">override global settings <see cref="Settings.JsonPrintSettings"/></param>
-		/// <returns>detailed string representation</returns>
-		public abstract string Print(IReadOnlyDictionary<string, int> overrideSetting = null);
-		#endregion
-
-		#region abstract array operations
 		/// <summary>
 		/// Cast this array into another data type <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">the data type to cast to</typeparam>
 		/// <returns>The casted <see cref="AbstractArray{T}"/>.</returns>
 		public abstract AbstractArray<TOut> DataTypeCast<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
+
+		/// <summary>
+		/// When implemented by a derived class, print out the array.
+		/// </summary>
+		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
+		/// <returns>The detailed string representation</returns>
+		public abstract string Print(PrintSettings? overrideSetting = null);
 		#endregion
 	}
 }

@@ -135,7 +135,7 @@ namespace Althea.Backend.CSharp.Storage
 			}
 		}
 
-		public unsafe override void SetMemoryValue(PointerSegment pointer, byte value)
+		public unsafe override void FillWithValue(PointerSegment pointer, byte value)
 		{
 			var offset = pointer.GetPointerOffset(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (mp is not null)
@@ -151,7 +151,7 @@ namespace Althea.Backend.CSharp.Storage
 				return;
 		}
 
-		public override void SetMemoryValue<T>(PointerSegment pointer, T value)
+		public override void FillWithValue<T>(PointerSegment pointer, T value)
 		{
 			var offset = pointer.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (mp is not null)

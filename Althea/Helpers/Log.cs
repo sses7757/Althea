@@ -41,7 +41,7 @@ namespace Althea.Helpers
 	}
 
 	// for JSON serialization
-	internal struct JsonLogSettings
+	internal struct LogSettings
 	{
 		public bool Suppress;
 		public int BufferSize;
@@ -51,11 +51,18 @@ namespace Althea.Helpers
 		public LogLevel[] PrintLevels;
 		public LogLevel[] BufferLevels;
 
-		internal JsonLogSettings(bool _)
+		internal LogSettings(bool _)
 		{
 			Suppress = false; BufferSize = 1024; WrapLimit = 125; Path = "Althea.log";
 			PrintLevels = new[] { LogLevel.Error, LogLevel.Warning };
 			BufferLevels = new[] { LogLevel.Trace, LogLevel.Debug };
+		}
+
+		[System.Text.Json.Serialization.JsonConstructor]
+		internal LogSettings(bool suppress, int bufferSize, int wrapLimit, string path, LogLevel[] printLevels, LogLevel[] bufferLevels)
+		{
+			Suppress = suppress; BufferSize = bufferSize; WrapLimit = wrapLimit; Path = path;
+			PrintLevels = printLevels; BufferLevels = bufferLevels;
 		}
 	}
 	#endregion
@@ -277,7 +284,7 @@ namespace Althea.Helpers
 	{
 		#region log settings
 		/// <summary>
-		/// Whether the log file output should be suppressed
+		/// Get or set whether the log file output should be suppressed
 		/// </summary>
 		public static bool SuppressLog {
 			get => Settings.singletonSettings.LogSettings.Suppress;
@@ -285,7 +292,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// The directory and file name of the log file
+		/// Get or set the directory and file name of the log file
 		/// </summary>
 		public static string FilePath {
 			get => Settings.singletonSettings.LogSettings.Path;
@@ -293,7 +300,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Buffer size used for output
+		/// Get or set the buffer size used for output
 		/// </summary>
 		public static int BufferSize {
 			get => Settings.singletonSettings.LogSettings.BufferSize;
@@ -301,7 +308,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// The maximum width (in characters) of a printed line
+		/// Get or set the maximum width (in characters) of a printed line
 		/// </summary>
 		public static int WrapLimit {
 			get => Settings.singletonSettings.LogSettings.WrapLimit;
@@ -309,19 +316,19 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// The <see cref="LogLevel"/>s to print
+		/// Get or set the <see cref="LogLevel"/>s to print
 		/// </summary>
-		public static LogLevel[] PrintLevels {
+		public static IReadOnlyList<LogLevel> PrintLevels {
 			get => Settings.singletonSettings.LogSettings.PrintLevels;
-			set => Settings.singletonSettings.LogSettings.PrintLevels = value;
+			set => Settings.singletonSettings.LogSettings.PrintLevels = value.ToArray();
 		}
 
 		/// <summary>
-		/// The <see cref="LogLevel"/>s to buffer
+		/// Get or set the <see cref="LogLevel"/>s to buffer
 		/// </summary>
-		public static LogLevel[] BufferLevels {
+		public static IReadOnlyList<LogLevel> BufferLevels {
 			get => Settings.singletonSettings.LogSettings.BufferLevels;
-			set => Settings.singletonSettings.LogSettings.BufferLevels = value;
+			set => Settings.singletonSettings.LogSettings.BufferLevels = value.ToArray();
 		}
 		#endregion
 

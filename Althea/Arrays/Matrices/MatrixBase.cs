@@ -141,7 +141,7 @@ namespace Althea.Arrays
 		/// <param name="rows">new number of rows</param>
 		/// <param name="cols">new number of columns</param>
 		/// <param name="herm">the new matrix is Hermitian or not, if <paramref name="refArray"/> is <see cref="MatrixBase{T}"/>, its <see cref="MatrixBase{T}.Hermitian"/> will be used</param>
-		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in T rather than bytes</param>
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Storage"/> in T rather than bytes</param>
 		protected MatrixBase(ValueArray<T> refArray, long actualLength, long rows, long cols, bool herm = false, long offset = 0) : base(refArray, actualLength, new[] { rows, cols }, offset)
 		{
 			if (refArray is MatrixBase<T> m)

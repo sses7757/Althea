@@ -142,6 +142,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The size of the target matrix canno be obtained since the length of array is not a perfect square. 的本地化字符串。
+        /// </summary>
+        internal static string PerfectSquare {
+            get {
+                return ResourceManager.GetString("PerfectSquare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Use default settings instead... 的本地化字符串。
         /// </summary>
         internal static string UseDefault {

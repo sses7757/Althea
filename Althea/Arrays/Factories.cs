@@ -322,7 +322,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage> 
 			{ 
-				[ValueArray<T>.PointerName] = vec.Pointer
+				[ValueArray<T>.PointerName] = vec.Storage
 			};
 		}
 	}
@@ -369,7 +369,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = vec.Pointer,
+				[ValueArray<T>.PointerName] = vec.Storage,
 				[IndexPointerName] = vec.IndexPointer
 			};
 		}
@@ -446,7 +446,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = mat.Pointer
+				[ValueArray<T>.PointerName] = mat.Storage
 			};
 		}
 
@@ -629,7 +629,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = mat.Pointer,
+				[ValueArray<T>.PointerName] = mat.Storage,
 				[RowIndexName] = mat.RowPointer,
 				[ColumnIndexName] = mat.ColumnPointer
 			};
@@ -694,7 +694,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = ten.Pointer
+				[ValueArray<T>.PointerName] = ten.Storage
 			};
 		}
 

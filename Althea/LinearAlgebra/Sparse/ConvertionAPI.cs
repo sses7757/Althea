@@ -65,18 +65,15 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 
 		#region vector and matrix
-
-
 		/// <summary>
-		/// Convert the indices of sparse vector to or from a sparse COO matrix's index arrays.
+		/// When implemented by a derived class, convert the indices of a sparse vector to or from a sparse COO matrix's index arrays.
 		/// </summary>
-		/// <param name="n">length of indices</param>
-		/// <param name="ind">input/output indices of sparse vector</param>
-		/// <param name="row">input/output COO matrix's row index array</param>
-		/// <param name="col">input/output COO matrix's column index array</param>
-		/// <param name="ld">number of rows of the matrix</param>
-		/// <param name="toCOO">convert to COO index arrays or backward</param>
-		public abstract void MatrixVectorCOOToFromSparseIndex(long n, Storage<int> ind, Storage<int> row, Storage<int> col, int ld, bool toCOO);
+		/// <param name="toCOO">Whether to convert to COO index arrays or backward -- if true, <paramref name="ind"/> is input; otherwise, <paramref name="ind"/> is output</param>
+		/// <param name="ind">The input/output indices of sparse vector</param>
+		/// <param name="row">The output/input COO matrix's row index array</param>
+		/// <param name="col">The output/input COO matrix's column index array</param>
+		/// <param name="ld">The number of rows of the matrix</param>
+		public abstract void MatrixVectorCOOToFromSparseIndex(bool toCOO, Storage<int> ind, Storage<int> row, Storage<int> col, long ld);
 		#endregion
 	}
 }

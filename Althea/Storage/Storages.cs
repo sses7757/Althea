@@ -378,7 +378,7 @@ namespace Althea.Storage
 				var pointer = impl.Allocate(location, len);
 				try
 				{
-					impl.SetMemoryValue(pointer, value);
+					impl.FillWithValue(pointer, value);
 					while (len > 0)
 					{
 						if (len < pointer.LengthInBytes)
@@ -549,6 +549,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
@@ -625,6 +626,7 @@ namespace Althea.Storage
 		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureOrMixedStorage{T}"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		public PureOrMixedReferenceStorage(IStorage storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
@@ -1104,6 +1106,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		public override CachedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new CachedReferenceStorage<T>(this, offset, newLength);
@@ -1189,6 +1192,7 @@ namespace Althea.Storage
 		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorage{T}"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		public CachedReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
@@ -1238,6 +1242,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
 		public override CachedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new CachedReferenceStorage<T>(this, offset, newLength);

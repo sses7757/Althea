@@ -144,6 +144,9 @@
   <data name="InvalidGeneric" xml:space="preserve">
     <value>The given generic type is invalid.</value>
   </data>
+  <data name="PerfectSquare" xml:space="preserve">
+    <value>The size of the target matrix canno be obtained since the length of array is not a perfect square.</value>
+  </data>
   <data name="UseDefault" xml:space="preserve">
     <value>Use default settings instead...</value>
   </data>

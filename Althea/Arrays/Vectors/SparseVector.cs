@@ -27,7 +27,7 @@ namespace Althea.Arrays
 		public override long LastIndex => RT.CopyOut(this.IndexPointer, offset: this.NonZero - 1);
 
 		/// <summary>
-		/// Number of nonzero values of this sparse vector, equal to the array size of <see cref="IndexPointer"/> and <see cref="ValueArray{T}.Pointer"/>, from <see cref="ISparseArray{T}.NonZero"/>.
+		/// Number of nonzero values of this sparse vector, equal to the array size of <see cref="IndexPointer"/> and <see cref="ValueArray{T}.Storage"/>, from <see cref="ISparseArray{T}.NonZero"/>.
 		/// </summary>
 		public long NonZero => this.ActualLength;
 
@@ -149,7 +149,7 @@ namespace Althea.Arrays
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			if (this.Disposed || this.Length == 0 || this.Pointer is null || !(this._root is null))
+			if (this.Disposed || this.Length == 0 || this.Storage is null || !(this._root is null))
 				return;
 			if (!(this.IndexPointer is null))
 				this.IndexPointer.Dispose();
@@ -385,21 +385,21 @@ namespace Althea.Arrays
 		{
 			if (array is SparseVector<T> sv)
 			{
-				if (this.Pointer != sv.Pointer)
-					this.Pointer.Dispose();
+				if (this.Storage != sv.Storage)
+					this.Storage.Dispose();
 				if (this.IndexPointer != sv.IndexPointer)
 					this.IndexPointer.Dispose();
 			}
 			else if (array is SparseMatrix<T> sm)
 			{
-				if (this.Pointer != sm.Pointer)
-					this.Pointer.Dispose();
+				if (this.Storage != sm.Storage)
+					this.Storage.Dispose();
 				this.IndexPointer.Dispose();
 			}
 			else
 			{
 				// other cases cannot share same pointers
-				this.Pointer.Dispose();
+				this.Storage.Dispose();
 				this.IndexPointer.Dispose();
 			}
 
@@ -418,7 +418,7 @@ namespace Althea.Arrays
 			var newVec = new SparseVector<T>(this.Length, this.NonZero, !this.OnHost);
 			try
 			{
-				RT.CopyTo(source: this.Pointer, dest: newVec.Pointer, length: this.NonZero);
+				RT.CopyTo(source: this.Storage, dest: newVec.Storage, length: this.NonZero);
 				RT.CopyTo(source: this.IndexPointer, dest: newVec.IndexPointer, length: this.NonZero);
 				return newVec;
 			}
@@ -465,7 +465,7 @@ namespace Althea.Arrays
 		/// <remarks>Override <see cref="ValueArray{T}.AsDenseVector"/></remarks>
 		public override DenseVector<T> AsDenseVector()
 		{
-			return new DenseVector<T>(this.Pointer, this.NonZero);
+			return new DenseVector<T>(this.Storage, this.NonZero);
 		}
 
 		/// <summary>
@@ -543,7 +543,7 @@ namespace Althea.Arrays
 				throw new ArgumentNullException(nameof(other), Resource.ArrayCannotNull);
 			if (other.NonZero != this.NonZero)
 				throw new ArgumentException(Resource.VectorWrongSize, nameof(other));
-			RT.CopyTo(source: other.Pointer, dest: this.Pointer, length: this.NonZero);
+			RT.CopyTo(source: other.Storage, dest: this.Storage, length: this.NonZero);
 			RT.CopyTo(source: other.IndexPointer, dest: this.IndexPointer, length: this.NonZero);
 		}
 
@@ -574,7 +574,7 @@ namespace Althea.Arrays
 					this.ReplaceBy(sp);
 				else
 				{
-					this.Pointer.ReplaceBy(sp.Pointer);
+					this.Storage.ReplaceBy(sp.Storage);
 					this.IndexPointer.ReplaceBy(sp.IndexPointer);
 				}
 			}
@@ -602,7 +602,7 @@ namespace Althea.Arrays
 				this.ReplaceBy(sp);
 			else
 			{
-				this.Pointer.ReplaceBy(sp.Pointer);
+				this.Storage.ReplaceBy(sp.Storage);
 				this.IndexPointer.ReplaceBy(sp.IndexPointer);
 			}
 		}
@@ -706,7 +706,7 @@ namespace Althea.Arrays
 				throw new ArgumentNullException(nameof(other), Resource.ArrayCannotNull);
 			if (other.Length != this.NonZero)
 				throw new ArgumentException(Resource.VectorWrongSize, nameof(other));
-			RT.CopyTo(source: other.Pointer, dest: this.Pointer, length: this.NonZero);
+			RT.CopyTo(source: other.Storage, dest: this.Storage, length: this.NonZero);
 		}
 
 		/// <summary>
@@ -1213,7 +1213,7 @@ namespace Althea.Arrays
 				CheckRange(ranges);
 				var vecs = ranges.Select(i => this[i] as SparseVector<T>);
 				long nnz = vecs.Sum(v => v.NonZero);
-				var vals = vecs.Select(v => v.Pointer).ToArray();
+				var vals = vecs.Select(v => v.Storage).ToArray();
 				var lens = vecs.Select(v => v.NonZero).ToArray();
 				var offsets = lens.AccumulateSum();
 				// create long enough arrays
@@ -1268,9 +1268,9 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="another">another <see cref="AbstractArray{T}"/> to check</param>
 		/// <returns>True if they do share some memory / data, false otherwise</returns>
-		public override bool ShareMemoryWith(AbstractArray<T> another)
+		public override bool ShareStorageWith(AbstractArray<T> another)
 		{
-			if (base.ShareMemoryWith(another))
+			if (base.ShareStorageWith(another))
 				return true;
 			else if (another is SparseVector<T> sv)
 			{
@@ -1298,7 +1298,7 @@ namespace Althea.Arrays
 		{
 			if (obj is null || !(obj is ValueArray<T> a))
 				return false;
-			else if (this.Pointer != a.Pointer)
+			else if (this.Storage != a.Storage)
 				return false;
 			if (obj is SparseVector<T> s)
 				return this.IndexPointer == s.IndexPointer && this.NonZero == s.NonZero;
@@ -1316,7 +1316,7 @@ namespace Althea.Arrays
 		{
 			return base.ToString(new Dictionary<string, object>
 			{
-				["value_address"] = $"0x{this.Pointer.ToHexString()}",
+				["value_address"] = $"0x{this.Storage.ToHexString()}",
 				["index_address"] = $"0x{this.IndexPointer.ToHexString()}",
 				["non_zeros"] = this.NonZero,
 			}, new[] { StringTerms.DataType, StringTerms.Size });
@@ -1326,7 +1326,7 @@ namespace Althea.Arrays
 		{
 			config ??= GlobalSettings.PrintConfig;
 			long length = Math.Min(config[PrintSetting.ArrayLength], this.NonZero);
-			T[] res = RT.CopyOutArray(this.Pointer, length);
+			T[] res = RT.CopyOutArray(this.Storage, length);
 			int[] ind = RT.CopyOutArray(this.IndexPointer, length);
 			return (ind, res);
 		}

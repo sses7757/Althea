@@ -42,7 +42,7 @@ namespace Althea.Arrays
 		/// <param name="refArray">original array</param>
 		/// <param name="actualLength">actual length of vector</param>
 		/// <param name="newLength">size of the new vector</param>
-		/// <param name="offset">offset to the <see cref="ValueArray{T}.Pointer"/> in T rather than bytes</param>
+		/// <param name="offset">offset to the <see cref="ValueArray{T}.Storage"/> in T rather than bytes</param>
 		protected VectorBase(ValueArray<T> refArray, long actualLength, long newLength, long offset = 0) : base(refArray, actualLength, new[] { newLength }, offset) { }
 		#endregion
 

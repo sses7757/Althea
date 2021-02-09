@@ -135,7 +135,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="refArray">the reference array</param>
 		/// <param name="newSize">new size of this tensor</param>
-		/// <param name="offset">offset to <paramref name="refArray"/>'s <see cref="ValueArray{T}.Pointer"/></param>
+		/// <param name="offset">offset to <paramref name="refArray"/>'s <see cref="ValueArray{T}.Storage"/></param>
 		public DenseTensor(ValueArray<T> refArray, long[] newSize, long offset = 0) : base(refArray, newSize.Prod(), newSize, offset)
 		{
 			if (newSize is null || newSize.Length == 0)
@@ -322,7 +322,7 @@ namespace Althea.Arrays
 		{
 			if (m is null || m == EmptyDnTen)
 				return null;
-			var tensor = new DenseTensor<T>(m.Pointer, size ?? m.Size);
+			var tensor = new DenseTensor<T>(m.Storage, size ?? m.Size);
 			m.Disposed = true;
 			GC.SuppressFinalize(m); // for performance
 			return tensor;
