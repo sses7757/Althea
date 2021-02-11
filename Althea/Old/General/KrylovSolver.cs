@@ -268,19 +268,19 @@ namespace Althea.General
 		/// The Krylov-Schur algorithm for non-Hermitian matrix's partial (especially the extreme eigenvalues) eigen-problem.
 		/// </summary>
 		/// <param name="MatMulVecFunc">a function that receives a dense vector input and give the result of the multiplication of the non-Hermitian matrix and the input vector</param>
-		/// <param name="initial">the initial vector</param>
+		/// <param name="initial">The initial vector</param>
 		/// <param name="nEig">only the top <paramref name="nEig"/> eigenvalues are the target, we DO NOT recommend a large value since the Krylov-Schur algorithm is not designed for it</param>
 		/// <param name="which">a <see cref="WhichEigenvalues"/> to indicate which eigen-pairs are desired</param>
-		/// <param name="tolerance">the threshold of convergence, default 0 means <c>machine precision * 5</c></param>
+		/// <param name="tolerance">The threshold of convergence, default 0 means <c>machine precision * 5</c></param>
 		/// <param name="maxRestarts">max number of restarts</param>
 		/// <param name="iterPerRestart">iteration number per restart, default 0 means auto calculation</param>
 		/// <param name="robustOrthogonalize">perform robust orthogonalization or not, default <c>true</c></param>
 		/// <param name="useGap">use the estimated gap in the convergence criteria or use the matrix norm, default true</param>
-		/// <param name="strategy">the restart strategy to use, if it is <see cref="RestartStrategy.UserDefine"/>, the <paramref name="restartStrategy"/> must be indicated</param>
+		/// <param name="strategy">The restart strategy to use, if it is <see cref="RestartStrategy.UserDefine"/>, the <paramref name="restartStrategy"/> must be indicated</param>
 		/// <param name="restartStrategy">used for selecting the preservation Ritz pairs only when <paramref name="strategy"/> is <see cref="RestartStrategy.UserDefine"/></param>
 		/// <returns>An array of <see cref="DoubleComplex"/> as the eigenvalues and an array of <typeparamref name="TVec"/> as corresponding eigenvectors (and a possible imaginary part of eigenvectors if <typeparamref name="T"/> is not a complex type) and the convergence at last.</returns>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
-		/// <typeparam name="TVec">the general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
+		/// <typeparam name="TVec">The general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
 		/// <exception cref="ArgumentException">if any of the arguments is wrong</exception>
 		/// <exception cref="InvalidOperationException">if the <paramref name="MatMulVecFunc"/> throws inner exceptions</exception>
 		/// <exception cref="InsufficientMemoryException">if the <paramref name="nEig"/> is too large to be calculated within free memory</exception>
@@ -554,15 +554,15 @@ namespace Althea.General
 		/// The Krylov subspace algorithm for non-Hermitian matrix's linear system problem, a.k.a. GMRES (solve <c>x</c> for <paramref name="MatMulVecFunc"/>(<c>x</c>) = <paramref name="b"/>).
 		/// </summary>
 		/// <param name="MatMulVecFunc">a function that receives a dense vector input and give the result of the multiplication of the non-Hermitian matrix and the input vector</param>
-		/// <param name="b">the vector b</param>
-		/// <param name="initGuess">the initial guess vector</param>
-		/// <param name="tolerance">the threshold of convergence, default 0 means <c>machine precision * 5</c></param>
+		/// <param name="b">The vector b</param>
+		/// <param name="initGuess">The initial guess vector</param>
+		/// <param name="tolerance">The threshold of convergence, default 0 means <c>machine precision * 5</c></param>
 		/// <param name="maxRestarts">max number of restarts</param>
 		/// <param name="iterPerRestart">iteration number per restart, default 0 means auto calculation</param>
 		/// <param name="robustOrthogonalize">perform robust orthogonalization or not, default <c>true</c></param>
 		/// <returns>A <typeparamref name="TVec"/> as corresponding solve and a <see cref="double"/> as the relative error.</returns>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
-		/// <typeparam name="TVec">the general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
+		/// <typeparam name="TVec">The general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
 		/// <exception cref="ArgumentException">if any of the arguments is wrong</exception>
 		/// <exception cref="InvalidOperationException">if the <paramref name="MatMulVecFunc"/> throws inner exceptions</exception>
 		/// <remarks>Currently, if some eigen-pairs are not converged after maximum number of iterations, they will not be returned.</remarks>

@@ -193,33 +193,33 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The resulting index</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract long AbsoluteValueArgMax<T>(Storage<T> x, int incx) where T : unmanaged;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public abstract long AbsoluteValueArgMax<T>(Storage<T> x, int strideX) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the minimum magnitude.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The resulting index or 0 if <paramref name="incx"/> is less than 1</returns>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The resulting index or 0 if <paramref name="strideX"/> is less than 1</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract long AbsoluteValueArgMin<T>(Storage<T> x, int incx) where T : unmanaged;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public abstract long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The result value as a <see cref="double"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract double AbsoluteValueSum<T>(Storage<T> x, int incx) where T : unmanaged;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public abstract double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, multiply the vector <paramref name="x"/> by the scalar <paramref name="α"/> and in-place add it to the vector <paramref name="y"/>.
@@ -227,12 +227,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
-		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void VectorGeneralAdd<T>(T α, Storage<T> x, int incx, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public abstract void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the dot (inner) product of vectors <paramref name="x"/> and <paramref name="y"/>.
@@ -240,35 +240,34 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="conjX">Conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
-		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <returns>The result value as a <typeparamref name="T"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract T Dot<T>(bool conjX, Storage<T> x, int incx, Storage<T> y, int incy) where T : unmanaged;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public abstract T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="incx"/> ≤ 0</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract double Norm<T>(Storage<T> x, int incx) where T : unmanaged;
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="strideX"/> ≤ 0</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public abstract double Norm<T>(Storage<T> x, int strideX) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="n">The number of elements in the vector <paramref name="x"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
-		/// <param name="x">The vector with <paramref name="n"/> elements</param>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract void Scale<T>(int n, T α, Storage<T> x, int incx) where T : unmanaged, IEquatable<T>;
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public abstract void Scale<T>(T α, Storage<T> x, int strideX) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 2
@@ -283,14 +282,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
 		/// <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of the two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="incx"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="incx"/>)</c> otherwise</param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> otherwise</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="y"/>. If this is 0, then the original values of <paramref name="y"/> will be ignored.</param>
-		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="m"/>-1)*<paramref name="incy"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*<paramref name="incy"/>)</c> otherwise</param>
-		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="m"/>-1)*<paramref name="strideY"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> otherwise</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public abstract void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-vector multiplication:<br/>
@@ -303,14 +302,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incx"/>))</c> elements</param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideX"/>))</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="y"/>. If this is 0, then the original values of <paramref name="y"/> will be ignored.</param>
-		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incy"/>))</c></param>
-		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideY"/>))</c></param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int incx, T β, Storage<T> y, int incy) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public abstract void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -321,16 +320,16 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
-		/// <param name="x">The vector with <c>(1+(<paramref name="m"/>-1)*<paramref name="incx"/>)</c> elements</param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="incy"/>)</c> elements</param>
-		/// <param name="incy">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
 		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> or <paramref name="incy"/> is less than 1</exception>
-		public abstract void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int incx, Storage<T> y, int incy, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public abstract void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
@@ -341,14 +340,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="conjX">Conjugate the second <paramref name="x"/> or not</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
-		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="incx"/>)</c> elements</param>
-		/// <param name="incx">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
 		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incx"/> is less than 1</exception>
-		public abstract void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int incx, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public abstract void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 3

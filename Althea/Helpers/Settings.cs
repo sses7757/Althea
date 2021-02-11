@@ -318,7 +318,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Set the path of the JSON configuration file and <b>import</b> the settings of it.
 		/// </summary>
-		/// <param name="filePath">the file path to set</param>
+		/// <param name="filePath">The file path to set</param>
 		/// <returns>If <paramref name="filePath"/> is an existing file and the import succeeded, return true. Otherwise, return false.</returns>
 		public static bool SetConfigFile(string filePath)
 		{

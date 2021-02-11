@@ -195,7 +195,7 @@ namespace Althea.Blas.Mkl.Customs
 		/// </summary>
 		/// <param name="arr">array to be summed</param>
 		/// <param name="N">length of <paramref name="arr"/></param>
-		/// <param name="stride">the stride of <paramref name="arr"/></param>
+		/// <param name="stride">The stride of <paramref name="arr"/></param>
 		/// <return>the sum</return>
 		internal delegate T sumVec<T>(IntPtr arr, long N, int stride);
 		#region direct sum

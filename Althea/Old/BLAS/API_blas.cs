@@ -91,8 +91,8 @@ namespace Althea.Blas
 		/// <param name="M">output <see cref="DenseMatrix{T}"/> M</param>
 		/// <param name="α">scalar of type <typeparamref name="T"/> to multiply</param>
 		/// <param name="conjugateB">perform conjugate to <paramref name="b"/> or not, default is true for complex and false otherwise</param>
-		/// <param name="strideA">the actual $\vec{a}$ is ${\vec{a}_i}_{i\mod\text{strideA}=0}$</param>
-		/// <param name="strideB">the actual $\vec{b}$ is ${\vec{b}_i}_{i\mod\text{strideB}=0}$</param>
+		/// <param name="strideA">The actual $\vec{a}$ is ${\vec{a}_i}_{i\mod\text{strideA}=0}$</param>
+		/// <param name="strideB">The actual $\vec{b}$ is ${\vec{b}_i}_{i\mod\text{strideB}=0}$</param>
 		/// <returns>a new <see cref="DenseMatrix{T}"/> containing the result</returns>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -140,8 +140,8 @@ namespace Althea.Blas
 		/// <param name="y">vector to be added by</param>
 		/// <param name="x">vector to add</param>
 		/// <param name="α">scalar to multiply <paramref name="x"/></param>
-		/// <param name="strideY">the actual $\vec{y}$ is ${\vec{y}_i}_{i\mod\text{strideY}=0}$</param>
-		/// <param name="strideX">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{strideX}=0}$</param>
+		/// <param name="strideY">The actual $\vec{y}$ is ${\vec{y}_i}_{i\mod\text{strideY}=0}$</param>
+		/// <param name="strideX">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{strideX}=0}$</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -163,7 +163,7 @@ namespace Althea.Blas
 		/// </summary>
 		/// <param name="x">vector</param>
 		/// <param name="α">scalar to multiply</param>
-		/// <param name="stride">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
+		/// <param name="stride">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -189,7 +189,7 @@ namespace Althea.Blas
 		/// Calculate the sum of the vector's each element's absolute value $\sum_i{|Re(\vec{x}_i)| + |Im(\vec{x}_i)|}$.
 		/// </summary>
 		/// <param name="x">vector</param>
-		/// <param name="stride">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
+		/// <param name="stride">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
 		/// <returns>abs sum</returns>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -209,7 +209,7 @@ namespace Althea.Blas
 		/// Finds the (smallest) index of the element of the maximum magnitude $\text{argmax}_i{\vec{x}_i}$.
 		/// </summary>
 		/// <param name="x">vector x</param>
-		/// <param name="stride">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
+		/// <param name="stride">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
 		/// <returns>the zero-based index</returns>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -229,7 +229,7 @@ namespace Althea.Blas
 		/// Finds the (smallest) index of the element of the minimum magnitude.
 		/// </summary>
 		/// <param name="x">vector x</param>
-		/// <param name="stride">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
+		/// <param name="stride">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
 		/// <returns>the zero-based index</returns>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -251,8 +251,8 @@ namespace Althea.Blas
 		/// <param name="x">vector x</param>
 		/// <param name="y">vector y</param>
 		/// <param name="conjugateX">perform conjugate to <paramref name="x"/> or not, default is true for complex and false otherwise</param>
-		/// <param name="strideY">the actual $\vec{y}$ is ${\vec{y}_i}_{i\mod\text{strideY}=0}$</param>
-		/// <param name="strideX">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{strideX}=0}$</param>
+		/// <param name="strideY">The actual $\vec{y}$ is ${\vec{y}_i}_{i\mod\text{strideY}=0}$</param>
+		/// <param name="strideX">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{strideX}=0}$</param>
 		/// <returns>the dot result</returns>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -275,7 +275,7 @@ namespace Althea.Blas
 		/// Calculate vector's norm (2-norm) $\|\vec{x}\|\equiv \sqrt{\sum_i{\vec{x}_i^2}}$
 		/// </summary>
 		/// <param name="x">vector x</param>
-		/// <param name="stride">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
+		/// <param name="stride">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{stride}=0}$</param>
 		/// <returns>norm of vector</returns>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -326,14 +326,14 @@ namespace Althea.Blas
 		/// <summary>
 		/// Directly compute $\vec{y} = \alpha A^{\text{op}} \vec{x}$ + \beta \vec{y}, $\vec{y}$ is overridden after the operation.
 		/// </summary>
-		/// <param name="A">the input <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
-		/// <param name="x">the input <see cref="DenseVector{T}"/> to multiply matrix</param>
-		/// <param name="y">the output <see cref="DenseVector{T}"/></param>
+		/// <param name="x">The input <see cref="DenseVector{T}"/> to multiply matrix</param>
+		/// <param name="y">The output <see cref="DenseVector{T}"/></param>
 		/// <param name="α">scalar to multiply <paramref name="x"/></param>
 		/// <param name="β">scalar to multiply <paramref name="y"/> with default 0</param>
-		/// <param name="strideY">the actual $\vec{y}$ is ${\vec{y}_i}_{i\mod\text{strideY}=0}$</param>
-		/// <param name="strideX">the actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{strideX}=0}$</param>
+		/// <param name="strideY">The actual $\vec{y}$ is ${\vec{y}_i}_{i\mod\text{strideY}=0}$</param>
+		/// <param name="strideX">The actual $\vec{x}$ is ${\vec{x}_i}_{i\mod\text{strideX}=0}$</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="ArgumentException">if vectors and matrix disagrees in size</exception>
 		public static void MatrixVectorMultiply<T>(DenseMatrix<T> A, DenseVector<T> x, DenseVector<T> y, T α, T β = default, MatrixOperation opA = MatrixOperation.None, int strideX = 1, int strideY = 1) where T : struct, IComparable<T>
@@ -370,10 +370,10 @@ namespace Althea.Blas
 		/// Calculate $C = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, implemented in CUDA BLAS by adding over every corresponding elements. <paramref name="A"/>, <paramref name="B"/> or <paramref name="C"/> may be the same.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="C">output <see cref="DenseMatrix{T}"/> C</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -438,13 +438,13 @@ namespace Althea.Blas
 		/// <summary>
 		/// Directly calculate $C = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C$.
 		/// </summary>
-		/// <param name="A">the input <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c>β == 0</c>, <paramref name="C"/> will be completely overridden</param>
-		/// <param name="C">the output <see cref="DenseMatrix{T}"/> C</param>
+		/// <param name="C">The output <see cref="DenseMatrix{T}"/> C</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <remarks>If <paramref name="A"/> is Hermitian and <paramref name="B"/> is not while <paramref name="opB"/> != <see cref="MatrixOperation.None"/>, a temporary <see cref="DenseMatrix{T}"/> -- the result of <paramref name="opB"/>(<paramref name="B"/>) will be created to use BLAS function <c>symm</c> or <c>hemm</c>. <para/>
@@ -699,7 +699,7 @@ namespace Althea.Blas
 		/// Up-cast the array of single types to double types.
 		/// </summary>
 		/// <param name="a">input array</param>
-		/// <param name="result">the up-casted array of type <typeparamref name="TOut"/></param>
+		/// <param name="result">The up-casted array of type <typeparamref name="TOut"/></param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types, only single types</typeparam>
 		/// <typeparam name="TOut">see <see cref="PureArray{T}"/> for supported data types, only double types</typeparam>
 		/// <exception cref="ArgumentException">if the vectors are not on device memory</exception>
@@ -751,7 +751,7 @@ namespace Althea.Blas
 		/// <summary>
 		/// Fill existed array with ones.
 		/// </summary>
-		/// <param name="a">the array to fill</param>
+		/// <param name="a">The array to fill</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <exception cref="ArgumentNullException">if <paramref name="a"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -770,7 +770,7 @@ namespace Althea.Blas
 		/// </summary>
 		/// <param name="array">array to be set</param>
 		/// <param name="positions">positions, a <see cref="int"/> <see cref="Storage{T}"/></param>
-		/// <param name="value">the value to be set</param>
+		/// <param name="value">The value to be set</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the arrays is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -793,7 +793,7 @@ namespace Althea.Blas
 		/// </summary>
 		/// <param name="array">array to be set</param>
 		/// <param name="positions">positions, a <see cref="int"/> <see cref="Storage{T}"/></param>
-		/// <param name="value">the value to be set</param>
+		/// <param name="value">The value to be set</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <exception cref="ArgumentNullException">if any of the arrays is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -814,9 +814,9 @@ namespace Althea.Blas
 		/// </summary>
 		/// <param name="array">array to be set</param>
 		/// <param name="positions">positions int array</param>
-		/// <param name="value">the value to be set</param>
+		/// <param name="value">The value to be set</param>
 		/// <param name="length">length of <paramref name="positions"/></param>
-		/// <param name="onHost">the memory position</param>
+		/// <param name="onHost">The memory position</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		public static void SetArrayValues<T>(Storage<T> array, Storage<int> positions, T value, long length, bool onHost) where T : struct, IComparable<T>
@@ -850,8 +850,8 @@ namespace Althea.Blas
 		/// <summary>
 		/// Directly sum the array's elements.
 		/// </summary>
-		/// <param name="a">the array to be summed</param>
-		/// <param name="stride">the stride between consecutive elements of <paramref name="a"/></param>
+		/// <param name="a">The array to be summed</param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="a"/></param>
 		/// <returns>the sum of <paramref name="a"/></returns>
 		public static T Sum<T>(PureArray<T> a, int stride = 1) where T : struct, IComparable<T>
 		{

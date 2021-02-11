@@ -17,9 +17,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Copy <paramref name="array"/> to <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="T">the type of <paramref name="span"/> and <paramref name="array"/></typeparam>
-		/// <param name="span">the <see cref="Span{T}"/> to be copied into</param>
-		/// <param name="array">the destination array to be copied</param>
+		/// <typeparam name="T">The type of <paramref name="span"/> and <paramref name="array"/></typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="array">The destination array to be copied</param>
 		/// <returns>The <paramref name="span"/></returns>
 		public static Span<T> CopyTo<T>(this IReadOnlyList<T> array, Span<T> span)
 		{
@@ -36,11 +36,11 @@ namespace Althea.Linq
 		/// <summary>
 		/// Copy <paramref name="array"/> to <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="TIn">the type of <paramref name="array"/></typeparam>
-		/// <typeparam name="TOut">the type of <paramref name="span"/></typeparam>
-		/// <param name="span">the <see cref="Span{T}"/> to be copied into</param>
-		/// <param name="array">the destination array to be copied</param>
-		/// <param name="selector">the converter to each element</param>
+		/// <typeparam name="TIn">The type of <paramref name="array"/></typeparam>
+		/// <typeparam name="TOut">The type of <paramref name="span"/></typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="array">The destination array to be copied</param>
+		/// <param name="selector">The converter to each element</param>
 		/// <returns>The <paramref name="span"/></returns>
 		public static Span<TOut> CopyTo<TIn, TOut>(this IReadOnlyList<TIn> array, Span<TOut> span, Converter<TIn, TOut> selector)
 		{
@@ -57,9 +57,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Copy <paramref name="span"/> to <paramref name="destArray"/>.
 		/// </summary>
-		/// <typeparam name="T">the type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
-		/// <param name="span">the <see cref="Span{T}"/> to be copied</param>
-		/// <param name="destArray">the destination array to be copied into</param>
+		/// <typeparam name="T">The type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to be copied</param>
+		/// <param name="destArray">The destination array to be copied into</param>
 		/// <returns>The <paramref name="destArray"/></returns>
 		public static T[] CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
 		{
@@ -76,11 +76,11 @@ namespace Althea.Linq
 		/// <summary>
 		/// Copy <paramref name="span"/> to <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="TIn">the type of <paramref name="span"/></typeparam>
-		/// <typeparam name="TOut">the type of <paramref name="array"/></typeparam>
-		/// <param name="span">the <see cref="Span{T}"/> to be copied from</param>
-		/// <param name="array">the destination array to be copied into</param>
-		/// <param name="selector">the converter to each element</param>
+		/// <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
+		/// <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to be copied from</param>
+		/// <param name="array">The destination array to be copied into</param>
+		/// <param name="selector">The converter to each element</param>
 		/// <returns>The <paramref name="array"/></returns>
 		public static TOut[] CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, TOut[] array, Converter<TIn, TOut> selector)
 		{
@@ -174,8 +174,8 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = result</c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static T[] ReOrder<T>(this IReadOnlyList<T> array, ReadOnlySpan<int> indices)
 		{
@@ -196,9 +196,9 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, int[] indices)
 		{
@@ -222,9 +222,9 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, Span<int> indices)
 		{
@@ -248,9 +248,9 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this Span<T> array, Span<T> target, int[] indices)
 		{
@@ -271,9 +271,9 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this Span<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
@@ -294,9 +294,9 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this ReadOnlySpan<T> array, Span<T> target, int[] indices)
 		{
@@ -317,9 +317,9 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this Span<T> array, T[] target, ReadOnlySpan<int> indices)
 		{
@@ -340,8 +340,8 @@ namespace Althea.Linq
 		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
 		public static void InverseOrderTo<T>(this Span<T> array, Span<T> target, int[] indices)
 		{
@@ -360,8 +360,8 @@ namespace Althea.Linq
 		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
 		public static void InverseOrderTo<T>(this Span<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
@@ -380,8 +380,8 @@ namespace Althea.Linq
 		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
 		public static void InverseOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, IReadOnlyList<int> indices)
 		{
@@ -402,8 +402,8 @@ namespace Althea.Linq
 		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
 		public static void InverseOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
@@ -424,8 +424,8 @@ namespace Althea.Linq
 		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="target">the array to put the reordered result</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
 		public static void InverseOrderTo<T>(this Span<T> array, T[] target, ReadOnlySpan<int> indices)
 		{
@@ -446,9 +446,9 @@ namespace Althea.Linq
 		/// Find the permutation order such that <c><paramref name="array"/>[result] = <paramref name="target"/></c>
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array before permutation</param>
-		/// <param name="target">the array after the permutation</param>
-		/// <param name="perm">the result permutation order to put in as a <see cref="Span{T}"/>, may be overwritten by undesired values if there is no such permutation</param>
+		/// <param name="array">The array before permutation</param>
+		/// <param name="target">The array after the permutation</param>
+		/// <param name="perm">The result permutation order to put in as a <see cref="Span{T}"/>, may be overwritten by undesired values if there is no such permutation</param>
 		/// <returns>success or not</returns>
 		public static bool FindPermutationTo<T>(this IReadOnlyList<T> array, IReadOnlyList<T> target, Span<int> perm)
 		{
@@ -470,8 +470,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the inverse permutation of <paramref name="perm"/> such that <c>perm[result] == result[perm] == identity permutation</c>
 		/// </summary>
-		/// <param name="perm">the input permutation</param>
-		/// <param name="inv">the inverse permutation to put in</param>
+		/// <param name="perm">The input permutation</param>
+		/// <param name="inv">The inverse permutation to put in</param>
 		public static void InversePermutationTo(this IReadOnlyList<int> perm, Span<int> inv)
 		{
 			if (perm is null || perm.Count > inv.Length)
@@ -782,16 +782,82 @@ namespace Althea.Linq
 		#endregion
 		#endregion
 
-		#region basic LINQ
+		#region indexing
+		/// <summary>
+		/// Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The span to find in</param>
+		/// <param name="predicator">The predicator to check occurrence</param>
+		/// <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static int IndexOf<T>(this Span<T> span, Predicate<T> predicator)
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (predicator(span[i]))
+					return i;
+			}
+			return -1;
+		}
 
+		/// <summary>
+		/// Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The span to find in</param>
+		/// <param name="predicator">The predicator to check occurrence</param>
+		/// <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static int IndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				if (predicator(span[i]))
+					return i;
+			}
+			return -1;
+		}
+
+		/// <summary>
+		/// Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The span to find in</param>
+		/// <param name="predicator">The predicator to check occurrence</param>
+		/// <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static int LastIndexOf<T>(this Span<T> span, Predicate<T> predicator)
+		{
+			for (int i = span.Length - 1; i >= 0; i--)
+			{
+				if (predicator(span[i]))
+					return i;
+			}
+			return -1;
+		}
+
+		/// <summary>
+		/// Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The span to find in</param>
+		/// <param name="predicator">The predicator to check occurrence</param>
+		/// <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+		/// <remarks>extend method of <paramref name="span"/></remarks>
+		public static int LastIndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
+		{
+			for (int i = span.Length - 1; i >= 0; i--)
+			{
+				if (predicator(span[i]))
+					return i;
+			}
+			return -1;
+		}
 		#endregion
 
 		#region predicate
 		/// <summary>
 		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <param name="span">the span to predicate</param>
-		/// <param name="predicator">the predicator delegate</param>
+		/// <param name="span">The span to predicate</param>
+		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this Span<T> span, Predicate<T> predicator)
@@ -807,8 +873,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <param name="span">the span to predicate</param>
-		/// <param name="predicator">the predicator delegate</param>
+		/// <param name="span">The span to predicate</param>
+		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
@@ -824,8 +890,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <param name="span">the span to predicate</param>
-		/// <param name="predicator">the predicator delegate</param>
+		/// <param name="span">The span to predicate</param>
+		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this Span<T> span, Predicate<T> predicator)
@@ -841,8 +907,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <param name="span">the span to predicate</param>
-		/// <param name="predicator">the predicator delegate</param>
+		/// <param name="span">The span to predicate</param>
+		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
@@ -859,8 +925,8 @@ namespace Althea.Linq
 		/// Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual<T>(this Span<T> list, IReadOnlyList<T> other) where T : IEquatable<T>
 		{
@@ -1024,7 +1090,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="span"/>'s elements are unique
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">span to pick</param>
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this Span<T> span) where T : IEquatable<T>
@@ -1043,7 +1109,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="span"/>'s elements are unique
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">span to pick</param>
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this ReadOnlySpan<T> span) where T : IEquatable<T>
@@ -1120,7 +1186,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate range of type <see cref="char"/> <see cref="Span{T}"/>.
 		/// </summary>
-		/// <param name="span">the span to fill</param>
+		/// <param name="span">The span to fill</param>
 		/// <param name="start">start value of the range</param>
 		/// <param name="step">step of the range</param>
 		public static void FillWithRange(this Span<char> span, char start, int step = 1)
@@ -1137,7 +1203,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate range of type <see cref="int"/> <see cref="Span{T}"/>.
 		/// </summary>
-		/// <param name="span">the span to fill</param>
+		/// <param name="span">The span to fill</param>
 		/// <param name="start">start value of the range</param>
 		/// <param name="step">step of the range</param>
 		public static void FillWithRange(this Span<int> span, int start, int step = 1)
@@ -1154,7 +1220,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate range of type <see cref="long"/> <see cref="Span{T}"/>.
 		/// </summary>
-		/// <param name="span">the span to fill</param>
+		/// <param name="span">The span to fill</param>
 		/// <param name="start">start value of the range</param>
 		/// <param name="step">step of the range</param>
 		public static void FillWithRange(this Span<long> span, long start, long step = 1)

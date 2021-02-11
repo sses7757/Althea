@@ -4,8 +4,10 @@ using System.Collections.Generic;
 
 using Althea.Linq;
 using Althea.Helpers;
+using Althea.NativeTypes;
 
 using MEM = Althea.Storage.AbstractApi;
+using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 
 
 namespace Althea.Arrays
@@ -16,29 +18,6 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid where T : unmanaged, IFormattable, IEquatable<T>
 	{
-		#region empty arrays
-		/// <summary>
-		/// The general empty dense vector with zero length
-		/// </summary>
-		public static readonly DenseVector<T> EmptyDnVec = new DenseVector<T>();
-		/// <summary>
-		/// The general empty sparse vector with zero length
-		/// </summary>
-		public static readonly SparseVector<T> EmptySpVec = new SparseVector<T>();
-		/// <summary>
-		/// The general empty dense matrix with zero length
-		/// </summary>
-		public static readonly DenseMatrix<T> EmptyDnMat = new DenseMatrix<T>();
-		/// <summary>
-		/// The general empty sparse matrix with zero length
-		/// </summary>
-		public static readonly SparseMatrix<T> EmptySpMat = new SparseMatrix<T>();
-		/// <summary>
-		/// The general empty dense tensor with zero length
-		/// </summary>
-		public static readonly DenseTensor<T> EmptyDnTen = new DenseTensor<T>();
-		#endregion
-
 		#region properties
 		/// <summary>
 		/// Get the raw storage of this array
@@ -58,33 +37,19 @@ namespace Althea.Arrays
 		#endregion
 
 		#region initialize and destroy
-
 		/// <summary>
 		/// Create a new <see cref="ValueArray{T}"/> using preallocated <paramref name="storage"/> and given <paramref name="size"/>
 		/// </summary>
-		/// <param name="storage">The preallocated <see cref="Storage{T}"/> as the underlying <see cref="Storage"/> of this array</param>
+		/// <param name="storage">The preallocated <see cref="Storage{T}"/> (can be a <see cref="ReferenceStorage{T}"/>) as the underlying <see cref="Storage"/> of this array</param>
 		/// <param name="size">The presenting size of this array</param>
 		/// <exception cref="ArgumentException">If the product of <paramref name="size"/> is not the same as the length of <paramref name="storage"/></exception>
 		protected ValueArray(Storage<T> storage, ReadOnlySpan<long> size) : base(size)
 		{
+			if (storage is null || !storage.IsValid())
+				throw new ArgumentNullException(nameof(storage));
 			if (this.Length != storage.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize);
 			this.Storage = storage;
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ValueArray{T}"/> using existing <paramref name="refArray"/> with new <paramref name="actualLength"/>, <paramref name="newSize"/> and <paramref name="offset"/>
-		/// </summary>
-		/// <param name="refArray">The original <see cref="ValueArray{T}"/> to refer</param>
-		/// <param name="actualLength">The actual size of the array, in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="newSize">The new presenting size of the array</param>
-		/// <param name="offset">The offset to <paramref name="refArray"/> in <typeparamref name="T"/> rather than bytes</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="actualLength"/> is out of boundary</exception>
-		protected ValueArray(ValueArray<T> refArray, long actualLength, ReadOnlySpan<long> newSize, long offset = 0) : base(newSize)
-		{
-			if (refArray is null || !refArray.IsValid())
-				throw new ArgumentNullException(nameof(refArray));
-			this.Storage = refArray.Storage.MakeReference(offset, actualLength);
 		}
 
 		/// <summary>
@@ -105,170 +70,248 @@ namespace Althea.Arrays
 		}
 		#endregion
 
-		#region point-wise operations
+		#region point-wise concrete operations
 		/// <summary>
 		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>.
 		/// </summary>
+		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
 		public virtual void FillWith(T value)
 		{
 			MEM.SelectImplementation(this.Storage).FillWithValue(this.Storage, value);
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>.
+		/// </summary>
+		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
+		public virtual void AddScalar(T value)
+		{
+			LAD.SelectImplementation(this.Storage).PointWiseAddScalar(this.Storage, 1, value);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>.
+		/// </summary>
+		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
+		public virtual void Scale(T value)
+		{
+			LAD.SelectImplementation(this.Storage).Scale(value, this.Storage, 1);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>.
+		/// </summary>
+		public virtual void Conjugate(T value)
+		{
+			LAD.SelectImplementation(this.Storage).PointWiseConjugate(this.Storage, 1);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, double)"/>.
+		/// </summary>
+		/// <param name="power">The power as a <see cref="double"/></param>
+		public virtual void Power(double power)
+		{
+			LAD.SelectImplementation(this.Storage).PointWisePower(this.Storage, 1, power);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
+		/// </summary>
+		/// <param name="power">The power as a <typeparamref name="T"/></param>
+		public virtual void Power(T power)
+		{
+			LAD.SelectImplementation(this.Storage).PointWisePower(this.Storage, 1, power);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
+		/// </summary>
+		/// <param name="threshold">The threshold as a <see cref="float"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
+		public virtual void Truncate(float threshold)
+		{
+			LAD.SelectImplementation(this.Storage).TruncateArray(this.Storage, threshold);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is dense or its emitted values are all <paramref name="sparseDefault"/>. <see cref="Storage"/> utilizes <see cref="LAD.AggregateSum{T}"/>.
+		/// </summary>
+		/// <param name="sparseDefault">The default emitted value if this array is a sparse array</param>
+		/// <returns>The aggregate sum of this array</returns>
+		public virtual T Sum(T sparseDefault = default)
+		{
+			T sum = LAD.SelectImplementation(this.Storage).AggregateSum(this.Storage, 1);
+			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+				return sum;
+			else
+				return (this.Length - this.ActualLength) * (dynamic)sparseDefault + sum;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is dense or its emitted values are all <paramref name="sparseDefault"/>. <see cref="Storage"/> utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
+		/// </summary>
+		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
+		/// <returns>The aggregate sum of absolute values of this array</returns>
+		public virtual double AbsSum(T sparseDefault = default)
+		{
+			double sum = LAD.SelectImplementation(this.Storage).AbsoluteValueSum(this.Storage, 1);
+			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+				return sum;
+			else
+				return (this.Length - this.ActualLength) * sparseDefault.GenericAbsolute().ToDouble() + sum;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is dense or its emitted values are all <paramref name="sparseDefault"/>. <see cref="Storage"/> utilizes <see cref="LAD.Norm{T}"/>.
+		/// </summary>
+		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
+		/// <returns>The 2-norm of this array</returns>
+		public virtual double Norm(T sparseDefault = default)
+		{
+			double norm = LAD.SelectImplementation(this.Storage).Norm(this.Storage, 1);
+			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+			{
+				return norm;
+			}
+			else
+			{
+				norm *= norm;
+				double abs = sparseDefault.GenericAbsolute().ToDouble();
+				norm += abs * abs * (this.Length - this.ActualLength);
+				return Math.Sqrt(norm);
+			}
+		}
 		#endregion
 
-		#region reshape
+		#region reshape (mostly abstract)
 		/// <summary>
-		/// When implemented by a derived class, get this array's <see cref="Storage"/> and make it a <see cref="DenseVector{T}"/>
+		/// Take out the data <see cref="Storage"/> to form a new referenced <see cref="DenseVector{T}"/>.
 		/// </summary>
-		/// <returns>The referenced <see cref="DenseVector{T}"/> from this array's <see cref="Storage"/></returns>
-		public virtual ValueArray<T> ToVector() => new DenseVector<T>(this.Storage, this.ActualLength);
+		/// <returns>A new referenced <see cref="DenseVector{T}"/> containing the data <see cref="Storage"/> of this one.</returns>
+		public DenseVector<T> AsDenseVector() => new DenseVector<T>(this, this.ActualLength);
 
 		/// <summary>
-		/// Check the new size (dimensionality) to reshape to with respect to the original one (this one) and find out the uncertain dimension.
+		/// Check the new size (dimensionality) to reshape to with respect to the original <paramref name="array"/> and find out the uncertain dimension.
 		/// </summary>
-		/// <param name="newSize">The new size (dimensionality) to check</param>
-		/// <param name="removeFlatable">Remove the size-1 dimension in <paramref name="newSize"/> or not</param>
-		/// <returns>The new size without uncertain dimension</returns>
+		/// <param name="array">The original array as a <see cref="ValueArray{T}"/> to check</param>
+		/// <param name="newSize">The new size as a <see cref="Span{T}"/> to check which can have at most one uncertain dimension indicated by a non-positive number. Overwritten by the new size without uncertain dimension at exit.</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="newSize"/> is of length 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="newSize"/> is of length 2 and are all non-positive while the length of this array is not a perfect square</exception>
-		protected virtual ReadOnlySpan<long> CheckSize(ReadOnlySpan<long> newSize, bool removeFlatable = true)
+		/// <exception cref="ArgumentException">If <paramref name="newSize"/> is of length 2 and are all non-positive while the length of <paramref name="array"/> is not a perfect square</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the product of <paramref name="newSize"/> is not the same as the presenting length of <paramref name="array"/></exception>
+		protected static void CheckSize(ValueArray<T> array, Span<long> newSize)
 		{
 			if (newSize.Length == 0)
 				throw new ArgumentNullException(nameof(newSize));
 			if (newSize.Length == 2 && newSize[0] <= 0 && newSize[1] <= 0) // try to convert to a square matrix
 			{
-				if (!this.Length.IsPerfectSquare())
+				if (!array.Length.IsPerfectSquare())
 				{
-					throw new ArgumentException(Resources.Other.PerfectSquare, nameof(newSize));
+					throw new ArgumentException(Resources.Other.PerfectSquare, nameof(array));
 				}
-				var leadDim = Convert.ToInt64(Math.Sqrt(this.Length));
-				
-				return new[] { leadDim, leadDim };
+				var leadDim = Convert.ToInt64(Math.Sqrt(array.Length));
+				newSize[0] = newSize[1] = leadDim;
 			}
-			int uncertainCount = newSize.Count(static r => r <= 0);
-			if (uncertainCount == 1)
+			int firstFind = newSize.IndexOf(static r => r <= 0);
+			if (firstFind < 0)
 			{
-				int i = newSize.Select(r => r < 0 ? 0 : r).ToList().IndexOf(0);
-				var prod = newSize.Where(r => r > 0).Prod();
-				var remain = this.Length % prod;
+				// no uncertain index
+				if (newSize.Prod() != array.Length)
+					throw new ArgumentOutOfRangeException(nameof(newSize));
+				return;
+			}
+			int lastFind = newSize.LastIndexOf(static r => r <= 0);
+			if (lastFind == firstFind)
+			{
+				// only one uncertainty
+				newSize[firstFind] = 1;
+				var prod = newSize.Prod();
+				var remain = array.Length % prod;
 				if (remain != 0)
 					throw new ArgumentOutOfRangeException(nameof(newSize));
 				else
-					newSize[i] = this.Length / newSize.Where(r => r > 0).Prod();
+					newSize[firstFind] = array.Length / prod;
 			}
-			else if (uncertainCount > 1)
+			else
 			{
+				// more than one uncertain indices
 				throw new ArgumentOutOfRangeException(nameof(newSize));
 			}
-			else if (newSize.Prod() != this.Length)
-			{
-				throw new ArgumentOutOfRangeException(nameof(newSize));
-			}
-			newSize = newSize.Where(r => r != 1).ToArray();
-			return newSize;
 		}
 
 		/// <summary>
-		/// Reshape the array (no new memory will be allocated).
+		/// When implemented by a derived class, reshape the array to a <paramref name="newSize"/>.
 		/// </summary>
-		/// <param name="newSize">the new dimensions.
-		/// You can have one uncertain dimension, indicated by a non-positive number.</param>
-		/// <returns>The reshaped array. Note that if out-of-place reshape is performed, the returned one cannot undo reshape.</returns>
-		public ValueArray<T> Reshape(params long[] newSize)
+		/// <param name="newSize">The new size/dimensionality. You can have at most one uncertain dimension, indicated by a non-positive number.</param>
+		/// <returns>The reshaped array which may be a referenced array or may not</returns>
+		public virtual ValueArray<T> Reshape(ReadOnlySpan<long> newSize)
 		{
-			newSize = this.CheckSize(newSize);
+			Span<long> size = stackalloc long[newSize.Length];
+			newSize.CopyTo(size);
+			CheckSize(this, size);
 			if (newSize.SequenceEqual(this.Size))
 				return this;
 			return newSize.Length switch
 			{
-				0 => throw new ArgumentException(Resource.RankZero, nameof(newSize)),
+				0 => throw new ArgumentException(Resources.Parameter.ZeroSize, nameof(newSize)),
 				1 => this.ToVector(),
 				2 => this.ToMatrix(newSize[0]),
-				_ => this.ToTensor(size: newSize),
+				_ => this.ToTensor(size: size),
 			};
 		}
 
 		/// <summary>
-		/// Take out the data array as a new <see cref="DenseVector{T}"/>.
+		/// When implemented by a derived class, reshape this array to a vector
 		/// </summary>
-		/// <returns>A new <see cref="DenseVector{T}"/> containing the referenced data array of this one.</returns>
-		public virtual DenseVector<T> AsDenseVector() => new DenseVector<T>(this, this.ActualLength);
+		/// <returns>The referenced vector reshaped from this array</returns>
+		public abstract ValueArray<T> ToVector();
 
 		/// <summary>
-		/// Default implementation. Reshape the array to a <see cref="DenseMatrix{T}"/> with leading dimension = <paramref name="leadDim"/>.
-		/// <br/>The default implementation assumes that the data is not aligned in memory, i.e., there is no extra pitch.
+		/// When implemented by a derived class, reshape the array to a matrix with leading dimension = <paramref name="leadDim"/>
 		/// </summary>
-		/// <param name="leadDim">leading dimension of matrix; if leadDim ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <param name="leadDim">The leading dimension of target matrix; if <paramref name="leadDim"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public virtual ValueArray<T> ToMatrix(long leadDim = 0)
-		{
-			var newSize = this.CheckSize(new[] { leadDim, 0 });
-			leadDim = newSize[0];
-			var secondDim = newSize[1];
-			return new DenseMatrix<T>(this, leadDim, secondDim);
-		}
+		public abstract ValueArray<T> ToMatrix(long leadDim = 0);
 
 		/// <summary>
-		/// Reshape the array to a general <see cref="DenseTensor{T}"/> with dimensionality = size.
-		/// <br/>The default implementation assumes that the data is not aligned in memory, i.e., there is no extra pitch.
+		/// When implemented by a derived class, reshape the array to a tensor with dimensionality = <paramref name="size"/>.
 		/// </summary>
-		/// <param name="size">The new dimensions. You can have one or zero uncertain dimension, indicated by a non-positive number.</param>
+		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public virtual ValueArray<T> ToTensor(params long[] size)
-		{
-			size = this.CheckSize(size);
-			return new DenseTensor<T>(this, size);
-		}
+		public abstract ValueArray<T> ToTensor(Span<long> size);
 
 		/// <summary>
-		/// Create a new array like this one (with same type and other info) while the data type is <typeparamref name="TOut"/>
+		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled.
 		/// </summary>
-		/// <typeparam name="TOut">the new data type</typeparam>
-		/// <returns>the new array</returns>
-		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : struct, IComparable<TOut>;
+		/// <returns>The new array alike this one</returns>
+		public abstract ValueArray<T> NewArrayAlike();
 
 		/// <summary>
-		/// Cast this array into another data type <typeparamref name="TOut"/>.
+		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
-		/// <typeparam name="TOut">the data type to cast to</typeparam>
-		/// <returns>The casted <see cref="ValueArray{TOut}"/></returns>
-		/// <exception cref="NotSupportedException">if the cast from <typeparamref name="T"/> to <typeparamref name="TOut"/> is not supported</exception>
-		public override AbstractArray<TOut> DataTypeCast<TOut>()
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <returns>The new array alike this one</returns>
+		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
+
+		/// <summary>
+		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// </summary>
+		/// <typeparam name="TOut">The data type to cast to</typeparam>
+		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
+		public override ValueArray<TOut> DataTypeCast<TOut>()
 		{
 			DataType typeT = default(T).ToDataType(), typeOut = default(TOut).ToDataType();
 			if (typeT == typeOut)
-				return this as ValueArray<TOut>;
-			if (!typeT.IsFloat())
-				throw new NotSupportedException(Resource.DataTypeNotSupport);
-			var arr = this.NewArrayAlike<TOut>();
-			try
 			{
-				if (!typeOut.IsReal() && typeT.IsReal()) // cast from real to complex
-				{
-					BLAS.PointWiseToComplex(this, arr);
-				}
-				else if (typeT.Bytes() == 4 && typeOut.Bytes() == 8) // cast from float to double
-				{
-					BLAS.PointWiseUpcast(this, arr);
-				}
-				else if(typeOut.IsReal() && !typeT.IsReal()) // cast from complex to real
-				{
-					var srcPtr = this.Storage.As<TOut>();
-					BLAS.VectorGenralCopy(arr, new DenseVector<TOut>(srcPtr, srcPtr.Length), arr.ActualLength, strideSrc: 2);
-				}
-				else
-					throw new NotSupportedException(Resource.DataTypeNotSupport);
-				return arr;
+				var ret = this as ValueArray<TOut>;
+				return ret ?? new DenseVector<TOut>(Storage<TOut>.Empty, 0);
 			}
-			catch (Exception)
-			{
-				arr.Dispose();
-				throw;
-			}
+			var alike = this.NewArrayAlike<TOut>();
+			LAD.SelectImplementation(this.Storage, alike.Storage).PointWiseCast(this.Storage, 1, alike.Storage, 1);
+			return alike;
 		}
-
 		#endregion
 
-		#region overrides
+		#region new methods and overrides
 		/// <summary>
 		/// When implemented by a derived class, check if this <see cref="ValueArray{T}"/> share some storage with the <paramref name="other"/> one
 		/// </summary>
@@ -279,11 +322,10 @@ namespace Althea.Arrays
 		{
 			if (other is ValueArray<T> arr)
 			{
-				ValueArray<T> a = this._root ?? this, b = arr._root ?? arr;
-				if (a.Equals(b))
+				if (this == arr)
 					return true;
 				else
-					return a.Storage.ShareMemoryWith(b.Storage);
+					return this.Storage.ShareMemoryWith(arr.Storage);
 			}
 			else
 				return false;
@@ -311,8 +353,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the string representation of this array with new terms and existed ones (existed ones are shown at first).
 		/// </summary>
-		/// <param name="terms">the additional terms</param>
-		/// <param name="include">the include terms, default null means all</param>
+		/// <param name="terms">The additional terms</param>
+		/// <param name="include">The include terms, default null means all</param>
 		/// <returns>the string representation</returns>
 		protected string ToString(IEnumerable<KeyValuePair<string, object>> terms, IEnumerable<StringTerms> include = null)
 		{
@@ -365,21 +407,22 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Override <see cref="AbstractArray{T}.GetHashCode"/> to get the hash code this array.
+		/// When implemented by a derived class, get the hash code this array. The default 
 		/// </summary>
 		/// <returns>The hash code computed by <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/></returns>
-		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size.HashCodeOfArray());
+		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size.HashCodeOfSpan());
 
 		/// <summary>
-		/// Whether this object is equal to another, the shapes / sizes are also compared
+		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation utilizes <see cref="AbstractArray{T}.Equals(object?)"/> and additionally compares <see cref="Storage"/>s.
 		/// </summary>
-		/// <param name="obj"></param>
-		public override bool Equals(object obj)
+		/// <param name="obj">The other object to compare with</param>
+		/// <returns>True if this == <paramref name="obj"/></returns>
+		public override bool Equals(object? obj)
 		{
-			if (obj is null || !(obj is ValueArray<T> a))
+			if (obj is null || obj is not ValueArray<T> a)
 				return false;
 			else
-				return this.Storage == a.Storage && this.Size.SequenceEqual(a.Size);
+				return base.Equals(obj) && this.Storage == a.Storage;
 		}
 		#endregion
 

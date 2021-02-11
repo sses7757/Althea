@@ -257,7 +257,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Get the actual permutation order in <see cref="int"/> array provided with the tensor rank
 		/// </summary>
-		/// <param name="tensor">the target tensor</param>
+		/// <param name="tensor">The target tensor</param>
 		/// <param name="allowPartial">allow the actual permutation order to be a partial one or not, default false</param>
 		/// <returns>an array of <see cref="int"/> of base-zero indicating the permutation order</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> or its <see cref="ITensor.Label"/> is null</exception>
@@ -276,7 +276,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Get the actual permutation order in <see cref="char"/> array provided with the tensor rank
 		/// </summary>
-		/// <param name="tensor">the target tensor</param>
+		/// <param name="tensor">The target tensor</param>
 		/// <param name="allowPartial">allow the actual permutation order to be a partial one or not, default false</param>
 		/// <returns>an array of <see cref="char"/> corresponding the <see cref="ITensor.Label"/> of <paramref name="tensor"/> indicating the permutation order</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> is null</exception>
@@ -294,43 +294,43 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int, int> tuple) => new TensorOrder(tuple);
 		#endregion
 
@@ -338,43 +338,43 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, char> tuple) => new TensorOrder(tuple);
 		#endregion
 
@@ -382,43 +382,43 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int, Range> tuple) => new TensorOrder(tuple);
 		#endregion
 
@@ -426,43 +426,43 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, Range> tuple) => new TensorOrder(tuple);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">the general tuple to indicate the permutation order</param>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, Range> tuple) => new TensorOrder(tuple);
 		#endregion
 
@@ -470,19 +470,19 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Implicitly convert from <see cref="Index"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
-		/// <param name="order">the <see cref="Index"/> array to indicate the permutation order</param>
+		/// <param name="order">The <see cref="Index"/> array to indicate the permutation order</param>
 		public static implicit operator TensorOrder(Index[] order) => new TensorOrder(order);
 
 		/// <summary>
 		/// Implicitly convert from <see cref="int"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
-		/// <param name="order">the <see cref="int"/> array to indicate the permutation order</param>
+		/// <param name="order">The <see cref="int"/> array to indicate the permutation order</param>
 		public static implicit operator TensorOrder(int[] order) => new TensorOrder(order.Select(static o => (Index)o).ToArray());
 
 		/// <summary>
 		/// Implicitly convert from <see cref="char"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
-		/// <param name="order">the <see cref="char"/> array to indicate the permutation order</param>
+		/// <param name="order">The <see cref="char"/> array to indicate the permutation order</param>
 		public static implicit operator TensorOrder(char[] order) => new TensorOrder(order);
 		#endregion
 		#endregion

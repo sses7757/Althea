@@ -24,7 +24,7 @@ namespace Althea.Solver.Cuda.Dense
 		/// context. It must be called before any other cuSolverDN API function is invoked. It
 		/// allocates hardware resources necessary for accessing the GPU
 		/// </summary>
-		/// <param name="handle">the pointer to the handle to the cuSolverDN context.</param>
+		/// <param name="handle">The pointer to the handle to the cuSolverDN context.</param>
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern Status cusolverDnCreate(ref IntPtr handle);
@@ -75,7 +75,7 @@ namespace Althea.Solver.Cuda.Dense
 		/// <param name="k">number of elementary reflections whose product defines the matrix Q, <paramref name="k"/>≤<paramref name="n"/></param>
 		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="n"/> with <paramref name="lda"/> is not less than <c>max(1, <paramref name="m"/>)</c>.</param>
 		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/>.</param>
-		/// <param name="tau">the scalars of elementary reflection vectors</param>
+		/// <param name="tau">The scalars of elementary reflection vectors</param>
 		/// <param name="lwork">size of working array</param>
 		/// <returns><see cref="Status"/></returns>
 		internal delegate Status orgqrBufFunc(IntPtr handle, int m, int n, int k, [In] IntPtr A, int lda, [In] IntPtr tau, ref int lwork);
@@ -89,7 +89,7 @@ namespace Althea.Solver.Cuda.Dense
 		/// <param name="k">number of elementary reflections whose product defines the matrix Q, <paramref name="k"/>≤<paramref name="n"/></param>
 		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="n"/> with <paramref name="lda"/> is not less than <c>max(1, <paramref name="m"/>)</c>.</param>
 		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/>.</param>
-		/// <param name="tau">the scalars of elementary reflection vectors</param>
+		/// <param name="tau">The scalars of elementary reflection vectors</param>
 		/// <param name="work">working space, T-typed array of size <paramref name="lwork"/></param>
 		/// <param name="lwork">size of working array</param>
 		/// <param name="devInfo">if <c>info = 0</c>, the process is successful. if <c>info = -i</c>, the i-th parameter is wrong (not counting handle).</param>
@@ -482,7 +482,7 @@ namespace Althea.Solver.Cuda.Sparse
 		/// context. It must be called before any other cuSolverSP API function is invoked. It
 		/// allocates hardware resources necessary for accessing the GPU.
 		/// </summary>
-		/// <param name="handle">the pointer to the handle to the cuSolverSP context.</param>
+		/// <param name="handle">The pointer to the handle to the cuSolverSP context.</param>
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern Status cusolverSpCreate(ref IntPtr handle);
@@ -490,7 +490,7 @@ namespace Althea.Solver.Cuda.Sparse
 		/// <summary>
 		/// This function releases CPU-side resources used by the cuSolverSP library.
 		/// </summary>
-		/// <param name="handle">the handle to the cuSolverSP context.</param>
+		/// <param name="handle">The handle to the cuSolverSP context.</param>
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern Status cusolverSpDestroy(IntPtr handle);
@@ -504,7 +504,7 @@ namespace Althea.Solver.Cuda.Sparse
 		/// <param name="handle">handle to the cuSolverSP library context.</param>
 		/// <param name="m">number of rows and columns of matrix A.</param>
 		/// <param name="nnz">number of non-zeros of matrix A.</param>
-		/// <param name="descrA">the <see cref="SparseBlas.Cuda.SparseMatrixDescription"/> of matrix A.</param>
+		/// <param name="descrA">The <see cref="SparseBlas.Cuda.SparseMatrixDescription"/> of matrix A.</param>
 		/// <param name="csrValA">array of <paramref name="nnz"/> non-zero elements of matrix A.</param>
 		/// <param name="csrRowPtrA">integer array of <paramref name="m"/> + 1 elements that contains the start of every row and the end of the last row plus one.</param>
 		/// <param name="csrColIndA">integer array of <paramref name="nnz"/> column indices of the nonzero elements of matrix A.</param>
@@ -539,7 +539,7 @@ namespace Althea.Solver.Cuda.Sparse
 		/// <param name="handle">handle to the cuSolverSP library context.</param>
 		/// <param name="m">number of rows and columns of matrix A.</param>
 		/// <param name="nnz">number of non-zeros of matrix A.</param>
-		/// <param name="descrA">the <see cref="SparseBlas.Cuda.SparseMatrixDescription"/> of matrix A.</param>
+		/// <param name="descrA">The <see cref="SparseBlas.Cuda.SparseMatrixDescription"/> of matrix A.</param>
 		/// <param name="csrValA">array of <paramref name="nnz"/> non-zero elements of matrix A.</param>
 		/// <param name="csrRowPtrA">integer array of <paramref name="m"/> + 1 elements that contains the start of every row and the end of the last row plus one.</param>
 		/// <param name="csrColIndA">integer array of <paramref name="nnz"/> column indices of the nonzero elements of matrix A.</param>

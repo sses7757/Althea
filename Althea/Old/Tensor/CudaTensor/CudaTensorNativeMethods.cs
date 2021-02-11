@@ -45,7 +45,7 @@ namespace Althea.Tensor.Cuda
 		/// Computes the minimal alignment requirement for a given pointer and descriptor.
 		/// </summary>
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
-		/// <param name="ptr">the data pointer</param>
+		/// <param name="ptr">The data pointer</param>
 		/// <param name="desc"><see cref="TensorDescription"/> to the tensor</param>
 		/// <param name="alignmentRequirement">output, the largest alignment requirement that <paramref name="ptr"/> can fulfill (in bytes)</param>
 		/// <returns><see cref="Status"/></returns>
@@ -62,10 +62,10 @@ namespace Althea.Tensor.Cuda
 		/// <param name="alpha">scalar to multiply <paramref name="A"/></param>
 		/// <param name="A">tensor A</param>
 		/// <param name="descA"><see cref="TensorDescription"/> to the tensor <paramref name="A"/></param>
-		/// <param name="modeA">the mode of <paramref name="A"/></param>
+		/// <param name="modeA">The mode of <paramref name="A"/></param>
 		/// <param name="B">tensor B</param>
 		/// <param name="descB"><see cref="TensorDescription"/> to the tensor <paramref name="B"/></param>
-		/// <param name="modeB">the mode of <paramref name="B"/></param>
+		/// <param name="modeB">The mode of <paramref name="B"/></param>
 		/// <param name="type">compute type <see cref="CudaDataType"/></param>
 		/// <param name="stream">CUDA stream pointer</param>
 		/// <returns><see cref="Status"/></returns>
@@ -93,14 +93,14 @@ namespace Althea.Tensor.Cuda
 		/// <param name="alpha">scalar to multiply <paramref name="A"/></param>
 		/// <param name="A">tensor A</param>
 		/// <param name="descA"><see cref="TensorDescription"/> to the tensor <paramref name="A"/></param>
-		/// <param name="modeA">the mode of <paramref name="A"/></param>
+		/// <param name="modeA">The mode of <paramref name="A"/></param>
 		/// <param name="gamma">scalar to multiply <paramref name="C"/></param>
 		/// <param name="C">tensor C</param>
 		/// <param name="descC"><see cref="TensorDescription"/> to the tensor <paramref name="C"/></param>
-		/// <param name="modeC">the mode of <paramref name="C"/></param>
+		/// <param name="modeC">The mode of <paramref name="C"/></param>
 		/// <param name="D">tensor D</param>
 		/// <param name="descD"><see cref="TensorDescription"/> to the tensor <paramref name="D"/></param>
-		/// <param name="modeD">the mode of <paramref name="D"/></param>
+		/// <param name="modeD">The mode of <paramref name="D"/></param>
 		/// <param name="opAC"><see cref="BinaryOperation"/> for <paramref name="A"/> and <paramref name="C"/></param>
 		/// <param name="type">compute type <see cref="CudaDataType"/></param>
 		/// <param name="stream">CUDA stream pointer</param>
@@ -127,18 +127,18 @@ namespace Althea.Tensor.Cuda
 		/// <param name="alpha">scalar to multiply <paramref name="A"/></param>
 		/// <param name="A">tensor A</param>
 		/// <param name="descA"><see cref="TensorDescription"/> to the tensor <paramref name="A"/></param>
-		/// <param name="modeA">the mode of <paramref name="A"/></param>
+		/// <param name="modeA">The mode of <paramref name="A"/></param>
 		/// <param name="beta">scalar to multiply <paramref name="B"/></param>
 		/// <param name="B">tensor B</param>
 		/// <param name="descB"><see cref="TensorDescription"/> to the tensor <paramref name="B"/></param>
-		/// <param name="modeB">the mode of <paramref name="B"/></param>
+		/// <param name="modeB">The mode of <paramref name="B"/></param>
 		/// <param name="gamma">scalar to multiply <paramref name="C"/></param>
 		/// <param name="C">tensor C</param>
 		/// <param name="descC"><see cref="TensorDescription"/> to the tensor <paramref name="C"/></param>
-		/// <param name="modeC">the mode of <paramref name="C"/></param>
+		/// <param name="modeC">The mode of <paramref name="C"/></param>
 		/// <param name="D">tensor D</param>
 		/// <param name="descD"><see cref="TensorDescription"/> to the tensor <paramref name="D"/></param>
-		/// <param name="modeD">the mode of <paramref name="D"/></param>
+		/// <param name="modeD">The mode of <paramref name="D"/></param>
 		/// <param name="opAB"><see cref="BinaryOperation"/> for <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="opABC"><see cref="BinaryOperation"/> for <c><paramref name="opAB"/>(<paramref name="A"/>, <paramref name="B"/>)</c> and <paramref name="C"/></param>
 		/// <param name="type">compute type <see cref="CudaDataType"/></param>
@@ -167,18 +167,18 @@ namespace Althea.Tensor.Cuda
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
 		/// <param name="desc">output <see cref="ContractDescription"/> that gets filled with the information that encodes the tensor contraction problem</param>
 		/// <param name="descA"><see cref="TensorDescription"/> to the tensor A</param>
-		/// <param name="modeA">the mode of A</param>
-		/// <param name="alignmentRequirementA">the alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of A</param>
+		/// <param name="modeA">The mode of A</param>
+		/// <param name="alignmentRequirementA">The alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of A</param>
 		/// <param name="descB"><see cref="TensorDescription"/> to the tensor B</param>
-		/// <param name="modeB">the mode of B</param>
-		/// <param name="alignmentRequirementB">the alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of B</param>
+		/// <param name="modeB">The mode of B</param>
+		/// <param name="alignmentRequirementB">The alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of B</param>
 		/// <param name="descC"><see cref="TensorDescription"/> to the tensor C</param>
-		/// <param name="modeC">the mode of C</param>
-		/// <param name="alignmentRequirementC">the alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of C</param>
+		/// <param name="modeC">The mode of C</param>
+		/// <param name="alignmentRequirementC">The alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of C</param>
 		/// <param name="descD"><see cref="TensorDescription"/> to the tensor D</param>
-		/// <param name="modeD">the mode of D</param>
-		/// <param name="alignmentRequirementD">the alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of D</param>
-		/// <param name="computeType">the <see cref="ComputeType"/></param>
+		/// <param name="modeD">The mode of D</param>
+		/// <param name="alignmentRequirementD">The alignment requirement given by <see cref="cutensorGetAlignmentRequirement"/> of D</param>
+		/// <param name="computeType">The <see cref="ComputeType"/></param>
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -193,7 +193,7 @@ namespace Althea.Tensor.Cuda
 		/// </summary>
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
 		/// <param name="find">output <see cref="ContractFind"/> representing the candidate</param>
-		/// <param name="algo">the <see cref="ContractionAlgorithm"/> to use</param>
+		/// <param name="algo">The <see cref="ContractionAlgorithm"/> to use</param>
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -203,9 +203,9 @@ namespace Althea.Tensor.Cuda
 		/// Determines the required workspaceSize for a given tensor contraction
 		/// </summary>
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
-		/// <param name="desc">the <see cref="ContractDescription"/> filled with the information that encodes the tensor contraction problem</param>
-		/// <param name="find">the <see cref="ContractFind"/> representing the candidate</param>
-		/// <param name="pref">the <see cref="WorkSpacePreference"/></param>
+		/// <param name="desc">The <see cref="ContractDescription"/> filled with the information that encodes the tensor contraction problem</param>
+		/// <param name="find">The <see cref="ContractFind"/> representing the candidate</param>
+		/// <param name="pref">The <see cref="WorkSpacePreference"/></param>
 		/// <param name="workspaceSize">output workspace size (in bytes) that is required for the given tensor contraction</param>
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
@@ -217,9 +217,9 @@ namespace Althea.Tensor.Cuda
 		/// </summary>
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
 		/// <param name="plan">output <see cref="ContractPlan"/> holding the contraction execution plan (i.e., the candidate that will be executed as well as all it’s runtime parameters for the given tensor contraction problem)</param>
-		/// <param name="desc">the <see cref="ContractDescription"/> filled with the information that encodes the tensor contraction problem</param>
-		/// <param name="find">the <see cref="ContractFind"/> representing the candidate</param>
-		/// <param name="workspaceSize">the workspace size (in bytes) that is required for the given tensor contraction</param>
+		/// <param name="desc">The <see cref="ContractDescription"/> filled with the information that encodes the tensor contraction problem</param>
+		/// <param name="find">The <see cref="ContractFind"/> representing the candidate</param>
+		/// <param name="workspaceSize">The workspace size (in bytes) that is required for the given tensor contraction</param>
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -229,16 +229,16 @@ namespace Althea.Tensor.Cuda
 		/// This routine computes the tensor contraction <c>D = α * A · B + β * C</c>.
 		/// </summary>
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
-		/// <param name="plan">the <see cref="ContractPlan"/> holding the contraction execution plan</param>
+		/// <param name="plan">The <see cref="ContractPlan"/> holding the contraction execution plan</param>
 		/// <param name="alpha">scalar α</param>
 		/// <param name="A">tensor A</param>
 		/// <param name="B">tensor B</param>
 		/// <param name="beta">scalar β</param>
 		/// <param name="C">tensor C</param>
 		/// <param name="D">tensor D</param>
-		/// <param name="workspace">the working buffer</param>
+		/// <param name="workspace">The working buffer</param>
 		/// <param name="workspaceSize">size of <paramref name="workspace"/></param>
-		/// <param name="stream">the CUDA stream</param>
+		/// <param name="stream">The CUDA stream</param>
 		/// <returns><see cref="Status"/></returns>
 		internal delegate Status Contraction<T>(ref Handle handle, ref ContractPlan plan, ref T alpha, [In] IntPtr A, [In] IntPtr B, ref T beta, [In] IntPtr C, IntPtr D, IntPtr workspace, long workspaceSize, IntPtr stream);
 
@@ -263,15 +263,15 @@ namespace Althea.Tensor.Cuda
 		/// <param name="handle">Opaque <see cref="Handle"/> holding cuTENSOR’s library context</param>
 		/// <param name="A">tensor A</param>
 		/// <param name="descA"><see cref="TensorDescription"/> to the tensor <paramref name="A"/></param>
-		/// <param name="modeA">the mode of <paramref name="A"/></param>
+		/// <param name="modeA">The mode of <paramref name="A"/></param>
 		/// <param name="C">tensor C</param>
 		/// <param name="descC"><see cref="TensorDescription"/> to the tensor <paramref name="C"/></param>
-		/// <param name="modeC">the mode of <paramref name="C"/></param>
+		/// <param name="modeC">The mode of <paramref name="C"/></param>
 		/// <param name="D">tensor D</param>
 		/// <param name="descD"><see cref="TensorDescription"/> to the tensor <paramref name="D"/></param>
-		/// <param name="modeD">the mode of <paramref name="D"/></param>
-		/// <param name="opReduce">the <see cref="BinaryOperation"/> as reduction operation</param>
-		/// <param name="typeCompute">the <see cref="ComputeType"/></param>
+		/// <param name="modeD">The mode of <paramref name="D"/></param>
+		/// <param name="opReduce">The <see cref="BinaryOperation"/> as reduction operation</param>
+		/// <param name="typeCompute">The <see cref="ComputeType"/></param>
 		/// <param name="workspaceSize">output work buffer size in bytes</param>
 		/// <returns><see cref="Status"/></returns>
 		[DllImport(CUTENSOR_DLL_NAME)]
@@ -286,18 +286,18 @@ namespace Althea.Tensor.Cuda
 		/// <param name="beta">scalar β</param>
 		/// <param name="A">tensor A</param>
 		/// <param name="descA"><see cref="TensorDescription"/> to the tensor <paramref name="A"/></param>
-		/// <param name="modeA">the mode of <paramref name="A"/></param>
+		/// <param name="modeA">The mode of <paramref name="A"/></param>
 		/// <param name="C">tensor C</param>
 		/// <param name="descC"><see cref="TensorDescription"/> to the tensor <paramref name="C"/></param>
-		/// <param name="modeC">the mode of <paramref name="C"/></param>
+		/// <param name="modeC">The mode of <paramref name="C"/></param>
 		/// <param name="D">tensor D</param>
 		/// <param name="descD"><see cref="TensorDescription"/> to the tensor <paramref name="D"/></param>
-		/// <param name="modeD">the mode of <paramref name="D"/></param>
-		/// <param name="opReduce">the <see cref="BinaryOperation"/> as reduction operation</param>
-		/// <param name="typeCompute">the <see cref="ComputeType"/></param>
-		/// <param name="workspace">the working buffer array</param>
+		/// <param name="modeD">The mode of <paramref name="D"/></param>
+		/// <param name="opReduce">The <see cref="BinaryOperation"/> as reduction operation</param>
+		/// <param name="typeCompute">The <see cref="ComputeType"/></param>
+		/// <param name="workspace">The working buffer array</param>
 		/// <param name="workspaceSize">size of <paramref name="workspace"/></param>
-		/// <param name="stream">the CUDA stream pointer</param>
+		/// <param name="stream">The CUDA stream pointer</param>
 		/// <returns><see cref="Status"/></returns>
 		internal delegate Status Reduction<T>(ref Handle handle, ref T alpha, [In] IntPtr A, ref TensorDescription descA, in int modeA, ref T beta, [In] IntPtr C, ref TensorDescription descC, in int modeC, IntPtr D, ref TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, IntPtr workspace, long workspaceSize, IntPtr stream);
 

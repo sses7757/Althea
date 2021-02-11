@@ -12,7 +12,7 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The complex interface for any possible real data type
 	/// </summary>
-	/// <typeparam name="T">the data type of corresponding real number, usually an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
+	/// <typeparam name="T">The data type of corresponding real number, usually an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
 	public interface IComplex<T> : IFormattable where T : unmanaged
 	{
 		/// <summary>
@@ -24,6 +24,12 @@ namespace Althea.NativeTypes
 		/// Get the imaginary part
 		/// </summary>
 		T Imag { get; }
+
+		/// <summary>
+		/// Compute the absolute value of this complex
+		/// </summary>
+		/// <returns>The absolute value of this complex</returns>
+		T Abs();
 	}
 	#endregion
 
@@ -31,7 +37,7 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The general complex type for built-in types
 	/// </summary>
-	/// <typeparam name="T">the data type of corresponding real number</typeparam>
+	/// <typeparam name="T">The data type of corresponding real number</typeparam>
 	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
 	/// I do not recommend one to use any data type conversions or arithmetic operations in heavy load like loop over a <c><see cref="Complex{T}"/>[]</c> even though the dynamic functions will be optimized by the JIT to have performance way better than boxing and unboxing <typeparamref name="T"/>, they may still perform a lot worse than operations with compile-time-known <typeparamref name="T"/>.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
@@ -454,7 +460,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex number power
 		/// </summary>
-		/// <param name="p">the power of real type <typeparamref name="T"/></param>
+		/// <param name="p">The power of real type <typeparamref name="T"/></param>
 		public Complex<T> Pow(T p)
 		{
 			if (this.imag.Equals(default))
@@ -474,7 +480,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex  number power
 		/// </summary>
-		/// <param name="p">the power of complex type <see cref="Complex{T}"/></param>
+		/// <param name="p">The power of complex type <see cref="Complex{T}"/></param>
 		public Complex<T> Pow(Complex<T> p)
 		{
 			if (p.imag.Equals(default))
@@ -567,7 +573,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Convert a 1D <typeparamref name="T"/> array to <see cref="Complex{T}"/> array by taking two consecutive real values to form one complex value.
 		/// </summary>
-		/// <typeparam name="T">the real type</typeparam>
+		/// <typeparam name="T">The real type</typeparam>
 		/// <param name="input">input array of type <typeparamref name="T"/></param>
 		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
 		/// <remarks>extend method of <paramref name="input"/></remarks>
@@ -585,7 +591,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Convert a 1D <typeparamref name="T"/> array to <see cref="Complex{T}"/> array by creating complex values with only real parts.
 		/// </summary>
-		/// <typeparam name="T">the real type</typeparam>
+		/// <typeparam name="T">The real type</typeparam>
 		/// <param name="input">input array of type <typeparamref name="T"/></param>
 		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
 		/// <remarks>extend method of <paramref name="input"/></remarks>
@@ -638,10 +644,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Complex list summation by <paramref name="selector"/>
 		/// </summary>
-		/// <typeparam name="T">the complex type's real type</typeparam>
-		/// <typeparam name="TFrom">the conversion from type</typeparam>
+		/// <typeparam name="T">The complex type's real type</typeparam>
+		/// <typeparam name="TFrom">The conversion from type</typeparam>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static Complex<T> Sum<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
@@ -659,10 +665,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Complex list product by <paramref name="selector"/>
 		/// </summary>
-		/// <typeparam name="T">the complex type's real type</typeparam>
-		/// <typeparam name="TFrom">the conversion from type</typeparam>
+		/// <typeparam name="T">The complex type's real type</typeparam>
+		/// <typeparam name="TFrom">The conversion from type</typeparam>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static Complex<T> Prod<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>

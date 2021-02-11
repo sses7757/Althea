@@ -147,15 +147,10 @@ namespace Althea.Arrays
 		public abstract AbstractArray<T> Clone();
 
 		/// <summary>
-		/// When implemented by a derived class, create a new array with same properties (e.g. <see cref="Size"/>) as this one.
+		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/> by creating a new array of <typeparamref name="TOut"/>.
 		/// </summary>
-		/// <returns>The array alike this one.</returns>
-		public abstract AbstractArray<T> NewArrayAlike();
-		/// <summary>
-		/// Cast this array into another data type <typeparamref name="TOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">the data type to cast to</typeparam>
-		/// <returns>The casted <see cref="AbstractArray{T}"/>.</returns>
+		/// <typeparam name="TOut">The data type to cast to</typeparam>
+		/// <returns>The casted <see cref="AbstractArray{T}"/> of type <typeparamref name="TOut"/>.</returns>
 		public abstract AbstractArray<TOut> DataTypeCast<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
 
 		/// <summary>

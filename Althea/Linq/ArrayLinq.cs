@@ -34,10 +34,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the maximum item of <paramref name="list"/> by <paramref name="selector"/>.
 		/// </summary>
-		/// <typeparam name="T">the input data type</typeparam>
+		/// <typeparam name="T">The input data type</typeparam>
 		/// <typeparam name="TOut">data type of array that can be compared</typeparam>
 		/// <param name="list">list to find maximum</param>
-		/// <param name="selector">the selector used to convert <typeparamref name="T"/> to <typeparamref name="TOut"/></param>
+		/// <param name="selector">The selector used to convert <typeparamref name="T"/> to <typeparamref name="TOut"/></param>
 		/// <returns>the maximum item</returns>
 		public static TOut Max<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector) where TOut : IComparable<TOut>
 		{
@@ -74,10 +74,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the minimum item of <paramref name="list"/> by <paramref name="selector"/>.
 		/// </summary>
-		/// <typeparam name="T">the input data type</typeparam>
+		/// <typeparam name="T">The input data type</typeparam>
 		/// <typeparam name="TOut">data type of array that can be compared</typeparam>
 		/// <param name="list">list to find minimum</param>
-		/// <param name="selector">the selector used to convert <typeparamref name="T"/> to <typeparamref name="TOut"/></param>
+		/// <param name="selector">The selector used to convert <typeparamref name="T"/> to <typeparamref name="TOut"/></param>
 		/// <returns>the minimum item</returns>
 		public static TOut Min<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector) where TOut : IComparable<TOut>
 		{
@@ -98,7 +98,7 @@ namespace Althea.Linq
 		/// Find the maximum item of <paramref name="list"/> by conversion function <paramref name="selector"/>.
 		/// </summary>
 		/// <typeparam name="T">data type of array</typeparam>
-		/// <typeparam name="TSort">the data type that can be compared</typeparam>
+		/// <typeparam name="TSort">The data type that can be compared</typeparam>
 		/// <param name="list">list to find maximum</param>
 		/// <param name="selector">conversion function</param>
 		/// <returns>the maximum item</returns>
@@ -124,7 +124,7 @@ namespace Althea.Linq
 		/// Find the minimum item of <paramref name="list"/> by conversion function <paramref name="selector"/>.
 		/// </summary>
 		/// <typeparam name="T">data type of array</typeparam>
-		/// <typeparam name="TSort">the data type that can be compared</typeparam>
+		/// <typeparam name="TSort">The data type that can be compared</typeparam>
 		/// <param name="list">list to find minimum</param>
 		/// <param name="selector">conversion function</param>
 		/// <returns>the minimum item</returns>
@@ -152,7 +152,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
 		/// <typeparam name="TOut">output list type</typeparam>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="func">accumulate function, input is the element of list and the accumulation value</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Aggregate result <typeparamref name="TOut"/></returns>
@@ -175,7 +175,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
 		/// <typeparam name="TOut">output list type</typeparam>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="func">accumulate function, input is the element of list and the accumulation value</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
@@ -199,7 +199,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -219,7 +219,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -239,7 +239,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -259,7 +259,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -281,7 +281,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -301,7 +301,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -321,7 +321,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -341,7 +341,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -364,7 +364,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
 		/// <typeparam name="TOut">output list type</typeparam>
-		/// <param name="list">the list to accumulate</param>
+		/// <param name="list">The list to accumulate</param>
 		/// <param name="func">accumulate function, input is the element of list and the accumulation value</param>
 		/// <param name="init">initial output value</param>
 		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> with <c><paramref name="func"/>(<paramref name="list"/>[0], <paramref name="init"/>)</c> as first element</returns>
@@ -537,7 +537,7 @@ namespace Althea.Linq
 		/// List summation by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static int Sum<T>(this IReadOnlyList<T> list, Converter<T, int> selector)
@@ -556,7 +556,7 @@ namespace Althea.Linq
 		/// List summation by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static long Sum<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
@@ -575,7 +575,7 @@ namespace Althea.Linq
 		/// List summation by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static float Sum<T>(this IReadOnlyList<T> list, Converter<T, float> selector)
@@ -594,7 +594,7 @@ namespace Althea.Linq
 		/// List summation by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static double Sum<T>(this IReadOnlyList<T> list, Converter<T, double> selector)
@@ -615,7 +615,7 @@ namespace Althea.Linq
 		/// List product by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static int Prod<T>(this IReadOnlyList<T> list, Converter<T, int> selector)
@@ -634,7 +634,7 @@ namespace Althea.Linq
 		/// List product by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static long Prod<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
@@ -653,7 +653,7 @@ namespace Althea.Linq
 		/// List product by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static float Prod<T>(this IReadOnlyList<T> list, Converter<T, float> selector)
@@ -672,7 +672,7 @@ namespace Althea.Linq
 		/// List product by <paramref name="selector"/>
 		/// </summary>
 		/// <param name="list"></param>
-		/// <param name="selector">the selector to apply to each element</param>
+		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static double Prod<T>(this IReadOnlyList<T> list, Converter<T, double> selector)
@@ -695,8 +695,8 @@ namespace Althea.Linq
 		/// Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other) where T : IEquatable<T>
 		{
@@ -716,9 +716,9 @@ namespace Althea.Linq
 		/// Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
@@ -738,11 +738,11 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
 		/// </summary>
-		/// <typeparam name="TL">the left input type</typeparam>
-		/// <typeparam name="TR">the right input type</typeparam>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
-		/// <param name="equalityComparer">the function used to compare equality</param>
+		/// <typeparam name="TL">The left input type</typeparam>
+		/// <typeparam name="TR">The right input type</typeparam>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
+		/// <param name="equalityComparer">The function used to compare equality</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual<TL, TR>(this IReadOnlyList<TL> list, IReadOnlyList<TR> other, EqualComparer<TL, TR> equalityComparer)
 		{
@@ -765,8 +765,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
 		/// </summary>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<byte> list, IReadOnlyList<byte> other)
 		{
@@ -786,8 +786,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
 		/// </summary>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<char> list, IReadOnlyList<char> other)
 		{
@@ -807,8 +807,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
 		/// </summary>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<int> list, IReadOnlyList<int> other)
 		{
@@ -828,8 +828,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
 		/// </summary>
-		/// <param name="list">the list to compare</param>
-		/// <param name="other">the other list to compare</param>
+		/// <param name="list">The list to compare</param>
+		/// <param name="other">The other list to compare</param>
 		/// <returns>Sequentially equals or not</returns>
 		public static bool SequenceEqual(this IReadOnlyList<long> list, IReadOnlyList<long> other)
 		{
@@ -850,8 +850,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if all elements of <paramref name="list"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <param name="list">the list to predicate</param>
-		/// <param name="predicator">the predicator delegate</param>
+		/// <param name="list">The list to predicate</param>
+		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static bool All<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
@@ -875,8 +875,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if any element of <paramref name="list"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <param name="list">the list to predicate</param>
-		/// <param name="predicator">the predicator delegate</param>
+		/// <param name="list">The list to predicate</param>
+		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
 		public static bool Any<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
@@ -967,7 +967,7 @@ namespace Althea.Linq
 		/// Get the first element of <paramref name="list"/> is available or default otherwise
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="list">the list to take</param>
+		/// <param name="list">The list to take</param>
 		/// <returns>the first element or default</returns>
 		public static T FirstOrDefault<T>(this IReadOnlyList<T> list)
 		{
@@ -981,8 +981,8 @@ namespace Althea.Linq
 		/// Append an <paramref name="element"/> to the end of <paramref name="list"/>
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="list">the list to be appended</param>
-		/// <param name="element">the value to append</param>
+		/// <param name="list">The list to be appended</param>
+		/// <param name="element">The value to append</param>
 		/// <returns>a new list after appending <paramref name="element"/></returns>
 		public static IReadOnlyList<T> Append<T>(this IReadOnlyList<T> list, T element)
 		{
@@ -999,7 +999,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
 		/// <typeparam name="TOut">output list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1031,7 +1031,7 @@ namespace Althea.Linq
 		/// General list converter.
 		/// </summary>
 		/// <typeparam name="T">input list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1062,7 +1062,7 @@ namespace Althea.Linq
 		/// General list converter.
 		/// </summary>
 		/// <typeparam name="T">input list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1093,7 +1093,7 @@ namespace Althea.Linq
 		/// General list converter.
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1124,7 +1124,7 @@ namespace Althea.Linq
 		/// General list converter.
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1157,7 +1157,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
 		/// <typeparam name="TOut">output list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1181,7 +1181,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="TIn">input list type</typeparam>
 		/// <typeparam name="TOut">output list type</typeparam>
-		/// <param name="list">the list to convert</param>
+		/// <param name="list">The list to convert</param>
 		/// <param name="selector">selector function used to convert</param>
 		/// <returns>Result after conversion</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
@@ -1208,9 +1208,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Pick the element(s) <c>e</c> in <paramref name="list"/> where <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
-		/// <param name="predicator">the predicator used to pick</param>
+		/// <param name="predicator">The predicator used to pick</param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Where<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
 		{
@@ -1237,9 +1237,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Pick the element(s) and index <c>e, i</c> in <paramref name="list"/> where <c><paramref name="predicator"/>(e, i) == true</c>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
-		/// <param name="predicator">the predicator used to pick</param>
+		/// <param name="predicator">The predicator used to pick</param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Where<T>(this IReadOnlyList<T> list, IndexPredicator<T> predicator)
 		{
@@ -1257,9 +1257,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get all the indices of the occurrences of <paramref name="value"/> in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="list">the list to find in</param>
-		/// <param name="value">the value to find</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="list">The list to find in</param>
+		/// <param name="value">The value to find</param>
 		/// <returns>the zero-based indices or empty if not founded</returns>
 		public static int[] IndicesOf<T>(this IReadOnlyList<T> list, T value) where T : IEquatable<T>
 		{
@@ -1276,9 +1276,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the index of the first occurrence of <paramref name="value"/> in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="list">the list to find in</param>
-		/// <param name="value">the value to find</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="list">The list to find in</param>
+		/// <param name="value">The value to find</param>
 		/// <returns>the zero-based index or -1 if not founded</returns>
 		public static int IndexOf<T>(this IReadOnlyList<T> list, T value) where T : IEquatable<T>
 		{
@@ -1302,10 +1302,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get all the indices of the occurrences of <paramref name="value"/> in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="list">the list to find in</param>
-		/// <param name="value">the value to find</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="list">The list to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the zero-based indices or empty if not founded</returns>
 		public static int[] IndicesOf<T>(this IReadOnlyList<T> list, T value, IEqualityComparer<T>? comparer = null)
 		{
@@ -1323,10 +1323,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the index of the first occurrence of <paramref name="value"/> in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="list">the list to find in</param>
-		/// <param name="value">the value to find</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="list">The list to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the zero-based index or -1 if not founded</returns>
 		public static int IndexOf<T>(this IReadOnlyList<T> list, T value, IEqualityComparer<T>? comparer = null)
 		{
@@ -1354,11 +1354,11 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the index of the first occurrence of <paramref name="value"/> in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <typeparam name="TOut">the selected data type</typeparam>
-		/// <param name="list">the list to find in</param>
-		/// <param name="selector">the selector used to convert <paramref name="list"/> before comparison</param>
-		/// <param name="value">the value to find</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <typeparam name="TOut">The selected data type</typeparam>
+		/// <param name="list">The list to find in</param>
+		/// <param name="selector">The selector used to convert <paramref name="list"/> before comparison</param>
+		/// <param name="value">The value to find</param>
 		/// <returns>the zero-based index or -1 if not founded</returns>
 		public static int IndexOf<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector, TOut value) where TOut : IEquatable<TOut>
 		{
@@ -1374,12 +1374,12 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the index of the first occurrence of <paramref name="value"/> in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <typeparam name="TOut">the selected data type</typeparam>
-		/// <param name="list">the list to find in</param>
-		/// <param name="selector">the selector used to convert <paramref name="list"/> before comparison</param>
-		/// <param name="value">the value to find</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <typeparam name="TOut">The selected data type</typeparam>
+		/// <param name="list">The list to find in</param>
+		/// <param name="selector">The selector used to convert <paramref name="list"/> before comparison</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the zero-based index or -1 if not founded</returns>
 		public static int IndexOf<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector, TOut value, IEqualityComparer<TOut>? comparer = null)
 		{
@@ -1396,9 +1396,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Pick the index of element(s) <c>i</c> in <paramref name="list"/> where <c><paramref name="predicator"/>(i) == true</c>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
-		/// <param name="predicator">the predicator used to pick</param>
+		/// <param name="predicator">The predicator used to pick</param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> IndexWhere<T>(this IReadOnlyList<T> list, Predicate<int> predicator)
 		{
@@ -1417,9 +1417,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Count the element(s) <c>e</c> in <paramref name="list"/> where <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to count in</param>
-		/// <param name="predicator">the predicator used to count</param>
+		/// <param name="predicator">The predicator used to count</param>
 		/// <returns>the count</returns>
 		public static int Count<T>(this IReadOnlyList<T> list, Predicate<T> predicator)
 		{
@@ -1467,9 +1467,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Take first <paramref name="count"/> of <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to take in</param>
-		/// <param name="from">the inclusive index to take from</param>
+		/// <param name="from">The inclusive index to take from</param>
 		/// <param name="count">number of elements to take</param>
 		/// <returns>the result list</returns>
 		public static IReadOnlyList<T> TakeRange<T>(this IReadOnlyList<T> list, int from, int count)
@@ -1496,7 +1496,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Take first <paramref name="count"/> of <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to take in</param>
 		/// <param name="count">number of elements to take</param>
 		/// <returns>the result list</returns>
@@ -1522,7 +1522,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Take last <paramref name="count"/> of <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to take in</param>
 		/// <param name="count">number of elements to take</param>
 		/// <returns>the result list</returns>
@@ -1548,7 +1548,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Skip first <paramref name="count"/> of <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to take in</param>
 		/// <param name="count">number of elements to take</param>
 		/// <returns>the result list</returns>
@@ -1574,7 +1574,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Skip last <paramref name="count"/> of <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to take in</param>
 		/// <param name="count">number of elements to take</param>
 		/// <returns>the result list</returns>
@@ -1686,7 +1686,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Reverse the order of <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to reverse</param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Reverse<T>(this IReadOnlyList<T> list)
@@ -1714,7 +1714,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Convert the input <see cref="IReadOnlyList{T}"/> <paramref name="list"/> to an array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to convert</param>
 		/// <returns><paramref name="list"/> itself if it is an array or a copied array</returns>
 		public static T[] ToArray<T>(this IReadOnlyList<T> list)
@@ -1734,7 +1734,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Convert the input <see cref="IReadOnlyList{T}"/> <paramref name="list"/> to a copied array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to convert</param>
 		/// <returns>a copied array</returns>
 		public static T[] ToCopiedArray<T>(this IReadOnlyList<T> list)
@@ -1754,7 +1754,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Convert the input <see cref="IReadOnlyList{T}"/> <paramref name="list"/> to a <see cref="List{T}"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to convert</param>
 		/// <returns><paramref name="list"/> itself if it is a <see cref="List{T}"/> or a copied <see cref="List{T}"/></returns>
 		public static List<T> ToList<T>(this IReadOnlyList<T> list)
@@ -1772,8 +1772,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Sort <paramref name="list"/> directly
 		/// </summary>
-		/// <typeparam name="T">the input type</typeparam>
-		/// <param name="list">the input list</param>
+		/// <typeparam name="T">The input type</typeparam>
+		/// <param name="list">The input list</param>
 		/// <returns>the ordered list</returns>
 		public static IOrderedList<T> Sort<T>(this IReadOnlyList<T> list) where T : IComparable<T>
 		{
@@ -1790,8 +1790,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Sort <paramref name="list"/> directly
 		/// </summary>
-		/// <typeparam name="T">the input type</typeparam>
-		/// <param name="list">the input list</param>
+		/// <typeparam name="T">The input type</typeparam>
+		/// <param name="list">The input list</param>
 		/// <returns>the descending ordered list</returns>
 		public static IOrderedList<T> SortByDescending<T>(this IReadOnlyList<T> list) where T : IComparable<T>
 		{
@@ -1810,7 +1810,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Index the distinct element(s) in <paramref name="list"/> using the <see cref="IComparable{T}"/> interface to sort such that <c><paramref name="list"/>.<see cref="Distinct{T}(IReadOnlyList{T}, IEqualityComparer{T})">Distinct</see>().<see cref="Array.Sort{T}(T[])">Sort</see>().<see cref="ReOrder{T}(IReadOnlyList{T}, int[])">ReOrder</see>(result) == <paramref name="list"/></c>.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
 		/// <returns>the result indices as an <see cref="int"/> array</returns>
 		public static int[] ToDistinctIndex<T>(this IReadOnlyList<T> list) where T : IComparable<T>
@@ -1825,9 +1825,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Order <paramref name="list"/> with key generated by <paramref name="selector"/>
 		/// </summary>
-		/// <typeparam name="T">the input type</typeparam>
-		/// <typeparam name="TOut">the selector output type that can be compared</typeparam>
-		/// <param name="list">the input list</param>
+		/// <typeparam name="T">The input type</typeparam>
+		/// <typeparam name="TOut">The selector output type that can be compared</typeparam>
+		/// <param name="list">The input list</param>
 		/// <param name="selector"></param>
 		/// <returns>the ordered list</returns>
 		public static IReadOnlyList<T> OrderBy<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector) where TOut : IComparable<TOut>
@@ -1848,9 +1848,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Descend order <paramref name="list"/> with key generated by <paramref name="selector"/>
 		/// </summary>
-		/// <typeparam name="T">the input type</typeparam>
-		/// <typeparam name="TOut">the selector output type that can be compared</typeparam>
-		/// <param name="list">the input list</param>
+		/// <typeparam name="T">The input type</typeparam>
+		/// <typeparam name="TOut">The selector output type that can be compared</typeparam>
+		/// <param name="list">The input list</param>
 		/// <param name="selector"></param>
 		/// <returns>the descending ordered list</returns>
 		public static IReadOnlyList<T> OrderByDescending<T, TOut>(this IReadOnlyList<T> list, Converter<T, TOut> selector) where TOut : IComparable<TOut>
@@ -1962,10 +1962,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check whether <paramref name="set"/> and <paramref name="list"/> contains same elements
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="set">the set to check</param>
-		/// <param name="list">the list to check</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set">The set to check</param>
+		/// <param name="list">The list to check</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns></returns>
 		public static bool SetEquals<T>(this IImmutableSet<T> set, IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
@@ -1982,10 +1982,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check whether <paramref name="list1"/> and <paramref name="list2"/> contains same elements
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="list1">the set to check</param>
-		/// <param name="list2">the list to check</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="list1">The set to check</param>
+		/// <param name="list2">The list to check</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns></returns>
 		public static bool SetEquals<T>(this IReadOnlyList<T> list1, IReadOnlyList<T> list2, IEqualityComparer<T>? comparer = null)
 		{
@@ -2002,7 +2002,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s elements are unique
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
 		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this IReadOnlyList<T> list) where T : IEquatable<T>
@@ -2021,10 +2021,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s elements are unique by given <paramref name="selector"/>
 		/// </summary>
-		/// <typeparam name="TFrom">the data type of <paramref name="list"/></typeparam>
-		/// <typeparam name="TTo">the data type of output</typeparam>
+		/// <typeparam name="TFrom">The data type of <paramref name="list"/></typeparam>
+		/// <typeparam name="TTo">The data type of output</typeparam>
 		/// <param name="list">list to pick</param>
-		/// <param name="selector">the selector to convert each element in <paramref name="list"/></param>
+		/// <param name="selector">The selector to convert each element in <paramref name="list"/></param>
 		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<TFrom, TTo>(this IReadOnlyList<TFrom> list, Converter<TFrom, TTo> selector) where TTo : IEquatable<TTo>
 		{
@@ -2043,9 +2043,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check if <paramref name="list"/>'s elements are unique
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
@@ -2064,9 +2064,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Pick the distinct element(s) in <paramref name="list"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to pick</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Distinct<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
@@ -2083,7 +2083,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to check in</param>
 		/// <param name="element">element to check</param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
@@ -2104,10 +2104,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to check in</param>
 		/// <param name="element">element to check</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T>(this IReadOnlyList<T> list, T element, IEqualityComparer<T>? comparer = null)
 		{
@@ -2130,12 +2130,12 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <typeparam name="TCompare">the type used to compare</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <typeparam name="TCompare">The type used to compare</typeparam>
 		/// <param name="list">list to check in</param>
 		/// <param name="element">element to check</param>
-		/// <param name="selector">the converter applied to <paramref name="list"/> before comparisons</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="selector">The converter applied to <paramref name="list"/> before comparisons</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector, IEqualityComparer<TCompare>? comparer = null)
 		{
@@ -2151,11 +2151,11 @@ namespace Althea.Linq
 		/// <summary>
 		/// Check whether <paramref name="list"/> contains <paramref name="element"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <typeparam name="TCompare">the type used to compare</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <typeparam name="TCompare">The type used to compare</typeparam>
 		/// <param name="list">list to check in</param>
 		/// <param name="element">element to check</param>
-		/// <param name="selector">the converter applied to <paramref name="list"/> before comparisons</param>
+		/// <param name="selector">The converter applied to <paramref name="list"/> before comparisons</param>
 		/// <returns><paramref name="list"/> contains <paramref name="element"/> or not</returns>
 		public static bool Contains<T, TCompare>(this IReadOnlyList<T> list, TCompare element, Converter<T, TCompare> selector) where TCompare : IEquatable<TCompare>
 		{
@@ -2170,10 +2170,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Remove element(s) <c>e</c> in <paramref name="list"/> where <c>e</c> is in <paramref name="other"/> to form a new <see cref="IReadOnlyList{T}"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to remove from</param>
-		/// <param name="other">the list used to compare</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="other">The list used to compare</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Except<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
@@ -2191,10 +2191,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the element(s) <c>e</c> in <paramref name="list"/> where <c>e</c> is also in <paramref name="other"/> to form a new <see cref="IReadOnlyList{T}"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to get from</param>
-		/// <param name="other">the list used to compare</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="other">The list used to compare</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Intersect<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
@@ -2212,10 +2212,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Get the union list of <paramref name="list"/> and <paramref name="other"/> to form a new <see cref="IReadOnlyList{T}"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">first list</param>
 		/// <param name="other">second list</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Union<T>(this IReadOnlyList<T> list, IReadOnlyList<T> other, IEqualityComparer<T>? comparer = null)
 		{
@@ -2233,10 +2233,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Group the given <paramref name="list"/> by <paramref name="keySelector"/> and the values of groups are given by the values in <paramref name="list"/>.
 		/// </summary>
-		/// <typeparam name="T">the input type</typeparam>
-		/// <typeparam name="TKey">the key type</typeparam>
-		/// <param name="list">the input list to group</param>
-		/// <param name="keySelector">the converter from <typeparamref name="T"/> to <typeparamref name="TKey"/></param>
+		/// <typeparam name="T">The input type</typeparam>
+		/// <typeparam name="TKey">The key type</typeparam>
+		/// <param name="list">The input list to group</param>
+		/// <param name="keySelector">The converter from <typeparamref name="T"/> to <typeparamref name="TKey"/></param>
 		/// <returns>an <see cref="IReadOnlyList{T}"/> of <see cref="IReadOnlyGrouping{TKey, TElement}"/>s</returns>
 		public static IReadOnlyList<IReadOnlyGrouping<TKey, T>> GroupBy<T, TKey>(this IReadOnlyList<T> list, Converter<T, TKey> keySelector)
 		{
@@ -2247,12 +2247,12 @@ namespace Althea.Linq
 		/// <summary>
 		/// Group the given <paramref name="list"/> by <paramref name="keySelector"/> and the values of groups are given by <paramref name="valueSelector"/>.
 		/// </summary>
-		/// <typeparam name="T">the input type</typeparam>
-		/// <typeparam name="TKey">the key type</typeparam>
-		/// <typeparam name="TValue">the value type</typeparam>
-		/// <param name="list">the input list to group</param>
-		/// <param name="keySelector">the converter from <typeparamref name="T"/> to <typeparamref name="TKey"/></param>
-		/// <param name="valueSelector">the converter from <typeparamref name="T"/> to <typeparamref name="TValue"/></param>
+		/// <typeparam name="T">The input type</typeparam>
+		/// <typeparam name="TKey">The key type</typeparam>
+		/// <typeparam name="TValue">The value type</typeparam>
+		/// <param name="list">The input list to group</param>
+		/// <param name="keySelector">The converter from <typeparamref name="T"/> to <typeparamref name="TKey"/></param>
+		/// <param name="valueSelector">The converter from <typeparamref name="T"/> to <typeparamref name="TValue"/></param>
 		/// <returns>an <see cref="IReadOnlyList{T}"/> of <see cref="IReadOnlyGrouping{TKey, TElement}"/>s</returns>
 		public static IReadOnlyList<IReadOnlyGrouping<TKey, TValue>> GroupBy<T, TKey, TValue>(this IReadOnlyList<T> list, Converter<T, TKey> keySelector, Converter<T, TValue> valueSelector)
 		{
@@ -2291,8 +2291,8 @@ namespace Althea.Linq
 		/// Find the permutation order such that <c><paramref name="array"/>[result] = <paramref name="target"/></c>
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array before permutation</param>
-		/// <param name="target">the array after the permutation</param>
+		/// <param name="array">The array before permutation</param>
+		/// <param name="target">The array after the permutation</param>
 		/// <returns>the permutation order as an <see cref="int"/> array, or empty array if <c>∃ a∈<paramref name="target"/>, a∉<paramref name="array"/></c></returns>
 		public static int[] FindPermutation<T>(this IReadOnlyList<T> array, IReadOnlyList<T> target)
 		{
@@ -2316,8 +2316,8 @@ namespace Althea.Linq
 		/// Find the permutation order such that <c><paramref name="sorted"/>[result] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="sorted">the array before permutation. must be sorted</param>
-		/// <param name="target">the array after the permutation</param>
+		/// <param name="sorted">The array before permutation. must be sorted</param>
+		/// <param name="target">The array after the permutation</param>
 		/// <returns>the permutation order as an <see cref="int"/> array, or empty array if <c>∃ a∈<paramref name="target"/>, a∉<paramref name="sorted"/></c></returns>
 		public static int[] FindPermutationOfSorted<T>(this IReadOnlyList<T> sorted, IReadOnlyList<T> target)
 		{
@@ -2341,8 +2341,8 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = result</c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static T[] ReOrder<T>(this IReadOnlyList<T> array, params int[] indices)
 		{
@@ -2363,8 +2363,8 @@ namespace Althea.Linq
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = result</c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="indices">the indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="array">The array to order</param>
+		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
 		public static T[] ReOrder<T>(this IReadOnlyList<T> array, IReadOnlyList<int> indices)
 		{
@@ -2385,8 +2385,8 @@ namespace Althea.Linq
 		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c>result[<paramref name="indices"/>] = <paramref name="array"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to order</param>
-		/// <param name="indices">the indices to order, may has less elements than <paramref name="array"/></param>
+		/// <param name="array">The array to order</param>
+		/// <param name="indices">The indices to order, may has less elements than <paramref name="array"/></param>
 		/// <returns>the re-ordered array</returns>
 		public static T[] InverseOrder<T>(this IReadOnlyList<T> array, IReadOnlyList<int> indices)
 		{
@@ -2409,7 +2409,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the inverse permutation of <paramref name="perm"/> such that <c>perm[result] == result[perm] == identity permutation</c>
 		/// </summary>
-		/// <param name="perm">the input permutation</param>
+		/// <param name="perm">The input permutation</param>
 		public static int[] InversePermutation(this IReadOnlyList<int> perm)
 		{
 			if (perm is null)
@@ -2429,8 +2429,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Random shuffle the <paramref name="list"/> by random generator <paramref name="rand"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="list">the list to be shuffled</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="list">The list to be shuffled</param>
 		/// <param name="rand">random generator <see cref="Random"/>, default null means internal one</param>
 		/// <returns>the new shuffled list</returns>
 		public static IReadOnlyList<T> Shuffle<T>(this IReadOnlyList<T> list, Random? rand = null)
@@ -2454,7 +2454,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate a random <see cref="int"/> array of length <paramref name="count"/> whose elements are unique and with in range [<paramref name="minValue"/>, <paramref name="minValue"/>).
 		/// </summary>
-		/// <param name="count">the length of array to generate</param>
+		/// <param name="count">The length of array to generate</param>
 		/// <param name="minValue">The inclusive lower bound of the random number returned.</param>
 		/// <param name="maxValue">The exclusive upper bound of the random number returned. maxValue must be greater than or equal to <c><paramref name="minValue"/> + <paramref name="count"/></c>.</param>
 		/// <returns>the generate a random <see cref="int"/> array</returns>
@@ -2474,8 +2474,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate a random <see cref="int"/> array of length <paramref name="count"/> whose elements' sum is <paramref name="sum"/>.
 		/// </summary>
-		/// <param name="count">the length of array to generate</param>
-		/// <param name="sum">the desired sum of elements generated</param>
+		/// <param name="count">The length of array to generate</param>
+		/// <param name="sum">The desired sum of elements generated</param>
 		/// <returns>the generate a random <see cref="int"/> array whose elements are all positive</returns>
 		public static int[] RandomPositiveArrayOfSum(int count, int sum)
 		{
@@ -2499,8 +2499,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate a random <see cref="int"/> array of length <paramref name="count"/> whose elements' sum is <paramref name="sum"/>.
 		/// </summary>
-		/// <param name="count">the length of array to generate</param>
-		/// <param name="sum">the desired sum of elements generated</param>
+		/// <param name="count">The length of array to generate</param>
+		/// <param name="sum">The desired sum of elements generated</param>
 		/// <returns>the generate a random <see cref="int"/> array whose elements are all non-negative</returns>
 		public static int[] RandomNonNegativeArrayOfSum(int count, int sum)
 		{
@@ -2522,9 +2522,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Convert <paramref name="list"/> to an <see cref="IImmutableSet{T}"/> by removing duplicate element(s)
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">list to convert</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>the result <see cref="IImmutableSet{T}"/></returns>
 		public static IImmutableSet<T> ToImmutableSet<T>(this IReadOnlyList<T> list, IEqualityComparer<T>? comparer = null)
 		{
@@ -2597,7 +2597,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
 		/// <param name="array">array to get hash code</param>
-		/// <param name="hashCodeConverter">the converter used to get the hash code of each element</param>
+		/// <param name="hashCodeConverter">The converter used to get the hash code of each element</param>
 		/// <returns>the hash code of <paramref name="array"/></returns>
 		public static int HashCodeOfArray<T>(this IReadOnlyList<T> array, Converter<T, int> hashCodeConverter)
 		{
@@ -2637,7 +2637,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
 		/// <param name="set">array to get hash code</param>
-		/// <param name="hashCodeConverter">the converter used to get the hash code of each element</param>
+		/// <param name="hashCodeConverter">The converter used to get the hash code of each element</param>
 		/// <returns>the hash code of <paramref name="set"/></returns>
 		public static int HashCodeOfSet<T>(this IReadOnlyList<T> set, Converter<T, int> hashCodeConverter)
 		{
@@ -2656,9 +2656,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate a <see cref="IReadOnlyList{T}"/> by repeating <paramref name="val"/> for <paramref name="count"/> times
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="count">the count to repeat</param>
-		/// <param name="val">the value to repeat</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="count">The count to repeat</param>
+		/// <param name="val">The value to repeat</param>
 		/// <returns>the result <see cref="IReadOnlyList{T}"/></returns>
 		public static IReadOnlyList<T> Repeat<T>(T val, int count)
 		{
@@ -2677,7 +2677,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Generate generic-typed (<typeparamref name="T"/>) range as an <see cref="IReadOnlyList{T}"/> with.
 		/// </summary>
-		/// <typeparam name="T">the data type that must be able to self increment (operator <c>++</c> or <c>+=</c>)</typeparam>
+		/// <typeparam name="T">The data type that must be able to self increment (operator <c>++</c> or <c>+=</c>)</typeparam>
 		/// <param name="start">start value of the range</param>
 		/// <param name="count">count of the range</param>
 		/// <param name="step">step, default means use operator <c>++</c>, otherwise, use operator <c>+=</c></param>

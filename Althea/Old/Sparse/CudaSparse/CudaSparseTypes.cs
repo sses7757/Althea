@@ -266,7 +266,7 @@ namespace Althea.SparseBlas.Cuda
 		/// Factory method, create <see cref="SparseMatrixDescription"/> from <see cref="MatrixBase{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="m">the input <see cref="PureArray{T}"/></param>
+		/// <param name="m">The input <see cref="PureArray{T}"/></param>
 		/// <param name="forceGeneral">always regard the input matrix as a general one, default true</param>
 		/// <returns>The created <see cref="SparseMatrixDescription"/></returns>
 		public static SparseMatrixDescription Create<T>(MatrixBase<T> m, bool forceGeneral = true) where T : struct, IComparable<T>
@@ -283,7 +283,7 @@ namespace Althea.SparseBlas.Cuda
 		/// Factory method, create <see cref="SparseMatrixDescription"/> from <see cref="Storage{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="m">the input <see cref="Storage{T}"/></param>
+		/// <param name="m">The input <see cref="Storage{T}"/></param>
 		/// <param name="herm">is <paramref name="m"/> Hermitian or not</param>
 		/// <param name="forceGeneral">always regard the input matrix as a general one, default true</param>
 		/// <returns>The created <see cref="SparseMatrixDescription"/></returns>
@@ -367,7 +367,7 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="SparseVector{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="vec">the <see cref="SparseVector{T}"/> to create from</param>
+		/// <param name="vec">The <see cref="SparseVector{T}"/> to create from</param>
 		/// <returns>The created <see cref="SparseVectorWrapper"/>.</returns>
 		public static SparseVectorWrapper Create<T>(SparseVector<T> vec) where T : struct, IComparable<T>
 		{
@@ -380,8 +380,8 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="SparseVectorWrapper{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="vec">the <see cref="SparseVectorWrapper{T}"/> to create from</param>
-		/// <param name="length">the length of <paramref name="vec"/></param>
+		/// <param name="vec">The <see cref="SparseVectorWrapper{T}"/> to create from</param>
+		/// <param name="length">The length of <paramref name="vec"/></param>
 		/// <returns>The created <see cref="SparseVectorWrapper"/>.</returns>
 		public static SparseVectorWrapper Create<T>(SparseVectorWrapper<T> vec, long length) where T : struct, IComparable<T>
 		{
@@ -471,7 +471,7 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="DenseVector{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="vec">the <see cref="DenseVector{T}"/> to create from</param>
+		/// <param name="vec">The <see cref="DenseVector{T}"/> to create from</param>
 		/// <returns>The created <see cref="DenseVectorWrapper"/>.</returns>
 		public static DenseVectorWrapper Create<T>(DenseVector<T> vec) where T : struct, IComparable<T>
 		{
@@ -484,8 +484,8 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="Storage{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="vec">the <see cref="Storage{T}"/> to create from</param>
-		/// <param name="length">the length of <paramref name="vec"/></param>
+		/// <param name="vec">The <see cref="Storage{T}"/> to create from</param>
+		/// <param name="length">The length of <paramref name="vec"/></param>
 		/// <returns>The created <see cref="DenseVectorWrapper"/>.</returns>
 		public static DenseVectorWrapper Create<T>(Storage<T> vec, long length) where T : struct, IComparable<T>
 		{
@@ -620,7 +620,7 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="SparseMatrix{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="matrix">the <see cref="SparseMatrix{T}"/> to create from</param>
+		/// <param name="matrix">The <see cref="SparseMatrix{T}"/> to create from</param>
 		/// <param name="op">The <see cref="PowerOperation"/> about to apply on <paramref name="matrix"/></param>
 		/// <returns>The created <see cref="SparseMatrixWrapper"/></returns>
 		public static SparseMatrixWrapper Create<T>(SparseMatrix<T> matrix, PowerOperation op = PowerOperation.None) where T : struct, IComparable<T>
@@ -645,10 +645,10 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="SparseMatrixWrapper{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="matrix">the <see cref="SparseMatrixWrapper{T}"/> to create from</param>
-		/// <param name="format">the <see cref="SparseMatrixFormat"/> of matrix</param>
-		/// <param name="m">the number of rows of <paramref name="matrix"/></param>
-		/// <param name="n">the number of columns of <paramref name="matrix"/></param>
+		/// <param name="matrix">The <see cref="SparseMatrixWrapper{T}"/> to create from</param>
+		/// <param name="format">The <see cref="SparseMatrixFormat"/> of matrix</param>
+		/// <param name="m">The number of rows of <paramref name="matrix"/></param>
+		/// <param name="n">The number of columns of <paramref name="matrix"/></param>
 		/// <param name="op">The <see cref="PowerOperation"/> about to apply on <paramref name="matrix"/></param>
 		/// <returns>The created <see cref="SparseMatrixWrapper"/></returns>
 		public static SparseMatrixWrapper Create<T>(SparseMatrixWrapper<T> matrix, long m, long n, SparseMatrixFormat format, PowerOperation op = PowerOperation.None) where T : struct, IComparable<T>
@@ -754,7 +754,7 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a generic <see cref="DenseMatrix{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="matrix">the <see cref="DenseMatrix{T}"/> to create from</param>
+		/// <param name="matrix">The <see cref="DenseMatrix{T}"/> to create from</param>
 		/// <returns>The created <see cref="DenseMatrixWrapper"/></returns>
 		public static DenseMatrixWrapper Create<T>(DenseMatrix<T> matrix) where T : struct, IComparable<T>
 		{
@@ -767,7 +767,7 @@ namespace Althea.SparseBlas.Cuda
 		/// The factory method that creates from a pointer.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="matrix">the <see cref="Storage{T}"/> to create from</param>
+		/// <param name="matrix">The <see cref="Storage{T}"/> to create from</param>
 		/// <param name="ld">leading dimension</param>
 		/// <param name="m">number of rows</param>
 		/// <param name="n">number of columns</param>

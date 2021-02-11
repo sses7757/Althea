@@ -69,7 +69,7 @@ namespace Althea.General
 		/// <param name="estimateEigvals">Ritz values, without converged ones</param>
 		/// <param name="estimateEigvecs">Ritz vectors, without converged ones</param>
 		/// <param name="NConverged">number of converged eigen-pairs</param>
-		/// <param name="NTarget">the number of smallest eigen-pairs wanted</param>
+		/// <param name="NTarget">The number of smallest eigen-pairs wanted</param>
 		/// <param name="maxIter">max number of iteration</param>
 		/// <returns>The indices to preserve <paramref name="estimateEigvals"/> and columns of <paramref name="estimateEigvecs"/></returns>
 		int[] PreserveSelect(DoubleComplex[] estimateEigvals, DoubleComplex[][] estimateEigvecs, int NConverged, int NTarget, int maxIter);
@@ -185,7 +185,7 @@ namespace Althea.General
 		/// <summary>
 		/// Get the machine precision of <typeparamref name="T"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <returns></returns>
 		public static double MachinePrecisionOf<T>() where T : struct, IComparable<T>
 		{
@@ -305,10 +305,10 @@ namespace Althea.General
 		/// <summary>
 		/// Robust orthogonalize <paramref name="r"/> against all vectors in list <paramref name="qs"/>.
 		/// </summary>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
-		/// <typeparam name="TVec">the general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
-		/// <param name="r">the vector (<typeparamref name="TVec"/>) to orthogonalize <b>in-place</b></param>
-		/// <param name="qs">the vectors (list of <typeparamref name="TVec"/>) to orthogonalize against</param>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
+		/// <typeparam name="TVec">The general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
+		/// <param name="r">The vector (<typeparamref name="TVec"/>) to orthogonalize <b>in-place</b></param>
+		/// <param name="qs">The vectors (list of <typeparamref name="TVec"/>) to orthogonalize against</param>
 		/// <param name="robust">perform robust orthogonalization or normal one</param>
 		/// <returns>the coefficients of <c>&lt;<paramref name="r"/>,<paramref name="qs"/>&gt;</c></returns>
 		public static T[] RobustOrthogonalize<TVec, T>(TVec r, IReadOnlyList<TVec> qs, bool robust = true)
@@ -706,9 +706,9 @@ namespace Althea.General
 		/// The naïve Lanczos algorithm to calculate the lowest eigenvalue of the target matrix.
 		/// </summary>
 		/// <typeparam name="TVec">The concrete vector class type</typeparam>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
-		/// <param name="MatMulVecFunc">the function that represents the multiplication of the target matrix and the </param>
-		/// <param name="initial">the initial vector</param>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
+		/// <param name="MatMulVecFunc">The function that represents the multiplication of the target matrix and the </param>
+		/// <param name="initial">The initial vector</param>
 		/// <param name="maxIter">maximum number of iterations, will be auto decreased if there are not enough memory</param>
 		/// <param name="checkFirst">check the <paramref name="MatMulVecFunc"/> and <paramref name="maxIter"/> first, may lead to some extra time usage</param>
 		/// <returns>The approximate lowest eigenvalue and the and eigenvector</returns>
@@ -923,17 +923,17 @@ namespace Althea.General
 		/// Lanczos algorithm for Hermitian matrix's partial (especially the lowest eigenvalues) eigen-problem.
 		/// </summary>
 		/// <param name="MatMulVecFunc">a function that receives a dense vector input and give the result of the multiplication of the Hermitian matrix and the input vector</param>
-		/// <param name="initial">the initial vector</param>
+		/// <param name="initial">The initial vector</param>
 		/// <param name="smallestK">only the smallest k eigenvalues are the target, we DO NOT recommend a larger k since Lanczos is not designed for it</param>
-		/// <param name="tolerance">the tolerance of the Lanczos iterative solver, default 0 means <c>machine precision * 5</c></param>
+		/// <param name="tolerance">The tolerance of the Lanczos iterative solver, default 0 means <c>machine precision * 5</c></param>
 		/// <param name="maxIter">max iteration number, if <paramref name="maxIter"/> ≤ 0, it will be auto calculated and the thick restart strategy will be used to compute multiple eigen-pairs until they are all converged; otherwise, the computation stops at total number of iterations = <paramref name="maxIter"/> while some of the eigen-pairs may not be calculated at all</param>
 		/// <param name="reorthogonalize">perform re-orthogonalization or not, default is <c>true</c>, (notice that Lanczos algorithm is extremely numerical unstable without it)</param>
 		/// <param name="useGap">use the estimated gap in the convergence criteria or use the matrix norm, default true</param>
-		/// <param name="strategy">the restart strategy to use, if it is <see cref="RestartStrategy.UserDefine"/>, the <paramref name="selector"/> must be indicated</param>
+		/// <param name="strategy">The restart strategy to use, if it is <see cref="RestartStrategy.UserDefine"/>, the <paramref name="selector"/> must be indicated</param>
 		/// <param name="selector">used for selecting the preservation Ritz pairs only when <paramref name="strategy"/> is <see cref="RestartStrategy.UserDefine"/></param>
 		/// <returns>An array of <see cref="double"/> as the eigenvalues and an array of <typeparamref name="TVec"/> as corresponding eigenvectors and the convergence.</returns>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
-		/// <typeparam name="TVec">the general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
+		/// <typeparam name="TVec">The general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
 		/// <exception cref="ArgumentException">if any of the arguments is wrong</exception>
 		/// <exception cref="InvalidOperationException">if the <paramref name="MatMulVecFunc"/> throws inner exceptions</exception>
 		/// <exception cref="InsufficientMemoryException">if the <paramref name="smallestK"/> is too large to be calculated within free memory</exception>

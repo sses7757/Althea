@@ -145,7 +145,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
 		/// </summary>
-		/// <param name="a">the input number</param>
+		/// <param name="a">The input number</param>
 		/// <returns>the ordinal representation string</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -167,7 +167,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Is the input integer a perfect square or not.
 		/// </summary>
-		/// <param name="input">the input integer</param>
+		/// <param name="input">The input integer</param>
 		/// <returns>Whether <paramref name="input"/> is perfect square or not.</returns>
 		public static bool IsPerfectSquare(this long input)
 		{
@@ -178,7 +178,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Whether the input integer is a power of 2
 		/// </summary>
-		/// <param name="x">the input integer</param>
+		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
 		public static bool IsPowerOfTwo(this long x)
 		{
@@ -189,7 +189,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Whether the input integer is a power of 2
 		/// </summary>
-		/// <param name="x">the input integer</param>
+		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
 		public static bool IsPowerOfTwo(this int x)
 		{
@@ -200,7 +200,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Whether the input integer is a power of 2
 		/// </summary>
-		/// <param name="x">the input integer</param>
+		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
 		public static bool IsPowerOfTwo(this short x)
 		{
@@ -211,7 +211,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Get the nearest power of 2 integer of the input integer
 		/// </summary>
-		/// <param name="x">the input integer</param>
+		/// <param name="x">The input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
 		public static int NearestPowerOfTwo(this int x)
 		{
@@ -227,7 +227,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Get the nearest power of 2 integer of the input integer
 		/// </summary>
-		/// <param name="x">the input integer</param>
+		/// <param name="x">The input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
 		public static long NearestPowerOfTwo(this long x)
 		{
@@ -413,7 +413,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Convert a <see cref="TimeSpan"/> into a string representation of total minutes and rest of them (seconds and smaller ones).
 		/// </summary>
-		/// <param name="span">the time span</param>
+		/// <param name="span">The time span</param>
 		/// <param name="restFormat">an optional format string of the rest, see <see cref="TimeSpan.ToString(string)"/></param>
 		/// <returns>the string representation</returns>
 		public static string TotalMinutesString(this TimeSpan span, string restFormat = @"ss\.ff")
@@ -424,7 +424,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Convert a <see cref="TimeSpan"/> into a string representation of total hours and rest of them (minutes, seconds and smaller ones).
 		/// </summary>
-		/// <param name="span">the time span</param>
+		/// <param name="span">The time span</param>
 		/// <param name="restFormat">an optional format string of the rest, see <see cref="TimeSpan.ToString(string)"/></param>
 		/// <returns>the string representation</returns>
 		public static string TotalHoursString(this TimeSpan span, string restFormat = @"mm:ss\.ff")
@@ -506,7 +506,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Print out 1D array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="input">array to print</param>
 		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
 		/// <returns>string representation</returns>
@@ -520,7 +520,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Print out 1D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="input">values of the vector to print</param>
 		/// <param name="ind">indices of the values</param>
 		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
@@ -536,7 +536,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Print out 2D array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="arr">array to print</param>
 		/// <param name="hasMore">if the row is complete or not</param>
 		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
@@ -568,7 +568,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Print out 2D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="input">values of the vector to print</param>
 		/// <param name="indx">row indices of the values</param>
 		/// <param name="indy">column indices of the values</param>
@@ -594,9 +594,9 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Safely apply <paramref name="action"/> to the cloned <paramref name="array"/> -- when <paramref name="action"/> throws error, the new copied array will be safely disposed.
 		/// </summary>
-		/// <typeparam name="T">the array that is <see cref="ICloneable"/> and <see cref="IDisposable"/></typeparam>
-		/// <param name="array">the array to be acted by <paramref name="action"/></param>
-		/// <param name="action">the <see cref="Action{T}"/> to apply</param>
+		/// <typeparam name="T">The array that is <see cref="ICloneable"/> and <see cref="IDisposable"/></typeparam>
+		/// <param name="array">The array to be acted by <paramref name="action"/></param>
+		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>the cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
 		public static T ApplyToClone<T>(this T array, Action<T> action) where T : ICloneable<T>, IDisposable
 		{
@@ -618,17 +618,17 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Perform general inner product of two matrices <paramref name="left"/> and <paramref name="right"/> with <paramref name="multiply"/> as general multiplication
 		/// </summary>
-		/// <typeparam name="TL">the left matrix's data type</typeparam>
-		/// <typeparam name="TR">the right matrix's data type</typeparam>
-		/// <typeparam name="TO">the output matrix's data type</typeparam>
+		/// <typeparam name="TL">The left matrix's data type</typeparam>
+		/// <typeparam name="TR">The right matrix's data type</typeparam>
+		/// <typeparam name="TO">The output matrix's data type</typeparam>
 		/// <param name="m">number of rows of <paramref name="left"/></param>
 		/// <param name="n">number of columns of <paramref name="right"/></param>
 		/// <param name="k">number of columns of <paramref name="left"/> and rows of <paramref name="right"/></param>
 		/// <param name="left">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
 		/// <param name="right">right matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TR"/></param>
 		/// <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-		/// <param name="newZero">the function used to create a new output element with value of a general zero</param>
-		/// <param name="inPlaceAdd">the function used to in-place add the first parameter by the second one</param>
+		/// <param name="newZero">The function used to create a new output element with value of a general zero</param>
+		/// <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
 		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
 		public static TO[,] InnerProduct<TL, TR, TO>(int m, int n, int k, Func<int, int, TL> left, Func<int, int, TR> right, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
 		{
@@ -657,16 +657,16 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Perform general inner product of a matrix <paramref name="leftMat"/> and a vector <paramref name="rightVec"/> with <paramref name="multiply"/> as general multiplication
 		/// </summary>
-		/// <typeparam name="TL">the left matrix's data type</typeparam>
-		/// <typeparam name="TR">the right matrix's data type</typeparam>
-		/// <typeparam name="TO">the output matrix's data type</typeparam>
+		/// <typeparam name="TL">The left matrix's data type</typeparam>
+		/// <typeparam name="TR">The right matrix's data type</typeparam>
+		/// <typeparam name="TO">The output matrix's data type</typeparam>
 		/// <param name="m">number of rows of <paramref name="leftMat"/></param>
 		/// <param name="k">number of columns of <paramref name="leftMat"/> and rows of <paramref name="rightVec"/></param>
 		/// <param name="leftMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
 		/// <param name="rightVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
 		/// <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-		/// <param name="newZero">the function used to create a new output element with value of a general zero</param>
-		/// <param name="inPlaceAdd">the function used to in-place add the first parameter by the second one</param>
+		/// <param name="newZero">The function used to create a new output element with value of a general zero</param>
+		/// <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
 		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
 		public static TO[] InnerProduct<TL, TR, TO>(int m, int k, Func<int, int, TL> leftMat, Func<int, TR> rightVec, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
 		{
@@ -691,16 +691,16 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Perform general inner product of a vector <paramref name="leftVec"/> and a matrix <paramref name="rightMat"/> with <paramref name="multiply"/> as general multiplication
 		/// </summary>
-		/// <typeparam name="TL">the left matrix's data type</typeparam>
-		/// <typeparam name="TR">the right matrix's data type</typeparam>
-		/// <typeparam name="TO">the output matrix's data type</typeparam>
+		/// <typeparam name="TL">The left matrix's data type</typeparam>
+		/// <typeparam name="TR">The right matrix's data type</typeparam>
+		/// <typeparam name="TO">The output matrix's data type</typeparam>
 		/// <param name="n">number of columns of <paramref name="leftVec"/> and rows of <paramref name="rightMat"/></param>
 		/// <param name="k">number of columns of <paramref name="rightMat"/></param>
 		/// <param name="rightMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
 		/// <param name="leftVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
 		/// <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-		/// <param name="newZero">the function used to create a new output element with value of a general zero</param>
-		/// <param name="inPlaceAdd">the function used to in-place add the first parameter by the second one</param>
+		/// <param name="newZero">The function used to create a new output element with value of a general zero</param>
+		/// <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
 		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
 		public static TO[] InnerProduct<TL, TR, TO>(int n, int k, Func<int, TL> leftVec, Func<int, int, TR> rightMat, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
 		{
@@ -727,7 +727,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Calculate the offset from the start using the giving collection length.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/></param>
+		/// <param name="index">The <see cref="Index"/></param>
 		/// <param name="length">The length of the collection that the Index will be used with. It has to be a positive value</param>
 		/// <param name="check">check parameters and result or not</param>
 		/// <remarks>This is a <see cref="long"/> version of <see cref="Index.GetOffset(int)"/>.</remarks>
@@ -754,7 +754,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Calculate the start offset and length of range object using a collection length.
 		/// </summary>
-		/// <param name="range">the <see cref="Range"/></param>
+		/// <param name="range">The <see cref="Range"/></param>
 		/// <param name="length">The length of the collection that the range will be used with. It has to be a positive value.</param>
 		/// <param name="check">check parameters and result or not</param>
 		/// <returns>the offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
@@ -777,8 +777,8 @@ namespace Althea.Helpers
 		/// Convert a 1D array to a 2D jagged array
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">the array to convert</param>
-		/// <param name="innerSize">the size of inner dimension of the 2D jagged array</param>
+		/// <param name="array">The array to convert</param>
+		/// <param name="innerSize">The size of inner dimension of the 2D jagged array</param>
 		/// <returns>the 2D jagged array</returns>
 		public static T[][] ToJagged<T>(this T[] array, long innerSize)
 		{
@@ -875,7 +875,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="arr">input 2D array to test</param>
 		/// <returns>Hermitian or not</returns>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		public static bool IsHermitian<T>(this T[,] arr) where T : unmanaged, IFormattable, IEquatable<T>
 		{
 			if (arr is null)
@@ -907,8 +907,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Clear a general array
 		/// </summary>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="array">the array to clear</param>
+		/// <typeparam name="TArr">The array type</typeparam>
+		/// <param name="array">The array to clear</param>
 		public static void ClearList<TArr>(this TArr[] array) where TArr : IDisposable
 		{
 			if (array is null)
@@ -920,8 +920,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Clear a general list
 		/// </summary>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="list">the list to clear</param>
+		/// <typeparam name="TArr">The array type</typeparam>
+		/// <param name="list">The list to clear</param>
 		public static void ClearList<TArr>(this List<TArr> list) where TArr : IDisposable
 		{
 			if (list is null)
@@ -933,8 +933,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Dispose a general read-only list
 		/// </summary>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="list">the read-only list to dispose</param>
+		/// <typeparam name="TArr">The array type</typeparam>
+		/// <param name="list">The read-only list to dispose</param>
 		public static void ClearList<TArr>(this IReadOnlyList<TArr> list) where TArr : IDisposable
 		{
 			if (list is null)
@@ -948,9 +948,9 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Dispose a general dictionary
 		/// </summary>
-		/// <typeparam name="T">the dictionary key type</typeparam>
-		/// <typeparam name="TArr">the array type</typeparam>
-		/// <param name="dict">the dictionary to dispose</param>
+		/// <typeparam name="T">The dictionary key type</typeparam>
+		/// <typeparam name="TArr">The array type</typeparam>
+		/// <param name="dict">The dictionary to dispose</param>
 		public static void ClearDict<T, TArr>(this IReadOnlyDictionary<T, TArr> dict) where TArr : IDisposable
 		{
 			if (dict is null)

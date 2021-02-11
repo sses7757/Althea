@@ -211,108 +211,108 @@ namespace Althea.Solver
 		/// Calculate the eigenvalues (and eigenvectors) of given Hermitian matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding real type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding real type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
 		void EigenSpecialHermitianMatrix<T, TReal>(int n, Storage<TReal> valOut, Storage<T> A, int lda, EigMode mode) where T : struct, IComparable<T> where TReal : struct, IComparable<TReal>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given Hermitian matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding real type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding real type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
 		public delegate void DelegateEigenSpecialHermitianMatrix<T, TReal>(int n, Storage<TReal> valOut, Storage<T> A, int lda, EigMode mode) where T : struct, IComparable<T> where TReal : struct, IComparable<TReal>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given Hermitian matrix pair <paramref name="A"/>, <paramref name="B"/> for the general one.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding real type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding real type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="B">the input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="B">The input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/>d</param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
-		/// <param name="eigType">the <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="eigType">The <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		void EigenGeneralHermitianMatrix<T, TReal>(int n, Storage<TReal> valOut, Storage<T> A, int lda, Storage<T> B, int ldb, EigType eigType, EigMode mode) where T : struct, IComparable<T> where TReal : struct, IComparable<TReal>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given Hermitian matrix pair <paramref name="A"/>, <paramref name="B"/> for the general one.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding real type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding real type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="B">the input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="B">The input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/>d</param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
-		/// <param name="eigType">the <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="eigType">The <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		public delegate void DelegateEigenGeneralHermitianMatrix<T, TReal>(int n, Storage<TReal> valOut, Storage<T> A, int lda, Storage<T> B, int ldb, EigType eigType, EigMode mode) where T : struct, IComparable<T> where TReal : struct, IComparable<TReal>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding complex type</param>
-		/// <param name="leftVec">the output left eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="ldvl">the leading dimension of <paramref name="leftVec"/></param>
-		/// <param name="ldvr">the leading dimension of <paramref name="rightVec"/></param>
-		/// <param name="rightVec">the output right eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+		/// <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
 		void EigenSpecialGeneralMatrix<T, TComplex>(int n, Storage<TComplex> valOut, Storage<TComplex> leftVec, int ldvl, Storage<TComplex> rightVec, int ldvr, Storage<T> A, int lda, EigMode mode) where T : struct, IComparable<T> where TComplex : struct, IComparable<TComplex>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding complex type</param>
-		/// <param name="leftVec">the output left eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="ldvl">the leading dimension of <paramref name="leftVec"/></param>
-		/// <param name="ldvr">the leading dimension of <paramref name="rightVec"/></param>
-		/// <param name="rightVec">the output right eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+		/// <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
 		public delegate void DelegateEigenSpecialGeneralMatrix<T, TComplex>(int n, Storage<TComplex> valOut, Storage<TComplex> leftVec, int ldvl, Storage<TComplex> rightVec, int ldvr, Storage<T> A, int lda, EigMode mode) where T : struct, IComparable<T> where TComplex : struct, IComparable<TComplex>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general one.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding complex type</param>
-		/// <param name="leftVec">the output left eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="ldvl">the leading dimension of <paramref name="leftVec"/></param>
-		/// <param name="ldvr">the leading dimension of <paramref name="rightVec"/></param>
-		/// <param name="rightVec">the output right eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+		/// <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="B">the input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="B">The input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/>d</param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
-		/// <param name="eigType">the <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="eigType">The <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		void EigenGeneralGeneralMatrix<T, TComplex>(int n, Storage<TComplex> valOut, Storage<TComplex> leftVec, int ldvl, Storage<TComplex> rightVec, int ldvr, Storage<T> A, int lda, Storage<T> B, int ldb, EigType eigType, EigMode mode) where T : struct, IComparable<T> where TComplex : struct, IComparable<TComplex>;
 
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general one.
 		/// </summary>
 		/// <param name="n">number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">the output eigenvalues, must be preallocated, of corresponding complex type</param>
-		/// <param name="leftVec">the output left eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="ldvl">the leading dimension of <paramref name="leftVec"/></param>
-		/// <param name="ldvr">the leading dimension of <paramref name="rightVec"/></param>
-		/// <param name="rightVec">the output right eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="A">the input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+		/// <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="A">The input/output matrix to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors otherwise</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="B">the input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="B">The input matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/>d</param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
-		/// <param name="eigType">the <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="eigType">The <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		public delegate void DelegateEigenGeneralGeneralMatrix<T, TComplex>(int n, Storage<TComplex> valOut, Storage<TComplex> leftVec, int ldvl, Storage<TComplex> rightVec, int ldvr, Storage<T> A, int lda, Storage<T> B, int ldb, EigType eigType, EigMode mode) where T : struct, IComparable<T> where TComplex : struct, IComparable<TComplex>;
 		#endregion
 
@@ -357,7 +357,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="nrhs">number of right-hand sides.</param>
-		/// <param name="A">the coefficient matrix</param>
+		/// <param name="A">The coefficient matrix</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
 		/// <param name="B">each column of this matrix is the vector at right; overwritten by solution X in the end</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/></param>
@@ -369,7 +369,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="nrhs">number of right-hand sides.</param>
-		/// <param name="A">the coefficient matrix</param>
+		/// <param name="A">The coefficient matrix</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
 		/// <param name="B">each column of this matrix is the vector at right; overwritten by solution X in the end</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/></param>
@@ -385,7 +385,7 @@ namespace Althea.Solver
 		/// <param name="n">number of columns of matrix <paramref name="A"/></param>
 		/// <param name="A">matrix to be factorized, overwritten by the unitary matrix after return</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="tri">the output triangular matrix</param>
+		/// <param name="tri">The output triangular matrix</param>
 		/// <param name="ldt">leading dimension of <paramref name="tri"/></param>
 		void QRDecomposition<T>(bool full, int m, int n, Storage<T> A, int lda, Storage<T> tri, int ldt) where T : struct, IComparable<T>;
 
@@ -397,7 +397,7 @@ namespace Althea.Solver
 		/// <param name="n">number of columns of matrix <paramref name="A"/></param>
 		/// <param name="A">matrix to be factorized, overwritten by the unitary matrix after return</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="tri">the output triangular matrix</param>
+		/// <param name="tri">The output triangular matrix</param>
 		/// <param name="ldt">leading dimension of <paramref name="tri"/></param>
 		public delegate void DelegateQRDecomposition<T>(bool full, int m, int n, Storage<T> A, int lda, Storage<T> tri, int ldt) where T : struct, IComparable<T>;
 
@@ -407,10 +407,10 @@ namespace Althea.Solver
 		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="A">matrix to be decomposed, overwritten by the triangular matrix at exit</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="U">the output unitary matrix</param>
+		/// <param name="U">The output unitary matrix</param>
 		/// <param name="ldu">leading dimension of <paramref name="U"/></param>
 		/// <param name="jobu">calculate Schur vectors or not</param>
-		/// <param name="orderVal">the value order of the factorization so that selected eigenvalues are at the top left of Schur form. Default null means use default order</param>
+		/// <param name="orderVal">The value order of the factorization so that selected eigenvalues are at the top left of Schur form. Default null means use default order</param>
 		/// <returns>the actual number of eigenvalues returned</returns>
 		int SchurDecomposition<T>(int n, Storage<T> A, int lda, Storage<T> U, int ldu, EigMode jobu,  DoubleComplex[] orderVal = null) where T : struct, IComparable<T>;
 
@@ -420,10 +420,10 @@ namespace Althea.Solver
 		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="A">matrix to be decomposed, overwritten by the triangular matrix at exit</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <param name="U">the output unitary matrix</param>
+		/// <param name="U">The output unitary matrix</param>
 		/// <param name="ldu">leading dimension of <paramref name="U"/></param>
 		/// <param name="jobu">calculate Schur vectors or not</param>
-		/// <param name="orderVal">the value order of the factorization so that selected eigenvalues are at the top left of Schur form. Default null means use default order</param>
+		/// <param name="orderVal">The value order of the factorization so that selected eigenvalues are at the top left of Schur form. Default null means use default order</param>
 		/// <returns>the actual number of eigenvalues returned</returns>
 		public delegate int DelegateSchurDecomposition<T>(int n, Storage<T> A, int lda, Storage<T> U, int ldu, EigMode jobu, DoubleComplex[] orderVal = null) where T : struct, IComparable<T>;
 		#endregion

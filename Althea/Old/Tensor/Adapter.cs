@@ -15,32 +15,32 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Permute (general transpose) and scale this tensor to form a new tensor: $B_{i_0,i_1,...,i_n} = \alpha \Psi(A_{\Pi(i_0,i_1,...,i_n)})$.
 		/// </summary>
-		/// <param name="α">the scalar to multiply</param>
-		/// <param name="op">the <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
-		/// <param name="A">the source tensor</param>
+		/// <param name="α">The scalar to multiply</param>
+		/// <param name="op">The <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
+		/// <param name="A">The source tensor</param>
 		/// <param name="sizeA">size/extent of <paramref name="A"/></param>
-		/// <param name="B">the output tensor</param>
+		/// <param name="B">The output tensor</param>
 		/// <param name="sizeB">size/extent of <paramref name="B"/></param>
-		/// <param name="permAToB">the permutation order from <paramref name="A"/> to <paramref name="B"/></param>
+		/// <param name="permAToB">The permutation order from <paramref name="A"/> to <paramref name="B"/></param>
 		void Permute<T>(Storage<T> A, long[] sizeA, T α, UnitaryOperation op, Storage<T> B, long[] sizeB, ReadOnlySpan<int> permAToB) where T : struct, IComparable<T>;
 
 		/// <summary>
 		/// Permute (general transpose) and scale this tensor to form a new tensor: $B_{i_0,i_1,...,i_n} = \alpha \Psi(A_{\Pi(i_0,i_1,...,i_n)})$.
 		/// </summary>
-		/// <param name="α">the scalar to multiply</param>
-		/// <param name="op">the <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
-		/// <param name="A">the source tensor</param>
+		/// <param name="α">The scalar to multiply</param>
+		/// <param name="op">The <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
+		/// <param name="A">The source tensor</param>
 		/// <param name="sizeA">size/extent of <paramref name="A"/></param>
-		/// <param name="B">the output tensor</param>
+		/// <param name="B">The output tensor</param>
 		/// <param name="sizeB">size/extent of <paramref name="B"/></param>
-		/// <param name="permAToB">the permutation order from <paramref name="A"/> to <paramref name="B"/></param>
+		/// <param name="permAToB">The permutation order from <paramref name="A"/> to <paramref name="B"/></param>
 		public delegate void DelegatePermute<T>(Storage<T> A, long[] sizeA, T α, UnitaryOperation op, Storage<T> B, long[] sizeB, ReadOnlySpan<int> permAToB) where T : struct, IComparable<T>;
 
 		// Ignore Spelling: ijkl mjl kmi li
 		/// <summary>
 		/// Partial reduction of tensor <paramref name="A"/>: $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$. The indices not in <paramref name="permAToC"/> of <paramref name="A"/> will be aggregated according to <paramref name="reduction"/>.
 		/// </summary>
-		/// <param name="reduction">the reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
+		/// <param name="reduction">The reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
 		/// <param name="α">scalar α</param>
 		/// <param name="opA"><see cref="UnitaryOperation"/> <c>Ψ<sub>A</sub></c></param>
 		/// <param name="A">tensor A</param>
@@ -50,14 +50,14 @@ namespace Althea.Tensor
 		/// <param name="C">tensor C</param>
 		/// <param name="sizeC">size/extent of <paramref name="C"/></param>
 		/// <param name="D">output tensor D</param>
-		/// <param name="permAToC">the permutation order from <paramref name="A"/> to <paramref name="C"/></param>
+		/// <param name="permAToC">The permutation order from <paramref name="A"/> to <paramref name="C"/></param>
 		/// <remarks>For example, if you want to reduce a 4-tensor <c><paramref name="A"/><sub>ijkl</sub></c> to a 2-tensor <c><paramref name="D"/><sub>li</sub></c>, then <paramref name="permAToC"/> can be <c>{3,0}</c>.</remarks>
 		void Reduce<T>(BinaryOperation reduction, T α, UnitaryOperation opA, Storage<T> A, long[] sizeA, T β, UnitaryOperation opC, Storage<T> C, long[] sizeC, Storage<T> D, ReadOnlySpan<int> permAToC) where T : struct, IComparable<T>;
 
 		/// <summary>
 		/// Partial reduction of tensor <paramref name="A"/>: $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$. The indices not in <paramref name="permAToC"/> of <paramref name="A"/> will be aggregated according to <paramref name="reduction"/>.
 		/// </summary>
-		/// <param name="reduction">the reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
+		/// <param name="reduction">The reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
 		/// <param name="α">scalar α</param>
 		/// <param name="opA"><see cref="UnitaryOperation"/> <c>Ψ<sub>A</sub></c></param>
 		/// <param name="A">tensor A</param>
@@ -67,7 +67,7 @@ namespace Althea.Tensor
 		/// <param name="C">tensor C</param>
 		/// <param name="sizeC">size/extent of <paramref name="C"/></param>
 		/// <param name="D">output tensor D</param>
-		/// <param name="permAToC">the permutation order from <paramref name="A"/> to <paramref name="C"/></param>
+		/// <param name="permAToC">The permutation order from <paramref name="A"/> to <paramref name="C"/></param>
 		/// <remarks>For example, if you want to reduce a 4-tensor <c><paramref name="A"/><sub>ijkl</sub></c> to a 2-tensor <c><paramref name="D"/><sub>li</sub></c>, then <paramref name="permAToC"/> can be <c>{3,0}</c>.</remarks>
 		public delegate void DelegateReduce<T>(BinaryOperation reduction, T α, UnitaryOperation opA, Storage<T> A, long[] sizeA, T β, UnitaryOperation opC, Storage<T> C, long[] sizeC, Storage<T> D, ReadOnlySpan<int> permAToC) where T : struct, IComparable<T>;
 

@@ -17,7 +17,7 @@ namespace Althea.Arrays
 	/// The sparse vector class that inherit the <see cref="VectorBase{T}"/> and implements <see cref="ISparseArray{T}"/>.
 	/// </summary>
 	/// <remarks>The indices array are platform specific, <see cref="long"/> for 64-bit system and <see cref="int"/> otherwise.</remarks>
-	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
+	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
 	public sealed class SparseVector<T> : VectorBase<T>, ISparseArray<T>, IVector<SparseVector<T>, SparseMatrix<T>, T> where T : struct, IComparable<T>
 	{
 		#region sparse vector special
@@ -51,7 +51,7 @@ namespace Althea.Arrays
 		/// Vector constructor
 		/// </summary>
 		/// <param name="length">length of vector to initialize</param>
-		/// <param name="nonZeros">the actual length of the stored data, i.e. the number of non-zero values</param>
+		/// <param name="nonZeros">The actual length of the stored data, i.e. the number of non-zero values</param>
 		/// <param name="onHost">allocate one host memory or device memory</param>
 		/// <exception cref="ArgumentException">if <c>2 * <paramref name="nonZeros"/> ≥ <paramref name="length"/></c></exception>
 		public SparseVector(long length, long nonZeros, bool onHost = false) : base(actualLength: nonZeros, showLength: length, onHost)
@@ -87,8 +87,8 @@ namespace Althea.Arrays
 		/// Full constructor with pre-allocated value and index arrays
 		/// </summary>
 		/// <param name="length">length of the vector</param>
-		/// <param name="values">the pre-allocated value array</param>
-		/// <param name="indices">the pre-allocated index array</param>
+		/// <param name="values">The pre-allocated value array</param>
+		/// <param name="indices">The pre-allocated index array</param>
 		public SparseVector(long length, Storage<T> values, Storage<int> indices) : base(values, length)
 		{
 			if (values is null)
@@ -111,8 +111,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="refArray">reference array</param>
 		/// <param name="newLength">length of the new sparse vector</param>
-		/// <param name="newNNZ">the actual length of the stored data, i.e. the number of non-zero values of the new sparse vector</param>
-		/// <param name="indices">the indices array pointer, if it is null and the <paramref name="refArray"/> is not a <see cref="SparseVector{T}"/>, a new one will be allocated</param>
+		/// <param name="newNNZ">The actual length of the stored data, i.e. the number of non-zero values of the new sparse vector</param>
+		/// <param name="indices">The indices array pointer, if it is null and the <paramref name="refArray"/> is not a <see cref="SparseVector{T}"/>, a new one will be allocated</param>
 		/// <param name="offset">offset to the data pointer</param>
 		public SparseVector(ValueArray<T> refArray, long newLength, long newNNZ, Storage<int> indices = null, long offset = 0) : base(refArray, newNNZ, newLength, offset)
 		{
@@ -176,7 +176,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create a new array like this one (with same type and other info) while the data type is <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the new data type</typeparam>
+		/// <typeparam name="TOut">The new data type</typeparam>
 		/// <returns>the new array</returns>
 		public override ValueArray<TOut> NewArrayAlike<TOut>() => new SparseVector<TOut>(this.Length, this.NonZero, this.OnHost);
 
@@ -287,7 +287,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the values of this vector to a C# array.
 		/// </summary>
-		/// <param name="ranges">the range with max value = <c>nnz</c>, default is all</param>
+		/// <param name="ranges">The range with max value = <c>nnz</c>, default is all</param>
 		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this vector</returns>
 		public T[] ValueToFortranOrderArray(params Range[] ranges)
 		{
@@ -302,7 +302,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the index array of this vector to an <see cref="IEnumerable{T}"/> of C# array
 		/// </summary>
-		/// <param name="ranges">the range of each index array, default all</param>
+		/// <param name="ranges">The range of each index array, default all</param>
 		/// <returns>an <see cref="IEnumerable{T}"/> of C# array of type <see cref="long"/></returns>
 		public IEnumerable<long[]> IndexToLongArray(params Range[] ranges)
 		{
@@ -313,7 +313,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the index array of this vector to an <see cref="IEnumerable{T}"/> of C# array
 		/// </summary>
-		/// <param name="ranges">the range of each index array, default all</param>
+		/// <param name="ranges">The range of each index array, default all</param>
 		/// <returns>an <see cref="IEnumerable{T}"/> of C# array of type <see cref="int"/></returns>
 		public IEnumerable<int[]> IndexToIntArray(params Range[] ranges)
 		{
@@ -328,8 +328,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Copy the <paramref name="values"/> into this sparse vector's value array.
 		/// </summary>
-		/// <param name="values">the value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		public void ValueFromFortranOrderArray(T[] values, params Range[] ranges)
 		{
 			if (values is null)
@@ -348,7 +348,7 @@ namespace Althea.Arrays
 		/// Copy the <paramref name="indices"/> into this sparse vector's index array.
 		/// </summary>
 		/// <param name="indices">an <see cref="IEnumerable{T}"/> of C# <see cref="long"/> array</param>
-		/// <param name="ranges">the range of each index array, default all</param>
+		/// <param name="ranges">The range of each index array, default all</param>
 		public void IndexFromLongArray(IEnumerable<long[]> indices, params Range[] ranges)
 		{
 			if (indices is null || !System.Linq.Enumerable.Any(indices))
@@ -361,7 +361,7 @@ namespace Althea.Arrays
 		/// Copy the <paramref name="indices"/> into this sparse vector's index array.
 		/// </summary>
 		/// <param name="indices">an <see cref="IEnumerable{T}"/> of C# <see cref="int"/> array</param>
-		/// <param name="ranges">the range of each index array, default all</param>
+		/// <param name="ranges">The range of each index array, default all</param>
 		public void IndexFromIntArray(IEnumerable<int[]> indices, params Range[] ranges)
 		{
 			if (indices is null || !System.Linq.Enumerable.Any(indices))
@@ -380,7 +380,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Dispose this sparse vector after comparing the pointers between this vector and the target <paramref name="array"/>.
 		/// </summary>
-		/// <param name="array">the target <see cref="ISparseArray{T}"/> to compare</param>
+		/// <param name="array">The target <see cref="ISparseArray{T}"/> to compare</param>
 		public void DisposeExclude(ISparseArray<T> array)
 		{
 			if (array is SparseVector<T> sv)
@@ -471,7 +471,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Cast this array into another data type <typeparamref name="TOut"/>.
 		/// </summary>
-		/// <typeparam name="TOut">the data type to cast to</typeparam>
+		/// <typeparam name="TOut">The data type to cast to</typeparam>
 		/// <returns>The casted <see cref="AbstractArray{T}"/>.</returns>
 		public override AbstractArray<TOut> DataTypeCast<TOut>()
 		{
@@ -496,8 +496,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <see cref="SparseVector{T}"/>. From <see cref="IKrylovVector{TVec, T}.OperateOn(IReadOnlyList{TVec}, T[])"/>
 		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
+		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
+		/// <param name="input">The input C# array to be operated</param>
 		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <see cref="SparseVector{T}"/>.</returns>
 		/// <remarks>this method is actually static</remarks>
 		public SparseVector<T> OperateOn(IReadOnlyList<SparseVector<T>> notJoinedVecs, T[] input)
@@ -534,7 +534,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Replace the values of this vector by the one from <paramref name="other"/>, from <see cref="IKrylovVector{TVec, T}.ReplaceBy(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the <see cref="SparseVector{T}"/> used to replace</param>
+		/// <param name="other">The <see cref="SparseVector{T}"/> used to replace</param>
 		/// <exception cref="ArgumentNullException">if <paramref name="other"/> is null</exception>
 		/// <exception cref="ArgumentException">if <paramref name="other"/> has different non-zero values than this</exception>
 		public void ReplaceBy(SparseVector<T> other)
@@ -610,7 +610,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^T) \vec{v}_{\text{other}}$, from <see cref="IKrylovVector{TVec, T}.Dot(TVec, bool?)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="SparseVector{T}"/></param>
+		/// <param name="other">The other <see cref="SparseVector{T}"/></param>
 		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
 		/// <returns>The inner product result</returns>
 		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
@@ -633,7 +633,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$, from <see cref="IVector{TVec, T}.PointWiseMultiply(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="SparseVector{T}"/></param>
+		/// <param name="other">The other <see cref="SparseVector{T}"/></param>
 		/// <returns>The result <see cref="SparseVector{T}"/>.</returns>
 		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
 		public void PointWiseMultiply(SparseVector<T> other)
@@ -647,7 +647,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$, from <see cref="IVector{TVec, T}.PointWiseDivide(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="SparseVector{T}"/></param>
+		/// <param name="other">The other <see cref="SparseVector{T}"/></param>
 		/// <returns>The result <see cref="SparseVector{T}"/>.</returns>
 		/// <exception cref="DivideByZeroException">ALWAYS</exception>
 		public void PointWiseDivide(SparseVector<T> other)
@@ -658,9 +658,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$ out-of-place, from <see cref="IVector{TVec, TMat, T}.OuterProduct"/>.
 		/// </summary>
-		/// <param name="other">the other input <see cref="SparseVector{T}"/></param>
+		/// <param name="other">The other input <see cref="SparseVector{T}"/></param>
 		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">the <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
 		/// <returns>The result <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null</returns>
 		public SparseMatrix<T> OuterProduct(SparseVector<T> other, bool? conjugateOther = null, SparseMatrix<T> overwrite = null)
 		{
@@ -688,8 +688,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <see cref="DenseVector{T}"/>. From <see cref="IKrylovVector{TVec, T}.OperateOn(IReadOnlyList{TVec}, T[])"/>
 		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
+		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
+		/// <param name="input">The input C# array to be operated</param>
 		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <see cref="DenseVector{T}"/>.</returns>
 		/// <remarks>this method is actually static</remarks>
 		public DenseVector<T> OperateOn(IReadOnlyList<DenseVector<T>> notJoinedVecs, T[] input) => notJoinedVecs is null || notJoinedVecs.Count == 0 ? throw new ArgumentNullException(nameof(notJoinedVecs)) : notJoinedVecs[0].OperateOn(notJoinedVecs, input);
@@ -697,7 +697,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Replace the values of this vector by the one from <paramref name="other"/>, from <see cref="IKrylovVector{TVec, T}.ReplaceBy(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the <see cref="DenseVector{T}"/> used to replace</param>
+		/// <param name="other">The <see cref="DenseVector{T}"/> used to replace</param>
 		/// <exception cref="ArgumentNullException">if <paramref name="other"/> is null</exception>
 		/// <exception cref="ArgumentException">if length of <paramref name="other"/> is not same as <see cref="NonZero"/></exception>
 		public void ReplaceBy(DenseVector<T> other)
@@ -712,7 +712,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^T) \vec{v}_{\text{other}}$, from <see cref="IKrylovVector{TVec, T}.Dot(TVec, bool?)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="DenseVector{T}"/></param>
+		/// <param name="other">The other <see cref="DenseVector{T}"/></param>
 		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
 		/// <returns>The inner product result</returns>
 		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
@@ -724,7 +724,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$, from <see cref="IVector{TVec, T}.PointWiseMultiply(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="DenseVector{T}"/></param>
+		/// <param name="other">The other <see cref="DenseVector{T}"/></param>
 		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
 		public void PointWiseMultiply(DenseVector<T> other)
 		{
@@ -734,7 +734,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$, from <see cref="IVector{TVec, T}.PointWiseDivide(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="DenseVector{T}"/></param>
+		/// <param name="other">The other <see cref="DenseVector{T}"/></param>
 		/// <exception cref="DivideByZeroException">ALWAYS</exception>
 		public void PointWiseDivide(DenseVector<T> other)
 		{
@@ -790,9 +790,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$ out-of-place, from <see cref="IVector{TVec, TMat, T}.OuterProduct"/>.
 		/// </summary>
-		/// <param name="other">the other input <see cref="DenseVector{T}"/></param>
+		/// <param name="other">The other input <see cref="DenseVector{T}"/></param>
 		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">the <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
 		/// <returns>The result <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null</returns>
 		public DenseMatrix<T> OuterProduct(DenseVector<T> other, bool? conjugateOther = null, DenseMatrix<T> overwrite = null)
 		{
@@ -861,8 +861,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <see cref="VectorBase{T}"/>. From <see cref="VectorBase{T}.OperateOn"/>
 		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
+		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
+		/// <param name="input">The input C# array to be operated</param>
 		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <see cref="VectorBase{T}"/>.</returns>
 		/// <remarks>this method is actually static</remarks>
 		public override VectorBase<T> OperateOn(IReadOnlyList<VectorBase<T>> notJoinedVecs, T[] input)
@@ -878,7 +878,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Replace the values of this vector by the one from <paramref name="other"/>, from <see cref="IKrylovVector{TVec, T}.ReplaceBy(TVec)"/>.
 		/// </summary>
-		/// <param name="other">the <see cref="VectorBase{T}"/> used to replace</param>
+		/// <param name="other">The <see cref="VectorBase{T}"/> used to replace</param>
 		/// <exception cref="ArgumentNullException">if <paramref name="other"/> is null</exception>
 		/// <exception cref="ArgumentException">if <paramref name="other"/> has different non-zero values than this</exception>
 		public override void ReplaceBy(VectorBase<T> other)
@@ -924,8 +924,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{y}_{\text{this}} = \beta \cdot \vec{y}_{\text{this}} + \alpha \cdot A^{\text{op}} \vec{x}$.
 		/// </summary>
-		/// <param name="x">the input <see cref="VectorBase{T}"/></param>
-		/// <param name="A">the input <see cref="MatrixBase{T}"/></param>
+		/// <param name="x">The input <see cref="VectorBase{T}"/></param>
+		/// <param name="A">The input <see cref="MatrixBase{T}"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
 		/// <param name="op"><see cref="MatrixOperation"/> applied to <paramref name="A"/></param>
@@ -958,7 +958,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^T) \vec{v}_{\text{other}}$, override <see cref="VectorBase{T}.Dot(VectorBase{T}, bool?)"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
 		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
 		/// <returns>The inner product result</returns>
 		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
@@ -983,7 +983,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$, override <see cref="VectorBase{T}.PointWiseMultiply(VectorBase{T})"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
 		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
 		public override void PointWiseMultiply(VectorBase<T> other)
 		{
@@ -1006,7 +1006,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_2 \equiv \{\vec{v}_{\text{this}}^i \vec{v}_2^i\}_i$, override <see cref="VectorBase{T}.PointWiseDivide(VectorBase{T})"/>.
 		/// </summary>
-		/// <param name="other">the other <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
 		/// <exception cref="DivideByZeroException">if the <paramref name="other"/> vector is sparse</exception>
 		public override void PointWiseDivide(VectorBase<T> other)
 		{
@@ -1049,9 +1049,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$ out-of-place. Override <see cref="VectorBase{T}.OuterProduct"/>
 		/// </summary>
-		/// <param name="other">the other input <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other input <see cref="VectorBase{T}"/></param>
 		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">the <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
 		/// <returns>The result <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null</returns>
 		public override MatrixBase<T> OuterProduct(VectorBase<T> other, bool? conjugateOther = null, MatrixBase<T> overwrite = null)
 		{
@@ -1135,7 +1135,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Single range indexer of vector.
 		/// </summary>
-		/// <param name="r">the <see cref="Range"/> of index</param>
+		/// <param name="r">The <see cref="Range"/> of index</param>
 		/// <returns>The reference <see cref="SparseVector{T}"/> of the selected range</returns>
 		/// <remarks>
 		/// The getter returns a reference <see cref="SparseVector{T}"/>. <br/>
@@ -1205,7 +1205,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Multiple range indexer of vector.
 		/// </summary>
-		/// <param name="ranges">the array of <see cref="Range"/> of indices</param>
+		/// <param name="ranges">The array of <see cref="Range"/> of indices</param>
 		/// <returns>All the values in the ranges at a copied <see cref="VectorBase{T}"/></returns>
 		/// <remarks>The getter copies the values in the ranges while the setter calls <see cref="ValueArray{T}.AsDenseVector"/> before utilizing the <see cref="this[int[]]"/>, which may be of bad performance.</remarks>
 		public override DenseVector<T> this[params Range[] ranges] {

@@ -79,9 +79,9 @@ namespace Althea.SparseBlas
 		/// Gather vector at indices to override another vector.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
-		/// <param name="src">the source <see cref="Storage{T}"/> to obtain from</param>
-		/// <param name="dst">the destination <see cref="Storage{T}"/> to override</param>
-		/// <param name="pos">the positions to gather</param>
+		/// <param name="src">The source <see cref="Storage{T}"/> to obtain from</param>
+		/// <param name="dst">The destination <see cref="Storage{T}"/> to override</param>
+		/// <param name="pos">The positions to gather</param>
 		/// <param name="N">length of <paramref name="pos"/> and <paramref name="dst"/></param>
 		/// <exception cref="ArgumentException">if the vectors have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -103,9 +103,9 @@ namespace Althea.SparseBlas
 		/// Set vector at indices to the value of another vector.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
-		/// <param name="src">the source <see cref="Storage{T}"/> to obtain from</param>
-		/// <param name="dst">the destination <see cref="Storage{T}"/> to override</param>
-		/// <param name="pos">the positions to gather</param>
+		/// <param name="src">The source <see cref="Storage{T}"/> to obtain from</param>
+		/// <param name="dst">The destination <see cref="Storage{T}"/> to override</param>
+		/// <param name="pos">The positions to gather</param>
 		/// <param name="N">length of <paramref name="pos"/> and <paramref name="src"/></param>
 		/// <exception cref="ArgumentException">if the vectors have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -127,9 +127,9 @@ namespace Althea.SparseBlas
 		/// Gather vector at indices to override another vector.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
-		/// <param name="src">the source <see cref="Storage{T}"/> to obtain from</param>
-		/// <param name="dst">the destination <see cref="Storage{T}"/> to override</param>
-		/// <param name="pos">the positions to gather</param>
+		/// <param name="src">The source <see cref="Storage{T}"/> to obtain from</param>
+		/// <param name="dst">The destination <see cref="Storage{T}"/> to override</param>
+		/// <param name="pos">The positions to gather</param>
 		/// <exception cref="ArgumentException">if the vectors have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		public static void VectorGatherAtIndices<T>(PureArray<T> src, int[] pos, PureArray<T> dst) where T : struct, IComparable<T>
@@ -152,9 +152,9 @@ namespace Althea.SparseBlas
 		/// Set vector at indices to the value of another vector.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
-		/// <param name="src">the source <see cref="Storage{T}"/> to obtain from</param>
-		/// <param name="dst">the destination <see cref="Storage{T}"/> to override</param>
-		/// <param name="pos">the positions to gather</param>
+		/// <param name="src">The source <see cref="Storage{T}"/> to obtain from</param>
+		/// <param name="dst">The destination <see cref="Storage{T}"/> to override</param>
+		/// <param name="pos">The positions to gather</param>
 		/// <exception cref="ArgumentException">if the vectors have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		public static void VectorSetAtIndices<T>(PureArray<T> src, int[] pos, PureArray<T> dst) where T : struct, IComparable<T>
@@ -177,8 +177,8 @@ namespace Althea.SparseBlas
 		/// Convert sparse vector to override a dense vector.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported types</typeparam>
-		/// <param name="src">the source <see cref="SparseVector{T}"/> to convert from</param>
-		/// <param name="dst">the destination <see cref="DenseVector{T}"/> to override</param>
+		/// <param name="src">The source <see cref="SparseVector{T}"/> to convert from</param>
+		/// <param name="dst">The destination <see cref="DenseVector{T}"/> to override</param>
 		/// <exception cref="ArgumentException">if the vectors have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		public static void VectorSparseToDense<T>(SparseVector<T> src, DenseVector<T> dst) where T : struct, IComparable<T>
@@ -256,7 +256,7 @@ namespace Althea.SparseBlas
 		/// <param name="M"><see cref="SparseMatrix{T}"/> to multiply the matrix</param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="opM">the operation to matrix <paramref name="M"/></param>
+		/// <param name="opM">The operation to matrix <paramref name="M"/></param>
 		/// <exception cref="ArgumentException">if the arrays have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		public static void SparseMatrixDenseVectorMultiply<T>(SparseMatrix<T> M, DenseVector<T> x, DenseVector<T> y, T α, T β = default, MatrixOperation opM = MatrixOperation.None) where T : struct, IComparable<T>
@@ -298,7 +298,7 @@ namespace Althea.SparseBlas
 		/// <param name="M"><see cref="DenseMatrix{T}"/> to multiply the matrix</param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="opM">the operation to matrix <paramref name="M"/></param>
+		/// <param name="opM">The operation to matrix <paramref name="M"/></param>
 		/// <exception cref="ArgumentException">if the arrays have incompatible size</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		///  <remarks>If <paramref name="M"/> is Hermitian and the lower part of it are not stored, this part will be used in this method, you will need to fill it manually (<see cref="DenseMatrix{T}.CopyUpperToLower"/>) before calling this method.</remarks>
@@ -339,8 +339,8 @@ namespace Althea.SparseBlas
 		/// Directly convert a <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.CSR"/> to a <see cref="DenseMatrix{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="SparseMatrix{T}"/></param>
-		/// <param name="dest">the output <see cref="DenseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="SparseMatrix{T}"/></param>
+		/// <param name="dest">The output <see cref="DenseMatrix{T}"/></param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> or <paramref name="dest"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -364,8 +364,8 @@ namespace Althea.SparseBlas
 		/// Directly convert a <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.CSC"/> to a <see cref="DenseMatrix{T}"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="SparseMatrix{T}"/></param>
-		/// <param name="dest">the output <see cref="DenseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="SparseMatrix{T}"/></param>
+		/// <param name="dest">The output <see cref="DenseMatrix{T}"/></param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> or <paramref name="dest"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -389,7 +389,7 @@ namespace Althea.SparseBlas
 		/// Directly convert a <see cref="DenseMatrix{T}"/> to a new <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.CSR"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="DenseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="DenseMatrix{T}"/></param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -411,8 +411,8 @@ namespace Althea.SparseBlas
 		/// Directly convert a <see cref="DenseMatrix{T}"/> to a new <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.CSR"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="DenseMatrix{T}"/></param>
-		/// <param name="sp">the output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
+		/// <param name="M">The input <see cref="DenseMatrix{T}"/></param>
+		/// <param name="sp">The output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -442,7 +442,7 @@ namespace Althea.SparseBlas
 		/// Directly convert a <see cref="DenseMatrix{T}"/> to a new <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.CSC"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="DenseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="DenseMatrix{T}"/></param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -465,8 +465,8 @@ namespace Althea.SparseBlas
 		/// Directly convert a <see cref="DenseMatrix{T}"/> to a new <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.CSC"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="DenseMatrix{T}"/></param>
-		/// <param name="sp">the output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
+		/// <param name="M">The input <see cref="DenseMatrix{T}"/></param>
+		/// <param name="sp">The output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -494,7 +494,7 @@ namespace Althea.SparseBlas
 		/// Prune a <see cref="DenseMatrix{T}"/> of format <see cref="SparseMatrixFormat.CSR"/> to a new <see cref="SparseMatrix{T}"/> with absolute values less than <paramref name="threshold"/> regarding as zeros.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported REAL data types</typeparam>
-		/// <param name="M">the input <see cref="SparseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="SparseMatrix{T}"/></param>
 		/// <param name="threshold"><c>abs(value)</c> less than <paramref name="threshold"/> will be regarded as zero, must be larger than or equal to 0</param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
@@ -521,9 +521,9 @@ namespace Althea.SparseBlas
 		/// Prune a <see cref="DenseMatrix{T}"/> of format <see cref="SparseMatrixFormat.CSR"/> to a new <see cref="SparseMatrix{T}"/> with absolute values less than <paramref name="threshold"/> regarding as zeros.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported REAL data types</typeparam>
-		/// <param name="M">the input <see cref="SparseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="SparseMatrix{T}"/></param>
 		/// <param name="threshold"><c>abs(value)</c> less than <paramref name="threshold"/> will be regarded as zero, must be larger than or equal to 0</param>
-		/// <param name="sp">the output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
+		/// <param name="sp">The output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="threshold"/> is negative</exception>
@@ -558,7 +558,7 @@ namespace Althea.SparseBlas
 		/// Prune a <see cref="SparseMatrix{T}"/> of format <see cref="SparseMatrixFormat.Compressed"/> to a new <see cref="SparseMatrix{T}"/> with absolute values less than <paramref name="threshold"/> regarding as zeros.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="SparseMatrix{T}"/></param>
+		/// <param name="M">The input <see cref="SparseMatrix{T}"/></param>
 		/// <param name="threshold"><c>abs(value)</c> less than <paramref name="threshold"/> will be regarded as zero, must be larger than 0</param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
@@ -584,8 +584,8 @@ namespace Althea.SparseBlas
 		/// Prune a <see cref="SparseMatrix{T}"/> of format <see cref="SparseMatrixFormat.Compressed"/> to a new <see cref="SparseMatrix{T}"/> with absolute values less than <paramref name="threshold"/> regarding as zeros.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="M">the input <see cref="SparseMatrix{T}"/></param>
-		/// <param name="sp">the output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
+		/// <param name="M">The input <see cref="SparseMatrix{T}"/></param>
+		/// <param name="sp">The output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
 		/// <param name="threshold"><c>abs(value)</c> less than <paramref name="threshold"/> will be regarded as zero, must be larger than 0</param>
 		/// <returns>A new <see cref="SparseMatrix{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
@@ -626,7 +626,7 @@ namespace Althea.SparseBlas
 		/// <item><term>CSR ↔ CSC</term><description>  All arrays</description></item>
 		/// </list>
 		/// </summary>
-		/// <param name="op">the operation to apply to <paramref name="M"/>, default <see cref="MatrixOperation.None"/></param>
+		/// <param name="op">The operation to apply to <paramref name="M"/>, default <see cref="MatrixOperation.None"/></param>
 		/// <param name="M">source <see cref="SparseMatrix{T}"/></param>
 		/// <param name="target">target format, can be non-atomic</param>
 		/// <returns>a new <see cref="SparseMatrix{T}"/> if <paramref name="target"/> does not contains original format</returns>
@@ -666,9 +666,9 @@ namespace Althea.SparseBlas
 		/// <item><term>CSR ↔ CSC</term><description>  All arrays</description></item>
 		/// </list>
 		/// </summary>
-		/// <param name="op">the operation to apply to <paramref name="M"/>, default <see cref="MatrixOperation.None"/></param>
+		/// <param name="op">The operation to apply to <paramref name="M"/>, default <see cref="MatrixOperation.None"/></param>
 		/// <param name="M">source <see cref="SparseMatrix{T}"/></param>
-		/// <param name="sp">the output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
+		/// <param name="sp">The output <see cref="SparseMatrix{T}"/> to <b>in-place</b> replace</param>
 		/// <param name="target">target format, can be non-atomic</param>
 		/// <returns>a new <see cref="SparseMatrix{T}"/> if <paramref name="target"/> does not contains original format</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
@@ -728,9 +728,9 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <param name="α">scalar of type <typeparamref name="T"/>. If <c><paramref name="α"/> == 0</c>, please use <see cref="MatrixSparseFormatConvert{T}(SparseMatrix{T}, SparseMatrix{T}, SparseMatrixFormat, MatrixOperation)"/></param>
-		/// <param name="A">the <see cref="SparseMatrix{T}"/> A</param>
-		/// <param name="B">the <see cref="SparseMatrix{T}"/> B</param>
-		/// <param name="C">the output <see cref="SparseMatrix{T}"/> C, will be in-place altered</param>
+		/// <param name="A">The <see cref="SparseMatrix{T}"/> A</param>
+		/// <param name="B">The <see cref="SparseMatrix{T}"/> B</param>
+		/// <param name="C">The output <see cref="SparseMatrix{T}"/> C, will be in-place altered</param>
 		/// <param name="opA">operation to <paramref name="A"/></param>
 		/// <param name="opB">operation to <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/>. If <c><paramref name="β"/> == 0</c>, please use <see cref="MatrixSparseFormatConvert{T}(SparseMatrix{T}, SparseMatrix{T}, SparseMatrixFormat, MatrixOperation)"/></param>
@@ -787,12 +787,12 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <param name="α">scalar of type <typeparamref name="T"/>, cannot be zero</param>
-		/// <param name="A">the <see cref="SparseMatrix{T}"/> A</param>
+		/// <param name="A">The <see cref="SparseMatrix{T}"/> A</param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="C"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="SparseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B</param>
 		/// <param name="opA">operation to <paramref name="A"/></param>
 		/// <param name="opB">operation to <paramref name="B"/></param>
-		/// <param name="C">the input and output <see cref="SparseMatrix{T}"/> C, will be in-place altered</param>
+		/// <param name="C">The input and output <see cref="SparseMatrix{T}"/> C, will be in-place altered</param>
 		/// <exception cref="ArgumentNullException">if any of the matrices is null</exception>
 		/// <exception cref="ArgumentException">if the matrices are not compatible in size or both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -850,10 +850,10 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the input <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="SparseMatrix{T}"/> B with <see cref="SparseMatrixFormat.CSC"/></param>
-		/// <param name="C">the input/output <see cref="DenseMatrix{T}"/> C</param>
+		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B with <see cref="SparseMatrixFormat.CSC"/></param>
+		/// <param name="C">The input/output <see cref="DenseMatrix{T}"/> C</param>
 		/// <param name="opA">operation to <paramref name="A"/></param>
 		/// <param name="opB">operation to <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if any of the matrices is null</exception>
@@ -897,12 +897,12 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the input <see cref="SparseMatrix{T}"/> A with <see cref="SparseMatrixFormat.CSR"/>/<see cref="SparseMatrixFormat.Coordinated"/></param>
-		/// <param name="opA">the <see cref="MatrixOperation"/> to apply on <paramref name="A"/></param>
+		/// <param name="A">The input <see cref="SparseMatrix{T}"/> A with <see cref="SparseMatrixFormat.CSR"/>/<see cref="SparseMatrixFormat.Coordinated"/></param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply on <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B</param>
-		/// <param name="opB">the <see cref="MatrixOperation"/> to apply on <paramref name="B"/></param>
-		/// <param name="C">the input/output <see cref="DenseMatrix{T}"/> C</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply on <paramref name="B"/></param>
+		/// <param name="C">The input/output <see cref="DenseMatrix{T}"/> C</param>
 		/// <exception cref="ArgumentNullException">if any of the matrices is null</exception>
 		/// <exception cref="ArgumentException">if the matrices are not compatible in size or <paramref name="α"/> OR <paramref name="β"/> is 0</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -984,7 +984,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="indexPtr">array pointer</param>
 		/// <param name="N">size of the array</param>
-		/// <param name="toFind">the target value to find</param>
+		/// <param name="toFind">The target value to find</param>
 		/// <returns>index of target value, -1 if not found</returns>
 		public static int IndexFind(Storage<int> indexPtr, long N, int toFind)
 		{
@@ -1002,7 +1002,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="indexPtr">array pointer</param>
 		/// <param name="N">size of the array</param>
-		/// <param name="value">the target value to find</param>
+		/// <param name="value">The target value to find</param>
 		/// <param name="lowerBound">regard <paramref name="value"/> as lower bound or upper bound</param>
 		/// <returns>index of target value, -1 if not found</returns>
 		public static int IndexLowerUpperBound(Storage<int> indexPtr, long N, int value, bool lowerBound = true)
@@ -1037,8 +1037,8 @@ namespace Althea.SparseBlas
 		/// <summary>
 		/// Point-wise add the <paramref name="scalar"/> to the <paramref name="array"/>. 
 		/// </summary>
-		/// <param name="array">the <see cref="Storage{T}"/> to be added</param>
-		/// <param name="scalar">the scalar <see cref="int"/> to add</param>
+		/// <param name="array">The <see cref="Storage{T}"/> to be added</param>
+		/// <param name="scalar">The scalar <see cref="int"/> to add</param>
 		/// <param name="N">length of <paramref name="array"/></param>
 		public static void IndexAddScalar(Storage<int> array, int scalar, long N)
 		{
@@ -1052,8 +1052,8 @@ namespace Althea.SparseBlas
 		/// <summary>
 		/// Convert the sparse vector's index array to / from a COOC sparse matrix's index arrays by mod and quotient. The value array will not be copied.
 		/// </summary>
-		/// <param name="vec">the input <see cref="SparseVector{T}"/></param>
-		/// <param name="mat">the output <see cref="SparseMatrix{T}"/></param>
+		/// <param name="vec">The input <see cref="SparseVector{T}"/></param>
+		/// <param name="mat">The output <see cref="SparseMatrix{T}"/></param>
 		/// <param name="toCOO">convert to COOC matrix or backward</param>
 		/// <returns>The new row index pointer and column index pointer</returns>
 		/// <exception cref="ArgumentException">if <paramref name="mat"/> is not of <see cref="SparseMatrixFormat.COOC"/></exception>
@@ -1080,7 +1080,7 @@ namespace Althea.SparseBlas
 		/// Prune a <see cref="DenseVector{T}"/> to a new <see cref="SparseVector{T}"/> with absolute values or equal to less than <paramref name="threshold"/> regarding as zeros.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="v">the input <see cref="DenseVector{T}"/></param>
+		/// <param name="v">The input <see cref="DenseVector{T}"/></param>
 		/// <param name="threshold"><c>abs(value)</c> less than <paramref name="threshold"/> will be regarded as zero</param>
 		/// <returns>A new <see cref="SparseVector{T}"/> containing the pruned result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="v"/> is null</exception>
@@ -1129,7 +1129,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="a">one of the input <see cref="SparseVector{T}"/></param>
 		/// <param name="b">one of the input <see cref="SparseVector{T}"/></param>
-		/// <param name="lengthOverride">the output <see cref="SparseVector{T}"/>'s length, only positive number is considered as an override</param>
+		/// <param name="lengthOverride">The output <see cref="SparseVector{T}"/>'s length, only positive number is considered as an override</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <returns>A new <see cref="SparseVector{T}"/> containing the addition result.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="a"/> or <paramref name="b"/> is null</exception>
@@ -1156,7 +1156,7 @@ namespace Althea.SparseBlas
 		/// <summary>
 		/// Get the non-empty row/column indices of a given CSR/CSC sparse matrix.
 		/// </summary>
-		/// <param name="M">the <see cref="SparseMatrix{T}"/> to get non-empty row/column indices</param>
+		/// <param name="M">The <see cref="SparseMatrix{T}"/> to get non-empty row/column indices</param>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <returns>The <see cref="Storage{T}"/> pointing to the non-empty row/column indices array <c>nnei</c>.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="M"/> is null</exception>
@@ -1180,7 +1180,7 @@ namespace Althea.SparseBlas
 		/// Fill a sparse matrix with identity.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="matrix">the <see cref="SparseMatrix{T}"/> to fill with identity matrix</param>
+		/// <param name="matrix">The <see cref="SparseMatrix{T}"/> to fill with identity matrix</param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="StatusException">if the calculation of custom CUDA method <c>fillOne</c> returns error status</exception>
 		public static void FillIdentity<T>(SparseMatrix<T> matrix) where T : struct, IComparable<T>
@@ -1199,9 +1199,9 @@ namespace Althea.SparseBlas
 		/// Compute sparse vectors' outer product $M = \vec{a} \vec{b}^H$ where $M$ is a <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.COOC"/>.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="a">the input <see cref="SparseVector{T}"/></param>
-		/// <param name="b">the input <see cref="SparseVector{T}"/></param>
-		/// <param name="M">the output <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.COOC"/></param>
+		/// <param name="a">The input <see cref="SparseVector{T}"/></param>
+		/// <param name="b">The input <see cref="SparseVector{T}"/></param>
+		/// <param name="M">The output <see cref="SparseMatrix{T}"/> of <see cref="SparseMatrixFormat.COOC"/></param>
 		/// <param name="conjugateB">conjugate on <paramref name="b"/> or not if <typeparamref name="T"/> is a complex type</param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="StatusException">if the calculation of custom CUDA method <c>fillOne</c> returns error status</exception>
@@ -1228,7 +1228,7 @@ namespace Althea.SparseBlas
 		/// <param name="A">input <see cref="SparseMatrix{T}"/> A</param>
 		/// <param name="B">input <see cref="SparseMatrix{T}"/> B</param>
 		/// <param name="M">output <see cref="SparseMatrix{T}"/> M</param>
-		/// <param name="targetCOOC">the result matrix a <see cref="SparseMatrixFormat.COOC"/> or <see cref="SparseMatrixFormat.COOR"/></param>
+		/// <param name="targetCOOC">The result matrix a <see cref="SparseMatrixFormat.COOC"/> or <see cref="SparseMatrixFormat.COOR"/></param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="StatusException">if the calculation of custom CUDA method <c>fillOne</c> returns error status</exception>
 		/// <exception cref="OverflowException">if the number of non-zeros, leading and second dimensions of <paramref name="M"/> cannot be casted to <see cref="int"/> without loss</exception>

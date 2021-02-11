@@ -14,9 +14,9 @@ namespace Althea.General
 		/// <summary>
 		/// Symmetrize matrix by adding its conjugate transpose out-of-place.
 		/// </summary>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more detail</typeparam>
-		/// <typeparam name="TMat">the matrix type that inherits <see cref="AbstractArray{T}"/> and <see cref="IMatrix{TMat, TVec, T}"/></typeparam>
-		/// <param name="A">the input <typeparamref name="TMat"/></param>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more detail</typeparam>
+		/// <typeparam name="TMat">The matrix type that inherits <see cref="AbstractArray{T}"/> and <see cref="IMatrix{TMat, TVec, T}"/></typeparam>
+		/// <param name="A">The input <typeparamref name="TMat"/></param>
 		/// <param name="α">scalar to multiply the result</param>
 		/// <param name="conjugateAtLast">return the original </param>
 		/// <returns>If <c><paramref name="conjugateAtLast"/> == false</c>: $B_{\text{result}}=\alpha \frac{A + A^H}{2}$; otherwise: $B_{\text{result}}=\alpha \frac{\bar{A} + A^T}{2}$</returns>
@@ -76,9 +76,9 @@ namespace Althea.General
 		/// <summary>
 		/// Calculate $(A \oplus B) \cdot \vec{v}_{\text{this}}$ out-of-place.
 		/// </summary>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more detail</typeparam>
-		/// <typeparam name="TMat">the concrete matrix type that inherits <see cref="AbstractArray{T}"/> and <see cref="IMatrix{TMat, TVec, T}"/></typeparam>
-		/// <typeparam name="TVec">the concrete vector type that inherits <see cref="AbstractArray{T}"/> and <see cref="IVector{TVec, TMat, T}"/></typeparam>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more detail</typeparam>
+		/// <typeparam name="TMat">The concrete matrix type that inherits <see cref="AbstractArray{T}"/> and <see cref="IMatrix{TMat, TVec, T}"/></typeparam>
+		/// <typeparam name="TVec">The concrete vector type that inherits <see cref="AbstractArray{T}"/> and <see cref="IVector{TVec, TMat, T}"/></typeparam>
 		/// <param name="vec">input vector <typeparamref name="TVec"/></param>
 		/// <param name="A">input matrix <typeparamref name="TMat"/> A</param>
 		/// <param name="B">input matrix <typeparamref name="TMat"/> B</param>
@@ -172,9 +172,9 @@ namespace Althea.General
 		/// <summary>
 		/// Calculate $(A \otimes B) \cdot \vec{v}_{\text{this}}$ out-of-place.
 		/// </summary>
-		/// <typeparam name="T">the data type, see <see cref="AbstractArray{T}"/> for more detail</typeparam>
-		/// <typeparam name="TMat">the concrete matrix type that inherits <see cref="AbstractArray{T}"/> and <see cref="IMatrix{TMat, TVec, T}"/></typeparam>
-		/// <typeparam name="TVec">the concrete vector type that inherits <see cref="AbstractArray{T}"/> and <see cref="IVector{TVec, TMat, T}"/></typeparam>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more detail</typeparam>
+		/// <typeparam name="TMat">The concrete matrix type that inherits <see cref="AbstractArray{T}"/> and <see cref="IMatrix{TMat, TVec, T}"/></typeparam>
+		/// <typeparam name="TVec">The concrete vector type that inherits <see cref="AbstractArray{T}"/> and <see cref="IVector{TVec, TMat, T}"/></typeparam>
 		/// <param name="vec">input vector <typeparamref name="TVec"/></param>
 		/// <param name="A">input matrix <typeparamref name="TMat"/> A</param>
 		/// <param name="B">input matrix <typeparamref name="TMat"/> B</param>

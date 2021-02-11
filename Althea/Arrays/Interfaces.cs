@@ -41,14 +41,14 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the values of this array to a C# array of Fortran/MATLAB order.
 		/// </summary>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this array</returns>
 		T[] ValueToFortranOrderArray(params Range[] ranges);
 
 		/// <summary>
 		/// Convert the indices of this array to an <see cref="IEnumerable{T}"/> of C# arrays
 		/// </summary>
-		/// <param name="ranges">the range of each index array, default all</param>
+		/// <param name="ranges">The range of each index array, default all</param>
 		/// <returns>an <see cref="IEnumerable{T}"/> of C# arrays of type <typeparamref name="TIndex"/></returns>
 		IEnumerable<TIndex[]> IndexToArray(params Range[] ranges);
 		#endregion
@@ -57,15 +57,15 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Copy the <paramref name="values"/> of Fortran/MATLAB order into this array's value array.
 		/// </summary>
-		/// <param name="values">the value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		void ValueFromFortranOrderArray(T[] values, params Range[] ranges);
 
 		/// <summary>
 		/// Copy the <paramref name="indices"/> into this array's index arrays.
 		/// </summary>
 		/// <param name="indices">an <see cref="IEnumerable{T}"/> of <typeparamref name="TIndex"/> arrays</param>
-		/// <param name="ranges">the range of each index array, default all</param>
+		/// <param name="ranges">The range of each index array, default all</param>
 		void IndexFromArray(IEnumerable<TIndex[]> indices, params Range[] ranges);
 		#endregion
 
@@ -73,7 +73,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>.
 		/// </summary>
-		/// <param name="array">the target <see cref="ISparseArray{T, TIndex}"/> to exclude</param>
+		/// <param name="array">The target <see cref="ISparseArray{T, TIndex}"/> to exclude</param>
 		void DisposeExclude(ISparseArray<T, TIndex> array);
 		#endregion
 	}
@@ -88,7 +88,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the values of this array to a C# array of Fortran/MATLAB order.
 		/// </summary>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this array</returns>
 		T[] ToFortranOrderArray(params Range[] ranges);
 		#endregion
@@ -97,8 +97,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Copy the <paramref name="values"/> of Fortran/MATLAB order into this array.
 		/// </summary>
-		/// <param name="values">the value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		void FromFortranOrderArray(T[] values, params Range[] ranges);
 		#endregion
 	}
@@ -176,7 +176,7 @@ namespace Althea.Arrays
 	/// The interface of vector that contains the operation needed for Lanczos and Krylov-Schur solver.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">the vector type</typeparam>
+	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IKrylovVector<TVec, T> : IVector<T>
 		where TVec : IKrylovVector<TVec, T> 
 		where T : unmanaged, IEquatable<T>
@@ -185,7 +185,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^H) \vec{v}_{\text{other}}$.
 		/// </summary>
-		/// <param name="other">the other <typeparamref name="TVec"/></param>
+		/// <param name="other">The other <typeparamref name="TVec"/></param>
 		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
 		/// <returns>The inner product result</returns>
 		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
@@ -201,8 +201,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <typeparamref name="TVec"/>.
 		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
+		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
+		/// <param name="input">The input C# array to be operated</param>
 		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <typeparamref name="TVec"/>.</returns>
 		/// <remarks>this method is actually static</remarks>
 		TVec OperateOn(IReadOnlyList<TVec> notJoinedVecs, T[] input);
@@ -219,7 +219,7 @@ namespace Althea.Arrays
 	/// The interface of vector that contains the members, operations and indexers of vector whose inputs are relevant with vector.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">the vector type</typeparam>
+	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IVector<TVec, T> : IKrylovVector<TVec, T>
 		where TVec : class, IVector<TVec, T>, new()
 		where T : unmanaged, IEquatable<T>
@@ -228,14 +228,14 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
 		/// </summary>
-		/// <param name="other">the other <typeparamref name="TVec"/></param>
+		/// <param name="other">The other <typeparamref name="TVec"/></param>
 		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
 		void PointWiseMultiply(TVec other);
 
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
 		/// </summary>
-		/// <param name="other">the other <typeparamref name="TVec"/></param>
+		/// <param name="other">The other <typeparamref name="TVec"/></param>
 		void PointWiseDivide(TVec other);
 
 		// TODO: add point wise power, etc.?
@@ -246,8 +246,8 @@ namespace Althea.Arrays
 	/// The interface of vector that contains the extra operations of vector whose inputs / outputs are also relevant with matrix.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">the vector type</typeparam>
-	/// <typeparam name="TMat">the matrix type</typeparam>
+	/// <typeparam name="TVec">The vector type</typeparam>
+	/// <typeparam name="TMat">The matrix type</typeparam>
 	public interface IVector<TVec, TMat, T> : IVector<TVec, T>
 		where TVec : class, IVector<TVec, TMat, T>, new()
 		where TMat : class, IMatrix<TMat, T>, new()
@@ -257,8 +257,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{y}_{\text{this}} = \beta \cdot \vec{y}_{\text{this}} + \alpha \cdot A^{\text{op}} \vec{x}$.
 		/// </summary>
-		/// <param name="x">the input <typeparamref name="TVec"/></param>
-		/// <param name="A">the input <typeparamref name="TMat"/></param>
+		/// <param name="x">The input <typeparamref name="TVec"/></param>
+		/// <param name="A">The input <typeparamref name="TMat"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
 		/// <param name="op"><see cref="MatrixOperation"/> applied to <paramref name="A"/></param>
@@ -267,9 +267,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$.
 		/// </summary>
-		/// <param name="other">the other input <typeparamref name="TVec"/></param>
+		/// <param name="other">The other input <typeparamref name="TVec"/></param>
 		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">the <typeparamref name="TMat"/> to overwrite as result, default null</param>
+		/// <param name="overwrite">The <typeparamref name="TMat"/> to overwrite as result, default null</param>
 		/// <returns>The result <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null</returns>
 		TMat OuterProduct(TVec other, bool? conjugateOther = null, TMat? overwrite = null);
 		#endregion
@@ -364,7 +364,7 @@ namespace Althea.Arrays
 	/// The interface of matrix that contains basic members, methods, operations and indexers whose inputs and outputs are relevant with matrix.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TMat">the matrix type</typeparam>
+	/// <typeparam name="TMat">The matrix type</typeparam>
 	public interface IMatrix<TMat, T> : IMatrix<T>, IKrylovVector<TMat, T>
 		where TMat : class, IMatrix<TMat, T>, new()
 		where T : unmanaged, IEquatable<T>
@@ -374,7 +374,7 @@ namespace Althea.Arrays
 		/// Get a new matrix by the column index range.
 		/// </summary>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these columns. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TMat GetColumnRange(Range columnRange, TMat? overwrite = null);
 
@@ -382,7 +382,7 @@ namespace Althea.Arrays
 		/// Get a new matrix by the row index range.
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
-		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these rows. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TMat GetRowRange(Range rowRange, TMat? overwrite = null);
 
@@ -391,7 +391,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix (if possible)</param>
+		/// <param name="overwrite">The output <typeparamref name="TMat"/> to overwrite, default null means creating a ref matrix (if possible)</param>
 		/// <returns>A sub-matrix in this region. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TMat GetSubmatrix(Range rowRange, Range columnRange, TMat? overwrite = null);
 		#endregion
@@ -400,14 +400,14 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the transpose of this matrix. A new <see cref="IMatrix{T}"/> will be created if the result is not it self.
 		/// </summary>
-		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The transposed <typeparamref name="TMat"/>.</returns>
 		TMat Transpose(TMat? overwrite = null);
 
 		/// <summary>
 		/// Calculate the conjugate transpose of this matrix. A new <see cref="IMatrix{T}"/> will be created if the result is not it self.
 		/// </summary>
-		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The conjugate-transposed <typeparamref name="TMat"/>.</returns>
 		TMat ConjugateTranspose(TMat? overwrite = null);
 
@@ -415,7 +415,7 @@ namespace Althea.Arrays
 		/// Symmetrize this matrix by adding its conjugate transpose out-of-place.
 		/// </summary>
 		/// <param name="conjugateAtLast">return the original </param>
-		/// <param name="overwrite">the output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <typeparamref name="TMat"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>If <c><paramref name="conjugateAtLast"/> == false</c>: $B_{\text{result}}=\frac{A + A^H}{2}$; otherwise: $B_{\text{result}}=\frac{\bar{A} + A^T}{2}$</returns>
 		TMat Symmetrize(bool conjugateAtLast = false, TMat? overwrite = null);
 
@@ -423,20 +423,20 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$. This method will try to in-place replace this matrix.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the <typeparamref name="TMat"/> A, can be null</param>
+		/// <param name="A">The <typeparamref name="TMat"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <typeparamref name="TMat"/> B, can be null</param>
+		/// <param name="B">The input <typeparamref name="TMat"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		void From_αA_Add_βB(TMat A, TMat B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$. This method will try to in-place replace this matrix.
 		/// </summary>
-		/// <param name="A">the input <typeparamref name="TMat"/> A</param>
+		/// <param name="A">The input <typeparamref name="TMat"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <typeparamref name="TMat"/> B</param>
+		/// <param name="B">The input <typeparamref name="TMat"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		void Mulβ_AddBy_αAB(TMat A, TMat B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
@@ -444,18 +444,18 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute Kronecker product $A \otimes B$. If <paramref name="forceHerm"/> is true, then $(A \otimes B^H + A^H \otimes B)/2$ will be calculated.
 		/// </summary>
-		/// <param name="other">the other <typeparamref name="TMat"/> B at right</param>
+		/// <param name="other">The other <typeparamref name="TMat"/> B at right</param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">the <typeparamref name="TMat"/> to overwrite by result, default null</param>
+		/// <param name="overwrite">The <typeparamref name="TMat"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker product, a new <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null.</returns>
 		TMat KroneckerProd(TMat other, bool forceHerm = true, TMat? overwrite = null);
 
 		/// <summary>
 		/// Compute Kronecker sum $A \oplus B \equiv A \otimes I + I \otimes B$. If <paramref name="forceHerm"/> is true, then $[(A \otimes I + I \otimes B^H) + (A^H \otimes I + I \otimes B)]/2$ will be calculated.
 		/// </summary>
-		/// <param name="other">the other <typeparamref name="TMat"/> B at right</param>
+		/// <param name="other">The other <typeparamref name="TMat"/> B at right</param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">the <typeparamref name="TMat"/> to overwrite by result, default null</param>
+		/// <param name="overwrite">The <typeparamref name="TMat"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker sum, a new <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null.</returns>
 		TMat KroneckerSum(TMat other, bool forceHerm = true, TMat? overwrite = null);
 		#endregion
@@ -465,8 +465,8 @@ namespace Althea.Arrays
 	/// The interface of matrix that contains extra methods, operations and indexers whose inputs and outputs are also relevant with vector.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TMat">the matrix type</typeparam>
-	/// <typeparam name="TVec">the vector type</typeparam>
+	/// <typeparam name="TMat">The matrix type</typeparam>
+	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IMatrix<TMat, TVec, T> : IMatrix<TMat, T>
 		where TMat : class, IMatrix<TMat, TVec, T>, new()
 		where TVec : class, IVector<TVec, T>, new()
@@ -476,52 +476,52 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Join the array of <typeparamref name="TVec"/> forming into a <typeparamref name="TMat"/> overwriting this matrix.
 		/// </summary>
-		/// <param name="vectors">the input array of <typeparamref name="TVec"/></param>
+		/// <param name="vectors">The input array of <typeparamref name="TVec"/></param>
 		void FromColumnVectors(TVec[] vectors);
 
 		/// <summary>
 		/// Get part of the column vectors that forms the matrix.
 		/// </summary>
-		/// <param name="colRange">the <see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="colRange">The <see cref="Range"/> of columns</param>
+		/// <param name="overwrite">The output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec[] GetColumns(Range colRange, TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get part of the row vectors that forms the matrix.
 		/// </summary>
-		/// <param name="rowRange">the <see cref="Range"/> of rows</param>
-		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="rowRange">The <see cref="Range"/> of rows</param>
+		/// <param name="overwrite">The output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec[] GetRows(Range rowRange, TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get all of the column vectors that forms the matrix.
 		/// </summary>
-		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="overwrite">The output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec[] GetColumns(TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get all of the row vectors that forms the matrix.
 		/// </summary>
-		/// <param name="overwrite">the output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="overwrite">The output array of <typeparamref name="TVec"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec[] GetRows(TVec[]? overwrite = null);
 
 		/// <summary>
 		/// Get one column of the matrix.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/> of column</param>
-		/// <param name="overwrite">the output <typeparamref name="TVec"/> to overwrite, default null means creating a ref vector if possible</param>
+		/// <param name="index">The <see cref="Index"/> of column</param>
+		/// <param name="overwrite">The output <typeparamref name="TVec"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected column as a <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec GetColumnAt(Index index, TVec? overwrite = null);
 
 		/// <summary>
 		/// Get one row of the matrix.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/> of row</param>
-		/// <param name="overwrite">the output <typeparamref name="TVec"/> to overwrite, default null means creating a ref vector if possible</param>
+		/// <param name="index">The <see cref="Index"/> of row</param>
+		/// <param name="overwrite">The output <typeparamref name="TVec"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected row as a <typeparamref name="TVec"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec GetRowAt(Index index, TVec? overwrite = null);
 		#endregion
@@ -531,7 +531,7 @@ namespace Althea.Arrays
 		/// The method to get diagonal elements.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diag, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="overwrite">the output <typeparamref name="TVec"/> to overwrite, default null means creating a new vector</param>
+		/// <param name="overwrite">The output <typeparamref name="TVec"/> to overwrite, default null means creating a new vector</param>
 		/// <returns>A new <typeparamref name="TVec"/> containing the (super-/sub-)diagonal elements. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		TVec GetDiag(long k, TVec? overwrite = null);
 
@@ -539,7 +539,7 @@ namespace Althea.Arrays
 		/// The method to set diagonal elements.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diag, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="vec">the <typeparamref name="TVec"/></param>
+		/// <param name="vec">The <typeparamref name="TVec"/></param>
 		void SetDiag(long k, TVec vec);
 		#endregion
 
@@ -547,8 +547,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of this Hermitian matrix for the special eigen-problem -- $A V = V \Lambda$, or matrices pair A, <paramref name="B"/> for the general one -- $A V = \Lambda B V$ or $A B V = \Lambda V$ or $B A V = \Lambda V$ <b>out-of-place</b>. Here, matrix A is this matrix.
 		/// </summary>
-		/// <param name="B">the input <typeparamref name="TMat"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="type">the <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
+		/// <param name="B">The input <typeparamref name="TMat"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="type">The <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
 		/// <returns>The eigenvalues</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		TVec EigenvalueHerm(TMat B = null, Solver.EigType type = Solver.EigType.Type1);
@@ -556,19 +556,19 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of this Hermitian matrix for the special eigen-problem -- $A V = V \Lambda$, or matrices pair A, <paramref name="B"/> for the general one -- $A V = \Lambda B V$ or $A B V = \Lambda V$ or $B A V = \Lambda V$ <b>out-of-place</b>. Here, matrix A is this matrix.
 		/// </summary>
-		/// <param name="overwriteValues">the <typeparamref name="TVec"/> to store eigenvalues, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteVectors">the <typeparamref name="TMat"/> to store eigenvectors, default null means that this method will create a new one and return</param>
-		/// <param name="B">the input <typeparamref name="TMat"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="type">the <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
+		/// <param name="overwriteValues">The <typeparamref name="TVec"/> to store eigenvalues, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteVectors">The <typeparamref name="TMat"/> to store eigenvectors, default null means that this method will create a new one and return</param>
+		/// <param name="B">The input <typeparamref name="TMat"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="type">The <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		(TVec values, TMat vectors) EigensystemHerm(TVec overwriteValues = null, TMat overwriteVectors = null, TMat B = null, Solver.EigType type = Solver.EigType.Type1);
 
 		/// <summary>
 		/// Compute the singular value decomposition (SVD) of this matrix and corresponding the left and/or right singular vectors: $A = U S V^*$ <b>out-of-place</b>, where A is this matrix.
 		/// </summary>
-		/// <param name="overwriteS">the <typeparamref name="TVec"/> to store singular values, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteU">the <typeparamref name="TMat"/> to store left singular vectors, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteVct">the <typeparamref name="TMat"/> to store right singular vectors, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteS">The <typeparamref name="TVec"/> to store singular values, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteU">The <typeparamref name="TMat"/> to store left singular vectors, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteVct">The <typeparamref name="TMat"/> to store right singular vectors, default null means that this method will create a new one and return</param>
 		/// <param name="calcU">calculate the left singular vectors or not, if false, the return <c>U</c> will be null</param>
 		/// <param name="calcV">calculate the right singular vectors or not, if false, the return <c>Vct</c> will be null</param>
 		/// <returns>the singular values and left, right singular vectors</returns>
@@ -579,8 +579,8 @@ namespace Althea.Arrays
 		/// QR factorize this matrix <b>out-of-place</b>.
 		/// </summary>
 		/// <param name="full">perform full factorization or not</param>
-		/// <param name="overwriteQ">the <typeparamref name="TMat"/> to store triangular matrix Q, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteR">the <typeparamref name="TMat"/> to store triangular matrix R, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteQ">The <typeparamref name="TMat"/> to store triangular matrix Q, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteR">The <typeparamref name="TMat"/> to store triangular matrix R, default null means that this method will create a new one and return</param>
 		/// <returns>the Q matrix and R matrix</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		(TMat Q, TMat R) QR(bool full = false, TMat overwriteQ = null, TMat overwriteR = null);
@@ -618,14 +618,14 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for tensor that contains basic indexers whose inputs and outputs are not relevant with tensors.
 	/// </summary>
-	/// <typeparam name="T">the data type</typeparam>
+	/// <typeparam name="T">The data type</typeparam>
 	public interface ITensor<T> : ITensor where T : unmanaged, IEquatable<T>
 	{
 		#region indexer
 		/// <summary>
 		/// Get or set an element in of this tensor.
 		/// </summary>
-		/// <param name="pos">the indices of each rank</param>
+		/// <param name="pos">The indices of each rank</param>
 		/// <returns>the value at <paramref name="pos"/></returns>
 		T this[params Index[] pos] { get; set; }
 		#endregion
@@ -664,8 +664,8 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for tensor that contains more methods, operations and indexers.
 	/// </summary>
-	/// <typeparam name="T">the data type</typeparam>
-	/// <typeparam name="TTen">the tensor type</typeparam>
+	/// <typeparam name="T">The data type</typeparam>
+	/// <typeparam name="TTen">The tensor type</typeparam>
 	public interface ITensor<TTen, T> : ITensor<T>, IKrylovVector<TTen, T>
 		where TTen : class, ITensor<TTen, T>, new()
 		where T : unmanaged, IEquatable<T>
@@ -698,8 +698,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Permute <paramref name="tensor"/> by <paramref name="order"/> and replace to this tensor
 		/// </summary>
-		/// <param name="tensor">the tensor to be permuted</param>
-		/// <param name="order">the new permutation <see cref="TensorOrder"/>, zero-based</param>
+		/// <param name="tensor">The tensor to be permuted</param>
+		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
 		void Permute(TTen tensor, TensorOrder order);
 		#endregion
 
@@ -713,7 +713,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The permute operator of this tensor.
 		/// </summary>
-		/// <param name="order">the new permutation <see cref="TensorOrder"/>, zero-based</param>
+		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
 		/// <returns>the result tensor, a new <typeparamref name="TTen"/></returns>
 		TTen OperatorPermute(TensorOrder order);
 
@@ -721,7 +721,7 @@ namespace Althea.Arrays
 		/// Contraction operator for two tensors: this as left and <paramref name="right"/>.
 		/// </summary>
 		/// <param name="right">right operand</param>
-		/// <param name="order">the order of the result tensor; if this parameter is null or empty, the order will be determined within</param>
+		/// <param name="order">The order of the result tensor; if this parameter is null or empty, the order will be determined within</param>
 		/// <returns>the contraction result, out-of-place</returns>
 		/// <remarks>the <see cref="ITensor.Label"/> of operands will be utilized</remarks>
 		TTen OperatorContract(TTen right, params char[] order);
@@ -739,7 +739,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Set the sub tensor formed by the first N rank of this tensor.
 		/// </summary>
-		/// <param name="value">the sub <typeparamref name="TTen"/> to set</param>
+		/// <param name="value">The sub <typeparamref name="TTen"/> to set</param>
 		/// <param name="firstNRank">first N ranks to set or get</param>
 		/// <param name="restPos">rest of the tensor's rank's position <see cref="Index"/></param>
 		void SetSpan(TTen value, int firstNRank, params Index[] restPos);
@@ -749,8 +749,8 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface of decomposable and matrix-multipliable tensor that contains matrix multiplication, SVD and QR.
 	/// </summary>
-	/// <typeparam name="T">the data type</typeparam>
-	/// <typeparam name="TTen">the tensor type</typeparam>
+	/// <typeparam name="T">The data type</typeparam>
+	/// <typeparam name="TTen">The tensor type</typeparam>
 	public interface ITensorAsMatrix<TTen, T>
 		where TTen : class, IDisposable, ITensor<TTen, T>, ITensorAsMatrix<TTen, T>, new()
 		where T : unmanaged, IEquatable<T>
@@ -767,11 +767,11 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Multiply this tensor as a matrix with the <paramref name="right"/> tensor as another matrix.
 		/// </summary>
-		/// <param name="right">the other <typeparamref name="TTen"/> as a matrix</param>
+		/// <param name="right">The other <typeparamref name="TTen"/> as a matrix</param>
 		/// <param name="partitionLeft">a <see cref="Index"/> to indicate the first <paramref name="partitionLeft"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
 		/// <param name="partitionRight">a <see cref="Index"/> to indicate the first <paramref name="partitionRight"/> (exclude) indices of tensor <paramref name="right"/> will be regarded as the row and others column</param>
-		/// <param name="leftOp">the <see cref="MatrixOperation"/> to apply on this one</param>
-		/// <param name="rightOp">the <see cref="MatrixOperation"/> to apply on <paramref name="right"/></param>
+		/// <param name="leftOp">The <see cref="MatrixOperation"/> to apply on this one</param>
+		/// <param name="rightOp">The <see cref="MatrixOperation"/> to apply on <paramref name="right"/></param>
 		/// <returns>The <b>out-of-place</b> multiplication result as a tensor whose <see cref="AbstractArray{T}.Size">size</see> is the same as corresponding <see cref="ITensor{TTen, T}.OperatorContract(TTen, char[])"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="partitionLeft"/> or <paramref name="partitionRight"/> is out of range</exception>
 		TTen OperatorMatrixMultiply(TTen right, Index partitionLeft, Index partitionRight, MatrixOperation leftOp = MatrixOperation.None, MatrixOperation rightOp = MatrixOperation.None);
@@ -788,7 +788,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Shift all the eigenvalues of this tensor by adding <paramref name="shift"/> to each diagonal elements of this tensor as a matrix.
 		/// </summary>
-		/// <param name="shift">the shift value, if it is zero, no operation shall be performed</param>
+		/// <param name="shift">The shift value, if it is zero, no operation shall be performed</param>
 		/// <exception cref="InvalidOperationException">if this tensor's shape is not a square matrix</exception>
 		void EigenvalueShift(T shift);
 		#endregion
@@ -815,7 +815,7 @@ namespace Althea.Arrays
 		/// Compute the singular value decomposition (SVD) of this tensor and corresponding the left and/or right singular vectors: $A = U S V^*$ <b>out-of-place</b>, where $A$ is this matrix. Not necessarily sorted descending by singular values. Then truncate the singular values $S$ and vectors $U$, $V^*$ to preserve at most <paramref name="maxPreserve"/> entries.
 		/// </summary>
 		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="maxPreserve">the maximum number of singular values and vectors to preserve, must be positive</param>
+		/// <param name="maxPreserve">The maximum number of singular values and vectors to preserve, must be positive</param>
 		/// <returns>The singular values and left, right singular vectors with at most <paramref name="maxPreserve"/> entries.</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="partition"/> is out of range</exception>

@@ -190,12 +190,14 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Construct a <see cref="DataType"/> from given parameters
 		/// </summary>
-		/// <param name="complex">whether the constructed <see cref="DataType"/> is a complex type</param>
-		/// <param name="type">the <see cref="DataTypeClassification"/> the constructed <see cref="DataType"/> is a floating point type</param>
-		/// <param name="size">the size in bytes of the constructed <see cref="DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
-		/// <returns>The constructed <see cref="DataType"/></returns>
+		/// <param name="complex">Whether the constructed <see cref="DataType"/> is a complex type</param>
+		/// <param name="type">The <see cref="DataTypeClassification"/> the constructed <see cref="DataType"/> is a floating point type</param>
+		/// <param name="size">The size in bytes of the constructed <see cref="DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
+		/// <returns>The constructed <see cref="DataType"/> or the default value if <paramref name="type"/> is <see cref="DataTypeClassification.NotSupported"/></returns>
 		public static DataType MakeDataType(bool complex, DataTypeClassification type, int size)
 		{
+			if (type == DataTypeClassification.NotSupported)
+				return default;
 			if (complex)
 				return DataType.Complex | (DataType)((int)type << TypeMaskStart) | (DataType)((size / 2) << ByteMaskStart);
 			else
@@ -205,35 +207,35 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is a real type.
 		/// </summary>
-		/// <param name="dataType">the <see cref="DataType"/> to check</param>
+		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a real type.</returns>
 		public static bool IsReal(this DataType dataType) => (dataType & DataType.Complex) == 0;
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is a float type.
 		/// </summary>
-		/// <param name="dataType">the <see cref="DataType"/> to check</param>
+		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a float type.</returns>
 		public static bool IsFloat(this DataType dataType) => ((int)dataType & TypeMask) == (TypeFloatPoint >> TypeMaskStart);
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is a signed integer type.
 		/// </summary>
-		/// <param name="dataType">the <see cref="DataType"/> to check</param>
+		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a signed integer type.</returns>
 		public static bool IsSignedInteger(this DataType dataType) => ((int)dataType & TypeMask) == (TypeSignedInteger >> TypeMaskStart);
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is an unsigned integer type.
 		/// </summary>
-		/// <param name="dataType">the <see cref="DataType"/> to check</param>
+		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is an unsigned integer type.</returns>
 		public static bool IsUnsignedInteger(this DataType dataType) => ((int)dataType & TypeMask) == (TypeUnsignedInteger >> TypeMaskStart);
 
 		/// <summary>
 		/// Get the number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.
 		/// </summary>
-		/// <param name="dataType">the <see cref="DataType"/> to get</param>
+		/// <param name="dataType">The <see cref="DataType"/> to get</param>
 		/// <returns>The number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.</returns>
 		public static int Bytes(this DataType dataType) => ((int)dataType & ByteMask) >> ByteMaskStart;
 
@@ -266,18 +268,18 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the string representation of a given <see cref="DataType"/>
 		/// </summary>
-		/// <param name="dataType">the <see cref="DataType"/> to get string representation</param>
+		/// <param name="dataType">The <see cref="DataType"/> to get string representation</param>
 		/// <returns>The string representation of <paramref name="dataType"/></returns>
 		public static string GetStringRepr(this DataType dataType)
 		{
-			return (dataType.IsReal() ? "Real" : "Complex") + " Byte" + dataType.Bytes() + (dataType.IsFloat() ? "Float" : "Integer");
+			return (dataType.IsReal() ? "Real" : "Complex") + $" Byte-{dataType.Bytes()} " + (dataType.IsFloat() ? "Float" : "Integer");
 		}
 
 
 		/// <summary>
 		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
 		/// </summary>
-		/// <typeparam name="T">the data type to convert</typeparam>
+		/// <typeparam name="T">The data type to convert</typeparam>
 		/// <param name="value">a instance value of type <typeparamref name="T"/></param>
 		/// <returns>the corresponding <see cref="DataType"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
@@ -317,7 +319,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
 		/// </summary>
-		/// <typeparam name="T">the data type to convert</typeparam>
+		/// <typeparam name="T">The data type to convert</typeparam>
 		/// <returns>the corresponding <see cref="DataType"/></returns>
 		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();
 	}

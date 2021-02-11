@@ -75,7 +75,7 @@ namespace Althea.Rng
 		/// <summary>
 		/// Set seed for all random number generators
 		/// </summary>
-		/// <param name="seed">the seed, default null means a random one</param>
+		/// <param name="seed">The seed, default null means a random one</param>
 		public static void SetSeed(int? seed = null)
 		{
 			seed ??= (new Random().Next());

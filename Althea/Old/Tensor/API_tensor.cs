@@ -79,11 +79,11 @@ namespace Althea.Tensor
 		/// </summary>
 		/// <typeparam name="TTen">tensor type</typeparam>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="A">the tensor A</param>
-		/// <param name="α">the scalar to multiply</param>
-		/// <param name="newOrder">the permute order of <paramref name="A"/> as <see cref="TensorOrder"/></param>
-		/// <param name="B">the tensor B</param>
-		/// <param name="order">the permute order from <paramref name="A"/> to <paramref name="B"/></param>
+		/// <param name="A">The tensor A</param>
+		/// <param name="α">The scalar to multiply</param>
+		/// <param name="newOrder">The permute order of <paramref name="A"/> as <see cref="TensorOrder"/></param>
+		/// <param name="B">The tensor B</param>
+		/// <param name="order">The permute order from <paramref name="A"/> to <paramref name="B"/></param>
 		public static void PermuteCheck<TTen, T>(TTen A, T α, TensorOrder newOrder, TTen B, Span<int> order)
 			where TTen : PureArray<T>, Althea.ITensor
 			where T : struct, IComparable<T>
@@ -108,14 +108,14 @@ namespace Althea.Tensor
 		/// Check sizes and labels of reduction $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$.
 		/// </summary>
 		/// <typeparam name="TTen">tensor type</typeparam>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="α">the scalar to multiply <paramref name="A"/></param>
-		/// <param name="A">the input tensor <typeparamref name="TTen"/> to be reduced</param>
-		/// <param name="β">the scalar to multiply <paramref name="C"/></param>
-		/// <param name="C">the tensor <typeparamref name="TTen"/> to be added at last</param>
-		/// <param name="opC">the <see cref="UnitaryOperation"/> on <paramref name="C"/> before addition</param>
-		/// <param name="D">the tensor <typeparamref name="TTen"/> to be overwritten</param>
-		/// <param name="permA2C">the permutation order from <paramref name="A"/> to <paramref name="C"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="α">The scalar to multiply <paramref name="A"/></param>
+		/// <param name="A">The input tensor <typeparamref name="TTen"/> to be reduced</param>
+		/// <param name="β">The scalar to multiply <paramref name="C"/></param>
+		/// <param name="C">The tensor <typeparamref name="TTen"/> to be added at last</param>
+		/// <param name="opC">The <see cref="UnitaryOperation"/> on <paramref name="C"/> before addition</param>
+		/// <param name="D">The tensor <typeparamref name="TTen"/> to be overwritten</param>
+		/// <param name="permA2C">The permutation order from <paramref name="A"/> to <paramref name="C"/></param>
 		public static void ReduceCheck<TTen, T>(T α, TTen A, T β, ref TTen C, ref UnitaryOperation opC, ref TTen D, Span<int> permA2C)
 			where TTen : PureArray<T>, Althea.ITensor
 			where T : struct, IComparable<T>
@@ -191,7 +191,7 @@ namespace Althea.Tensor
 		/// </summary>
 		/// <typeparam name="TTen">tensor type</typeparam>
 		/// <typeparam name="T">data type</typeparam>
-		/// <param name="α">the scalar to multiply</param>
+		/// <param name="α">The scalar to multiply</param>
 		/// <param name="left">left tensor</param>
 		/// <param name="right">right tensor</param>
 		/// <param name="commonRank">output, number of common indices</param>
@@ -391,11 +391,11 @@ namespace Althea.Tensor
 		/// Permute (general transpose) and scale this tensor to form a new tensor: $B_{i_0,i_1,...,i_n} = \alpha \Psi(A_{\Pi(i_0,i_1,...,i_n)})$.
 		/// </summary>
 		/// <typeparam name="T">see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="newOrder">the new permutation order in <see cref="TensorOrder"/></param>
-		/// <param name="α">the scalar to multiply</param>
-		/// <param name="op">the <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
-		/// <param name="A">the source tensor</param>
-		/// <param name="B">the output tensor</param>
+		/// <param name="newOrder">The new permutation order in <see cref="TensorOrder"/></param>
+		/// <param name="α">The scalar to multiply</param>
+		/// <param name="op">The <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
+		/// <param name="A">The source tensor</param>
+		/// <param name="B">The output tensor</param>
 		public static void Permute<T>(DenseTensor<T> A, T α, UnitaryOperation op, TensorOrder newOrder, DenseTensor<T> B) where T : struct, IComparable<T>
 		{
 			Span<int> permA2B = stackalloc int[A.Rank];
@@ -408,7 +408,7 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Partial reduction of tensor <paramref name="A"/>: $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$. The missing indices of <paramref name="A"/> compared to <paramref name="C"/> will be aggregated according to <paramref name="reduction"/>.
 		/// </summary>
-		/// <param name="reduction">the reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
+		/// <param name="reduction">The reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
 		/// <param name="α">scalar α</param>
 		/// <param name="opA"><see cref="UnitaryOperation"/> <c>Ψ<sub>A</sub></c></param>
 		/// <param name="A"><see cref="DenseTensor{T}"/> A</param>

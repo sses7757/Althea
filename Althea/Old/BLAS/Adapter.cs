@@ -534,7 +534,7 @@ namespace Althea.Blas
 		/// Compute <c><paramref name="a"/> = <paramref name="a"/>.^<paramref name="p"/></c> (point-wise power) in-place.
 		/// </summary>
 		/// <param name="a">vector that will be overridden</param>
-		/// <param name="p">the <see cref="double"/> power</param>
+		/// <param name="p">The <see cref="double"/> power</param>
 		/// <param name="N">length of array</param>
 		void PointWisePower<T>(Storage<T> a, double p, long N) where T : struct, IComparable<T>;
 
@@ -542,7 +542,7 @@ namespace Althea.Blas
 		/// Compute <c><paramref name="a"/> = <paramref name="a"/>.^<paramref name="p"/></c> (point-wise power) in-place.
 		/// </summary>
 		/// <param name="a">vector that will be overridden</param>
-		/// <param name="p">the <see cref="double"/> power</param>
+		/// <param name="p">The <see cref="double"/> power</param>
 		/// <param name="N">length of array</param>
 		public delegate void DelegatePointWisePower<T>(Storage<T> a, double p, long N) where T : struct, IComparable<T>;
 
@@ -595,7 +595,7 @@ namespace Althea.Blas
 		/// </summary>
 		/// <param name="array">array to be set</param>
 		/// <param name="pos">positions, <see cref="int"/> array</param>
-		/// <param name="value">the value to set</param>
+		/// <param name="value">The value to set</param>
 		/// <param name="posN">length of <paramref name="pos"/> array</param>
 		void SetArrayWithValue<T>(Storage<T> array, T value, Storage<int> pos, long posN) where T : struct, IComparable<T>;
 
@@ -604,14 +604,14 @@ namespace Althea.Blas
 		/// </summary>
 		/// <param name="array">array to be set</param>
 		/// <param name="pos">positions, <see cref="int"/> array</param>
-		/// <param name="value">the value to set</param>
+		/// <param name="value">The value to set</param>
 		/// <param name="posN">length of <paramref name="pos"/> array</param>
 		public delegate void DelegateSetArrayWithValue<T>(Storage<T> array, T value, Storage<int> pos, long posN) where T : struct, IComparable<T>;
 
 		/// <summary>
 		/// Truncate the array by comparing between each element and the given one <c><paramref name="arr"/><sub>i</sub> ← 0  i.f.f. <paramref name="arr"/><sub>i</sub> &lt; abs(<paramref name="threshold"/>)</c>.
 		/// </summary>
-		/// <param name="arr">the array to be truncated</param>
+		/// <param name="arr">The array to be truncated</param>
 		/// <param name="threshold">if an element is smaller than <c><paramref name="threshold"/> * abs(the_largest_one)</c> , it will be set to 0</param>
 		/// <param name="N">length of <paramref name="arr"/></param>
 		void TruncateArray<T>(Storage<T> arr, float threshold, long N) where T : struct, IComparable<T>;
@@ -619,7 +619,7 @@ namespace Althea.Blas
 		/// <summary>
 		/// Truncate the array by comparing between each element and the given one <c><paramref name="arr"/><sub>i</sub> ← 0  i.f.f. <paramref name="arr"/><sub>i</sub> &lt; abs(<paramref name="threshold"/>)</c>.
 		/// </summary>
-		/// <param name="arr">the array to be truncated</param>
+		/// <param name="arr">The array to be truncated</param>
 		/// <param name="threshold">if an element is smaller than <c><paramref name="threshold"/> * abs(the_largest_one)</c> , it will be set to 0</param>
 		/// <param name="N">length of <paramref name="arr"/></param>
 		public delegate void DelegateTruncateArray<T>(Storage<T> arr, float threshold, long N) where T : struct, IComparable<T>;
@@ -627,18 +627,18 @@ namespace Althea.Blas
 		/// <summary>
 		/// Directly sum the array's elements.
 		/// </summary>
-		/// <param name="arr">the array to be summed</param>
+		/// <param name="arr">The array to be summed</param>
 		/// <param name="N">length of <paramref name="arr"/></param>
-		/// <param name="stride">the stride of <paramref name="arr"/></param>
+		/// <param name="stride">The stride of <paramref name="arr"/></param>
 		/// <returns>the sum</returns>
 		T Sum<T>(Storage<T> arr, long N, int stride) where T : struct, IComparable<T>;
 
 		/// <summary>
 		/// Directly sum the array's elements.
 		/// </summary>
-		/// <param name="arr">the array to be summed</param>
+		/// <param name="arr">The array to be summed</param>
 		/// <param name="N">length of <paramref name="arr"/></param>
-		/// <param name="stride">the stride of <paramref name="arr"/></param>
+		/// <param name="stride">The stride of <paramref name="arr"/></param>
 		/// <returns>the sum</returns>
 		public delegate T DelegateSum<T>(Storage<T> arr, long N, int stride) where T : struct, IComparable<T>;
 		#endregion

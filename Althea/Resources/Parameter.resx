@@ -156,4 +156,7 @@
   <data name="WrongSize" xml:space="preserve">
     <value>The given parameter has incompatible size.</value>
   </data>
+  <data name="ZeroSize" xml:space="preserve">
+    <value>The given parameter has size of zero which is not allowed.</value>
+  </data>
 </root>

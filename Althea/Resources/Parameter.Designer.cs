@@ -176,5 +176,14 @@ namespace Althea.Resources {
                 return ResourceManager.GetString("WrongSize", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似 The given parameter has size of zero which is not allowed. 的本地化字符串。
+        /// </summary>
+        internal static string ZeroSize {
+            get {
+                return ResourceManager.GetString("ZeroSize", resourceCulture);
+            }
+        }
     }
 }

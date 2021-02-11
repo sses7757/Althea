@@ -12,7 +12,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract vector class that inherit the <see cref="ValueArray{T}"/>.
 	/// </summary>
-	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
+	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
 	public abstract class VectorBase<T> : ValueArray<T>, IVector<VectorBase<T>, MatrixBase<T>, T> where T : struct, IComparable<T>
 	{
 		#region initialize and destroy
@@ -32,7 +32,7 @@ namespace Althea.Arrays
 		/// Abstract vector data constructor with separate length and actual memory size
 		/// </summary>
 		/// <param name="actualLength">actual length of vector to allocate on memory</param>
-		/// <param name="showLength">the display length of the vector</param>
+		/// <param name="showLength">The display length of the vector</param>
 		/// <param name="onHost">allocate one host memory or device memory</param>
 		protected VectorBase(long actualLength, long showLength, bool onHost) : base(actualLength, new long[] { showLength }, onHost) { }
 
@@ -78,8 +78,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <see cref="VectorBase{T}"/>. From <see cref="General.IKrylovVector{TVec, T}.OperateOn(IReadOnlyList{TVec}, T[])"/>
 		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
+		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
+		/// <param name="input">The input C# array to be operated</param>
 		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <see cref="VectorBase{T}"/>.</returns>
 		/// <remarks>this method can actually be static</remarks>
 		public abstract VectorBase<T> OperateOn(IReadOnlyList<VectorBase<T>> notJoinedVecs, T[] input);
@@ -113,13 +113,13 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Replace the values of this vector by the one from <paramref name="other"/>.
 		/// </summary>
-		/// <param name="other">the <see cref="VectorBase{T}"/> used to replace</param>
+		/// <param name="other">The <see cref="VectorBase{T}"/> used to replace</param>
 		public abstract void ReplaceBy(VectorBase<T> other);
 
 		/// <summary>
 		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H \vec{v}_{\text{other}}$.
 		/// </summary>
-		/// <param name="other">the other <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
 		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
 		/// <returns>The inner product result</returns>
 		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
@@ -128,20 +128,20 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
 		/// </summary>
-		/// <param name="other">the other <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
 		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
 		public abstract void PointWiseMultiply(VectorBase<T> other);
 
 		/// <summary>
 		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
 		/// </summary>
-		/// <param name="other">the other <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
 		public abstract void PointWiseDivide(VectorBase<T> other);
 
 		/// <summary>
 		/// Compute $\vec{v}_{\text{tobeDiv}} ./ \vec{v}_{\text{this}} \equiv \{\vec{v}_{\text{tobeDiv}}^i \vec{v}_{\text{this}}^i\}_i$.
 		/// </summary>
-		/// <param name="tobeDiv">the vector to be divided (to be in-place altered)</param>
+		/// <param name="tobeDiv">The vector to be divided (to be in-place altered)</param>
 		/// <remarks>The opposite of <see cref="PointWiseDivide"/>, only the classes directly inherits <see cref="VectorBase{T}"/> need to implement this method. This method is used by built-in <see cref="DenseVector{T}"/> and <see cref="SparseVector{T}"/> to implement <see cref="PointWiseDivide"/>.</remarks>
 		internal protected abstract void PointWiseDivide_Opposite(VectorBase<T> tobeDiv);
 
@@ -163,8 +163,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $\vec{y}_{\text{this}} = \beta \cdot \vec{y}_{\text{this}} + \alpha \cdot A^{\text{op}} \vec{x}$.
 		/// </summary>
-		/// <param name="x">the input <see cref="VectorBase{T}"/></param>
-		/// <param name="A">the input <see cref="MatrixBase{T}"/></param>
+		/// <param name="x">The input <see cref="VectorBase{T}"/></param>
+		/// <param name="A">The input <see cref="MatrixBase{T}"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
 		/// <param name="op"><see cref="MatrixOperation"/> applied to <paramref name="A"/></param>
@@ -185,9 +185,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$ out-of-place. From <see cref="IVector{TVec, TMat, T}.OuterProduct"/>
 		/// </summary>
-		/// <param name="other">the other input <see cref="VectorBase{T}"/></param>
+		/// <param name="other">The other input <see cref="VectorBase{T}"/></param>
 		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">the <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
 		/// <returns>The result <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null</returns>
 		public abstract MatrixBase<T> OuterProduct(VectorBase<T> other, bool? conjugateOther = null, MatrixBase<T> overwrite = null);
 		#endregion
@@ -378,7 +378,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check the range then return offset and count.
 		/// </summary>
-		/// <param name="range">the input <see cref="Range"/></param>
+		/// <param name="range">The input <see cref="Range"/></param>
 		/// <returns>offset and count</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="range"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -395,7 +395,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check the index then return the offset.
 		/// </summary>
-		/// <param name="index">the input <see cref="Index"/></param>
+		/// <param name="index">The input <see cref="Index"/></param>
 		/// <returns>offset</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -410,7 +410,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check the indices then return the offsets.
 		/// </summary>
-		/// <param name="indices">the input array of <see cref="Index"/></param>
+		/// <param name="indices">The input array of <see cref="Index"/></param>
 		/// <returns>offsets</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if any <paramref name="indices"/> is out of range</exception>
 		/// <exception cref="ArgumentException">if <paramref name="indices"/> they are not unique</exception>
@@ -426,7 +426,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check the ranges then return offsets.
 		/// </summary>
-		/// <param name="ranges">the input array of <see cref="Range"/></param>
+		/// <param name="ranges">The input array of <see cref="Range"/></param>
 		/// <returns>offsets</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if any <paramref name="ranges"/> is out of range</exception>
 		/// <exception cref="ArgumentException">if <paramref name="ranges"/> overlap</exception>
@@ -451,7 +451,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Single range indexer of vector, new in <see cref="VectorBase{T}"/>.
 		/// </summary>
-		/// <param name="r">the <see cref="Range"/> of index</param>
+		/// <param name="r">The <see cref="Range"/> of index</param>
 		/// <returns>The reference <see cref="VectorBase{T}"/> of the selected range</returns>
 		/// <remarks>Range [a, b) are inclusive and exclusive respectively. See <see cref="Range"/> and <see cref="Index"/> for more information</remarks>
 		public abstract VectorBase<T> this[Range r] { get; set; }
@@ -467,7 +467,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Multiple range indexer of vector, new in <see cref="VectorBase{T}"/>.
 		/// </summary>
-		/// <param name="ranges">the array of <see cref="Range"/> of indices</param>
+		/// <param name="ranges">The array of <see cref="Range"/> of indices</param>
 		/// <returns>All the values inside the ranges are copied to a new <see cref="DenseVector{T}"/></returns>
 		/// <remarks>This indexer copies the values in the ranges, altering the retrieved values does not change this array's values at these positions</remarks>
 		public abstract DenseVector<T> this[params Range[] ranges] { get; set; }

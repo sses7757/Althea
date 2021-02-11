@@ -11,14 +11,14 @@ namespace Althea.Linq
 	/// <summary>
 	/// The interface for immutable set
 	/// </summary>
-	/// <typeparam name="T">the data type</typeparam>
+	/// <typeparam name="T">The data type</typeparam>
 	public interface IImmutableSet<T> : IReadOnlyList<T>, IEquatable<IImmutableSet<T>>
 	{
 		/// <summary>
 		/// Remove all elements in the specified set from the current set.
 		/// </summary>
 		/// <param name="other">The collection of items to remove from the set.</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>A new set as the result</returns>
 		IImmutableSet<T> ExceptWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null);
 
@@ -26,15 +26,15 @@ namespace Althea.Linq
 		/// Pick all elements in the specified set from the current set.
 		/// </summary>
 		/// <param name="other">The collection of items to intersect from the set.</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>A new set as the result</returns>
 		IImmutableSet<T> IntersectWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null);
 
 		/// <summary>
 		/// Generate a new set so that it contains all elements that are present in the current set, in the specified set, or in both.
 		/// </summary>
-		/// <param name="other">the other set</param>
-		/// <param name="comparer">the <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
+		/// <param name="other">The other set</param>
+		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns>A new set as the result</returns>
 		IImmutableSet<T> UnionWith(IImmutableSet<T> other, IEqualityComparer<T>? comparer = null);
 
@@ -203,7 +203,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Create a <see cref="ImmutableZeroOneElementSet{T}"/> with given one element
 		/// </summary>
-		/// <param name="data">the given element</param>
+		/// <param name="data">The given element</param>
 		public ImmutableZeroOneElementSet(T data)
 		{
 			this.hasValue = true;
@@ -366,8 +366,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Create a <see cref="ImmutableTwoElementSet{T}"/> with given two elements
 		/// </summary>
-		/// <param name="data1">the first given element</param>
-		/// <param name="data2">the second given element</param>
+		/// <param name="data1">The first given element</param>
+		/// <param name="data2">The second given element</param>
 		/// <exception cref="InvalidOperationException">if <paramref name="data1"/> == <paramref name="data2"/></exception>
 		public ImmutableTwoElementSet(T data1, T data2)
 		{
@@ -541,9 +541,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Create a <see cref="ImmutableThreeElementSet{T}"/> with given three elements
 		/// </summary>
-		/// <param name="data1">the first given element</param>
-		/// <param name="data2">the second given element</param>
-		/// <param name="data3">the third given element</param>
+		/// <param name="data1">The first given element</param>
+		/// <param name="data2">The second given element</param>
+		/// <param name="data3">The third given element</param>
 		/// <exception cref="InvalidOperationException">if <paramref name="data1"/> == <paramref name="data2"/> or <paramref name="data2"/> == <paramref name="data3"/></exception>
 		public ImmutableThreeElementSet(T data1, T data2, T data3)
 		{
@@ -728,7 +728,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Binary search <paramref name="value"/> to get its index of occurrence
 		/// </summary>
-		/// <param name="value">the value to search</param>
+		/// <param name="value">The value to search</param>
 		/// <returns>the index of occurrence</returns>
 		int BinarySearch(T value);
 
@@ -837,63 +837,63 @@ namespace Althea.Linq
 	/// <summary>
 	/// Represents a method that aggregate <paramref name="value"/> and <paramref name="aggergatedValue"/>.
 	/// </summary>
-	/// <typeparam name="T">the input type</typeparam>
-	/// <typeparam name="TAggergate">the aggregated value's type</typeparam>
-	/// <param name="value">the value to be aggregated</param>
-	/// <param name="aggergatedValue">the previously aggregated value to be aggregated with <paramref name="value"/></param>
+	/// <typeparam name="T">The input type</typeparam>
+	/// <typeparam name="TAggergate">The aggregated value's type</typeparam>
+	/// <param name="value">The value to be aggregated</param>
+	/// <param name="aggergatedValue">The previously aggregated value to be aggregated with <paramref name="value"/></param>
 	/// <returns>the aggregation of <paramref name="value"/> and <paramref name="aggergatedValue"/></returns>
 	public delegate TAggergate Aggregator<in T, TAggergate>(T value, TAggergate aggergatedValue);
 
 	/// <summary>
 	/// Represents a method that check if the two input values are the same.
 	/// </summary>
-	/// <typeparam name="TL">the left input type</typeparam>
-	/// <typeparam name="TR">the right input type</typeparam>
-	/// <param name="left">the left value to compare</param>
-	/// <param name="right">the right value to compare</param>
+	/// <typeparam name="TL">The left input type</typeparam>
+	/// <typeparam name="TR">The right input type</typeparam>
+	/// <param name="left">The left value to compare</param>
+	/// <param name="right">The right value to compare</param>
 	/// <returns><paramref name="left"/> equals <paramref name="right"/> or not</returns>
 	public delegate bool EqualComparer<in TL, in TR>(TL left, TR right);
 
 	/// <summary>
 	/// Represents a method that receives a <paramref name="value"/> of a list and the corresponding <paramref name="index"/> and outputs the convert result.
 	/// </summary>
-	/// <typeparam name="TIn">the input value's type</typeparam>
-	/// <typeparam name="TOut">the output type</typeparam>
-	/// <param name="value">the value</param>
-	/// <param name="index">the corresponding index</param>
+	/// <typeparam name="TIn">The input value's type</typeparam>
+	/// <typeparam name="TOut">The output type</typeparam>
+	/// <param name="value">The value</param>
+	/// <param name="index">The corresponding index</param>
 	/// <returns>the converted value as a <typeparamref name="TOut"/></returns>
 	public delegate TOut Selector<in TIn, out TOut>(TIn value, int index);
 
 	/// <summary>
 	/// Represents a method that receives a <paramref name="value"/> of a list and the corresponding <paramref name="index"/> and outputs the predication result.
 	/// </summary>
-	/// <typeparam name="TIn">the input value's type</typeparam>
-	/// <param name="value">the value</param>
-	/// <param name="index">the corresponding index</param>
+	/// <typeparam name="TIn">The input value's type</typeparam>
+	/// <param name="value">The value</param>
+	/// <param name="index">The corresponding index</param>
 	/// <returns>the predication result as a <see cref="bool"/></returns>
 	public delegate bool IndexPredicator<in TIn>(TIn value, int index);
 
 	/// <summary>
 	/// Represents a method that converts two objects of possible different types to another type.
 	/// </summary>
-	/// <typeparam name="T1">the first input's type</typeparam>
-	/// <typeparam name="T2">the second input's type</typeparam>
-	/// <typeparam name="TOut">the output type</typeparam>
-	/// <param name="input1">the first input parameter to be converted</param>
-	/// <param name="input2">the second input parameter to be converted</param>
+	/// <typeparam name="T1">The first input's type</typeparam>
+	/// <typeparam name="T2">The second input's type</typeparam>
+	/// <typeparam name="TOut">The output type</typeparam>
+	/// <param name="input1">The first input parameter to be converted</param>
+	/// <param name="input2">The second input parameter to be converted</param>
 	/// <returns>the converted output as a <typeparamref name="TOut"/></returns>
 	public delegate TOut ZipConverter<in T1, in T2, out TOut>(T1 input1, T2 input2);
 
 	/// <summary>
 	/// Represents a method that converts three objects of possible different types to another type.
 	/// </summary>
-	/// <typeparam name="T1">the first input's type</typeparam>
-	/// <typeparam name="T2">the second input's type</typeparam>
-	/// <typeparam name="T3">the third input's type</typeparam>
-	/// <typeparam name="TOut">the output type</typeparam>
-	/// <param name="input1">the first input parameter to be converted</param>
-	/// <param name="input2">the second input parameter to be converted</param>
-	/// <param name="input3">the third input parameter to be converted</param>
+	/// <typeparam name="T1">The first input's type</typeparam>
+	/// <typeparam name="T2">The second input's type</typeparam>
+	/// <typeparam name="T3">The third input's type</typeparam>
+	/// <typeparam name="TOut">The output type</typeparam>
+	/// <param name="input1">The first input parameter to be converted</param>
+	/// <param name="input2">The second input parameter to be converted</param>
+	/// <param name="input3">The third input parameter to be converted</param>
 	/// <returns>the converted output as a <typeparamref name="TOut"/></returns>
 	public delegate TOut ZipConverter<in T1, in T2, in T3, out TOut>(T1 input1, T2 input2, T3 input3);
 	#endregion

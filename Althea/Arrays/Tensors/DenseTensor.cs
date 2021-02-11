@@ -16,7 +16,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The general dense tensor class that inherit the <see cref="ValueArray{T}"/> and implements <see cref="IDenseArray{T}"/>.
 	/// </summary>
-	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
+	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
 	public sealed class DenseTensor<T> : ValueArray<T>, ITensor<DenseTensor<T>, T>, ITensorAsMatrix<DenseTensor<T>, T>, IDenseArray<T>
 		where T : struct, IComparable<T>
 	{
@@ -109,7 +109,7 @@ namespace Althea.Arrays
 		/// Create a new tensor
 		/// </summary>
 		/// <param name="size">size array</param>
-		/// <param name="label">the label</param>
+		/// <param name="label">The label</param>
 		/// <param name="onHost">allocate on host or device memory</param>
 		public DenseTensor(IReadOnlyList<long> size, IReadOnlyList<char> label = null, bool onHost = false) : base(size.Prod(), size, onHost)
 		{
@@ -123,7 +123,7 @@ namespace Althea.Arrays
 		/// Create a new tensor with pre-allocated pointer
 		/// </summary>
 		/// <param name="size">size array</param>
-		/// <param name="pointer">the pre-allocated data pointer</param>
+		/// <param name="pointer">The pre-allocated data pointer</param>
 		public DenseTensor(Storage<T> pointer, IReadOnlyList<long> size) : base(pointer, size)
 		{
 			if (size is null || size.Count == 0)
@@ -133,7 +133,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Reference initializer
 		/// </summary>
-		/// <param name="refArray">the reference array</param>
+		/// <param name="refArray">The reference array</param>
 		/// <param name="newSize">new size of this tensor</param>
 		/// <param name="offset">offset to <paramref name="refArray"/>'s <see cref="ValueArray{T}.Storage"/></param>
 		public DenseTensor(ValueArray<T> refArray, long[] newSize, long offset = 0) : base(refArray, newSize.Prod(), newSize, offset)
@@ -165,7 +165,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the values of this tensor to a C# array.
 		/// </summary>
-		/// <param name="ranges">the range with max value = length of this vector, default is all</param>
+		/// <param name="ranges">The range with max value = length of this vector, default is all</param>
 		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this vector</returns>
 		/// <remarks>currently, only a all <see cref="Range.All"/> <paramref name="ranges"/> is supported</remarks>
 		public T[] ToFortranOrderArray(params Range[] ranges)
@@ -183,8 +183,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Copy the <paramref name="values"/> into this dense tensor.
 		/// </summary>
-		/// <param name="values">the value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		/// <remarks>currently, only a all <see cref="Range.All"/> <paramref name="ranges"/> is supported</remarks>
 		public void FromFortranOrderArray(T[] values, params Range[] ranges)
 		{
@@ -219,7 +219,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^H) \vec{v}_{\text{other}}$.
 		/// </summary>
-		/// <param name="other">the other tensor</param>
+		/// <param name="other">The other tensor</param>
 		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
 		/// <returns>The inner product result</returns>
 		public T Dot(DenseTensor<T> other, bool? conjugateThis = null)
@@ -248,8 +248,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result tensor.
 		/// </summary>
-		/// <param name="notJoinedVecs">the columns of the matrix to operate</param>
-		/// <param name="input">the input C# array to be operated</param>
+		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
+		/// <param name="input">The input C# array to be operated</param>
 		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as tensor.</returns>
 		/// <remarks>this method is actually static</remarks>
 		public DenseTensor<T> OperateOn(IReadOnlyList<DenseTensor<T>> notJoinedVecs, T[] input)
@@ -350,7 +350,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create a new array like this one (with same type and other info) while the data type is <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the new data type</typeparam>
+		/// <typeparam name="TOut">The new data type</typeparam>
 		/// <returns>the new array</returns>
 		public override ValueArray<TOut> NewArrayAlike<TOut>() => new DenseTensor<TOut>(this.Size, label: this.Label, onHost: this.OnHost);
 
@@ -450,7 +450,7 @@ namespace Althea.Arrays
 		/// Scaling operator for a tensor.
 		/// </summary>
 		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <param name="α">the scalar to multiply</param>
+		/// <param name="α">The scalar to multiply</param>
 		/// <returns>the scaling result</returns>
 		/// <remarks>the <see cref="Label"/> of operand will be ignored</remarks>
 		public static DenseTensor<T> operator *(DenseTensor<T> left, T α)
@@ -465,7 +465,7 @@ namespace Althea.Arrays
 		/// Scaling operator for a tensor.
 		/// </summary>
 		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <param name="α">the scalar to multiply</param>
+		/// <param name="α">The scalar to multiply</param>
 		/// <returns>the scaling result</returns>
 		/// <remarks>the <see cref="Label"/> of operand will be ignored</remarks>
 		public static DenseTensor<T> operator *(T α, DenseTensor<T> left) => left * α;
@@ -517,8 +517,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Permute <paramref name="tensor"/> by <paramref name="order"/> and replace to this tensor
 		/// </summary>
-		/// <param name="tensor">the tensor to be permuted</param>
-		/// <param name="order">the new permutation <see cref="TensorOrder"/>, zero-based</param>
+		/// <param name="tensor">The tensor to be permuted</param>
+		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
 		public void Permute(DenseTensor<T> tensor, TensorOrder order)
 		{
 			tensor.Permute(Scalars<T>.One, UnitaryOperation.Identity, order, overwrite: this);
@@ -527,7 +527,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Permute (general transpose) and this tensor to form a <b>new</b> one.
 		/// </summary>
-		/// <param name="order">the new permutation <see cref="TensorOrder"/>, zero-based</param>
+		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
 		/// <returns>the result tensor, a new <see cref="DenseTensor{T}"/></returns>
 		public DenseTensor<T> OperatorPermute(TensorOrder order)
 		{
@@ -539,7 +539,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="right">right operand</param>
 		/// <returns>the contraction result, out-of-place</returns>
-		/// <param name="order">the order of the result tensor, default is the alphabetic order</param>
+		/// <param name="order">The order of the result tensor, default is the alphabetic order</param>
 		/// <remarks>the <see cref="ITensor.Label"/> of operands will be utilized</remarks>
 		public DenseTensor<T> OperatorContract(DenseTensor<T> right, params char[] order)
 		{
@@ -586,10 +586,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Tensor product between this tensor and <paramref name="other"/> tensor to form a <b>new</b> tensor.
 		/// </summary>
-		/// <param name="other">the other <see cref="DenseTensor{T}"/> to product</param>
-		/// <param name="α">the scalar to multiply</param>
+		/// <param name="other">The other <see cref="DenseTensor{T}"/> to product</param>
+		/// <param name="α">The scalar to multiply</param>
 		/// <param name="conjugateOther">perform conjugate to <paramref name="other"/> or not, default is true for complex and false otherwise</param>
-		/// <param name="overwrite">the overwrite result <see cref="DenseTensor{T}"/></param>
+		/// <param name="overwrite">The overwrite result <see cref="DenseTensor{T}"/></param>
 		/// <returns>the result tensor, a new <see cref="DenseTensor{T}"/> if <paramref name="overwrite"/> does not meet conditions</returns>
 		public DenseTensor<T> TensorProduct(DenseTensor<T> other, T α, bool? conjugateOther = null, DenseTensor<T> overwrite = null)
 		{
@@ -619,10 +619,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Permute (general transpose) and scale this tensor to form a <b>new</b> tensor: $A_{i_0,i_1,...,i_n} = \alpha \Psi(A_{\Pi(i_0,i_1,...,i_n)})$.
 		/// </summary>
-		/// <param name="newOrder">the new permutation <see cref="TensorOrder"/>, zero-based</param>
-		/// <param name="α">the scalar to multiply</param>
-		/// <param name="op">the <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
-		/// <param name="overwrite">the overwrite result <see cref="DenseTensor{T}"/></param>
+		/// <param name="newOrder">The new permutation <see cref="TensorOrder"/>, zero-based</param>
+		/// <param name="α">The scalar to multiply</param>
+		/// <param name="op">The <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
+		/// <param name="overwrite">The overwrite result <see cref="DenseTensor{T}"/></param>
 		/// <returns>the result tensor, a new <see cref="DenseTensor{T}"/> if <paramref name="overwrite"/> does not meet conditions</returns>
 		public DenseTensor<T> Permute(T α, UnitaryOperation op, TensorOrder newOrder, DenseTensor<T> overwrite = null)
 		{
@@ -650,7 +650,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Partial reduction of tensor <paramref name="A"/>: $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$. The missing indices of <paramref name="A"/> compared to <paramref name="C"/> will be aggregated according to <paramref name="reduction"/>.
 		/// </summary>
-		/// <param name="reduction">the reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
+		/// <param name="reduction">The reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
 		/// <param name="α">scalar α</param>
 		/// <param name="opA"><see cref="UnitaryOperation"/> <c>Ψ<sub>A</sub></c></param>
 		/// <param name="A"><see cref="DenseTensor{T}"/> A</param>
@@ -683,11 +683,11 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Multiply this tensor as a matrix with the <paramref name="right"/> tensor as another matrix.
 		/// </summary>
-		/// <param name="right">the other <see cref="DenseTensor{T}"/> as a matrix</param>
+		/// <param name="right">The other <see cref="DenseTensor{T}"/> as a matrix</param>
 		/// <param name="partitionLeft">a <see cref="Index"/> to indicate the first <paramref name="partitionLeft"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
 		/// <param name="partitionRight">a <see cref="Index"/> to indicate the first <paramref name="partitionRight"/> (exclude) indices of tensor <paramref name="right"/> will be regarded as the row and others column</param>
-		/// <param name="leftOp">the <see cref="MatrixOperation"/> to apply on this one</param>
-		/// <param name="rightOp">the <see cref="MatrixOperation"/> to apply on <paramref name="right"/></param>
+		/// <param name="leftOp">The <see cref="MatrixOperation"/> to apply on this one</param>
+		/// <param name="rightOp">The <see cref="MatrixOperation"/> to apply on <paramref name="right"/></param>
 		/// <returns>the multiplication result, out-of-place</returns>
 		public DenseTensor<T> OperatorMatrixMultiply(DenseTensor<T> right, Index partitionLeft, Index partitionRight, MatrixOperation leftOp = MatrixOperation.None, MatrixOperation rightOp = MatrixOperation.None)
 		{
@@ -750,7 +750,7 @@ namespace Althea.Arrays
 		/// Compute the singular value decomposition (SVD) of this tensor and corresponding the left and/or right singular vectors: $A = U S V^*$ <b>out-of-place</b>, where $A$ is this matrix. Not necessarily sorted descending by singular values. Then truncate the singular values $S$ and vectors $U$, $V^*$ to preserve at most <paramref name="maxPreserve"/> entries.
 		/// </summary>
 		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="maxPreserve">the maximum number of singular values and vectors to preserve, must be positive</param>
+		/// <param name="maxPreserve">The maximum number of singular values and vectors to preserve, must be positive</param>
 		/// <returns>The singular values and left, right singular vectors with at most <paramref name="maxPreserve"/> entries.</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="partition"/> is out of range</exception>
@@ -874,7 +874,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Shift all the eigenvalues of this tensor by adding <paramref name="shift"/> to each diagonal elements of this tensor as a matrix.
 		/// </summary>
-		/// <param name="shift">the shift value, if it is zero, no operation shall be performed</param>
+		/// <param name="shift">The shift value, if it is zero, no operation shall be performed</param>
 		/// <exception cref="InvalidOperationException">if this tensor's shape is not a square matrix</exception>
 		public void EigenvalueShift(T shift)
 		{
@@ -894,7 +894,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get or set an element in of this tensor like a vector.
 		/// </summary>
-		/// <param name="i">the index in memory</param>
+		/// <param name="i">The index in memory</param>
 		/// <returns>the value at index <paramref name="i"/></returns>
 		public T this[Index i] {
 			get {
@@ -940,7 +940,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get or set an element in of this tensor.
 		/// </summary>
-		/// <param name="pos">the indices of each rank</param>
+		/// <param name="pos">The indices of each rank</param>
 		/// <returns>the value at <paramref name="pos"/></returns>
 		public T this[params Index[] pos] {
 			get {
@@ -968,7 +968,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Set the sub tensor formed by the first N rank of this tensor.
 		/// </summary>
-		/// <param name="value">the value to set</param>
+		/// <param name="value">The value to set</param>
 		/// <param name="firstNRank">first N ranks to set or get</param>
 		/// <param name="restPos">rest of the tensor's rank's position <see cref="Index"/></param>
 		/// <returns>the sub <see cref="DenseTensor{T}"/> of the <paramref name="firstNRank"/> at <paramref name="restPos"/></returns>

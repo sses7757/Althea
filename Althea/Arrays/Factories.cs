@@ -15,8 +15,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Abstract method to create array by size from other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/>.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="size">the size of the array about to create</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="size">The size of the array about to create</param>
 		/// <param name="onHost">create on host memory or device</param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array</returns>
@@ -27,9 +27,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Abstract method to reconstruct array from the pointers obtained from <see cref="ValueArray{T}.GetPointers"/> and other information from <see cref="ValueArray{T}.GetOtherInfo"/>.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="size">the size of the array about to create</param>
-		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="size">The size of the array about to create</param>
+		/// <param name="pointers">The pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array</returns>
 		ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>;
@@ -83,9 +83,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create an array of concrete type <typeparamref name="TArray"/> using reflection.
 		/// </summary>
-		/// <typeparam name="TArray">the concrete array type</typeparam>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="size">the size of the array about to create</param>
+		/// <typeparam name="TArray">The concrete array type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="size">The size of the array about to create</param>
 		/// <param name="onHost">create on host memory or device</param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <typeparamref name="TArray"/></returns>
@@ -104,9 +104,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create an array of concrete type <paramref name="arrayType"/> using reflection.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="arrayType">the type of the array to reconstruct</param>
-		/// <param name="size">the size of the array about to create</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="arrayType">The type of the array to reconstruct</param>
+		/// <param name="size">The size of the array about to create</param>
 		/// <param name="onHost">create on host memory or device</param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <paramref name="arrayType"/></returns>
@@ -131,10 +131,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Reconstruct an array of concrete type <typeparamref name="TArray"/> using reflection.
 		/// </summary>
-		/// <typeparam name="TArray">the concrete array type</typeparam>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="size">the size of the array about to create</param>
-		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
+		/// <typeparam name="TArray">The concrete array type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="size">The size of the array about to create</param>
+		/// <param name="pointers">The pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <typeparamref name="TArray"/></returns>
 		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
@@ -151,10 +151,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Reconstruct an array of concrete type <paramref name="arrayType"/> using reflection.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="arrayType">the type of the array to reconstruct</param>
-		/// <param name="size">the size of the array about to create</param>
-		/// <param name="pointers">the pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="arrayType">The type of the array to reconstruct</param>
+		/// <param name="size">The size of the array about to create</param>
+		/// <param name="pointers">The pointers obtained from <see cref="ValueArray{T}.GetPointers"/></param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetOtherInfo"/></param>
 		/// <returns>created array of type <paramref name="arrayType"/></returns>
 		/// <remarks>If <paramref name="arrayType"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" which should also lie in the same naming space.</remarks>
@@ -176,7 +176,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create from C# array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="array">a C# array</param>
 		/// <param name="onHost">create on host memory or device, default device</param>
 		/// <returns>the created <see cref="VectorBase{T}"/></returns>
@@ -188,7 +188,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create from C# 2D array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="array">a C# 2D array</param>
 		/// <param name="onHost">create on host memory or device, default device</param>
 		/// <returns>the created <see cref="MatrixBase{T}"/></returns>
@@ -200,7 +200,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create from C# arrays as columns
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="array">C# arrays as columns</param>
 		/// <param name="onHost">create on host memory or device, default device</param>
 		/// <returns>the created <see cref="MatrixBase{T}"/></returns>
@@ -221,9 +221,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create from C# array as a column-majored 1D array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="array">C# array as a column-majored 1D array</param>
-		/// <param name="rows">the number of rows</param>
+		/// <param name="rows">The number of rows</param>
 		/// <param name="onHost">create on host memory or device, default device</param>
 		/// <returns>the created <see cref="MatrixBase{T}"/></returns>
 		public static MatrixBase<T> FromColumnMajoredArray<T>(T[] array, long rows, bool onHost = false) where T : struct, IComparable<T>
@@ -237,10 +237,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create from C# value and index array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="array">a C# value array</param>
 		/// <param name="index">a C# index array</param>
-		/// <param name="length">the length of the array, default 0 means using the maximum value of <paramref name="index"/></param>
+		/// <param name="length">The length of the array, default 0 means using the maximum value of <paramref name="index"/></param>
 		/// <param name="onHost">create on host memory or device, default device</param>
 		/// <returns>the created <see cref="VectorBase{T}"/></returns>
 		public static VectorBase<T> FromIndexedArray<T>(T[] array, int[] index, int length = 0, bool onHost = false) where T : struct, IComparable<T>
@@ -251,12 +251,12 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create from C# value and index array
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="array">a C# value array</param>
 		/// <param name="rowIndex">a C# row index array</param>
 		/// <param name="columnIndex">a C# column index array</param>
-		/// <param name="rows">the length of the array, default 0 means using the maximum value of <paramref name="rowIndex"/></param>
-		/// <param name="columns">the length of the array, default 0 means using the maximum value of <paramref name="columnIndex"/></param>
+		/// <param name="rows">The length of the array, default 0 means using the maximum value of <paramref name="rowIndex"/></param>
+		/// <param name="columns">The length of the array, default 0 means using the maximum value of <paramref name="columnIndex"/></param>
 		/// <param name="onHost">create on host memory or device, default device</param>
 		/// <returns>the created <see cref="MatrixBase{T}"/></returns>
 		public static MatrixBase<T> FromIndexedArray<T>(T[] array, int[] rowIndex, int[] columnIndex, int rows = 0, int columns = 0, bool onHost = false) where T : struct, IComparable<T>
@@ -269,10 +269,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check the pointer and cast it into target type
 		/// </summary>
-		/// <typeparam name="T">the type to cast to</typeparam>
-		/// <param name="pointers">the pointers' dictionary</param>
+		/// <typeparam name="T">The type to cast to</typeparam>
+		/// <param name="pointers">The pointers' dictionary</param>
 		/// <param name="name">pointer name to check</param>
-		/// <param name="size">the size to check, default 0 means do not check</param>
+		/// <param name="size">The size to check, default 0 means do not check</param>
 		/// <returns>the casted <see cref="Storage{T}"/></returns>
 		public static Storage<T> CheckPointer<T>(IReadOnlyDictionary<string, IStorage> pointers, string name, long size = 0) where T : struct
 		{

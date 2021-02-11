@@ -86,10 +86,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be powered in-place</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="p">The exponent as a <see cref="int"/></param>
+		/// <param name="p">The exponent as a <see cref="double"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		public abstract void PointWisePower<T>(Storage<T> x, int stride, int p) where T : unmanaged;
+		public abstract void PointWisePower<T>(Storage<T> x, int stride, double p) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>.^<paramref name="p"/></c> (point-wise power).

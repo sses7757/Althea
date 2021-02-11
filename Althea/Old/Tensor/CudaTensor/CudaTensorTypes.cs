@@ -221,8 +221,8 @@ namespace Althea.Tensor.Cuda
 		/// Create a <see cref="TensorDescription"/>
 		/// </summary>
 		/// <typeparam name="T">see <see cref="Storage.Storage{T}"/> for supported data types</typeparam>
-		/// <param name="handle">the CUDA Tensor library handle</param>
-		/// <param name="op">the <see cref="UnitaryOperation"/> to the tensor in the following computation, default identity</param>
+		/// <param name="handle">The CUDA Tensor library handle</param>
+		/// <param name="op">The <see cref="UnitaryOperation"/> to the tensor in the following computation, default identity</param>
 		/// <param name="size">size/extent of each dimension of the tensor</param>
 		/// <param name="stride">stride of each dimension of the tensor, default null means that all strides are one</param>
 		/// <returns>the created <see cref="TensorDescription"/></returns>
@@ -266,7 +266,7 @@ namespace Althea.Tensor.Cuda
 		/// <summary>
 		/// Determines whether this == <paramref name="other"/>
 		/// </summary>
-		/// <param name="other">the other <see cref="ContractDescription"/></param>
+		/// <param name="other">The other <see cref="ContractDescription"/></param>
 		/// <returns>equals or not</returns>
 		public bool Equals(ContractDescription other)
 		{
@@ -276,7 +276,7 @@ namespace Althea.Tensor.Cuda
 		/// <summary>
 		/// Determines whether this == <paramref name="obj"/>
 		/// </summary>
-		/// <param name="obj">the other <see cref="object"/></param>
+		/// <param name="obj">The other <see cref="object"/></param>
 		/// <returns>equals or not</returns>
 		public override bool Equals(object obj)
 		{

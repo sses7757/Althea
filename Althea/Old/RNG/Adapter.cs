@@ -11,28 +11,28 @@ namespace Althea.Rng
 		/// <summary>
 		/// Set seed of this random generator
 		/// </summary>
-		/// <param name="seed">the seed</param>
+		/// <param name="seed">The seed</param>
 		void SetSeed(long seed);
 
 		/// <summary>
 		/// Fill an array with generated random 32-bit integers (<see cref="int"/>), each bit random.
 		/// </summary>
-		/// <param name="arr">the array to fill</param>
-		/// <param name="length">the length of the array</param>
+		/// <param name="arr">The array to fill</param>
+		/// <param name="length">The length of the array</param>
 		void GenerateInt(IntPtr arr, long length);
 
 		/// <summary>
 		/// Fill an array with generated random <see cref="float"/>s in range [0.0f, 1.0f).
 		/// </summary>
-		/// <param name="arr">the array to fill</param>
-		/// <param name="length">the length of the array</param>
+		/// <param name="arr">The array to fill</param>
+		/// <param name="length">The length of the array</param>
 		void GenerateSingle(IntPtr arr, long length);
 
 		/// <summary>
 		/// Fill an array with generated random <see cref="double"/>s in range [0.0d, 1.0d).
 		/// </summary>
-		/// <param name="arr">the array to fill</param>
-		/// <param name="length">the length of the array</param>
+		/// <param name="arr">The array to fill</param>
+		/// <param name="length">The length of the array</param>
 		void GenerateDouble(IntPtr arr, long length);
 	}
 }
@@ -89,7 +89,7 @@ namespace Althea.Rng.Cuda
 		/// <summary>
 		/// Set seed of random generator.
 		/// </summary>
-		/// <param name="seed">the <see cref="long"/> seed to set</param>
+		/// <param name="seed">The <see cref="long"/> seed to set</param>
 		public void SetSeed(long seed)
 		{
 			NativeMethods.curandSetPseudoRandomGeneratorSeed(this.handle, seed).Check();
@@ -99,7 +99,7 @@ namespace Althea.Rng.Cuda
 		/// Set the absolute offset of the pseudo or quasi-random number generator. All values of offset are valid.
 		/// <br/>The offset position is absolute, not relative to the current position in the sequence.
 		/// </summary>
-		/// <param name="offset">the <see cref="long"/> offset to set</param>
+		/// <param name="offset">The <see cref="long"/> offset to set</param>
 		/// <exception cref="StatusException">if the returned status is not success</exception>
 		public void SetOffset(long offset)
 		{

@@ -10,7 +10,7 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The interface for custom native types such as <c>long double</c> in C++ on some platforms.
 	/// </summary>
-	/// <typeparam name="T">the type of actual struct that implement this interface</typeparam>
+	/// <typeparam name="T">The type of actual struct that implement this interface</typeparam>
 	public interface ICustomNativeType<T> : IFormattable where T : unmanaged, ICustomNativeType<T>
 	{
 		/// <summary>
@@ -22,15 +22,15 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// A in-fact <b>static</b> method to be implemented to parse a string <paramref name="str"/> to <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="str">the <see cref="string"/> to be parsed</param>
-		/// <param name="result">the output result of type <typeparamref name="T"/></param>
+		/// <param name="str">The <see cref="string"/> to be parsed</param>
+		/// <param name="result">The output result of type <typeparamref name="T"/></param>
 		/// <returns>success or not</returns>
 		protected bool TryParse_Internal(string str, out T result);
 
 		/// <summary>
 		/// A static method to be implemented to parse a string <paramref name="str"/> to <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="str">the <see cref="string"/> to be parsed</param>
+		/// <param name="str">The <see cref="string"/> to be parsed</param>
 		/// <returns>the output result of type <typeparamref name="T"/>, null means unsuccessful parse</returns>
 		public static object? TryParse(string str)
 		{
@@ -117,7 +117,7 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// Generic type scalars
 	/// </summary>
-	/// <typeparam name="T">the data type</typeparam>
+	/// <typeparam name="T">The data type</typeparam>
 	public static class Scalars<T> where T : unmanaged
 	{
 		/// <summary>
@@ -160,7 +160,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic type zero value checker
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="a">input number</param>
 		/// <returns><c><paramref name="a"/> == 0</c> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -172,7 +172,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic type one value checker
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
+		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="a">input number</param>
 		/// <returns><c><paramref name="a"/> == 1</c> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -186,9 +186,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic type number reciprocal.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
-		/// <param name="a">input number</param>
-		/// <returns>reciprocal of the number</returns>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <returns>The reciprocal of the <paramref name="a"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GenericReciprocal<T>(this T a) where T : unmanaged
 		{
@@ -198,9 +198,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic type number negate.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
-		/// <param name="a">input number</param>
-		/// <returns>negation of the number</returns>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <returns>The negation of the <paramref name="a"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GenericNegate<T>(this T a) where T : unmanaged
 		{
@@ -210,10 +210,10 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic type number add.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
-		/// <param name="a">input left number</param>
-		/// <param name="b">input right number</param>
-		/// <returns>negation of the number</returns>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input left number</param>
+		/// <param name="b">The input right number</param>
+		/// <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GenericAdd<T>(this T a, T b) where T : unmanaged
 		{
@@ -223,9 +223,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic type number conjugate.
 		/// </summary>
-		/// <typeparam name="T">the supported data type</typeparam>
-		/// <param name="a">input number</param>
-		/// <returns>complex conjugate of the number</returns>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <returns>The complex conjugate of <paramref name="a"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GenericConjugate<T>(this T a) where T : unmanaged
@@ -233,7 +233,7 @@ namespace Althea.NativeTypes
 			T? result = a switch
 			{
 				sbyte or short or int or long => a,
-				byte or ushort or int or long => a,
+				byte or ushort or uint or ulong => a,
 				float or double or decimal => a,
 				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Conjugate(),
 				Complex<short> a_short => (T)(dynamic)a_short.Conjugate(),
@@ -255,6 +255,45 @@ namespace Althea.NativeTypes
 				throw new NotSupportedException(Resources.Support.DataType);
 			if (typeof(T).IsComplexDirect())
 				return (T)((dynamic)a).Conjugate();
+			else
+				return a;
+		}
+
+		/// <summary>
+		/// Generic type number absolute value.
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <returns>The absolute value of <paramref name="a"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericAbsolute<T>(this T a) where T : unmanaged
+		{
+			T? result = a switch
+			{
+				sbyte or short or int or long => Math.Abs((dynamic)a),
+				byte or ushort or uint or ulong => a,
+				float or double or decimal => Math.Abs((dynamic)a),
+				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Abs(),
+				Complex<short> a_short => (T)(dynamic)a_short.Abs(),
+				Complex<int> a_int => (T)(dynamic)a_int.Abs(),
+				Complex<long> a_long => (T)(dynamic)a_long.Abs(),
+				Complex<byte> a_byte => (T)(dynamic)a_byte.Abs(),
+				Complex<ushort> a_ushort => (T)(dynamic)a_ushort.Abs(),
+				Complex<uint> a_int => (T)(dynamic)a_int.Abs(),
+				Complex<ulong> a_long => (T)(dynamic)a_long.Abs(),
+				Complex<float> a_float => (T)(dynamic)a_float.Abs(),
+				Complex<double> a_double => (T)(dynamic)a_double.Abs(),
+				_ => null,
+			};
+			if (result.HasValue)
+			{
+				return result.Value;
+			}
+			if (!typeof(T).IsSupportedDirect())
+				throw new NotSupportedException(Resources.Support.DataType);
+			if (typeof(T).IsComplexDirect())
+				return (T)((dynamic)a).Abs();
 			else
 				return a;
 		}
@@ -316,9 +355,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Try to parse a <see cref="string"/> to a native type (including types that implements <see cref="ICustomNativeType{T}"/>)
 		/// </summary>
-		/// <typeparam name="T">the native type</typeparam>
-		/// <param name="str">the <see cref="string"/> to parse</param>
-		/// <param name="result">the output result</param>
+		/// <typeparam name="T">The native type</typeparam>
+		/// <param name="str">The <see cref="string"/> to parse</param>
+		/// <param name="result">The output result</param>
 		/// <returns>success or not</returns>
 		public static bool TryParseNativeType<T>(this string str, out T result) where T : unmanaged
 		{
@@ -330,7 +369,7 @@ namespace Althea.NativeTypes
 					float or double or decimal => (T)(dynamic)double.Parse(str),
 					// built-in integer types
 					sbyte or short or int or long => (T)(dynamic)long.Parse(str),
-					byte or ushort or int or long => (T)(dynamic)long.Parse(str),
+					byte or ushort or uint or ulong => (T)(dynamic)long.Parse(str),
 					// otherwise
 					_ => null,
 				};
@@ -398,7 +437,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <paramref name="type"/> is a complex data type.
 		/// </summary>
-		/// <param name="type">the type</param>
+		/// <param name="type">The type</param>
 		/// <returns>true for complex type</returns>
 		public static bool IsComplex(this Type type)
 		{
@@ -427,7 +466,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a complex data type.
 		/// </summary>
-		/// <typeparam name="T">the type to check</typeparam>
+		/// <typeparam name="T">The type to check</typeparam>
 		/// <param name="value">an instance of <typeparamref name="T"/></param>
 		/// <returns>true for complex type</returns>
 		public static bool IsComplex<T>(this T value) where T : unmanaged
@@ -438,7 +477,7 @@ namespace Althea.NativeTypes
 				float or double => false,
 				// built-in integer types
 				sbyte or short or int or long => false,
-				byte or ushort or int or long => false,
+				byte or ushort or uint or ulong => false,
 				// built-in complex float types
 				Complex<float> or Complex<double> => true,
 				// built-in complex integer types
@@ -452,7 +491,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a complex data type.
 		/// </summary>
-		/// <typeparam name="T">the type to check</typeparam>
+		/// <typeparam name="T">The type to check</typeparam>
 		/// <returns>true for complex type</returns>
 		public static bool IsComplex<T>() where T : unmanaged => IsComplex(default(T));
 		#endregion
@@ -478,7 +517,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <paramref name="type"/> is a supported data type.
 		/// </summary>
-		/// <param name="type">the type</param>
+		/// <param name="type">The type</param>
 		/// <returns>true for supported type</returns>
 		public static bool IsSupported(this Type type)
 		{
@@ -507,7 +546,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a supported data type.
 		/// </summary>
-		/// <typeparam name="T">the type to check</typeparam>
+		/// <typeparam name="T">The type to check</typeparam>
 		/// <param name="value">an instance of <typeparamref name="T"/></param>
 		/// <returns>true for supported type</returns>
 		public static bool IsSupported<T>(this T value) where T : unmanaged
@@ -518,7 +557,7 @@ namespace Althea.NativeTypes
 				float or double => true,
 				// built-in integer types
 				sbyte or short or int or long => true,
-				byte or ushort or int or long => true,
+				byte or ushort or uint or ulong => true,
 				// built-in complex float types
 				Complex<float> or Complex<double> => true,
 				// built-in complex integer types
@@ -532,7 +571,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a supported data type.
 		/// </summary>
-		/// <typeparam name="T">the type to check</typeparam>
+		/// <typeparam name="T">The type to check</typeparam>
 		/// <returns>true for supported type</returns>
 		public static bool IsSupported<T>() where T : unmanaged => IsSupported(default(T));
 		#endregion
@@ -559,7 +598,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <paramref name="type"/> is a floating point type or a integral type.
 		/// </summary>
-		/// <param name="type">the type</param>
+		/// <param name="type">The type</param>
 		/// <returns>0 for not supported data type</returns>
 		public static DataTypeClassification GetClassification(this Type type)
 		{
@@ -588,7 +627,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
 		/// </summary>
-		/// <typeparam name="T">the type to check</typeparam>
+		/// <typeparam name="T">The type to check</typeparam>
 		/// <param name="value">an instance of <typeparamref name="T"/></param>
 		/// <returns>0 for not supported data type</returns>
 		public static DataTypeClassification GetClassification<T>(this T value) where T : unmanaged
@@ -599,7 +638,7 @@ namespace Althea.NativeTypes
 				float or double => DataTypeClassification.FloatPoint,
 				// built-in integer types
 				sbyte or short or int or long => DataTypeClassification.SignedInteger,
-				byte or ushort or int or long => DataTypeClassification.UnsignedInteger,
+				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
 				// built-in complex float types
 				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint,
 				// built-in complex integer types
@@ -613,7 +652,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
 		/// </summary>
-		/// <typeparam name="T">the type to check</typeparam>
+		/// <typeparam name="T">The type to check</typeparam>
 		/// <returns>0 for not supported data type</returns>
 		public static DataTypeClassification GetClassification<T>() where T : unmanaged => GetClassification(default(T));
 		#endregion

@@ -86,9 +86,9 @@ namespace Althea.Storage
 		/// <summary>
 		/// Save the target <paramref name="array"/> to file with relative or absolute folder path <paramref name="folder"/> synchronously.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="array">the array to save</param>
-		/// <param name="folder">the folder to save to, default is a random hash code as folder name. It must be a non-existing or empty folder</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="array">The array to save</param>
+		/// <param name="folder">The folder to save to, default is a random hash code as folder name. It must be a non-existing or empty folder</param>
 		/// <param name="overrideCheck">override the global setting of calculate check sum or not, default null means do not override</param>
 		/// <param name="compress">compress the result folder as a .zip file or remains it a folder</param>
 		/// <returns>the folder / file name</returns>
@@ -101,7 +101,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Check if the <paramref name="folder"/> to save to is licit
 		/// </summary>
-		/// <param name="folder">the folder to save arrays in</param>
+		/// <param name="folder">The folder to save arrays in</param>
 		public static void CheckSaveFolder(string folder)
 		{
 			if (File.Exists(folder))
@@ -115,7 +115,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Check if the <paramref name="folder"/> to load from is licit
 		/// </summary>
-		/// <param name="folder">the folder to load arrays from</param>
+		/// <param name="folder">The folder to load arrays from</param>
 		public static void CheckLoadFolder(string folder)
 		{
 			if ((File.GetAttributes(folder) & FileAttributes.Directory) == FileAttributes.Directory)
@@ -134,9 +134,9 @@ namespace Althea.Storage
 		/// <summary>
 		/// Save the target <paramref name="array"/> to file with relative or absolute folder path <paramref name="folder"/> asynchronously.
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="array">the array to save</param>
-		/// <param name="folder">the folder to save to, default is a random hash code as folder name. It must be a non-existing or empty folder</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="array">The array to save</param>
+		/// <param name="folder">The folder to save to, default is a random hash code as folder name. It must be a non-existing or empty folder</param>
 		/// <param name="overrideCheck">override the global setting of calculate check sum or not, default null means do not override</param>
 		/// <param name="compress">compress the result folder as a .zip file or remains it a folder</param>
 		/// <returns>the folder / file name</returns>
@@ -200,8 +200,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Read the saved folder / file back to a <see cref="PureArray{T}"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="folder">the folder or file name saved</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="folder">The folder or file name saved</param>
 		/// <param name="forceOnHost">default null means using the header file to identify the storage location (on host / on device); if a <see cref="bool"/> value is indicated, it will override the header file's info</param>
 		/// <returns>the <see cref="PureArray{T}"/> read from disk</returns>
 		/// <exception cref="IOException">if the check code and the file do not match</exception>
@@ -213,8 +213,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Read the saved folder / file back to a <see cref="PureArray{T}"/>
 		/// </summary>
-		/// <typeparam name="T">the data type</typeparam>
-		/// <param name="folder">the folder or file name saved</param>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="folder">The folder or file name saved</param>
 		/// <param name="forceOnHost">default null means using the header file to identify the storage location (on host / on device); if a <see cref="bool"/> value is indicated, it will override the header file's info</param>
 		/// <returns>the <see cref="PureArray{T}"/> read from disk</returns>
 		/// <exception cref="IOException">if the check code and the file do not match</exception>

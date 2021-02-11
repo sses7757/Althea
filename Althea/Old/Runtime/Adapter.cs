@@ -77,9 +77,9 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copies 2D data from <paramref name="source"/> to <paramref name="dest"/>. If any of them is on GPU, the GPU routine will be invoked.
 		/// </summary>
-		/// <param name="source">the source pointer</param>
+		/// <param name="source">The source pointer</param>
 		/// <param name="sourceLD">source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
-		/// <param name="dest">the destination pointer</param>
+		/// <param name="dest">The destination pointer</param>
 		/// <param name="destLD">destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="height">height to copy, in <typeparamref name="T"/></param>
 		/// <param name="width">width to copy, in <typeparamref name="T"/> rather than bytes</param>
@@ -88,9 +88,9 @@ namespace Althea.Runtime
 		/// <summary>
 		/// Copies 2D data from <paramref name="source"/> to <paramref name="dest"/>. If any of them is on GPU, the GPU routine will be invoked.
 		/// </summary>
-		/// <param name="source">the source pointer</param>
+		/// <param name="source">The source pointer</param>
 		/// <param name="sourceLD">source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
-		/// <param name="dest">the destination pointer</param>
+		/// <param name="dest">The destination pointer</param>
 		/// <param name="destLD">destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="height">height to copy, in <typeparamref name="T"/></param>
 		/// <param name="width">width to copy, in <typeparamref name="T"/> rather than bytes</param>

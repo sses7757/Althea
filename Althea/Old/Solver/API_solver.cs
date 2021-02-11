@@ -101,13 +101,13 @@ namespace Althea.Solver
 		/// </summary>
 		/// <typeparam name="T">input data type, see <see cref="PureArray{T}"/> for supported data types</typeparam>
 		/// <typeparam name="TCorr"><paramref name="valOut"/> data type, must be corresponding real types of <typeparamref name="T"/> if <paramref name="A"/>, <paramref name="B"/> are Hermitian or corresponding complex types of <typeparamref name="T"/> otherwise</typeparam>
-		/// <param name="valOut">the output eigenvalues, must be preallocated</param>
-		/// <param name="leftVecOut">the output left eigenvectors, if both <paramref name="A"/> and <paramref name="B"/> are Hermitian, <paramref name="A"/> rather than <paramref name="leftVecOut"/> is used to store eigenvectors</param>
-		/// <param name="rightVecOut">the output right eigenvectors, if both <paramref name="A"/> and <paramref name="B"/> are Hermitian, <paramref name="A"/> rather than <paramref name="rightVecOut"/> is used to store eigenvectors</param>
-		/// <param name="A">the input/output <see cref="DenseMatrix{T}"/> to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors if this is a Hermitian problem</param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="mode">the <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
-		/// <param name="eigType">the <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="valOut">The output eigenvalues, must be preallocated</param>
+		/// <param name="leftVecOut">The output left eigenvectors, if both <paramref name="A"/> and <paramref name="B"/> are Hermitian, <paramref name="A"/> rather than <paramref name="leftVecOut"/> is used to store eigenvectors</param>
+		/// <param name="rightVecOut">The output right eigenvectors, if both <paramref name="A"/> and <paramref name="B"/> are Hermitian, <paramref name="A"/> rather than <paramref name="rightVecOut"/> is used to store eigenvectors</param>
+		/// <param name="A">The input/output <see cref="DenseMatrix{T}"/> to calculate eigensystem; destroyed during the calculation if <paramref name="mode"/> is <see cref="EigMode.NoVector"/> or replaced by the eigenvectors if this is a Hermitian problem</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="eigType"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="mode">The <see cref="EigMode"/> to indicate whether the eigenvectors should be calculated</param>
+		/// <param name="eigType">The <see cref="EigType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if <paramref name="A"/> or <paramref name="valOut"/> is null</exception>
 		/// <exception cref="ArgumentException">if the <paramref name="valOut"/> is too short or <typeparamref name="T"/> and <typeparamref name="TCorr"/> do not match</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> or <typeparamref name="TCorr"/> is not one of the supported type</exception>
@@ -274,8 +274,8 @@ namespace Althea.Solver
 		/// QR factorize the given matrix <paramref name="A"/>.
 		/// </summary>
 		/// <param name="A">input matrix to be factorized</param>
-		/// <param name="Q">the output unitary matrix, full factorization or not depends on its size</param>
-		/// <param name="tri">the output trapezoidal matrix whose lower part may be not meaningful</param>
+		/// <param name="Q">The output unitary matrix, full factorization or not depends on its size</param>
+		/// <param name="tri">The output trapezoidal matrix whose lower part may be not meaningful</param>
 		/// <remarks>LQ decomposition can be done via QR factorizing the conjugate transpose of <paramref name="A"/>.<br/>
 		/// RQ decomposition can be done via QR factorizing the inverse of <paramref name="A"/> or the up-down reverse of <paramref name="A"/>.<br/>
 		/// QL decomposition can be done via QR factorizing the inverse of conjugate transpose of <paramref name="A"/> of the left-right reverse of <paramref name="A"/>.</remarks>
@@ -315,9 +315,9 @@ namespace Althea.Solver
 		/// Schur decompose the given matrix <paramref name="A"/>.
 		/// </summary>
 		/// <param name="A">matrix to be decomposed, replaced by the Schur matrix after return</param>
-		/// <param name="U">the output unitary matrix, default null means do not compute</param>
-		/// <param name="order">the orders the factorization so that selected eigenvalues are at the top left of Schur form. Default null means identity permutation, which is sorted descending by the modulus of eigenvalues</param>
-		/// <param name="orderVal">the value order of the factorization so that selected eigenvalues are at the top left of Schur form. Default null means use <paramref name="order"/></param>
+		/// <param name="U">The output unitary matrix, default null means do not compute</param>
+		/// <param name="order">The orders the factorization so that selected eigenvalues are at the top left of Schur form. Default null means identity permutation, which is sorted descending by the modulus of eigenvalues</param>
+		/// <param name="orderVal">The value order of the factorization so that selected eigenvalues are at the top left of Schur form. Default null means use <paramref name="order"/></param>
 		/// <returns>the actual number of eigenvalues returned</returns>
 		/// <remarks>if both <paramref name="order"/> and <paramref name="orderVal"/> are indicated, only <paramref name="orderVal"/> will be used</remarks>
 		public static int Schur<T>(DenseMatrix<T> A, int[] order = null, DoubleComplex[] orderVal = null, DenseMatrix<T> U = null) where T : struct, IComparable<T>
@@ -379,7 +379,7 @@ namespace Althea.Solver
 		/// Both <paramref name="A"/> and <paramref name="B"/> are in-place where <paramref name="A"/> is replaced by its LU decomposition and <paramref name="B"/> the solution X.
 		/// </summary>
 		/// <typeparam name="T">input data type, see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <param name="A">the coefficient <see cref="DenseMatrix{T}"/></param>
+		/// <param name="A">The coefficient <see cref="DenseMatrix{T}"/></param>
 		/// <param name="B">each column of this <see cref="DenseMatrix{T}"/> is the vector at right; overwritten by solution X in the end</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
@@ -407,11 +407,11 @@ namespace Althea.Solver
 		/// Calculate one eigen-pair of a <see cref="SparseMatrix{T}"/> with <see cref="SparseMatrixFormat.CSR"/> $A \vec{x} = \lambda \vec{x}$ using shift-inverse method.
 		/// </summary>
 		/// <typeparam name="T">input data type, see <see cref="PureArray{T}"/> for supported data types</typeparam>
-		/// <typeparam name="TReal">the real corresponding of <typeparamref name="T"/></typeparam>
-		/// <param name="A">the input <see cref="SparseMatrix{T}"/> to calculate eigen-pair</param>
+		/// <typeparam name="TReal">The real corresponding of <typeparamref name="T"/></typeparam>
+		/// <param name="A">The input <see cref="SparseMatrix{T}"/> to calculate eigen-pair</param>
 		/// <param name="λ0">scalar of type <typeparamref name="T"/> as initial eigenvalue guess</param>
 		/// <param name="maxIter">max number of iterations</param>
-		/// <param name="tolerance">the tolerance for judging convergence</param>
+		/// <param name="tolerance">The tolerance for judging convergence</param>
 		/// <returns>The eigenvalue nearest to <paramref name="λ0"/> and the corresponding eigen-pair.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="A"/> is null</exception>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type or the matrix is not square CSR matrix</exception>

@@ -228,7 +228,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="y">dense vector y</param>
 		/// <param name="n">length of vector</param>
-		/// <param name="threshold">the abs value below it will regarded as zero</param>
+		/// <param name="threshold">The abs value below it will regarded as zero</param>
 		/// <returns>a <see cref="SparseVectorWrapper{T}"/></returns>
 		SparseVectorWrapper<T> VectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : unmanaged;
 
@@ -237,7 +237,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="y">dense vector y</param>
 		/// <param name="n">length of vector</param>
-		/// <param name="threshold">the abs value below it will regarded as zero</param>
+		/// <param name="threshold">The abs value below it will regarded as zero</param>
 		/// <returns>a <see cref="SparseVectorWrapper{T}"/></returns>
 		public delegate SparseVectorWrapper<T> DelegateVectorDenseToSparse<T>(Storage<T> y, int n, float threshold = 0) where T : unmanaged;
 
@@ -372,7 +372,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">sparse vector y</param>
-		/// <param name="M">the output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format</param>
+		/// <param name="M">The output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format</param>
 		/// <param name="conjY">conjugate on <paramref name="y"/> or not</param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		void VectorSparseOuterSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, SparseMatrixWrapper<T> M, bool conjY = true) where T : unmanaged;
@@ -382,7 +382,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="x">sparse vector x</param>
 		/// <param name="y">sparse vector y</param>
-		/// <param name="M">the output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format</param>
+		/// <param name="M">The output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format</param>
 		/// <param name="conjY">conjugate on <paramref name="y"/> or not</param>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		public delegate void DelegateVectorSparseOuterSparse<T>(SparseVectorWrapper<T> x, SparseVectorWrapper<T> y, SparseMatrixWrapper<T> M, bool conjY = true) where T : unmanaged;
@@ -496,7 +496,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="m">number of rows of <paramref name="M"/></param>
 		/// <param name="n">number of columns of <paramref name="M"/></param>
-		/// <param name="threshold">the threshold</param>
+		/// <param name="threshold">The threshold</param>
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
@@ -507,7 +507,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="m">number of rows of <paramref name="M"/></param>
 		/// <param name="n">number of columns of <paramref name="M"/></param>
-		/// <param name="threshold">the threshold</param>
+		/// <param name="threshold">The threshold</param>
 		/// <param name="M">source dense matrix</param>
 		/// <param name="ld">leading dimension of <paramref name="M"/></param>
 		/// <returns>a new sparse matrix</returns>
@@ -518,7 +518,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="m">number of rows of <paramref name="M"/></param>
 		/// <param name="n">number of columns of <paramref name="M"/></param>
-		/// <param name="threshold">the threshold</param>
+		/// <param name="threshold">The threshold</param>
 		/// <param name="M">source dense matrix</param>
 		/// <param name="isCSR">is <paramref name="M"/> a CSR matrix or a CSC one</param>
 		/// <returns>a new sparse matrix</returns>
@@ -529,7 +529,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="m">number of rows of <paramref name="M"/></param>
 		/// <param name="n">number of columns of <paramref name="M"/></param>
-		/// <param name="threshold">the threshold</param>
+		/// <param name="threshold">The threshold</param>
 		/// <param name="M">source dense matrix</param>
 		/// <param name="isCSR">is <paramref name="M"/> a CSR matrix or a CSC one</param>
 		/// <returns>a new sparse matrix</returns>
@@ -550,9 +550,9 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="m">number of rows of <paramref name="M"/> before <paramref name="op"/></param>
 		/// <param name="n">number of columns of <paramref name="M"/> before <paramref name="op"/></param>
-		/// <param name="op">the operation to apply to <paramref name="M"/></param>
+		/// <param name="op">The operation to apply to <paramref name="M"/></param>
 		/// <param name="M">source dense matrix</param>
-		/// <param name="format">the format of <paramref name="M"/>, must be atomic</param>
+		/// <param name="format">The format of <paramref name="M"/>, must be atomic</param>
 		/// <param name="target">target format, can be non-atomic, it becomes the actual format at return</param>
 		/// <returns>a new sparse matrix if <paramref name="target"/> does not contains <paramref name="format"/></returns>
 		SparseMatrixWrapper<T> MatrixSparseFormatConvert<T>(int m, int n, MatrixOperation op, SparseMatrixWrapper<T> M, SparseMatrixFormat format, ref SparseMatrixFormat target) where T : unmanaged;
@@ -572,9 +572,9 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="m">number of rows of <paramref name="M"/> before <paramref name="op"/></param>
 		/// <param name="n">number of columns of <paramref name="M"/> before <paramref name="op"/></param>
-		/// <param name="op">the operation to apply to <paramref name="M"/></param>
+		/// <param name="op">The operation to apply to <paramref name="M"/></param>
 		/// <param name="M">source dense matrix</param>
-		/// <param name="format">the format of <paramref name="M"/>, must be atomic</param>
+		/// <param name="format">The format of <paramref name="M"/>, must be atomic</param>
 		/// <param name="target">target format, can be non-atomic, it becomes the actual format at return</param>
 		/// <returns>a new sparse matrix if <paramref name="target"/> does not contains <paramref name="format"/></returns>
 		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseFormatConvert<T>(int m, int n, MatrixOperation op, SparseMatrixWrapper<T> M, SparseMatrixFormat format, ref SparseMatrixFormat target) where T : unmanaged;
@@ -602,15 +602,15 @@ namespace Althea.SparseBlas
 		/// <summary>
 		/// Fill a sparse matrix with identity.
 		/// </summary>
-		/// <param name="M">the sparse matrix to fill</param>
-		/// <param name="format">the format of the matrix</param>
+		/// <param name="M">The sparse matrix to fill</param>
+		/// <param name="format">The format of the matrix</param>
 		void MatrixFillIdentity<T>(SparseMatrixWrapper<T> M, SparseMatrixFormat format) where T : unmanaged;
 
 		/// <summary>
 		/// Fill a sparse matrix with identity.
 		/// </summary>
-		/// <param name="M">the sparse matrix to fill</param>
-		/// <param name="format">the format of the matrix</param>
+		/// <param name="M">The sparse matrix to fill</param>
+		/// <param name="format">The format of the matrix</param>
 		public delegate void DelegateMatrixFillIdentity<T>(SparseMatrixWrapper<T> M, SparseMatrixFormat format) where T : unmanaged;
 		#endregion
 
@@ -623,11 +623,11 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the sparse matrix A</param>
-		/// <param name="formatA">the format of <paramref name="A"/></param>
+		/// <param name="A">The sparse matrix A</param>
+		/// <param name="formatA">The format of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the sparse matrix B</param>
-		/// <param name="formatB">the format of <paramref name="B"/></param>
+		/// <param name="B">The sparse matrix B</param>
+		/// <param name="formatB">The format of <paramref name="B"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
 		SparseMatrixWrapper<T> MatrixSparseAddSparse<T>(int m, int n, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
@@ -640,11 +640,11 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the sparse matrix A</param>
-		/// <param name="formatA">the format of <paramref name="A"/></param>
+		/// <param name="A">The sparse matrix A</param>
+		/// <param name="formatA">The format of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the sparse matrix B</param>
-		/// <param name="formatB">the format of <paramref name="B"/></param>
+		/// <param name="B">The sparse matrix B</param>
+		/// <param name="formatB">The format of <paramref name="B"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
 		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseAddSparse<T>(int m, int n, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
@@ -658,13 +658,13 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the sparse matrix A</param>
-		/// <param name="formatA">the format of <paramref name="A"/></param>
+		/// <param name="A">The sparse matrix A</param>
+		/// <param name="formatA">The format of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the sparse matrix B</param>
-		/// <param name="formatB">the format of <paramref name="B"/></param>
-		/// <param name="D">the sparse matrix D</param>
-		/// <param name="formatD">the format of <paramref name="D"/></param>
+		/// <param name="B">The sparse matrix B</param>
+		/// <param name="formatB">The format of <paramref name="B"/></param>
+		/// <param name="D">The sparse matrix D</param>
+		/// <param name="formatD">The format of <paramref name="D"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
 		SparseMatrixWrapper<T> MatrixSparseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, SparseMatrixWrapper<T> D, SparseMatrixFormat formatD, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
@@ -678,13 +678,13 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the sparse matrix A</param>
-		/// <param name="formatA">the format of <paramref name="A"/></param>
+		/// <param name="A">The sparse matrix A</param>
+		/// <param name="formatA">The format of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the sparse matrix B</param>
-		/// <param name="formatB">the format of <paramref name="B"/></param>
-		/// <param name="D">the sparse matrix D</param>
-		/// <param name="formatD">the format of <paramref name="D"/></param>
+		/// <param name="B">The sparse matrix B</param>
+		/// <param name="formatB">The format of <paramref name="B"/></param>
+		/// <param name="D">The sparse matrix D</param>
+		/// <param name="formatD">The format of <paramref name="D"/></param>
 		/// <param name="target">output target format</param>
 		/// <returns>A new sparse matrix C</returns>
 		public delegate SparseMatrixWrapper<T> DelegateMatrixSparseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, SparseMatrixWrapper<T> D, SparseMatrixFormat formatD, T α, T β, out SparseMatrixFormat target) where T : unmanaged;
@@ -698,12 +698,12 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the dense matrix A</param>
+		/// <param name="A">The dense matrix A</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the sparse matrix B</param>
-		/// <param name="formatB">the format of <paramref name="B"/></param>
-		/// <param name="C">the dense matrix C</param>
+		/// <param name="B">The sparse matrix B</param>
+		/// <param name="formatB">The format of <paramref name="B"/></param>
+		/// <param name="C">The dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
 		void MatrixDenseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, Storage<T> A, int lda, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
 
@@ -716,12 +716,12 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the dense matrix A</param>
+		/// <param name="A">The dense matrix A</param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the sparse matrix B</param>
-		/// <param name="formatB">the format of <paramref name="B"/></param>
-		/// <param name="C">the dense matrix C</param>
+		/// <param name="B">The sparse matrix B</param>
+		/// <param name="formatB">The format of <paramref name="B"/></param>
+		/// <param name="C">The dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
 		public delegate void DelegateMatrixDenseMultiplySparse<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, Storage<T> A, int lda, SparseMatrixWrapper<T> B, SparseMatrixFormat formatB, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
 
@@ -734,12 +734,12 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the sparse matrix A</param>
-		/// <param name="formatA">the format of <paramref name="A"/></param>
+		/// <param name="A">The sparse matrix A</param>
+		/// <param name="formatA">The format of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the dense matrix B</param>
+		/// <param name="B">The dense matrix B</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/></param>
-		/// <param name="C">the dense matrix C</param>
+		/// <param name="C">The dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
 		/// <returns>A new sparse matrix C</returns>
 		void MatrixSparseMultiplyDense<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, Storage<T> B, int ldb, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
@@ -753,12 +753,12 @@ namespace Althea.SparseBlas
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="A">the sparse matrix A</param>
-		/// <param name="formatA">the format of <paramref name="A"/></param>
+		/// <param name="A">The sparse matrix A</param>
+		/// <param name="formatA">The format of <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the dense matrix B</param>
+		/// <param name="B">The dense matrix B</param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/></param>
-		/// <param name="C">the dense matrix C</param>
+		/// <param name="C">The dense matrix C</param>
 		/// <param name="ldc">leading dimension of <paramref name="C"/></param>
 		/// <returns>A new sparse matrix C</returns>
 		public delegate void DelegateMatrixSparseMultiplyDense<T>(int m, int n, int k, MatrixOperation opA, MatrixOperation opB, SparseMatrixWrapper<T> A, SparseMatrixFormat formatA, Storage<T> B, int ldb, Storage<T> C, int ldc, T α, T β) where T : unmanaged;
@@ -773,7 +773,7 @@ namespace Althea.SparseBlas
 		/// <param name="mb">number of rows of <paramref name="B"/></param>
 		/// <param name="nb">number of columns of <paramref name="B"/></param>
 		/// <param name="M">output sparse matrix M</param>
-		/// <param name="targetCOOC">the result matrix sorted by column or by row</param>
+		/// <param name="targetCOOC">The result matrix sorted by column or by row</param>
 		void SparseMatrixKronecker<T>(int ma, int na, int mb, int nb, SparseMatrixWrapper<T> A, SparseMatrixWrapper<T> B, SparseMatrixWrapper<T> M, bool targetCOOC = true) where T : unmanaged;
 
 		/// <summary>
@@ -786,7 +786,7 @@ namespace Althea.SparseBlas
 		/// <param name="mb">number of rows of <paramref name="B"/></param>
 		/// <param name="nb">number of columns of <paramref name="B"/></param>
 		/// <param name="M">output sparse matrix M</param>
-		/// <param name="targetCOOC">the result matrix sorted by column or by row</param>
+		/// <param name="targetCOOC">The result matrix sorted by column or by row</param>
 		public delegate void DelegateSparseMatrixKronecker<T>(int ma, int na, int mb, int nb, SparseMatrixWrapper<T> A, SparseMatrixWrapper<T> B, SparseMatrixWrapper<T> M, bool targetCOOC = true) where T : unmanaged;
 		#endregion
 
@@ -828,7 +828,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="indexPtr">array pointer</param>
 		/// <param name="N">size of the array</param>
-		/// <param name="toFind">the target value to find</param>
+		/// <param name="toFind">The target value to find</param>
 		/// <returns>index of target value, -1 if not found</returns>
 		int IndexFind(Storage<int> indexPtr, long N, int toFind);
 
@@ -837,7 +837,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="indexPtr">array pointer</param>
 		/// <param name="N">size of the array</param>
-		/// <param name="toFind">the target value to find</param>
+		/// <param name="toFind">The target value to find</param>
 		/// <returns>index of target value, -1 if not found</returns>
 		public delegate int DelegateIndexFind(Storage<int> indexPtr, long N, int toFind);
 
@@ -846,7 +846,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="indexPtr">array pointer</param>
 		/// <param name="N">size of the array</param>
-		/// <param name="value">the target value to find</param>
+		/// <param name="value">The target value to find</param>
 		/// <param name="lowerBound">regard <paramref name="value"/> as lower bound or upper bound</param>
 		/// <returns>index of target value, -1 if not found</returns>
 		int IndexLowerUpperBound(Storage<int> indexPtr, long N, int value, bool lowerBound);
@@ -856,7 +856,7 @@ namespace Althea.SparseBlas
 		/// </summary>
 		/// <param name="indexPtr">array pointer</param>
 		/// <param name="N">size of the array</param>
-		/// <param name="value">the target value to find</param>
+		/// <param name="value">The target value to find</param>
 		/// <param name="lowerBound">regard <paramref name="value"/> as lower bound or upper bound</param>
 		/// <returns>index of target value, -1 if not found</returns>
 		public delegate int DelegateIndexLowerUpperBound(Storage<int> indexPtr, long N, int value, bool lowerBound);
@@ -882,16 +882,16 @@ namespace Althea.SparseBlas
 		/// <summary>
 		/// Point-wise add the <paramref name="scalar"/> to the <paramref name="array"/>. 
 		/// </summary>
-		/// <param name="array">the <see cref="Storage{T}"/> to be added</param>
-		/// <param name="scalar">the scalar <see cref="int"/> to add</param>
+		/// <param name="array">The <see cref="Storage{T}"/> to be added</param>
+		/// <param name="scalar">The scalar <see cref="int"/> to add</param>
 		/// <param name="N">length of <paramref name="array"/></param>
 		void IndexAddScalar(Storage<int> array, int scalar, long N);
 
 		/// <summary>
 		/// Point-wise add the <paramref name="scalar"/> to the <paramref name="array"/>. 
 		/// </summary>
-		/// <param name="array">the <see cref="Storage{T}"/> to be added</param>
-		/// <param name="scalar">the scalar <see cref="int"/> to add</param>
+		/// <param name="array">The <see cref="Storage{T}"/> to be added</param>
+		/// <param name="scalar">The scalar <see cref="int"/> to add</param>
 		/// <param name="N">length of <paramref name="array"/></param>
 		public delegate void DelegateIndexAddScalar(Storage<int> array, int scalar, long N);
 		#endregion

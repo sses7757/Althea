@@ -58,7 +58,7 @@ namespace Althea.Blas.Cuda
 		/// <para/>This function allows or disallows the usage of atomics in the CUDA BLAS library for all routines which have an alternate implementation.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
-		/// <param name="mode">the <see cref="AtomicsMode"/> to set</param>
+		/// <param name="mode">The <see cref="AtomicsMode"/> to set</param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -82,7 +82,7 @@ namespace Althea.Blas.Cuda
 		/// The default is for the values to be passed by reference on the host.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
-		/// <param name="mode">the <see cref="PointerMode"/> to set</param>
+		/// <param name="mode">The <see cref="PointerMode"/> to set</param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -101,7 +101,7 @@ namespace Althea.Blas.Cuda
 		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
 		/// <param name="x">vector with elements</param>
 		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
+		/// <param name="result">The resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		internal delegate Status amaxFunc(IntPtr handle, int n, IntPtr x, int incx, ref int result);
 		#region abs max
@@ -143,7 +143,7 @@ namespace Althea.Blas.Cuda
 		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
 		/// <param name="x">vector with elements</param>
 		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
+		/// <param name="result">The resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		internal delegate Status aminFunc(IntPtr handle, int n, IntPtr x, int incx, ref int result);
 		#region abs min
@@ -183,7 +183,7 @@ namespace Althea.Blas.Cuda
 		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
 		/// <param name="x">vector with elements</param>
 		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
+		/// <param name="result">The resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		internal delegate Status asumFunc<T>(IntPtr handle, int n, IntPtr x, int incx, ref T result);
 		#region abs sum
@@ -267,7 +267,7 @@ namespace Althea.Blas.Cuda
 		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">(in and out) another vector with elements</param>
 		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <param name="result">the resulting dot product, which is 0.0 if <c>n &lt;= 0</c></param>
+		/// <param name="result">The resulting dot product, which is 0.0 if <c>n &lt;= 0</c></param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		internal delegate Status dotFunc<T>(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy, ref T result);
 		#region vector dot
@@ -321,7 +321,7 @@ namespace Althea.Blas.Cuda
 		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
 		/// <param name="x">vector with elements</param>
 		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the result, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
+		/// <param name="result">The result, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		internal delegate Status normFunc<T>(IntPtr handle, int n, IntPtr x, int incx, ref T result);
 		#region vector norm

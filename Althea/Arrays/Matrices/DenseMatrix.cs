@@ -16,7 +16,7 @@ namespace Althea.Arrays
 	/// The dense matrix class that inherit the <see cref="MatrixBase{T}"/> and implements <see cref="IDenseArray{T}"/>.
 	/// </summary>
 	/// <remarks>Matrices are stored in the column-major format in the memory. This is often known as the <c>Fortran</c> or the <c>MATLAB</c> way.</remarks>
-	/// <typeparam name="T">the supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
+	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
 	public sealed class DenseMatrix<T> : MatrixBase<T>, IDenseArray<T>, IMatrix<DenseMatrix<T>, DenseVector<T>, T>, IDecomposable<DenseMatrix<T>, DenseVector<T>, T> where T : struct, IComparable<T>
 	{
 		#region initialize and destroy
@@ -35,8 +35,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Matrix constructor
 		/// </summary>
-		/// <param name="rows">the number of rows</param>
-		/// <param name="cols">the number of columns</param>
+		/// <param name="rows">The number of rows</param>
+		/// <param name="cols">The number of columns</param>
 		/// <param name="herm">is the matrix hermitian or not</param>
 		/// <param name="onHost">allocate on host memory or device memory</param>
 		public DenseMatrix(long rows, long cols, bool onHost = false, bool herm = false) : base(rows * cols, rows, cols, onHost, herm)
@@ -57,11 +57,11 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Matrix full constructor with pre-allocated values.
 		/// </summary>
-		/// <param name="values">the pre-allocated values <see cref="Storage{T}"/></param>
+		/// <param name="values">The pre-allocated values <see cref="Storage{T}"/></param>
 		/// <param name="rows">number of rows</param>
 		/// <param name="cols">number of columns</param>
 		/// <param name="ld">leading dimension; if <paramref name="ld"/> ≤ 0, it will be set to <paramref name="rows"/></param>
-		/// <param name="herm">the new matrix is Hermitian or not</param>
+		/// <param name="herm">The new matrix is Hermitian or not</param>
 		/// <param name="offset">offset to the <paramref name="values"/>, in <typeparamref name="T"/> rather than bytes</param>
 		public DenseMatrix(Storage<T> values, long rows, long cols, long ld = 0, bool herm = false, long offset = 0) : base(values + offset, rows, cols, herm: herm)
 		{
@@ -77,7 +77,7 @@ namespace Althea.Arrays
 		/// <param name="newRows">new number of rows</param>
 		/// <param name="newCols">new number of columns</param>
 		/// <param name="newLD">new leading dimension, less than or equal to 0 means that it is equal to <paramref name="newRows"/></param>
-		/// <param name="herm">the new matrix is Hermitian or not, if <paramref name="refArray"/> is <see cref="MatrixBase{T}"/>, its <see cref="MatrixBase{T}.Hermitian"/> will be used</param>
+		/// <param name="herm">The new matrix is Hermitian or not, if <paramref name="refArray"/> is <see cref="MatrixBase{T}"/>, its <see cref="MatrixBase{T}.Hermitian"/> will be used</param>
 		/// <param name="offset">offset to the <see cref="ValueArray{T}.Storage"/> in <typeparamref name="T"/> rather than bytes</param>
 		public DenseMatrix(ValueArray<T> refArray, long newRows, long newCols, long newLD = 0, bool herm = false, long offset = 0) : base(refArray, (newLD > 0 ? newLD : refArray is DenseMatrix<T> m ? m.LeadDim : newRows) * newCols, newRows, newCols, herm, offset)
 		{
@@ -115,7 +115,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Convert the values of this matrix to a C# array column-major array.
 		/// </summary>
-		/// <param name="ranges">the indicating row and column ranges, default is all</param>
+		/// <param name="ranges">The indicating row and column ranges, default is all</param>
 		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this matrix</returns>
 		public T[] ToFortranOrderArray(params Range[] ranges)
 		{
@@ -130,8 +130,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Copy the <paramref name="values"/> of Fortran/MATLAB order into this dense matrix.
 		/// </summary>
-		/// <param name="values">the value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">the ranges of each dimension, default is all</param>
+		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
+		/// <param name="ranges">The ranges of each dimension, default is all</param>
 		public void FromFortranOrderArray(T[] values, params Range[] ranges)
 		{
 			if (ranges is null || ranges.Length == 0)
@@ -189,8 +189,8 @@ namespace Althea.Arrays
 		/// Convert this matrix to a <see cref="SparseMatrix{T}"/>. The out-of-place conversion may be performed.
 		/// </summary>
 		/// <param name="threshold">values smaller than threshold are regarded as zeros, must be larger than or equal to 0</param>
-		/// <param name="targetFormat">the target <see cref="SparseMatrix{T}"/>'s format, see <see cref="SparseMatrixFormat"/></param>
-		/// <param name="algorithm">the <see cref="DenseMatrixToSparseAlgorithm"/> to use, default is null which means that the default algorithms corresponding to the <paramref name="targetFormat"/> and <typeparamref name="T"/> will be used</param>
+		/// <param name="targetFormat">The target <see cref="SparseMatrix{T}"/>'s format, see <see cref="SparseMatrixFormat"/></param>
+		/// <param name="algorithm">The <see cref="DenseMatrixToSparseAlgorithm"/> to use, default is null which means that the default algorithms corresponding to the <paramref name="targetFormat"/> and <typeparamref name="T"/> will be used</param>
 		/// <returns>Converted <see cref="SparseMatrix{T}"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="threshold"/> &lt; 0 or the <paramref name="algorithm"/> is incompatible with <typeparamref name="T"/></exception>
 		public override SparseMatrix<T> ToSparse(float threshold = default, SparseMatrixFormat targetFormat = SparseMatrixFormat.Any, DenseMatrixToSparseAlgorithm? algorithm = null)
@@ -285,7 +285,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Create a new array like this one (with same type and other info) while the data type is <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the new data type</typeparam>
+		/// <typeparam name="TOut">The new data type</typeparam>
 		/// <returns>the new array</returns>
 		public override ValueArray<TOut> NewArrayAlike<TOut>() => new DenseMatrix<TOut>(this.NRows, this.NCols, this.OnHost, this.Hermitian);
 		#endregion
@@ -336,7 +336,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Join the array of <see cref="DenseVector{T}"/> as columns of this matrix. From <see cref="IMatrix{TMat, TVec, T}.FromColumnVectors"/>.
 		/// </summary>
-		/// <param name="vecs">the input array of <see cref="DenseVector{T}"/></param>
+		/// <param name="vecs">The input array of <see cref="DenseVector{T}"/></param>
 		public void FromColumnVectors(DenseVector<T>[] vecs)
 		{
 			if (vecs is null)
@@ -357,7 +357,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Join the array of <see cref="DenseVector{T}"/> as rows of this matrix.
 		/// </summary>
-		/// <param name="vecs">the input array of <see cref="DenseVector{T}"/></param>
+		/// <param name="vecs">The input array of <see cref="DenseVector{T}"/></param>
 		public void FromRowVectors(DenseVector<T>[] vecs)
 		{
 			if (vecs is null)
@@ -380,8 +380,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get part of the vectors that forms the matrix of length, from <see cref="IMatrix{TMat, TVec, T}.GetColumns(Range, TVec[])"/>.
 		/// </summary>
-		/// <param name="colRange">the <see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="colRange">The <see cref="Range"/> of columns</param>
+		/// <param name="overwrite">The output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T>[] GetColumns(Range colRange, DenseVector<T>[] overwrite = null)
 		{
@@ -414,8 +414,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get part of the row vectors that forms the matrix, from <see cref="IMatrix{TMat, TVec, T}.GetRows(Range, TVec[])"/>.
 		/// </summary>
-		/// <param name="rowRange">the <see cref="Range"/> of rows</param>
-		/// <param name="overwrite">the output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="rowRange">The <see cref="Range"/> of rows</param>
+		/// <param name="overwrite">The output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T>[] GetRows(Range rowRange, DenseVector<T>[] overwrite = null)
 		{
@@ -449,22 +449,22 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get all of the vectors that forms the matrix of length, from <see cref="IMatrix{TMat, TVec, T}.GetColumns(Range, TVec[])"/>.
 		/// </summary>
-		/// <param name="overwrite">the output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="overwrite">The output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T>[] GetColumns(DenseVector<T>[] overwrite = null) => this.GetColumns(Range.All, overwrite);
 
 		/// <summary>
 		/// Get all of the row vectors that forms the matrix, from <see cref="IMatrix{TMat, TVec, T}.GetRows(Range, TVec[])"/>.
 		/// </summary>
-		/// <param name="overwrite">the output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="overwrite">The output array of <see cref="DenseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T>[] GetRows(DenseVector<T>[] overwrite = null) => this.GetRows(Range.All, overwrite);
 
 		/// <summary>
 		/// Get one column of the matrix, from <see cref="IMatrix{TMat, TVec, T}"/>.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/> of column</param>
-		/// <param name="overwrite">the output <see cref="DenseVector{T}"/> to overwrite, default null means creating a ref vector if possible</param>
+		/// <param name="index">The <see cref="Index"/> of column</param>
+		/// <param name="overwrite">The output <see cref="DenseVector{T}"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected column as a <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T> GetColumnAt(Index index, DenseVector<T> overwrite = null)
 		{
@@ -482,8 +482,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get one row of the matrix, from <see cref="IMatrix{TMat, TVec, T}"/>.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/> of column</param>
-		/// <param name="overwrite">the output <see cref="DenseVector{T}"/> to overwrite, default null means creating a new vector</param>
+		/// <param name="index">The <see cref="Index"/> of column</param>
+		/// <param name="overwrite">The output <see cref="DenseVector{T}"/> to overwrite, default null means creating a new vector</param>
 		/// <returns>The selected column as a <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T> GetRowAt(Index index, DenseVector<T> overwrite = null)
 		{
@@ -509,7 +509,7 @@ namespace Althea.Arrays
 		/// Get a new matrix by the column index range, from <see cref="IMatrix{TMat, T}.GetColumnRange(Range, TMat)"/>.
 		/// </summary>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>The new matrix (data is not copied) constructed by these columns. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		/// <remarks>The new matrix's Hermitian is same as this one (unless it is not square any more).</remarks>
 		public DenseMatrix<T> GetColumnRange(Range columnRange, DenseMatrix<T> overwrite = null)
@@ -531,7 +531,7 @@ namespace Althea.Arrays
 		/// Get a new matrix by the row index range, from <see cref="IMatrix{TMat, T}.GetRowRange(Range, TMat)"/>.
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
-		/// <param name="overwrite">the output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these rows. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseMatrix<T> GetRowRange(Range rowRange, DenseMatrix<T> overwrite = null)
 		{
@@ -553,7 +553,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
 		/// <returns>A sub-matrix in this region. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseMatrix<T> GetSubmatrix(Range rowRange, Range columnRange, DenseMatrix<T> overwrite = null)
 		{
@@ -571,7 +571,7 @@ namespace Althea.Arrays
 		/// The method to get diagonal elements, from <see cref="IMatrix{TMat, TVec, T}.GetDiag(long, TVec)"/>.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="overwrite">the output <see cref="VectorBase{T}"/> to overwrite, default null means creating a new vector</param>
+		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> to overwrite, default null means creating a new vector</param>
 		/// <returns>A new <see cref="VectorBase{T}"/> representing the (super-/sub-)diagonal elements.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
 		public DenseVector<T> GetDiag(long k, DenseVector<T> overwrite = null)
@@ -613,7 +613,7 @@ namespace Althea.Arrays
 		/// The method to set diagonal elements, from <see cref="IMatrix{TMat, TVec, T}.SetDiag(long, TVec)"/>.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="vec">the <see cref="DenseVector{T}"/></param>
+		/// <param name="vec">The <see cref="DenseVector{T}"/></param>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
 		public void SetDiag(long k, DenseVector<T> vec)
 		{
@@ -642,7 +642,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the transpose of this matrix. A new <see cref="DenseMatrix{T}"/> will be created if the result is not it self, from <see cref="IMatrix{TMat, T}.Transpose(TMat)"/>;
 		/// </summary>
-		/// <param name="overwrite">the output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The transposed matrix out-of-place.</returns>
 		public DenseMatrix<T> Transpose(DenseMatrix<T> overwrite = null)
 		{
@@ -674,7 +674,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the conjugate transpose of this matrix. A new <see cref="DenseMatrix{T}"/> will be created if the result is not it self. Override <see cref="MatrixBase{T}.ConjugateTranspose"/>.
 		/// </summary>
-		/// <param name="overwrite">the output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The conjugate transposed matrix out-of-place.</returns>
 		public DenseMatrix<T> ConjugateTranspose(DenseMatrix<T> overwrite = null)
 		{
@@ -697,7 +697,7 @@ namespace Althea.Arrays
 		/// Symmetrize this matrix by adding its conjugate transpose out-of-place, from <see cref="IMatrix{TMat, T}.Symmetrize(bool, TMat)"/>.
 		/// </summary>
 		/// <param name="conjugateAtLast">return the original </param>
-		/// <param name="overwrite">the output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a new matrix; note that it cannot always be overwritten</param>
+		/// <param name="overwrite">The output <see cref="DenseMatrix{T}"/> to overwrite, default null means creating a new matrix; note that it cannot always be overwritten</param>
 		/// <returns>If <c><paramref name="conjugateAtLast"/> == false</c>: $B_{\text{result}}=\frac{A + A^H}{2}$; otherwise: $B_{\text{result}}=\frac{\bar{A} + A^T}{2}$</returns>
 		public DenseMatrix<T> Symmetrize(bool conjugateAtLast = false, DenseMatrix<T> overwrite = null)
 		{
@@ -710,10 +710,10 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, from <see cref="IMatrix{TMat, T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the <see cref="DenseMatrix{T}"/> A, can be null</param>
+		/// <param name="A">The <see cref="DenseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
@@ -741,10 +741,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$, from <see cref="IMatrix{TMat, T}.Mulβ_AddBy_αAB(TMat, TMat, T, T, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
-		/// <param name="A">the input <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -763,7 +763,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="B">right <see cref="DenseMatrix{T}"/></param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">the <see cref="DenseMatrix{T}"/> to overwrite by result, default null</param>
+		/// <param name="overwrite">The <see cref="DenseMatrix{T}"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker product, a new <see cref="DenseMatrix{T}"/> or <paramref name="overwrite"/> if it is not null.</returns>
 		public DenseMatrix<T> KroneckerProd(DenseMatrix<T> B, bool forceHerm = true, DenseMatrix<T> overwrite = null)
 		{
@@ -814,7 +814,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="B">right <see cref="DenseMatrix{T}"/></param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">the <see cref="DenseMatrix{T}"/> to overwrite by result, default null</param>
+		/// <param name="overwrite">The <see cref="DenseMatrix{T}"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker product, a new <see cref="DenseMatrix{T}"/> or <paramref name="overwrite"/> if it is not null.</returns>z
 		public DenseMatrix<T> KroneckerSum(DenseMatrix<T> B, bool forceHerm = true, DenseMatrix<T> overwrite = null)
 		{
@@ -875,7 +875,7 @@ namespace Althea.Arrays
 		/// The method to set diagonal elements, from <see cref="IMatrix{TMat, TVec, T}.SetDiag(long, TVec)"/>.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="vec">the <see cref="SparseVector{T}"/></param>
+		/// <param name="vec">The <see cref="SparseVector{T}"/></param>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
 		public void SetDiag(long k, SparseVector<T> vec)
 		{
@@ -893,10 +893,10 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, from <see cref="IMatrix{TMat, T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the <see cref="SparseMatrix{T}"/> A, can be null</param>
+		/// <param name="A">The <see cref="SparseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="SparseMatrix{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
@@ -954,10 +954,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$, from <see cref="IMatrix{TMat, T}.Mulβ_AddBy_αAB"/>.
 		/// </summary>
-		/// <param name="A">the input <see cref="MatrixBase{T}"/> A</param>
+		/// <param name="A">The input <see cref="MatrixBase{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <see cref="MatrixBase{T}"/> B</param>
+		/// <param name="B">The input <see cref="MatrixBase{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -991,10 +991,10 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, from <see cref="IMatrix{TMat, T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the <see cref="SparseMatrix{T}"/> A, can be null</param>
+		/// <param name="A">The <see cref="SparseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
@@ -1026,10 +1026,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$, from <see cref="IMatrix{TMat, T}.Mulβ_AddBy_αAB"/>.
 		/// </summary>
-		/// <param name="A">the input <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <see cref="SparseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -1047,10 +1047,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$, from <see cref="IMatrix{TMat, T}.Mulβ_AddBy_αAB(TMat, TMat, T, T, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
-		/// <param name="A">the input <see cref="SparseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="SparseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
@@ -1089,7 +1089,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Join the array of <see cref="VectorBase{T}"/> forming into a <see cref="MatrixBase{T}"/>
 		/// </summary>
-		/// <param name="vecs">the input array of <see cref="VectorBase{T}"/>, <see cref="SparseVector{T}"/> is not supported here</param>
+		/// <param name="vecs">The input array of <see cref="VectorBase{T}"/>, <see cref="SparseVector{T}"/> is not supported here</param>
 		/// <remarks>For <see cref="ISparseArray{T}"/>, please use <see cref="SparseMatrix{T}.FromColumnVectors(VectorBase{T}[])"/> instead.</remarks>
 		public override void FromColumnVectors(VectorBase<T>[] vecs)
 		{
@@ -1107,7 +1107,7 @@ namespace Althea.Arrays
 		/// Get a new matrix by the column index range, override <see cref="MatrixBase{T}.GetColumnRange(Range, MatrixBase{T})"/>.
 		/// </summary>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>The new matrix (data is not copied) constructed by these columns. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		/// <remarks>The new matrix's Hermitian is same as this one (unless it is not square any more).</remarks>
 		public override MatrixBase<T> GetColumnRange(Range columnRange, MatrixBase<T> overwrite = null)
@@ -1117,7 +1117,7 @@ namespace Althea.Arrays
 		/// Get a new matrix by the row index range, override <see cref="MatrixBase{T}.GetRowRange(Range, MatrixBase{T})"/>.
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these rows. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public override MatrixBase<T> GetRowRange(Range rowRange, MatrixBase<T> overwrite = null)
 			=> this.GetRowRange(rowRange, overwrite as DenseMatrix<T>);
@@ -1127,7 +1127,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
 		/// <returns>A sub-matrix in this region. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public override MatrixBase<T> GetSubmatrix(Range rowRange, Range columnRange, MatrixBase<T> overwrite = null)
 			=> this.GetSubmatrix(rowRange, columnRange, overwrite as DenseMatrix<T>);
@@ -1135,8 +1135,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get part of the vectors that forms the matrix of length, override <see cref="MatrixBase{T}.GetColumns(Range, VectorBase{T}[])"/>.
 		/// </summary>
-		/// <param name="colRange">the <see cref="Range"/> of columns</param>
-		/// <param name="overwrite">the output array of <see cref="VectorBase{T}"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="colRange">The <see cref="Range"/> of columns</param>
+		/// <param name="overwrite">The output array of <see cref="VectorBase{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public override VectorBase<T>[] GetColumns(Range colRange, VectorBase<T>[] overwrite = null)
 			=> this.GetColumns(colRange, overwrite as DenseVector<T>[]);
@@ -1144,8 +1144,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get part of the row vectors that forms the matrix, override <see cref="MatrixBase{T}.GetRows(Range, VectorBase{T}[])"/>.
 		/// </summary>
-		/// <param name="rowRange">the <see cref="Range"/> of rows</param>
-		/// <param name="overwrite">the output array of <see cref="VectorBase{T}"/> to overwrite, default null means creating ref vectors if possible</param>
+		/// <param name="rowRange">The <see cref="Range"/> of rows</param>
+		/// <param name="overwrite">The output array of <see cref="VectorBase{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public override VectorBase<T>[] GetRows(Range rowRange, VectorBase<T>[] overwrite = null)
 			=> this.GetRows(rowRange, overwrite as DenseVector<T>[]);
@@ -1153,8 +1153,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get one column of the matrix, override <see cref="MatrixBase{T}.GetColumnAt(Index, VectorBase{T})"/>.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/> of column</param>
-		/// <param name="overwrite">the output <see cref="VectorBase{T}"/> to overwrite, default null means creating a ref vector if possible</param>
+		/// <param name="index">The <see cref="Index"/> of column</param>
+		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected column as a <see cref="VectorBase{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public override VectorBase<T> GetColumnAt(Index index, VectorBase<T> overwrite = null)
 			=> this.GetColumnAt(index, overwrite as DenseVector<T>);
@@ -1162,8 +1162,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get one row of the matrix, override <see cref="MatrixBase{T}.GetRowAt(Index, VectorBase{T})"/>.
 		/// </summary>
-		/// <param name="index">the <see cref="Index"/> of row</param>
-		/// <param name="overwrite">the output <see cref="VectorBase{T}"/> to overwrite, default null means creating a ref vector if possible</param>
+		/// <param name="index">The <see cref="Index"/> of row</param>
+		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> to overwrite, default null means creating a ref vector if possible</param>
 		/// <returns>The selected row as a <see cref="VectorBase{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public override VectorBase<T> GetRowAt(Index index, VectorBase<T> overwrite = null)
 			=> this.GetRowAt(index, overwrite as DenseVector<T>);
@@ -1180,7 +1180,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the transpose of this matrix. A new <see cref="MatrixBase{T}"/> will be created if the result is not it self. Override <see cref="MatrixBase{T}.Transpose"/>.
 		/// </summary>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The transposed matrix out-of-place.</returns>
 		public override MatrixBase<T> Transpose(MatrixBase<T> overwrite = null)
 			=> this.Transpose(overwrite as DenseMatrix<T>);
@@ -1188,7 +1188,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the conjugate transpose of this matrix. A new <see cref="MatrixBase{T}"/> will be created if the result is not it self. Override <see cref="MatrixBase{T}.ConjugateTranspose"/>.
 		/// </summary>
-		/// <param name="overwrite">the output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <see cref="MatrixBase{T}"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The conjugate transposed matrix out-of-place.</returns>
 		public override MatrixBase<T> ConjugateTranspose(MatrixBase<T> overwrite = null)
 			=> this.ConjugateTranspose(overwrite as DenseMatrix<T>);
@@ -1197,10 +1197,10 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$. Override <see cref="MatrixBase{T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">the <see cref="MatrixBase{T}"/> A, can be null</param>
+		/// <param name="A">The <see cref="MatrixBase{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">the input <see cref="MatrixBase{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="MatrixBase{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <returns>whether this operation can be done in-place</returns>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
@@ -1258,10 +1258,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$. Override <see cref="MatrixBase{T}.Mulβ_AddBy_αAB"/>.
 		/// </summary>
-		/// <param name="A">the input <see cref="MatrixBase{T}"/> A</param>
+		/// <param name="A">The input <see cref="MatrixBase{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">the input <see cref="MatrixBase{T}"/> B</param>
+		/// <param name="B">The input <see cref="MatrixBase{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <returns>whether this operation can be done in-place</returns>
@@ -1324,7 +1324,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="B">right <see cref="MatrixBase{T}"/></param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">the <see cref="MatrixBase{T}"/> to overwrite by result, default null</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker product, a new <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null.</returns>
 		public override MatrixBase<T> KroneckerProd(MatrixBase<T> B, bool forceHerm = true, MatrixBase<T> overwrite = null)
 		{
@@ -1346,7 +1346,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="B">right <see cref="DenseMatrix{T}"/></param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">the <see cref="MatrixBase{T}"/> to overwrite by result, default null</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite by result, default null</param>
 		/// <returns>The result of Kronecker product, a new <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null.</returns>
 		public override MatrixBase<T> KroneckerSum(MatrixBase<T> B, bool forceHerm = true, MatrixBase<T> overwrite = null)
 		{
@@ -1383,8 +1383,8 @@ namespace Althea.Arrays
 		/// <item><term>Non-Hermitian</term><description>  <see cref="double"/> → <see cref="DoubleComplex"/></description></item>
 		/// <item><term>Other</term><description>  Other data types remains unchanged</description></item>
 		/// </list></typeparam>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="type">the <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="type">The <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
 		/// <returns>The eigenvalues.</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type or <typeparamref name="T"/> and <typeparamref name="TOut"/> do not match</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
@@ -1424,9 +1424,9 @@ namespace Althea.Arrays
 		/// </list>
 		/// </typeparam>
 		/// <param name="calcLeft">calculate both left and right eigenvectors or only right eigenvectors</param>
-		/// <param name="overwriteValues">the <see cref="DenseVector{TOut}"/> to store eigenvalues, default null means that this method will create a new one and return</param>
-		/// <param name="B">the input <see cref="MatrixBase{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="type">the <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
+		/// <param name="overwriteValues">The <see cref="DenseVector{TOut}"/> to store eigenvalues, default null means that this method will create a new one and return</param>
+		/// <param name="B">The input <see cref="MatrixBase{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="type">The <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
 		/// <returns>The eigenvalues and the eigenvectors. If both this matrix and <paramref name="B"/> are Hermitian, this matrix will be overwritten by eigenvectors and the output <c>left</c> and <c>right</c> are both null. Otherwise, the output <c>left</c> and <c>right</c> store the output left and right eigenvectors</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type or <typeparamref name="T"/> and <typeparamref name="TOut"/> do not match</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
@@ -1470,8 +1470,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of this Hermitian matrix for the special eigen-problem -- $A V = V \Lambda$, or matrices pair A, <paramref name="B"/> for the general one -- $A V = \Lambda B V$ or $A B V = \Lambda V$ or $B A V = \Lambda V$. Here, matrix A is this matrix.
 		/// </summary>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="type">the <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="type">The <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
 		/// <returns>The eigenvalues</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
@@ -1521,10 +1521,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the eigenvalues (and eigenvectors) of this Hermitian matrix for the special eigen-problem -- $A V = V \Lambda$, or matrices pair A, <paramref name="B"/> for the general one -- $A V = \Lambda B V$ or $A B V = \Lambda V$ or $B A V = \Lambda V$ <b>out-of-place</b>. Here, matrix A is this matrix.
 		/// </summary>
-		/// <param name="overwriteValues">the <see cref="DenseVector{T}"/> to store eigenvalues, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteVectors">the <see cref="DenseMatrix{T}"/> to store eigenvectors, default null means that this method will create a new one and return</param>
-		/// <param name="B">the input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
-		/// <param name="type">the <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
+		/// <param name="overwriteValues">The <see cref="DenseVector{T}"/> to store eigenvalues, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteVectors">The <see cref="DenseMatrix{T}"/> to store eigenvectors, default null means that this method will create a new one and return</param>
+		/// <param name="B">The input <see cref="DenseMatrix{T}"/> to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
+		/// <param name="type">The <see cref="Solver.EigType"/> to indicate positions of this matrix and <paramref name="B"/></param>
 		/// <returns>The eigenvalues and the eigenvectors.</returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
@@ -1588,9 +1588,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute the singular value decomposition (SVD) of this matrix and corresponding the left and/or right singular vectors: $\text{this} = U S V^*$.
 		/// </summary>
-		/// <param name="overwriteS">the <see cref="DenseVector{T}"/> to store singular values, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteU">the <see cref="DenseMatrix{T}"/> to store left singular vectors, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteVct">the <see cref="DenseMatrix{T}"/> to store right singular vectors, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteS">The <see cref="DenseVector{T}"/> to store singular values, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteU">The <see cref="DenseMatrix{T}"/> to store left singular vectors, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteVct">The <see cref="DenseMatrix{T}"/> to store right singular vectors, default null means that this method will create a new one and return</param>
 		/// <param name="calcU">calculate the left singular vectors or not, if false, the return <c>U</c> will be null</param>
 		/// <param name="calcV">calculate the right singular vectors or not, if false, the return <c>Vct</c> will be null</param>
 		/// <returns>the singular values and left, right singular vectors</returns>
@@ -1649,8 +1649,8 @@ namespace Althea.Arrays
 		/// QR factorize this matrix.
 		/// </summary>
 		/// <param name="full">perform full factorization or economic factorization</param>
-		/// <param name="overwriteQ">the <see cref="DenseMatrix{T}"/> to store triangular matrix Q, default null means that this method will create a new one and return</param>
-		/// <param name="overwriteR">the <see cref="DenseMatrix{T}"/> to store triangular matrix R, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteQ">The <see cref="DenseMatrix{T}"/> to store triangular matrix Q, default null means that this method will create a new one and return</param>
+		/// <param name="overwriteR">The <see cref="DenseMatrix{T}"/> to store triangular matrix R, default null means that this method will create a new one and return</param>
 		/// <returns>the Q and R matrices</returns>
 		public (DenseMatrix<T> Q, DenseMatrix<T> R) QR(bool full = false, DenseMatrix<T> overwriteQ = null, DenseMatrix<T> overwriteR = null)
 		{
@@ -1676,7 +1676,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the inverse of this matrix out-of-place
 		/// </summary>
-		/// <param name="overwrite">the <see cref="DenseMatrix{T}"/> to store the inverse matrix, default null means that this method will create a new one and return</param>
+		/// <param name="overwrite">The <see cref="DenseMatrix{T}"/> to store the inverse matrix, default null means that this method will create a new one and return</param>
 		/// <returns>the inverse matrix</returns>
 		public DenseMatrix<T> Inverse(DenseMatrix<T> overwrite = null)
 		{
@@ -1793,7 +1793,7 @@ namespace Althea.Arrays
 		/// The method to get diagonal elements, override <see cref="MatrixBase{T}.GetDiag(long, VectorBase{T})"/>.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="overwrite">the output <see cref="VectorBase{T}"/> to overwrite, default null means creating a new vector</param>
+		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> to overwrite, default null means creating a new vector</param>
 		/// <returns>A new <see cref="VectorBase{T}"/> representing the (super-/sub-)diagonal elements.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
 		public override VectorBase<T> GetDiag(long k, VectorBase<T> overwrite = null)
@@ -1803,7 +1803,7 @@ namespace Althea.Arrays
 		/// The method to set diagonal elements, override <see cref="MatrixBase{T}.SetDiag(long, VectorBase{T})"/>.
 		/// </summary>
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="vec">the <see cref="VectorBase{T}"/> </param>
+		/// <param name="vec">The <see cref="VectorBase{T}"/> </param>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
 		public override void SetDiag(long k, VectorBase<T> vec)
 		{
@@ -1835,7 +1835,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute Hermitian rank-k update $C_{\text{this}} = \alpha A^{\text{op}} A^{\text{op}}^H + \beta C_{\text{this}}$.
 		/// </summary>
-		/// <param name="A">the input non-Hermitian <see cref="DenseMatrix{T}"/> A</param>
+		/// <param name="A">The input non-Hermitian <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="op">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/></param>
@@ -1854,7 +1854,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Initialize from managed C# two-dimensional array.
 		/// </summary>
-		/// <param name="input">the C# multidimensional array of type <typeparamref name="T"/> and on host indicator</param>
+		/// <param name="input">The C# multidimensional array of type <typeparamref name="T"/> and on host indicator</param>
 		public static explicit operator DenseMatrix<T>((T[,] value, bool onHost) input)
 		{
 			var (value, onHost) = input;
@@ -1877,7 +1877,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Initialize from host C# one-dimensional array which stores the matrix in column-order.
 		/// </summary>
-		/// <param name="input">the C# one-dimensional array of type <typeparamref name="T"/> and the leading dimension</param>
+		/// <param name="input">The C# one-dimensional array of type <typeparamref name="T"/> and the leading dimension</param>
 		public static explicit operator DenseMatrix<T>((T[] value, long leadDim, bool onHost) input)
 		{
 			var (value, leadDim, onHost) = input;

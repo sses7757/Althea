@@ -160,8 +160,8 @@ namespace Althea
 		/// <summary>
 		/// Initialize the <see cref="StatusException"/> by a <see cref="Enum"/>.
 		/// </summary>
-		/// <param name="error">the error enum</param>
-		/// <param name="methodName">the method name, can be null or empty for not showing it</param>
+		/// <param name="error">The error enum</param>
+		/// <param name="methodName">The method name, can be null or empty for not showing it</param>
 		/// <param name="trace">customize stack trace</param>
 		/// <exception cref="ArgumentException">if <paramref name="error"/> does not represent an error status</exception>
 		public StatusException(Enum error, string methodName, StackTrace trace = null)
@@ -180,7 +180,7 @@ namespace Althea
 		/// <summary>
 		/// Initialize the <see cref="StatusException"/> by a <see cref="Enum"/>.
 		/// </summary>
-		/// <param name="error">the error enum</param>
+		/// <param name="error">The error enum</param>
 		/// <param name="trace">customize <see cref="System.Diagnostics.StackTrace"/></param>
 		/// <exception cref="ArgumentException">if <paramref name="error"/> does not represent an error status</exception>
 		public StatusException(Enum error, StackTrace trace = null)
@@ -204,7 +204,7 @@ namespace Althea
 		/// <summary>
 		/// Initialize the <see cref="StatusException"/> by a <see cref="Enum"/> while the method is the calling method obtained by <see cref="StackTrace.GetFrame(int)"/>.
 		/// </summary>
-		/// <param name="error">the error enum</param>
+		/// <param name="error">The error enum</param>
 		/// <exception cref="ArgumentException">if <paramref name="error"/> does not represent an error status</exception>
 		public StatusException(Enum error)
 		{
@@ -223,9 +223,9 @@ namespace Althea
 		/// <summary>
 		/// Initialize the <see cref="StatusException"/> by two <see cref="Enum"/>s.
 		/// </summary>
-		/// <param name="error1">the error enum 1</param>
-		/// <param name="error2">the error enum 2</param>
-		/// <param name="method">the <see cref="MethodBase"/> to indicate the current method</param>
+		/// <param name="error1">The error enum 1</param>
+		/// <param name="error2">The error enum 2</param>
+		/// <param name="method">The <see cref="MethodBase"/> to indicate the current method</param>
 		/// <exception cref="ArgumentException">if <paramref name="error1"/> or <paramref name="error2"/> does not represent an error status</exception>
 		public StatusException(MethodBase method, Enum error1, Enum error2)
 		{

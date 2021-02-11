@@ -238,7 +238,7 @@ namespace Althea.Tensor
 	/// <summary>
 	/// The static class that provides caching <see cref="ContractionInput"/> with corresponding contraction plan <typeparamref name="TPlan"/>.
 	/// </summary>
-	/// <typeparam name="TPlan">the type of contraction plan</typeparam>
+	/// <typeparam name="TPlan">The type of contraction plan</typeparam>
 	public static class ContractionCache<TPlan> where TPlan : struct, IDisposable
 	{
 		private static readonly List<int> HashCodes = new List<int>();
@@ -267,8 +267,8 @@ namespace Althea.Tensor
 		/// <param name="outLeftFree">output tensor's indices corresponding to left tensor's</param>
 		/// <param name="rightFree">right tensor's free indices sorted by <paramref name="outRightFree"/></param>
 		/// <param name="outRightFree">output tensor's indices corresponding to right tensor's</param>
-		/// <param name="plan">the output contraction plan as <typeparamref name="TPlan"/> if the given input parameters are cached; null otherwise</param>
-		/// <param name="input">the created <see cref="ContractionInput"/> from given input parameters if they are <b>not</b> cached; or the found one</param>
+		/// <param name="plan">The output contraction plan as <typeparamref name="TPlan"/> if the given input parameters are cached; null otherwise</param>
+		/// <param name="input">The created <see cref="ContractionInput"/> from given input parameters if they are <b>not</b> cached; or the found one</param>
 		public static void TryGet(long[] leftSize, long[] rightSize, long[] outSize, ReadOnlySpan<int> leftContract, ReadOnlySpan<int> rightContract, ReadOnlySpan<int> leftFree, ReadOnlySpan<int> outLeftFree, ReadOnlySpan<int> rightFree, ReadOnlySpan<int> outRightFree, out TPlan? plan, out ContractionInput input)
 		{
 			int hashCode = ContractionInput.HashCodeOf(leftSize, rightSize, leftContract, rightContract, leftFree, outLeftFree, rightFree, outRightFree);
@@ -296,8 +296,8 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Add a pair of <see cref="ContractionInput"/> <paramref name="input"/> and corresponding <typeparamref name="TPlan"/> <paramref name="plan"/>
 		/// </summary>
-		/// <param name="input">the input information as a <see cref="ContractionInput"/></param>
-		/// <param name="plan">the contraction plan as a <typeparamref name="TPlan"/></param>
+		/// <param name="input">The input information as a <see cref="ContractionInput"/></param>
+		/// <param name="plan">The contraction plan as a <typeparamref name="TPlan"/></param>
 		/// <returns>true if <paramref name="input"/> is not in current cache, false otherwise</returns>
 		public static bool Add(ContractionInput input, TPlan plan)
 		{
@@ -308,8 +308,8 @@ namespace Althea.Tensor
 	/// <summary>
 	/// The static class that provides caching <see cref="ContractionInput"/> and <typeparamref name="TAdditionInput"/> with corresponding contraction plan <typeparamref name="TPlan"/>.
 	/// </summary>
-	/// <typeparam name="TAdditionInput">the type of additional information used to identify a contraction input (along with <see cref="ContractionInput"/>)</typeparam>
-	/// <typeparam name="TPlan">the type of contraction plan</typeparam>
+	/// <typeparam name="TAdditionInput">The type of additional information used to identify a contraction input (along with <see cref="ContractionInput"/>)</typeparam>
+	/// <typeparam name="TPlan">The type of contraction plan</typeparam>
 	public static class ContractionCache<TAdditionInput, TPlan>
 		where TAdditionInput : struct, IEquatable<TAdditionInput>
 		where TPlan : struct, IDisposable
@@ -342,9 +342,9 @@ namespace Althea.Tensor
 		/// <param name="outLeftFree">output tensor's indices corresponding to left tensor's</param>
 		/// <param name="rightFree">right tensor's free indices sorted by <paramref name="outRightFree"/></param>
 		/// <param name="outRightFree">output tensor's indices corresponding to right tensor's</param>
-		/// <param name="addition">the additional information as a <typeparamref name="TAdditionInput"/></param>
-		/// <param name="plan">the output contraction plan as <typeparamref name="TPlan"/> if the given input parameters are cached; null otherwise</param>
-		/// <param name="input">the created <see cref="ContractionInput"/> from given input parameters if they are <b>not</b> cached; or the found one</param>
+		/// <param name="addition">The additional information as a <typeparamref name="TAdditionInput"/></param>
+		/// <param name="plan">The output contraction plan as <typeparamref name="TPlan"/> if the given input parameters are cached; null otherwise</param>
+		/// <param name="input">The created <see cref="ContractionInput"/> from given input parameters if they are <b>not</b> cached; or the found one</param>
 		public static void TryGet(long[] leftSize, long[] rightSize, long[] outSize, ReadOnlySpan<int> leftContract, ReadOnlySpan<int> rightContract, ReadOnlySpan<int> leftFree, ReadOnlySpan<int> outLeftFree, ReadOnlySpan<int> rightFree, ReadOnlySpan<int> outRightFree, TAdditionInput addition, out TPlan? plan, out ContractionInput input)
 		{
 			int hashCode = ContractionInput.HashCodeOf(leftSize, rightSize, leftContract, rightContract, leftFree, outLeftFree, rightFree, outRightFree);
@@ -373,9 +373,9 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Add a pair of <see cref="ContractionInput"/> <paramref name="input"/> and corresponding <typeparamref name="TPlan"/> <paramref name="plan"/>
 		/// </summary>
-		/// <param name="input">the input information as a <see cref="ContractionInput"/></param>
-		/// <param name="addition">the additional information as a <typeparamref name="TAdditionInput"/></param>
-		/// <param name="plan">the contraction plan as a <typeparamref name="TPlan"/></param>
+		/// <param name="input">The input information as a <see cref="ContractionInput"/></param>
+		/// <param name="addition">The additional information as a <typeparamref name="TAdditionInput"/></param>
+		/// <param name="plan">The contraction plan as a <typeparamref name="TPlan"/></param>
 		/// <returns>true if <paramref name="input"/> is not in current cache, false otherwise</returns>
 		public static bool Add(ContractionInput input, TAdditionInput addition, TPlan plan)
 		{
@@ -402,8 +402,8 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Construct from permutation and size
 		/// </summary>
-		/// <param name="perm">the permutation order</param>
-		/// <param name="size">the original tensor's size / extent</param>
+		/// <param name="perm">The permutation order</param>
+		/// <param name="size">The original tensor's size / extent</param>
 		public PermuteInput(int[] perm, int[] size)
 		{
 			this.Perm = perm; this.Size = size;
@@ -489,7 +489,7 @@ namespace Althea.Tensor
 	/// <summary>
 	/// The static class that provides caching <see cref="PermuteInput"/> with corresponding permutation plan <typeparamref name="TPlan"/>.
 	/// </summary>
-	/// <typeparam name="TPlan">the type of contraction plan</typeparam>
+	/// <typeparam name="TPlan">The type of contraction plan</typeparam>
 	public static class PermuteCache<TPlan> where TPlan : struct, IDisposable
 	{
 		private static readonly List<int> HashCodes = new List<int>();
@@ -509,10 +509,10 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Try to get the contraction plan as <typeparamref name="TPlan"/> from given input parameters.
 		/// </summary>
-		/// <param name="perm">the permutation order</param>
-		/// <param name="size">the original tensor's size / extent</param>
-		/// <param name="plan">the output contraction plan as <typeparamref name="TPlan"/> if the given input parameters are cached; null otherwise</param>
-		/// <param name="input">the created <see cref="PermuteInput"/> from given input parameters if they are <b>not</b> cached; or the found one</param>
+		/// <param name="perm">The permutation order</param>
+		/// <param name="size">The original tensor's size / extent</param>
+		/// <param name="plan">The output contraction plan as <typeparamref name="TPlan"/> if the given input parameters are cached; null otherwise</param>
+		/// <param name="input">The created <see cref="PermuteInput"/> from given input parameters if they are <b>not</b> cached; or the found one</param>
 		public static void TryGet(ReadOnlySpan<int> perm, ReadOnlySpan<int> size, out TPlan? plan, out PermuteInput input)
 		{
 			int hashCode = PermuteInput.HashCodeOf(perm, size);
@@ -540,8 +540,8 @@ namespace Althea.Tensor
 		/// <summary>
 		/// Add a pair of <see cref="PermuteInput"/> <paramref name="input"/> and corresponding <typeparamref name="TPlan"/> <paramref name="plan"/>
 		/// </summary>
-		/// <param name="input">the input information as a <see cref="PermuteInput"/></param>
-		/// <param name="plan">the contraction plan as a <typeparamref name="TPlan"/></param>
+		/// <param name="input">The input information as a <see cref="PermuteInput"/></param>
+		/// <param name="plan">The contraction plan as a <typeparamref name="TPlan"/></param>
 		/// <returns>true if <paramref name="input"/> is not in current cache, false otherwise</returns>
 		public static bool Add(PermuteInput input, TPlan plan)
 		{

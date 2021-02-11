@@ -98,7 +98,7 @@ namespace Althea.Solver.Mkl
 		/// <param name="k">number of elementary reflections whose product defines the matrix Q, <paramref name="k"/>≤<paramref name="n"/></param>
 		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="n"/> with <paramref name="lda"/> is not less than <c>max(1, <paramref name="m"/>)</c>.</param>
 		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/>.</param>
-		/// <param name="tau">the scalars of elementary reflection vectors</param>
+		/// <param name="tau">The scalars of elementary reflection vectors</param>
 		/// <returns>The info. If <c>info = 0</c>, the LU factorization is successful. if <c>info = -i</c>, the i-th parameter is wrong.</returns>
 		internal delegate int orgqrFunc(MklSolverLayout matrix_layout, int m, int n, int k, IntPtr A, int lda, IntPtr tau);
 		#region QR factorization
@@ -273,7 +273,7 @@ namespace Althea.Solver.Mkl
 		/// <param name="matrix_layout"><see cref="MklSolverLayout"/> of matrix <paramref name="A"/></param>
 		/// <param name="jobv">specifies options for computing all ('V') or none ('N') of the unitary matrix</param>
 		/// <param name="sort">specifies options for using <paramref name="selectFunc"/> to select and order eigenvalues or not</param>
-		/// <param name="selectFunc">the selection callback function whose inputs are real and imaginary parts of eigenvalue, returns the order as <see cref="int"/>, 0 means do not select</param>
+		/// <param name="selectFunc">The selection callback function whose inputs are real and imaginary parts of eigenvalue, returns the order as <see cref="int"/>, 0 means do not select</param>
 		/// <param name="n">number of columns and rows of matrix <paramref name="A"/></param>
 		/// <param name="A">matrix with size <paramref name="n"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/></param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
@@ -294,7 +294,7 @@ namespace Althea.Solver.Mkl
 		/// <param name="matrix_layout"><see cref="MklSolverLayout"/> of matrix <paramref name="A"/></param>
 		/// <param name="jobv">specifies options for computing all ('V') or none ('N') of the unitary matrix</param>
 		/// <param name="sort">specifies options for using <paramref name="selectFunc"/> to select and order eigenvalues or not</param>
-		/// <param name="selectFunc">the selection callback function whose input is the eigenvalue, returns the order as <see cref="int"/>, 0 means do not select</param>
+		/// <param name="selectFunc">The selection callback function whose input is the eigenvalue, returns the order as <see cref="int"/>, 0 means do not select</param>
 		/// <param name="n">number of columns and rows of matrix <paramref name="A"/></param>
 		/// <param name="A">matrix with size <paramref name="n"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/></param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>

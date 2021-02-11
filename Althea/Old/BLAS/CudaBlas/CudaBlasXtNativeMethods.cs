@@ -42,7 +42,7 @@ namespace Althea.Blas.Cuda.Xt
 		/// </summary>
 		/// <param name="handle">CUDA BLASXt context retrieved by <see cref="cublasXtCreate"/></param>
 		/// <param name="nbDevices">number of devices</param>
-		/// <param name="deviceId">the IDs' of devices</param>
+		/// <param name="deviceId">The IDs' of devices</param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		[DllImport(CUBLASXT_API_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -65,7 +65,7 @@ namespace Althea.Blas.Cuda.Xt
 		/// This function allows the user to query the block dimension used for the tiling of the matrices.
 		/// </summary>
 		/// <param name="handle">CUDA BLASXt context retrieved by <see cref="cublasXtCreate"/></param>
-		/// <param name="blockDim">the returned block dimension</param>
+		/// <param name="blockDim">The returned block dimension</param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		[DllImport(CUBLASXT_API_DLL_NAME)]
 		//[NativeMethodBoundary]
@@ -86,7 +86,7 @@ namespace Althea.Blas.Cuda.Xt
 		/// This function allows the user to enable or disable the Pinning Memory mode. See https://docs.nvidia.com/cuda/cublas/index.html#cublasxt_setPinningMemMode for more detail.
 		/// </summary>
 		/// <param name="handle">CUDA BLASXt context retrieved by <see cref="cublasXtCreate"/></param>
-		/// <param name="mode">the <see cref="PinnedMemoryMode"/> to set</param>
+		/// <param name="mode">The <see cref="PinnedMemoryMode"/> to set</param>
 		/// <returns>operation status enum <see cref="Status"/></returns>
 		[DllImport(CUBLASXT_API_DLL_NAME)]
 		//[NativeMethodBoundary]

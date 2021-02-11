@@ -95,7 +95,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the <see cref="UriScheme"/> from a <see cref="Uri"/>
 		/// </summary>
-		/// <param name="uri">the absolute <see cref="Uri"/></param>
+		/// <param name="uri">The absolute <see cref="Uri"/></param>
 		/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or <see cref="UriScheme.Unknown"/> if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> is not an absolute URI</exception>
 		public static UriScheme GetScheme(this Uri uri)
@@ -558,7 +558,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Convert this <see cref="PureOrMixedStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
@@ -619,11 +619,16 @@ namespace Althea.Storage
 		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription[this.start..this.end] ?? default;
 
 		/// <summary>
+		/// Create an empty <see cref="PureOrMixedReferenceStorage{T}"/>
+		/// </summary>
+		internal PureOrMixedReferenceStorage() : base(null) { }
+
+		/// <summary>
 		/// Create a <see cref="PureOrMixedReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
-		/// <param name="storage">the <see cref="PureOrMixedStorage{T}"/> to be referenced</param>
-		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
-		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <param name="storage">The <see cref="PureOrMixedStorage{T}"/> to be referenced</param>
+		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureOrMixedStorage{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
@@ -676,7 +681,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="PureOrMixedReferenceStorage{T}"/> (in presenting order)
 		/// </summary>
-		/// <param name="index">the element index</param>
+		/// <param name="index">The element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
 		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureOrMixedReferenceStorage{T}"/> is null</exception>
@@ -713,7 +718,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Convert this <see cref="PureOrMixedReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
@@ -771,7 +776,7 @@ namespace Althea.Storage
 		/// <b>Allocate</b> and create a <see cref="PureStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
-		/// <param name="length">the length of contiguous memory block in <typeparamref name="T"/></param>
+		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
 		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[1].SetValue(location), stackalloc long[1].SetValue(length))
 		{
 			this.pointer = Allocate(location, length);
@@ -787,7 +792,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
-		/// <param name="index">the element index</param>
+		/// <param name="index">The element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override PointerSegment this[int index] {
@@ -823,8 +828,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
-		/// <param name="locations">the <see cref="ReadOnlySpan{T}"/> of given <see cref="StorageLocation"/>s</param>
-		/// <param name="lengths">the <see cref="ReadOnlySpan{T}"/> of given lengths</param>
+		/// <param name="locations">The <see cref="ReadOnlySpan{T}"/> of given <see cref="StorageLocation"/>s</param>
+		/// <param name="lengths">The <see cref="ReadOnlySpan{T}"/> of given lengths</param>
 		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="locations"/> or not</param>
 		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same; or <paramref name="allowSameLocation"/> is false while <paramref name="locations"/> contains duplicate value(s)</exception>
@@ -852,7 +857,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
-		/// <param name="param">the <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
+		/// <param name="param">The <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
 		public MixedStorage(params (StorageLocation location, long length)[] param) :
 			this(param.CopyTo(stackalloc StorageLocation[param.Length], static p => p.location),
 				 param.CopyTo(stackalloc long[param.Length], static p => p.length),
@@ -869,7 +874,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
-		/// <param name="index">the element index</param>
+		/// <param name="index">The element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override PointerSegment this[int index] {
@@ -1045,7 +1050,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
 		/// </summary>
-		/// <param name="index">the element index, must be 0</param>
+		/// <param name="index">The element index, must be 0</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
@@ -1115,7 +1120,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Convert this <see cref="CachedReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>A <see cref="CachedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override CachedReferenceStorage<TOut> As<TOut>()
@@ -1187,9 +1192,9 @@ namespace Althea.Storage
 		/// <summary>
 		/// Create a <see cref="CachedReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
-		/// <param name="storage">the <see cref="CachedStorage{T}"/> to be referenced</param>
-		/// <param name="offset">the total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
-		/// <param name="newLength">the new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <param name="storage">The <see cref="CachedStorage{T}"/> to be referenced</param>
+		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorage{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
@@ -1221,7 +1226,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="CachedReferenceStorage{T}"/> (in presenting order)
 		/// </summary>
-		/// <param name="index">the element index</param>
+		/// <param name="index">The element index</param>
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
 		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="CachedReferenceStorage{T}"/> is null</exception>
@@ -1251,7 +1256,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Convert this <see cref="CachedReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">the output data type</typeparam>
+		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="CachedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
 		public override CachedReferenceStorage<TOut> As<TOut>()

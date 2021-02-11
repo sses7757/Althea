@@ -61,7 +61,7 @@ namespace Althea.Runtime.Mkl
 		/// <summary>
 		/// Returns the Intel® MKL version in a character string.
 		/// </summary>
-		/// <param name="str">the input and output string</param>
+		/// <param name="str">The input and output string</param>
 		/// <param name="len">length of <paramref name="str"/></param>
 		[DllImport(MKLRT_API_DLL_NAME, CharSet = CharSet.Ansi)]
 		internal static extern void MKL_Get_Version_String(StringBuilder str, int len);
@@ -116,9 +116,9 @@ namespace Althea.Runtime.Mkl
 		/// <summary>
 		/// Copies 2D data between different pointers.
 		/// </summary>
-		/// <param name="src">the source pointer</param>
+		/// <param name="src">The source pointer</param>
 		/// <param name="srcPitch">source array actual height (actual leading dimension) in bytes</param>
-		/// <param name="dst">the destination pointer</param>
+		/// <param name="dst">The destination pointer</param>
 		/// <param name="dstPitch">destination array actual height (actual leading dimension) in bytes</param>
 		/// <param name="height">height to copy, in bytes</param>
 		/// <param name="width">width to copy, in real size rather than bytes</param>

@@ -69,7 +69,7 @@ namespace Althea.Runtime.Cuda
 		/// <summary>
 		/// Frees memory on the device.
 		/// </summary>
-		/// <param name="devPtr">the pointer to the array to free</param>
+		/// <param name="devPtr">The pointer to the array to free</param>
 		[DllImport(CUDART_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern CudaError cudaFree(IntPtr devPtr);
@@ -77,7 +77,7 @@ namespace Althea.Runtime.Cuda
 		/// <summary>
 		/// Frees page-locked (pinned) memory on the host.
 		/// </summary>
-		/// <param name="ptr">the pointer to the array to free</param>
+		/// <param name="ptr">The pointer to the array to free</param>
 		[DllImport(CUDART_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern CudaError cudaFreeHost(IntPtr ptr);
@@ -85,8 +85,8 @@ namespace Althea.Runtime.Cuda
 		/// <summary>
 		/// Allocates page-locked (pinned) memory on the host.
 		/// </summary>
-		/// <param name="pHost">the returned host array pointer</param>
-		/// <param name="size">the array size in bytes</param>
+		/// <param name="pHost">The returned host array pointer</param>
+		/// <param name="size">The array size in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMallocHost(ref IntPtr pHost, long size);
@@ -94,8 +94,8 @@ namespace Althea.Runtime.Cuda
 		/// <summary>
 		/// Allocates memory on the device.
 		/// </summary>
-		/// <param name="pDev">the returned device array pointer</param>
-		/// <param name="size">the array size in bytes</param>
+		/// <param name="pDev">The returned device array pointer</param>
+		/// <param name="size">The array size in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
 		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMalloc(ref IntPtr pDev, long size);
@@ -146,7 +146,7 @@ namespace Althea.Runtime.Cuda
 		/// <summary>
 		/// Get the CUDA device's compute capability
 		/// </summary>
-		/// <param name="deviceID">the id of device</param>
+		/// <param name="deviceID">The id of device</param>
 		/// <param name="major">output major compute capability</param>
 		/// <param name="minor">output minor compute capability</param>
 		/// <returns><see cref="CudaError"/></returns>
