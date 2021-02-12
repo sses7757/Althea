@@ -1133,7 +1133,7 @@ namespace Althea.Linq
 		/// <returns>the hash code of <paramref name="set"/></returns>
 		public static int HashCodeOfSet<T>(this ReadOnlySpan<T> set) where T : struct
 		{
-			if (set.Length == 0)
+			if (set.IsEmpty)
 				return 0; // hash code of null
 			int hc = 0;
 			for (int i = 0; i < set.Length; ++i)

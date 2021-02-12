@@ -128,8 +128,9 @@ namespace Althea
 	/// <summary>
 	/// The struct of a storage location
 	/// </summary>
-	/// <remarks>This struct has size of a <see cref="int"/>. The <see cref="LocationType"/> occupies first few bits and its detail occupies the rest (slightly smaller than a full <see cref="int"/>).</remarks>
-	[StructLayout(LayoutKind.Sequential)]
+	/// <remarks>
+	/// This struct has size of a <see cref="int"/>. The <see cref="LocationType"/> occupies first few bits and its detail occupies the rest (slightly smaller than a full <see cref="int"/>).
+	/// </remarks>
 	public readonly struct StorageLocation : IEquatable<StorageLocation>
 	{
 		#region basic
@@ -138,7 +139,7 @@ namespace Althea
 		/// <summary>
 		/// The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/>
 		/// </summary>
-		public LocationType Type => (LocationType)unchecked((byte)this._data);
+		public LocationType Type => (LocationType)unchecked((byte)(this._data & byte.MaxValue));
 
 		/// <summary>
 		/// The location detail of the <see cref="Type"/>.
@@ -153,7 +154,7 @@ namespace Althea
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="detail"/> is too large to fit with <see cref="LocationType"/></exception>
 		public StorageLocation(LocationType location, int detail)
 		{
-			if (detail < 0 || detail >= (byte.MaxValue + 1) * (ushort.MaxValue + 1))
+			if (detail < 0 || detail >= 0xffffff)
 				throw new ArgumentOutOfRangeException(nameof(detail), Parameter.InvalidValue);
 			this._data = (byte)location + (detail << 8);
 		}
@@ -272,15 +273,19 @@ namespace Althea
 	/// <summary>
 	/// The struct of a combination of storage location(s)
 	/// </summary>
-	[StructLayout(LayoutKind.Sequential, Pack = 2)]
+	/// <remarks>
+	/// The size of this structure is 64, which is exactly inside the cache line boundaries for Intel CPUs.<br/>
+	/// The data field of this struct is a <see cref="FixedBuffer_60{T}"/> rather than an array of <see cref="StorageLocation"/> to reduce GC pressure since this structure is frequently created.<br/>
+	/// In fact, nearly no GC is necessary even if some reference type has field of this <see cref="CombinationOfLocations"/>.
+	/// </remarks>
 	public readonly struct CombinationOfLocations : IEquatable<CombinationOfLocations>, IReadOnlyList<StorageLocation>
 	{
 		#region basic
+		private readonly FixedBuffer_60<StorageLocation> data;
+
 		private readonly CombinationType type; // size = 2
 
 		private readonly ushort count;
-
-		private readonly FixedBuffer_60<StorageLocation> data;
 
 		/// <summary>
 		/// The number of <see cref="StorageLocation"/>s in this description
@@ -307,16 +312,7 @@ namespace Althea
 			this.data = new FixedBuffer_60<StorageLocation>();
 			this.count = (ushort)data.Length;
 			// set the values of data
-			Span<StorageLocation> span = stackalloc StorageLocation[data.Length];
-			data.CopyTo(span);
-			if (type.IsOrdered())
-			{
-				span.Sort();
-			}
-			for (int i = 0; i < 15; i++)
-			{
-				this.data[i] = span[i];
-			}
+			this.data.CopyFromSpan(data);
 		}
 
 		/// <summary>
@@ -367,10 +363,13 @@ namespace Althea
 		/// <returns>The hash code</returns>
 		public override int GetHashCode()
 		{
+			Span<StorageLocation> span = stackalloc StorageLocation[this.count];
+			this.data.CopyToSpan(span);
+			ReadOnlySpan<StorageLocation> s = span;
 			if (this.type.IsOrdered())
-				return HashCode.Combine(this.type, this.data);
+				return HashCode.Combine(this.type, s.HashCodeOfSpan());
 			else
-				return HashCode.Combine(this.type, ((ReadOnlySpan<StorageLocation>)this.data.AsSpan()).HashCodeOfSet());
+				return HashCode.Combine(this.type, s.HashCodeOfSet());
 		}
 
 		/// <summary>
@@ -413,7 +412,9 @@ namespace Althea
 			if (length <= 0 || length + start > this.Count)
 				throw new ArgumentOutOfRangeException(nameof(length));
 
-			return new CombinationOfLocations(this.type, this.data.AsSpan().Slice(start, length));
+			Span<StorageLocation> locations = stackalloc StorageLocation[this.count];
+			this.CopyLocationsToSpan(locations);
+			return new CombinationOfLocations(this.type, locations.Slice(start, length));
 		}
 
 		/// <summary>
@@ -426,10 +427,9 @@ namespace Althea
 
 		IEnumerator<StorageLocation> IEnumerable<StorageLocation>.GetEnumerator()
 		{
-			var span = this.data.AsSpan();
 			for (int i = 0; i < this.Count; i++)
 			{
-				yield return span[i];
+				yield return this.data[i];
 			}
 		}
 
@@ -444,10 +444,17 @@ namespace Althea
 		public static implicit operator CombinationOfLocations(StorageLocation storageDetail) => new CombinationOfLocations(storageDetail);
 
 		/// <summary>
-		/// Explicitly convert a <see cref="CombinationOfLocations"/> to a <see cref="ReadOnlySpan{T}"/> by taking its underlying <see cref="StorageLocation"/>s
+		/// Copy the <see cref="StorageLocation"/>s of this combination to a given <paramref name="span"/>
 		/// </summary>
-		/// <param name="locations">The <see cref="CombinationOfLocations"/> to be converted</param>
-		public static explicit operator ReadOnlySpan<StorageLocation>(CombinationOfLocations locations) => locations.data.AsSpan()[..locations.count];
+		/// <param name="span">The given <see cref="Span{T}"/> of <see cref="StorageLocation"/> to copy to</param>
+		/// <exception cref="ArgumentException">If <paramref name="span"/>'s length is not the same as <see cref="Count"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void CopyLocationsToSpan(Span<StorageLocation> span)
+		{
+			if (span.Length != this.count)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(span));
+			this.data.CopyToSpan(span);
+		}
 		#endregion
 
 		#region string related
@@ -494,12 +501,11 @@ namespace Althea
 	/// The struct of which delimits a certain section of a certain unmanaged memory block
 	/// </summary>
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
-	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct PointerSegment : IEquatable<PointerSegment>, IMainPropertyFormat, ICheckValid
 	{
 		#region basic
 		private readonly IPointer pointer;
-
+		
 		private readonly long offset;
 
 		private readonly long length;

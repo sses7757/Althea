@@ -18,21 +18,22 @@ namespace Althea.LinearAlgebra.Sparse
 		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the row-first order.
 		/// </summary>
 		COOR = 1 << 0,
-
 		/// <summary>
 		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the column-first order.
 		/// </summary>
 		COOC = 1 << 1,
-
 		/// <summary>
-		/// Compressed Sparse Row Format (CSR). The only way the <see cref="CSR"/> differs from the <see cref="COOR"/> format is that the array containing the row indices is compressed, that is, the row index array only stores the end-of-row offsets of <c>size == leading_dim + 1</c> of the value array.
+		/// Compressed Sparse Row Format (CSR). The only way the <see cref="CSR"/> differs from the <see cref="COOR"/> format is that the array containing the row indices is compressed, that is, the row index array only stores the end-of-row offsets of <c>size == number_of_rows + 1</c> of the value array.
 		/// </summary>
 		CSR = 1 << 2,
-
 		/// <summary>
 		/// Compressed Sparse Column Format (CSC). The only way the <see cref="CSC"/> differs from the <see cref="CSR"/> format is that the column index array instead of row indices array stores the end-of-column (not end-of-row) offsets.
 		/// </summary>
 		CSC = 1 << 3,
+		/// <summary>
+		/// Block Sparse Row Format (BSR). The only way the <see cref="BSR"/> differs from the <see cref="CSR"/> format is that instead of indexing values, <see cref="BSR"/> indexes the dense block sub-matrices. Therefore, this requires additional parameters: number of non-zero blocks instead of non-zero values, number of block matrix rows, number of block matrix columns, end-of-row offsets are counted in blocks and therefore is of <c>size == number_of_rows / block_rows + 1</c>.
+		/// </summary>
+		BSR = 1 << 4,
 	}
 
 	/// <summary>
@@ -41,19 +42,19 @@ namespace Althea.LinearAlgebra.Sparse
 	public static class SparseMatrixFormatExtension
 	{
 		/// <summary>
-		/// Since <see cref="SparseMatrixFormat.COOC"/> and <see cref="SparseMatrixFormat.COOR"/> are so similar that it can be generalized to the Coordinate Format (COO).
+		/// The coordinated formats.
 		/// </summary>
 		public const SparseMatrixFormat Coordinated = SparseMatrixFormat.COOR | SparseMatrixFormat.COOC;
 
 		/// <summary>
-		/// Since <see cref="SparseMatrixFormat.CSR"/> and <see cref="SparseMatrixFormat.CSC"/> are so similar that it can be generalized to the Compressed Format.
+		/// The compressed formats.
 		/// </summary>
-		public const SparseMatrixFormat Compressed = SparseMatrixFormat.CSR | SparseMatrixFormat.CSC;
+		public const SparseMatrixFormat Compressed = SparseMatrixFormat.CSR | SparseMatrixFormat.CSC | SparseMatrixFormat.BSR;
 
 		/// <summary>
 		/// The row majored formats.
 		/// </summary>
-		public const SparseMatrixFormat RowMajor = SparseMatrixFormat.COOR | SparseMatrixFormat.CSR;
+		public const SparseMatrixFormat RowMajor = SparseMatrixFormat.COOR | SparseMatrixFormat.CSR | SparseMatrixFormat.BSR;
 
 		/// <summary>
 		/// The column majored formats.

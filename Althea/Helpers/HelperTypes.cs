@@ -13,8 +13,8 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The interface for fixed buffer structures
 	/// </summary>
-	/// <typeparam name="T">any unmanaged struct</typeparam>
-	public interface IFixedBuffer<T> : IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T> where T : unmanaged, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	public interface IFixedBuffer<T> : IReadOnlyList<T> where T : unmanaged, IEquatable<T>
 	{
 		/// <summary>
 		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
@@ -30,14 +30,6 @@ namespace Althea.Helpers
 		new T this[int index] { get; set; }
 
 		/// <summary>
-		/// Get the <see cref="Span{T}"/> representation of this fixed buffer
-		/// </summary>
-		/// <param name="count">The presenting length of the result <see cref="Span{T}"/>, default 0 means maximum possible</param>
-		/// <returns>The <see cref="Span{T}"/> representation of this fixed buffer</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="count"/> is out of range</exception>
-		Span<T> AsSpan(int count = 0);
-
-		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
 		/// </summary>
 		/// <returns>The array containing the elements of this fixed buffer</returns>
@@ -49,6 +41,24 @@ namespace Althea.Helpers
 		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		IFixedBuffer<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>;
+
+		/// <summary>
+		/// Copy the data from the given <paramref name="span"/> to this fixed buffer
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0);
+
+		/// <summary>
+		/// Copy the data from this fixed buffer to the given <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy to</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		void CopyToSpan(Span<T> span, int offset = 0);
 
 		/// <summary>
 		/// Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
@@ -73,29 +83,28 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 60
 	/// </summary>
-	/// <typeparam name="T">any unmanaged struct</typeparam>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 60)]
 	[UnsafeValueType]
 	public unsafe struct FixedBuffer_60<T> : IEquatable<FixedBuffer_60<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
-		private T field;
-
-		private T* Pointer => (T*)Unsafe.AsPointer(ref this.field);
-
-		/// <summary>
-		/// Get the <see cref="Span{T}"/> representation of this fixed buffer
-		/// </summary>
-		/// <param name="count">The presenting length of the result <see cref="Span{T}"/>, default 0 means maximum possible</param>
-		/// <returns>The <see cref="Span{T}"/> representation of this fixed buffer</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="count"/> is out of range</exception>
-		public Span<T> AsSpan(int count = 0) => count < 0 || count > this.Count ? throw new ArgumentOutOfRangeException(nameof(count)) : new Span<T>(this.Pointer, count == 0 ? this.Count : count);
+		private readonly T field;
 
 		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
 		/// </summary>
 		/// <returns>The array containing the elements of this fixed buffer</returns>
-		public T[] ToArray() => this.AsSpan().ToArray();
+		public T[] ToArray()
+		{
+			T[] array = new T[this.Count];
+			fixed (void* t = &this)
+			fixed (T* a = array)
+			{
+				Unsafe.CopyBlock(a, t, 60);
+			}
+			return array;
+		}
 
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
@@ -105,12 +114,56 @@ namespace Althea.Helpers
 		public FixedBuffer_60<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
 		{
 			var newBuffer = new FixedBuffer_60<TOut>();
-			Unsafe.CopyBlock(newBuffer.Pointer, this.Pointer, 60);
+			fixed (void* t = &this)
+			{
+				Unsafe.CopyBlock(&newBuffer, t, 60);
+			}
 			return newBuffer;
 		}
 
 		IFixedBuffer<TOut> IFixedBuffer<T>.As<TOut>() => this.As<TOut>();
 
+		/// <summary>
+		/// Copy the data from the given <paramref name="span"/> to this fixed buffer
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= this.Count)
+				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+			if (span.Length > this.Count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+			int size = Math.Min(span.Length, this.Count);
+			fixed (void* t = &this)
+			{
+				var temp = new Span<T>(t, size);
+				span.CopyTo(temp);
+			}
+		}
+
+		/// <summary>
+		/// Copy the data from this fixed buffer to the given <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy to</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		public void CopyToSpan(Span<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= this.Count)
+				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+			if (span.Length > this.Count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+			int size = Math.Min(span.Length, this.Count);
+			fixed (void* t = &this)
+			{
+				var temp = new ReadOnlySpan<T>(t, size);
+				temp.CopyTo(span);
+			}
+		}
 
 		/// <summary>
 		/// Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
@@ -125,7 +178,10 @@ namespace Althea.Helpers
 			if (size + copyStart > 60)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
-			Unsafe.CopyBlock(Unsafe.AsPointer(ref s), this.Pointer, (uint)size);
+			fixed (void* t = &this)
+			{
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+			}
 			return s;
 		}
 
@@ -141,7 +197,10 @@ namespace Althea.Helpers
 			int size = Marshal.SizeOf<TStruct>();
 			if (size + copyStart > 60)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
-			Unsafe.CopyBlock(this.Pointer + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
+			fixed (void* t = &this)
+			{
+				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
+			}
 		}
 		#endregion
 
@@ -151,14 +210,17 @@ namespace Althea.Helpers
 		/// </summary>
 		public int NonDefaults {
 			get {
-				var span = this.AsSpan();
-				int result = 0;
-				for (int i = 0; i < this.Count; i++)
+				fixed (void* t = &this)
 				{
-					if (!span[i].Equals(default))
-						result++;
+					T* ptr = (T*)t;
+					int result = 0;
+					for (int i = 0; i < this.Count; i++)
+					{
+						if (!ptr[i].Equals(default))
+							result++;
+					}
+					return result;
 				}
-				return result;
 			}
 		}
 
@@ -174,8 +236,22 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
-			get => index >= 0 && index < this.Count ? Pointer[index] : throw new ArgumentOutOfRangeException(nameof(index));
-			set => Pointer[index] = index >= 0 && index < this.Count ? value : throw new ArgumentOutOfRangeException(nameof(index));
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				fixed (void* t = &this)
+				{
+					return ((T*)t)[index];
+				}
+			}
+			set {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				fixed (void* t = &this)
+				{
+					((T*)t)[index] = value;
+				}
+			}
 		}
 
 		/// <summary>
@@ -184,12 +260,9 @@ namespace Althea.Helpers
 		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
 		public IEnumerator<T> GetEnumerator()
 		{
-			var span = this.AsSpan();
-			var iter = span.GetEnumerator();
-			yield return iter.Current;
-			while (iter.MoveNext())
+			for (int i = 0; i < this.Count; i++)
 			{
-				yield return iter.Current;
+				yield return this[i];
 			}
 		}
 
@@ -204,16 +277,17 @@ namespace Althea.Helpers
 		/// <returns>this == <paramref name="other"/></returns>
 		public bool Equals(FixedBuffer_60<T> other)
 		{
-			T* ptrThis = this.Pointer;
-			T* ptrOther = other.Pointer;
-			if (ptrThis == ptrOther)
-				return true;
-			for (int i = 0; i < this.Count; i++)
+			fixed (void* t = &this)
 			{
-				if (!ptrThis[i].Equals(ptrOther[i]))
-					return false;
+				T* ptrThis = (T*)t;
+				T* ptrOther = &other.field;
+				for (int i = 0; i < this.Count; i++)
+				{
+					if (!ptrThis[i].Equals(ptrOther[i]))
+						return false;
+				}
+				return true;
 			}
-			return true;
 		}
 
 		/// <summary>
@@ -230,7 +304,14 @@ namespace Althea.Helpers
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="FixedBuffer_60{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
-		public override int GetHashCode() => ((ReadOnlySpan<T>)this.AsSpan()).HashCodeOfSpan();
+		public override int GetHashCode()
+		{
+			fixed (void* t = &this)
+			{
+				var temp = new ReadOnlySpan<T>(t, this.Count);
+				return temp.HashCodeOfSpan();
+			}
+		}
 
 		/// <summary>
 		/// Equality operator
@@ -265,29 +346,28 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
 	/// </summary>
-	/// <typeparam name="T">any unmanaged struct</typeparam>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 128)]
 	[UnsafeValueType]
 	public unsafe struct FixedBuffer_128<T> : IEquatable<FixedBuffer_128<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
-		private T field;
-
-		private T* Pointer => (T*)Unsafe.AsPointer(ref this.field);
-
-		/// <summary>
-		/// Get the <see cref="Span{T}"/> representation of this fixed buffer
-		/// </summary>
-		/// <param name="count">The presenting length of the result <see cref="Span{T}"/>, default 0 means maximum possible</param>
-		/// <returns>The <see cref="Span{T}"/> representation of this fixed buffer</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="count"/> is out of range</exception>
-		public Span<T> AsSpan(int count = 0) => count < 0 || count > this.Count ? throw new ArgumentOutOfRangeException(nameof(count)) : new Span<T>(this.Pointer, count == 0 ? this.Count : count);
+		private readonly T field;
 
 		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
 		/// </summary>
 		/// <returns>The array containing the elements of this fixed buffer</returns>
-		public T[] ToArray() => this.AsSpan().ToArray();
+		public T[] ToArray()
+		{
+			T[] array = new T[this.Count];
+			fixed (void* t = &this)
+			fixed (T* a = array)
+			{
+				Unsafe.CopyBlock(a, t, 128);
+			}
+			return array;
+		}
 
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
@@ -297,12 +377,56 @@ namespace Althea.Helpers
 		public FixedBuffer_128<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
 		{
 			var newBuffer = new FixedBuffer_128<TOut>();
-			Unsafe.CopyBlock(newBuffer.Pointer, this.Pointer, 128);
+			fixed (void* t = &this)
+			{
+				Unsafe.CopyBlock(&newBuffer, t, 128);
+			}
 			return newBuffer;
 		}
 
 		IFixedBuffer<TOut> IFixedBuffer<T>.As<TOut>() => this.As<TOut>();
 
+		/// <summary>
+		/// Copy the data from the given <paramref name="span"/> to this fixed buffer
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= this.Count)
+				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+			if (span.Length > this.Count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+			int size = Math.Min(span.Length, this.Count);
+			fixed (void* t = &this)
+			{
+				var temp = new Span<T>(t, size);
+				span.CopyTo(temp);
+			}
+		}
+
+		/// <summary>
+		/// Copy the data from this fixed buffer to the given <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy to</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		public void CopyToSpan(Span<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= this.Count)
+				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+			if (span.Length > this.Count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+			int size = Math.Min(span.Length, this.Count);
+			fixed (void* t = &this)
+			{
+				var temp = new ReadOnlySpan<T>(t, size);
+				temp.CopyTo(span);
+			}
+		}
 
 		/// <summary>
 		/// Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
@@ -317,7 +441,10 @@ namespace Althea.Helpers
 			if (size + copyStart > 128)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
-			Unsafe.CopyBlock(Unsafe.AsPointer(ref s), this.Pointer, (uint)size);
+			fixed (void* t = &this)
+			{
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+			}
 			return s;
 		}
 
@@ -333,7 +460,10 @@ namespace Althea.Helpers
 			int size = Marshal.SizeOf<TStruct>();
 			if (size + copyStart > 128)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
-			Unsafe.CopyBlock(this.Pointer + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
+			fixed (void* t = &this)
+			{
+				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
+			}
 		}
 		#endregion
 
@@ -343,14 +473,17 @@ namespace Althea.Helpers
 		/// </summary>
 		public int NonDefaults {
 			get {
-				var span = this.AsSpan();
-				int result = 0;
-				for (int i = 0; i < this.Count; i++)
+				fixed (void* t = &this)
 				{
-					if (!span[i].Equals(default))
-						result++;
+					T* ptr = (T*)t;
+					int result = 0;
+					for (int i = 0; i < this.Count; i++)
+					{
+						if (!ptr[i].Equals(default))
+							result++;
+					}
+					return result;
 				}
-				return result;
 			}
 		}
 
@@ -366,8 +499,22 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
-			get => index >= 0 && index < this.Count ? Pointer[index] : throw new ArgumentOutOfRangeException(nameof(index));
-			set => Pointer[index] = index >= 0 && index < this.Count ? value : throw new ArgumentOutOfRangeException(nameof(index));
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				fixed (void* t = &this)
+				{
+					return ((T*)t)[index];
+				}
+			}
+			set {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index));
+				fixed (void* t = &this)
+				{
+					((T*)t)[index] = value;
+				}
+			}
 		}
 
 		/// <summary>
@@ -376,12 +523,9 @@ namespace Althea.Helpers
 		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
 		public IEnumerator<T> GetEnumerator()
 		{
-			var span = this.AsSpan();
-			var iter = span.GetEnumerator();
-			yield return iter.Current;
-			while (iter.MoveNext())
+			for (int i = 0; i < this.Count; i++)
 			{
-				yield return iter.Current;
+				yield return this[i];
 			}
 		}
 
@@ -396,16 +540,17 @@ namespace Althea.Helpers
 		/// <returns>this == <paramref name="other"/></returns>
 		public bool Equals(FixedBuffer_128<T> other)
 		{
-			T* ptrThis = this.Pointer;
-			T* ptrOther = other.Pointer;
-			if (ptrThis == ptrOther)
-				return true;
-			for (int i = 0; i < this.Count; i++)
+			fixed (void* t = &this)
 			{
-				if (!ptrThis[i].Equals(ptrOther[i]))
-					return false;
+				T* ptrThis = (T*)t;
+				T* ptrOther = &other.field;
+				for (int i = 0; i < this.Count; i++)
+				{
+					if (!ptrThis[i].Equals(ptrOther[i]))
+						return false;
+				}
+				return true;
 			}
-			return true;
 		}
 
 		/// <summary>
@@ -422,7 +567,14 @@ namespace Althea.Helpers
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="FixedBuffer_128{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
-		public override int GetHashCode() => ((ReadOnlySpan<T>)this.AsSpan()).HashCodeOfSpan();
+		public override int GetHashCode()
+		{
+			fixed (void* t = &this)
+			{
+				var temp = new ReadOnlySpan<T>(t, this.Count);
+				return temp.HashCodeOfSpan();
+			}
+		}
 
 		/// <summary>
 		/// Equality operator

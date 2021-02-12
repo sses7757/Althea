@@ -12,11 +12,11 @@ namespace Althea.Arrays
 	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
+		private readonly FixedBuffer_128<long> m_size;
+
+		private readonly FixedBuffer_128<long> m_sizeProd;
+
 		private readonly int m_rank;
-
-		private readonly FixedBuffer_128<long> m_size = new FixedBuffer_128<long>();
-
-		private readonly FixedBuffer_128<long> m_sizeProd = new FixedBuffer_128<long>();
 		#endregion
 
 		#region properties

@@ -9,7 +9,6 @@ using Althea.Linq;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
-////using CopyDelegate = System.Func<Althea.PointerSegment, Althea.PointerSegment, long>;
 
 
 namespace Althea.Storage
