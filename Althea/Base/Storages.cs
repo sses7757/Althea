@@ -775,7 +775,7 @@ namespace Althea
 	/// I must warn you that although .NET has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of .NET.</remarks>
-	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>> where T : unmanaged
+	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, ICloneable<Storage<T>> where T : unmanaged
 	{
 		#region properties
 		/// <summary>
@@ -828,7 +828,8 @@ namespace Althea
 		/// </summary>
 		public void Dispose()
 		{
-			this.Dispose(true);
+			if (this.IsValid())
+				this.Dispose(true);
 			this.Disposed = true;
 			GC.SuppressFinalize(this);
 		}
@@ -857,6 +858,25 @@ namespace Althea
 				}
 			}
 			return false;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, allocate and creates a new <see cref="Storage{T}"/> that is a copy of the current one. The default implementation utilizes <see cref="Althea.Storage.StorageFactory{T}.CreateAlike(Storage{T})"/> and <see cref="MEM.MemoryCopy{T}(Storage{T}, Storage{T})"/>.
+		/// </summary>
+		/// <returns>A new <see cref="Storage{T}"/> that is a copy of the current instance</returns>
+		public virtual Storage<T> Clone()
+		{
+			var storage = Storage.StorageFactory<T>.CreateAlike(this);
+			try
+			{
+				MEM.SelectImplementation(this, storage).MemoryCopy(this, storage);
+				return storage;
+			}
+			catch (System.Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>

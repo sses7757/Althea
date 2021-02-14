@@ -236,7 +236,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="x">vector</param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		public void AddBy_αx(DenseTensor<T> x, T α)
+		public void AddByVector(DenseTensor<T> x, T α)
 		{
 			if (x is null || x == EmptyDnTen)
 				throw new ArgumentNullException(nameof(x), Resource.ArrayCannotNull);
@@ -276,7 +276,7 @@ namespace Althea.Arrays
 					if (dnten.OnHost != this.OnHost || dnten.Disposed)
 						throw new ArgumentException(Resource.VectorWrongValue, nameof(notJoinedVecs));
 					if (!input[i].IsZero())
-						tensor.AddBy_αx(dnten, input[i]);
+						tensor.AddByVector(dnten, input[i]);
 				}
 				return tensor;
 			}

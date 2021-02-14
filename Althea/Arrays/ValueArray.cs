@@ -33,7 +33,7 @@ namespace Althea.Arrays
 		/// Check whether this object is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this object</returns>
-		public virtual bool IsValid() => this.Storage is not null && this.Storage.IsValid();
+		public virtual bool IsValid() => this.Length > 0 && this.Storage is not null && this.Storage.IsValid();
 		#endregion
 
 		#region initialize and destroy
@@ -49,6 +49,7 @@ namespace Althea.Arrays
 				throw new ArgumentNullException(nameof(storage));
 			if (this.Length != storage.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize);
+
 			this.Storage = storage;
 		}
 
@@ -63,10 +64,6 @@ namespace Althea.Arrays
 				return;
 			}
 			this.Storage.Dispose();
-			if (disposing)
-			{
-				////base.Dispose(true);
-			}
 		}
 		#endregion
 
@@ -181,6 +178,38 @@ namespace Althea.Arrays
 				return Math.Sqrt(norm);
 			}
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, in-place scale this array's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes the <see cref="Norm(T)"/> and <see cref="Scale(T)"/>.
+		/// </summary>
+		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
+		/// <exception cref="ArgumentOutOfRangeException">If the default values indicated by <paramref name="sparseDefault"/> alone contribute 2-norm exceeding 1.</exception>
+		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
+		public virtual void Normalize(T sparseDefault = default)
+		{
+			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+			{
+				double norm = this.Norm();
+				if (norm == 0)
+					throw new DivideByZeroException();
+				this.Scale((1 / norm).FromDouble<T>());
+			}
+			else
+			{
+				T defaultNormSquare = (this.Length - this.ActualLength) * (sparseDefault * (dynamic)sparseDefault);
+				double defaultNormDouble = defaultNormSquare.ToDouble();
+				if (defaultNormDouble > 1)
+					throw new ArgumentOutOfRangeException(nameof(sparseDefault), Resources.Parameter.InvalidValue);
+				if (defaultNormDouble == 1)
+				{
+					this.FillWith(default);
+				}
+				double norm = this.Norm();
+				if (norm == 0)
+					throw new DivideByZeroException();
+				this.Scale((Math.Sqrt(1 - defaultNormDouble) / norm).FromDouble<T>());
+			}
+		}
 		#endregion
 
 		#region reshape (mostly abstract)
@@ -248,7 +277,7 @@ namespace Althea.Arrays
 			Span<long> size = stackalloc long[newSize.Length];
 			newSize.CopyTo(size);
 			CheckSize(this, size);
-			if (newSize.SequenceEqual(this.Size))
+			if (this.Size == newSize)
 				return this;
 			return newSize.Length switch
 			{
@@ -318,14 +347,14 @@ namespace Althea.Arrays
 		/// <param name="other">The other <see cref="AbstractArray{T}"/> to check</param>
 		/// <returns>True if they do share some storage, false otherwise</returns>
 		/// <remarks>The default implementation only compares the <see cref="Storage"/>s</remarks>
-		public virtual bool ShareStorageWith(ValueArray<T> other)
+		public virtual bool OverlapWith(ValueArray<T> other)
 		{
 			if (other is ValueArray<T> arr)
 			{
-				if (this == arr)
+				if (ReferenceEquals(this, arr))
 					return true;
 				else
-					return this.Storage.ShareMemoryWith(arr.Storage);
+					return this.Storage.OverlapWith(arr.Storage);
 			}
 			else
 				return false;
@@ -337,15 +366,15 @@ namespace Althea.Arrays
 		protected enum StringTerms
 		{
 			/// <summary>
-			/// The data type
+			/// Add the term for the string representation of the current data type
 			/// </summary>
 			DataType,
 			/// <summary>
-			/// The memory address
+			/// Add the term for the string representation of the current <see cref="Storage"/>
 			/// </summary>
-			Address,
+			Stroage,
 			/// <summary>
-			/// The presenting size
+			/// Add the term for the string representation of the current presenting size
 			/// </summary>
 			Size
 		}
@@ -356,45 +385,47 @@ namespace Althea.Arrays
 		/// <param name="terms">The additional terms</param>
 		/// <param name="include">The include terms, default null means all</param>
 		/// <returns>the string representation</returns>
-		protected string ToString(IEnumerable<KeyValuePair<string, object>> terms, IEnumerable<StringTerms> include = null)
+		protected string ToString(IReadOnlyDictionary<string, object>? terms, params StringTerms[] include)
 		{
 			// default values
-			if (include is null || System.Linq.Enumerable.Count(include) == 0)
-				include = new[] { StringTerms.DataType, StringTerms.Address, StringTerms.Size };
+			if (include is null || include.Length == 0)
+				include = new[] { StringTerms.DataType, StringTerms.Stroage, StringTerms.Size };
 			if (terms is null)
-				terms = Array.Empty<KeyValuePair<string, object>>();
+				terms = new Dictionary<string, object>(0);
 			// get type name of this array
 			var type = this.GetType();
-			string name = type.Name;
-			if (type.IsGenericType)
+			string? name;
+			if (include.Contains(StringTerms.DataType))
 			{
-				name = name.Replace("`" + type.GenericTypeArguments.Length, "", CudaCSharpConverters.StrCmp);
+				name = type.GetGenericString();
+			}
+			else
+			{
+				name = type.Name;
+				if (type.IsGenericType)
+				{
+					name = name.Replace($"`{type.GenericTypeArguments.Length}", "");
+				}
 			}
 			// output include terms and other terms
 			StringBuilder output = new StringBuilder(name);
-			output.Append(this.Disposed ? " (disposed)" : "");
-			output.Append(" at ");
-			output.Append(this.OnHost ? "host" : $"device {RT.DeviceNo}");
-			output.Append(" [");
+			output.Append(this.Disposed ? " (disposed) " : " ").Append('[');
 			foreach (var item in include)
 			{
 				output.Append(item switch
 				{
-					StringTerms.DataType => $"data_type={typeof(T).Name}",
-					StringTerms.Address => $"address=0x{this.Storage.ToHexString()}",
-					StringTerms.Size => $"size={string.Join("x", Size)}",
+					StringTerms.Stroage => $"value_storage={{{this.Storage}}}",
+					StringTerms.Size => $"size={string.Join("x", this.Size)}",
 					_ => "",
 				});
 				output.Append(", ");
 			}
 			foreach (var item in terms)
 			{
-				output.Append(item.Key);
-				output.Append("=");
-				output.Append(item.Value);
-				output.Append(", ");
+				output.Append(item.Key).Append('=').Append(item.Value).Append(", ");
 			}
-			return output.Remove(output.Length - 2, 2) + "]";
+			output.Remove(output.Length - 2, 2).Append(']');
+			return output.ToString();
 		}
 
 		/// <summary>
@@ -410,7 +441,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the hash code this array. The default 
 		/// </summary>
 		/// <returns>The hash code computed by <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/></returns>
-		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size.HashCodeOfSpan());
+		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size);
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation utilizes <see cref="AbstractArray{T}.Equals(object?)"/> and additionally compares <see cref="Storage"/>s.
@@ -427,162 +458,83 @@ namespace Althea.Arrays
 		#endregion
 
 		#region override operators
-		//Ignore Spelling: stackrel
 		/// <summary>
-		/// Array and value compare with threshold
+		/// When implemented by a derived class, deep clone the array, the mutable status will not be copied.
 		/// </summary>
-		/// <param name="a">array</param>
-		/// <param name="v">value</param>
-		/// <returns>$$a \stackrel{?}{=} v$$</returns>
-		public static bool operator ==(ValueArray<T> a, T v)
+		/// <returns>The cloned array</returns>
+		public override abstract ValueArray<T> Clone();
+
+		/// <summary>
+		/// Compare the <see cref="Storage"/> of the given <paramref name="array"/> with a given <paramref name="value"/> to check whether all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>.
+		/// </summary>
+		/// <param name="array">The given <see cref="ValueArray{T}"/> to be compared</param>
+		/// <param name="value">The given value in <typeparamref name="T"/> to compare</param>
+		/// <returns>True if all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>; false otherwise.</returns>
+		public static bool operator ==(ValueArray<T> array, T value)
 		{
-			if (a is null || a == EmptyDnVec)
+			if (array is null || !array.IsValid())
 				return false;
-			using var da = (a.Clone() as ValueArray<T>).ToVector();
-			if (!v.Equals(Scalars<T>.Zero))
+			var lad = LAD.SelectImplementation(array.Storage);
+			long index;
+			if (!value.IsZero())
 			{
-				using var ones = new DenseVector<T>(da.ActualLength, a.OnHost);
-				BLAS.FillWithOnes(ones);
-				BLAS.VectorAddBy(da, ones, v.GenericNegate());
+				using var clone = array.Storage.Clone();
+				lad.PointWiseAddScalar(clone, 1, value.GenericNegate());
+				index = lad.AbsoluteValueArgMax(clone, 1);
 			}
-			long index = BLAS.VectorAbsArgmax(da);
-			T val = RT.CopyOut(a, index);
-			T mval = val.GenericNegate();
-			bool condition1 = val.CompareTo(GlobalSettings.EqualThreshold.FromDouble<T>()) <= 0 &&
-							  mval.CompareTo(val) <= 0; // v >= 0 and v <= threshold
-			bool condition2 = mval.CompareTo(GlobalSettings.EqualThreshold.FromDouble<T>()) <= 0 &&
-							  val.CompareTo(mval) <= 0; // v <= 0 and -v <= threshold
-			return condition1 || condition2;
+			else
+			{
+				index = lad.AbsoluteValueArgMax(array.Storage, 1);
+			}
+			double val = MEM.SelectImplementation(array.Storage)
+							.ToManaged(array.Storage.MakeReference(offset: index))
+							.GenericAbsolute()
+							.ToDouble();
+			return val <= 1E-6;
 		}
 
 		/// <summary>
-		/// Array and value compare with threshold
+		/// Compare the <see cref="Storage"/> of the given <paramref name="array"/> with a given <paramref name="value"/> to check whether all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>.
 		/// </summary>
-		/// <param name="a">array treated as a vector</param>
-		/// <param name="v">value</param>
-		/// <returns>$$\vec{a} - v \stackrel{?}{=} 0$$</returns>
-		public static bool operator ==(T v, ValueArray<T> a) => a == v;
+		/// <param name="array">The given <see cref="ValueArray{T}"/> to be compared</param>
+		/// <param name="value">The given value in <typeparamref name="T"/> to compare</param>
+		/// <returns>True if all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>; false otherwise.</returns>
+		public static bool operator ==(T value, ValueArray<T> array) => array == value;
 
 		/// <summary>
-		/// Array and value compare with threshold
+		/// Compare the <see cref="Storage"/> of the given <paramref name="array"/> with a given <paramref name="value"/> to check whether all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>.
 		/// </summary>
-		/// <param name="a">array treated as a vector</param>
-		/// <param name="v">value</param>
-		/// <returns>$$\vec{a} - v \stackrel{?}{\ne} 0$$</returns>
-		public static bool operator !=(ValueArray<T> a, T v) => !(a == v);
+		/// <param name="array">The given <see cref="ValueArray{T}"/> to be compared</param>
+		/// <param name="value">The given value in <typeparamref name="T"/> to compare</param>
+		/// <returns>True if any element in <paramref name="array"/>'s <see cref="Storage"/> is not with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>; false otherwise.</returns>
+		public static bool operator !=(ValueArray<T> array, T value) => !(array == value);
 
 		/// <summary>
-		/// Array and value compare with threshold
+		/// Compare the <see cref="Storage"/> of the given <paramref name="array"/> with a given <paramref name="value"/> to check whether all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>.
 		/// </summary>
-		/// <param name="a">array treated as a vector</param>
-		/// <param name="v">value</param>
-		/// <returns>$$\vec{a} - v \stackrel{?}{\ne} 0$$</returns>
-		public static bool operator !=(T v, ValueArray<T> a) => !(a == v);
+		/// <param name="array">The given <see cref="ValueArray{T}"/> to be compared</param>
+		/// <param name="value">The given value in <typeparamref name="T"/> to compare</param>
+		/// <returns>True if any element in <paramref name="array"/>'s <see cref="Storage"/> is not with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>; false otherwise.</returns>
+		public static bool operator !=(T value, ValueArray<T> array) => !(array == value);
 		#endregion
 
-		#region abstract array operations
-		/// <summary>
-		/// Conjugate this array out-of-place.
-		/// </summary>
-		/// <returns>the conjugate array. If <typeparamref name="T"/> is a real type, this array is returned</returns>
-		public virtual ValueArray<T> ConjugateOutOfPlace()
-		{
-			if (this.IsRealType)
-				return this;
-			return this.ApplyToClone(c => BLAS.PointWiseConjugate(c));
-		}
-
-		/// <summary>
-		/// Conjugate this array in-place.
-		/// </summary>
-		public virtual void ConjugateInPlace()
-		{
-			if (!this.IsRealType)
-				BLAS.PointWiseConjugate(this);
-		}
-
-		/// <summary>
-		/// Truncate the array in-place.
-		/// </summary>
-		/// <param name="threshold">values lower than <c><paramref name="threshold"/> / this.Length</c> is chopped to 0.
-		/// </param>
-		public virtual void Truncate(float threshold = 1e-7f)
-		{
-			BLAS.Truncate(this, threshold / this.Length);
-		}
-
-		/// <summary>
-		/// Calculate the point-wise absolute value of an array, then sum.
-		/// </summary>
-		/// <returns>$\sum_i{|\vec{v}_i|}$</returns>
-		public virtual double AbsSum()
-		{
-			return BLAS.VectorAbsSum(this);
-		}
-
-		/// <summary>
-		/// Calculate the sum of all values of this array
-		/// </summary>
-		/// <returns>the sum</returns>
-		public virtual T Sum()
-		{
-			return BLAS.Sum(this);
-		}
-
-		/// <summary>
-		/// Array's absolute values' maximum element's position.
-		/// </summary>
-		/// <returns>$\text{argmax_i{|\text{abs}{v_i}|}}$</returns>
-		public virtual long ArgMaxAbs()
-		{
-			return BLAS.VectorAbsArgmax(this);
-		}
-
-		/// <summary>
-		/// Calculate the maximum absolute value of this tensor
-		/// </summary>
-		/// <returns>the maximum absolute value</returns>
-		public double AbsMax()
-		{
-			long ind = this.ArgMaxAbs();
-			return Math.Abs(RT.CopyOut(this.Storage, ind).ToDouble());
-		}
-
-		/// <summary>
-		/// Array's absolute values' minimum element's position.
-		/// </summary>
-		/// <returns>$$\text{argmin}_i |\text{abs}{v_i}|$$</returns>
-		public virtual long ArgMinAbs()
-		{
-			return BLAS.VectorAbsArgmin(this);
-		}
-		#endregion
-
-		#region serialize
+		#region serialization
 		/// <summary>
 		/// The pointer name that <b>shall</b> be used in <see cref="GetPointers"/>.
 		/// </summary>
-		public const string PointerName = nameof(Storage);
+		public const string StorageName = nameof(Storage);
 
 		/// <summary>
-		/// Get the pointer in the class-defined order, the first one must be <see cref="Storage"/> to the value data.
+		/// When implemented by a derived class, get all the storages of this array. The <see cref="Storage"/> must be associated with key <see cref="StorageName"/>.
 		/// </summary>
-		/// <returns>the pointers</returns>
+		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
 		public abstract IReadOnlyDictionary<string, IStorage> GetPointers();
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing this array, in the class-defined order
+		/// When implemented by a derived class, get other requisite informations for re-constructing the array of that derived class type.
 		/// </summary>
-		/// <returns>other requisite informations</returns>
+		/// <returns>Other requisite informations used to re-construct this array</returns>
 		public abstract IReadOnlyDictionary<string, object> GetOtherInfo();
-		#endregion
-
-		#region host and device convert
-		/// <summary>
-		/// Convert this array to the other memory.
-		/// </summary>
-		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one</returns>
-		public abstract ValueArray<T> ToTheOtherMemory();
 		#endregion
 	}
 }

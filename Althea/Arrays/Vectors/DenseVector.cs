@@ -14,13 +14,13 @@ namespace Althea.Arrays
 	/// The dense vector class that inherit the <see cref="VectorBase{T}"/> and implements <see cref="IDenseArray{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public sealed class DenseVector<T> : VectorBase<T>, IDenseArray<T>, IVector<DenseVector<T>, DenseMatrix<T>, T> where T : struct, IComparable<T>
+	public sealed class DenseVector<T> : VectorBase<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region dense vector member override
 		/// <summary>
 		/// The last index of the dense vector is always its length subtract one. Override <see cref="VectorBase{T}.LastIndex"/>.
 		/// </summary>
-		public override long LastIndex => this.Size[0] - 1;
+		public override long LastIndex => this.ActualLength - 1;
 
 		/// <summary>
 		/// Total actual length of the array in memory, in <typeparamref name="T"/> rather than bytes. Override <see cref="ValueArray{T}.ActualLength"/>.

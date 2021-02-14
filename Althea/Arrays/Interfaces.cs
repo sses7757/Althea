@@ -10,235 +10,89 @@ namespace Althea.Arrays
 {
 	#region basic
 	/// <summary>
-	/// Simple interface for sparse array which only contains basic members, additional fillings and .conversions from / to C# arrays
+	/// Simple interface for sparse arrays, inherits <see cref="IReadOnlyList{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TIndex">Any integral-typed unmanaged struct as the index data type</typeparam>
-	public interface ISparseArray<T, TIndex> : IMutableArray<T> where T : unmanaged, IEquatable<T> where TIndex : unmanaged
+	/// <typeparam name="TIndex">Any integer-typed unmanaged struct as the index data type</typeparam>
+	public interface ISparseArray<T, TIndex> : IReadOnlyList<Storage<TIndex>>
+		where T : unmanaged, IEquatable<T>
+		where TIndex : unmanaged
 	{
 		#region property
 		/// <summary>
-		/// Number of nonzero values of this sparse vector, equal to the size of the index/value array size. The default implementation returns the length of <see cref="IMutableArray{T}.Storage"/>.
+		/// When implemented by a derived class, get the number of nonzero values of this sparse array.
 		/// </summary>
-		long NonZero => this.Storage.Length;
-
-		/// <summary>
-		/// The underlying list of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/> for the index array(s) of this sparse array
-		/// </summary>
-		IReadOnlyList<Storage<TIndex>> IndexStorages { get; }
-		#endregion
-
-		#region fills
-		/// <summary>
-		/// Fill this sparse array's index array(s) with arithmetic sequence(s).
-		/// </summary>
-		/// <param name="v">The start values and steps of the sequence(s), must be of same length as <see cref="IMutableArray{T}.Size"/></param>
-		/// <exception cref="ArgumentException">if the lengths/values of <paramref name="v"/> do not follow the rule</exception>
-		void FillIndexWithRange(params (TIndex start, TIndex step)[] v);
-		#endregion
-
-		#region to C# arrays
-		/// <summary>
-		/// Convert the values of this array to a C# array of Fortran/MATLAB order.
-		/// </summary>
-		/// <param name="ranges">The ranges of each dimension, default is all</param>
-		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this array</returns>
-		T[] ValueToFortranOrderArray(params Range[] ranges);
-
-		/// <summary>
-		/// Convert the indices of this array to an <see cref="IEnumerable{T}"/> of C# arrays
-		/// </summary>
-		/// <param name="ranges">The range of each index array, default all</param>
-		/// <returns>an <see cref="IEnumerable{T}"/> of C# arrays of type <typeparamref name="TIndex"/></returns>
-		IEnumerable<TIndex[]> IndexToArray(params Range[] ranges);
-		#endregion
-
-		#region from C# arrays
-		/// <summary>
-		/// Copy the <paramref name="values"/> of Fortran/MATLAB order into this array's value array.
-		/// </summary>
-		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">The ranges of each dimension, default is all</param>
-		void ValueFromFortranOrderArray(T[] values, params Range[] ranges);
-
-		/// <summary>
-		/// Copy the <paramref name="indices"/> into this array's index arrays.
-		/// </summary>
-		/// <param name="indices">an <see cref="IEnumerable{T}"/> of <typeparamref name="TIndex"/> arrays</param>
-		/// <param name="ranges">The range of each index array, default all</param>
-		void IndexFromArray(IEnumerable<TIndex[]> indices, params Range[] ranges);
+		long NonZeros { get; }
 		#endregion
 
 		#region dispose
 		/// <summary>
-		/// Dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>.
+		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>.
 		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T, TIndex}"/> to exclude</param>
+		/// <param name="array">The target <see cref="ISparseArray{T, TIndex}"/> to exclude before disposing</param>
 		void DisposeExclude(ISparseArray<T, TIndex> array);
-		#endregion
-	}
-
-	/// <summary>
-	/// Simple interface for dense array which contains the conversions from / to C# arrays.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IDenseArray<T> : IMutableArray<T> where T : unmanaged, IEquatable<T>
-	{
-		#region to C# arrays
-		/// <summary>
-		/// Convert the values of this array to a C# array of Fortran/MATLAB order.
-		/// </summary>
-		/// <param name="ranges">The ranges of each dimension, default is all</param>
-		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this array</returns>
-		T[] ToFortranOrderArray(params Range[] ranges);
-		#endregion
-
-		#region from C# arrays
-		/// <summary>
-		/// Copy the <paramref name="values"/> of Fortran/MATLAB order into this array.
-		/// </summary>
-		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">The ranges of each dimension, default is all</param>
-		void FromFortranOrderArray(T[] values, params Range[] ranges);
 		#endregion
 	}
 	#endregion
 
-	#region vectors
+	#region vector
 	/// <summary>
-	/// The interface of vector that contains the members, operations and indexers of vector whose inputs and outputs are not relevant with vector.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IVector<T> : IMutableArray<T>, IReadOnlyList<T> where T : unmanaged, IEquatable<T>
-	{
-		#region property
-		/// <summary>
-		/// The last index of the vector
-		/// </summary>
-		long LastIndex { get; }
-		#endregion
-
-		#region operation
-		/// <summary>
-		/// Scale this vector <b>in-place</b>, i.e. $\vec{v}_{\text{this}} = \alpha \vec{v}_{\text{this}}$.
-		/// </summary>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		void Scale(T α);
-
-		/// <summary>
-		/// 2-norm of this vector, i.e. $\|\vec{v}\| = \sqrt{\sum_i{\vec{v}_i^2}}$.
-		/// </summary>
-		/// <returns>The 2-norm of this vector.</returns>
-		double Norm();
-
-		/// <summary>
-		/// Normalize this vector <b>in-place</b> to make it norm-one, i.e. $\vec{v} = \vec{v} / \|\vec{v}\|$.
-		/// </summary>
-		void Normalize();
-		#endregion
-
-		#region indexer
-		/// <summary>
-		/// Basic indexer of vector.
-		/// </summary>
-		/// <param name="i">The position as a <see cref="int"/></param>
-		/// <returns>an instance of the data type <typeparamref name="T"/></returns>
-		/// <remarks>Since a value cannot hold reference, altering the retrieved value does not change this array's value at that position.</remarks>
-		new T this[int i] { get; set; }
-		#endregion
-	}
-
-	/// <summary>
-	/// The interface for dense storage vectors
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IDenseVector<T> : IDenseArray<T>, IVector<T> where T : unmanaged, IEquatable<T>
-	{
-		// empty
-	}
-
-	/// <summary>
-	/// The interface for sparse storage vectors
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TIndex">Any integer-typed unmanaged struct as the data type of index array</typeparam>
-	public interface ISparseVector<T, TIndex> : ISparseArray<T, TIndex>, IVector<T> where T : unmanaged, IEquatable<T> where TIndex : unmanaged
-	{
-		#region property
-		/// <summary>
-		/// The underlying <see cref="Storage{T}"/> of type <typeparamref name="TIndex"/> for the index array of this sparse vector
-		/// </summary>
-		Storage<TIndex> IndexStorage { get; }
-		#endregion
-	}
-
-	/// <summary>
-	/// The interface of vector that contains the operation needed for Lanczos and Krylov-Schur solver.
+	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type</typeparam>
-	public interface IKrylovVector<TVec, T> : IVector<T>
+	public interface IKrylovVector<TVec, T>
 		where TVec : IKrylovVector<TVec, T> 
 		where T : unmanaged, IEquatable<T>
 	{
 		#region operation
 		/// <summary>
-		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^H) \vec{v}_{\text{other}}$.
+		/// When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
 		/// </summary>
-		/// <param name="other">The other <typeparamref name="TVec"/></param>
-		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
-		/// <returns>The inner product result</returns>
-		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
-		T Dot(TVec other, bool? conjugateThis = null);
+		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
+		void Scale(T value);
 
 		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} = \vec{v}_{\text{this}} + \alpha \vec{x}$.
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
 		/// </summary>
-		/// <param name="x">vector</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		void AddBy_αx(TVec x, T α);
+		/// <returns>The 2-norm of this vector</returns>
+		double Norm();
 
 		/// <summary>
-		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <typeparamref name="TVec"/>.
+		/// When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
 		/// </summary>
-		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
-		/// <param name="input">The input C# array to be operated</param>
-		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <typeparamref name="TVec"/>.</returns>
-		/// <remarks>this method is actually static</remarks>
-		TVec OperateOn(IReadOnlyList<TVec> notJoinedVecs, T[] input);
+		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
+		void Normalize();
 
 		/// <summary>
-		/// Replace this vector's content with <paramref name="another"/> <b>in-place</b>.
+		/// When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
 		/// </summary>
-		/// <param name="another">another <typeparamref name="TVec"/> to replace from</param>
-		void ReplaceBy(TVec another);
-		#endregion
-	}
-
-	/// <summary>
-	/// The interface of vector that contains the members, operations and indexers of vector whose inputs are relevant with vector.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type</typeparam>
-	public interface IVector<TVec, T> : IKrylovVector<TVec, T>
-		where TVec : class, IVector<TVec, T>, new()
-		where T : unmanaged, IEquatable<T>
-	{
-		#region operation
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
-		/// </summary>
-		/// <param name="other">The other <typeparamref name="TVec"/></param>
-		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
-		void PointWiseMultiply(TVec other);
+		/// <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
+		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+		T Dot(TVec other);
 
 		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
+		/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
 		/// </summary>
-		/// <param name="other">The other <typeparamref name="TVec"/></param>
-		void PointWiseDivide(TVec other);
+		/// <param name="other">The other <typeparamref name="TVec"/> to add</param>
+		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+		void AddByVector(TVec other, T scalar);
 
-		// TODO: add point wise power, etc.?
+		/// <summary>
+		/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
+		/// </summary>
+		/// <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
+		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
+		void ReplaceBy(TVec other);
+
+		/// <summary>
+		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="VectorBase{T}"/>.
+		/// </summary>
+		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
+		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
+		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <see cref="VectorBase{T}"/></returns>
+		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
+		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input);
 		#endregion
 	}
 

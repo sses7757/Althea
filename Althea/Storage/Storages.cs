@@ -801,6 +801,25 @@ namespace Althea.Storage
 				return this.pointer;
 			}
 		}
+
+		/// <summary>
+		/// Allocate and creates a new <see cref="PureStorage{T}"/> that is a copy of the current one.
+		/// </summary>
+		/// <returns>A new <see cref="PureStorage{T}"/> that is a copy of the current instance</returns>
+		public override PureStorage<T> Clone()
+		{
+			var storage = new PureStorage<T>(this.pointer.Location, this.Length);
+			try
+			{
+				MEM.SelectImplementation(this, storage).MemoryCopy(this.pointer, storage.pointer);
+				return storage;
+			}
+			catch (System.Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
+		}
 		#endregion
 	}
 
@@ -1639,7 +1658,8 @@ namespace Althea.Storage
 			int sizeT = Storage<T>.SizeOfT;
 			var descr = storage.LocationDescription;
 			CombinationType type = descr.Type;
-			var locations = (ReadOnlySpan<StorageLocation>)descr;
+			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
+			descr.CopyLocationsToSpan(locations);
 			Span<long> lengths = stackalloc long[descr.Count];
 			long bytesLeft = 0;
 			for (int i = 0; i < descr.Count; i++)

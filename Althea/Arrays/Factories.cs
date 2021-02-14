@@ -314,7 +314,7 @@ namespace Althea.Arrays
 			if (size is null || size.Count != 1)
 				throw new ArgumentNullException(nameof(size));
 
-			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName, size[0]);
+			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.StorageName, size[0]);
 			return new DenseVector<T>(data, size[0]);
 		}
 
@@ -322,7 +322,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage> 
 			{ 
-				[ValueArray<T>.PointerName] = vec.Storage
+				[ValueArray<T>.StorageName] = vec.Storage
 			};
 		}
 	}
@@ -348,7 +348,7 @@ namespace Althea.Arrays
 
 		private static (Storage<T> value, Storage<int> index) Check<T>(IReadOnlyDictionary<string, IStorage> pointers) where T : struct, IComparable<T>
 		{
-			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName);
+			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.StorageName);
 			var index = PureArrayFactory.CheckPointer<int>(pointers, IndexPointerName);
 			return (value, index);
 		}
@@ -369,7 +369,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = vec.Storage,
+				[ValueArray<T>.StorageName] = vec.Storage,
 				[IndexPointerName] = vec.IndexPointer
 			};
 		}
@@ -426,7 +426,7 @@ namespace Althea.Arrays
 								throw new ArgumentNullException(nameof(otherInfo));
 			}
 
-			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName, ld * size[1]);
+			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.StorageName, ld * size[1]);
 			return (ld, herm, data);
 		}
 
@@ -446,7 +446,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = mat.Storage
+				[ValueArray<T>.StorageName] = mat.Storage
 			};
 		}
 
@@ -545,7 +545,7 @@ namespace Althea.Arrays
 			if (format == SparseMatrixFormat.Any && nnz == 0)
 				throw new ArgumentNullException(nameof(otherInfo));
 
-			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName);
+			var value = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.StorageName);
 			var row = PureArrayFactory.CheckPointer<int>(pointers, RowIndexName);
 			var col = PureArrayFactory.CheckPointer<int>(pointers, ColumnIndexName);
 
@@ -629,7 +629,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = mat.Storage,
+				[ValueArray<T>.StorageName] = mat.Storage,
 				[RowIndexName] = mat.RowPointer,
 				[ColumnIndexName] = mat.ColumnPointer
 			};
@@ -682,7 +682,7 @@ namespace Althea.Arrays
 			if (size is null || size.Count == 0)
 				throw new ArgumentNullException(nameof(size));
 
-			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.PointerName, size.Prod());
+			var data = PureArrayFactory.CheckPointer<T>(pointers, ValueArray<T>.StorageName, size.Prod());
 			var label = GetLabel(otherInfo);
 			var result = new DenseTensor<T>(data, size);
 			if (label != null)
@@ -694,7 +694,7 @@ namespace Althea.Arrays
 		{
 			return new Dictionary<string, IStorage>
 			{
-				[ValueArray<T>.PointerName] = ten.Storage
+				[ValueArray<T>.StorageName] = ten.Storage
 			};
 		}
 

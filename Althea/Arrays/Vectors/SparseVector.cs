@@ -18,7 +18,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <remarks>The indices array are platform specific, <see cref="long"/> for 64-bit system and <see cref="int"/> otherwise.</remarks>
 	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public sealed class SparseVector<T> : VectorBase<T>, ISparseArray<T>, IVector<SparseVector<T>, SparseMatrix<T>, T> where T : struct, IComparable<T>
+	public abstract class SparseVector<T> : VectorBase<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region sparse vector special
 		/// <summary>
@@ -548,7 +548,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Compute $\vec{y} = \vec{y} + \alpha \vec{x}$, from <see cref="IKrylovVector{TVec, T}.AddBy_αx(TVec, T)"/>.
+		/// Compute $\vec{y} = \vec{y} + \alpha \vec{x}$, from <see cref="IKrylovVector{TVec, T}.AddByVector(TVec, T)"/>.
 		/// </summary>
 		/// <param name="x">vector</param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>

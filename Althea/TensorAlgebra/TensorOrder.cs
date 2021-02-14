@@ -32,9 +32,9 @@ namespace Althea.TensorAlgebra
 		/// </summary>
 		public static TensorOrder Identity { get => new TensorOrder(new ValueTuple<Range>(Range.All)); }
 
-		private readonly FixedBuffer_128<(int, OrderType)> order;
+		private readonly SizedFixedBuffer_128<(int, OrderType)> order;
 
-		private TensorOrder(FixedBuffer_128<(int, OrderType)> order) => this.order = order;
+		private TensorOrder(SizedFixedBuffer_128<(int, OrderType)> order) => this.order = order;
 
 		/// <summary>
 		/// Create an order from a general tuple whose element must be <see cref="short"/>, <see cref="int"/>, <see cref="long"/>, <see cref="Index"/> or <see cref="Range"/> (base-zero order index and range, cannot be negative) or <see cref="char"/> (character label which can only be checked when calling <see cref="GetIntArrayOrder"/> or <see cref="GetCharArrayOrder"/>).
@@ -50,7 +50,7 @@ namespace Althea.TensorAlgebra
 			if (tuple.Length > 128 / 8)
 				throw new ArgumentException(Parameter.WrongSize, nameof(tuple));
 
-			this.order = new FixedBuffer_128<(int, OrderType)>();
+			this.order = new SizedFixedBuffer_128<(int, OrderType)>();
 			int current = 0;
 			for (int i = 0; i < tuple.Length; i++)
 			{
@@ -109,7 +109,7 @@ namespace Althea.TensorAlgebra
 			if (indices.Length > 128 / 8)
 				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
-			this.order = new FixedBuffer_128<(int, OrderType)>();
+			this.order = new SizedFixedBuffer_128<(int, OrderType)>();
 			for (int i = 0; i < indices.Length; i++)
 			{
 				var id = indices[i];
@@ -133,7 +133,7 @@ namespace Althea.TensorAlgebra
 			if (chars.Length > 128 / 8)
 				throw new ArgumentException(Parameter.WrongSize, nameof(chars));
 
-			this.order = new FixedBuffer_128<(int, OrderType)>();
+			this.order = new SizedFixedBuffer_128<(int, OrderType)>();
 			for (int i = 0; i < chars.Length; i++)
 			{
 				var newOne = (chars[i], OrderType.Char);

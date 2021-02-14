@@ -9,10 +9,23 @@ namespace Althea.LinearAlgebra.Sparse
 {
 	#region enum
 	/// <summary>
-	/// The <see cref="SparseMatrixFormat"/> enum indicates the format specification of a sparse matrix
+	/// The <see cref="SparseVectorFormat"/> enum indicates the format specification of a sparse vector. Each bit flag indicates an atomic format.
 	/// </summary>
 	[Flags]
-	public enum SparseMatrixFormat : long
+	public enum SparseVectorFormat : int
+	{
+		/// <summary>
+		/// The Coordinate Format that stores each non-zero element and its <b>zero-based</b> index in separate storages.
+		/// </summary>
+		/// <remarks>For default implementations, this is the only supported sparse vector format</remarks>
+		Coordinated = 1 << 0,
+	}
+
+	/// <summary>
+	/// The <see cref="SparseMatrixFormat"/> enum indicates the format specification of a sparse matrix. Each bit flag indicates an atomic format.
+	/// </summary>
+	[Flags]
+	public enum SparseMatrixFormat : int
 	{
 		/// <summary>
 		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the row-first order.
@@ -35,39 +48,58 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		BSR = 1 << 4,
 	}
+	#endregion
 
+
+	#region extension methods
 	/// <summary>
-	/// The static class for extension methods of <see cref="SparseMatrixFormat"/>
+	/// The static class for extension methods of <see cref="SparseVectorFormat"/> and <see cref="SparseMatrixFormat"/>
 	/// </summary>
-	public static class SparseMatrixFormatExtension
+	public static class FormatExtension
 	{
+		#region constants
 		/// <summary>
-		/// The coordinated formats.
+		/// The coordinated formats for sparse matrices.
 		/// </summary>
 		public const SparseMatrixFormat Coordinated = SparseMatrixFormat.COOR | SparseMatrixFormat.COOC;
 
 		/// <summary>
-		/// The compressed formats.
+		/// The compressed formats for sparse matrices.
 		/// </summary>
 		public const SparseMatrixFormat Compressed = SparseMatrixFormat.CSR | SparseMatrixFormat.CSC | SparseMatrixFormat.BSR;
 
 		/// <summary>
-		/// The row majored formats.
+		/// The row majored formats for sparse matrices.
 		/// </summary>
 		public const SparseMatrixFormat RowMajor = SparseMatrixFormat.COOR | SparseMatrixFormat.CSR | SparseMatrixFormat.BSR;
 
 		/// <summary>
-		/// The column majored formats.
+		/// The column majored formats for sparse matrices.
 		/// </summary>
 		public const SparseMatrixFormat ColumnMajor = SparseMatrixFormat.COOC | SparseMatrixFormat.CSC;
 
 
 		/// <summary>
+		/// All of the possible <see cref="SparseVectorFormat"/>s. Value = 111...111
+		/// </summary>
+		/// <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
+		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
+		public const SparseVectorFormat VectorAny = (SparseVectorFormat)~0;
+		/// <summary>
 		/// All of the possible <see cref="SparseMatrixFormat"/>s. Value = 111...111
 		/// </summary>
 		/// <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
 		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
-		public const SparseMatrixFormat Any = (SparseMatrixFormat)~0;
+		public const SparseMatrixFormat MatrixAny = (SparseMatrixFormat)~0;
+		#endregion
+
+		#region methods
+		/// <summary>
+		/// Check whether the given <see cref="SparseVectorFormat"/> is an atomic format or not
+		/// </summary>
+		/// <param name="format">The given <see cref="SparseVectorFormat"/> to check</param>
+		/// <returns>True if <paramref name="format"/> is an atomic format, i.e. a power of two; false otherwise.</returns>
+		public static bool IsAtomic(this SparseVectorFormat format) => ((int)format).IsPowerOfTwo();
 
 		/// <summary>
 		/// Check whether the given <see cref="SparseMatrixFormat"/> is an atomic format or not
@@ -150,226 +182,7 @@ namespace Althea.LinearAlgebra.Sparse
 						throw new InvalidOperationException();
 			}
 		}
-	}
-	#endregion
-
-
-	#region wrapper
-	/// <summary>
-	/// The sparse vector wrapper
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public readonly struct SparseVectorWrapper<T> : IEquatable<SparseVectorWrapper<T>>, ICheckValid where T : unmanaged
-	{
-		/// <summary>
-		/// value array
-		/// </summary>
-		public Storage<T> Values { get; }
-
-		/// <summary>
-		/// index array
-		/// </summary>
-		public Storage<int> Indices { get; }
-
-		/// <summary>
-		/// Check whether this object is a valid one or not
-		/// </summary>
-		/// <returns>The validness of this object</returns>
-		public bool IsValid() => this.Values.IsValid() && this.Indices.IsValid();
-
-		/// <summary>
-		/// Simple constructor from given value array <paramref name="val"/> and index array <paramref name="ind"/>
-		/// </summary>
-		/// <param name="val">The value array storage as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="ind">The index array storage as a <see cref="Storage{T}"/> of <see cref="int"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="ind"/> or <paramref name="val"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="ind"/> and <paramref name="val"/> have different length</exception>
-		public SparseVectorWrapper(Storage<T> val, Storage<int> ind)
-		{
-			if (val is null || !val.IsValid())
-				throw new ArgumentNullException(nameof(val));
-			if (ind is null || !ind.IsValid())
-				throw new ArgumentNullException(nameof(ind));
-			if (val.Length != ind.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-			this.Values = val;
-			this.Indices = ind;
-		}
-
-		/// <summary>
-		/// Indicates whether this instance and another <see cref="SparseVectorWrapper{T}"/> are equal.
-		/// </summary>
-		/// <param name="other">The other <see cref="SparseVectorWrapper{T}"/></param>
-		/// <returns>True if obj and this instance are the same type and represent the same value</returns>
-		public bool Equals(SparseVectorWrapper<T> other) => this.Values == other.Values && this.Indices == other.Indices;
-
-		/// <summary>
-		/// Indicates whether this instance and a specified object are equal.
-		/// </summary>
-		/// <param name="obj">The object to compare with the current instance.</param>
-		/// <returns>True if obj and this instance are the same type and represent the same value</returns>
-		public override bool Equals(object? obj)
-		{
-			if (obj is SparseVectorWrapper<T> sv)
-				return this.Equals(sv);
-			else
-				return false;
-		}
-
-		/// <summary>
-		/// Get hash code
-		/// </summary>
-		/// <returns>the hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.Values, this.Indices);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(SparseVectorWrapper<T> left, SparseVectorWrapper<T> right)
-		{
-			return left.Equals(right);
-		}
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(SparseVectorWrapper<T> left, SparseVectorWrapper<T> right)
-		{
-			return !(left == right);
-		}
-	}
-
-	/// <summary>
-	/// The sparse matrix wrapper
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public readonly struct SparseMatrixWrapper<T> : IEquatable<SparseMatrixWrapper<T>>, ICheckValid where T : unmanaged
-	{
-		/// <summary>
-		/// Get the value array
-		/// </summary>
-		public Storage<T> Values { get; }
-
-		/// <summary>
-		/// Get the row index/pointer array
-		/// </summary>
-		public Storage<int> Row { get; }
-
-		/// <summary>
-		/// Get the column index/pointer array
-		/// </summary>
-		public Storage<int> Column { get; }
-
-		/// <summary>
-		/// Get the sparse format
-		/// </summary>
-		public SparseMatrixFormat Format { get; }
-
-		/// <summary>
-		/// Check whether this object is a valid one or not
-		/// </summary>
-		/// <returns>The validness of this object</returns>
-		public bool IsValid() => this.Values.IsValid() && this.Row.IsValid() && this.Column.IsValid();
-
-		/// <summary>
-		/// Simple constructor from given value array <paramref name="val"/> and index arrays <paramref name="row"/> and <paramref name="column"/>
-		/// </summary>
-		/// <param name="val">The value array storage as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="row">The row index array storage as a <see cref="Storage{T}"/> of <see cref="int"/></param>
-		/// <param name="column">The column index array storage as a <see cref="Storage{T}"/> of <see cref="int"/></param>
-		/// <param name="format">The sparse matrix format as a <see cref="SparseMatrixFormat"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">If </exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="row"/> or <paramref name="column"/> or <paramref name="val"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="row"/> and <paramref name="column"/> and <paramref name="val"/> have lengths not the same as the regulation implied in <paramref name="format"/></exception>
-		public SparseMatrixWrapper(Storage<T> val, Storage<int> row, Storage<int> column, SparseMatrixFormat format)
-		{
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), Resources.Parameter.InvalidValue);
-			if (val is null || !val.IsValid())
-				throw new ArgumentNullException(nameof(val));
-			if (row is null || !row.IsValid())
-				throw new ArgumentNullException(nameof(row));
-			if (column is null || !column.IsValid())
-				throw new ArgumentNullException(nameof(column));
-
-			this.Values = val;
-			this.Row = row;
-			this.Column = column;
-			this.Format = format;
-		}
-
-		/// <summary>
-		/// Indicates whether this instance and another <see cref="SparseMatrixWrapper{T}"/> are equal.
-		/// </summary>
-		/// <param name="other">The other <see cref="SparseMatrixWrapper{T}"/></param>
-		/// <returns>True if obj and this instance are the same type and represent the same value</returns>
-		public bool Equals(SparseMatrixWrapper<T> other) => this.Values == other.Values && this.Row == other.Row && this.Column == other.Column && this.Format == other.Format;
-
-		/// <summary>
-		/// Indicates whether this instance and a specified object are equal.
-		/// </summary>
-		/// <param name="obj">The object to compare with the current instance.</param>
-		/// <returns>True if obj and this instance are the same type and represent the same value</returns>
-		public override bool Equals(object? obj)
-		{
-			if (obj is SparseMatrixWrapper<T> sm)
-				return this.Equals(sm);
-			else
-				return false;
-		}
-
-		/// <summary>
-		/// Get hash code
-		/// </summary>
-		/// <returns>the hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.Values, this.Row, this.Column, this.Format);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(SparseMatrixWrapper<T> left, SparseMatrixWrapper<T> right)
-		{
-			return left.Equals(right);
-		}
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(SparseMatrixWrapper<T> left, SparseMatrixWrapper<T> right)
-		{
-			return !(left == right);
-		}
-	}
-	#endregion
-
-
-	#region converter
-	/// <summary>
-	/// The static class which contains converter methods
-	/// </summary>
-	public static class Converter
-	{
-		/// <summary>
-		/// Convert the given <paramref name="vector"/> of type <see cref="ISparseVector{T, Int32}"/> to a <see cref="SparseVectorWrapper{T}"/>
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="vector">The input sparse vector as a <see cref="ISparseVector{T, Int32}"/></param>
-		/// <returns>The created <see cref="SparseVectorWrapper{T}"/></returns>
-		public static SparseVectorWrapper<T> ToWrapper<T>(this ISparseVector<T, int> vector) where T : unmanaged, IEquatable<T>
-		{
-			return new SparseVectorWrapper<T>(vector.Storage, vector.IndexStorage);
-		}
-
-		/// <summary>
-		/// Convert the given <paramref name="matrix"/> of type <see cref="ISparseMatrix{T, Int32}"/> to a <see cref="SparseMatrixWrapper{T}"/>
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="matrix">The input sparse vector as a <see cref="ISparseMatrix{T, Int32}"/></param>
-		/// <returns>The created <see cref="SparseMatrixWrapper{T}"/></returns>
-		public static SparseMatrixWrapper<T> ToWrapper<T>(this ISparseMatrix<T, int> matrix) where T : unmanaged, IEquatable<T>
-		{
-			return new SparseMatrixWrapper<T>(matrix.Storage, matrix.RowIndexStorage, matrix.ColumnIndexStorage);
-		}
+		#endregion
 	}
 	#endregion
 }

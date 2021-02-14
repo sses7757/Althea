@@ -3,197 +3,43 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
-using Althea.Storage;
-using BLAS = Althea.Blas.API;
+using Althea.NativeTypes;
 
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract vector class that inherit the <see cref="ValueArray{T}"/>.
+	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public abstract class VectorBase<T> : ValueArray<T>, IVector<VectorBase<T>, MatrixBase<T>, T> where T : struct, IComparable<T>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	public abstract class VectorBase<T> : ValueArray<T>, IReadOnlyList<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
-		#region initialize and destroy
+		#region initialize
 		/// <summary>
-		/// The last index of the vector, from <see cref="IVector{T}.LastIndex"/>
+		/// Construct a <see cref="VectorBase{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="length"/>
 		/// </summary>
-		public abstract long LastIndex { get; }
-
-		/// <summary>
-		/// Full constructor with pre-allocated values.
-		/// </summary>
-		/// <param name="values"><see cref="Storage{T}"/> of the value array</param>
-		/// <param name="length">size of the vector</param>
-		protected VectorBase(Storage<T> values, long length) : base(values, new[] { length }) { }
-
-		/// <summary>
-		/// Abstract vector data constructor with separate length and actual memory size
-		/// </summary>
-		/// <param name="actualLength">actual length of vector to allocate on memory</param>
-		/// <param name="showLength">The display length of the vector</param>
-		/// <param name="onHost">allocate one host memory or device memory</param>
-		protected VectorBase(long actualLength, long showLength, bool onHost) : base(actualLength, new long[] { showLength }, onHost) { }
-
-		/// <summary>
-		/// Abstract vector reshape constructor
-		/// </summary>
-		/// <param name="refArray">original array</param>
-		/// <param name="actualLength">actual length of vector</param>
-		/// <param name="newLength">size of the new vector</param>
-		/// <param name="offset">offset to the <see cref="ValueArray{T}.Storage"/> in T rather than bytes</param>
-		protected VectorBase(ValueArray<T> refArray, long actualLength, long newLength, long offset = 0) : base(refArray, actualLength, new[] { newLength }, offset) { }
+		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
+		/// <param name="length">The size of the vector</param>
+		protected VectorBase(Storage<T> values, long length) : base(values, stackalloc long[1].SetValue(length)) { }
 		#endregion
-
 
 		#region reshape
 		/// <summary>
-		/// Vector to vector -- just returns this is enough.
+		/// Reshape this array to a vector. Returns this vector directly.
 		/// </summary>
-		/// <returns>this vector</returns>
-		/// <seealso cref="ValueArray{T}.ToVector"/>
+		/// <returns> Returns this vector directly.</returns>
 		public override ValueArray<T> ToVector() => this;
 		#endregion
 
-
 		#region converter
 		/// <summary>
-		/// Convert this vector to a <see cref="DenseVector{T}"/>. The out-of-place conversion may be performed.
+		/// When implemented by a derived class, convert this vector to a <see cref="DenseVector{T}"/>.
 		/// </summary>
-		/// <returns>Converted dense vector</returns>
+		/// <returns>The new converted dense vector, or this array if this array is a <see cref="DenseVector{T}"/></returns>
 		public abstract DenseVector<T> ToDense();
-
-		/// <summary>
-		/// Convert this vector to a <see cref="SparseVector{T}"/>. The out-of-place conversion may be performed.
-		/// </summary>
-		/// <param name="threshold">values smaller than threshold are regarded as zeros</param>
-		/// <returns>Converted sparse vector</returns>
-		/// <remarks>If this vector is sparse, this method returns it directly rather than performing prunes.</remarks>
-		public abstract SparseVector<T> ToSparse(float threshold = default);
 		#endregion
 
-
-		#region abstract operations (mostly from IVector<TVec, TMat, T>)
-		/// <summary>
-		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result vector <see cref="VectorBase{T}"/>. From <see cref="General.IKrylovVector{TVec, T}.OperateOn(IReadOnlyList{TVec}, T[])"/>
-		/// </summary>
-		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
-		/// <param name="input">The input C# array to be operated</param>
-		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as <see cref="VectorBase{T}"/>.</returns>
-		/// <remarks>this method can actually be static</remarks>
-		public abstract VectorBase<T> OperateOn(IReadOnlyList<VectorBase<T>> notJoinedVecs, T[] input);
-
-		/// <summary>
-		/// 2-norm of this vector, i.e. $\|\vec{v}\| = \sqrt{\sum_i{\vec{v}_i^2}}$. From <see cref="IVector{T}.Norm"/>.
-		/// </summary>
-		/// <returns>The 2-norm of this vector.</returns>
-		public virtual double Norm()
-		{
-			double norm = BLAS.VectorNorm(this);
-			return norm;
-		}
-
-		/// <summary>
-		/// Normalize this vector to make it norm-one <b>in-place</b>, i.e. $\vec{v} = \vec{v} / \|\vec{v}\|$.
-		/// </summary>
-		public virtual void Normalize()
-		{
-			double norm = BLAS.VectorNorm(this);
-			T scalar = (1 / norm).FromDouble<T>();
-			BLAS.VectorScale(this, scalar);
-		}
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} = \alpha \vec{v}_{\text{this}}$ <b>in-place</b>.
-		/// </summary>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		public virtual void Scale(T α) => BLAS.VectorScale(this, α);
-
-		/// <summary>
-		/// Replace the values of this vector by the one from <paramref name="other"/>.
-		/// </summary>
-		/// <param name="other">The <see cref="VectorBase{T}"/> used to replace</param>
-		public abstract void ReplaceBy(VectorBase<T> other);
-
-		/// <summary>
-		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H \vec{v}_{\text{other}}$.
-		/// </summary>
-		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
-		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
-		/// <returns>The inner product result</returns>
-		/// <remarks>This method is symmetric (semi-symmetric, e.g. the conjugate relation, when data type is a complex type) for this vector and the other vector.</remarks>
-		public abstract T Dot(VectorBase<T> other, bool? conjugateThis = null);
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}}\circ\vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
-		/// </summary>
-		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
-		/// <remarks>This method is symmetric since only the sparse vector one may be modified.</remarks>
-		public abstract void PointWiseMultiply(VectorBase<T> other);
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} ./ \vec{v}_{\text{other}} \equiv \{\vec{v}_{\text{this}}^i \vec{v}_{\text{other}}^i\}_i$.
-		/// </summary>
-		/// <param name="other">The other <see cref="VectorBase{T}"/></param>
-		public abstract void PointWiseDivide(VectorBase<T> other);
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{tobeDiv}} ./ \vec{v}_{\text{this}} \equiv \{\vec{v}_{\text{tobeDiv}}^i \vec{v}_{\text{this}}^i\}_i$.
-		/// </summary>
-		/// <param name="tobeDiv">The vector to be divided (to be in-place altered)</param>
-		/// <remarks>The opposite of <see cref="PointWiseDivide"/>, only the classes directly inherits <see cref="VectorBase{T}"/> need to implement this method. This method is used by built-in <see cref="DenseVector{T}"/> and <see cref="SparseVector{T}"/> to implement <see cref="PointWiseDivide"/>.</remarks>
-		internal protected abstract void PointWiseDivide_Opposite(VectorBase<T> tobeDiv);
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} = \vec{v}_{\text{this}} + \alpha \vec{x}$.
-		/// </summary>
-		/// <param name="x">vector</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		public abstract void AddBy_αx(VectorBase<T> x, T α);
-
-		/// <summary>
-		/// Compute $\vec{y} = \vec{y} + \alpha \vec{v}_{\text{this}}$, always in-place for non-sparse <paramref name="y"/>.
-		/// </summary>
-		/// <param name="y"><see cref="VectorBase{T}"/> to be altered by this method</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <remarks>The opposite of <see cref="AddBy_αx"/>, only the classes directly inherits <see cref="VectorBase{T}"/> need to implement this method. This method is used by built-in <see cref="DenseVector{T}"/> and <see cref="SparseVector{T}"/> to implement <see cref="AddBy_αx"/>.</remarks>
-		internal protected abstract void AddBy_αx_Opposite(VectorBase<T> y, T α);
-
-		/// <summary>
-		/// Compute $\vec{y}_{\text{this}} = \beta \cdot \vec{y}_{\text{this}} + \alpha \cdot A^{\text{op}} \vec{x}$.
-		/// </summary>
-		/// <param name="x">The input <see cref="VectorBase{T}"/></param>
-		/// <param name="A">The input <see cref="MatrixBase{T}"/></param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="op"><see cref="MatrixOperation"/> applied to <paramref name="A"/></param>
-		public abstract void Mulβ_AddBy_αopAx(MatrixBase<T> A, VectorBase<T> x, T α, T β = default, MatrixOperation op = MatrixOperation.None);
-
-		/// <summary>
-		/// Compute $\vec{y} = \beta \cdot \vec{y} + \alpha \cdot A \vec{v}_{\text{this}}$, always in-place for non-sparse <paramref name="y"/>.
-		/// </summary>
-		/// <param name="A"><see cref="MatrixBase{T}"/></param>
-		/// <param name="y"><see cref="VectorBase{T}"/> to be in-place altered</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="op"><see cref="MatrixOperation"/> applied to <paramref name="A"/></param>
-		/// <returns>The altered <paramref name="y"/> for non-sparse <paramref name="y"/> or some new sparse vector.</returns>
-		/// <remarks>The opposite of <see cref="Mulβ_AddBy_αopAx"/>, only the classes directly inherits <see cref="VectorBase{T}"/> need to implement this method. This method is used by built-in <see cref="DenseVector{T}"/> and <see cref="SparseVector{T}"/> to implement <see cref="Mulβ_AddBy_αopAx"/>.</remarks>
-		internal protected abstract void Mulβ_AddBy_αopAx_Opposite(MatrixBase<T> A, VectorBase<T> y, T α, T β = default, MatrixOperation op = MatrixOperation.None);
-
-		/// <summary>
-		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$ out-of-place. From <see cref="IVector{TVec, TMat, T}.OuterProduct"/>
-		/// </summary>
-		/// <param name="other">The other input <see cref="VectorBase{T}"/></param>
-		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to overwrite as result, default null</param>
-		/// <returns>The result <see cref="MatrixBase{T}"/> or <paramref name="overwrite"/> if it is not null</returns>
-		public abstract MatrixBase<T> OuterProduct(VectorBase<T> other, bool? conjugateOther = null, MatrixBase<T> overwrite = null);
-		#endregion
-
-
-		#region defined operators
+		#region operators
 		/// <summary>
 		/// Vector point-wise multiply (not vector inner product).
 		/// </summary>
@@ -203,9 +49,9 @@ namespace Althea.Arrays
 		public static VectorBase<T> operator *(VectorBase<T> left, VectorBase<T> right)
 		{
 			if (left is null)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(left));
 			if (right is null)
-				throw new ArgumentNullException(nameof(right), Resource.ArrayCannotNull);
+				throw new ArgumentNullException(nameof(right));
 			if (left.OnHost != right.OnHost)
 				throw new ArgumentException(Resource.RequireSamePos);
 

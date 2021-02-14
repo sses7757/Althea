@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Althea.Linq;
 using Althea.Helpers;
 
 
@@ -12,33 +13,26 @@ namespace Althea.Arrays
 	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
-		private readonly FixedBuffer_128<long> m_size;
+		private readonly SizedFixedBuffer_128<long> m_size = default;
 
-		private readonly FixedBuffer_128<long> m_sizeProd;
-
-		private readonly int m_rank;
+		private readonly long m_length = 0;
 		#endregion
 
 		#region properties
 		/// <summary>
 		/// Get the rank of this array as a <see cref="int"/>
 		/// </summary>
-		public int Rank => this.m_rank;
+		public int Rank => this.m_size.Count;
 
 		/// <summary>
-		/// Get the size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// Get the size of this mutable array as a <see cref="SizedFixedBuffer_128{T}"/> of <see cref="long"/>
 		/// </summary>
-		public ReadOnlySpan<long> Size => this.m_size.AsSpan(this.Rank);
-
-		/// <summary>
-		/// Get the exclusive (the last one is the <see cref="Length"/>) accumulated product (partial product) result of <see cref="Size"/>
-		/// </summary>
-		protected ReadOnlySpan<long> SizeProd => this.m_sizeProd.AsSpan(this.Rank);
+		public SizedFixedBuffer_128<long> Size => this.m_size;
 
 		/// <summary>
 		/// Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
-		public long Length => this.m_sizeProd[this.Rank - 1];
+		public long Length => this.m_length;
 		#endregion
 
 		#region initialize and dispose
@@ -48,31 +42,29 @@ namespace Althea.Arrays
 		/// <param name="size">The size of this abstract array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="size"/> is of length 0</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="size"/> has length larger than 16</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> contains any non-positive value</exception>
 		protected AbstractArray(ReadOnlySpan<long> size)
 		{
 			if (size.Length == 0)
 				throw new ArgumentNullException(nameof(size));
-			if (size.Length >= 16)
+			if (size.Length > 16)
 				throw new NotSupportedException(Resources.Parameter.WrongSize);
+			if (size.Length == 1 && size[0] == 0)
+				return;
+			if (size.Any(static s => s <= 0))
+				throw new ArgumentOutOfRangeException(nameof(size), Resources.Parameter.MustPositive);
 
-			this.m_rank = size.Length;
-			size.CopyTo(this.m_size.AsSpan(this.Rank));
-			var sizeProdSpan = this.m_sizeProd.AsSpan(this.Rank);
-			long prod = 1;
-			for (int i = 0; i < this.Rank; i++)
-			{
-				prod *= size[i];
-				sizeProdSpan[i] = prod;
-			}
+			this.m_size = new SizedFixedBuffer_128<long>(size);
+			this.m_length = size.Prod();
 		}
 
 		/// <summary>
-		/// This array is disposed or not
+		/// Get a <see cref="bool"/> to indicate whether this array is disposed or not
 		/// </summary>
-		public bool Disposed { private set; get; } = false;
+		protected bool Disposed { private set; get; } = false;
 
 		/// <summary>
-		/// The dispose method invoked by the finalize method (or yourself) to release the memory.
+		/// The dispose method invoked by the user to release the (possible) underlying unmanaged memory
 		/// </summary>
 		public void Dispose()
 		{

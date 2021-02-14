@@ -35,6 +35,8 @@ namespace Althea.Helpers
 		/// <returns>The array containing the elements of this fixed buffer</returns>
 		T[] ToArray();
 
+		internal T[] Data => this.ToArray();
+
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
@@ -80,6 +82,8 @@ namespace Althea.Helpers
 	}
 	#endregion
 
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 60
 	/// </summary>
@@ -95,6 +99,7 @@ namespace Althea.Helpers
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
 		/// </summary>
 		/// <returns>The array containing the elements of this fixed buffer</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T[] ToArray()
 		{
 			T[] array = new T[this.Count];
@@ -111,6 +116,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_60<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
 		{
 			var newBuffer = new FixedBuffer_60<TOut>();
@@ -121,6 +127,7 @@ namespace Althea.Helpers
 			return newBuffer;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IFixedBuffer<TOut> IFixedBuffer<T>.As<TOut>() => this.As<TOut>();
 
 		/// <summary>
@@ -130,6 +137,7 @@ namespace Althea.Helpers
 		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.Count)
@@ -151,6 +159,7 @@ namespace Althea.Helpers
 		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.Count)
@@ -172,6 +181,7 @@ namespace Althea.Helpers
 		/// <param name="copyStart">The start position to copy in bytes</param>
 		/// <returns>The created <typeparamref name="TStruct"/></returns>
 		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
 			int size = Marshal.SizeOf<TStruct>();
@@ -192,6 +202,7 @@ namespace Althea.Helpers
 		/// <param name="struct">The structure to copy</param>
 		/// <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
 		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
 			int size = Marshal.SizeOf<TStruct>();
@@ -258,6 +269,7 @@ namespace Althea.Helpers
 		/// Returns an enumerator that iterates through the collection.
 		/// </summary>
 		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator()
 		{
 			for (int i = 0; i < this.Count; i++)
@@ -266,6 +278,7 @@ namespace Althea.Helpers
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
 
@@ -275,6 +288,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="other">another <see cref="FixedBuffer_60{T}"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(FixedBuffer_60<T> other)
 		{
 			fixed (void* t = &this)
@@ -295,6 +309,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is FixedBuffer_60<T> buffer && this.Equals(buffer);
@@ -304,6 +319,7 @@ namespace Althea.Helpers
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="FixedBuffer_60{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			fixed (void* t = &this)
@@ -316,6 +332,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Equality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(FixedBuffer_60<T> left, FixedBuffer_60<T> right)
 		{
 			return left.Equals(right);
@@ -324,6 +341,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(FixedBuffer_60<T> left, FixedBuffer_60<T> right)
 		{
 			return !(left == right);
@@ -335,32 +353,52 @@ namespace Althea.Helpers
 		/// Return the string representation of this <see cref="FixedBuffer_60{T}"/>
 		/// </summary>
 		/// <returns>the string representation of this <see cref="FixedBuffer_60{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Fixed Buffer [{string.Join(", ", this)}]";
+			return $"Fixed Buffer";
 		}
 		#endregion
 	}
 
 
 	/// <summary>
-	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
+	/// The read-only fixed buffer struct of type <typeparamref name="T"/> with maximum data size in bytes = 128. There are extra 4 bytes used to store the data size in <typeparamref name="T"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
-	[StructLayout(LayoutKind.Sequential, Size = 128)]
+	[StructLayout(LayoutKind.Sequential, Size = 128 + sizeof(int))]
 	[UnsafeValueType]
-	public unsafe struct FixedBuffer_128<T> : IEquatable<FixedBuffer_128<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
+	public readonly unsafe struct SizedFixedBuffer_128<T> : IEquatable<SizedFixedBuffer_128<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
+		private readonly int size;
+
 		private readonly T field;
+
+		/// <summary>
+		/// The number of elements in this fixed buffer
+		/// </summary>
+		public int Count => this.size;
+
+		/// <summary>
+		/// Create a new <see cref="SizedFixedBuffer_128{T}"/> with given <paramref name="data"/>
+		/// </summary>
+		/// <param name="data">The data as a <see cref="ReadOnlySpan{T}"/></param>
+		public SizedFixedBuffer_128(ReadOnlySpan<T> data)
+		{
+			this.size = data.Length;
+			this.field = default;
+			this.CopyFromSpan(data);
+		}
 
 		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
 		/// </summary>
 		/// <returns>The array containing the elements of this fixed buffer</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T[] ToArray()
 		{
-			T[] array = new T[this.Count];
+			T[] array = new T[this.size];
 			fixed (void* t = &this)
 			fixed (T* a = array)
 			{
@@ -374,16 +412,18 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-		public FixedBuffer_128<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SizedFixedBuffer_128<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
 		{
-			var newBuffer = new FixedBuffer_128<TOut>();
+			var newBuffer = new SizedFixedBuffer_128<TOut>();
 			fixed (void* t = &this)
 			{
-				Unsafe.CopyBlock(&newBuffer, t, 128);
+				Unsafe.CopyBlock(&newBuffer, t, unchecked((uint)(this.size * sizeof(T))));
 			}
 			return newBuffer;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IFixedBuffer<TOut> IFixedBuffer<T>.As<TOut>() => this.As<TOut>();
 
 		/// <summary>
@@ -393,13 +433,14 @@ namespace Althea.Helpers
 		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= this.size)
 				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length > this.size)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+			int size = Math.Min(span.Length, this.size);
 			fixed (void* t = &this)
 			{
 				var temp = new Span<T>(t, size);
@@ -414,13 +455,14 @@ namespace Althea.Helpers
 		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= this.size)
 				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length > this.size)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+			int size = Math.Min(span.Length, this.size);
 			fixed (void* t = &this)
 			{
 				var temp = new ReadOnlySpan<T>(t, size);
@@ -435,10 +477,11 @@ namespace Althea.Helpers
 		/// <param name="copyStart">The start position to copy in bytes</param>
 		/// <returns>The created <typeparamref name="TStruct"/></returns>
 		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
 			int size = Marshal.SizeOf<TStruct>();
-			if (size + copyStart > 128)
+			if (size + copyStart > this.size * sizeof(T))
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
 			fixed (void* t = &this)
@@ -455,10 +498,11 @@ namespace Althea.Helpers
 		/// <param name="struct">The structure to copy</param>
 		/// <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
 		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
 			int size = Marshal.SizeOf<TStruct>();
-			if (size + copyStart > 128)
+			if (size + copyStart > this.size * sizeof(T))
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this)
 			{
@@ -477,7 +521,7 @@ namespace Althea.Helpers
 				{
 					T* ptr = (T*)t;
 					int result = 0;
-					for (int i = 0; i < this.Count; i++)
+					for (int i = 0; i < this.size; i++)
 					{
 						if (!ptr[i].Equals(default))
 							result++;
@@ -488,11 +532,6 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// The number of elements in this fixed buffer
-		/// </summary>
-		public int Count => 128 / sizeof(T);
-
-		/// <summary>
 		/// Basic indexer of this fixed buffer
 		/// </summary>
 		/// <param name="index">The index</param>
@@ -500,7 +539,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
 			get {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= this.size)
 					throw new ArgumentOutOfRangeException(nameof(index));
 				fixed (void* t = &this)
 				{
@@ -508,7 +547,7 @@ namespace Althea.Helpers
 				}
 			}
 			set {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= this.size)
 					throw new ArgumentOutOfRangeException(nameof(index));
 				fixed (void* t = &this)
 				{
@@ -523,7 +562,7 @@ namespace Althea.Helpers
 		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
 		public IEnumerator<T> GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < this.size; i++)
 			{
 				yield return this[i];
 			}
@@ -536,15 +575,16 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Whether this == <paramref name="other"/>
 		/// </summary>
-		/// <param name="other">another <see cref="FixedBuffer_128{T}"/> to compare</param>
+		/// <param name="other">another <see cref="SizedFixedBuffer_128{T}"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(FixedBuffer_128<T> other)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(SizedFixedBuffer_128<T> other)
 		{
 			fixed (void* t = &this)
 			{
 				T* ptrThis = (T*)t;
 				T* ptrOther = &other.field;
-				for (int i = 0; i < this.Count; i++)
+				for (int i = 0; i < this.size; i++)
 				{
 					if (!ptrThis[i].Equals(ptrOther[i]))
 						return false;
@@ -558,20 +598,22 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
-			return obj is FixedBuffer_128<T> buffer && this.Equals(buffer);
+			return obj is SizedFixedBuffer_128<T> buffer && this.Equals(buffer);
 		}
 
 		/// <summary>
-		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="FixedBuffer_128{T}"/>.
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="SizedFixedBuffer_128{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			fixed (void* t = &this)
 			{
-				var temp = new ReadOnlySpan<T>(t, this.Count);
+				var temp = new ReadOnlySpan<T>(t, this.size);
 				return temp.HashCodeOfSpan();
 			}
 		}
@@ -579,7 +621,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		public static bool operator ==(FixedBuffer_128<T> left, FixedBuffer_128<T> right)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(SizedFixedBuffer_128<T> left, SizedFixedBuffer_128<T> right)
 		{
 			return left.Equals(right);
 		}
@@ -587,7 +630,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		public static bool operator !=(FixedBuffer_128<T> left, FixedBuffer_128<T> right)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(SizedFixedBuffer_128<T> left, SizedFixedBuffer_128<T> right)
 		{
 			return !(left == right);
 		}
@@ -595,13 +639,22 @@ namespace Althea.Helpers
 
 		#region string related
 		/// <summary>
-		/// Return the string representation of this <see cref="FixedBuffer_128{T}"/>
+		/// Return the string representation of this <see cref="SizedFixedBuffer_128{T}"/>
 		/// </summary>
-		/// <returns>the string representation of this <see cref="FixedBuffer_128{T}"/></returns>
+		/// <returns>the string representation of this <see cref="SizedFixedBuffer_128{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Fixed Buffer [{string.Join(", ", this)}]";
+			return $"Read-only Fixed Buffer";
 		}
+		#endregion
+
+		#region converter
+		/// <summary>
+		/// Implicitly convert the given <paramref name="span"/> to a <see cref="SizedFixedBuffer_128{T}"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to be converted</param>
+		public static implicit operator SizedFixedBuffer_128<T>(ReadOnlySpan<T> span) => new SizedFixedBuffer_128<T>(span);
 		#endregion
 	}
 }
