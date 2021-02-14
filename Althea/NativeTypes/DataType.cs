@@ -14,15 +14,15 @@ namespace Althea.NativeTypes
 		/// </summary>
 		NotSupported = 0,
 		/// <summary>
-		/// The floating point
+		/// The floating point numbers defined in the "IEEE Standard 754 for Binary Floating-Point Arithmetic"
 		/// </summary>
-		FloatPoint = 1,
+		FloatPoint_IEEE754 = 1,
 		/// <summary>
-		/// The signed integer
+		/// The signed integer numbers
 		/// </summary>
 		SignedInteger = 2,
 		/// <summary>
-		/// The unsigned integer
+		/// The unsigned integer numbers
 		/// </summary>
 		UnsignedInteger = 3,
 	}
@@ -30,7 +30,7 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The general data types defined by flags and masks.
 	/// </summary>
-	public enum DataType
+	public enum DataType : int
 	{
 		/// <summary>
 		/// The right-most bit that represents the real base type, equals to zero, cannot be used separately.
@@ -140,7 +140,7 @@ namespace Althea.NativeTypes
 		/// The type mask (from 1st bit to 2nd bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type classification as a <see cref="DataTypeClassification"/>.
 		/// </summary>
-		public const int TypeMask = 0b0110;
+		public const int TypeMask = 0b1111_1110;
 		/// <summary>
 		/// The start bit of <see cref="TypeMask"/>.
 		/// </summary>
@@ -150,7 +150,7 @@ namespace Althea.NativeTypes
 		/// The number of bytes mask (from 4th bit to 7th bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="ByteMask"/>) &gt;&gt; <see cref="ByteMaskStart"/> = </c> the bytes used (only half of a complex type's size shall be counted).
 		/// </summary>
-		public const int ByteMask = 0b1111_0000;
+		public const int ByteMask = 0b1111_1111_0000_0000;
 		/// <summary>
 		/// The start bit of <see cref="ByteMask"/>.
 		/// </summary>

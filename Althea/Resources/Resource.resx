@@ -117,30 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ArrayCannotNull" xml:space="preserve">
-    <value>The input/output array(s) cannot be null.</value>
-  </data>
-  <data name="BuiltInClassImp" xml:space="preserve">
-    <value>The built-in class `{0}` has no need to implement this method.</value>
-  </data>
-  <data name="CannotLocateSource" xml:space="preserve">
-    <value>Cannot locate the source of input array(s).</value>
-  </data>
-  <data name="CannotOperate" xml:space="preserve">
-    <value>Matrices/vectors with incompatible sizes cannot perform such operation; </value>
-  </data>
-  <data name="ClassConcrete" xml:space="preserve">
-    <value>The class should be a concrete one.</value>
-  </data>
-  <data name="ClassMustBeSubOf" xml:space="preserve">
-    <value>The class should be a sub class of `{0}`.</value>
-  </data>
-  <data name="DimMustOne" xml:space="preserve">
-    <value>The length of size (the dimensionality) of the array must be one.</value>
-  </data>
-  <data name="DimMustTwo" xml:space="preserve">
-    <value>The length of size (the dimensionality) of the array must be two.</value>
-  </data>
   <data name="DuplicateLabels" xml:space="preserve">
     <value>Duplicate labels for tensors are not allowed.</value>
   </data>
@@ -188,15 +164,6 @@
   </data>
   <data name="RankZero" xml:space="preserve">
     <value>Rank zero is not allowed.</value>
-  </data>
-  <data name="RequireOnDeivce" xml:space="preserve">
-    <value>This operation requires the array stored on device memory.</value>
-  </data>
-  <data name="RequireOnHost" xml:space="preserve">
-    <value>This operation requires the array stored on host memory.</value>
-  </data>
-  <data name="RequireSamePos" xml:space="preserve">
-    <value>This operation requires the arrays to be stored on same kind of memory.</value>
   </data>
   <data name="RoutineNotLoaded" xml:space="preserve">
     <value>The target routine is not loaded.</value>

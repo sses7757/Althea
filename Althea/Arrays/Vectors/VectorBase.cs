@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
+using Althea.Helpers;
 using Althea.NativeTypes;
 
 
@@ -39,80 +41,85 @@ namespace Althea.Arrays
 		public abstract DenseVector<T> ToDense();
 		#endregion
 
+		#region indexing
+		/// <summary>
+		/// Provide legacy support of C# duck type for <c>this[<see cref="Index"/>]</c> and <c>this[<see cref="Range"/>]</c>
+		/// </summary>
+		public int Count => (int)this.Length;
+
+		/// <summary>
+		/// When implemented by a derived class, provide the basic indexed getter and setter of this vector
+		/// </summary>
+		/// <param name="index">The position of the element to get / set</param>
+		/// <returns>The element at <paramref name="index"/></returns>
+		public abstract T this[long index] { get; set; }
+
+		/// <summary>
+		/// Provide legacy support of <see cref="this[long]"/> and C# duck type for <c>this[<see cref="Index"/>]</c>
+		/// </summary>
+		public T this[int index] => this[(long)index];
+
+		/// <summary>
+		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
+		/// </summary>
+		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+		/// <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>. Shall be a referenced vector if possible.</returns>
+		public abstract VectorBase<T> Slice(long start, long length);
+
+		/// <summary>
+		/// Provide legacy support of C# duck type for <c>this[<see cref="Range"/>]</c>
+		/// </summary>
+		public VectorBase<T> Slice(int start, int length) => this.Slice(start, length);
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			var a = this[5..^5];
+			for (long i = 0; i < this.Length; i++)
+			{
+				yield return this[i];
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
+		#endregion
+
 		#region operators
 		/// <summary>
-		/// Vector point-wise multiply (not vector inner product).
+		/// Create a new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
 		/// </summary>
-		/// <param name="left">left operand, will be overwritten if it is in-place</param>
-		/// <param name="right">right operand</param>
-		/// <returns>$$\vec{v}_1\circ\vec{v}_2 \equiv \{\vec{v}_1^i \vec{v}_2^i\}_i$$</returns>
-		public static VectorBase<T> operator *(VectorBase<T> left, VectorBase<T> right)
+		/// <param name="vector">The original vector to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+		public static VectorBase<T> operator *(VectorBase<T> vector, T scalar)
 		{
-			if (left is null)
-				throw new ArgumentNullException(nameof(left));
-			if (right is null)
-				throw new ArgumentNullException(nameof(right));
-			if (left.OnHost != right.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-
-			return left.ApplyToClone(l => l.PointWiseMultiply(right));
+			if (vector is null || !vector.IsValid())
+				throw new ArgumentNullException(nameof(vector));
+			return vector.ApplyToClone(v => v.AddScalar(scalar));
 		}
 
 		/// <summary>
-		/// Vector scaling -- number multiplication.
+		/// Create a new <see cref="VectorBase{T}"/> which is the negation result of the given <paramref name="vector"/>
 		/// </summary>
-		/// <param name="v">vector, will be overwritten if it is in-place</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <returns>$$\vec{v}_{\text{result}} = \alpha \vec{v}$$</returns>
-		public static VectorBase<T> operator *(VectorBase<T> v, T α)
-		{
-			if (v is null)
-				throw new ArgumentNullException(nameof(v), Resource.ArrayCannotNull);
-			return v.ApplyToClone(c => BLAS.VectorScale(c, α));
-		}
-
+		/// <param name="vector">The original vector to negate</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the negation result of the given <paramref name="vector"/></returns>
+		public static VectorBase<T> operator -(VectorBase<T> vector) => vector * Scalars<T>.MinusOne;
 
 		/// <summary>
-		/// Vector negation.
+		/// Create a new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
 		/// </summary>
-		/// <param name="v"></param>
-		/// <returns>$$\vec{v}_{\text{result}=-\vec{v}$$</returns>
-		public static VectorBase<T> operator -(VectorBase<T> v) => v * Scalars<T>.MinusOne;
+		/// <param name="vector">The original vector to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+		public static VectorBase<T> operator *(T scalar, VectorBase<T> vector) => vector * scalar;
 
 		/// <summary>
-		/// Vector scaling -- number multiplication.
+		/// Create a new <see cref="VectorBase{T}"/> which is the division result of the given <paramref name="vector"/> and <paramref name="scalar"/>
 		/// </summary>
-		/// <param name="v">vector</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <returns>$$\vec{v}_{\text{result}} = \alpha \vec{v}$$</returns>
-		public static VectorBase<T> operator *(T α, VectorBase<T> v) => v * α;
-
-
-		/// <summary>
-		/// Vector scaling -- number division.
-		/// </summary>
-		/// <param name="v">vector</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <returns>$$\vec{v}_{\text{result}} = \frac{1}{\alpha}\vec{v}$$</returns>
-		public static VectorBase<T> operator /(VectorBase<T> v, T α) => v * α.GenericReciprocal();
-
-		/// <summary>
-		/// Vector point-wise division.
-		/// </summary>
-		/// <param name="left">left operand, will be overwritten if it is in-place</param>
-		/// <param name="right">right operand</param>
-		/// <returns>$$\vec{v}_1 ./ \vec{v}_2 \equiv \{\vec{v}_1^i / \vec{v}_2^i\}_i$$</returns>
-		public static VectorBase<T> operator /(VectorBase<T> left, VectorBase<T> right)
-		{
-			if (left is null)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (right is null)
-				throw new ArgumentNullException(nameof(right), Resource.ArrayCannotNull);
-			if (left.OnHost != right.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-
-			return left.ApplyToClone(l => l.PointWiseDivide(right));
-		}
+		/// <param name="vector">The original vector to be divided</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+		public static VectorBase<T> operator /(VectorBase<T> vector, T scalar) => vector * scalar.GenericReciprocal();
 
 		/// <summary>
 		/// Left matrix right vector multiplication, <b>out-of-place</b>.
@@ -217,106 +224,6 @@ namespace Althea.Arrays
 
 			return left.ApplyToClone(l => l.AddBy_αx(right, Scalars<T>.MinusOne));
 		}
-		#endregion
-
-
-		#region indexers
-		/// <summary>
-		/// Check the range then return offset and count.
-		/// </summary>
-		/// <param name="range">The input <see cref="Range"/></param>
-		/// <returns>offset and count</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="range"/> is out of range</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long offset, long count) CheckRange(Range range)
-		{
-			var (offset, count) = range.GetOffsetAndCount(this.Length);
-			if (offset < 0 || offset >= this.Length)
-				throw new ArgumentOutOfRangeException(nameof(range), range, Resource.RangeStartWrong);
-			if (count <= 0 || offset + count - 1 > this.LastIndex)
-				throw new ArgumentOutOfRangeException(nameof(range), range, Resource.RangeCountWrong);
-			return (offset, count);
-		}
-
-		/// <summary>
-		/// Check the index then return the offset.
-		/// </summary>
-		/// <param name="index">The input <see cref="Index"/></param>
-		/// <returns>offset</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected long CheckRange(Index index)
-		{
-			long offset = index.GetPosition(this.Length);
-			if (offset < 0 || offset >= this.Length)
-				throw new ArgumentOutOfRangeException(nameof(index), index, Resource.IndexWrong);
-			return offset;
-		}
-
-		/// <summary>
-		/// Check the indices then return the offsets.
-		/// </summary>
-		/// <param name="indices">The input array of <see cref="Index"/></param>
-		/// <returns>offsets</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if any <paramref name="indices"/> is out of range</exception>
-		/// <exception cref="ArgumentException">if <paramref name="indices"/> they are not unique</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected long[] CheckRange(Index[] indices)
-		{
-			var newindices = indices.Select(i => CheckRange(i));
-			if (newindices.Count != newindices.Distinct().Count)
-				throw new ArgumentException(Resource.DuplicateIndices, nameof(indices));
-			return newindices.ToArray();
-		}
-
-		/// <summary>
-		/// Check the ranges then return offsets.
-		/// </summary>
-		/// <param name="ranges">The input array of <see cref="Range"/></param>
-		/// <returns>offsets</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if any <paramref name="ranges"/> is out of range</exception>
-		/// <exception cref="ArgumentException">if <paramref name="ranges"/> overlap</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected long[] CheckRange(Range[] ranges)
-		{
-			var newRanges = ranges.Select(r => CheckRange(r));
-			var indices = newRanges.SelectMany(r => ArrayLinq.Range(r.offset, r.count));
-			if (indices.Count != indices.Distinct().Count)
-				throw new ArgumentException(Resource.DuplicateIndices, nameof(ranges));
-			return indices.ToArray();
-		}
-
-		/// <summary>
-		/// Basic indexer of vector, from <see cref="IVector{T}"/>.
-		/// </summary>
-		/// <param name="i">position indicated by <see cref="Index"/></param>
-		/// <returns>an instance of the data type <typeparamref name="T"/></returns>
-		/// <remarks>Since a value cannot hold reference, altering the retrieved value does not change this array's value at that position</remarks>
-		public abstract T this[Index i] { get; set; }
-
-		/// <summary>
-		/// Single range indexer of vector, new in <see cref="VectorBase{T}"/>.
-		/// </summary>
-		/// <param name="r">The <see cref="Range"/> of index</param>
-		/// <returns>The reference <see cref="VectorBase{T}"/> of the selected range</returns>
-		/// <remarks>Range [a, b) are inclusive and exclusive respectively. See <see cref="Range"/> and <see cref="Index"/> for more information</remarks>
-		public abstract VectorBase<T> this[Range r] { get; set; }
-
-		/// <summary>
-		/// Multiple position indexer of vector, new in <see cref="VectorBase{T}"/>.
-		/// </summary>
-		/// <param name="indices">positions indicated by array of <see cref="Index"/></param>
-		/// <returns>All the values at the indices are copied to a new <see cref="DenseVector{T}"/></returns>
-		/// <remarks>Since values are copied to a new <see cref="VectorBase{T}"/>, altering the retrieved values does not change this array's values at these positions</remarks>
-		public abstract DenseVector<T> this[params Index[] indices] { get; set; }
-
-		/// <summary>
-		/// Multiple range indexer of vector, new in <see cref="VectorBase{T}"/>.
-		/// </summary>
-		/// <param name="ranges">The array of <see cref="Range"/> of indices</param>
-		/// <returns>All the values inside the ranges are copied to a new <see cref="DenseVector{T}"/></returns>
-		/// <remarks>This indexer copies the values in the ranges, altering the retrieved values does not change this array's values at these positions</remarks>
-		public abstract DenseVector<T> this[params Range[] ranges] { get; set; }
 		#endregion
 	}
 }

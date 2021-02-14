@@ -81,12 +81,14 @@ namespace Althea
 	/// The interface for a cloneable object
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public interface ICloneable<T> where T : ICloneable<T>
+	public interface ICloneable<T> : ICloneable where T : ICloneable<T>
 	{
 		/// <summary>
 		/// Creates a new object that is a copy of the current instance.
 		/// </summary>
 		/// <returns>A new object that is a copy of the current instance</returns>
-		T Clone();
+		new T Clone();
+
+		object ICloneable.Clone() => this.Clone();
 	}
 }

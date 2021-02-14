@@ -61,78 +61,6 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 The input/output array(s) cannot be null. 的本地化字符串。
-        /// </summary>
-        internal static string ArrayCannotNull {
-            get {
-                return ResourceManager.GetString("ArrayCannotNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The built-in class `{0}` has no need to implement this method. 的本地化字符串。
-        /// </summary>
-        internal static string BuiltInClassImp {
-            get {
-                return ResourceManager.GetString("BuiltInClassImp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Cannot locate the source of input array(s). 的本地化字符串。
-        /// </summary>
-        internal static string CannotLocateSource {
-            get {
-                return ResourceManager.GetString("CannotLocateSource", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Matrices/vectors with incompatible sizes cannot perform such operation;  的本地化字符串。
-        /// </summary>
-        internal static string CannotOperate {
-            get {
-                return ResourceManager.GetString("CannotOperate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The class should be a concrete one. 的本地化字符串。
-        /// </summary>
-        internal static string ClassConcrete {
-            get {
-                return ResourceManager.GetString("ClassConcrete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The class should be a sub class of `{0}`. 的本地化字符串。
-        /// </summary>
-        internal static string ClassMustBeSubOf {
-            get {
-                return ResourceManager.GetString("ClassMustBeSubOf", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The length of size (the dimensionality) of the array must be one. 的本地化字符串。
-        /// </summary>
-        internal static string DimMustOne {
-            get {
-                return ResourceManager.GetString("DimMustOne", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The length of size (the dimensionality) of the array must be two. 的本地化字符串。
-        /// </summary>
-        internal static string DimMustTwo {
-            get {
-                return ResourceManager.GetString("DimMustTwo", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Duplicate labels for tensors are not allowed. 的本地化字符串。
         /// </summary>
         internal static string DuplicateLabels {
@@ -273,33 +201,6 @@ namespace Althea.Resources {
         internal static string RankZero {
             get {
                 return ResourceManager.GetString("RankZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 This operation requires the array stored on device memory. 的本地化字符串。
-        /// </summary>
-        internal static string RequireOnDeivce {
-            get {
-                return ResourceManager.GetString("RequireOnDeivce", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 This operation requires the array stored on host memory. 的本地化字符串。
-        /// </summary>
-        internal static string RequireOnHost {
-            get {
-                return ResourceManager.GetString("RequireOnHost", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 This operation requires the arrays to be stored on same kind of memory. 的本地化字符串。
-        /// </summary>
-        internal static string RequireSamePos {
-            get {
-                return ResourceManager.GetString("RequireSamePos", resourceCulture);
             }
         }
         

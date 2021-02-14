@@ -87,7 +87,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>. The default implementation does not scale the whole vector correctly if this vector is sparse and its default value is not zero.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		public virtual void Scale(T value)

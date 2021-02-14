@@ -20,6 +20,21 @@ namespace Althea.Helpers
 			}
 		}
 
+		internal static T ApplyToClone<T>(this T value, Action<T> action) where T : IDisposable, ICloneable
+		{
+			var clone = (T)value.Clone();
+			try
+			{
+				action.Invoke(clone);
+				return clone;
+			}
+			catch (System.Exception)
+			{
+				clone?.Dispose();
+				throw;
+			}
+		}
+
 		// TODO: move to native codes?
 		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
 										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);
