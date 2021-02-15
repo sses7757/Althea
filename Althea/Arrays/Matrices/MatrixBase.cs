@@ -74,7 +74,7 @@ namespace Althea.Arrays
 	/// The abstract matrix class that inherit the <see cref="ValueArray{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public abstract class MatrixBase<T> : ValueArray<T>, IMatrix<MatrixBase<T>, VectorBase<T>, T> where T : struct, IComparable<T>
+	public abstract class MatrixBase<T> : ValueArray<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region new members (mostly from IMatrix<TMat, TVec, T>)
 		/// <summary>

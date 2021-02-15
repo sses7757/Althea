@@ -860,11 +860,13 @@ namespace Althea
 			return false;
 		}
 
+		Storage<T> ICloneable<Storage<T>>.Clone() => this.Clone();
+
 		/// <summary>
 		/// When implemented by a derived class, allocate and creates a new <see cref="Storage{T}"/> that is a copy of the current one. The default implementation utilizes <see cref="Althea.Storage.StorageFactory{T}.CreateAlike(Storage{T})"/> and <see cref="MEM.MemoryCopy{T}(Storage{T}, Storage{T})"/>.
 		/// </summary>
 		/// <returns>A new <see cref="Storage{T}"/> that is a copy of the current instance</returns>
-		public virtual Storage<T> Clone()
+		public virtual ActualStorage<T> Clone()
 		{
 			var storage = Storage.StorageFactory<T>.CreateAlike(this);
 			try
@@ -889,7 +891,7 @@ namespace Althea
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="locationsAndLengths"/> has length(s) equals to 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
-		public static Storage<T> Create(CombinationType combinationType, params (StorageLocation location, long length)[] locationsAndLengths)
+		public static ActualStorage<T> Create(CombinationType combinationType, params (StorageLocation location, long length)[] locationsAndLengths)
 		{
 			if (locationsAndLengths is null || locationsAndLengths.Length <= 0)
 				throw new ArgumentNullException(nameof(locationsAndLengths));
@@ -922,7 +924,7 @@ namespace Althea
 		/// <param name="length">The corresponding length in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
-		public static Storage<T> Create(StorageLocation location, long length)
+		public static ActualStorage<T> Create(StorageLocation location, long length)
 		{
 			Span<StorageLocation> locations = stackalloc StorageLocation[1];
 			locations.SetValue(location);

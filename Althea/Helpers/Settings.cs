@@ -134,19 +134,23 @@ namespace Althea.Helpers
 
 			public ImplementationSettings ImplementationSettings;
 
+			public int StackAllocLimit;
+
 			internal JsonSettings(bool _)
 			{
 				LogSettings = new LogSettings(false);
 				PrintSettings = new PrintSettings(false);
 				ImplementationSettings = new ImplementationSettings(false);
+				StackAllocLimit = 1024;
 			}
 
 			[JsonConstructor]
-			internal JsonSettings(LogSettings logSettings, PrintSettings printSettings, ImplementationSettings implementationSettings)
+			internal JsonSettings(LogSettings logSettings, PrintSettings printSettings, ImplementationSettings implementationSettings, int stackAllocLimit)
 			{
 				LogSettings = logSettings;
 				PrintSettings = printSettings;
 				ImplementationSettings = implementationSettings;
+				StackAllocLimit = stackAllocLimit;
 			}
 		}
 
@@ -190,6 +194,17 @@ namespace Althea.Helpers
 		public static int PrintMatrixColumn {
 			get => singletonSettings.PrintSettings.MatrixColumn;
 			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixColumn: value);
+		}
+		#endregion
+
+		#region other settings
+		// Ignore Spelling: stackalloc
+		/// <summary>
+		/// Get and set the maximum size in bytes when using C# keyword "stackalloc" to reduce GC pressure. The default stack size of x64 C# program is 4MB, set a value larger than this may cause unexpected error(s).
+		/// </summary>
+		public static int StackAllocLimit {
+			get => singletonSettings.StackAllocLimit;
+			set => singletonSettings.StackAllocLimit = value;
 		}
 		#endregion
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.Helpers;
@@ -21,7 +20,7 @@ namespace Althea.Arrays
 		/// Construct a <see cref="VectorBase{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="length"/>
 		/// </summary>
 		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
-		/// <param name="length">The size of the vector</param>
+		/// <param name="length">The presenting size of the vector</param>
 		protected VectorBase(Storage<T> values, long length) : base(values, stackalloc long[1].SetValue(length)) { }
 		#endregion
 
@@ -52,6 +51,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="index">The position of the element to get / set</param>
 		/// <returns>The element at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public abstract T this[long index] { get; set; }
 
 		/// <summary>
@@ -65,6 +65,7 @@ namespace Althea.Arrays
 		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
 		/// <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
 		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>. Shall be a referenced vector if possible.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
 		public abstract VectorBase<T> Slice(long start, long length);
 
 		/// <summary>
@@ -84,7 +85,80 @@ namespace Althea.Arrays
 		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 		#endregion
 
+		#region linear algebra abstract methods
+		/// <summary>
+		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
+		/// </summary>
+		/// <param name="other">The other vector to perform the dot product</param>
+		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
+		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+		public abstract T Dot(VectorBase<T> other, bool conjugateThis = true);
+
+		/// <summary>
+		/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
+		/// </summary>
+		/// <param name="other">The other vector to add</param>
+		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+		public abstract void AddByVector(VectorBase<T> other, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, add the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) to this vector (scaled by <paramref name="β"/>) in-place.
+		/// </summary>
+		/// <param name="matrix">The input matrix to be multiplied</param>
+		/// <param name="vector">The input vector to be multiplied</param>
+		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
+		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
+		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
+		public abstract void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None);
+		#endregion
+
 		#region operators
+		/// <summary>
+		/// Create a new <see cref="VectorBase{T}"/> which is the point-wise exponentiation result of the given <paramref name="vector"/> and <paramref name="power"/>.
+		/// </summary>
+		/// <param name="vector">The original vector whose elements are the bases</param>
+		/// <param name="power">The power acting as the exponent of type <see cref="double"/></param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the point-wise exponentiate result of the given <paramref name="vector"/> and <paramref name="power"/></returns>
+		public static VectorBase<T> operator ^(VectorBase<T> vector, double power)
+		{
+			if (vector is null || !vector.IsValid())
+				throw new ArgumentNullException(nameof(vector));
+
+			return vector.ApplyToClone(v => v.Power(power));
+		}
+
+		/// <summary>
+		/// Create a new <see cref="VectorBase{T}"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
+		/// </summary>
+		/// <param name="left">One original vector as the left operand</param>
+		/// <param name="right">One original vector as the right operand</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
+		public static VectorBase<T> operator +(VectorBase<T> left, VectorBase<T> right)
+		{
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
+
+			return left.ApplyToClone(l => l.AddByVector(right, Scalars<T>.One));
+		}
+
+		/// <summary>
+		/// Create a new <see cref="VectorBase{T}"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
+		/// </summary>
+		/// <param name="left">One original vector as the left operand</param>
+		/// <param name="right">One original vector as the right operand</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
+		public static VectorBase<T> operator -(VectorBase<T> left, VectorBase<T> right)
+		{
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
+
+			return left.ApplyToClone(l => l.AddByVector(right, Scalars<T>.MinusOne));
+		}
+
 		/// <summary>
 		/// Create a new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
 		/// </summary>
@@ -95,6 +169,7 @@ namespace Althea.Arrays
 		{
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
+
 			return vector.ApplyToClone(v => v.AddScalar(scalar));
 		}
 
@@ -122,107 +197,35 @@ namespace Althea.Arrays
 		public static VectorBase<T> operator /(VectorBase<T> vector, T scalar) => vector * scalar.GenericReciprocal();
 
 		/// <summary>
-		/// Left matrix right vector multiplication, <b>out-of-place</b>.
+		/// Create a new <see cref="VectorBase{T}"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/>.
 		/// </summary>
-		/// <param name="v">vector</param>
-		/// <param name="M">matrix</param>
-		/// <returns>$$\vec{w} = M \vec{v}$$</returns>
-		/// <remarks>Temporary vector other than the returned one might be created as well</remarks>
-		public static VectorBase<T> operator *(MatrixBase<T> M, VectorBase<T> v)
+		/// <param name="vector">The input vector to be multiplied at the right side</param>
+		/// <param name="matrix">The input matrix to be multiplied at the left side</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/></returns>
+		public static VectorBase<T> operator *(MatrixBase<T> matrix, VectorBase<T> vector)
 		{
-			if (v is null)
-				throw new ArgumentNullException(nameof(v), Resource.ArrayCannotNull);
-			if (M is null)
-				throw new ArgumentNullException(nameof(M), Resource.ArrayCannotNull);
-			if (v.OnHost != M.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-			var result = new DenseVector<T>(M.NRows, v.OnHost);
-			try
-			{
-				result.Mulβ_AddBy_αopAx(M, v, Scalars<T>.One);
-				return result;
-			}
-			catch (Exception)
-			{
-				result?.Dispose();
-				throw;
-			}
+			if (matrix is null || !matrix.IsValid())
+				throw new ArgumentNullException(nameof(matrix));
+			if (vector is null || !vector.IsValid())
+				throw new ArgumentNullException(nameof(vector));
+
+			return vector.ApplyToAlike<VectorBase<T>, T>(v => v.AddByMatrixMultiplyVector(matrix, vector, Scalars<T>.One));
 		}
 
 		/// <summary>
-		/// Left vector right matrix multiplication, <b>out-of-place</b>.
+		/// Create a new <see cref="VectorBase{T}"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/>.
 		/// </summary>
-		/// <param name="v">vector</param>
-		/// <param name="M">matrix</param>
-		/// <returns>$$\vec{w} = \vec{v}^H M$$</returns>
-		public static VectorBase<T> operator *(VectorBase<T> v, MatrixBase<T> M)
+		/// <param name="vector">The input vector to be multiplied at the left side</param>
+		/// <param name="matrix">The input matrix to be multiplied at the right side</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/></returns>
+		public static VectorBase<T> operator *(VectorBase<T> vector, MatrixBase<T> matrix)
 		{
-			if (v is null)
-				throw new ArgumentNullException(nameof(v), Resource.ArrayCannotNull);
-			if (M is null)
-				throw new ArgumentNullException(nameof(M), Resource.ArrayCannotNull);
-			if (v.OnHost != M.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-			var result = new DenseVector<T>(M.NCols, v.OnHost);
-			try
-			{
-				//tex:$\vec{v}^* M \equiv (M^* \vec{v})^*$
-				result.Mulβ_AddBy_αopAx(M, v, Scalars<T>.One, op: MatrixOperation.ConjugateTranspose);
-				BLAS.PointWiseConjugate(result);
-				return result;
-			}
-			catch (Exception)
-			{
-				result?.Dispose();
-				throw;
-			}
-		}
+			if (matrix is null || !matrix.IsValid())
+				throw new ArgumentNullException(nameof(matrix));
+			if (vector is null || !vector.IsValid())
+				throw new ArgumentNullException(nameof(vector));
 
-		/// <summary>
-		/// Element wise power.
-		/// </summary>
-		/// <param name="v">array</param>
-		/// <param name="p">a <see cref="double"/> power</param>
-		/// <remarks>only real types are supported</remarks>
-		/// <returns>$$a_{\text{result}}_i={(a_i)}^p$$</returns>
-		public static VectorBase<T> operator ^(VectorBase<T> v, double p)
-		{
-			if (v is null)
-				throw new ArgumentNullException(nameof(v), Resource.ArrayCannotNull);
-
-			return v.ApplyToClone(c => BLAS.PointWisePower(c, p));
-		}
-
-		/// <summary>
-		/// Vector addition.
-		/// </summary>
-		/// <param name="left">left operand, will be overwritten if it is in-place</param>
-		/// <param name="right">right operand</param>
-		/// <returns>$$\vec{v}_{\text{result}}=\vec{v}_1 + \vec{v}_2$$</returns>
-		public static VectorBase<T> operator +(VectorBase<T> left, VectorBase<T> right)
-		{
-			if (left is null)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (right is null)
-				throw new ArgumentNullException(nameof(right), Resource.ArrayCannotNull);
-
-			return left.ApplyToClone(l => l.AddBy_αx(right, Scalars<T>.One));
-		}
-
-		/// <summary>
-		/// Vector subtraction.
-		/// </summary>
-		/// <param name="left">left operand, will be overwritten if it is in-place</param>
-		/// <param name="right">right operand</param>
-		/// <returns>$$\vec{v}_{\text{result}=\vec{v}_1 - \vec{v}_2$$</returns>
-		public static VectorBase<T> operator -(VectorBase<T> left, VectorBase<T> right)
-		{
-			if (left is null)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (right is null)
-				throw new ArgumentNullException(nameof(right), Resource.ArrayCannotNull);
-
-			return left.ApplyToClone(l => l.AddBy_αx(right, Scalars<T>.MinusOne));
+			return vector.ApplyToAlike<VectorBase<T>, T>(v => v.AddByMatrixMultiplyVector(matrix, vector, Scalars<T>.One, operation: LinearAlgebra.MatrixOperation.Transpose));
 		}
 		#endregion
 	}

@@ -332,7 +332,7 @@ namespace Althea.Arrays
 			if (typeT == typeOut)
 			{
 				var ret = this as ValueArray<TOut>;
-				return ret ?? new DenseVector<TOut>(Storage<TOut>.Empty, 0);
+				return ret ?? new DenseVector<TOut>();
 			}
 			var alike = this.NewArrayAlike<TOut>();
 			LAD.SelectImplementation(this.Storage, alike.Storage).PointWiseCast(this.Storage, 1, alike.Storage, 1);

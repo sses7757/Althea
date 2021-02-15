@@ -725,29 +725,29 @@ namespace Althea.Storage
 		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public abstract long FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
+		public abstract void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
-		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
-		public abstract long ToManaged<T>(PointerSegment source, ArraySegment<T> destination) where T : unmanaged;
+		public abstract long ToManaged<T>(PointerSegment source, Span<T> destination) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
-		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public abstract long FromManaged<T>(PointerSegment destination, ArraySegment<T> values) where T : unmanaged;
+		public abstract long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
@@ -758,7 +758,7 @@ namespace Althea.Storage
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="source"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
@@ -767,7 +767,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, ArraySegment<T> destination, long destinationLeadDim = 0) where T : unmanaged;
+		public abstract void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
@@ -777,7 +777,7 @@ namespace Althea.Storage
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
@@ -786,7 +786,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ArraySegment<T> values, long valuesLeadDim = 0) where T : unmanaged;
+		public abstract void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged;
 		#endregion
 
 		#region high-level storage operations
@@ -1068,11 +1068,11 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
-		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		public virtual long ToManaged<T>(Storage<T> source, ArraySegment<T> destination) where T : unmanaged
+		public virtual long ToManaged<T>(Storage<T> source, Span<T> destination) where T : unmanaged
 		{
 			source.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
@@ -1081,14 +1081,14 @@ namespace Althea.Storage
 				for (int i = 0; i < mixed.Count; i++)
 				{
 					this.ToManaged(mixed[i], destination[offset..]);
-					if (offset >= destination.Count)
+					if (offset >= destination.Length)
 						break;
 					offset += (int)(mixed[i].LengthInBytes / Storage<T>.SizeOfT);
 				}
 			}
 			else if (cached is not null)
 			{
-				long count = Storage<T>.SizeOfT * (long)destination.Count;
+				long count = Storage<T>.SizeOfT * (long)destination.Length;
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
@@ -1096,13 +1096,22 @@ namespace Althea.Storage
 				}
 				else
 				{
-					cached.ApplyUnaryFunction(this.ToManaged, 0, count, auxiliaryOriginal: destination,
-											  sliceFunc: static (dst, off, len) => dst.Slice((int)(off / Storage<T>.SizeOfT), (int)(len / Storage<T>.SizeOfT)),
-											  copyFunc: this.MemoryCopy, pack: Storage<T>.SizeOfT);
+					int pack = Storage<T>.SizeOfT;
+					long offset = 0;
+					long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+					while (count > 0)
+					{
+						long getLength = Math.Min(count, maxCacheSize);
+						var temp = cached.Retrieve(offset, count, this.MemoryCopy);
+						Span<T> val = destination.Slice((int)(offset / pack), (int)(getLength / pack));
+						this.ToManaged(temp, val);
+						offset += getLength;
+						count -= getLength;
+					}
 				}
-				return Math.Min(destination.Count, source.Length);
+				return Math.Min(destination.Length, source.Length);
 			}
-			return Math.Min(source.Length, destination.Count);
+			return Math.Min(source.Length, destination.Length);
 		}
 
 		/// <summary>
@@ -1110,11 +1119,11 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
-		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public virtual long FromManaged<T>(Storage<T> destination, ArraySegment<T> values) where T : unmanaged
+		public virtual long FromManaged<T>(Storage<T> destination, ReadOnlySpan<T> values) where T : unmanaged
 		{
 			destination.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (mixed is not null)
@@ -1123,14 +1132,14 @@ namespace Althea.Storage
 				for (int i = 0; i < destination.Count; i++)
 				{
 					this.FromManaged(destination[i], values[offset..]);
-					if (offset >= values.Count)
+					if (offset >= values.Length)
 						break;
 					offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
 				}
 			}
 			else if (cached is not null)
 			{
-				long count = Storage<T>.SizeOfT * (long)values.Count;
+				long count = Storage<T>.SizeOfT * (long)values.Length;
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
@@ -1138,12 +1147,21 @@ namespace Althea.Storage
 				}
 				else
 				{
-					cached.ApplyUnaryFunction(this.FromManaged, 0, count, auxiliaryOriginal: values,
-											  sliceFunc: static (src, off, len) => src.Slice((int)(off / Storage<T>.SizeOfT), (int)(len / Storage<T>.SizeOfT)),
-											  copyFunc: this.MemoryCopy, pack: Storage<T>.SizeOfT);
+					int pack = Storage<T>.SizeOfT;
+					long offset = 0;
+					long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
+					while (count > 0)
+					{
+						long getLength = Math.Min(count, maxCacheSize);
+						var temp = cached.Retrieve(offset, count, this.MemoryCopy);
+						ReadOnlySpan<T> val = values.Slice((int)(offset / pack), (int)(getLength / pack));
+						this.FromManaged(temp, val);
+						offset += getLength;
+						count -= getLength;
+					}
 				}
 			}
-			return Math.Min(destination.Length, values.Count);
+			return Math.Min(destination.Length, values.Length);
 		}
 
 		/// <summary>
@@ -1154,7 +1172,7 @@ namespace Althea.Storage
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="source"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="destination">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
@@ -1163,7 +1181,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public virtual void ToManaged2D<T>(Storage<T> source, long leadDim, long height, long width, ArraySegment<T> destination, long destinationLeadDim = 0) where T : unmanaged
+		public virtual void ToManaged2D<T>(Storage<T> source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -1177,7 +1195,7 @@ namespace Althea.Storage
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > source.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(source));
-			if (leadDim * width > destination.Count)
+			if (leadDim * width > destination.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
 			// shortcut
 			if (source.Count == 1)
@@ -1205,7 +1223,7 @@ namespace Althea.Storage
 		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
-		/// <param name="values">The managed <see cref="ArraySegment{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
@@ -1214,7 +1232,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public virtual void FromManaged2D<T>(Storage<T> destination, long leadDim, long height, long width, ArraySegment<T> values, long valuesLeadDim = 0) where T : unmanaged
+		public virtual void FromManaged2D<T>(Storage<T> destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
 		{
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
@@ -1228,7 +1246,7 @@ namespace Althea.Storage
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > destination.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
-			if (leadDim * width > values.Count)
+			if (leadDim * width > values.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(values));
 			// shortcut
 			if (destination.Count == 1)

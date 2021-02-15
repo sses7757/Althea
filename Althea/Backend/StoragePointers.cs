@@ -288,20 +288,20 @@ namespace Althea.Backend.Storage
 			if (memory.Pointer is not IMemoryPointer mp)
 				throw new NotSupportedException(Support.Location);
 			// other checks in FromManged
-			this.FromManged(mp.AsSpan<byte>(memory));
+			this.FromManged<byte>(mp.AsSpan<byte>(memory));
 		}
 
 		/// <summary>
 		/// Read data from the given <paramref name="managed"/> memory as a<see cref="Span{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
 		/// </summary>
-		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to read from</param>
+		/// <param name="managed">The managed memory as a <see cref="ReadOnlySpan{T}"/> to read from</param>
 		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
-		public override void FromManged<T>(Span<T> managed)
+		public override void FromManged<T>(ReadOnlySpan<T> managed)
 		{
 			////if (!this.CanTransferWithManaged)
 			////	throw new NotSupportedException(Support.Location);
@@ -650,20 +650,20 @@ namespace Althea.Backend.Storage
 			if (memory.Pointer is not IMemoryPointer mp)
 				throw new NotSupportedException(Support.Location);
 			// other checks in FromManged
-			this.FromManged(mp.AsSpan<byte>(memory));
+			this.FromManged<byte>(mp.AsSpan<byte>(memory));
 		}
 
 		/// <summary>
-		/// Read data from the given <paramref name="managed"/> memory as a<see cref="Span{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
+		/// Read data from the given <paramref name="managed"/> memory as a<see cref="ReadOnlySpan{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
 		/// </summary>
-		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to read from</param>
+		/// <param name="managed">The managed memory as a <see cref="ReadOnlySpan{T}"/> to read from</param>
 		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
-		public override void FromManged<T>(Span<T> managed)
+		public override void FromManged<T>(ReadOnlySpan<T> managed)
 		{
 			////if (!this.CanTransferWithManaged)
 			////	throw new NotSupportedException(Support.Location);

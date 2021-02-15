@@ -2,30 +2,22 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-using Althea.General;
 using Althea.Linq;
-using Althea.Storage;
-using RT = Althea.Runtime.API;
-using BLAS = Althea.Blas.API;
-using SPARSE = Althea.SparseBlas.API;
 
 
 namespace Althea.Arrays
 {
 
 	/// <summary>
-	/// The sparse vector class that inherit the <see cref="VectorBase{T}"/> and implements <see cref="ISparseArray{T}"/>.
+	/// The abstract sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value storage.
 	/// </summary>
-	/// <remarks>The indices array are platform specific, <see cref="long"/> for 64-bit system and <see cref="int"/> otherwise.</remarks>
-	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public abstract class SparseVector<T> : VectorBase<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="TIndex">Any integer-typed unmanaged struct as the index type</typeparam>
+	public abstract class SparseVector<T, TIndex> : VectorBase<T>, ISparseArray<T, TIndex>
+		where T : unmanaged, IFormattable, IEquatable<T>
+		where TIndex : unmanaged
 	{
 		#region sparse vector special
-		/// <summary>
-		/// The last index of the sparse vector is its <see cref="IndexPointer"/>'s last value. Override <see cref="VectorBase{T}.LastIndex"/>.
-		/// </summary>
-		public override long LastIndex => RT.CopyOut(this.IndexPointer, offset: this.NonZero - 1);
-
 		/// <summary>
 		/// Number of nonzero values of this sparse vector, equal to the array size of <see cref="IndexPointer"/> and <see cref="ValueArray{T}.Storage"/>, from <see cref="ISparseArray{T}.NonZero"/>.
 		/// </summary>

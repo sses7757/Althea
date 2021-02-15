@@ -20,21 +20,6 @@ namespace Althea.Helpers
 			}
 		}
 
-		internal static T ApplyToClone<T>(this T value, Action<T> action) where T : IDisposable, ICloneable
-		{
-			var clone = (T)value.Clone();
-			try
-			{
-				action.Invoke(clone);
-				return clone;
-			}
-			catch (System.Exception)
-			{
-				clone?.Dispose();
-				throw;
-			}
-		}
-
 		// TODO: move to native codes?
 		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
 										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);
@@ -456,14 +441,15 @@ namespace Althea.Helpers
 			bool neg = normal.StartsWith('-'), zero = input.IsZero();
 			if (neg && zero)
 				normal = normal[1..];
-			normal = normal.PadLeft(precision + 2);
-			if (normal.Length > precision + 2)
+			int totalLength = precision + 2;
+			normal = normal.PadLeft(totalLength);
+			if (normal.Length > totalLength)
 			{
 				int newPre = 2 * precision - normal.Length + 2;
 				normal = input.ToString("G" + newPre, formatProvider);
-				while (normal.Length > precision + 2)
+				while (normal.Length > totalLength)
 					normal = input.ToString("G" + (--newPre), formatProvider);
-				normal = normal.PadLeft(precision + 2);
+				normal = normal.PadLeft(totalLength);
 			}
 			return normal;
 		}
@@ -513,7 +499,6 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static string GetFormatString(ref int precision)
 		{
-			// TODO: edit way of settings
 			precision = precision <= 0 ? Settings.PrintPrecision : precision;
 			return "G" + precision;
 		}
@@ -522,60 +507,86 @@ namespace Althea.Helpers
 		/// Print out 1D array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
-		/// <param name="input">array to print</param>
-		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
-		/// <returns>string representation</returns>
-		public static string ToVectorString<T>(this T[] input, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		/// <param name="input">The dense vector to print</param>
+		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+		/// <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToVectorString<T>(this Span<T> input, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
+			if (input.IsEmpty)
+				return string.Empty;
 			string format = GetFormatString(ref precision);
-			var toStringFunc = GetDelegateOfGetNumberString<T>();
-			return string.Join(Environment.NewLine, input.Select(a => toStringFunc(a, format, precision)));
+			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < input.Length; i++)
+			{
+				sb.AppendLine(toStringFunc.Invoke(input[i], format, precision));
+			}
+			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
 		}
 
 		/// <summary>
 		/// Print out 1D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
-		/// <param name="input">values of the vector to print</param>
-		/// <param name="ind">indices of the values</param>
-		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
-		/// <returns>string representation</returns>
-		public static string ToSparseVectorString<T>(this T[] input, int[] ind, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		/// <param name="values">The values of the sparse vector to print</param>
+		/// <param name="indices">The indices of the sparse vector to print</param>
+		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+		/// <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToSparseVectorString<T>(this Span<T> values, Span<int> indices, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
+			if (values.Length != indices.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+			if (values.IsEmpty)
+				return string.Empty;
+
 			string format = GetFormatString(ref precision);
-			var toStringFunc = GetDelegateOfGetNumberString<T>();
-			string func(int i, T a) => string.Format("{0} -> {1}", i, toStringFunc(a, format, precision));
-			return string.Join(Environment.NewLine, ind.Zip(input, func));
+			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < values.Length; i++)
+			{
+				sb.AppendLine($"{indices[i]} -> {toStringFunc.Invoke(values[i], format, precision)}");
+			}
+			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
 		}
 
 		/// <summary>
 		/// Print out 2D array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
-		/// <param name="arr">array to print</param>
-		/// <param name="hasMore">if the row is complete or not</param>
-		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
-		/// <returns>string representation</returns>
-		public static string ToMatrixString<T>(this T[,] arr, bool hasMore, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		/// <param name="matrix">The column-major values of the dense matrix to print</param>
+		/// <param name="rows">The number of rows of the given matrix</param>
+		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+		/// <param name="hasMore">Whether each row of <paramref name="matrix"/> is complete or not</param>
+		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToMatrixString<T>(this Span<T> matrix, int rows, bool hasMore, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
-			if (arr is null)
-				throw new ArgumentNullException(nameof(arr));
+			if (matrix.IsEmpty)
+				return string.Empty;
+			if (rows <= 0)
+				throw new ArgumentOutOfRangeException(nameof(rows), Parameter.MustPositive);
+			if (matrix.Length % rows != 0)
+				throw new ArgumentException(Other.CannotDivide);
 
+			int cols = matrix.Length / rows;
 			string format = GetFormatString(ref precision);
-			var toStringFunc = GetDelegateOfGetNumberString<T>();
+			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
 			StringBuilder sb = new StringBuilder();
-			var (rows, cols) = arr.GetRowColumns();
-			for (long i = 0; i < rows; i++)
+			for (int i = 0; i < rows; i++)
 			{
-				string line = "";
-				for (long j = 0; j < cols; j++)
+				StringBuilder line = new StringBuilder();
+				for (int j = 0; j < cols; j++)
 				{
-					line += toStringFunc(arr[i, j], format, precision);
-					line += "  ";
+					line.Append(toStringFunc.Invoke(matrix[i + j * rows], format, precision)).Append("  ");
 				}
 				if (hasMore)
-					line += "...";
-				sb.AppendLine(line.TrimEnd());
+					line.Append("...");
+				sb.AppendLine(line.ToString());
 			}
 			return sb.ToString();
 		}
@@ -584,46 +595,79 @@ namespace Althea.Helpers
 		/// Print out 2D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
-		/// <param name="input">values of the vector to print</param>
-		/// <param name="indx">row indices of the values</param>
-		/// <param name="indy">column indices of the values</param>
-		/// <param name="precision">if precision &lt;= 0, the global setting is used</param>
-		/// <returns>string representation</returns>
-		public static string ToSparseMatrixString<T>(this T[] input, int[] indx, int[] indy, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		/// <param name="values">The values of the sparse matrix to print</param>
+		/// <param name="indx">The row indices of the sparse matrix to print</param>
+		/// <param name="indy">The column indices of the sparse matrix to print</param>
+		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+		/// <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToSparseMatrixString<T>(this Span<T> values, Span<int> indx, Span<int> indy, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
-			if (input is null)
-				throw new ArgumentNullException(nameof(input));
-			if (indx is null)
-				throw new ArgumentNullException(nameof(indx));
-			if (indy is null)
-				throw new ArgumentNullException(nameof(indy));
+			if (values.Length != indx.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+			if (values.Length != indy.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+			if (values.IsEmpty)
+				return string.Empty;
 
 			string format = GetFormatString(ref precision);
-			var toStringFunc = GetDelegateOfGetNumberString<T>();
-			string func(int ix, int iy, T val) => string.Format("({0}, {1}) -> {2}", ix, iy, toStringFunc(val, format, precision));
-			return string.Join(Environment.NewLine, indx.Zip(indy, input, func));
+			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < values.Length; i++)
+			{
+				sb.AppendLine($"({indx[i]}, {indy[i]}) -> {toStringFunc.Invoke(values[i], format, precision)}");
+			}
+			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
 		}
 		#endregion
 
 		#region clone related
 		/// <summary>
-		/// Safely apply <paramref name="action"/> to the cloned <paramref name="array"/> -- when <paramref name="action"/> throws error, the new copied array will be safely disposed.
+		/// Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
 		/// </summary>
 		/// <typeparam name="T">The array that is <see cref="ICloneable"/> and <see cref="IDisposable"/></typeparam>
 		/// <param name="array">The array to be acted by <paramref name="action"/></param>
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
-		/// <returns>the cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
-		public static T ApplyToClone<T>(this T array, Action<T> action) where T : ICloneable<T>, IDisposable
+		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
+		public static T ApplyToClone<T>(this T array, Action<T> action) where T : IDisposable, ICloneable
 		{
-			var copy = array.Clone();
+			var clone = array.Clone();
 			try
 			{
-				action(copy);
-				return copy;
+				var t = (T)clone;
+				action.Invoke(t);
+				return t;
 			}
-			catch (Exception)
+			catch (System.Exception)
 			{
-				copy?.Dispose();
+				(clone as IDisposable)?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Safely apply <paramref name="action"/> to a new array alike <paramref name="array"/>. When <paramref name="action"/> throws error, the new array will be safely disposed.
+		/// </summary>
+		/// <typeparam name="TArr">The array that is <see cref="Arrays.ValueArray{T}"/></typeparam>
+		/// <typeparam name="T">The data type used by <typeparamref name="TArr"/></typeparam>
+		/// <param name="array">The array to be acted by <paramref name="action"/></param>
+		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
+		/// <returns>The new array alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+		internal static TArr ApplyToAlike<TArr, T>(this TArr array, Action<TArr> action)
+			where TArr : Arrays.ValueArray<T>
+			where T : unmanaged, IFormattable, IEquatable<T>
+		{
+			var clone = array.NewArrayAlike();
+			try
+			{
+				var t = (TArr)clone;
+				action.Invoke(t);
+				return t;
+			}
+			catch (System.Exception)
+			{
+				clone?.Dispose();
 				throw;
 			}
 		}

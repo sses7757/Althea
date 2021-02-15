@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
+using Althea.Helpers;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
@@ -307,14 +308,14 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, read data from the given <paramref name="managed"/> memory as a<see cref="Span{T}"/> and write them to this <see cref="Stream"/> started from <see cref="Position"/>.
 		/// </summary>
-		/// <param name="managed">The managed memory as a <see cref="Span{T}"/> to read from</param>
+		/// <param name="managed">The managed memory as a <see cref="ReadOnlySpan{T}"/> to read from</param>
 		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
-		public abstract void FromManged<T>(Span<T> managed) where T : unmanaged;
+		public abstract void FromManged<T>(ReadOnlySpan<T> managed) where T : unmanaged;
 		#endregion
 
 		#region default implementation
@@ -348,12 +349,13 @@ namespace Althea.Storage
 			if (this.CanTransferWithManaged)
 			{
 				int len = checked((int)length);
-				T[] buffer = new T[Math.Min(bufferSize, len)];
-				Array.Fill(buffer, value);
+				int bufferLength = Math.Min(bufferSize, len);
+				Span<T> buffer = bufferLength <= Settings.StackAllocLimit ? stackalloc T[bufferLength] : new T[bufferLength];
+				buffer.Fill(value);
 				while (len > 0)
 				{
-					var span = buffer.AsSpan(0, Math.Min(len, buffer.Length));
-					this.FromManged(span);
+					var span = buffer.Slice(0, Math.Min(len, buffer.Length));
+					this.FromManged<T>(span);
 					len -= span.Length;
 				}
 			}
@@ -426,7 +428,7 @@ namespace Althea.Storage
 				{
 					var span = buffer.AsSpan(0, Math.Min(len, buffer.Length));
 					this.ToManged(span);
-					other.FromManged(span);
+					other.FromManged<byte>(span);
 					len -= span.Length;
 				}
 			}
@@ -1508,7 +1510,7 @@ namespace Althea.Storage
 		/// <param name="lengths">The given <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> indicating the length in <typeparamref name="T"/> of each location</param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <remarks>Independent checks for parameters are not necessary</remarks>
-		public delegate Storage<T> CreateDelegate(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
+		public delegate ActualStorage<T> CreateDelegate(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
 
 		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new Dictionary<CombinationType, CreateDelegate>
 		{
@@ -1516,7 +1518,7 @@ namespace Althea.Storage
 			[CombinationType.Cached] = DefaultCreateCached,
 		};
 
-		private static Storage<T> DefaultCreatePureOrMixed(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		private static ActualStorage<T> DefaultCreatePureOrMixed(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (locations.Length == 1)
 				return new PureStorage<T>(locations[0], lengths[0]);
@@ -1524,7 +1526,7 @@ namespace Althea.Storage
 				return new MixedStorage<T>(locations, lengths);
 		}
 
-		private static Storage<T> DefaultCreateCached(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		private static ActualStorage<T> DefaultCreateCached(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (locations.Length == 2 &&
 				locations[0].Type.GetClassification() == LocationTypeExtension.ClassMemory &&
@@ -1635,7 +1637,7 @@ namespace Althea.Storage
 		/// (the type with static method like <see cref="PureStorage{T}.IsSupported"/> and constructor using <paramref name="locations"/> and <paramref name="lengths"/>)<br/>
 		/// which can be <b>really</b> slow. Therefore, try to use <see cref="SetCreateMethod"/> before calling this method if possible.</remarks>
 		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/>, and it cannot be obtained from the public constructors of other assemblies</exception>
-		public static Storage<T> Create(CombinationType type, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static ActualStorage<T> Create(CombinationType type, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (!cache_create.ContainsKey(type))
 				throw new InvalidOperationException();
@@ -1653,7 +1655,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
 		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
-		public static Storage<T> CreateAlike(Storage<T> storage)
+		public static ActualStorage<T> CreateAlike(Storage<T> storage)
 		{
 			int sizeT = Storage<T>.SizeOfT;
 			var descr = storage.LocationDescription;
@@ -1667,9 +1669,31 @@ namespace Althea.Storage
 				long lengthInBytes = bytesLeft + storage.GetActualPointerAt(i).LengthInBytes;
 				lengths[i] = lengthInBytes / sizeT;
 				bytesLeft = lengthInBytes - lengths[i];
-				lengths[i] *= sizeT;
 			}
 			return Create(type, locations, lengths);
+		}
+
+		/// <summary>
+		/// Allocate and create a new <see cref="Storage{T}"/> alike the given <paramref name="storage"/>
+		/// </summary>
+		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
+		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
+		public static ActualStorage<TOut> CreateAlike<TOut>(Storage<T> storage) where TOut : unmanaged
+		{
+			int sizeT = Storage<T>.SizeOfT, sizeTOut = Storage<TOut>.SizeOfT;
+			var descr = storage.LocationDescription;
+			CombinationType type = descr.Type;
+			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
+			descr.CopyLocationsToSpan(locations);
+			Span<long> lengths = stackalloc long[descr.Count];
+			long bytesLeft = 0;
+			for (int i = 0; i < descr.Count; i++)
+			{
+				long lengthInBytes = bytesLeft + storage.GetActualPointerAt(i).LengthInBytes;
+				lengths[i] = lengthInBytes / sizeTOut;
+				bytesLeft = lengthInBytes - lengths[i];
+			}
+			return StorageFactory<TOut>.Create(type, locations, lengths);
 		}
 		#endregion
 	}

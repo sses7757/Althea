@@ -84,7 +84,7 @@ namespace Althea.NativeTypes
 		private readonly double low;
 		private readonly float high;
 
-		DataTypeClassification ICustomNativeType<CustomTypeTest>.Classification_Internal() => DataTypeClassification.FloatPoint;
+		DataTypeClassification ICustomNativeType<CustomTypeTest>.Classification_Internal() => DataTypeClassification.FloatPoint_IEEE754;
 		bool ICustomNativeType<CustomTypeTest>.TryParse_Internal(string str, out CustomTypeTest result) => throw new NotImplementedException();
 
 		public bool Equals(CustomTypeTest other) => this.low == other.low && this.high == other.high;
@@ -267,23 +267,23 @@ namespace Althea.NativeTypes
 		/// <returns>The absolute value of <paramref name="a"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericAbsolute<T>(this T a) where T : unmanaged
+		public static double GenericAbsolute<T>(this T a) where T : unmanaged
 		{
-			T? result = a switch
+			double? result = a switch
 			{
 				sbyte or short or int or long => Math.Abs((dynamic)a),
 				byte or ushort or uint or ulong => a,
 				float or double or decimal => Math.Abs((dynamic)a),
-				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Abs(),
-				Complex<short> a_short => (T)(dynamic)a_short.Abs(),
-				Complex<int> a_int => (T)(dynamic)a_int.Abs(),
-				Complex<long> a_long => (T)(dynamic)a_long.Abs(),
-				Complex<byte> a_byte => (T)(dynamic)a_byte.Abs(),
-				Complex<ushort> a_ushort => (T)(dynamic)a_ushort.Abs(),
-				Complex<uint> a_int => (T)(dynamic)a_int.Abs(),
-				Complex<ulong> a_long => (T)(dynamic)a_long.Abs(),
-				Complex<float> a_float => (T)(dynamic)a_float.Abs(),
-				Complex<double> a_double => (T)(dynamic)a_double.Abs(),
+				Complex<sbyte> a_sbyte => a_sbyte.Abs(),
+				Complex<short> a_short => a_short.Abs(),
+				Complex<int> a_int => a_int.Abs(),
+				Complex<long> a_long => a_long.Abs(),
+				Complex<byte> a_byte => a_byte.Abs(),
+				Complex<ushort> a_ushort => a_ushort.Abs(),
+				Complex<uint> a_int => a_int.Abs(),
+				Complex<ulong> a_long => a_long.Abs(),
+				Complex<float> a_float => a_float.Abs(),
+				Complex<double> a_double => a_double.Abs(),
 				_ => null,
 			};
 			if (result.HasValue)
@@ -293,9 +293,9 @@ namespace Althea.NativeTypes
 			if (!typeof(T).IsSupportedDirect())
 				throw new NotSupportedException(Resources.Support.DataType);
 			if (typeof(T).IsComplexDirect())
-				return (T)((dynamic)a).Abs();
+				return (double)((dynamic)a).Abs();
 			else
-				return a;
+				return (double)(dynamic)a;
 		}
 		#endregion
 
@@ -606,7 +606,7 @@ namespace Althea.NativeTypes
 				return DataTypeClassification.NotSupported;
 			// built-in float types
 			if (type == typeof(double) || type == typeof(float))
-				return DataTypeClassification.FloatPoint;
+				return DataTypeClassification.FloatPoint_IEEE754;
 			// built-in integer types
 			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
 				return DataTypeClassification.SignedInteger;
@@ -614,7 +614,7 @@ namespace Althea.NativeTypes
 				return DataTypeClassification.UnsignedInteger;
 			// complex float types
 			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
-				return DataTypeClassification.FloatPoint;
+				return DataTypeClassification.FloatPoint_IEEE754;
 			// complex integer types
 			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
 				return DataTypeClassification.SignedInteger;
@@ -635,15 +635,15 @@ namespace Althea.NativeTypes
 			return value switch
 			{
 				// built-in float types
-				float or double => DataTypeClassification.FloatPoint,
+				float or double => DataTypeClassification.FloatPoint_IEEE754,
 				// built-in integer types
 				sbyte or short or int or long => DataTypeClassification.SignedInteger,
 				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
 				// built-in complex float types
-				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint,
+				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint_IEEE754,
 				// built-in complex integer types
 				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => DataTypeClassification.SignedInteger,
-				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => DataTypeClassification.FloatPoint,
+				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => DataTypeClassification.FloatPoint_IEEE754,
 				// otherwise
 				_ => GetClassificationDirect(typeof(T)),
 			};

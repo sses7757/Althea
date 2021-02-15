@@ -8,7 +8,6 @@ using Althea.TensorAlgebra; // TensorOrder
 
 namespace Althea.Arrays
 {
-	#region basic
 	/// <summary>
 	/// Simple interface for sparse arrays, inherits <see cref="IReadOnlyList{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
 	/// </summary>
@@ -22,7 +21,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the number of nonzero values of this sparse array.
 		/// </summary>
-		long NonZeros { get; }
+		long NonZero { get; }
 		#endregion
 
 		#region dispose
@@ -33,16 +32,14 @@ namespace Althea.Arrays
 		void DisposeExclude(ISparseArray<T, TIndex> array);
 		#endregion
 	}
-	#endregion
 
-	#region vector
 	/// <summary>
 	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IKrylovVector<TVec, T>
-		where TVec : IKrylovVector<TVec, T> 
+		where TVec : class, IKrylovVector<TVec, T>, new()
 		where T : unmanaged, IEquatable<T>
 	{
 		#region operation
@@ -96,46 +93,12 @@ namespace Althea.Arrays
 		#endregion
 	}
 
-	/// <summary>
-	/// The interface of vector that contains the extra operations of vector whose inputs / outputs are also relevant with matrix.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type</typeparam>
-	/// <typeparam name="TMat">The matrix type</typeparam>
-	public interface IVector<TVec, TMat, T> : IVector<TVec, T>
-		where TVec : class, IVector<TVec, TMat, T>, new()
-		where TMat : class, IMatrix<TMat, T>, new()
-		where T : unmanaged, IEquatable<T>
-	{
-		#region operation
-		/// <summary>
-		/// Compute $\vec{y}_{\text{this}} = \beta \cdot \vec{y}_{\text{this}} + \alpha \cdot A^{\text{op}} \vec{x}$.
-		/// </summary>
-		/// <param name="x">The input <typeparamref name="TVec"/></param>
-		/// <param name="A">The input <typeparamref name="TMat"/></param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="β">scalar of type <typeparamref name="T"/></param>
-		/// <param name="op"><see cref="MatrixOperation"/> applied to <paramref name="A"/></param>
-		void Mulβ_AddBy_αopAx(TMat A, TVec x, T α, T β = default, MatrixOperation op = MatrixOperation.None);
-
-		/// <summary>
-		/// Compute $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^T$ or $M_{\text{result}} = \vec{v}_{\text{this}} \vec{v}_{\text{other}}^H$.
-		/// </summary>
-		/// <param name="other">The other input <typeparamref name="TVec"/></param>
-		/// <param name="conjugateOther">perform non- or conjugate transpose to <paramref name="other"/></param>
-		/// <param name="overwrite">The <typeparamref name="TMat"/> to overwrite as result, default null</param>
-		/// <returns>The result <typeparamref name="TMat"/> or <paramref name="overwrite"/> if it is not null</returns>
-		TMat OuterProduct(TVec other, bool? conjugateOther = null, TMat? overwrite = null);
-		#endregion
-	}
-	#endregion
-
 	#region matrices
 	/// <summary>
 	/// The interface of matrix that contains basic members, methods, operations and indexers whose inputs and outputs are not relevant with matrix.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IMatrix<T> : IMutableArray<T> where T : unmanaged, IEquatable<T>
+	public interface IMatrix<T> where T : unmanaged, IEquatable<T>
 	{
 		#region member
 		/// <summary>
