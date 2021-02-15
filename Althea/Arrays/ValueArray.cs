@@ -25,7 +25,7 @@ namespace Althea.Arrays
 		public Storage<T> Storage { get; }
 
 		/// <summary>
-		/// Get the total actual length of the value array in memory, in <typeparamref name="T"/> rather than bytes
+		/// Get the total actual length of the value array <see cref="Storage"/> in memory, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
 		public virtual long ActualLength => this.Storage.Length;
 
@@ -306,7 +306,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public abstract ValueArray<T> ToTensor(Span<long> size);
+		public abstract ValueArray<T> ToTensor(ReadOnlySpan<long> size);
 
 		/// <summary>
 		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled.

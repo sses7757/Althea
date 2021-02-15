@@ -518,7 +518,7 @@ namespace Althea
 		/// <summary>
 		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/>
 		/// </summary>
-		public StorageLocation Location => this.pointer.Location;
+		public StorageLocation Location => this.pointer?.Location ?? default;
 
 		/// <summary>
 		/// The native pointer (without offset and presenting length) as a <see cref="IPointer"/>
@@ -534,13 +534,6 @@ namespace Althea
 		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment"/>
 		/// </summary>
 		public long LengthInBytes => this.length;
-
-		/// <summary>
-		/// Get the raw pointer structure (without offset) of this <see cref="PointerSegment"/> in <typeparamref name="T"/>
-		/// </summary>
-		/// <typeparam name="T">The raw pointer structure type</typeparam>
-		/// <returns>The raw pointer structure as a <typeparamref name="T"/></returns>
-		public T? GetPointer<T>() where T : struct, IPointer => this.pointer is T t ? t : null;
 
 		/// <summary>
 		/// Create with given pointer
@@ -707,7 +700,7 @@ namespace Althea
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
 	/// </summary>
 	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; implement <see cref="Storage{T}"/> instead.</remarks>
-	public interface IStorage : IReadOnlyList<PointerSegment>, ICheckValid, IDisposable, IMainPropertyFormat
+	public interface IStorage : IReadOnlyList<PointerSegment>, IEquatable<IStorage>, ICheckValid, IDisposable, IMainPropertyFormat
 	{
 		/// <summary>
 		/// The total length of the presenting array in bytes
@@ -843,12 +836,48 @@ namespace Althea
 
 		#region other methods
 		/// <summary>
-		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="Storage{T}"/>. The default implementation assumes that only <see cref="PointerSegment"/>s visible from <see cref="this[int]"/> can be referenced.
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin with the <paramref name="other"/> <see cref="Storage{T}"/>. The default implementation only works when both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="ReferenceStorage{T}"/>.
+		/// </summary>
+		/// <param name="other">The other <see cref="Storage{T}"/> to check overlap</param>
+		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
+		/// <exception cref="NotImplementedException">If either of this and <paramref name="other"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/></exception>
+		public virtual bool SameOriginAs(Storage<T> other)
+		{
+			if (!this.IsValid() || !other.IsValid())
+				return false;
+
+			var originThis = this as ActualStorage<T> ?? (this as ReferenceStorage<T>)?.Reference;
+			var originOther = other as ActualStorage<T> ?? (other as ReferenceStorage<T>)?.Reference;
+			if (originThis is null || originOther is null)
+				throw new NotImplementedException();
+			return originThis.Equals(originOther);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="Storage{T}"/>. The default implementation is direct if both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="ReferenceStorage{T}"/>; otherwise, it assumes that only <see cref="PointerSegment"/>s visible from <see cref="this[int]"/> can be referenced.
 		/// </summary>
 		/// <param name="other">The other <see cref="Storage{T}"/> to check overlap</param>
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		public virtual bool OverlapWith(Storage<T> other)
 		{
+			if (!this.IsValid() || !other.IsValid())
+				return false;
+
+			var actualThis = this as ActualStorage<T>;
+			var actualOther = other as ActualStorage<T>;
+			var referenceThis = this as ReferenceStorage<T>;
+			var referenceOther = other as ReferenceStorage<T>;
+
+			if (actualThis is not null && actualOther is not null)
+				return actualThis.Equals(actualOther);
+			else if (actualThis is not null && referenceOther is not null)
+				return actualThis.Equals(referenceOther.Reference);
+			else if (referenceThis is not null && actualOther is not null)
+				return actualOther.Equals(referenceThis.Reference);
+			else if (referenceThis is not null && referenceOther is not null)
+				return referenceThis.Reference is not null && referenceOther is not null && referenceThis.Reference.Equals(referenceOther.Reference);
+
+			// else
 			for (int i = 0; i < this.Count; i++)
 			{
 				for (int j = 0; j < other.Count; j++)
@@ -1037,6 +1066,8 @@ namespace Althea
 		#endregion
 
 		#region equality
+		bool IEquatable<IStorage>.Equals(IStorage? other) => this.Equals(other as Storage<T>);
+
 		/// <summary>
 		/// Determines whether the specified object is equal to the current object.
 		/// </summary>

@@ -19,6 +19,11 @@ namespace Althea.Arrays
 	{
 		#region property
 		/// <summary>
+		/// When implemented by a derived class, get the value array storage of this sparse array.
+		/// </summary>
+		Storage<T> Storage { get; }
+
+		/// <summary>
 		/// When implemented by a derived class, get the number of nonzero values of this sparse array.
 		/// </summary>
 		long NonZero { get; }

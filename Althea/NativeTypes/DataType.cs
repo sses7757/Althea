@@ -43,21 +43,21 @@ namespace Althea.NativeTypes
 
 		// concrete types
 		/// <summary>
-		/// <see cref="float"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeFloatPoint"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="float"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		RealSingle = Real | DataTypeExtension.TypeFloatPoint | DataTypeExtension.Byte4,
+		RealSingle = Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="double"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeFloatPoint"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="double"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		RealDouble = Real | DataTypeExtension.TypeFloatPoint | DataTypeExtension.Byte8,
+		RealDouble = Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
 		/// <summary>
-		/// <see cref="Complex{Single}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="Complex{Single}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		ComplexSingle = Complex | DataTypeExtension.TypeFloatPoint | DataTypeExtension.Byte4,
+		ComplexSingle = Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="Complex{Double}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="Complex{Double}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		ComplexDouble = Complex | DataTypeExtension.TypeFloatPoint | DataTypeExtension.Byte8,
+		ComplexDouble = Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
 
 		/// <summary>
 		/// <see cref="sbyte"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
@@ -159,7 +159,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// The float base type; cannot be used separately.
 		/// </summary>
-		public const int TypeFloatPoint = (int)DataTypeClassification.FloatPoint << TypeMaskStart;
+		public const int TypeFloatPoint_IEEE754 = (int)DataTypeClassification.FloatPoint_IEEE754 << TypeMaskStart;
 		/// <summary>
 		/// The signed integer base type; cannot be used separately.
 		/// </summary>
@@ -216,7 +216,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a float type.</returns>
-		public static bool IsFloat(this DataType dataType) => ((int)dataType & TypeMask) == (TypeFloatPoint >> TypeMaskStart);
+		public static bool IsFloat(this DataType dataType) => ((int)dataType & TypeMask) == (TypeFloatPoint_IEEE754 >> TypeMaskStart);
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is a signed integer type.
@@ -279,9 +279,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
 		/// </summary>
-		/// <typeparam name="T">The data type to convert</typeparam>
-		/// <param name="value">a instance value of type <typeparamref name="T"/></param>
-		/// <returns>the corresponding <see cref="DataType"/></returns>
+		/// <typeparam name="T">The generic type to get its <see cref="DataType"/></typeparam>
+		/// <param name="value">An instance value of type <typeparamref name="T"/></param>
+		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		public unsafe static DataType ToDataType<T>(this T value) where T : unmanaged
 		{

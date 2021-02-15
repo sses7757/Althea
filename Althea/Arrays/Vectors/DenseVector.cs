@@ -128,14 +128,26 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="leadDim">The leading dimension of target matrix; if <paramref name="leadDim"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public override ValueArray<T> ToMatrix(long leadDim = 0) => throw new NotImplementedException();
+		public override ValueArray<T> ToMatrix(long leadDim = 0)
+		{
+			Span<long> size = stackalloc long[2];
+			size[0] = leadDim;
+			CheckSize(this, size);
+			return new DenseMatrix<T>(this.Storage, size[0], size[1]);
+		}
 
 		/// <summary>
 		/// Reshape the array to a tensor with dimensionality = <paramref name="size"/>.
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override ValueArray<T> ToTensor(Span<long> size) => throw new NotImplementedException();
+		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size)
+		{
+			Span<long> newSize = stackalloc long[size.Length];
+			size.CopyTo(newSize);
+			CheckSize(this, newSize);
+			return new DenseTensor<T>(pointer: this.Storage, newSize);
+		}
 		#endregion
 
 		#region linear algebra methods
@@ -145,7 +157,7 @@ namespace Althea.Arrays
 		/// <param name="other">The other vector to perform the dot product</param>
 		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
 		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public override T Dot(VectorBase<T> other, bool conjugateThis = true)
@@ -157,8 +169,8 @@ namespace Althea.Arrays
 
 			if (other is DenseVector<T>)
 				return LAD.SelectImplementation<T>(this.Storage, other.Storage).Dot(conjugateThis, this.Storage, 1, other.Storage, 1);
-			else if (other is SparseVector<T> sparse)
-				return sparse.Dot(this, conjugateThis).GenericConjugate();
+			else if (other is ISparseVector<T> sparse)
+				return LAS.SelectImplementation(this.Storage, sparse).VectorSparseDotDense(conjugateThis, sparse, this.Storage).GenericConjugate();
 			else
 				throw new NotSupportedException();
 		}
@@ -168,7 +180,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public override void AddByVector(VectorBase<T> other, T scalar)
@@ -180,8 +192,8 @@ namespace Althea.Arrays
 
 			if (other is DenseVector<T>)
 				LAD.SelectImplementation<T>(this.Storage, other.Storage).VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
-			else if (other is SparseVector<T> sparse)
-				LAS.SelectImplementation(this.Storage, other.Storage).VectorSparseAddToDense(scalar, sparse, this.Storage);
+			else if (other is ISparseVector<T> sparse)
+				LAS.SelectImplementation(this.Storage, other).VectorSparseAddToDense(scalar, sparse, this.Storage);
 			else
 				throw new NotSupportedException();
 		}
@@ -194,7 +206,7 @@ namespace Althea.Arrays
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="SparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="SparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
 		public override void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)
@@ -208,6 +220,29 @@ namespace Althea.Arrays
 			if (this.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NRows : matrix.NCols))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
 
+			var dnMat = matrix as DenseMatrix<T>;
+			var spMat = matrix as ISparseMatrix<T>;
+			var dnVec = vector as DenseVector<T>;
+			var spVec = vector as ISparseVector<T>;
+			if (dnMat is not null && dnVec is not null)
+			{
+				LAD.SelectImplementation<T>(this.Storage, dnMat.Storage, dnVec.Storage).GeneralMatrixMultiplyVector(operation, dnMat.NRows, dnMat.NCols, α, dnMat.Storage, dnMat.LeadDim, dnVec.Storage, 1, β, this.Storage, 1);
+			}
+			else if (spMat is not null && dnVec is not null)
+			{
+				LAS.SelectImplementation(this.Storage, dnVec.Storage, spMat).MatrixSparseMultiplyVectorDense(operation, α, spMat, dnVec.Storage, β, this.Storage);
+			}
+			else if (dnMat is not null && spVec is not null)
+			{
+				LAS.SelectImplementation(this.Storage, dnMat.Storage, spVec).MatrixDenseMultiplyVectorSparse(operation, α, dnMat.NRows, dnMat.NCols, dnMat.Storage, spVec, β, this.Storage);
+			}
+			else if (spMat is not null && spVec is not null)
+			{
+				using var dense = vector.ToDense();
+				this.AddByMatrixMultiplyVector(matrix, dense, α, β, operation);
+			}
+			else
+				throw new NotSupportedException();
 		}
 		#endregion
 

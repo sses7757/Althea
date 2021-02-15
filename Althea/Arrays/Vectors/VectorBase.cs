@@ -44,7 +44,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Index"/>]</c> and <c>this[<see cref="Range"/>]</c>
 		/// </summary>
-		public int Count => (int)this.Length;
+		public virtual int Count => (int)this.Length;
 
 		/// <summary>
 		/// When implemented by a derived class, provide the basic indexed getter and setter of this vector
