@@ -30,9 +30,9 @@ namespace Althea.Arrays
 		public virtual long ActualLength => this.Storage.Length;
 
 		/// <summary>
-		/// Check whether this object is a valid one or not
+		/// When implemented by a derived class, check whether this array is a valid one or not. The default implementation only checks <see cref="AbstractArray{T}.Length"/> and <see cref="Storage"/>.
 		/// </summary>
-		/// <returns>The validness of this object</returns>
+		/// <returns>The validness of this array</returns>
 		public virtual bool IsValid() => this.Length > 0 && this.Storage is not null && this.Storage.IsValid();
 		#endregion
 
@@ -98,7 +98,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>.
 		/// </summary>
-		public virtual void Conjugate(T value)
+		public virtual void Conjugate()
 		{
 			LAD.SelectImplementation(this.Storage).PointWiseConjugate(this.Storage, 1);
 		}
@@ -124,8 +124,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
 		/// </summary>
-		/// <param name="threshold">The threshold as a <see cref="float"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
-		public virtual void Truncate(float threshold)
+		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
+		public virtual void Truncate(double threshold)
 		{
 			LAD.SelectImplementation(this.Storage).TruncateArray(this.Storage, threshold);
 		}
@@ -135,7 +135,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="sparseDefault">The default emitted value if this array is a sparse array</param>
 		/// <returns>The aggregate sum of this array</returns>
-		public virtual T Sum(T sparseDefault = default)
+		protected T Sum(T sparseDefault = default)
 		{
 			T sum = LAD.SelectImplementation(this.Storage).AggregateSum(this.Storage, 1);
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
@@ -149,7 +149,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
 		/// <returns>The aggregate sum of absolute values of this array</returns>
-		public virtual double AbsSum(T sparseDefault = default)
+		protected double AbsSum(T sparseDefault = default)
 		{
 			double sum = LAD.SelectImplementation(this.Storage).AbsoluteValueSum(this.Storage, 1);
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
@@ -163,7 +163,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
 		/// <returns>The 2-norm of this array</returns>
-		public virtual double Norm(T sparseDefault = default)
+		protected double Norm(T sparseDefault = default)
 		{
 			double norm = LAD.SelectImplementation(this.Storage).Norm(this.Storage, 1);
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
@@ -185,7 +185,7 @@ namespace Althea.Arrays
 		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
 		/// <exception cref="ArgumentOutOfRangeException">If the default values indicated by <paramref name="sparseDefault"/> alone contribute 2-norm exceeding 1.</exception>
 		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		public virtual void Normalize(T sparseDefault = default)
+		protected void Normalize(T sparseDefault = default)
 		{
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
 			{
@@ -307,46 +307,14 @@ namespace Althea.Arrays
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
 		public abstract ValueArray<T> ToTensor(ReadOnlySpan<long> size);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled.
-		/// </summary>
-		/// <returns>The new array alike this one</returns>
-		public abstract ValueArray<T> NewArrayAlike();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <returns>The new array alike this one</returns>
-		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
-
-		/// <summary>
-		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
-		/// </summary>
-		/// <typeparam name="TOut">The data type to cast to</typeparam>
-		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
-		public override ValueArray<TOut> DataTypeCast<TOut>()
-		{
-			DataType typeT = default(T).ToDataType(), typeOut = default(TOut).ToDataType();
-			if (typeT == typeOut)
-			{
-				var ret = this as ValueArray<TOut>;
-				return ret ?? new DenseVector<TOut>();
-			}
-			var alike = this.NewArrayAlike<TOut>();
-			LAD.SelectImplementation(this.Storage, alike.Storage).PointWiseCast(this.Storage, 1, alike.Storage, 1);
-			return alike;
-		}
 		#endregion
 
 		#region new methods and overrides
 		/// <summary>
-		/// When implemented by a derived class, check if this <see cref="ValueArray{T}"/> share some storage with the <paramref name="other"/> one
+		/// When implemented by a derived class, check if this <see cref="ValueArray{T}"/> share some storage with the <paramref name="other"/> one. The default implementation only compares the <see cref="Storage"/>s.
 		/// </summary>
-		/// <param name="other">The other <see cref="AbstractArray{T}"/> to check</param>
+		/// <param name="other">The other <see cref="ValueArray{T}"/> to check</param>
 		/// <returns>True if they do share some storage, false otherwise</returns>
-		/// <remarks>The default implementation only compares the <see cref="Storage"/>s</remarks>
 		public virtual bool OverlapWith(ValueArray<T> other)
 		{
 			if (other is ValueArray<T> arr)
@@ -438,7 +406,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, get the hash code this array. The default 
+		/// When implemented by a derived class, get the hash code this array. The default implementation only takes <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/> into account.
 		/// </summary>
 		/// <returns>The hash code computed by <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/></returns>
 		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size);
@@ -457,13 +425,54 @@ namespace Althea.Arrays
 		}
 		#endregion
 
-		#region override operators
+		#region clone relate
 		/// <summary>
 		/// When implemented by a derived class, deep clone the array, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned array</returns>
 		public override abstract ValueArray<T> Clone();
 
+		/// <summary>
+		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled.
+		/// </summary>
+		/// <returns>The new array alike this one</returns>
+		public abstract ValueArray<T> NewArrayAlike();
+
+		/// <summary>
+		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <returns>The new array alike this one</returns>
+		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
+
+		/// <summary>
+		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// </summary>
+		/// <typeparam name="TOut">The data type to cast to</typeparam>
+		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
+		public override ValueArray<TOut> DataTypeCast<TOut>()
+		{
+			DataType typeT = default(T).ToDataType(), typeOut = default(TOut).ToDataType();
+			if (typeT == typeOut)
+			{
+				var ret = this as ValueArray<TOut>;
+				return ret ?? new DenseVector<TOut>();
+			}
+			var alike = this.NewArrayAlike<TOut>();
+			try
+			{
+				LAD.SelectImplementation(this.Storage, alike.Storage).PointWiseCast(this.Storage, 1, alike.Storage, 1);
+				return alike;
+			}
+			catch (Exception)
+			{
+				alike?.Dispose();
+				throw;
+			}
+		}
+		#endregion
+
+		#region override operators
 		/// <summary>
 		/// Compare the <see cref="Storage"/> of the given <paramref name="array"/> with a given <paramref name="value"/> to check whether all elements in <paramref name="array"/>'s <see cref="Storage"/> is with in the range of <c><paramref name="value"/> + (-1e-6, +1e-6)</c>.
 		/// </summary>

@@ -183,7 +183,7 @@ namespace Althea.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
-		public override void AddByVector(VectorBase<T> other, T scalar)
+		public void AddByVector(VectorBase<T> other, T scalar)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -199,6 +199,17 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
+		/// When implemented by a derived class, compute the addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
+		/// </summary>
+		/// <param name="other">The other vector to add</param>
+		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
+		public override DenseVector<T> AddVector(VectorBase<T> other, T scalar) => this.ApplyToClone(v => v.AddByVector(other, scalar));
+
+		/// <summary>
 		/// When implemented by a derived class, add the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) to this vector (scaled by <paramref name="β"/>) in-place.
 		/// </summary>
 		/// <param name="matrix">The input matrix to be multiplied</param>
@@ -206,10 +217,11 @@ namespace Althea.Arrays
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
+		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="SparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
-		public override void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)
+		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));
@@ -239,44 +251,57 @@ namespace Althea.Arrays
 			else if (spMat is not null && spVec is not null)
 			{
 				using var dense = vector.ToDense();
-				this.AddByMatrixMultiplyVector(matrix, dense, α, β, operation);
+				this.AddMatrixMultiplyVector(matrix, dense, α, β, operation);
 			}
 			else
 				throw new NotSupportedException();
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).
+		/// </summary>
+		/// <param name="matrix">The input matrix to be multiplied</param>
+		/// <param name="vector">The input vector to be multiplied</param>
+		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
+		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
+		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
+		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
+		public override DenseVector<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the elements in this dense vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/>.
+		/// </summary>
+		/// <returns>The aggregate sum of this sparse vector</returns>
+		public override T Sum() => this.Sum();
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the absolute values of elements in this dense vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/>.
+		/// </summary>
+		/// <returns>The aggregate sum of absolute values of this sparse vector</returns>
+		public override double AbsSum() => this.AbsSum();
+
+		/// <summary>
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this dense vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/>.
+		/// </summary>
+		/// <returns>The 2-norm of this sparse vector</returns>
+		public override double Norm() => this.Norm();
+
+		/// <summary>
+		/// When implemented by a derived class, in-place scale this dense vector such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes <see cref="ValueArray{T}.Normalize(T)"/>.
+		/// </summary>
+		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
+		public override void Normalize() => this.Normalize();
 		#endregion
 
 		#region IKrylovVector
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
-		/// </summary>
-		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		void IKrylovVector<DenseVector<T>, T>.Scale(T value) => this.Scale(value);
 
-		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
-		/// </summary>
-		/// <returns>The 2-norm of this vector</returns>
 		double IKrylovVector<DenseVector<T>, T>.Norm() => this.Norm();
 
-		/// <summary>
-		/// When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
-		/// </summary>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
 		void IKrylovVector<DenseVector<T>, T>.Normalize() => this.Normalize();
 
-		/// <summary>
-		/// When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
-		/// </summary>
-		/// <param name="other">The other dense vector to perform the dot product</param>
-		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
 		T IKrylovVector<DenseVector<T>, T>.Dot(DenseVector<T> other) => this.Dot(other);
 
-		/// <summary>
-		/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
-		/// </summary>
-		/// <param name="other">The other dense vector to add</param>
-		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
 		void IKrylovVector<DenseVector<T>, T>.AddByVector(DenseVector<T> other, T scalar) => this.AddByVector(other, scalar);
 
 		/// <summary>
@@ -336,7 +361,7 @@ namespace Althea.Arrays
 					if (dnvec.Disposed)
 						throw new ObjectDisposedException(nameof(unjoinedVectors));
 					if (!values[i].IsZero())
-						vec.AddByVector(dnvec, values[i]);
+						vec.AddVector(dnvec, values[i]);
 				}
 				return vec;
 			}
@@ -345,6 +370,24 @@ namespace Althea.Arrays
 				vec.Dispose();
 				throw;
 			}
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// When implemented by a derived class, get the hash code this dense vector. The default implementation only takes <see cref="ValueArray{T}.Storage"/>'s hash code.
+		/// </summary>
+		/// <returns>The hash code of <see cref="ValueArray{T}.Storage"/></returns>
+		public override int GetHashCode() => this.Storage.GetHashCode();
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/>.
+		/// </summary>
+		/// <param name="obj">The other object to compare with</param>
+		/// <returns>True if this == <paramref name="obj"/></returns>
+		public override bool Equals(object? obj)
+		{
+			return obj is DenseVector<T> dv && this.Storage == dv.Storage;
 		}
 		#endregion
 

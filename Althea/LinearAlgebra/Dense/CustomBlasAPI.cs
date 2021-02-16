@@ -132,7 +132,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="x">The vector to be truncated</param>
 		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		public abstract void TruncateArray<T>(Storage<T> x, float threshold) where T : unmanaged;
+		public abstract void TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, aggregately sum the elements in vector <paramref name="x"/>.

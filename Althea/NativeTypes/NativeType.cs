@@ -190,61 +190,83 @@ namespace Althea.NativeTypes
 		/// <param name="a">The input number</param>
 		/// <returns>The reciprocal of the <paramref name="a"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericReciprocal<T>(this T a) where T : unmanaged
+		public static T GenericReciprocal<T>(this T a) where T : unmanaged, IEquatable<T>
 		{
+			if (a.IsZero())
+				throw new DivideByZeroException();
+			if (a.IsOne())
+				return a;
 			return (T)(1 / (dynamic)a);
 		}
 
 		/// <summary>
-		/// Generic type number negate.
+		/// Generic type number negation.
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
 		/// <param name="a">The input number</param>
 		/// <returns>The negation of the <paramref name="a"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericNegate<T>(this T a) where T : unmanaged
+		public static T GenericNegate<T>(this T a) where T : unmanaged, IEquatable<T>
 		{
+			if (a.IsZero())
+				return default;
 			return (T)(-(dynamic)a);
 		}
 
 		/// <summary>
-		/// Generic type number add.
+		/// Generic type numbers addition.
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
 		/// <param name="a">The input left number</param>
 		/// <param name="b">The input right number</param>
 		/// <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericAdd<T>(this T a, T b) where T : unmanaged
+		public static T GenericAdd<T>(this T a, T b) where T : unmanaged, IEquatable<T>
 		{
+			if (a.IsZero())
+				return b;
+			if (b.IsZero())
+				return a;
 			return (T)((dynamic)a + b);
 		}
 
 		/// <summary>
-		/// Generic type number conjugate.
+		/// Generic type numbers multiplication.
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input left number</param>
+		/// <param name="b">The input right number</param>
+		/// <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericMultiply<T>(this T a, T b) where T : unmanaged, IEquatable<T>
+		{
+			if (a.IsZero() || b.IsZero())
+				return default;
+			if (a.IsOne())
+				return b;
+			if (b.IsOne())
+				return a;
+			return (T)((dynamic)a * b);
+		}
+
+		/// <summary>
+		/// Generic type number conjugation.
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
 		/// <param name="a">The input number</param>
 		/// <returns>The complex conjugate of <paramref name="a"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericConjugate<T>(this T a) where T : unmanaged
+		public static T GenericConjugate<T>(this T a) where T : unmanaged, IEquatable<T>
 		{
 			T? result = a switch
 			{
 				sbyte or short or int or long => a,
 				byte or ushort or uint or ulong => a,
 				float or double or decimal => a,
-				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Conjugate(),
-				Complex<short> a_short => (T)(dynamic)a_short.Conjugate(),
-				Complex<int> a_int => (T)(dynamic)a_int.Conjugate(),
-				Complex<long> a_long => (T)(dynamic)a_long.Conjugate(),
-				Complex<byte> a_byte => (T)(dynamic)a_byte.Conjugate(),
-				Complex<ushort> a_ushort => (T)(dynamic)a_ushort.Conjugate(),
-				Complex<uint> a_int => (T)(dynamic)a_int.Conjugate(),
-				Complex<ulong> a_long => (T)(dynamic)a_long.Conjugate(),
-				Complex<float> a_float => (T)(dynamic)a_float.Conjugate(),
-				Complex<double> a_double => (T)(dynamic)a_double.Conjugate(),
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Conjugate(),
+				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Conjugate(),
+				Complex<float> or Complex<double> => (T)((dynamic)a).Conjugate(),
 				_ => null,
 			};
 			if (result.HasValue)
@@ -260,6 +282,74 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
+		/// Generic type number power.
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <param name="power">The power as a <see cref="double"/></param>
+		/// <returns>The complex conjugate of <paramref name="a"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericPower<T>(this T a, double power) where T : unmanaged, IEquatable<T>
+		{
+			T? result = a switch
+			{
+				sbyte or short or int or long => Math.Pow((dynamic)a, power),
+				byte or ushort or uint or ulong => Math.Pow((dynamic)a, power),
+				float or double or decimal => Math.Pow((dynamic)a, power),
+				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Pow((sbyte)power),
+				Complex<short> a_short => (T)(dynamic)a_short.Pow((short)power),
+				Complex<int> a_int => (T)(dynamic)a_int.Pow((int)power),
+				Complex<long> a_long => (T)(dynamic)a_long.Pow((long)power),
+				Complex<byte> a_byte => (T)(dynamic)a_byte.Pow((byte)power),
+				Complex<ushort> a_ushort => (T)(dynamic)a_ushort.Pow((ushort)power),
+				Complex<uint> a_int => (T)(dynamic)a_int.Pow((uint)power),
+				Complex<ulong> a_long => (T)(dynamic)a_long.Pow((ulong)power),
+				Complex<float> a_float => (T)(dynamic)a_float.Pow((float)power),
+				Complex<double> a_double => (T)(dynamic)a_double.Pow(power),
+				_ => null,
+			};
+			if (result.HasValue)
+			{
+				return result.Value;
+			}
+			if (!typeof(T).IsSupportedDirect())
+				throw new NotSupportedException(Resources.Support.DataType);
+			return (T)((dynamic)a).Pow((T)(dynamic)power);
+		}
+
+
+		/// <summary>
+		/// Generic type number power.
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <param name="power">The power as a <typeparamref name="T"/></param>
+		/// <returns>The complex conjugate of <paramref name="a"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericPower<T>(this T a, T power) where T : unmanaged, IEquatable<T>
+		{
+			T? result = a switch
+			{
+				sbyte or short or int or long => Math.Pow((dynamic)a, (dynamic)power),
+				byte or ushort or uint or ulong => Math.Pow((dynamic)a, (dynamic)power),
+				float or double or decimal => Math.Pow((dynamic)a, (dynamic)power),
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Pow(power),
+				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Pow(power),
+				Complex<float> or Complex<double> => (T)((dynamic)a).Pow(power),
+				_ => null,
+			};
+			if (result.HasValue)
+			{
+				return result.Value;
+			}
+			if (!typeof(T).IsSupportedDirect())
+				throw new NotSupportedException(Resources.Support.DataType);
+			return (T)((dynamic)a).Pow(power);
+		}
+
+		/// <summary>
 		/// Generic type number absolute value.
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
@@ -267,7 +357,7 @@ namespace Althea.NativeTypes
 		/// <returns>The absolute value of <paramref name="a"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double GenericAbsolute<T>(this T a) where T : unmanaged
+		public static double GenericAbsolute<T>(this T a) where T : unmanaged, IEquatable<T>
 		{
 			double? result = a switch
 			{

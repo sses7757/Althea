@@ -44,7 +44,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Index"/>]</c> and <c>this[<see cref="Range"/>]</c>
 		/// </summary>
-		public virtual int Count => (int)this.Length;
+		public int Count => (int)this.Length;
 
 		/// <summary>
 		/// When implemented by a derived class, provide the basic indexed getter and setter of this vector
@@ -75,7 +75,6 @@ namespace Althea.Arrays
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			var a = this[5..^5];
 			for (long i = 0; i < this.Length; i++)
 			{
 				yield return this[i];
@@ -95,21 +94,48 @@ namespace Althea.Arrays
 		public abstract T Dot(VectorBase<T> other, bool conjugateThis = true);
 
 		/// <summary>
-		/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
+		/// When implemented by a derived class, compute the addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		public abstract void AddByVector(VectorBase<T> other, T scalar);
+		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
+		public abstract VectorBase<T> AddVector(VectorBase<T> other, T scalar);
 
 		/// <summary>
-		/// When implemented by a derived class, add the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) to this vector (scaled by <paramref name="β"/>) in-place.
+		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).
 		/// </summary>
 		/// <param name="matrix">The input matrix to be multiplied</param>
 		/// <param name="vector">The input vector to be multiplied</param>
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
-		public abstract void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None);
+		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
+		public abstract VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None);
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the elements in this vector.
+		/// </summary>
+		/// <returns>The aggregate sum of this sparse vector</returns>
+		public abstract T Sum();
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the absolute values of elements in this vector.
+		/// </summary>
+		/// <returns>The aggregate sum of absolute values of this sparse vector</returns>
+		public abstract double AbsSum();
+
+		/// <summary>
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
+		/// </summary>
+		/// <returns>The 2-norm of this sparse vector</returns>
+		public abstract double Norm();
+
+		/// <summary>
+		/// When implemented by a derived class, in-place scale this sparse vector such that its 2-norm (Euclidean norm) is 1.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">If the default values alone contribute 2-norm exceeding 1.</exception>
+		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
+		public abstract void Normalize();
 		#endregion
 
 		#region operators
@@ -128,6 +154,22 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
+		/// Compute the dot (inner) product result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
+		/// </summary>
+		/// <param name="left">One original vector as the left operand</param>
+		/// <param name="right">One original vector as the right operand</param>
+		/// <returns>A <typeparamref name="T"/> which is the dot (inner) product result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
+		public static T operator *(VectorBase<T> left, VectorBase<T> right)
+		{
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
+
+			return left.Dot(right);
+		}
+
+		/// <summary>
 		/// Create a new <see cref="VectorBase{T}"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
 		/// </summary>
 		/// <param name="left">One original vector as the left operand</param>
@@ -140,7 +182,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.ApplyToClone(l => l.AddByVector(right, Scalars<T>.One));
+			return left.AddVector(right, Scalars<T>.One);
 		}
 
 		/// <summary>
@@ -156,7 +198,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.ApplyToClone(l => l.AddByVector(right, Scalars<T>.MinusOne));
+			return left.AddVector(right, Scalars<T>.MinusOne);
 		}
 
 		/// <summary>
@@ -209,7 +251,7 @@ namespace Althea.Arrays
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
 
-			return vector.ApplyToAlike<VectorBase<T>, T>(v => v.AddByMatrixMultiplyVector(matrix, vector, Scalars<T>.One));
+			return vector.AddMatrixMultiplyVector(matrix, vector, Scalars<T>.One);
 		}
 
 		/// <summary>
@@ -225,7 +267,7 @@ namespace Althea.Arrays
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
 
-			return vector.ApplyToAlike<VectorBase<T>, T>(v => v.AddByMatrixMultiplyVector(matrix, vector, Scalars<T>.One, operation: LinearAlgebra.MatrixOperation.Transpose));
+			return vector.AddMatrixMultiplyVector(matrix, vector, Scalars<T>.One, operation: LinearAlgebra.MatrixOperation.Transpose);
 		}
 		#endregion
 	}
