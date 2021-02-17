@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using Althea.Helpers;
+using Althea.Arrays;
 using Althea.NativeTypes;
 
 using MEM = Althea.Storage.AbstractApi;
@@ -9,7 +10,7 @@ using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
 
 
-namespace Althea.Arrays
+namespace Althea.Backend.Arrays
 {
 	/// <summary>
 	/// The concrete dense vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage.
@@ -118,12 +119,6 @@ namespace Althea.Arrays
 
 		#region conversion methods
 		/// <summary>
-		/// Convert this vector to a <see cref="DenseVector{T}"/>.
-		/// </summary>
-		/// <returns>This vector</returns>
-		public override DenseVector<T> ToDense() => this;
-
-		/// <summary>
 		/// Reshape the vector to a matrix with leading dimension = <paramref name="leadDim"/>
 		/// </summary>
 		/// <param name="leadDim">The leading dimension of target matrix; if <paramref name="leadDim"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
@@ -157,7 +152,7 @@ namespace Althea.Arrays
 		/// <param name="other">The other vector to perform the dot product</param>
 		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
 		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public override T Dot(VectorBase<T> other, bool conjugateThis = true)
@@ -180,7 +175,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public void AddByVector(VectorBase<T> other, T scalar)
@@ -193,7 +188,7 @@ namespace Althea.Arrays
 			if (other is DenseVector<T>)
 				LAD.SelectImplementation<T>(this.Storage, other.Storage).VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
 			else if (other is ISparseVector<T> sparse)
-				LAS.SelectImplementation(this.Storage, other).VectorSparseAddToDense(scalar, sparse, this.Storage);
+				LAS.SelectImplementation(this.Storage, sparse).VectorSparseAddToDense(scalar, sparse, this.Storage);
 			else
 				throw new NotSupportedException();
 		}
@@ -204,7 +199,7 @@ namespace Althea.Arrays
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
 		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public override DenseVector<T> AddVector(VectorBase<T> other, T scalar) => this.ApplyToClone(v => v.AddByVector(other, scalar));
@@ -218,7 +213,7 @@ namespace Althea.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="SparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="SparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
 		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)
@@ -338,8 +333,8 @@ namespace Althea.Arrays
 
 			// sort first to reduce errors
 			int length = input.Length;
-			Span<T> values = length * Storage<T>.SizeOfT <= Settings.StackAllocLimit ? stackalloc T[length] : new T[length];
-			Span<double> keys = length * Storage<T>.SizeOfT <= Settings.StackAllocLimit ? stackalloc double[length] : new double[length];
+			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
+			Span<double> keys = length.CheckStockLimit<double>() ?? stackalloc double[length];
 			for (int i = 0; i < length; i++)
 			{
 				values[i] = input[i];
@@ -361,7 +356,7 @@ namespace Althea.Arrays
 					if (dnvec.Disposed)
 						throw new ObjectDisposedException(nameof(unjoinedVectors));
 					if (!values[i].IsZero())
-						vec.AddVector(dnvec, values[i]);
+						vec.AddByVector(dnvec, values[i]);
 				}
 				return vec;
 			}
@@ -406,9 +401,11 @@ namespace Althea.Arrays
 			var settings = overrideSetting ?? Settings.PrintSetting;
 
 			string detail = ":" + Environment.NewLine;
+			// get managed array
 			int length = (int)Math.Min(settings.ArrayLength, this.Length);
-			Span<T> managed = length * Storage<T>.SizeOfT <= Settings.StackAllocLimit ? stackalloc T[length] : new T[length];
+			Span<T> managed = length.CheckStockLimit<T>() ?? stackalloc T[length];
 			MEM.SelectImplementation(this.Storage).ToManaged(this.Storage, managed);
+			// to dense vector string
 			detail += managed.ToVectorString(precision: settings.Precision);
 			if (this.Length > managed.Length)
 				detail += Environment.NewLine + $"...{this.Length - managed.Length} more elements";

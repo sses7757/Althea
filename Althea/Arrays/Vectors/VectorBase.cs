@@ -32,14 +32,6 @@ namespace Althea.Arrays
 		public override ValueArray<T> ToVector() => this;
 		#endregion
 
-		#region converter
-		/// <summary>
-		/// When implemented by a derived class, convert this vector to a <see cref="DenseVector{T}"/>.
-		/// </summary>
-		/// <returns>The new converted dense vector, or this array if this array is a <see cref="DenseVector{T}"/></returns>
-		public abstract DenseVector<T> ToDense();
-		#endregion
-
 		#region indexing
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Index"/>]</c> and <c>this[<see cref="Range"/>]</c>

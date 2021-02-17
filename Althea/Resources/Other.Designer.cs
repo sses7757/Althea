@@ -124,6 +124,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given sparse array has different sparsity from this one, hence, this in-place operation cannot be executed. 的本地化字符串。
+        /// </summary>
+        internal static string DifferentSparsity {
+            get {
+                return ResourceManager.GetString("DifferentSparsity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 An error happened: 的本地化字符串。
         /// </summary>
         internal static string ErrorOccur {

@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using Althea.Linq;
 using Althea.Helpers;
 using Althea.Resources;
+using Althea.NativeTypes;
 
 using MEM = Althea.Storage.AbstractApi;
 
@@ -536,6 +537,8 @@ namespace Althea.Storage
 				throw new ArgumentNullException(nameof(lengths));
 			if (locations.Length != lengths.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
+			if (lengths.Length == 1 && lengths[0] == 0)
+				return; // empty
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
 
@@ -780,7 +783,7 @@ namespace Althea.Storage
 		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
 		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[1].SetValue(location), stackalloc long[1].SetValue(length))
 		{
-			this.pointer = Allocate(location, length);
+			this.pointer = length == 0 ? default : Allocate(location, length);
 		}
 		#endregion
 
@@ -1680,6 +1683,10 @@ namespace Althea.Storage
 		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
 		public static ActualStorage<TOut> CreateAlike<TOut>(Storage<T> storage) where TOut : unmanaged
 		{
+			// shortcut
+			if (typeof(T) == typeof(TOut))
+				return CreateAlike(storage) as ActualStorage<TOut> ?? ActualStorage<TOut>.Empty; // never empty
+			// otherwise
 			int sizeT = Storage<T>.SizeOfT, sizeTOut = Storage<TOut>.SizeOfT;
 			var descr = storage.LocationDescription;
 			CombinationType type = descr.Type;

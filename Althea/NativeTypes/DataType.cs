@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 
 namespace Althea.NativeTypes
@@ -283,7 +284,8 @@ namespace Althea.NativeTypes
 		/// <param name="value">An instance value of type <typeparamref name="T"/></param>
 		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		public unsafe static DataType ToDataType<T>(this T value) where T : unmanaged
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DataType ToDataType<T>(this T value) where T : unmanaged
 		{
 			return value switch
 			{
@@ -312,7 +314,7 @@ namespace Althea.NativeTypes
 				Complex<ulong> _ => DataType.ComplexUInt64,
 				// otherwise
 				_ => !typeof(T).IsSupportedDirect() ? throw new NotSupportedException(Resources.Support.DataType)
-						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), sizeof(T)),
+						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), Storage<T>.SizeOfT),
 			};
 		}
 
@@ -321,6 +323,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <typeparam name="T">The data type to convert</typeparam>
 		/// <returns>the corresponding <see cref="DataType"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();
 	}
 	#endregion

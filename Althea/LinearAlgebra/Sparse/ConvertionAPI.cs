@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Althea.Arrays;
+
 
 namespace Althea.LinearAlgebra.Sparse
 {
@@ -10,27 +12,27 @@ namespace Althea.LinearAlgebra.Sparse
 	{
 		#region delegate
 		/// <summary>
-		/// Encapsulates a method that receive the total <paramref name="length"/> in <typeparamref name="T"/> as the parameter and return an <b>allocated</b> new <see cref="SparseVectorWrapper{T}"/> of the given length (non-zeros).
+		/// Encapsulates a method that receive the total <paramref name="length"/> in <typeparamref name="T"/> as the parameter and return an <b>allocated</b> new <see cref="ISparseVector{T}"/> of the given length (non-zeros).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="length">The desired total length in <typeparamref name="T"/></param>
-		/// <returns>An <b>allocated</b> new <see cref="SparseVectorWrapper{T}"/> of <paramref name="length"/></returns>
+		/// <returns>An <b>allocated</b> new <see cref="ISparseVector{T}"/> of <paramref name="length"/></returns>
 		/// <remarks>
 		/// This delegate is usually used as a nullable parameter of methods in <see cref="AbstractApi"/>.<br/>
 		/// The default implementation typically shall utilize <c><see cref="Storage.StorageFactory{T}"/>.<see cref="Storage.StorageFactory{T}.CreateAlike">CreateAlike</see>(input_storage.<see cref="Storage{T}.MakeReference">MakeReference</see>(0, <paramref name="length"/>))</c>
 		/// </remarks>
-		public delegate SparseVectorWrapper<T> DelegateCreateNew<T>(long length) where T : unmanaged;
+		public delegate ISparseVector<T> DelegateCreateNew<T>(long length) where T : unmanaged;
 		#endregion
 
 		#region vector
 		/// <summary>
-		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.<see cref="SparseVectorWrapper{T}.Indices">Indices</see>] = <paramref name="x"/>.<see cref="SparseVectorWrapper{T}.Values">Values</see>.
+		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseVector{T}.Storage">Values</see>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="x">The sparse vector x as a <see cref="SparseVectorWrapper{T}"/></param>
-		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.<see cref="SparseVectorWrapper{T}.Indices">Indices</see> are overwritten</param>
+		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
+		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public abstract void VectorSparseToDense<T>(SparseVectorWrapper<T> x, Storage<T> y) where T : unmanaged;
+		public abstract void VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
@@ -59,9 +61,9 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/></param>
 		/// <param name="threshold">Any element in <paramref name="x"/> whose absolute value is less than or equals to <paramref name="threshold"/> will be regarded as zero</param>
 		/// <param name="createFunc">See <see cref="DelegateCreateNew{T}"/></param>
-		/// <returns>The result sparse vector as a <see cref="SparseVectorWrapper{T}"/></returns>
+		/// <returns>The result sparse vector as a <see cref="ISparseVector{T}"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		public abstract SparseVectorWrapper<T> VectorDenseToSparse<T>(Storage<T> x, float threshold = 0, DelegateCreateNew<T>? createFunc = null) where T : unmanaged;
+		public abstract ISparseVector<T> VectorDenseToSparse<T>(Storage<T> x, float threshold = 0, DelegateCreateNew<T>? createFunc = null) where T : unmanaged;
 		#endregion
 
 		#region vector and matrix

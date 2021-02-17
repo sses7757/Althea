@@ -324,7 +324,7 @@ namespace Althea.Arrays
 				return false;
 			if (count == 0) count = overwrite.LongLength;
 			if (len == 0) len = overwrite[0].Length;
-			if (nnz == 0 && overwrite[0] is SparseVector<T> sp) nnz = sp.NonZero;
+			if (nnz == 0 && overwrite[0] is AbstractSparseVector<T> sp) nnz = sp.NonZero;
 			return overwrite.LongLength == count && overwrite.All(o => o is DenseVector<T> dd && dd.OnHost == this.OnHost && dd.Length == len);
 		}
 		#endregion
@@ -877,7 +877,7 @@ namespace Althea.Arrays
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
 		/// <param name="vec">The <see cref="SparseVector{T}"/></param>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
-		public void SetDiag(long k, SparseVector<T> vec)
+		public void SetDiag(long k, AbstractSparseVector<T> vec)
 		{
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException(Resource.MatMustSquare);
@@ -1813,7 +1813,7 @@ namespace Althea.Arrays
 				throw new ArgumentNullException(nameof(vec), Resource.ArrayCannotNull);
 			if (vec is DenseVector<T> dv)
 				this.SetDiag(k, dv);
-			else if (vec is SparseVector<T> sv)
+			else if (vec is AbstractSparseVector<T> sv)
 				this.SetDiag(k, sv);
 			else
 			{

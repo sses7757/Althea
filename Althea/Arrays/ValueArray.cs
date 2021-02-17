@@ -45,12 +45,14 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If the product of <paramref name="size"/> is not the same as the length of <paramref name="storage"/></exception>
 		protected ValueArray(Storage<T> storage, ReadOnlySpan<long> size) : base(size)
 		{
+			this.Storage = storage;
+			if (size.Length == 1 && size[0] == 0)
+				return;
+			// checks if not an empty array
 			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
 			if (this.Length != storage.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize);
-
-			this.Storage = storage;
 		}
 
 		/// <summary>

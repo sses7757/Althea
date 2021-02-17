@@ -245,7 +245,7 @@ namespace Althea.Arrays
 		/// <returns>the created <see cref="VectorBase{T}"/></returns>
 		public static VectorBase<T> FromIndexedArray<T>(T[] array, int[] index, int length = 0, bool onHost = false) where T : struct, IComparable<T>
 		{
-			return (SparseVector<T>)(array, index, length == 0 ? index.Max() : length, onHost);
+			return (AbstractSparseVector<T>)(array, index, length == 0 ? index.Max() : length, onHost);
 		}
 
 		/// <summary>
@@ -329,9 +329,9 @@ namespace Althea.Arrays
 
 	internal sealed class SparseVectorFactory : IArrayFactory
 	{
-		private const string IndexPointerName = nameof(SparseVector<int>.IndexPointer);
+		private const string IndexPointerName = nameof(AbstractSparseVector<int>.IndexPointer);
 		// Ignore Spelling: nnz
-		private const string NonZerosName = nameof(SparseVector<int>.NonZero);
+		private const string NonZerosName = nameof(AbstractSparseVector<int>.NonZero);
 
 		private static long Check(IReadOnlyList<long> size, IReadOnlyDictionary<string, object> otherInfo)
 		{
@@ -365,7 +365,7 @@ namespace Althea.Arrays
 			return new SparseVector<T>(size[0], value, index);
 		}
 
-		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(SparseVector<T> vec) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(AbstractSparseVector<T> vec) where T : struct, IComparable<T>
 		{
 			return new Dictionary<string, IStorage>
 			{
@@ -374,7 +374,7 @@ namespace Althea.Arrays
 			};
 		}
 
-		internal static IReadOnlyDictionary<string, object> GetOtherInfo<T>(SparseVector<T> vec) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, object> GetOtherInfo<T>(AbstractSparseVector<T> vec) where T : struct, IComparable<T>
 		{
 			return new Dictionary<string, object>
 			{

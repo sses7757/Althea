@@ -30,12 +30,12 @@ namespace Althea.LinearAlgebra.Dense
 		protected static void DisposeNotCurrent() => DisposeNotCurrent(RecentAPIs);
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T>(Storage<T> storage) where T : unmanaged => SelectImplementation(RecentAPIs, storage);
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther) where T : unmanaged where
 			TOther : unmanaged
@@ -49,7 +49,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
 			TOther : unmanaged
@@ -63,7 +63,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
 			TOther : unmanaged
@@ -77,12 +77,12 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2);
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther) where T : unmanaged where
 			TOther : unmanaged
@@ -96,7 +96,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
 			TOther : unmanaged
@@ -110,7 +110,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
 			TOther : unmanaged
@@ -124,12 +124,12 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2, storage3);
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther) where T : unmanaged where
 			TOther : unmanaged
@@ -143,7 +143,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
 			TOther : unmanaged
@@ -157,7 +157,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage)"/>
+		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
 		/// </summary>
 		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
 			TOther : unmanaged

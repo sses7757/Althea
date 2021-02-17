@@ -20,6 +20,14 @@ namespace Althea.Helpers
 			}
 		}
 
+		internal static T[]? CheckStockLimit<T>(this int length) where T : unmanaged
+		{
+			if (length * Storage<T>.SizeOfT > Settings.StackAllocLimit)
+				return new T[length];
+			else
+				return null;
+		}
+
 		// TODO: move to native codes?
 		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
 										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);
@@ -59,7 +67,7 @@ namespace Althea.Helpers
 	/// </summary>
 	public static class ReflectionHelper
 	{
-		private static readonly Dictionary<(Type t1, Type t2), Delegate> _conversionCache = new Dictionary<(Type t1, Type t2), Delegate>();
+		private static readonly Dictionary<(Type t1, Type t2), Delegate?> _conversionCache = new Dictionary<(Type t1, Type t2), Delegate?>();
 
 		/// <summary>
 		/// Generic convert <paramref name="obj"/> of <typeparamref name="T1"/> to <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators.
@@ -67,8 +75,9 @@ namespace Althea.Helpers
 		/// <typeparam name="T1">input type</typeparam>
 		/// <typeparam name="T2">output type</typeparam>
 		/// <param name="obj">input object</param>
-		/// <returns>object converted by explicit or implicit operators</returns>
-		public static T2 ReflectionConvert<T1, T2>(T1 obj)
+		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
+		/// <remarks>Since this method has internal caching, this is better for repetitive usage and worse for simple usage than <see cref="NativeTypeExtension.GenericConvert{TOut, TIn}(TIn)"/> which utilizes dynamic conversion.</remarks>
+		public static T2 ReflectionConvert<T1, T2>(this T1 obj) where T1 : notnull where T2 : notnull
 		{
 			static bool predicator(System.Reflection.MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
 																		m.ReturnType == typeof(T2) && m.GetParameters().Length == 1 &&
@@ -82,10 +91,14 @@ namespace Althea.Helpers
 				conversionOperator ??= t2.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
 												 .Where(predicator).FirstOrDefault();
 				if (conversionOperator is null)
-					throw new MethodAccessException(Other.CannotFindMethod);
-				_conversionCache.Add((t1, t2), conversionOperator.CreateDelegate<Converter<T1, T2>>());
+					_conversionCache.Add((t1, t2), null);
+				else
+					_conversionCache.Add((t1, t2), conversionOperator.CreateDelegate<Converter<T1, T2>>());
 			}
-			return ((Converter<T1, T2>)_conversionCache[(t1, t2)]).Invoke(obj);
+			if (_conversionCache[(t1, t2)] is not Converter<T1, T2> converter)
+				return (T2)(dynamic)obj;
+			else
+				return converter.Invoke(obj);
 		}
 
 		/// <summary>
@@ -535,7 +548,7 @@ namespace Althea.Helpers
 		/// <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseVectorString<T>(this Span<T> values, Span<int> indices, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToSparseVectorString<T>(this Span<T> values, Span<long> indices, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
 			if (values.Length != indices.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
@@ -602,7 +615,7 @@ namespace Althea.Helpers
 		/// <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseMatrixString<T>(this Span<T> values, Span<int> indx, Span<int> indy, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToSparseMatrixString<T>(this Span<T> values, Span<long> indx, Span<long> indy, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
 			if (values.Length != indx.Length)
 				throw new ArgumentException(Parameter.NotSameSize);

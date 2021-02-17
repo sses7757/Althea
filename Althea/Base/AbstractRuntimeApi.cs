@@ -182,11 +182,11 @@ namespace Althea
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void Check<T>(LinkedList<T> recents, params IStorage[] storages) where T : AbstractRuntimeApi
+		private static void Check<T>(LinkedList<T> recents, IReadOnlyList<IStorage> storages) where T : AbstractRuntimeApi
 		{
 			if (recents.Count == 0)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			if (storages.Any(s => !s.IsValid()))
+			if (storages.Any(static s => !s.IsValid()))
 				throw new ArgumentNullException(nameof(storages));
 			Check(recents);
 		}
@@ -197,17 +197,18 @@ namespace Althea
 		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="location">The given <see cref="StorageLocation"/> to work with.</param>
+		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations, can be null</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
-		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
-		protected static T SelectImplementation<T>(LinkedList<T> recents, StorageLocation location) where T : AbstractRuntimeApi
+		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IReadOnlyList{IStorage}, Predicate{T})"/>, this method is specially separated for performance issues.</remarks>
+		protected static T SelectImplementation<T>(LinkedList<T> recents, StorageLocation location, Predicate<T>? validApi = null) where T : AbstractRuntimeApi
 		{
 			Check(recents);
 
 			var current = recents.First;
 			if (current is null)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			if (current.Value.IsSupportedUnitary(location))
+			if (current.Value.IsSupportedUnitary(location) && (validApi?.Invoke(current.Value) ?? true))
 			{
 				return current.Value;
 			}
@@ -215,7 +216,7 @@ namespace Althea
 			while (current is not null)
 			{
 				Initialize(current);
-				if (current.Value.IsSupportedUnitary(location))
+				if (current.Value.IsSupportedUnitary(location) && (validApi?.Invoke(current.Value) ?? true))
 				{
 					return current.Value;
 				}
@@ -231,18 +232,19 @@ namespace Althea
 		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="storage">The given <see cref="IStorage"/> to work with.</param>
+		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations, can be null</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="storage"/> has invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
-		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
-		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage) where T : AbstractRuntimeApi
+		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IReadOnlyList{IStorage}, Predicate{T})"/>, this method is specially separated for performance issues.</remarks>
+		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage, Predicate<T>? validApi = null) where T : AbstractRuntimeApi
 		{
 			Check(recents, storage);
 
 			var current = recents.First;
 			if (current is null)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			if (current.Value.IsSupportedUnitary(storage.LocationDescription))
+			if (current.Value.IsSupportedUnitary(storage.LocationDescription) && (validApi?.Invoke(current.Value) ?? true))
 			{
 				return current.Value;
 			}
@@ -250,7 +252,7 @@ namespace Althea
 			while (current is not null)
 			{
 				Initialize(current);
-				if (current.Value.IsSupportedUnitary(storage.LocationDescription))
+				if (current.Value.IsSupportedUnitary(storage.LocationDescription) && (validApi?.Invoke(current.Value) ?? true))
 				{
 					return current.Value;
 				}
@@ -266,18 +268,19 @@ namespace Althea
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="storage1">The first given <see cref="IStorage"/> to work with.</param>
 		/// <param name="storage2">The second given <see cref="IStorage"/> to work with.</param>
+		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations, can be null</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="storage1"/> or <paramref name="storage2"/> has invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
-		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
-		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2) where T : AbstractRuntimeApi
+		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IReadOnlyList{IStorage}, Predicate{T})"/>, this method is specially separated for performance issues.</remarks>
+		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, Predicate<T>? validApi = null) where T : AbstractRuntimeApi
 		{
 			Check(recents, storage1, storage2);
 
 			var current = recents.First;
 			if (current is null)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			if (current.Value.IsSupportedBinary(storage1.LocationDescription, storage2.LocationDescription))
+			if (current.Value.IsSupportedBinary(storage1.LocationDescription, storage2.LocationDescription) && (validApi?.Invoke(current.Value) ?? true))
 			{
 				return current.Value;
 			}
@@ -285,7 +288,7 @@ namespace Althea
 			while (current is not null)
 			{
 				Initialize(current);
-				if (current.Value.IsSupportedBinary(storage1.LocationDescription, storage2.LocationDescription))
+				if (current.Value.IsSupportedBinary(storage1.LocationDescription, storage2.LocationDescription) && (validApi?.Invoke(current.Value) ?? true))
 				{
 					return current.Value;
 				}
@@ -302,18 +305,19 @@ namespace Althea
 		/// <param name="storage1">The first given <see cref="IStorage"/> to work with.</param>
 		/// <param name="storage2">The second given <see cref="IStorage"/> to work with.</param>
 		/// <param name="storage3">The third given <see cref="IStorage"/> to work with.</param>
+		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations, can be null</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> has invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
-		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IStorage[])"/>, this method is specially separated for performance issues.</remarks>
-		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, IStorage storage3) where T : AbstractRuntimeApi
+		/// <remarks>Although the functionality of this method can be done by <see cref="SelectImplementation{T}(LinkedList{T}, IReadOnlyList{IStorage}, Predicate{T})"/>, this method is specially separated for performance issues.</remarks>
+		protected static T SelectImplementation<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, IStorage storage3, Predicate<T>? validApi = null) where T : AbstractRuntimeApi
 		{
 			Check(recents, storage1, storage2, storage3);
 
 			var current = recents.First;
 			if (current is null)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			if (current.Value.IsSupportedTernary(storage1.LocationDescription, storage2.LocationDescription, storage3.LocationDescription))
+			if (current.Value.IsSupportedTernary(storage1.LocationDescription, storage2.LocationDescription, storage3.LocationDescription) && (validApi?.Invoke(current.Value) ?? true))
 			{
 				return current.Value;
 			}
@@ -321,7 +325,7 @@ namespace Althea
 			while (current is not null)
 			{
 				Initialize(current);
-				if (current.Value.IsSupportedTernary(storage1.LocationDescription, storage2.LocationDescription, storage3.LocationDescription))
+				if (current.Value.IsSupportedTernary(storage1.LocationDescription, storage2.LocationDescription, storage3.LocationDescription) && (validApi?.Invoke(current.Value) ?? true))
 				{
 					return current.Value;
 				}
@@ -336,17 +340,19 @@ namespace Althea
 		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="storages">The given <see cref="IStorage"/>s to work with.</param>
+		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations, can be null</param>
 		/// <returns>The suitable most recent implementation or null if not found.</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="storages"/> contains one <see cref="IStorage"/> with invalid value(s), such as <see cref="PointerSegment.Pointer"/> and <see cref="PointerSegment.LengthInBytes"/></exception>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
-		protected static T SelectImplementation<T>(LinkedList<T> recents, params IStorage[] storages) where T : AbstractRuntimeApi
+		protected static T SelectImplementation<T>(LinkedList<T> recents, IReadOnlyList<IStorage> storages, Predicate<T>? validApi = null) where T : AbstractRuntimeApi
 		{
 			Check(recents, storages);
+			var locations = storages.Select(static s => s.LocationDescription).ToArray();
 
 			var current = recents.First;
 			if (current is null)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			if (current.Value.IsSupportedNary(storages.Select(s => s.LocationDescription).ToArray()))
+			if (current.Value.IsSupportedNary(locations) && (validApi?.Invoke(current.Value) ?? true))
 			{
 				return current.Value;
 			}
@@ -354,7 +360,7 @@ namespace Althea
 			while (current is not null)
 			{
 				Initialize(current);
-				if (current.Value.IsSupportedNary(storages.Select(s => s.LocationDescription).ToArray()))
+				if (current.Value.IsSupportedNary(locations) && (validApi?.Invoke(current.Value) ?? true))
 				{
 					return current.Value;
 				}

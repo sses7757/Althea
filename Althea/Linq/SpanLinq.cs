@@ -58,7 +58,7 @@ namespace Althea.Linq
 		/// Copy <paramref name="span"/> to <paramref name="destArray"/>.
 		/// </summary>
 		/// <typeparam name="T">The type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> to be copied</param>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to be copied</param>
 		/// <param name="destArray">The destination array to be copied into</param>
 		/// <returns>The <paramref name="destArray"/></returns>
 		public static T[] CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
@@ -92,6 +92,44 @@ namespace Althea.Linq
 				array[i] = selector(span[i]);
 			}
 			return array;
+		}
+
+		/// <summary>
+		/// Copy <paramref name="span"/> to <paramref name="array"/>.
+		/// </summary>
+		/// <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
+		/// <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to be copied from</param>
+		/// <param name="array">The destination <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="selector">The converter to each element</param>
+		public static void CopyTo<TIn, TOut>(this Span<TIn> span, Span<TOut> array, Converter<TIn, TOut> selector)
+		{
+			if (span.Length != array.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+
+			for (int i = 0; i < span.Length; i++)
+			{
+				array[i] = selector(span[i]);
+			}
+		}
+
+		/// <summary>
+		/// Copy <paramref name="span"/> to <paramref name="array"/>.
+		/// </summary>
+		/// <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
+		/// <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to be copied from</param>
+		/// <param name="array">The destination <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="selector">The converter to each element</param>
+		public static void CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, Span<TOut> array, Converter<TIn, TOut> selector)
+		{
+			if (span.Length != array.Length)
+				throw new ArgumentException(Parameter.NotSameSize);
+
+			for (int i = 0; i < span.Length; i++)
+			{
+				array[i] = selector(span[i]);
+			}
 		}
 		#endregion
 

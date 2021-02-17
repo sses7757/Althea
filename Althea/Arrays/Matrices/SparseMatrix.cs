@@ -16,7 +16,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
 	/// <remarks>For compatibility issues, only general sparse matrix is supported</remarks>
-	public sealed class SparseMatrix<T> : MatrixBase<T>, ISparseArray<T>, IMatrix<SparseMatrix<T>, SparseVector<T>, T>, IMatrix<DenseMatrix<T>, DenseVector<T>, T> where T : struct, IComparable<T>
+	public sealed class SparseMatrix<T> : MatrixBase<T>, ISparseArray<T>, IMatrix<SparseMatrix<T>, AbstractSparseVector<T>, T>, IMatrix<DenseMatrix<T>, DenseVector<T>, T> where T : struct, IComparable<T>
 	{
 		#region sparse matrix special
 		/// <summary>
@@ -323,7 +323,7 @@ namespace Althea.Arrays
 			leadDim = size[0];
 			if (leadDim == this.NRows)
 				return this;
-			using var spVec = this.ToVector() as SparseVector<T>;
+			using var spVec = this.ToVector() as AbstractSparseVector<T>;
 			return spVec.ToMatrix(leadDim);
 		}
 
@@ -509,7 +509,7 @@ namespace Althea.Arrays
 		{
 			if (this == (array as SparseMatrix<T>))
 				return;
-			if (array is SparseVector<T> sv)
+			if (array is AbstractSparseVector<T> sv)
 			{
 				if (this.Storage != sv.Storage)
 					this.Storage.Dispose();
@@ -645,7 +645,7 @@ namespace Althea.Arrays
 			return overwrite.OnHost == this.OnHost && overwrite.Format == format && overwrite.NRows == rows && overwrite.NCols == cols && overwrite.NonZero == nnz;
 		}
 
-		private bool CanOverwrite(SparseVector<T> overwrite,long len = 0, long nnz = 0)
+		private bool CanOverwrite(AbstractSparseVector<T> overwrite,long len = 0, long nnz = 0)
 		{
 			if (overwrite is null || overwrite == EmptySpVec)
 				return false;
@@ -654,7 +654,7 @@ namespace Althea.Arrays
 			return overwrite.OnHost == this.OnHost && overwrite.Length == len && overwrite.NonZero == nnz;
 		}
 
-		private bool CanOverwrite(SparseVector<T>[] overwrite, long count = 0, long len = 0, long[] nnzs = null)
+		private bool CanOverwrite(AbstractSparseVector<T>[] overwrite, long count = 0, long len = 0, long[] nnzs = null)
 		{
 			if (overwrite is null || overwrite.LongLength == 0)
 				return false;
@@ -701,7 +701,7 @@ namespace Althea.Arrays
 		/// Join the array of <see cref="SparseVector{T}"/> forming into a <see cref="SparseMatrix{T}"/>. From <see cref="IMatrix{TMat, TVec, T}.FromColumnVectors"/>.
 		/// </summary>
 		/// <param name="vecs">The input array of <see cref="SparseVector{T}"/></param>
-		public void FromColumnVectors(SparseVector<T>[] vecs)
+		public void FromColumnVectors(AbstractSparseVector<T>[] vecs)
 		{
 			if (vecs is null)
 				throw new ArgumentNullException(nameof(vecs));
@@ -879,7 +879,7 @@ namespace Althea.Arrays
 		/// <returns>An array of data type <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.CSC"/></exception>
 		/// <remarks>The <see cref="SparseMatrixFormat.COOC"/> is no longer supported (compared to <see cref="GetColumnRange(Range, SparseMatrix{T})"/>) since the finding of index will be executed multiple times.</remarks>
-		public SparseVector<T>[] GetColumns(Range colRange, SparseVector<T>[] overwrite = null)
+		public AbstractSparseVector<T>[] GetColumns(Range colRange, AbstractSparseVector<T>[] overwrite = null)
 		{
 			if (this.Format != SparseMatrixFormat.CSC)
 				throw new InvalidOperationException(string.Format(Resource.Culture, Resource.SpMatMustFormat, SparseMatrixFormat.CSC));
@@ -903,7 +903,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				var rows = new SparseVector<T>[count];
+				var rows = new AbstractSparseVector<T>[count];
 				for (long i = 0; i < count; i++)
 					rows[i] = new SparseVector<T>(this, this.NCols, newNNZs[i], indices: this.RowPointer, offset: colPtr[i]);
 				return rows;
@@ -916,8 +916,8 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The output array of <see cref="SparseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.CSC"/></exception>
-		/// <remarks>The <see cref="SparseMatrixFormat.COOC"/> is no longer supported (compared to <see cref="GetColumns(Range, SparseVector{T}[])"/>) since the finding of index will be executed multiple times.</remarks>
-		public SparseVector<T>[] GetColumns(SparseVector<T>[] overwrite = null) => this.GetColumns(Range.All, overwrite);
+		/// <remarks>The <see cref="SparseMatrixFormat.COOC"/> is no longer supported (compared to <see cref="GetColumns(Range, AbstractSparseVector{T}[])"/>) since the finding of index will be executed multiple times.</remarks>
+		public AbstractSparseVector<T>[] GetColumns(AbstractSparseVector<T>[] overwrite = null) => this.GetColumns(Range.All, overwrite);
 
 		/// <summary>
 		/// Get part of the row vectors that forms the matrix, from <see cref="IMatrix{TMat, TVec, T}.GetRows(Range, TVec[])"/>.
@@ -927,7 +927,7 @@ namespace Althea.Arrays
 		/// <returns>An array of data type <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.CSR"/></exception>
 		///  <remarks>The <see cref="SparseMatrixFormat.COOR"/> is no longer supported (compared to <see cref="GetRowRange(Range, SparseMatrix{T})"/>) since the finding of index will be executed multiple times.</remarks>
-		public SparseVector<T>[] GetRows(Range rowRange, SparseVector<T>[] overwrite = null)
+		public AbstractSparseVector<T>[] GetRows(Range rowRange, AbstractSparseVector<T>[] overwrite = null)
 		{
 			if (this.Format != SparseMatrixFormat.CSR)
 				throw new InvalidOperationException(string.Format(Resource.Culture, Resource.SpMatMustFormat, SparseMatrixFormat.CSR));
@@ -951,7 +951,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				var rows = new SparseVector<T>[count];
+				var rows = new AbstractSparseVector<T>[count];
 				for (long i = 0; i < count; i++)
 					rows[i] = new SparseVector<T>(this, this.NCols, newNNZs[i], indices: this.ColumnPointer, offset: rowPtr[i]);
 				return rows;
@@ -965,7 +965,7 @@ namespace Althea.Arrays
 		/// <returns>An array of data type <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.CSR"/></exception>
 		///  <remarks>The <see cref="SparseMatrixFormat.COOR"/> is not supported since the finding of index will be executed multiple times.</remarks>
-		public SparseVector<T>[] GetRows(SparseVector<T>[] overwrite = null) => this.GetRows(Range.All, overwrite);
+		public AbstractSparseVector<T>[] GetRows(AbstractSparseVector<T>[] overwrite = null) => this.GetRows(Range.All, overwrite);
 
 		/// <summary>
 		/// Get one column of the matrix, from <see cref="IMatrix{TMat, TVec, T}.GetColumnAt(Index, TVec)"/>.
@@ -974,7 +974,7 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The output <see cref="SparseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>The selected column as <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
-		public SparseVector<T> GetColumnAt(Index index, SparseVector<T> overwrite = null)
+		public AbstractSparseVector<T> GetColumnAt(Index index, AbstractSparseVector<T> overwrite = null)
 		{
 			var (_, colIdx) = CheckRange(0, index);
 			if (this.Format == SparseMatrixFormat.CSC)
@@ -1017,7 +1017,7 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The output <see cref="SparseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>The selected row as <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
-		public SparseVector<T> GetRowAt(Index index, SparseVector<T> overwrite = null)
+		public AbstractSparseVector<T> GetRowAt(Index index, AbstractSparseVector<T> overwrite = null)
 		{
 			var (rowIdx, _) = CheckRange(index, 0);
 			if (this.Format == SparseMatrixFormat.CSR)
@@ -1062,9 +1062,9 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The output <see cref="SparseVector{T}"/> to overwrite, default null means creating a new vector</param>
 		/// <returns>A new <see cref="SparseVector{T}"/> representing the (super-/sub-)diagonal elements.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
-		public SparseVector<T> GetDiag(long k, SparseVector<T> overwrite = null)
+		public AbstractSparseVector<T> GetDiag(long k, AbstractSparseVector<T> overwrite = null)
 		{
-			return this.GetDiag(k, overwrite as VectorBase<T>) as SparseVector<T>;
+			return this.GetDiag(k, overwrite as VectorBase<T>) as AbstractSparseVector<T>;
 		}
 
 		/// <summary>
@@ -1073,7 +1073,7 @@ namespace Althea.Arrays
 		/// <param name="k">diagonal index, 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
 		/// <param name="vec">The <see cref="SparseVector{T}"/></param>
 		/// <exception cref="InvalidOperationException">if this matrix is not square</exception>
-		public void SetDiag(long k, SparseVector<T> vec)
+		public void SetDiag(long k, AbstractSparseVector<T> vec)
 		{
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException(Resource.MatMustSquare);
@@ -1507,7 +1507,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				var sp = this.GetColumns(colRange, null as SparseVector<T>[]);
+				var sp = this.GetColumns(colRange, null as AbstractSparseVector<T>[]);
 				try
 				{
 					var dn = new DenseVector<T>[count];
@@ -1563,7 +1563,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				var sp = this.GetRows(rowRange, null as SparseVector<T>[]);
+				var sp = this.GetRows(rowRange, null as AbstractSparseVector<T>[]);
 				try
 				{
 					var dn = new DenseVector<T>[count];
@@ -1983,7 +1983,7 @@ namespace Althea.Arrays
 				case SparseMatrixFormat.COOC:
 					if (algorithm == SparseMatrixToDenseAlgorithm.ViaVector)
 					{
-						using var temp = this.ToVector() as SparseVector<T>;
+						using var temp = this.ToVector() as AbstractSparseVector<T>;
 						mat = temp.ToDense().ToMatrix() as DenseMatrix<T>;
 					}
 					else
@@ -2035,7 +2035,7 @@ namespace Althea.Arrays
 		public override AbstractArray<TOut> DataTypeCast<TOut>()
 		{
 			if (typeof(TOut) == typeof(T))
-				return this as SparseVector<TOut>;
+				return this as AbstractSparseVector<TOut>;
 			var mat = base.DataTypeCast<TOut>() as SparseMatrix<TOut>;
 			try
 			{
@@ -2078,7 +2078,7 @@ namespace Althea.Arrays
 		/// <param name="vecs">The input array of <see cref="VectorBase{T}"/></param>
 		public override void FromColumnVectors(VectorBase<T>[] vecs)
 		{
-			this.FromColumnVectors(vecs as SparseVector<T>[]);
+			this.FromColumnVectors(vecs as AbstractSparseVector<T>[]);
 		}
 
 		/// <summary>
@@ -2138,12 +2138,12 @@ namespace Althea.Arrays
 		/// <returns>An array of data type <see cref="VectorBase{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		public override VectorBase<T>[] GetColumns(Range colRange, VectorBase<T>[] overwrite = null)
 		{
-			if (overwrite != null && overwrite.All(v => v is SparseVector<T>))
-				return this.GetColumns(colRange, overwrite.Select(v => v as SparseVector<T>).ToArray());
+			if (overwrite != null && overwrite.All(v => v is AbstractSparseVector<T>))
+				return this.GetColumns(colRange, overwrite.Select(v => v as AbstractSparseVector<T>).ToArray());
 			else if (overwrite != null && overwrite.All(v => v is DenseVector<T>))
 				return this.GetColumns(colRange, overwrite.Select(v => v as DenseVector<T>).ToArray());
 			else
-				return this.GetColumns(colRange, Array.Empty<SparseVector<T>>());
+				return this.GetColumns(colRange, Array.Empty<AbstractSparseVector<T>>());
 		}
 
 		/// <summary>
@@ -2154,12 +2154,12 @@ namespace Althea.Arrays
 		/// <returns>An array of data type <see cref="VectorBase{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		public override VectorBase<T>[] GetRows(Range rowRange, VectorBase<T>[] overwrite = null)
 		{
-			if (overwrite != null && overwrite.All(v => v is SparseVector<T>))
-				return this.GetRows(rowRange, overwrite.Select(v => v as SparseVector<T>).ToArray());
+			if (overwrite != null && overwrite.All(v => v is AbstractSparseVector<T>))
+				return this.GetRows(rowRange, overwrite.Select(v => v as AbstractSparseVector<T>).ToArray());
 			else if (overwrite != null && overwrite.All(v => v is DenseVector<T>))
 				return this.GetRows(rowRange, overwrite.Select(v => v as DenseVector<T>).ToArray());
 			else
-				return this.GetRows(rowRange, Array.Empty<SparseVector<T>>());
+				return this.GetRows(rowRange, Array.Empty<AbstractSparseVector<T>>());
 		}
 
 		/// <summary>
@@ -2170,8 +2170,8 @@ namespace Althea.Arrays
 		/// <returns>The selected column as a <see cref="VectorBase{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		public override VectorBase<T> GetColumnAt(Index index, VectorBase<T> overwrite = null)
 		{
-			if (overwrite != null && overwrite is SparseVector<T>)
-				return this.GetColumnAt(index, overwrite as SparseVector<T>);
+			if (overwrite != null && overwrite is AbstractSparseVector<T>)
+				return this.GetColumnAt(index, overwrite as AbstractSparseVector<T>);
 			else if (overwrite != null && overwrite is DenseVector<T>)
 				return this.GetColumnAt(index, overwrite as DenseVector<T>);
 			else
@@ -2186,8 +2186,8 @@ namespace Althea.Arrays
 		/// <returns>The selected column as a <see cref="VectorBase{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		public override VectorBase<T> GetRowAt(Index index, VectorBase<T> overwrite = null)
 		{
-			if (overwrite != null && overwrite is SparseVector<T>)
-				return this.GetRowAt(index, overwrite as SparseVector<T>);
+			if (overwrite != null && overwrite is AbstractSparseVector<T>)
+				return this.GetRowAt(index, overwrite as AbstractSparseVector<T>);
 			else if (overwrite != null && overwrite is DenseVector<T>)
 				return this.GetRowAt(index, overwrite as DenseVector<T>);
 			else
@@ -2574,7 +2574,7 @@ namespace Althea.Arrays
 							inds.Add(find);
 						}
 					}
-					return (SparseVector<T>)(vals.ToArray(), inds.ToArray(), rowPos.LongLength, this.OnHost);
+					return (AbstractSparseVector<T>)(vals.ToArray(), inds.ToArray(), rowPos.LongLength, this.OnHost);
 				}
 				finally
 				{
@@ -2775,7 +2775,7 @@ namespace Althea.Arrays
 		{
 			if (base.ShareStorageWith(another))
 				return true;
-			else if (another is SparseVector<T> sv)
+			else if (another is AbstractSparseVector<T> sv)
 			{
 				return this.RowPointer.ShareMemoryWith(sv.IndexPointer) || this.ColumnPointer.ShareMemoryWith(sv.IndexPointer);
 			}

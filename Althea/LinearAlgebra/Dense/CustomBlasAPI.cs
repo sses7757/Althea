@@ -57,6 +57,19 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region custom BLAS level 1
 		/// <summary>
+		/// When implemented by a derived class, check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[j]</c> (point-wise equals).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The vector to be checked</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The other vector to be checked</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>Whether all elements in <paramref name="x"/> and <paramref name="y"/> are equal</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public abstract bool PointWiseEquals<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
+
+		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>.*<paramref name="y"/></c> (point-wise multiplication).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>

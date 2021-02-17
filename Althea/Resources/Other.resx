@@ -138,6 +138,9 @@
   <data name="CannotParseComplex" xml:space="preserve">
     <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
   </data>
+  <data name="DifferentSparsity" xml:space="preserve">
+    <value>The given sparse array has different sparsity from this one, hence, this in-place operation cannot be executed.</value>
+  </data>
   <data name="ErrorOccur" xml:space="preserve">
     <value>An error happened:</value>
   </data>

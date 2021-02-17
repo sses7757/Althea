@@ -1229,6 +1229,13 @@ namespace Althea
 	/// <remarks>Since this class has a finalizer, it cannot be in GC generation 0, i.e., it will not be disposed immediately when out of scope.</remarks>
 	public abstract class ActualStorage<T> : Storage<T> where T : unmanaged
 	{
+		#region static
+		/// <summary>
+		/// Get an empty <see cref="ActualStorage{T}"/>
+		/// </summary>
+		public static new readonly ActualStorage<T> Empty = new Storage.PureStorage<T>(default, 0);
+		#endregion
+
 		#region memory
 		/// <summary>
 		/// The total length of the presenting array in <typeparamref name="T"/> (rather than bytes), override <see cref="Storage{T}.Length"/>

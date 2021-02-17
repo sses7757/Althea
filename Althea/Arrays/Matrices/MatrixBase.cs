@@ -37,7 +37,7 @@ namespace Althea.Arrays
 		/// </summary>
 		NonzeroThresholdDefault,
 		/// <summary>
-		/// Algorithm that takes a three-step approach and utilizes the <see cref="DenseVector{T}.ToSparse(float)"/> and <see cref="SparseVector{T}.ToMatrix(long)"/> method:
+		/// Algorithm that takes a three-step approach and utilizes the <see cref="DenseVector{T}.ToSparse(float)"/> and <see cref="AbstractSparseVector{T}.ToMatrix(long)"/> method:
 		/// <list type="number">
 		/// <item><description>flatten the <see cref="DenseMatrix{T}"/> to a <see cref="DenseVector{T}"/> which takes almost no time and memory space;</description></item>
 		/// <item><description>prune the <see cref="DenseVector{T}"/> to get a <see cref="SparseVector{T}"/>;</description></item>

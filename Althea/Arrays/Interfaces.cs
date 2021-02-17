@@ -26,7 +26,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the number of nonzero values of this sparse array.
 		/// </summary>
-		long NonZero { get; }
+		long NStored { get; }
 		#endregion
 
 		#region dispose
@@ -97,6 +97,41 @@ namespace Althea.Arrays
 		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input);
 		#endregion
 	}
+
+	/// <summary>
+	/// The interface for sparse vectors without indicating the index data type whose value array is <see cref="ISparseVector{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface ISparseVector<T> : IReadOnlyList<IStorage> where T : unmanaged
+	{
+		#region properties
+		/// <summary>
+		/// When implemented by a derived class, get the value array storage of this sparse vector
+		/// </summary>
+		Storage<T> Storage { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the number of stored values of this sparse array. The default implementation returns the length of <see cref="ISparseVector{T}.Storage"/>.
+		/// </summary>
+		long NStored => this.Storage.Length;
+
+		/// <summary>
+		/// When implemented by a derived class, get the data type of the index array(s) of this sparse vector as a <see cref="DataType"/>
+		/// </summary>
+		DataType IndexType { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the default value of this sparse vector
+		/// </summary>
+		T DefaultValue { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the format of this sparse vector as a <see cref="LinearAlgebra.Sparse.SparseVectorFormat"/>
+		/// </summary>
+		LinearAlgebra.Sparse.SparseVectorFormat Format { get; }
+		#endregion
+	}
+
 
 	#region matrices
 	/// <summary>
