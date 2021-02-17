@@ -80,11 +80,12 @@ namespace Althea
 		/// <summary>
 		/// Storage composed of only one storage location (pure) or a <b>set</b> of storage memory locations (mixed)
 		/// </summary>
-		PureOrMixed = 0 << CombinationTypeExtension.ClassificationEnd | CombinationTypeExtension.ClassUnordered,
+		/// <remarks>The storages with this type only </remarks>
+		PureOrMixed = (0 << CombinationTypeExtension.ClassificationEnd) | CombinationTypeExtension.ClassCombined,
 		/// <summary>
 		/// Storage composed of several <b>ordered</b> storage locations
 		/// </summary>
-		Cached = 0 << CombinationTypeExtension.ClassificationEnd | CombinationTypeExtension.ClassOrdered,
+		Cached = (0 << CombinationTypeExtension.ClassificationEnd) | CombinationTypeExtension.ClassOrdered,
 	}
 
 	/// <summary>
@@ -103,10 +104,10 @@ namespace Althea
 		public const int ClassificationMask = 0b1;
 
 		/// <summary>
-		/// The classification of unordered typed <see cref="CombinationType"/>
+		/// The classification of combined (unordered) typed <see cref="CombinationType"/>
 		/// </summary>
 		/// <remarks>Other classifications are not supported.</remarks>
-		public const int ClassUnordered = 0b0;
+		public const int ClassCombined = 0b0;
 
 		/// <summary>
 		/// The classification of ordered typed <see cref="CombinationType"/>
@@ -119,7 +120,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="combinationType">The given <see cref="CombinationType"/></param>
 		/// <returns>Whether the given <see cref="CombinationType"/> is an ordered one or a unordered one</returns>
-		public static bool IsOrdered(this CombinationType combinationType) => ((int)combinationType).IsBitSet(0);
+		public static bool IsOrdered(this CombinationType combinationType) => ((short)combinationType).IsBitSet(0);
 	}
 	#endregion
 
@@ -1058,7 +1059,7 @@ namespace Althea
 		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<PointerSegment>)this).GetEnumerator();
 
 		/// <summary>
-		/// Get the actual <see cref="PointerSegment"/> at the actual index (the index in <see cref="LocationDescription"/>) <paramref name="i"/>
+		/// When implemented by a derived class, get the actual <see cref="PointerSegment"/> at the actual index (the index in <see cref="LocationDescription"/>) <paramref name="i"/>. The default implementation simply returns <see cref="this[int]"/>.
 		/// </summary>
 		/// <param name="i">The actual index</param>
 		/// <returns>The actual <see cref="PointerSegment"/> at <paramref name="i"/></returns>

@@ -1653,27 +1653,48 @@ namespace Althea.Storage
 			return cache_create[type].Invoke(locations, lengths);
 		}
 
-		/// <summary>
-		/// Allocate and create a new <see cref="Storage{T}"/> alike the given <paramref name="storage"/>
-		/// </summary>
-		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
-		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
-		public static ActualStorage<T> CreateAlike(Storage<T> storage)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void GetLocationsAndLengths(Storage<T> storage, Span<StorageLocation> locations, Span<long> lengths)
 		{
 			int sizeT = Storage<T>.SizeOfT;
 			var descr = storage.LocationDescription;
-			CombinationType type = descr.Type;
-			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
 			descr.CopyLocationsToSpan(locations);
-			Span<long> lengths = stackalloc long[descr.Count];
-			long bytesLeft = 0;
+			// get lengths
+			// the most possible case
+			if (storage.LengthInBytes == storage.Sum(static p => p.LengthInBytes))
+			{
+				long bytesLeft = 0;
+				for (int i = 0; i < descr.Count; i++)
+				{
+					long lengthInBytes = bytesLeft + storage[i].LengthInBytes;
+					lengths[i] = lengthInBytes / sizeT;
+					bytesLeft = lengthInBytes - lengths[i] * sizeT;
+				}
+				return;
+			}
+			// else, less possible, need GetActualPointerAt()
+			long actualOccupiedBytes = 0;
+			for (int i = 0; i < descr.Count; i++)
+				actualOccupiedBytes += storage.GetActualPointerAt(i).LengthInBytes;
+			if (storage.LengthInBytes == actualOccupiedBytes)
+			{
+				long bytesLeft = 0;
+				for (int i = 0; i < descr.Count; i++)
+				{
+					long lengthInBytes = bytesLeft + storage.GetActualPointerAt(i).LengthInBytes;
+					lengths[i] = lengthInBytes / sizeT;
+					bytesLeft = lengthInBytes - lengths[i] * sizeT;
+				}
+				return;
+			}
+			// else, cannot auto align
 			for (int i = 0; i < descr.Count; i++)
 			{
-				long lengthInBytes = bytesLeft + storage.GetActualPointerAt(i).LengthInBytes;
-				lengths[i] = lengthInBytes / sizeT;
-				bytesLeft = lengthInBytes - lengths[i];
+				long length = storage.GetActualPointerAt(i).LengthInBytes;
+				if (length % sizeT != 0)
+					throw new ArgumentException(Other.CannotDivide, nameof(storage));
+				lengths[i] = length / sizeT;
 			}
-			return Create(type, locations, lengths);
 		}
 
 		/// <summary>
@@ -1681,26 +1702,35 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
 		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/>'s <see cref="PointerSegment"/> are not aligned to the size of <typeparamref name="T"/>, meanwhile auto alignment cannot be done with neither <see cref="Storage{T}.this[int]"/> nor <see cref="Storage{T}.GetActualPointerAt(int)"/></exception>
+		public static ActualStorage<T> CreateAlike(Storage<T> storage)
+		{
+			int sizeT = Storage<T>.SizeOfT;
+			var descr = storage.LocationDescription;
+			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
+			Span<long> lengths = stackalloc long[descr.Count];
+			GetLocationsAndLengths(storage, locations, lengths);
+			return Create(descr.Type, locations, lengths);
+		}
+
+		/// <summary>
+		/// Allocate and create a new <see cref="Storage{T}"/> alike the given <paramref name="storage"/>
+		/// </summary>
+		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
+		/// <returns>A new <see cref="Storage{T}"/> of type <typeparamref name="TOut"/> alike <paramref name="storage"/> with the new lengths in <typeparamref name="TOut"/> equals to the original lengths in <typeparamref name="T"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/>'s <see cref="PointerSegment"/> are not aligned to the size of <typeparamref name="T"/>, meanwhile auto alignment cannot be done with neither <see cref="Storage{T}.this[int]"/> nor <see cref="Storage{T}.GetActualPointerAt(int)"/></exception>
 		public static ActualStorage<TOut> CreateAlike<TOut>(Storage<T> storage) where TOut : unmanaged
 		{
 			// shortcut
 			if (typeof(T) == typeof(TOut))
 				return CreateAlike(storage) as ActualStorage<TOut> ?? ActualStorage<TOut>.Empty; // never empty
 			// otherwise
-			int sizeT = Storage<T>.SizeOfT, sizeTOut = Storage<TOut>.SizeOfT;
+			int sizeT = Storage<T>.SizeOfT;
 			var descr = storage.LocationDescription;
-			CombinationType type = descr.Type;
 			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
-			descr.CopyLocationsToSpan(locations);
 			Span<long> lengths = stackalloc long[descr.Count];
-			long bytesLeft = 0;
-			for (int i = 0; i < descr.Count; i++)
-			{
-				long lengthInBytes = bytesLeft + storage.GetActualPointerAt(i).LengthInBytes;
-				lengths[i] = lengthInBytes / sizeTOut;
-				bytesLeft = lengthInBytes - lengths[i];
-			}
-			return StorageFactory<TOut>.Create(type, locations, lengths);
+			GetLocationsAndLengths(storage, locations, lengths);
+			return StorageFactory<TOut>.Create(descr.Type, locations, lengths);
 		}
 		#endregion
 	}
