@@ -211,6 +211,14 @@ namespace Althea.Arrays
 		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
 		#endregion
 
+		#region new method
+		/// <summary>
+		/// Convert this sparse vector to a dense vector
+		/// </summary>
+		/// <returns>The converted <see cref="Backend.Arrays.DenseVector{T}"/></returns>
+		public abstract Backend.Arrays.DenseVector<T> ToDense();
+		#endregion
+
 		#region point-wise method override
 		/// <summary>
 		/// When implemented by a derived class, fill this sparse array with given <paramref name="value"/>. The default implementation utilizes <see cref="ValueArray{T}.FillWith(T)"/> and sets <see cref="DefaultValue"/> to <paramref name="value"/>.
@@ -491,7 +499,7 @@ namespace Althea.Arrays
 			// get managed arrays
 			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
 			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
-			MEM.SelectImplementation(this.Storage).ToManaged(this.Storage, values);
+			MEM.ToManaged(this.Storage, values);
 			Span<long> indices = length.CheckStockLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(indices);
 			// to vector string

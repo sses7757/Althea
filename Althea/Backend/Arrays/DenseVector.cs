@@ -56,12 +56,12 @@ namespace Althea.Backend.Arrays
 			get {
 				if (index < 0 || index >= this.Length)
 					throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
-				return MEM.SelectImplementation(this.Storage).ToManaged(this.Storage.MakeReference(offset: index));
+				return MEM.ToManaged(this.Storage.MakeReference(offset: index));
 			}
 			set {
 				if (index < 0 || index >= this.Length)
 					throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
-				MEM.SelectImplementation(this.Storage).FromManaged(this.Storage.MakeReference(offset: index), value);
+				MEM.FromManaged(this.Storage.MakeReference(offset: index), value);
 			}
 		}
 		/// <summary>
@@ -245,7 +245,7 @@ namespace Althea.Backend.Arrays
 			}
 			else if (spMat is not null && spVec is not null)
 			{
-				using var dense = vector.ToDense();
+				using var dense = spVec.ToDense();
 				this.AddMatrixMultiplyVector(matrix, dense, α, β, operation);
 			}
 			else
@@ -309,7 +309,7 @@ namespace Althea.Backend.Arrays
 			if (this.Length != other.Length)
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 
-			MEM.SelectImplementation(this.Storage, other.Storage).MemoryCopy(other.Storage, this.Storage);
+			MEM.MemoryCopy(other.Storage, this.Storage);
 		}
 
 		/// <summary>
@@ -404,7 +404,7 @@ namespace Althea.Backend.Arrays
 			// get managed array
 			int length = (int)Math.Min(settings.ArrayLength, this.Length);
 			Span<T> managed = length.CheckStockLimit<T>() ?? stackalloc T[length];
-			MEM.SelectImplementation(this.Storage).ToManaged(this.Storage, managed);
+			MEM.ToManaged(this.Storage, managed);
 			// to dense vector string
 			detail += managed.ToVectorString(precision: settings.Precision);
 			if (this.Length > managed.Length)

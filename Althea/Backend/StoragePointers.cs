@@ -693,14 +693,13 @@ namespace Althea.Backend.Storage
 	}
 
 
-	/// <summary>
-	/// The static class containing extension methods for <see cref="IMemoryPointer"/>, <see cref="IStreamPointer"/>, <see cref="FileStream"/> and <see cref="TcpStream"/>
-	/// </summary>
 	internal static class ConcretePointersExtension
 	{
 		public static readonly StorageLocation CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
 		public static readonly StorageLocation FileAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
 		public static readonly StorageLocation TcpAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.TCP);
+
+		public const long INVALID = -1, NOT_SUPPORT = -2;
 
 		public static long GetPointerOffset<T>(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) where
 			T : unmanaged
@@ -710,8 +709,8 @@ namespace Althea.Backend.Storage
 			if (!pointer.IsValid() || pointer.OffsetInBytes % Storage<T>.SizeOfT != 0 || pointer.LengthInBytes % Storage<T>.SizeOfT != 0)
 			{
 				if (@throw)
-					throw new NotSupportedException(Support.Location);
-				return 0;
+					throw new ArgumentNullException(nameof(pointer));
+				return INVALID;
 			}
 			// cast
 			if (pointer.Location == CpuAlone && pointer.Pointer is IMemoryPointer mp)
@@ -726,9 +725,9 @@ namespace Althea.Backend.Storage
 			{
 				streamPointer = sp2;
 			}
-			else if (@throw)
+			else
 			{
-				throw new NotSupportedException(Support.Location);
+				return NOT_SUPPORT;
 			}
 			return pointer.OffsetInBytes / Storage<T>.SizeOfT;
 		}

@@ -376,11 +376,10 @@ namespace Althea.Storage
 				}
 				// copy
 				long len = Math.Min(bufferSize, length);
-				var impl = MEM.SelectImplementation(location);
-				var pointer = impl.Allocate(location, len);
+				var pointer = MEM.Allocate(location, len);
 				try
 				{
-					impl.FillWithValue(pointer, value);
+					MEM.FillWithValue(pointer, value);
 					while (len > 0)
 					{
 						if (len < pointer.LengthInBytes)
@@ -391,7 +390,7 @@ namespace Althea.Storage
 				}
 				finally
 				{
-					impl.Free(pointer);
+					MEM.Free(pointer);
 				}
 			}
 			// flush at the end
@@ -452,8 +451,7 @@ namespace Althea.Storage
 				}
 				// copy
 				long len = Math.Min(bufferSize, length);
-				var impl = MEM.SelectImplementation(value);
-				var pointer = impl.Allocate(value, len);
+				var pointer = MEM.Allocate(value, len);
 				try
 				{
 					while (len > 0)
@@ -467,7 +465,7 @@ namespace Althea.Storage
 				}
 				finally
 				{
-					impl.Free(pointer);
+					MEM.Free(pointer);
 				}
 			}
 			// flush at the end
@@ -816,7 +814,7 @@ namespace Althea.Storage
 			var storage = new PureStorage<T>(this.pointer.Location, this.Length);
 			try
 			{
-				MEM.SelectImplementation(this, storage).MemoryCopy(this.pointer, storage.pointer);
+				MEM.MemoryCopy(this.pointer, storage.pointer);
 				return storage;
 			}
 			catch (System.Exception)
@@ -945,23 +943,25 @@ namespace Althea.Storage
 		PointerSegment GetCacheLevel(int index);
 
 		/// <summary>
-		/// Copy a <see cref="PointerSegment"/> from <paramref name="source"/> to another <see cref="PointerSegment"/> <paramref name="destination"/>
+		/// Encapsulates a method that copies a <see cref="PointerSegment"/> from <paramref name="source"/> to another <see cref="PointerSegment"/> <paramref name="destination"/>
 		/// </summary>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
-		/// <returns>The actual number of bytes copied</returns>
-		public delegate long CopyDelegate(PointerSegment source, PointerSegment destination);
+		/// <param name="copied">Output the actual number of bytes copied</param>
+		/// <return>Whether the encapsulated method support such copy or not</return>
+		public delegate bool CopyDelegate(PointerSegment source, PointerSegment destination, out long copied);
 
 		/// <summary>
 		/// When implemented by a derived class, retrieve some part of the data delimited by <paramref name="lengthInBytes"/> and <paramref name="totalOffsetInBytes"/> via promoting them to the highest caching level.
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value will be replaced by the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/> of <see cref="MEM.Current"/>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
+		/// <exception cref="NotSupportedException">If <paramref name="copy"/> returns false</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
 		/// <remarks>
-		/// Typically, the methods in an instance of <see cref="MEM"/> will invoke this method with <paramref name="copy"/> set to its <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/>.<br/>
+		/// Typically, the methods in an instance of <see cref="MEM"/> will invoke this method with <paramref name="copy"/> set to the  correct internal method <see cref="MEM.MemoryCopy_(PointerSegment, PointerSegment, out long)"/>.<br/>
 		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
 		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
 		/// </remarks>
@@ -970,7 +970,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">See <see cref="Retrieve(long, long, CopyDelegate?)"/></param>
 		void Flush(CopyDelegate? copy = null);
 		#endregion
 
@@ -1061,7 +1061,7 @@ namespace Althea.Storage
 			{
 				var ptr = this.GetCacheLevel(i);
 				if (ptr.IsValid())
-					MEM.SelectImplementation(ptr.Location).Free(ptr, disposeManaged);
+					MEM.Free(ptr, disposeManaged);
 			}
 		}
 
@@ -1167,11 +1167,12 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value will be replaced by the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/>.</param>
+		/// <exception cref="NotSupportedException">If <paramref name="copy"/> returns false</exception>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
 		/// <remarks>
-		/// Typically, the methods in an instance of <see cref="MEM"/> will invoke this method with <paramref name="copy"/> set to its <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/>.<br/>
+		/// Typically, the methods in an instance of <see cref="MEM"/> will invoke this method with <paramref name="copy"/> set to correct internal method <see cref="MEM.MemoryCopy_(PointerSegment, PointerSegment, out long)"/>.<br/>
 		/// Some caching strategies and algorithms (such as the ones utilized by modern computers) shall be used to improve performance.<br/>
 		/// It is not necessary to write the data in the higher caching level back to the lower one immediately while it is necessary if some new data are retrieved.
 		/// </remarks>
@@ -1180,7 +1181,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">See <see cref="Retrieve(long, long, ICachedStorage.CopyDelegate?)"/></param>
 		public abstract void Flush(ICachedStorage.CopyDelegate? copy = null);
 		#endregion
 	}
@@ -1296,8 +1297,9 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value will be replaced by the <see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
+		/// <exception cref="NotSupportedException">If <paramref name="copy"/> returns false</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
 		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
 		public PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
@@ -1314,7 +1316,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">See <see cref="Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>.</param>
 		/// <remarks>This method utilizes the <see cref="ICachedStorage.Flush(ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
 		public void Flush(ICachedStorage.CopyDelegate? copy = null)
 		{
@@ -1416,14 +1418,22 @@ namespace Althea.Storage
 		/// <summary>
 		/// Update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
-		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">See <see cref="Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>.</param>
 		public override void Flush(ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (!this.cached)
 				return;
-			copy ??= MEM.SelectImplementation(this).MemoryCopy;
 			// copy
-			copy.Invoke(this.memory, this.stream.MoveBy(streamOffset, this.memory.LengthInBytes));
+			if (copy is null)
+			{
+				MEM.MemoryCopy(this.memory, this.stream.MoveBy(streamOffset, this.memory.LengthInBytes));
+			}
+			else
+			{
+				bool support = copy.Invoke(this.memory, this.stream.MoveBy(streamOffset, this.memory.LengthInBytes), out _);
+				if (!support)
+					throw new NotSupportedException(Support.Location);
+			}
 			// reset
 			this.cached = false; this.streamOffset = 0;
 		}
@@ -1433,8 +1443,9 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="totalOffsetInBytes">The total offset (in bytes) in the lowest caching level (the cache level where all the data preserves)</param>
 		/// <param name="lengthInBytes">The length to retrieve (in bytes), default 0 means retrieve as much as possible</param>
-		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value can be replaced by the <see cref="MEM.SelectImplementation(IStorage, IStorage)"/>.<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)">MemoryCopy</see>.</param>
+		/// <param name="copy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data between caching levels. The default null value will be replaced by the<see cref="MEM.MemoryCopy(PointerSegment, PointerSegment)"/>.</param>
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
+		/// <exception cref="NotSupportedException">If <paramref name="copy"/> returns false</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="CachedStorage{T}.TopCacheSizeInBytes"/></exception>
 		public override PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
 		{
@@ -1447,11 +1458,16 @@ namespace Althea.Storage
 				throw new ArgumentOutOfRangeException(nameof(lengthInBytes));
 
 			long offset = totalOffsetInBytes;
-			copy ??= MEM.SelectImplementation(this).MemoryCopy;
 			if (!this.cached)
 			{   // not cached yet
+				bool support = true;
 				// copy from stream storage to memory cache as much as possible
-				copy.Invoke(this.stream.MoveBy(offset, memLen), this.memory);
+				if (copy is null)
+					MEM.MemoryCopy(this.stream.MoveBy(offset, memLen), this.memory);
+				else
+					support = copy.Invoke(this.stream.MoveBy(offset, memLen), this.memory, out _);
+				if (!support)
+					throw new NotSupportedException(Support.Location);
 				return this.memory.AsLength(LengthInBytes);
 			}
 			// else
@@ -1471,12 +1487,27 @@ namespace Althea.Storage
 			{   // partial overlap
 				long overlapLength = memLen - offsetDiffU;
 				var stream = this.stream.MoveBy(this.streamOffset);
-				// flush (copy from memory cache to stream storage)
-				copy.Invoke(this.memory.AsLength(offsetDiffU), stream.AsLength(offsetDiffU));
-				// copy inside memory cache
-				copy.Invoke(this.memory.MoveBy(offsetDiff, overlapLength), this.memory.AsLength(overlapLength));
-				// copy from stream storage to memory cache as much as possible
-				copy.Invoke(stream.MoveBy(memLen, offsetDiffU), this.memory.MoveBy(offsetDiff, offsetDiffU));
+				if (copy is null)
+				{
+					// flush (copy from memory cache to stream storage)
+					MEM.MemoryCopy(this.memory.AsLength(offsetDiffU), stream.AsLength(offsetDiffU));
+					// copy inside memory cache
+					MEM.MemoryCopy(this.memory.MoveBy(offsetDiff, overlapLength), this.memory.AsLength(overlapLength));
+					// copy from stream storage to memory cache as much as possible
+					MEM.MemoryCopy(stream.MoveBy(memLen, offsetDiffU), this.memory.MoveBy(offsetDiff, offsetDiffU));
+				}
+				else
+				{
+					// flush (copy from memory cache to stream storage)
+					if (!copy.Invoke(this.memory.AsLength(offsetDiffU), stream.AsLength(offsetDiffU), out _))
+						throw new NotSupportedException(Support.Location);
+					// copy inside memory cache
+					if (!copy.Invoke(this.memory.MoveBy(offsetDiff, overlapLength), this.memory.AsLength(overlapLength), out _))
+						throw new NotSupportedException(Support.Location);
+					// copy from stream storage to memory cache as much as possible
+					if (!copy.Invoke(stream.MoveBy(memLen, offsetDiffU), this.memory.MoveBy(offsetDiff, offsetDiffU), out _))
+						throw new NotSupportedException(Support.Location);
+				}
 				return this.stream.AsLength(lengthInBytes);
 			}
 			else
@@ -1484,12 +1515,27 @@ namespace Althea.Storage
 				long overlapLength = memLen - offsetDiffU;
 				long overlapLengthI = overlapLength;
 				var stream = this.stream.MoveBy(this.streamOffset);
-				// flush (copy from memory cache to stream storage)
-				copy.Invoke(this.memory.MoveBy(overlapLengthI, offsetDiffU), stream.MoveBy(overlapLengthI, offsetDiffU));
-				// copy inside memory cache
-				copy.Invoke(this.memory.AsLength(overlapLength), this.memory.MoveBy(-offsetDiff, overlapLength));
-				// copy from stream storage to memory cache as much as possible
-				copy.Invoke(stream.MoveBy(offsetDiff, offsetDiffU), this.memory.AsLength(offsetDiffU));
+				if (copy is null)
+				{
+					// flush (copy from memory cache to stream storage)
+					MEM.MemoryCopy(this.memory.MoveBy(overlapLengthI, offsetDiffU), stream.MoveBy(overlapLengthI, offsetDiffU));
+					// copy inside memory cache
+					MEM.MemoryCopy(this.memory.AsLength(overlapLength), this.memory.MoveBy(-offsetDiff, overlapLength));
+					// copy from stream storage to memory cache as much as possible
+					MEM.MemoryCopy(stream.MoveBy(offsetDiff, offsetDiffU), this.memory.AsLength(offsetDiffU));
+				}
+				else
+				{
+					// flush (copy from memory cache to stream storage)
+					if (!copy.Invoke(this.memory.MoveBy(overlapLengthI, offsetDiffU), stream.MoveBy(overlapLengthI, offsetDiffU), out _))
+						throw new NotSupportedException(Support.Location);
+					// copy inside memory cache
+					if (!copy.Invoke(this.memory.AsLength(overlapLength), this.memory.MoveBy(-offsetDiff, overlapLength), out _))
+						throw new NotSupportedException(Support.Location);
+					// copy from stream storage to memory cache as much as possible
+					if (!copy.Invoke(stream.MoveBy(offsetDiff, offsetDiffU), this.memory.AsLength(offsetDiffU), out _))
+						throw new NotSupportedException(Support.Location);
+				}
 				return this.stream.AsLength(lengthInBytes);
 			}
 		}

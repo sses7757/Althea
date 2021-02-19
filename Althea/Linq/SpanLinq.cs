@@ -1018,6 +1018,28 @@ namespace Althea.Linq
 			return span;
 		}
 
+
+		/// <summary>
+		/// Set the first to the third element of <see cref="Span{T}"/> to the given <paramref name="value1"/> and <paramref name="value2"/>
+		/// </summary>
+		/// <typeparam name="T">any data type</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to set</param>
+		/// <param name="value1">The first value of type <typeparamref name="T"/></param>
+		/// <param name="value2">The second value of type <typeparamref name="T"/></param>
+		/// <param name="value3">The third value of type <typeparamref name="T"/></param>
+		/// <returns>The <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
+		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2, T value3)
+		{
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+			if (span.Length < 2)
+				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+			span[0] = value1; span[1] = value2; span[2] = value3;
+			return span;
+		}
+
 		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
 		/// </summary>
@@ -1081,6 +1103,24 @@ namespace Althea.Linq
 		public static Span<TTo> As<TFrom, TTo>(this Span<TFrom> span) where TFrom : struct where TTo : struct
 		{
 			return MemoryMarshal.Cast<TFrom, TTo>(span);
+		}
+
+		// Ignore Spelling: stackalloc
+		/// <summary>
+		/// Cast the given <paramref name="span"/> of <see cref="IntPtr"/> to a <see cref="Span{T}"/> of reference-type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">The reference type to cast to</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> of <see cref="IntPtr"/> to cast from</param>
+		/// <returns>The <see cref="Span{T}"/> of reference-type <typeparamref name="T"/> casted from <paramref name="span"/></returns>
+		/// <example>
+		/// <code>
+		/// Span&lt;IntPtr&gt; span = stackalloc IntPtr[5];<br/>
+		/// Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
+		/// </code>
+		/// </example>
+		public static Span<T> AsReferenceType<T>(this Span<IntPtr> span) where T : class
+		{
+			return MemoryMarshal.CreateSpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
 		}
 
 		/// <summary>

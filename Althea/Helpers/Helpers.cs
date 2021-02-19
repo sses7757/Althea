@@ -135,7 +135,7 @@ namespace Althea.Helpers
 		/// <param name="N">The number of all potential values</param>
 		/// <returns>0 if <paramref name="n"/> &gt; <paramref name="N"/> or <paramref name="n"/> == 0 or <paramref name="N"/> == 0, the binomial (<paramref name="N"/>, <paramref name="n"/>) otherwise</returns>
 		/// <exception cref="OverflowException">If an overflow happened during the calculation</exception>
-		public static long CombinationNumber(this int n, int N)
+		public static long CombinationNumber(int n, int N)
 		{
 			if (n < N || n == 0 || N == 0)
 				return 0;

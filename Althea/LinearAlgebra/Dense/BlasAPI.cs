@@ -12,7 +12,7 @@ namespace Althea.LinearAlgebra.Dense
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
-		#region static methods for dispatching
+		#region basic
 		/// <summary>
 		/// Get the current using <see cref="AbstractApi"/>.
 		/// </summary>
@@ -22,171 +22,327 @@ namespace Althea.LinearAlgebra.Dense
 		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
 
 		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.DisposeNotCurrent{T}(LinkedList{T})"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void DisposeNotCurrent() => DisposeNotCurrent(RecentAPIs);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T>(Storage<T> storage) where T : unmanaged => SelectImplementation(RecentAPIs, storage);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther);
-			var selectThis = SelectImplementation(RecentAPIs, storage);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2);
-			var selectThis = SelectImplementation(RecentAPIs, storage);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2, storageOther3);
-			var selectThis = SelectImplementation(RecentAPIs, storage);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther);
-			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2);
-			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2, storageOther3);
-			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3) where T : unmanaged => SelectImplementation(RecentAPIs, storage1, storage2, storage3);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther);
-			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2, storage3);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther1, Storage<TOther> storageOther2) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2);
-			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2, storage3);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T, TOther>(Storage<T> storage1, Storage<T> storage2, Storage<T> storage3, Storage<TOther> storageOther1, Storage<TOther> storageOther2, Storage<TOther> storageOther3) where T : unmanaged where
-			TOther : unmanaged
-		{
-			var selectOther = SelectImplementation(RecentAPIs, storageOther1, storageOther2, storageOther3);
-			var selectThis = SelectImplementation(RecentAPIs, storage1, storage2, storage3);
-			if (ReferenceEquals(selectThis, selectOther))
-				return selectThis;
-			else
-				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-		}
 		#endregion
 
 
 		#region support information
 		/// <summary>
-		/// When implemented by a derived class, get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
+		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by vector unary operations of this implementation or not.
 		/// </summary>
-		public abstract IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer { get; }
+		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
+		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The unary operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedVectorUnary(CombinationOfLocations location);
 
 		/// <summary>
-		/// When implemented by a derived class, check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector binary operations of this implementation or not.
 		/// </summary>
-		/// <param name="locations">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
-		/// <returns>Whether this implementation supports data transfer between <paramref name="locations"/> and C# managed memory</returns>
-		public virtual bool IsSupportedTransfer(CombinationOfLocations locations) => this.SupportedManagedTransfer.Contains(locations);
+		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
+		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
+		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The binary operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedVectorBinary(CombinationOfLocations location1, CombinationOfLocations location2);
+
+		/// <summary>
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector and matrix trinary operations of this implementation or not.
+		/// </summary>
+		/// <param name="vector1">The given <see cref="CombinationOfLocations"/> of the first vector</param>
+		/// <param name="vector2">The given <see cref="CombinationOfLocations"/> of the second vector</param>
+		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of matrix</param>
+		/// <returns>Whether trinary operations between <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The binary operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedVectorBinaryMatrix(CombinationOfLocations vector1, CombinationOfLocations vector2, CombinationOfLocations matrix);
+
+		/// <summary>
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by matrix binary operations of this implementation or not.
+		/// </summary>
+		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
+		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
+		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The binary operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedMatrixBinary(CombinationOfLocations location1, CombinationOfLocations location2);
+
+		/// <summary>
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by matrix trinary operations of this implementation or not.
+		/// </summary>
+		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
+		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
+		/// <param name="location3">The third given <see cref="CombinationOfLocations"/></param>
+		/// <returns>Whether trinary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The binary operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedMatrixTrinary(CombinationOfLocations location1, CombinationOfLocations location2, CombinationOfLocations location3);
 		#endregion
 
 
+		#region static methods as dispatchers
+		#region BLAS level 1
+		/// <summary>
+		/// Find the (smallest) index of the element with the maximum magnitude.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The resulting index</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static long AbsoluteValueArgMax<T>(Storage<T> x, int strideX) where T : unmanaged;
+
+		/// <summary>
+		/// Find the (smallest) index of the element with the minimum magnitude.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The resulting index or 0 if <paramref name="strideX"/> is less than 1</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged;
+
+		/// <summary>
+		/// Compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The result value as a <see cref="double"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged;
+
+		/// <summary>
+		/// Multiply the vector <paramref name="x"/> by the scalar <paramref name="α"/> and in-place add it to the vector <paramref name="y"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public static void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Compute the dot (inner) product of vectors <paramref name="x"/> and <paramref name="y"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="conjX">Conjugate <paramref name="x"/> or not</param>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <returns>The result value as a <typeparamref name="T"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public static T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
+
+		/// <summary>
+		/// Compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="strideX"/> ≤ 0</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static double Norm<T>(Storage<T> x, int strideX) where T : unmanaged;
+
+		/// <summary>
+		/// In-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static void Scale<T>(T α, Storage<T> x, int strideX) where T : unmanaged, IEquatable<T>;
+		#endregion
+
+		#region BLAS level 2
+		/// <summary>
+		/// Perform the matrix-vector multiplication: <paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>)* <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/>.<br/>
+		/// Where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> and <paramref name="β"/> are scalars.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="op">The <see cref="MatrixOperation"/> that is non- or (conj.) transpose</param>
+		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
+		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
+		/// <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="lda">The leading dimension of the two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> otherwise</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="y"/>. If this is 0, then the original values of <paramref name="y"/> will be ignored.</param>
+		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="m"/>-1)*<paramref name="strideY"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> otherwise</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public static void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Perform the symmetric/hermitian matrix-vector multiplication:<br/>
+		/// <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="A"/>*<paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.<br/>
+		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
+		/// </summary>
+		/// <param name="fillLower">The indicates whether <paramref name="A"/>'s lower or upper part is stored</param>
+		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideX"/>))</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="y"/>. If this is 0, then the original values of <paramref name="y"/> will be ignored.</param>
+		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideY"/>))</c></param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public static void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Perform the rank-1 update:<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="y"/>^op + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjY"/> ? H : T</c>.<br/>
+		/// Where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> is a scalar.
+		/// </summary>
+		/// <param name="conjY">Conjugate <paramref name="y"/> or not</param>
+		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
+		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
+		public static void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Perform the symmetric/hermitian rank-1 update:<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
+		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
+		/// </summary>
+		/// <param name="fillLower">The <see cref="bool"/> of result matrix <paramref name="A"/></param>
+		/// <param name="conjX">Conjugate the second <paramref name="x"/> or not</param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		#endregion
+
+		#region BLAS level 3
+		/// <summary>
+		/// Perform the matrix-matrix multiplication:<br/>
+		/// <paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars; <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are matrices stored in column-major format with dimensions <paramref name="opA"/>(<paramref name="A"/>) → <paramref name="m"/>×<paramref name="k"/>, <paramref name="opB"/>(<paramref name="B"/>) → <paramref name="k"/>×<paramref name="n"/> and <paramref name="C"/> → <paramref name="m"/>×<paramref name="n"/>, respectively.
+		/// </summary>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="B"/></param>
+		/// <param name="m">The number of rows of matrix <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</param>
+		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Perform the symmetric/hermitian matrix-matrix multiplication:<br/>
+		/// If <paramref name="leftA"/> is true, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>; otherwise, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="B"/> * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></c>.<br/>
+		/// Where <paramref name="A"/> is a symmetric/hermitian matrix stored in lower or upper mode, <paramref name="B"/> and <paramref name="C"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.
+		/// </summary>
+		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> lower or upper part is stored</param>
+		/// <param name="leftA">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> is on the left or right of <paramref name="B"/></param>
+		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or symmetric matrix</param>
+		/// <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
+		/// <param name="n">The number of columns of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
+		/// <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
+		/// Perform the symmetric/hermitian rank-k update:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
+		/// </summary>
+		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s lower or upper part is stored</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+		/// <param name="conjA">Conjugate transpose <paramref name="A"/> or just transpose <paramref name="A"/></param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void RankKUpdate<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		#endregion
+		#endregion
+
+
+		#region abstract methods that actually do computations
 		#region BLAS level 1
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the maximum magnitude.
@@ -194,10 +350,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The resulting index</returns>
+		/// <param name="index">Output the resulting index</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public abstract long AbsoluteValueArgMax<T>(Storage<T> x, int strideX) where T : unmanaged;
+		protected abstract bool AbsoluteValueArgMax_<T>(Storage<T> x, int strideX, out long index) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the minimum magnitude.
@@ -205,10 +362,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The resulting index or 0 if <paramref name="strideX"/> is less than 1</returns>
+		/// <param name="index">Output the resulting index</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public abstract long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged;
+		protected abstract bool AbsoluteValueArgMin_<T>(Storage<T> x, int strideX, out long index) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
@@ -216,10 +374,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The result value as a <see cref="double"/></returns>
+		/// <param name="sum">Output the result as a <see cref="double"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public abstract double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged;
+		protected abstract bool AbsoluteValueSum_<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, multiply the vector <paramref name="x"/> by the scalar <paramref name="α"/> and in-place add it to the vector <paramref name="y"/>.
@@ -230,9 +389,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public abstract void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		protected abstract bool VectorGeneralAdd_<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the dot (inner) product of vectors <paramref name="x"/> and <paramref name="y"/>.
@@ -243,10 +403,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
-		/// <returns>The result value as a <typeparamref name="T"/></returns>
+		/// <param name="dot">Output the result value as a <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public abstract T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
+		protected abstract bool Dot_<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY, out T dot) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
@@ -254,9 +415,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="strideX"/> ≤ 0</returns>
+		/// <param name="norm">Output the result value as a <see cref="double"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public abstract double Norm<T>(Storage<T> x, int strideX) where T : unmanaged;
+		protected abstract bool Norm_<T>(Storage<T> x, int strideX, out double norm) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
@@ -264,10 +426,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public abstract void Scale<T>(T α, Storage<T> x, int strideX) where T : unmanaged, IEquatable<T>;
+		protected abstract bool Scale_<T>(T α, Storage<T> x, int strideX) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 2
@@ -289,7 +452,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public abstract void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		protected abstract void GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-vector multiplication:<br/>
@@ -309,7 +472,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public abstract void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		protected abstract void SymmHermMatrixMultiplyVector_<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -329,7 +492,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public abstract void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		protected abstract void GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
@@ -347,7 +510,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public abstract void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		protected abstract void SymmHermRankOneUpdate_<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 3
@@ -370,7 +533,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract void GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-matrix multiplication:<br/>
@@ -391,7 +554,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void SymmHermMatrixMultiplyGeneral<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract void SymmHermMatrixMultiplyGeneral_<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
@@ -410,7 +573,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public abstract void RankKUpdate<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract void RankKUpdate_<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		#endregion
 		#endregion
 	}
 }

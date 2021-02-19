@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Althea.Linq;
 using Althea.Helpers;
 using Althea.NativeTypes;
+using Althea.Backend.Arrays;
 
 using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
@@ -76,7 +77,7 @@ namespace Althea.Arrays
 		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
 		public virtual void FillWith(T value)
 		{
-			MEM.SelectImplementation(this.Storage).FillWithValue(this.Storage, value);
+			MEM.FillWithValue(this.Storage, value);
 		}
 
 		/// <summary>
@@ -385,7 +386,7 @@ namespace Althea.Arrays
 				output.Append(item switch
 				{
 					StringTerms.Stroage => $"value_storage={{{this.Storage}}}",
-					StringTerms.Size => $"size={string.Join("x", this.Size)}",
+					StringTerms.Size => $"size={string.Join('x', this.m_size)}",
 					_ => "",
 				});
 				output.Append(", ");
@@ -411,7 +412,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the hash code this array. The default implementation only takes <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/> into account.
 		/// </summary>
 		/// <returns>The hash code computed by <see cref="Storage"/> and <see cref="AbstractArray{T}.Size"/></returns>
-		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size);
+		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size.HashCodeOfSpan());
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation utilizes <see cref="AbstractArray{T}.Equals(object?)"/> and additionally compares <see cref="Storage"/>s.
@@ -497,8 +498,7 @@ namespace Althea.Arrays
 			{
 				index = lad.AbsoluteValueArgMax(array.Storage, 1);
 			}
-			double val = MEM.SelectImplementation(array.Storage)
-							.ToManaged(array.Storage.MakeReference(offset: index))
+			double val = MEM.ToManaged(array.Storage.MakeReference(offset: index))
 							.GenericAbsolute()
 							.ToDouble();
 			return val <= 1E-6;

@@ -67,6 +67,11 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region reshape
+		/// <summary>
+		/// Convert this sparse vector to a dense vector
+		/// </summary>
+		/// <returns>The converted <see cref="Backend.Arrays.DenseVector{T}"/></returns>
+		public override Backend.Arrays.DenseVector<T> ToDense() => throw new NotImplementedException();
 
 		public override ValueArray<T> ToMatrix(long leadDim = 0) => throw new NotImplementedException();
 		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) => throw new NotImplementedException();
@@ -218,7 +223,7 @@ namespace Althea.Backend.Arrays
 		public virtual void ReplaceBy(SparseVector<T, TInd> other)
 		{
 			this.CheckSparsity(other);
-			MEM.SelectImplementation(this.Storage, other.Storage).MemoryCopy(other.Storage, this.Storage);
+			MEM.MemoryCopy(other.Storage, this.Storage);
 		}
 
 		/// <summary>
@@ -287,12 +292,12 @@ namespace Althea.Backend.Arrays
 		{
 			if (typeof(TInd) == typeof(long))
 			{
-				MEM.SelectImplementation(this.IndexStorage).ToManaged(this.IndexStorage as Storage<long> ?? Storage<long>.Empty, indices);
+				MEM.ToManaged(this.IndexStorage as Storage<long> ?? Storage<long>.Empty, indices);
 				return;
 			}
 			// else
 			Span<TInd> temp = indices.Length.CheckStockLimit<TInd>() ?? stackalloc TInd[indices.Length];
-			MEM.SelectImplementation(this.IndexStorage).ToManaged(this.IndexStorage, temp);
+			MEM.ToManaged(this.IndexStorage, temp);
 			temp.CopyTo(indices, static a => a.ReflectionConvert<TInd, long>());
 		}
 

@@ -901,7 +901,7 @@ namespace Althea
 			var storage = Storage.StorageFactory<T>.CreateAlike(this);
 			try
 			{
-				MEM.SelectImplementation(this, storage).MemoryCopy(this, storage);
+				MEM.MemoryCopy(this, storage);
 				return storage;
 			}
 			catch (System.Exception)
@@ -1264,7 +1264,7 @@ namespace Althea
 			{
 				var ptr = this[i];
 				if (ptr.IsValid())
-					MEM.SelectImplementation(ptr.Location).Free(ptr, disposeManaged);
+					MEM.Free(ptr, disposeManaged);
 			}
 		}
 
@@ -1284,7 +1284,7 @@ namespace Althea
 		/// <exception cref="OutOfMemoryException">If system cannot allocate <paramref name="length"/> on <paramref name="location"/></exception>
 		protected static PointerSegment Allocate(StorageLocation location, long length)
 		{
-			return MEM.SelectImplementation(location).Allocate<T>(location, length);
+			return MEM.Allocate<T>(location, length);
 		}
 		#endregion
 	}

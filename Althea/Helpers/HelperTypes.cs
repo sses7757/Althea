@@ -368,12 +368,12 @@ namespace Althea.Helpers
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 128 + sizeof(int))]
 	[UnsafeValueType]
-	public readonly unsafe struct SizedFixedBuffer_128<T> : IEquatable<SizedFixedBuffer_128<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct SizedFixedBuffer_128<T> : IEquatable<SizedFixedBuffer_128<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private readonly int size;
 
-		private readonly T field;
+		private T field;
 
 		/// <summary>
 		/// The number of elements in this fixed buffer
@@ -508,6 +508,15 @@ namespace Althea.Helpers
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
 			}
+		}
+
+		/// <summary>
+		/// Create a <see cref="ReadOnlySpan{T}"/> from this sized fixed buffer
+		/// </summary>
+		/// <returns>The <see cref="ReadOnlySpan{T}"/> referring to this sized fixed buffer</returns>
+		public ReadOnlySpan<T> AsSpan()
+		{
+			return MemoryMarshal.CreateReadOnlySpan(ref this.field, this.size);
 		}
 		#endregion
 

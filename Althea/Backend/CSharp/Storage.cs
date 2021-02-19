@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -49,43 +48,47 @@ namespace Althea.Backend.CSharp.Storage
 		#endregion
 
 		#region private
-		private static readonly IReadOnlyList<CombinationOfLocations> NoTCPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone),
-			WithTCPUnary = GenerateUnaryLoactions(CpuAlone, FileAlone, TcpAlone);
+		private static readonly CombinationOfLocations[] NoTCPUnary
+			= GenerateUnaryLoactions(stackalloc StorageLocation[2].SetValue(CpuAlone, FileAlone));
+		private static readonly CombinationOfLocations[] WithTCPUnary
+			= GenerateUnaryLoactions(stackalloc StorageLocation[3].SetValue(CpuAlone, FileAlone, TcpAlone));
 
-		private static readonly IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> NoTCPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone),
-			WithTCPBinary = GenerateBinaryLoactions(CpuAlone, FileAlone, TcpAlone);
-
-		private bool IsSupported(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempTcpFolder is not null && location == TcpAlone);
+		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] NoTCPBinary
+			= GenerateBinaryLoactions(stackalloc StorageLocation[2].SetValue(CpuAlone, FileAlone));
+		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] WithTCBinary
+			= GenerateBinaryLoactions(stackalloc StorageLocation[3].SetValue(CpuAlone, FileAlone, TcpAlone));
 		#endregion
 
 		#region support
-		public override IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations => this.TempTcpFolder is null ? NoTCPUnary : WithTCPUnary;
+		protected override bool IsSupportedUnary(CombinationOfLocations location) => this.TempTcpFolder is null ? NoTCPUnary.Contains(location) : WithTCPUnary.Contains(location);
 
-		public override IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations => this.TempTcpFolder is null ? NoTCPBinary : WithTCPBinary;
+		protected override bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2) => this.TempTcpFolder is null ? NoTCPBinary.Contains((location1, location2)) : WithTCBinary.Contains((location1, location2));
 
-		public override IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer => this.SupportedUnaryLocations;
+		protected override bool CanTransferWithManaged(CombinationOfLocations location) => this.IsSupportedUnary(location);
 		#endregion
 
 		#region properties
-		public override (int major, int minor) DriverVersion(LocationType location) => default;
+		public override bool IsSupportedLocation(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempTcpFolder is not null && location == TcpAlone);
+
+		public override (int major, int minor) DriverVersion(StorageLocation location) => default;
 
 		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
 		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
 			var memoryInfo = GC.GetGCMemoryInfo();
-			long total = unchecked(memoryInfo.TotalAvailableMemoryBytes);
-			long free = total - unchecked(Environment.WorkingSet);
+			long total = memoryInfo.TotalAvailableMemoryBytes;
+			long free = total - Environment.WorkingSet;
 			return (free, total);
 		}
-
-		public override int MaxDeviceNumber(LocationType location) => 1;
 		#endregion
 
 		#region low-level storage operations
-		protected internal override PointerSegment Allocate(StorageLocation location, long length)
+		protected override bool Allocate_(StorageLocation location, long length, out PointerSegment result)
 		{
-			if (!this.IsSupported(location))
-				throw new NotSupportedException(Support.Location);
+			if (!this.IsSupportedLocation(location))
+			{
+				result = default; return false;
+			}
 
 			IPointer pointer; // box struct to interface
 			if (location == CpuAlone)
@@ -108,36 +111,42 @@ namespace Althea.Backend.CSharp.Storage
 					pointer = new StreamPointer(new TcpStream(builder.Uri, length, Backend.Storage.Tcp.DefaultTcpMethods.DefaultTcpProtocol), location);
 				}
 				else
-					throw new NotSupportedException(Support.Location);
+				{
+					result = default; return false;
+				}
 			}
-			return new PointerSegment(pointer);
+			result = new PointerSegment(pointer); return true;
 		}
 
-		protected internal override bool Free(PointerSegment pointer, bool disposeManaged)
+		protected override bool Free_(PointerSegment pointer, bool disposeManaged, out bool valid)
 		{
 			var offset = pointer.GetPointerOffset(out IMemoryPointer? mp, out IStreamPointer? sp, @throw: false);
-			if (offset != 0)
-				return false;
+			if (offset == INVALID)
+			{
+				valid = false; return true;
+			}
+			if (offset == NOT_SUPPORT)
+			{
+				valid = true; return false;
+			}
 
 			if (mp is not null)
 			{
 				Marshal.FreeHGlobal(mp.Pointer);
-				return true;
 			}
 			else if (sp is not null)
 			{
 				sp.Dispose();
-				return true;
 			}
-			else
-			{
-				return false;
-			}
+			valid = true; return true;
 		}
 
-		public unsafe override void FillWithValue(PointerSegment pointer, byte value)
+		protected unsafe override bool FillWithValue_(PointerSegment pointer, byte value)
 		{
 			var offset = pointer.GetPointerOffset(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (offset == NOT_SUPPORT)
+				return false;
+
 			if (mp is not null)
 			{
 				Unsafe.InitBlock(mp.NativePointer(offset), value, checked((uint)pointer.LengthInBytes));
@@ -145,15 +154,17 @@ namespace Althea.Backend.CSharp.Storage
 			else if (sp is not null)
 			{
 				sp.NativeStream.Position = offset;
-				sp.NativeStream.SetValues<byte>(value, pointer.LengthInBytes);
+				sp.NativeStream.SetValues(value, pointer.LengthInBytes);
 			}
-			else // never here
-				return;
+			return true;
 		}
 
-		public override void FillWithValue<T>(PointerSegment pointer, T value)
+		protected override bool FillWithValue_<T>(PointerSegment pointer, T value)
 		{
 			var offset = pointer.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (offset == NOT_SUPPORT)
+				return false;
+
 			if (mp is not null)
 			{
 				mp.AsSpan<T>(pointer).Fill(value);
@@ -163,14 +174,17 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offset;
 				sp.NativeStream.SetValues<T>(value, pointer.LengthInBytes / Storage<T>.SizeOfT);
 			}
-			else // never here
-				return;
+			return true;
 		}
 
-		public override long MemoryCopy(PointerSegment source, PointerSegment destination)
+		protected override bool MemoryCopy_(PointerSegment source, PointerSegment destination, out long copied)
 		{
 			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
+			{
+				copied = 0; return false;
+			}
 
 			uint copyLength = checked((uint)Math.Min(source.LengthInBytes, destination.LengthInBytes));
 			if (srcMP is not null && dstMP is not null)
@@ -196,10 +210,10 @@ namespace Althea.Backend.CSharp.Storage
 				dstSP.NativeStream.Position = dstOff;
 				srcSP.NativeStream.CopyTo(dstSP.NativeStream, source.LengthInBytes);
 			}
-			return copyLength;
+			copied = copyLength; return true;
 		}
 
-		public override void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
+		protected override bool MemoryCopy2D_(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
 		{
 			if (sourceLD == 0)
 				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
@@ -218,12 +232,14 @@ namespace Althea.Backend.CSharp.Storage
 			// shortcut
 			if (sourceLD == destinationLD && sourceLD == height)
 			{
-				this.MemoryCopy(source.AsLength(height * width), destination.AsLength(height * width));
-				return;
+				return this.MemoryCopy_(source.AsLength(height * width), destination.AsLength(height * width), out _);
 			}
 			// normal cases
 			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
+				return false;
+
 			if (srcMP is not null && dstMP is not null)
 			{
 				uint hh = checked((uint)height);
@@ -237,7 +253,7 @@ namespace Althea.Backend.CSharp.Storage
 						Unsafe.CopyBlock(dstPtr, srcPtr, hh);
 					}
 				}
-				return;
+				return true;
 			}
 			long end = source.OffsetInBytes + sourceLD * width;
 			long srcLD = sourceLD, dstLD = destinationLD;
@@ -267,11 +283,10 @@ namespace Althea.Backend.CSharp.Storage
 					srcSP.NativeStream.CopyTo(dstSP.NativeStream, height);
 				}
 			}
-			else // never here
-				return;
+			return true;
 		}
 
-		public override long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination)
+		protected override bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long copied)
 		{
 			long srcLen = source.LengthInBytes / Storage<T>.SizeOfT, dstLen = destination.LengthInBytes / Storage<T>.SizeOfT;
 			if (incrementSource <= 0 || incrementSource >= srcLen)
@@ -282,12 +297,17 @@ namespace Althea.Backend.CSharp.Storage
 			// shortcut
 			if (incrementSource == 1 && incrementDestination == 1)
 			{
-				this.MemoryCopy(source, destination);
+				return this.MemoryCopy_(source, destination, out copied);
 			}
 			// other cases
 			long copyLength = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
 			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
+			{
+				copied = 0; return false;
+			}
+
 			if (srcMP is not null && dstMP is not null)
 			{
 				Span<T> srcSpan = srcMP.AsSpan<T>(source), dstSpan = dstMP.AsSpan<T>(destination);
@@ -333,32 +353,41 @@ namespace Althea.Backend.CSharp.Storage
 					dstOff += incrementDestination;
 				}
 			}
-			return copyLength;
+			copied = copyLength; return true;
 		}
 		#endregion
 
 		#region low-level storage and manged operations
-		public override T ToManaged<T>(PointerSegment source)
+		protected override bool ToManaged_<T>(PointerSegment source, out T result)
 		{
+			result = default;
 			long offset = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (offset == NOT_SUPPORT)
+				return false;
+
 			if (mp is not null)
 			{
-				unsafe { return Unsafe.Read<T>(mp.UnmangedPointer<T>(offset)); }
+				unsafe
+				{
+					result = Unsafe.Read<T>(mp.UnmangedPointer<T>(offset));
+				}
 			}
 			else if (sp is not null)
 			{
 				Span<T> span = stackalloc T[1];
 				sp.NativeStream.Position = offset;
 				sp.NativeStream.ToManged(span);
-				return span[0];
+				result = span[0];
 			}
-			else // never here
-				return default;
+			return true;
 		}
 
-		public override void FromManaged<T>(PointerSegment destination, T value)
+		protected override bool FromManaged_<T>(PointerSegment destination, T value)
 		{
 			long offset = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (offset == NOT_SUPPORT)
+				return false;
+
 			if (mp is not null)
 			{
 				unsafe { Unsafe.Write(mp.UnmangedPointer<T>(offset), value); }
@@ -370,8 +399,7 @@ namespace Althea.Backend.CSharp.Storage
 				sp.NativeStream.Position = offset;
 				sp.NativeStream.FromManged<T>(span);
 			}
-			else // never here
-				return;
+			return true;
 		}
 
 		private static long ToManaged<T>(IMemoryPointer? mp, IStreamPointer? sp, long offsetSrc, Span<T> destination, int offsetDst, int copyLength) where T : unmanaged
@@ -404,24 +432,34 @@ namespace Althea.Backend.CSharp.Storage
 			return copyLength;
 		}
 
-		public override long ToManaged<T>(PointerSegment source, Span<T> destination)
+		protected override bool ToManaged_<T>(PointerSegment source, Span<T> destination, out long copied)
 		{
 			long offset = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (offset == NOT_SUPPORT)
+			{
+				copied = 0; return false;
+			}
+
 			int copyLength = checked((int)Math.Min(source.LengthInBytes / Storage<T>.SizeOfT, destination.Length));
-			return ToManaged(mp, sp, offset, destination, 0, copyLength);
+			copied = ToManaged(mp, sp, offset, destination, 0, copyLength);
+			return true;
 		}
 
-		public override long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values)
+		protected override bool FromManaged_<T>(PointerSegment destination, ReadOnlySpan<T> values, out long copied)
 		{
 			long offset = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (offset == NOT_SUPPORT)
+			{
+				copied = 0; return false;
+			}
+
 			int copyLength = checked((int)Math.Min(destination.LengthInBytes / Storage<T>.SizeOfT, values.Length));
-			return FromManaged(mp, sp, offset, values, 0, copyLength);
+			copied = FromManaged(mp, sp, offset, values, 0, copyLength);
+			return true;
 		}
 
-		public override void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0)
+		protected override bool ToManaged2D_<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0)
 		{
-			if (!source.IsValid())
-				throw new ArgumentNullException(nameof(source));
 			if (leadDim == 0)
 				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
 			if (width == 0)
@@ -430,6 +468,11 @@ namespace Althea.Backend.CSharp.Storage
 				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
 			if (height > leadDim || height > destinationLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
+
+			long start = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (start == NOT_SUPPORT)
+				return false;
+
 			if (leadDim * width > (source.Pointer.LengthInBytes - source.OffsetInBytes) / Storage<T>.SizeOfT)
 				throw new ArgumentException(Parameter.WrongSize, nameof(source));
 			if (leadDim * width > destination.Length)
@@ -437,11 +480,10 @@ namespace Althea.Backend.CSharp.Storage
 			if (destinationLeadDim == 0)
 				destinationLeadDim = height;
 			// shortcut
-			long start = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (leadDim == height && destinationLeadDim == height)
 			{
 				ToManaged(mp, sp, start, destination, 0, checked((int)(height * width)));
-				return;
+				return true;
 			}
 			// normal cases
 			int h = checked((int)height), dstLD = checked((int)destinationLeadDim);
@@ -451,12 +493,11 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				ToManaged(mp, sp, srcOffset, destination, dstOffset, h);
 			}
+			return true;
 		}
 
-		public override void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim)
+		protected override bool FromManaged2D_<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim)
 		{
-			if (!destination.IsValid())
-				throw new ArgumentNullException(nameof(destination));
 			if (leadDim == 0)
 				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
 			if (width == 0)
@@ -465,6 +506,11 @@ namespace Althea.Backend.CSharp.Storage
 				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
 			if (height > leadDim || height > valuesLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
+
+			long start = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			if (start == NOT_SUPPORT)
+				return false;
+
 			if (leadDim * width > (destination.Pointer.LengthInBytes - destination.OffsetInBytes) / Storage<T>.SizeOfT)
 				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
 			if (leadDim * width > values.Length)
@@ -472,11 +518,10 @@ namespace Althea.Backend.CSharp.Storage
 			if (valuesLeadDim == 0)
 				valuesLeadDim = height;
 			// shortcut
-			long start = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (leadDim == height && valuesLeadDim == height)
 			{
 				FromManaged(mp, sp, start, values, 0, checked((int)(height * width)));
-				return;
+				return true;
 			}
 			// normal case
 			int h = checked((int)height), srcLD = checked((int)valuesLeadDim);
@@ -486,6 +531,7 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				FromManaged(mp, sp, dstOffset, values, srcOffset, h);
 			}
+			return true;
 		}
 		#endregion
 	}

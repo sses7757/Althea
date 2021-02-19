@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-using Althea.Linq;
-using Althea.NativeTypes;
 using Althea.Resources;
+using Althea.NativeTypes;
 
 
 namespace Althea.Storage
@@ -293,12 +292,26 @@ namespace Althea.Storage
 		#endregion
 
 		#region copies between IPureOrMixedStorage and ICachedStorage
+		private static bool StaticCopy(PointerSegment source, PointerSegment destination, out long copied)
+		{
+			try
+			{
+				copied = AbstractApi.MemoryCopy(source, destination);
+				return true;
+			}
+			catch (System.Exception)
+			{
+				copied = 0;
+				return false;
+			}
+		}
+
 		/// <summary>
 		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/> where both are <see cref="IPureOrMixedStorage"/>.
 		/// </summary>
 		/// <param name="source">The source <see cref="IPureOrMixedStorage"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="IPureOrMixedStorage"/> to copy into</param>
-		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="copyFunc">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/></param>
 		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="copyFunc"/>, default 1 means no alignment.</param>
 		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="copyFunc"/>, default 1 means no alignment.</param>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
@@ -320,7 +333,7 @@ namespace Althea.Storage
 			if (destinationAlign >= destination.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
 
-			copyFunc ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			copyFunc ??= StaticCopy;
 
 			PointerSegment src = source[0], dst = destination[0];
 			bool incSrc = false, incDst = false;
@@ -334,7 +347,7 @@ namespace Althea.Storage
 				if (incDst)
 					dst = destination[j].MoveBy(dstOffset);
 				// copy
-				long copyCount = copyFunc.Invoke(src, dst);
+				copyFunc.Invoke(src, dst, out long copyCount);
 				// check next
 				long srcNextOffset = copyCount * sourceAlign, dstNextOffset = copyCount * destinationAlign;
 				if (srcNextOffset >= src.LengthInBytes)
@@ -366,7 +379,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
 		/// <param name="alignedCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to aligned copy data, default is the same as <paramref name="blockCopy"/></param>
-		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/></param>
 		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
 		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
@@ -388,7 +401,7 @@ namespace Althea.Storage
 			if (destinationAlign >= destination.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
 
-			blockCopy ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			blockCopy ??= StaticCopy;
 			alignedCopy ??= blockCopy;
 
 			long maxCacheSize = destination.TopCacheSizeInBytes;
@@ -404,7 +417,7 @@ namespace Althea.Storage
 					var src = srcOrg.MoveBy(srcOffset);
 					var dst = destination.Retrieve(dstOffset, dstGet, blockCopy);
 					// copy
-					long copiedCount = alignedCopy.Invoke(src, dst);
+					alignedCopy.Invoke(src, dst, out long copiedCount);
 					// increase
 					count -= copiedCount;
 					srcOffset += copiedCount * sourceAlign;
@@ -420,7 +433,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="PureOrMixedStorage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="CachedStorage{T}"/> to copy into</param>
 		/// <param name="alignedCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to aligned copy data, default is the same as <paramref name="blockCopy"/></param>
-		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/></param>
 		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
 		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
@@ -442,7 +455,7 @@ namespace Althea.Storage
 			if (destinationAlign >= destination.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
 
-			blockCopy ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			blockCopy ??= StaticCopy;
 			alignedCopy ??= blockCopy;
 
 			long maxCacheSize = source.TopCacheSizeInBytes;
@@ -458,7 +471,7 @@ namespace Althea.Storage
 					var dst = dstOrg.MoveBy(dstOffset);
 					var src = source.Retrieve(srcOffset, srcGet, blockCopy);
 					// copy
-					long copiedCount = alignedCopy.Invoke(src, dst);
+					alignedCopy.Invoke(src, dst, out long copiedCount);
 					// increase
 					count -= copiedCount;
 					srcOffset += copiedCount * sourceAlign;
@@ -474,7 +487,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="ICachedStorage"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="ICachedStorage"/> to copy into</param>
 		/// <param name="alignedCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to aligned copy data, default is the same as <paramref name="blockCopy"/></param>
-		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/> selected by <see cref="AbstractApi.SelectImplementation(IStorage, IStorage)"/></param>
+		/// <param name="blockCopy">The <see cref="ICachedStorage.CopyDelegate"/> used to copy data and invoke <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>, default is the <see cref="AbstractApi.MemoryCopy(PointerSegment, PointerSegment)"/></param>
 		/// <param name="sourceAlign">The number of bytes to align <paramref name="source"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
 		/// <param name="destinationAlign">The number of bytes to align <paramref name="destination"/> before invoking <paramref name="blockCopy"/>, default 1 means no alignment.</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or empty</exception>
@@ -497,7 +510,7 @@ namespace Althea.Storage
 			if (destinationAlign >= destination.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
 
-			blockCopy ??= AbstractApi.SelectImplementation(source, destination).MemoryCopy;
+			blockCopy ??= StaticCopy;
 			alignedCopy ??= blockCopy;
 
 			long maxCacheSize = Math.Min(source.TopCacheSizeInBytes, destination.TopCacheSizeInBytes);
@@ -510,7 +523,7 @@ namespace Althea.Storage
 				var src = source.Retrieve(srcOffset, srcGet, blockCopy);
 				var dst = destination.Retrieve(dstOffset, dstGet, blockCopy);
 				// copy
-				long copiedCount = alignedCopy.Invoke(src, dst);
+				alignedCopy.Invoke(src, dst, out long copiedCount);
 				// increase
 				count -= copiedCount;
 				srcOffset += copiedCount * sourceAlign;
@@ -528,7 +541,7 @@ namespace Althea.Storage
 	/// <remarks>The default implementations of methods about <see cref="Storage{T}"/> ensure that you can only implement the basic low-level memory operations of "pure" storages while the high-level methods about <see cref="Storage{T}"/> work fine automatically. However, if there are native supports, it is still recommended to overwrite these methods.</remarks>
 	public abstract class AbstractApi : AbstractRuntimeApi
 	{
-		#region static methods for dispatching
+		#region basic
 		/// <summary>
 		/// Get the current using <see cref="AbstractApi"/>.
 		/// </summary>
@@ -538,114 +551,766 @@ namespace Althea.Storage
 		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
 
 		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.DisposeNotCurrent{T}(LinkedList{T})"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void DisposeNotCurrent() => DisposeNotCurrent(RecentAPIs);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, StorageLocation, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation(StorageLocation location) => SelectImplementation(RecentAPIs, location);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation(IStorage storage) => SelectImplementation(RecentAPIs, storage);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation(IStorage storage1, IStorage storage2) => SelectImplementation(RecentAPIs, storage1, storage2);
 		#endregion
 
 
 		#region support information
 		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
+		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by unary operations of this implementation or not.
 		/// </summary>
-		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
+		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
+		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The unary operations:
+		/// <list type="bullet">
+		/// <item><see cref="Allocate(StorageLocation, long)"/></item>
+		/// <item><see cref="Free(PointerSegment, bool)"/></item>
+		/// <item><see cref="FillWithValue(PointerSegment, byte)"/></item>
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedUnary(CombinationOfLocations location);
 
 		/// <summary>
-		/// When implemented by a derived class, get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by binary operations of this implementation or not.
 		/// </summary>
-		public abstract IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer { get; }
+		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
+		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
+		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The binary operations:
+		/// <list type="bullet">
+		/// <item><see cref="MemoryCopy(PointerSegment, PointerSegment)"/></item>
+		/// <item><see cref="MemoryCopy2D(PointerSegment, long, PointerSegment, long, long, long)"/></item>
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2);
 
 		/// <summary>
-		/// When implemented by a derived class, check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation
+		/// When implemented by a derived class, check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation or not.
 		/// </summary>
-		/// <param name="locations">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
-		/// <returns>Whether this implementation supports data transfer between <paramref name="locations"/> and C# managed memory</returns>
-		public virtual bool IsSupportedTransfer(CombinationOfLocations locations) => this.SupportedManagedTransfer.Contains(locations);
+		/// <param name="location">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
+		/// <returns>Whether this <see cref="AbstractApi"/> supports data transfer between <paramref name="location"/> and C# managed memory</returns>
+		/// <remarks>
+		/// The transfer operations:
+		/// <list type="bullet">
+		/// <item><see cref="FromManaged{T}(PointerSegment, T)"/></item>
+		/// <item><see cref="ToManaged{T}(PointerSegment)"/></item>
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool CanTransferWithManaged(CombinationOfLocations location);
 		#endregion
+
 
 		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get the underlying driver's version of a supported <see cref="LocationType"/>.
+		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by the underlying driver of this implementation or not.
 		/// </summary>
-		/// <param name="location">The given supported <see cref="LocationType"/></param>
-		/// <returns>The underlying driver's version of given <paramref name="location"/></returns>
-		public abstract (int major, int minor) DriverVersion(LocationType location);
+		/// <param name="location">The given <see cref="StorageLocation"/> to check</param>
+		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractApi"/></returns>
+		public abstract bool IsSupportedLocation(StorageLocation location);
 
 		/// <summary>
-		/// When implemented by a derived class, get the maximum number of devices available of a supported <see cref="LocationType"/>.
+		/// When implemented by a derived class, get the underlying driver's version of a supported <see cref="StorageLocation"/>.
 		/// </summary>
-		/// <param name="location">The given supported <see cref="LocationType"/></param>
-		/// <returns>The maximum number of devices available of given <paramref name="location"/></returns>
-		public abstract int MaxDeviceNumber(LocationType location);
+		/// <param name="location">The given supported <see cref="StorageLocation"/></param>
+		/// <returns>The underlying driver's major version of <paramref name="location"/></returns>
+		public abstract (int major, int minor) DriverVersion(StorageLocation location);
 
 		/// <summary>
 		/// When implemented by a derived class, get the available and total memory in bytes for device indicated by a supported <see cref="StorageLocation"/>.
 		/// </summary>
 		/// <param name="location">The given supported <see cref="StorageLocation"/></param>
-		/// <returns>The available and total memory in bytes of device of given <paramref name="location"/></returns>
+		/// <returns>The free and total memory space in bytes of <paramref name="location"/></returns>
 		public abstract (long free, long total) FreeAndTotalMemory(StorageLocation location);
 		#endregion
 
+
+		#region static methods as dispatchers
 		#region low-level storage operations
 		/// <summary>
-		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>
+		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/> in bytes
 		/// </summary>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in bytes</param>
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
-		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected memory leaks which GC cannot collect due to improper usage.</remarks>
-		protected internal abstract PointerSegment Allocate(StorageLocation location, long length);
+		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		protected internal static PointerSegment Allocate(StorageLocation location, long length)
+		{
+			PointerSegment result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				success = node.Value.Allocate_(location, length, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/>.<br/>The default implementation utilizes <see cref="Allocate(StorageLocation, long)"/>.
+		/// Allocate a storage at given <paramref name="location"/> with given <paramref name="length"/> in <typeparamref name="T"/>. The implementation utilizes <see cref="Allocate(StorageLocation, long)"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
 		/// <param name="length">The length to allocate in <typeparamref name="T"/> rather than bytes</param>
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="location"/> is not supported</exception>
-		/// <exception cref="InvalidOperationException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
+		protected internal static PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged
+		{
+			return Allocate(location, length * Storage<T>.SizeOfT);
+		}
+
+		/// <summary>
+		/// Free a storage indicated by a given <paramref name="pointer"/>
+		/// </summary>
+		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
+		/// <param name="disposeManaged">Whether to dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
+		/// <returns>True if <paramref name="pointer"/> is valid the free succeeded; false otherwise.</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		protected internal static bool Free(PointerSegment pointer, bool disposeManaged = true)
+		{
+			StorageLocation location = pointer.Location;
+			bool result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				success = node.Value.Free_(pointer, disposeManaged, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.
+		/// </summary>
+		/// <param name="pointer">The pointer to be filled</param>
+		/// <param name="value">The value to set as a <see cref="byte"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
+		public static void FillWithValue(PointerSegment pointer, byte value)
+		{
+			StorageLocation location = pointer.Location;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				success = node.Value.FillWithValue_(pointer, value);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="pointer">The pointer to be filled</param>
+		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
+		public static void FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged
+		{
+			StorageLocation location = pointer.Location;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				success = node.Value.FillWithValue_(pointer, value);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
+		/// </summary>
+		/// <param name="source">The source pointer to copy from</param>
+		/// <param name="destination">The destination pointer to copy into</param>
+		/// <returns>The number of bytes of actually copied block</returns>
+		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		public static long MemoryCopy(PointerSegment source, PointerSegment destination)
+		{
+			CombinationOfLocations src = source.Location, dst = destination.Location;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				success = node.Value.MemoryCopy_(source, destination, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
+		/// </summary>
+		/// <param name="source">The source pointer</param>
+		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
+		/// <param name="destination">The destination pointer</param>
+		/// <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
+		/// <param name="height">The height to copy in bytes</param>
+		/// <param name="width">The width to copy in the real type</param>
+		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
+		/// or <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
+		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
+		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
+		/// </exception>
+		public static void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
+		{
+			CombinationOfLocations src = source.Location, dst = destination.Location;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				success = node.Value.MemoryCopy2D_(source, sourceLD, destination, destinationLD, height, width);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,¡­,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
+		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The <see cref="PointerSegment"/> to copy from</param>
+		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="destination">The <see cref="PointerSegment"/> to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		public static long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged
+		{
+			CombinationOfLocations src = source.Location, dst = destination.Location;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				success = node.Value.StridedCopy_<T>(source, incrementSource, destination, incrementDestination, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+		#endregion
+
+		#region low-level storage and managed operations
+		/// <summary>
+		/// Copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
+		/// <returns>The first element in <paramref name="source"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
+		public static T ToManaged<T>(PointerSegment source) where T : unmanaged
+		{
+			CombinationOfLocations location = source.Location;
+			T result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.ToManaged_(source, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
+		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
+		public static void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged
+		{
+			CombinationOfLocations location = destination.Location;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.FromManaged_(destination, value);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
+		public static long ToManaged<T>(PointerSegment source, Span<T> destination) where T : unmanaged
+		{
+			CombinationOfLocations location = source.Location;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.ToManaged_(source, destination, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
+		public static long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values) where T : unmanaged
+		{
+			CombinationOfLocations location = destination.Location;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.FromManaged_(destination, values, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		// Ignore Spelling: sizeof
+		/// <summary>
+		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="source"/></param>
+		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
+		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
+		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
+		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public static void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
+		{
+			CombinationOfLocations location = source.Location;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.ToManaged2D_(source, leadDim, height, width, destination, destinationLeadDim);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/></param>
+		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
+		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
+		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public static void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
+		{
+			CombinationOfLocations location = destination.Location;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.FromManaged2D_(destination, leadDim, height, width, values, valuesLeadDim);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+		#endregion
+
+		#region high-level storage operations
+		/// <summary>
+		/// Fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
+		/// <param name="value">The value to fill</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+		public static void FillWithValue<T>(Storage<T> storage, byte value) where T : unmanaged
+		{
+			CombinationOfLocations location = storage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedUnary(location));
+				success = node.Value.FillWithValue_(storage, value);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
+		/// <param name="value">The value to fill</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+		public static void FillWithValue<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location = storage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedUnary(location));
+				success = node.Value.FillWithValue_(storage, value);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Copy memory from <paramref name="source"/> to <paramref name="destination"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> pointer to copy into</param>
+		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
+		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		public static long MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
+		{
+			CombinationOfLocations src = source.LocationDescription, dst = destination.LocationDescription;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				success = node.Value.MemoryCopy_(source, destination, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,¡­,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="destination">The <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		public static long StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
+		{
+			CombinationOfLocations src = source.LocationDescription, dst = destination.LocationDescription;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				success = node.Value.StridedCopy_(source, incrementSource, destination, incrementDestination, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/></param>
+		/// <param name="sourceLD">The source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
+		/// <param name="destination">The destination <see cref="Storage{T}"/></param>
+		/// <param name="destLD">The destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
+		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
+		/// <param name="width">The width to copy in the real type</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are <b>not</b> ignored</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
+		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>, 
+		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>
+		/// </exception>
+		public static void MemoryCopy2D<T>(Storage<T> source, long sourceLD, Storage<T> destination, long destLD, long height, long width) where T : unmanaged
+		{
+			CombinationOfLocations src = source.LocationDescription, dst = destination.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				success = node.Value.MemoryCopy2D_(source, sourceLD, destination, destLD, height, width);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+		#endregion
+
+		#region high-level storage and managed operations
+		/// <summary>
+		/// Copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <returns>The first element in <paramref name="source"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		public static T ToManaged<T>(Storage<T> source) where T : unmanaged
+		{
+			CombinationOfLocations location = source.LocationDescription;
+			T result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.ToManaged_(source, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
+		public static void FromManaged<T>(Storage<T> destination, T value) where T : unmanaged
+		{
+			CombinationOfLocations location = destination.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.FromManaged_(destination, value);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		public static long ToManaged<T>(Storage<T> source, Span<T> destination) where T : unmanaged
+		{
+			CombinationOfLocations location = source.LocationDescription;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.ToManaged_(source, destination, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
+		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
+		public static long FromManaged<T>(Storage<T> destination, ReadOnlySpan<T> values) where T : unmanaged
+		{
+			CombinationOfLocations location = destination.LocationDescription;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.FromManaged_(destination, values, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="source"/></param>
+		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
+		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
+		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public static void ToManaged2D<T>(Storage<T> source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
+		{
+			CombinationOfLocations location = source.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.ToManaged2D_(source, leadDim, height, width, destination, destinationLeadDim);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
+		/// <param name="leadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/></param>
+		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
+		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
+		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
+		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentException">
+		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
+		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,
+		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
+		/// </exception>
+		public static void FromManaged2D<T>(Storage<T> destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
+		{
+			CombinationOfLocations location = destination.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				success = node.Value.FromManaged2D_(destination, leadDim, height, width, values, valuesLeadDim);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+		#endregion
+		#endregion
+
+
+		#region abstract methods that actually do computations
+		#region low-level storage operations
+		/// <summary>
+		/// When implemented by a derived class, allocate a storage at given <paramref name="location"/> with given <paramref name="length"/> in bytes
+		/// </summary>
+		/// <param name="location">The <see cref="StorageLocation"/> to allocate on</param>
+		/// <param name="length">The length to allocate in bytes</param>
+		/// <param name="result">The result -- an allocated pointer as a <see cref="PointerSegment"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected memory leaks which GC cannot collect due to improper usage.</remarks>
-		protected internal virtual PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged => this.Allocate(location, length * Storage<T>.SizeOfT);
+		protected abstract bool Allocate_(StorageLocation location, long length, out PointerSegment result);
 
 		/// <summary>
 		/// When implemented by a derived class, free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
-		/// <param name="disposeManaged">dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
-		/// <returns>If <paramref name="pointer"/> is not supported or <paramref name="pointer"/> is not valid, return false; otherwise, return true.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
+		/// <param name="disposeManaged">Whether to dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
+		/// <param name="valid">If <paramref name="pointer"/> is not valid, output false; otherwise, output true</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected wild pointers due to improper usage.</remarks>
-		protected internal abstract bool Free(PointerSegment pointer, bool disposeManaged = true);
+		protected abstract bool Free_(PointerSegment pointer, bool disposeManaged, out bool valid);
 
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.
 		/// </summary>
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
-		/// <exception cref="NotSupportedException">If <paramref name="pointer"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
-		public abstract void FillWithValue(PointerSegment pointer, byte value);
+		protected abstract bool FillWithValue_(PointerSegment pointer, byte value);
 
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="pointer"/>'s each value by same <paramref name="value"/>.
@@ -653,20 +1318,20 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="pointer"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
-		public abstract void FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged;
+		protected abstract bool FillWithValue_<T>(PointerSegment pointer, T value) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source pointer to copy from</param>
 		/// <param name="destination">The destination pointer to copy into</param>
-		/// <returns>The number of bytes of actually copied block</returns>
+		/// <param name="actualCopied">Output the number of bytes of actually copied block</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
-		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		public abstract long MemoryCopy(PointerSegment source, PointerSegment destination);
+		protected abstract bool MemoryCopy_(PointerSegment source, PointerSegment destination, out long actualCopied);
 
 		/// <summary>
 		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
@@ -677,8 +1342,8 @@ namespace Althea.Storage
 		/// <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in the real type</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
-		/// <exception cref="NotSupportedException">If copy between <paramref name="source"/> and <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
@@ -687,10 +1352,10 @@ namespace Althea.Storage
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		public abstract void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width);
+		protected abstract bool MemoryCopy2D_(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width);
 
 		/// <summary>
-		/// TWhen implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
+		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
 		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,¡­,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/// </summary>
@@ -699,10 +1364,11 @@ namespace Althea.Storage
 		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
-		public abstract long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged;
+		protected abstract bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long actualCopied) where T : unmanaged;
 		#endregion
 
 		#region low-level storage and managed operations
@@ -711,10 +1377,10 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
-		/// <returns>The first element in <paramref name="source"/>.</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <param name="value">Output the first element in <paramref name="source"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
-		public abstract T ToManaged<T>(PointerSegment source) where T : unmanaged;
+		protected abstract bool ToManaged_<T>(PointerSegment source, out T value) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
@@ -722,10 +1388,9 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public abstract void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged;
+		protected abstract bool FromManaged_<T>(PointerSegment destination, T value) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
@@ -733,10 +1398,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
-		public abstract long ToManaged<T>(PointerSegment source, Span<T> destination) where T : unmanaged;
+		protected abstract bool ToManaged_<T>(PointerSegment source, Span<T> destination, out long actualCopied) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
@@ -744,10 +1409,10 @@ namespace Althea.Storage
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public abstract long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values) where T : unmanaged;
+		protected abstract bool FromManaged_<T>(PointerSegment destination, ReadOnlySpan<T> values, out long actualCopied) where T : unmanaged;
 
 		// Ignore Spelling: sizeof
 		/// <summary>
@@ -760,14 +1425,14 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged;
+		protected abstract bool ToManaged2D_<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
@@ -779,33 +1444,37 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public abstract void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged;
+		protected abstract bool FromManaged2D_<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged;
 		#endregion
 
 		#region high-level storage operations
 		/// <summary>
-		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// When implemented by a derived class, fill the <paramref name="storage"/> byte by byte to the same <paramref name="value"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.<br/>
+		/// The default implementation only uses <see cref="IsSupportedUnary(CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
-		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		public virtual void FillWithValue<T>(Storage<T> storage, byte value) where T : unmanaged
+		protected virtual bool FillWithValue_<T>(Storage<T> storage, byte value) where T : unmanaged
 		{
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (!this.IsSupportedUnary(storage.LocationDescription))
+				return false;
 			if (mixed is not null)
 			{
 				for (int i = 0; i < storage.Count; i++)
 				{
-					this.FillWithValue(storage[i], value);
+					this.FillWithValue_(storage[i], value);
 				}
 			}
 			else if (cached is not null)
@@ -813,34 +1482,39 @@ namespace Althea.Storage
 				if (cached.LengthInBytes <= cached.GetRealLength() * ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
-					this.FillWithValue(cached[0], value);
+					this.FillWithValue_(cached[0], value);
 				}
 				else
 				{
-					cached.ApplyUnaryFunction(this.FillWithValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
+					cached.ApplyUnaryFunction(this.FillWithValue_, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy_);
 				}
 			}
+			return true;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// When implemented by a derived class, fill the <paramref name="storage"/>'s each value by same <paramref name="value"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.<br/>
+		/// The default implementation only uses <see cref="IsSupportedUnary(CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
-		/// <exception cref="NotSupportedException">If <paramref name="storage"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		public virtual void FillWithValue<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
+		protected virtual bool FillWithValue_<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
 		{
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (!this.IsSupportedUnary(storage.LocationDescription))
+				return false;
 			if (mixed is not null)
 			{
 				if (value.IsZero())
 					for (int i = 0; i < storage.Count; i++)
-						this.FillWithValue(storage[i], value);
+						this.FillWithValue_(storage[i], value);
 				else
 					for (int i = 0; i < storage.Count; i++)
-						this.FillWithValue(storage[i], (byte)0);
+						this.FillWithValue_(storage[i], (byte)0);
 			}
 			else if (cached is not null)
 			{
@@ -848,118 +1522,139 @@ namespace Althea.Storage
 				{
 					cached.Flush();
 					if (value.IsZero())
-						this.FillWithValue(cached[0], (byte)0);
+						this.FillWithValue_(cached[0], (byte)0);
 					else
-						this.FillWithValue(cached[0], value);
+						this.FillWithValue_(cached[0], value);
 				}
 				else
 				{
 					if (value.IsZero())
-						cached.ApplyUnaryFunction(this.FillWithValue, 0, cached.LengthInBytes, auxiliary: (byte)0, copyFunc: this.MemoryCopy);
+						cached.ApplyUnaryFunction(this.FillWithValue_, 0, cached.LengthInBytes, auxiliary: (byte)0, copyFunc: this.MemoryCopy_);
 					else
-						cached.ApplyUnaryFunction(this.FillWithValue, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy);
+						cached.ApplyUnaryFunction(this.FillWithValue_, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy_);
 				}
 			}
+			return true;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.<br/>
+		/// The default implementation only uses <see cref="IsSupportedBinary(CombinationOfLocations, CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> pointer to copy into</param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
 		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		public virtual long MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
+		protected virtual bool MemoryCopy_<T>(Storage<T> source, Storage<T> destination, out long actualCopied) where T : unmanaged
 		{
+			actualCopied = 0;
 			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
 			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
+			if (!this.IsSupportedBinary(source.LocationDescription, destination.LocationDescription))
+				return false;
 			// normal cases
 			if (srcMixed is not null && dstMixed is not null)
 			{
 				// shortcut
 				if (source.Count == 1 && destination.Count == 1)
 				{
-					this.MemoryCopy(source[0], destination[0]);
+					this.MemoryCopy_(source[0], destination[0], out _);
 				}
 				else
 				{
-					srcMixed.StorageMemoryCopy(dstMixed, this.MemoryCopy);
+					srcMixed.StorageMemoryCopy(dstMixed, this.MemoryCopy_);
 				}
 			}
 			else if (srcMixed is not null && dstCached is not null)
 			{
-				srcMixed.StorageMemoryCopy(dstCached, this.MemoryCopy);
+				srcMixed.StorageMemoryCopy(dstCached, this.MemoryCopy_);
 			}
 			else if (srcCached is not null && dstMixed is not null)
 			{
-				srcCached.StorageMemoryCopy(dstMixed, this.MemoryCopy);
+				srcCached.StorageMemoryCopy(dstMixed, this.MemoryCopy_);
 			}
 			else if (srcCached is not null && dstCached is not null)
 			{
-				srcCached.StorageMemoryCopy(dstCached, this.MemoryCopy);
+				srcCached.StorageMemoryCopy(dstCached, this.MemoryCopy_);
 			}
-			return Math.Min(source.Length, destination.Length);
+			actualCopied = Math.Min(source.Length, destination.Length);
+			return true;
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
 		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,¡­,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.<br/>
-		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.<br/>
+		/// The default implementation only uses <see cref="IsSupportedBinary(CombinationOfLocations, CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
-		public virtual long StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
+		protected virtual bool StridedCopy_<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination, out long actualCopied) where T : unmanaged
 		{
+			actualCopied = 0;
 			long srcLen = source.Length, dstLen = destination.Length;
 			if (incrementSource <= 0 || incrementSource >= srcLen)
 				throw new ArgumentOutOfRangeException(nameof(incrementSource));
 			if (incrementDestination <= 0 || incrementDestination >= dstLen)
 				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
 
+			bool CopyFunc(PointerSegment s, PointerSegment d, out long c)
+			{
+				return this.StridedCopy_<T>(s, incrementSource, d, incrementDestination, out c);
+			}
+
 			int srcAlign = Storage<T>.SizeOfT * incrementSource, dstAlign = Storage<T>.SizeOfT * incrementDestination;
-			long copyFunc(PointerSegment s, PointerSegment d) => this.StridedCopy<T>(s, incrementSource, d, incrementDestination);
 			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
 			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
+			if (!this.IsSupportedBinary(source.LocationDescription, destination.LocationDescription))
+				return false;
+
 			// normal cases
 			if (srcMixed is not null && dstMixed is not null)
 			{
 				// shortcut
 				if (source.Count == 1 && destination.Count == 1)
 				{
-					this.StridedCopy<T>(source[0], incrementSource, destination[0], incrementDestination);
+					this.StridedCopy_<T>(source[0], incrementSource, destination[0], incrementDestination, out _);
 				}
 				else
 				{
-					srcMixed.StorageMemoryCopy(dstMixed, copyFunc, sourceAlign: srcAlign, destinationAlign: dstAlign);
+					srcMixed.StorageMemoryCopy(dstMixed, CopyFunc, sourceAlign: srcAlign, destinationAlign: dstAlign);
 				}
 			}
 			else if (srcMixed is not null && dstCached is not null)
 			{
-				srcMixed.StorageMemoryCopy(dstCached, alignedCopy: copyFunc, blockCopy: this.MemoryCopy, sourceAlign: srcAlign, destinationAlign: dstAlign);
+				srcMixed.StorageMemoryCopy(dstCached, alignedCopy: CopyFunc, blockCopy: this.MemoryCopy_, sourceAlign: srcAlign, destinationAlign: dstAlign);
 			}
 			else if (srcCached is not null && dstMixed is not null)
 			{
-				srcCached.StorageMemoryCopy(dstMixed, alignedCopy: copyFunc, blockCopy: this.MemoryCopy, sourceAlign: srcAlign, destinationAlign: dstAlign);
+				srcCached.StorageMemoryCopy(dstMixed, alignedCopy: CopyFunc, blockCopy: this.MemoryCopy_, sourceAlign: srcAlign, destinationAlign: dstAlign);
 			}
 			else if (srcCached is not null && dstCached is not null)
 			{
-				srcCached.StorageMemoryCopy(dstCached, alignedCopy: copyFunc, blockCopy: this.MemoryCopy, sourceAlign: srcAlign, destinationAlign: dstAlign);
+				srcCached.StorageMemoryCopy(dstCached, alignedCopy: CopyFunc, blockCopy: this.MemoryCopy_, sourceAlign: srcAlign, destinationAlign: dstAlign);
 			}
-			return Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
+			actualCopied = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
+			return true;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.
+		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/> or <see cref="CombinationType.Cached"/>.<br/>
+		/// The default implementation only uses <see cref="IsSupportedBinary(CombinationOfLocations, CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/></param>
@@ -968,8 +1663,8 @@ namespace Althea.Storage
 		/// <param name="destLD">The destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in the real type</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are <b>not</b> ignored</remarks>
-		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
 		/// <exception cref="ArgumentException">
@@ -977,110 +1672,124 @@ namespace Althea.Storage
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>, 
 		/// or <c><paramref name="destLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>
 		/// </exception>
-		public virtual void MemoryCopy2D<T>(Storage<T> source, long sourceLD, Storage<T> destination, long destLD, long height, long width) where T : unmanaged
+		protected virtual bool MemoryCopy2D_<T>(Storage<T> source, long sourceLD, Storage<T> destination, long destLD, long height, long width) where T : unmanaged
 		{
 			if (sourceLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceLD), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
 			if (destLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(destLD), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destLD), Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
 			if (height > sourceLD || height > destLD)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (sourceLD * width > source.LengthInBytes)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(source));
+				throw new ArgumentException(Parameter.WrongSize, nameof(source));
 			if (destLD * width > destination.LengthInBytes)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
 
 			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? _);
 			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? _);
+			if (!this.IsSupportedBinary(source.LocationDescription, destination.LocationDescription))
+				return false;
+
 			// shortcut
 			if (srcMixed is not null && dstMixed is not null && source.Count == 1 && destination.Count == 1)
 			{
-				this.MemoryCopy2D(source[0], sourceLD, destination[0], destLD, height, width);
-				return;
+				return this.MemoryCopy2D_(source[0], sourceLD, destination[0], destLD, height, width);
 			}
 			long srcLD = sourceLD, dstLD = destLD;
 			source = source.MakeReference(newLength: height);
 			destination = destination.MakeReference(newLength: height);
 			for (long column = 0; column < width - 1; column++)
 			{
-				this.MemoryCopy(source, destination);
+				this.MemoryCopy_(source, destination, out _);
 				source = source.MakeReference(offset: srcLD, newLength: height);
 				destination = destination.MakeReference(offset: dstLD, newLength: height);
 			}
 			// copy last column
-			this.MemoryCopy(source, destination);
+			this.MemoryCopy_(source, destination, out _);
+			return true;
 		}
 		#endregion
 
 		#region high-level storage and managed operations
 		/// <summary>
-		/// When implemented by a derived class, copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, copy out the <b>first</b> element in <see cref="Storage{T}"/> <paramref name="source"/> to a managed value of type <typeparamref name="T"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
-		/// <returns>The first element in <paramref name="source"/>.</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <param name="value">Output the first element in <paramref name="source"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		public virtual T ToManaged<T>(Storage<T> source) where T : unmanaged
+		protected virtual bool ToManaged_<T>(Storage<T> source, out T value) where T : unmanaged
 		{
+			value = default;
 			source.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+
 			if (mixed is not null)
 			{
-				return this.ToManaged<T>(mixed[0]);
+				return this.ToManaged_(mixed[0], out value);
 			}
 			else if (cached is not null)
 			{
 				var temp = cached.Retrieve(0, Storage<T>.SizeOfT);
-				return this.ToManaged<T>(temp);
+				return this.ToManaged_(temp, out value);
 			}
-			else // never here
-				return default;
+			return false;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
-		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
-		public virtual void FromManaged<T>(Storage<T> destination, T value) where T : unmanaged
+		protected virtual bool FromManaged_<T>(Storage<T> destination, T value) where T : unmanaged
 		{
 			destination.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+
 			if (mixed is not null)
 			{
-				this.FromManaged(mixed[0], value);
+				return this.FromManaged_(mixed[0], value);
 			}
 			else if (cached is not null)
 			{
 				var temp = cached.Retrieve(0, Storage<T>.SizeOfT);
-				this.FromManaged(temp, value);
+				return this.FromManaged_(temp, value);
 			}
+			return false;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.<br/>
+		/// The default implementation only uses <see cref="CanTransferWithManaged(CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		public virtual long ToManaged<T>(Storage<T> source, Span<T> destination) where T : unmanaged
+		protected virtual bool ToManaged_<T>(Storage<T> source, Span<T> destination, out long actualCopied) where T : unmanaged
 		{
+			actualCopied = 0;
 			source.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (!this.CanTransferWithManaged(source.LocationDescription))
+				return false;
+
 			if (mixed is not null)
 			{
 				int offset = 0;
 				for (int i = 0; i < mixed.Count; i++)
 				{
-					this.ToManaged(mixed[i], destination[offset..]);
+					this.ToManaged_(mixed[i], destination[offset..], out _);
 					if (offset >= destination.Length)
 						break;
 					offset += (int)(mixed[i].LengthInBytes / Storage<T>.SizeOfT);
@@ -1092,7 +1801,7 @@ namespace Althea.Storage
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
-					this.ToManaged(cached[0], destination);
+					this.ToManaged_(cached[0], destination, out _);
 				}
 				else
 				{
@@ -1102,36 +1811,42 @@ namespace Althea.Storage
 					while (count > 0)
 					{
 						long getLength = Math.Min(count, maxCacheSize);
-						var temp = cached.Retrieve(offset, count, this.MemoryCopy);
+						var temp = cached.Retrieve(offset, count, this.MemoryCopy_);
 						Span<T> val = destination.Slice((int)(offset / pack), (int)(getLength / pack));
-						this.ToManaged(temp, val);
+						this.ToManaged_(temp, val, out _);
 						offset += getLength;
 						count -= getLength;
 					}
 				}
-				return Math.Min(destination.Length, source.Length);
 			}
-			return Math.Min(source.Length, destination.Length);
+			actualCopied = Math.Min(source.Length, destination.Length);
+			return true;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>.<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>.<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.<br/>
+		/// The default implementation only uses <see cref="CanTransferWithManaged(CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
-		/// <returns>The number of elements (in <typeparamref name="T"/>) of actually copied block</returns>
-		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		public virtual long FromManaged<T>(Storage<T> destination, ReadOnlySpan<T> values) where T : unmanaged
+		protected virtual bool FromManaged_<T>(Storage<T> destination, ReadOnlySpan<T> values, out long actualCopied) where T : unmanaged
 		{
+			actualCopied = 0;
 			destination.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
+			if (!this.CanTransferWithManaged(destination.LocationDescription))
+				return false;
+
 			if (mixed is not null)
 			{
 				int offset = 0;
 				for (int i = 0; i < destination.Count; i++)
 				{
-					this.FromManaged(destination[i], values[offset..]);
+					this.FromManaged_(destination[i], values[offset..], out _);
 					if (offset >= values.Length)
 						break;
 					offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
@@ -1143,7 +1858,7 @@ namespace Althea.Storage
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
-					this.FromManaged(cached[0], values);
+					this.FromManaged_(cached[0], values, out _);
 				}
 				else
 				{
@@ -1153,19 +1868,22 @@ namespace Althea.Storage
 					while (count > 0)
 					{
 						long getLength = Math.Min(count, maxCacheSize);
-						var temp = cached.Retrieve(offset, count, this.MemoryCopy);
+						var temp = cached.Retrieve(offset, count, this.MemoryCopy_);
 						ReadOnlySpan<T> val = values.Slice((int)(offset / pack), (int)(getLength / pack));
-						this.FromManaged(temp, val);
+						this.FromManaged_(temp, val, out _);
 						offset += getLength;
 						count -= getLength;
 					}
 				}
 			}
-			return Math.Min(destination.Length, values.Length);
+			actualCopied = Math.Min(destination.Length, values.Length);
+			return true;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, copy out the elements in unmanaged pointer <paramref name="source"/> as a 2D matrix to a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.<br/>
+		/// The default implementation only uses <see cref="CanTransferWithManaged(CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
@@ -1174,36 +1892,38 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="source"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public virtual void ToManaged2D<T>(Storage<T> source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
+		protected virtual bool ToManaged2D_<T>(Storage<T> source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
 			if (leadDim == 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
 			if (height > leadDim || height > destinationLeadDim)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > source.Length)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(source));
+				throw new ArgumentException(Parameter.WrongSize, nameof(source));
 			if (leadDim * width > destination.Length)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
 			// shortcut
 			if (source.Count == 1)
 			{
-				this.ToManaged2D(source[0], leadDim, height, width, destination, destinationLeadDim);
-				return;
+				return this.ToManaged2D_(source[0], leadDim, height, width, destination, destinationLeadDim);
 			}
 			// normal case
+			if (!this.CanTransferWithManaged(source.LocationDescription))
+				return false;
+
 			int h = checked((int)height), dstLD = checked((int)(destinationLeadDim == 0 ? height : destinationLeadDim));
 			long srcLD = leadDim, max = leadDim * width;
 			int dstOffset = 0;
@@ -1211,12 +1931,15 @@ namespace Althea.Storage
 			{
 				var src = source.MakeReference(offset: srcOffset, newLength: height);
 				var dst = destination.Slice(dstOffset, h);
-				this.ToManaged(src, dst);
+				this.ToManaged_(src, dst, out _);
 			}
+			return true;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.
+		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).<br/>
+		/// The default implementation only works for <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>.<br/>
+		/// The default implementation only uses <see cref="CanTransferWithManaged(CombinationOfLocations)"/> to check the support; rewrite this method if that method doest not give correct support information of this one.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
@@ -1225,36 +1948,38 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in <typeparamref name="T"/> rather than bytes</param>
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
-		/// <exception cref="NotSupportedException">if <paramref name="destination"/> is not supported</exception>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public virtual void FromManaged2D<T>(Storage<T> destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
+		protected virtual bool FromManaged2D_<T>(Storage<T> destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
 		{
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (leadDim == 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
 			if (height > leadDim || height > valuesLeadDim)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(height));
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > destination.Length)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
 			if (leadDim * width > values.Length)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(values));
+				throw new ArgumentException(Parameter.WrongSize, nameof(values));
 			// shortcut
 			if (destination.Count == 1)
 			{
-				this.FromManaged2D(destination[0], leadDim, height, width, values);
-				return;
+				return this.FromManaged2D_(destination[0], leadDim, height, width, values);
 			}
 			// normal case
+			if (!this.CanTransferWithManaged(destination.LocationDescription))
+				return false;
+
 			int h = checked((int)height), srcLD = checked((int)(valuesLeadDim == 0 ? height : valuesLeadDim));
 			long dstLD = leadDim, max = leadDim * width;
 			int srcOffset = 0;
@@ -1262,9 +1987,11 @@ namespace Althea.Storage
 			{
 				var dst = destination.MakeReference(offset: dstOffset, newLength: height);
 				var src = values.Slice(srcOffset, h);
-				this.FromManaged(dst, src);
+				this.FromManaged_(dst, src, out _);
 			}
+			return true;
 		}
+		#endregion
 		#endregion
 	}
 }

@@ -13,7 +13,10 @@ namespace Althea.Arrays
 	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
-		private readonly SizedFixedBuffer_128<long> m_size = default;
+		/// <summary>
+		/// The member that actually stores the size
+		/// </summary>
+		protected readonly SizedFixedBuffer_128<long> m_size = default;
 
 		private readonly long m_length = 0;
 		#endregion
@@ -25,9 +28,9 @@ namespace Althea.Arrays
 		public int Rank => this.m_size.Count;
 
 		/// <summary>
-		/// Get the size of this mutable array as a <see cref="SizedFixedBuffer_128{T}"/> of <see cref="long"/>
+		/// Get the size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
-		public SizedFixedBuffer_128<long> Size => this.m_size;
+		public ReadOnlySpan<long> Size => this.m_size.AsSpan();
 
 		/// <summary>
 		/// Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
