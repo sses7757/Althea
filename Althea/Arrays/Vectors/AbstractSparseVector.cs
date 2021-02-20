@@ -443,7 +443,7 @@ namespace Althea.Arrays
 			valueArray = Althea.Storage.StorageFactory<T>.CreateAlike<TOut>(this.Storage);
 			try
 			{
-				LAD.SelectImplementation(this.Storage, valueArray).PointWiseCast(this.Storage, 1, valueArray, 1);
+				LAD.PointWiseCast(this.Storage, 1, valueArray, 1);
 			}
 			catch (Exception)
 			{

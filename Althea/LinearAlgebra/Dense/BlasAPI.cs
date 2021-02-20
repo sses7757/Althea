@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-
-using Althea.Linq;
 
 
 namespace Althea.LinearAlgebra.Dense
@@ -30,7 +27,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by vector unary operations of this implementation or not.
 		/// </summary>
 		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
+		/// <returns>Whether vector unary operation on <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The unary operations:
 		/// <list type="bullet">
@@ -54,19 +51,33 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool IsSupportedVectorBinary(CombinationOfLocations location1, CombinationOfLocations location2);
 
 		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector and matrix trinary operations of this implementation or not.
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector and matrix binary operations of this implementation or not.
 		/// </summary>
-		/// <param name="vector1">The given <see cref="CombinationOfLocations"/> of the first vector</param>
-		/// <param name="vector2">The given <see cref="CombinationOfLocations"/> of the second vector</param>
-		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of matrix</param>
-		/// <returns>Whether trinary operations between <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <param name="vector">The given <see cref="CombinationOfLocations"/> of the vector</param>
+		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of the matrix</param>
+		/// <returns>Whether binary operations between <paramref name="vector"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The binary operations:
 		/// <list type="bullet">
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
-		protected abstract bool IsSupportedVectorBinaryMatrix(CombinationOfLocations vector1, CombinationOfLocations vector2, CombinationOfLocations matrix);
+		protected abstract bool IsSupportedVectorMatrixBinary(CombinationOfLocations vector, CombinationOfLocations matrix);
+
+		/// <summary>
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by binary vector and unary matrix operations of this implementation or not.
+		/// </summary>
+		/// <param name="vector1">The given <see cref="CombinationOfLocations"/> of the first vector</param>
+		/// <param name="vector2">The given <see cref="CombinationOfLocations"/> of the second vector</param>
+		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of matrix</param>
+		/// <returns>Whether binary vector and unary matrix operations between <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The binary operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedVectorBinaryMatrixUnary(CombinationOfLocations vector1, CombinationOfLocations vector2, CombinationOfLocations matrix);
 
 		/// <summary>
 		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by matrix binary operations of this implementation or not.
@@ -109,9 +120,23 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The resulting index</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static long AbsoluteValueArgMax<T>(Storage<T> x, int strideX) where T : unmanaged;
+		public static long AbsoluteValueArgMax<T>(Storage<T> x, int strideX) where T : unmanaged
+		{
+			CombinationOfLocations location = x.LocationDescription;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location), node);
+				success = node.Value.AbsoluteValueArgMax_(x, strideX, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
 
 		/// <summary>
 		/// Find the (smallest) index of the element with the minimum magnitude.
@@ -121,9 +146,23 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The resulting index or 0 if <paramref name="strideX"/> is less than 1</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged;
+		public static long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged
+		{
+			CombinationOfLocations location = x.LocationDescription;
+			long result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location), node);
+				success = node.Value.AbsoluteValueArgMin_(x, strideX, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
 
 		/// <summary>
 		/// Compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
@@ -133,9 +172,72 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The result value as a <see cref="double"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged;
+		public static double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged
+		{
+			CombinationOfLocations location = x.LocationDescription;
+			double result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location), node);
+				success = node.Value.AbsoluteValueSum_(x, strideX, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="strideX"/> ≤ 0</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static double Norm<T>(Storage<T> x, int strideX) where T : unmanaged
+		{
+			CombinationOfLocations location = x.LocationDescription;
+			double result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location), node);
+				success = node.Value.Norm_(x, strideX, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// In-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The vector of type <typeparamref name="T"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static void Scale<T>(T α, Storage<T> x, int strideX) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location = x.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location), node);
+				success = node.Value.Scale_(α, x, strideX);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Multiply the vector <paramref name="x"/> by the scalar <paramref name="α"/> and in-place add it to the vector <paramref name="y"/>.
@@ -147,9 +249,21 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The another vector of type <typeparamref name="T"/></param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		public static void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				success = node.Value.VectorGeneralAdd_(α, x, strideX, y, strideY);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Compute the dot (inner) product of vectors <paramref name="x"/> and <paramref name="y"/>.
@@ -162,32 +276,23 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <returns>The result value as a <typeparamref name="T"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
-
-		/// <summary>
-		/// Compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="strideX"/> ≤ 0</returns>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static double Norm<T>(Storage<T> x, int strideX) where T : unmanaged;
-
-		/// <summary>
-		/// In-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="α">The scalar used for multiplication</param>
-		/// <param name="x">The vector of type <typeparamref name="T"/></param>
-		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void Scale<T>(T α, Storage<T> x, int strideX) where T : unmanaged, IEquatable<T>;
+		public static T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription;
+			T result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				success = node.Value.Dot_(conjX, x, strideX, y, strideY, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
 		#endregion
 
 		#region BLAS level 2
@@ -208,9 +313,21 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="m"/>-1)*<paramref name="strideY"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> otherwise</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		public static void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(location1, location2, locationMat), node);
+				success = node.Value.GeneralMatrixMultiplyVector_(op, m, n, α, A, lda, x, strideX, β, y, strideY);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Perform the symmetric/hermitian matrix-vector multiplication:<br/>
@@ -229,9 +346,21 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideY"/>))</c></param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		public static void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(location1, location2, locationMat), node);
+				success = node.Value.SymmHermMatrixMultiplyVector_(fillLower, hermA, n, α, A, lda, x, strideX, β, y, strideY);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Perform the rank-1 update:<br/>
@@ -250,9 +379,21 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		public static void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(location1, location2, locationMat), node);
+				success = node.Value.GenralRankOneUpdate_(conjY, m, n, α, x, strideX, y, strideY, β, A, lda);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Perform the symmetric/hermitian rank-1 update:<br/>
@@ -269,9 +410,21 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		public static void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations locationVec = x.LocationDescription, locationMat = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorMatrixBinary(locationVec, locationMat), node);
+				success = node.Value.SymmHermRankOneUpdate_(fillLower, conjX, n, α, x, strideX, β, A, lda);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 		#endregion
 
 		#region BLAS level 3
@@ -294,8 +447,20 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
+				success = node.Value.GeneralMatricesMultiply_(opA, opB, m, n, k, α, A, lda, B, ldb, β, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Perform the symmetric/hermitian matrix-matrix multiplication:<br/>
@@ -316,8 +481,20 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
+				success = node.Value.SymmHermMatrixMultiplyGeneral_(fillLower, leftA, hermA, m, n, α, A, lda, B, ldb, β, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
 		/// Perform the symmetric/hermitian rank-k update:<br/>
@@ -336,8 +513,20 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void RankKUpdate<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void RankKUpdate<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
+				success = node.Value.RankKUpdate_(fillLower, op, conjA, n, k, α, A, lda, β, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 		#endregion
 		#endregion
 
@@ -450,9 +639,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied to <paramref name="y"/>. If this is 0, then the original values of <paramref name="y"/> will be ignored.</param>
 		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="m"/>-1)*<paramref name="strideY"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> otherwise</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract void GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		protected abstract bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-vector multiplication:<br/>
@@ -470,9 +660,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied to <paramref name="y"/>. If this is 0, then the original values of <paramref name="y"/> will be ignored.</param>
 		/// <param name="y">The input and output vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideY"/>))</c></param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract void SymmHermMatrixMultiplyVector_<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		protected abstract bool SymmHermMatrixMultiplyVector_<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -490,9 +681,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
 		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract void GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		protected abstract bool GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
@@ -508,9 +700,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
 		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract void SymmHermRankOneUpdate_<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		protected abstract bool SymmHermRankOneUpdate_<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 3
@@ -532,8 +725,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract void GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-matrix multiplication:<br/>
@@ -553,8 +747,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
 		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract void SymmHermMatrixMultiplyGeneral_<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool SymmHermMatrixMultiplyGeneral_<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
@@ -572,8 +767,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract void RankKUpdate_<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool RankKUpdate_<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 		#endregion
 		#endregion
 	}

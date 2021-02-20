@@ -86,7 +86,7 @@ namespace Althea.Arrays
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
 		public virtual void AddScalar(T value)
 		{
-			LAD.SelectImplementation(this.Storage).PointWiseAddScalar(this.Storage, 1, value);
+			LAD.PointWiseAddScalar(this.Storage, 1, value);
 		}
 
 		/// <summary>
@@ -95,7 +95,7 @@ namespace Althea.Arrays
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		public virtual void Scale(T value)
 		{
-			LAD.SelectImplementation(this.Storage).Scale(value, this.Storage, 1);
+			LAD.Scale(value, this.Storage, 1);
 		}
 
 		/// <summary>
@@ -103,7 +103,7 @@ namespace Althea.Arrays
 		/// </summary>
 		public virtual void Conjugate()
 		{
-			LAD.SelectImplementation(this.Storage).PointWiseConjugate(this.Storage, 1);
+			LAD.PointWiseConjugate(this.Storage, 1);
 		}
 
 		/// <summary>
@@ -112,7 +112,7 @@ namespace Althea.Arrays
 		/// <param name="power">The power as a <see cref="double"/></param>
 		public virtual void Power(double power)
 		{
-			LAD.SelectImplementation(this.Storage).PointWisePower(this.Storage, 1, power);
+			LAD.PointWisePower(this.Storage, 1, power);
 		}
 
 		/// <summary>
@@ -121,7 +121,7 @@ namespace Althea.Arrays
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
 		public virtual void Power(T power)
 		{
-			LAD.SelectImplementation(this.Storage).PointWisePower(this.Storage, 1, power);
+			LAD.PointWisePower(this.Storage, 1, power);
 		}
 
 		/// <summary>
@@ -130,7 +130,7 @@ namespace Althea.Arrays
 		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
 		public virtual void Truncate(double threshold)
 		{
-			LAD.SelectImplementation(this.Storage).TruncateArray(this.Storage, threshold);
+			LAD.TruncateArray(this.Storage, threshold);
 		}
 
 		/// <summary>
@@ -140,7 +140,7 @@ namespace Althea.Arrays
 		/// <returns>The aggregate sum of this array</returns>
 		protected T Sum(T sparseDefault = default)
 		{
-			T sum = LAD.SelectImplementation(this.Storage).AggregateSum(this.Storage, 1);
+			T sum = LAD.AggregateSum(this.Storage, 1);
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
 				return sum;
 			else
@@ -154,7 +154,7 @@ namespace Althea.Arrays
 		/// <returns>The aggregate sum of absolute values of this array</returns>
 		protected double AbsSum(T sparseDefault = default)
 		{
-			double sum = LAD.SelectImplementation(this.Storage).AbsoluteValueSum(this.Storage, 1);
+			double sum = LAD.AbsoluteValueSum(this.Storage, 1);
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
 				return sum;
 			else
@@ -168,7 +168,7 @@ namespace Althea.Arrays
 		/// <returns>The 2-norm of this array</returns>
 		protected double Norm(T sparseDefault = default)
 		{
-			double norm = LAD.SelectImplementation(this.Storage).Norm(this.Storage, 1);
+			double norm = LAD.Norm(this.Storage, 1);
 			if (this.Length == this.ActualLength || sparseDefault.IsZero())
 			{
 				return norm;
@@ -464,7 +464,7 @@ namespace Althea.Arrays
 			var alike = this.NewArrayAlike<TOut>();
 			try
 			{
-				LAD.SelectImplementation(this.Storage, alike.Storage).PointWiseCast(this.Storage, 1, alike.Storage, 1);
+				LAD.PointWiseCast(this.Storage, 1, alike.Storage, 1);
 				return alike;
 			}
 			catch (Exception)
@@ -486,17 +486,16 @@ namespace Althea.Arrays
 		{
 			if (array is null || !array.IsValid())
 				return false;
-			var lad = LAD.SelectImplementation(array.Storage);
 			long index;
 			if (!value.IsZero())
 			{
 				using var clone = array.Storage.Clone();
-				lad.PointWiseAddScalar(clone, 1, value.GenericNegate());
-				index = lad.AbsoluteValueArgMax(clone, 1);
+				LAD.PointWiseAddScalar(clone, 1, value.GenericNegate());
+				index = LAD.AbsoluteValueArgMax(clone, 1);
 			}
 			else
 			{
-				index = lad.AbsoluteValueArgMax(array.Storage, 1);
+				index = LAD.AbsoluteValueArgMax(array.Storage, 1);
 			}
 			double val = MEM.ToManaged(array.Storage.MakeReference(offset: index))
 							.GenericAbsolute()

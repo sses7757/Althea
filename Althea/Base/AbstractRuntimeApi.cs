@@ -18,13 +18,7 @@ namespace Althea
 	public abstract class AbstractRuntimeApi : IDisposable
 	{
 		#region static methods used for creating API class instances
-		/// <summary>
-		/// Create an instance of <typeparamref name="T"/> which has a constructor with no parameters.
-		/// </summary>
-		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="type">The <see cref="Type"/> (not the type of used to initialize</param>
-		/// <returns>The created instance of <typeparamref name="T"/>, or null if <typeparamref name="T"/> does not have a constructor with no parameters.</returns>
-		protected static T Create<T>(Type type) where T : AbstractRuntimeApi
+		private static T Create<T>(Type type) where T : AbstractRuntimeApi
 		{
 			if (type.IsGenericType || type.IsAbstract || !type.IsAssignableTo(typeof(T)))
 			{
@@ -48,14 +42,9 @@ namespace Althea
 			}
 		}
 
-		/// <summary>
-		/// Initialize a <see cref="LinkedListNode{T}"/> of <typeparamref name="T"/>
-		/// </summary>
-		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="node">The <see cref="LinkedListNode{T}"/> to initialize</param>
-		protected static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
+		private static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
 		{
-			if (node.Value is null)
+			if (node is null)
 				throw new ArgumentNullException(nameof(node));
 			if (!node.Value.Disposed)
 			{
@@ -65,20 +54,14 @@ namespace Althea
 			node.Value = Create<T>(type);
 		}
 
-		/// <summary>
-		/// Promote the implementation in <paramref name="node"/> to the top of the linked list <paramref name="recents"/>
-		/// </summary>
-		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
-		/// <param name="node">The <see cref="LinkedListNode{T}"/> to promote</param>
-		protected static void PromoteImplementation<T>(LinkedList<T> recents, LinkedListNode<T> node) where T : AbstractRuntimeApi
+		private static void PromoteImplementation<T>(LinkedList<T> recents, T impl) where T : AbstractRuntimeApi
 		{
-			if (recents is null || node is null)
+			if (recents is null || impl is null)
 				return;
-			if (!recents.Contains(node.Value))
+			if (!recents.Contains(impl))
 				return;
-			recents.Remove(node.Value);
-			node = recents.AddFirst(node.Value);
+			recents.Remove(impl);
+			var node = recents.AddFirst(impl);
 			Initialize(node);
 			if (Settings.DisposeNotCurrentImplementation)
 			{
@@ -105,7 +88,7 @@ namespace Althea
 			{
 				if (current.Value.GetType() == implementation)
 				{
-					PromoteImplementation(recents, current);
+					PromoteImplementation(recents, current.Value);
 					return true;
 				}
 				current = current.Next;
@@ -125,19 +108,20 @@ namespace Althea
 		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
 		/// <param name="implementation">The implementation indicated by a <typeparamref name="T"/></param>
-		/// <returns>Success or not</returns>
-		protected static bool SetImplementation<T>(LinkedList<T> recents, T implementation) where T : AbstractRuntimeApi
+		protected static void SetImplementation<T>(LinkedList<T> recents, T implementation) where T : AbstractRuntimeApi
 		{
-			var find = recents.Find(implementation);
-			if (find is not null)
-				PromoteImplementation(recents, find);
-			// else, a new implementation
-			var node = recents.AddFirst(implementation);
-			if (Settings.DisposeNotCurrentImplementation)
+			if (recents.Contains(implementation))
 			{
-				node.Next?.Value?.Dispose();
+				PromoteImplementation(recents, implementation);
 			}
-			return true;
+			else
+			{
+				var node = recents.AddFirst(implementation);
+				if (Settings.DisposeNotCurrentImplementation)
+				{
+					node.Next?.Value?.Dispose();
+				}
+			}
 		}
 		#endregion
 
@@ -457,83 +441,5 @@ namespace Althea
 		/// <param name="disposeManaged"></param>
 		protected abstract void Dispose(bool disposeManaged);
 		#endregion
-
-		/*
-		#region support information
-		/// <summary>
-		/// When implemented by a derived class, get the supported <see cref="CombinationOfLocations"/> for all unary operations. Each value in the list can have any flags which indicate a support of a combination of certain memory locations. Or null if there are no unary operations.
-		/// </summary>
-		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
-		public abstract IReadOnlyList<CombinationOfLocations> SupportedUnaryLocations { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get list of the supported <see cref="CombinationOfLocations"/> for all binary operations. Each value in the list is a set of two values to indicate a supported pair of two certain (mixed) memory locations. Or null if there are no binary operations.
-		/// </summary>
-		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
-		public abstract IReadOnlyList<ImmutableTwoElementSet<CombinationOfLocations>> SupportedBinaryLocations { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Each value in the list is a set of three values to indicate a supported triple of three certain (mixed) memory locations. Or null if there are no ternary operations.
-		/// </summary>
-		/// <remarks>Although the functionality of this property can be done by <see cref="SupportedNaryLocations(int)"/>, this one is specially separated for performance issues.</remarks>
-		public abstract IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations { get; }
-
-		// Ignore Spelling: N-ary
-		/// <summary>
-		/// When implemented by a derived class, get list of the supported <see cref="CombinationOfLocations"/> for all N-ary operations. The default implementation assumes that there are not <paramref name="N"/>-ary operations with <paramref name="N"/> &gt; 3.
-		/// </summary>
-		/// <param name="N">The number of operands, must be <paramref name="N"/> &gt; 0</param>
-		/// <returns>The list whose each value in the list is a set of <paramref name="N"/> values to indicate a supported combination of certain <see cref="CombinationOfLocations"/>. Or null if there are no N-ary operations.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="N"/> &lt;= 0</exception>
-		public virtual IReadOnlyList<IImmutableSet<CombinationOfLocations>> SupportedNaryLocations(int N)
-		{
-			return N switch
-			{
-				1 => this.SupportedUnaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)(ImmutableZeroOneElementSet<CombinationOfLocations>)l),
-				2 => this.SupportedBinaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
-				3 => this.SupportedTernaryLocations.Select(l => (IImmutableSet<CombinationOfLocations>)l),
-				> 3 => Array.Empty<IImmutableSet<CombinationOfLocations>>(), // there are no N-ary operations
-				_ => throw new ArgumentOutOfRangeException(nameof(N)),
-			};
-		}
-
-		/// <summary>
-		/// Check if the given <paramref name="location"/> is supported by unary operations of this <see cref="AbstractRuntimeApi"/> or not.
-		/// </summary>
-		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		/// <remarks>Although the functionality of this method can be done by <see cref="IsSupportedNary(CombinationOfLocations[])"/>, this one is specially separated for performance issues.</remarks>
-		public virtual bool IsSupportedUnitary(CombinationOfLocations location) => this.SupportedUnaryLocations.Contains(location);
-
-		/// <summary>
-		/// Check if the given <see cref="CombinationOfLocations"/>s are supported by binary operations of this <see cref="AbstractRuntimeApi"/> or not.
-		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		/// <remarks>Although the functionality of this method can be done by <see cref="IsSupportedNary(CombinationOfLocations[])"/>, this one is specially separated for performance issues.</remarks>
-		public virtual bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2)
-			=> this.SupportedBinaryLocations.Contains((location1, location2));
-
-		/// <summary>
-		/// Check if the given <see cref="LocationType"/>s are supported by ternary operations of this <see cref="AbstractRuntimeApi"/> or not.
-		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location3">The third given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether ternary operations between <paramref name="location1"/> and <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		/// <remarks>Although the functionality of this method can be done by <see cref="IsSupportedNary(CombinationOfLocations[])"/>, this one is specially separated for performance issues.</remarks>
-		public virtual bool IsSupportedTernary(CombinationOfLocations location1, CombinationOfLocations location2, CombinationOfLocations location3)
-			=> this.SupportedTernaryLocations.Contains((location1, location2, location3));
-
-		/// <summary>
-		/// Check if the given <paramref name="locations"/> are supported by N-ary operations of this <see cref="AbstractRuntimeApi"/> or not.
-		/// </summary>
-		/// <param name="locations">The given <see cref="CombinationOfLocations"/>s (must has exactly one or two flags)</param>
-		/// <returns>Whether N-ary operations between <paramref name="locations"/> are supported by this <see cref="AbstractRuntimeApi"/>.</returns>
-		public virtual bool IsSupportedNary(params CombinationOfLocations[] locations)
-			=> this.SupportedNaryLocations(locations.Length).Contains(new ImmutableSet<CombinationOfLocations>(locations));
-		#endregion
-		*/
 	}
 }
