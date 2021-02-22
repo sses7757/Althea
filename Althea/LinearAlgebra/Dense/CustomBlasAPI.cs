@@ -16,8 +16,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
 		/// <returns>Whether matrix unary operation on <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The unary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="MatrixCopyUpperToLowerPart{T}(long, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -31,19 +32,20 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="matrix2">The given <see cref="CombinationOfLocations"/> of the second matrix</param>
 		/// <returns>Whether unary vector and binary matrix operations between <paramref name="vector"/> and <paramref name="matrix1"/> and <paramref name="matrix2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The binary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="DiagonalMatrixMultiplyGeneral{T}(bool, long, long, T, Storage{T}, long, Storage{T}, int, T, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
-		protected abstract bool IsSupportedVectorUnaryMatrixUBinary(CombinationOfLocations vector, CombinationOfLocations matrix1, CombinationOfLocations matrix2);
+		protected abstract bool IsSupportedVectorUnaryMatrixBinary(CombinationOfLocations vector, CombinationOfLocations matrix1, CombinationOfLocations matrix2);
 		#endregion
 
 
 		#region static methods as dispatchers
 		#region BLAS like
 		/// <summary>
-		/// When implemented by a derived class, perform the matrix-matrix addition and/or transposition:<br/>
+		/// Perform the matrix-matrix addition and/or transposition:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>. <br/>
 		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars; and <paramref name="A"/>, <paramref name="B"/>, <paramref name="C"/> are matrices stored in column-major format with dimensions <paramref name="opA"/>(<paramref name="A"/>) → <paramref name="m"/>×<paramref name="n"/>, <paramref name="opB"/>(<paramref name="B"/>) → <paramref name="m"/>×<paramref name="n"/> and <paramref name="C"/> → <paramref name="m"/>×<paramref name="n"/>, respectively.
 		/// </summary>
@@ -104,7 +106,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, perform the matrix-matrix multiplication:
+		/// Perform the matrix-matrix multiplication:
 		/// <list type="table">
 		/// <listheader><term>Condition</term>  <description>Equation</description></listheader>
 		/// <item><term><paramref name="leftA"/> is true</term>  <description><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
@@ -133,7 +135,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixUBinary(locationVec, location1, location2), node);
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixBinary(locationVec, location1, location2), node);
 				success = node.Value.DiagonalMatrixMultiplyGeneral_(leftA, m, n, α, A, lda, x, strideX, β, C, ldc);
 			}
 			if (success && node is not null)
@@ -143,7 +145,7 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region custom BLAS level 1
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>.^<paramref name="p"/></c> (point-wise power).
+		/// Compute <c><paramref name="x"/> = <paramref name="x"/>.^<paramref name="p"/></c> (point-wise power).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be powered in-place</param>
@@ -167,7 +169,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>.^<paramref name="p"/></c> (point-wise power).
+		/// Compute <c><paramref name="x"/> = <paramref name="x"/>.^<paramref name="p"/></c> (point-wise power).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be powered in-place</param>
@@ -191,7 +193,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = conj(<paramref name="x"/>)</c> (point-wise conjugate).
+		/// Compute <c><paramref name="x"/> = conj(<paramref name="x"/>)</c> (point-wise conjugate).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be conjugated</param>
@@ -214,7 +216,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
+		/// Truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be truncated</param>
@@ -236,7 +238,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in vector <paramref name="x"/>.
+		/// Aggregately sum the elements in vector <paramref name="x"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be summed</param>
@@ -262,7 +264,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, aggregately product the elements in vector <paramref name="x"/>.
+		/// Aggregately product the elements in vector <paramref name="x"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be multiplied</param>
@@ -288,7 +290,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="α"/></c> (point-wise addition).
+		/// Compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="α"/></c> (point-wise addition).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be added in-place</param>
@@ -312,7 +314,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[j]</c> (point-wise equals).
+		/// Check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[j]</c> (point-wise equals).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be checked</param>
@@ -340,7 +342,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>.*<paramref name="y"/></c> (point-wise multiplication).
+		/// Compute <c><paramref name="x"/> = <paramref name="x"/>.*<paramref name="y"/></c> (point-wise multiplication).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be multiplied in-place</param>
@@ -365,7 +367,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>./<paramref name="y"/></c> (point-wise division).
+		/// Compute <c><paramref name="x"/> = <paramref name="x"/>./<paramref name="y"/></c> (point-wise division).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be multiplied in-place</param>
@@ -390,7 +392,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, cast the given vector from type <typeparamref name="T"/> to type <typeparamref name="TOut"/>.
+		/// Cast the given vector from type <typeparamref name="T"/> to type <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
 		/// <typeparam name="TOut">Any unmanaged struct as the output data type</typeparam>
@@ -416,7 +418,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, preform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
+		/// Perform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be partially summed</param>
@@ -441,7 +443,7 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, preform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
+		/// Perform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be partially multiplied</param>
@@ -468,15 +470,15 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region custom BLAS level 3
 		/// <summary>
-		/// When implemented by a derived class, copy the matrix <paramref name="A"/>'s upper part to lower part and set the diagonal elements to its absolute value is <typeparamref name="T"/> is a complex type.
+		/// Copy the matrix <paramref name="A"/>'s upper part to lower part and set the diagonal elements to its absolute value is <typeparamref name="T"/> is a complex type.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/></param>
+		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
-		public static void MatrixCopyUpperToLowerPart<T>(Storage<T> A, long ld, long n) where T : unmanaged
+		public static void MatrixCopyUpperToLowerPart<T>(long n, Storage<T> A, long lda) where T : unmanaged
 		{
 			CombinationOfLocations location1 = A.LocationDescription;
 			bool success = false;
@@ -484,14 +486,14 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1), node);
-				success = node.Value.MatrixCopyUpperToLowerPart_(A, ld, n);
+				success = node.Value.MatrixCopyUpperToLowerPart_(n, A, lda);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, calculate matrix Kronecker product:<br/>
+		/// Calculate matrix Kronecker product:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> ⊗ <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
@@ -707,7 +709,7 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool AggregateProduct_<T>(Storage<T> x, int stride, out T product) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, preform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
+		/// When implemented by a derived class, perform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be partially summed</param>
@@ -720,7 +722,7 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, preform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
+		/// When implemented by a derived class, perform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be partially multiplied</param>
@@ -750,12 +752,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, copy the matrix <paramref name="A"/>'s upper part to lower part and set the diagonal elements to its absolute value is <typeparamref name="T"/> is a complex type.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/></param>
+		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		protected abstract bool MatrixCopyUpperToLowerPart_<T>(Storage<T> A, long ld, long n) where T : unmanaged;
+		protected abstract bool MatrixCopyUpperToLowerPart_<T>(long n, Storage<T> A, long lda) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate matrix Kronecker product <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> ⊗ <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>.

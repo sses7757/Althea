@@ -37,7 +37,12 @@ namespace Althea.Arrays
 		/// </summary>
 		public T DefaultValue { get; protected set; }
 
-		DataType ISparseVector<T>.IndexType => default(TInd).ToDataType();
+		/// <summary>
+		/// The <see cref="DataType"/> of the type parameter <typeparamref name="TInd"/>
+		/// </summary>
+		protected static readonly DataType indexDataType = default(TInd).ToDataType();
+
+		DataType ISparseVector<T>.IndexType => indexDataType;
 
 		/// <summary>
 		/// The member of first index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>

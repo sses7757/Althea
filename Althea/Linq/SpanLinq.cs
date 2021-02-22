@@ -990,6 +990,7 @@ namespace Althea.Linq
 		/// <param name="value">The value of type <typeparamref name="T"/></param>
 		/// <returns>The <paramref name="span"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> SetValue<T>(this Span<T> span, T value)
 		{
 			if (span.IsEmpty)
@@ -1008,6 +1009,7 @@ namespace Althea.Linq
 		/// <returns>The <paramref name="span"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2)
 		{
 			if (span.IsEmpty)
@@ -1030,6 +1032,7 @@ namespace Althea.Linq
 		/// <returns>The <paramref name="span"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2, T value3)
 		{
 			if (span.IsEmpty)

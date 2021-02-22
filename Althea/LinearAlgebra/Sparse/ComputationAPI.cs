@@ -14,7 +14,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
-		#region static methods for dispatching
+		#region basic
 		/// <summary>
 		/// Get the current using <see cref="AbstractApi"/>.
 		/// </summary>
@@ -24,89 +24,50 @@ namespace Althea.LinearAlgebra.Sparse
 		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
 
 		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.DisposeNotCurrent{T}(LinkedList{T})"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void DisposeNotCurrent() => DisposeNotCurrent(RecentAPIs);
-
-		/// <summary>
-		/// Dense and sparse vector version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T>(Storage<T> dense, ISparseVector<T> sparse) where T : unmanaged
-		{
-			var selection = SelectImplementation(RecentAPIs, dense, sparse.Storage);
-			if (selection.IsSupportedSparseFormat(sparse.Format) &&
-				selection.IsSupportedSparseIndexType(sparse.IndexType) &&
-				selection.IsSupportedSparseDefaultValue(sparse.DefaultValue))
-				return selection;
-			// otherwise, use predicate search
-			return SelectImplementation(RecentAPIs, dense, sparse.Storage, validApi: a =>
-					a.IsSupportedSparseFormat(sparse.Format) &&
-					a.IsSupportedSparseIndexType(sparse.IndexType) &&
-					a.IsSupportedSparseDefaultValue(sparse.DefaultValue));
-		}
-
-		/// <summary>
-		/// Sparse and sparse vector version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation<T>(ISparseVector<T> sparse1, ISparseVector<T> sparse2) where T : unmanaged
-		{
-			var selection = SelectImplementation(RecentAPIs, sparse1.Storage, sparse2.Storage);
-			if (selection.IsSupportedSparseFormat(sparse1.Format, sparse2.Format) &&
-				selection.IsSupportedSparseIndexType(sparse1.IndexType, sparse2.IndexType) &&
-				selection.IsSupportedSparseDefaultValue(sparse1.DefaultValue, sparse2.DefaultValue))
-				return selection;
-			// otherwise, use predicate search
-			return SelectImplementation(RecentAPIs, sparse1.Storage, sparse2.Storage, validApi: a =>
-					a.IsSupportedSparseFormat(sparse1.Format, sparse2.Format) &&
-					a.IsSupportedSparseIndexType(sparse1.IndexType, sparse2.IndexType) &&
-					a.IsSupportedSparseDefaultValue(sparse1.DefaultValue, sparse2.DefaultValue));
-		}
-
-		/// <summary>
-		/// Special version for <see cref="AbstractApi"/> of method <see cref="AbstractRuntimeApi.SelectImplementation{T}(LinkedList{T}, IStorage, IStorage, Predicate{T})"/>
-		/// </summary>
-		public static AbstractApi SelectImplementation(IStorage storage1, IStorage storage2) => SelectImplementation(RecentAPIs, storage1, storage2);
 		#endregion
 
 
 		#region support information
-		public abstract bool IsSupportedSparseFormat(SparseVectorFormat format);
-
-		public abstract bool IsSupportedSparseFormat(SparseMatrixFormat format);
-
-		public abstract bool IsSupportedSparseFormat(SparseVectorFormat format1, SparseVectorFormat format2);
-
-		public abstract bool IsSupportedSparseFormat(SparseVectorFormat vector, SparseMatrixFormat matrix);
-
-		public abstract bool IsSupportedSparseFormat(SparseMatrixFormat format1, SparseMatrixFormat format2);
-
-		public abstract bool IsSupportedSparseIndexType(DataType type);
-
-		public abstract bool IsSupportedSparseDefaultValue<T>(T value) where T : unmanaged;
-
-		public abstract bool IsSupportedSparseIndexType(DataType type1, DataType type2);
-
-		public abstract bool IsSupportedSparseDefaultValue<T>(T value1, T value2) where T : unmanaged;
+		/// <summary>
+		/// When implemented by a derived class, check if the given <paramref name="indexType"/> is supported by vector alone operations of this implementation or not.
+		/// </summary>
+		/// <param name="indexType">The <see cref="DataType"/> of the vector's index array</param>
+		/// <returns>Whether vector alone operations using <paramref name="indexType"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedVectorIndexType(DataType indexType);
 
 		/// <summary>
-		/// Get list of the supported <see cref="CombinationOfLocations"/> for all ternary operations. Since <see cref="AbstractApi"/> has no definition of ternary operations, this override returns null.
+		/// When implemented by a derived class, check if the given <paramref name="vectorIndex"/> and <paramref name="matrixIndex"/> are supported by vector with matrix operations of this implementation or not.
 		/// </summary>
-		public override IReadOnlyList<ImmutableThreeElementSet<CombinationOfLocations>> SupportedTernaryLocations => Array.Empty<ImmutableThreeElementSet<CombinationOfLocations>>();
+		/// <param name="vectorIndex">The <see cref="DataType"/> of the vector's index array</param>
+		/// <param name="matrixIndex">The <see cref="DataType"/> of the matrix's index array</param>
+		/// <returns>Whether vector with matrix operations using <paramref name="vectorIndex"/> and <paramref name="matrixIndex"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedVectorMatrixIndexType(DataType vectorIndex, DataType matrixIndex);
 
 		/// <summary>
-		/// When implemented by a derived class, get the list of supported transfer between <see cref="CombinationOfLocations"/> and C# managed memory
+		/// When implemented by a derived class, check if the given <paramref name="indexType"/> is supported by matrix alone operations of this implementation or not.
 		/// </summary>
-		public abstract IReadOnlyList<CombinationOfLocations> SupportedManagedTransfer { get; }
+		/// <param name="indexType">The <see cref="DataType"/> of the matrix's index array</param>
+		/// <returns>Whether matrix alone operations using <paramref name="indexType"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <remarks>
+		/// The operations:
+		/// <list type="bullet">
+		/// <item>etc.</item>
+		/// </list>
+		/// </remarks>
+		protected abstract bool IsSupportedMatrixIndexType(DataType indexType);
 
-		/// <summary>
-		/// When implemented by a derived class, check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation
-		/// </summary>
-		/// <param name="locations">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
-		/// <returns>Whether this implementation supports data transfer between <paramref name="locations"/> and C# managed memory</returns>
-		public virtual bool IsSupportedTransfer(CombinationOfLocations locations) => this.SupportedManagedTransfer.Contains(locations);
 		#endregion
 
 

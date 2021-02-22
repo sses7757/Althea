@@ -29,8 +29,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
 		/// <returns>Whether vector unary operation on <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The unary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="Scale{T}(T, Storage{T}, int)"/></item>
+		/// <item><see cref="PointWisePower{T}(Storage{T}, int, T)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -43,8 +45,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
 		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The binary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="VectorGeneralAdd{T}(T, Storage{T}, int, Storage{T}, int)"/></item>
+		/// <item><see cref="PointWiseMultiply{T}(Storage{T}, int, Storage{T}, int)"/></item>
+		/// <item><see cref="PointWiseCast{T, TOut}(Storage{T}, int, Storage{TOut}, int)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -57,8 +62,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of the matrix</param>
 		/// <returns>Whether binary operations between <paramref name="vector"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The binary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="SymmHermRankOneUpdate{T}(bool, bool, long, T, Storage{T}, int, T, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -72,8 +78,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of matrix</param>
 		/// <returns>Whether binary vector and unary matrix operations between <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The binary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="GeneralMatrixMultiplyVector{T}(MatrixOperation, long, long, T, Storage{T}, long, Storage{T}, int, T, Storage{T}, int)"/></item>
+		/// <item><see cref="SymmHermMatrixMultiplyVector{T}(bool, bool, long, T, Storage{T}, long, Storage{T}, int, T, Storage{T}, int)"/></item>
+		/// <item><see cref="GenralRankOneUpdate{T}(bool, long, long, T, Storage{T}, int, Storage{T}, int, T, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -86,8 +95,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
 		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The binary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="RankKUpdate{T}(bool, MatrixOperation, bool, long, long, T, Storage{T}, long, T, Storage{T}, long)"/></item>
+		/// <item><see cref="GeneralMatricesAdd{T}(MatrixOperation, MatrixOperation, long, long, T, Storage{T}?, long, T, Storage{T}?, long, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -101,8 +112,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="location3">The third given <see cref="CombinationOfLocations"/></param>
 		/// <returns>Whether trinary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
-		/// The binary operations:
+		/// The operations:
 		/// <list type="bullet">
+		/// <item><see cref="GeneralMatricesMultiply{T}(MatrixOperation, MatrixOperation, long, long, long, T, Storage{T}, long, Storage{T}, long, T, Storage{T}, long)"/></item>
+		/// <item><see cref="GeneralMatricesAdd{T}(MatrixOperation, MatrixOperation, long, long, T, Storage{T}?, long, T, Storage{T}?, long, Storage{T}, long)"/></item>
+		/// <item><see cref="MatrixKronecker{T}(long, long, long, long, T, Storage{T}, long, Storage{T}, long, T, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
