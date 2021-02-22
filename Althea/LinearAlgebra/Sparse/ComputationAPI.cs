@@ -80,6 +80,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The input/output dense vector as a <see cref="Storage{T}"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="TypeMismatchException">If the <see cref="ISparseArray{T}.IndexType"/> is not an integral type</exception>
 		public abstract void VectorSparseAddToDense<T>(T α, ISparseVector<T> x, Storage<T> y) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
@@ -110,10 +111,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateNew{T}"/></param>
+		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <returns>The result of sum of <paramref name="x"/> and <paramref name="y"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public abstract ISparseVector<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, DelegateCreateNew<T>? createFunc = null) where T : unmanaged;
+		public abstract ISparseVector<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
@@ -145,7 +146,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="α">The scalar to multiply <paramref name="M"/></param>
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
-		public abstract void MatrixSparseMultiplyVectorDense<T>(MatrixOperation op, T α, SparseMatrixWrapper<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged, IEquatable<T>;
+		public abstract void MatrixSparseMultiplyVectorDense<T>(MatrixOperation op, T α, ISparseMatrix<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the dense matrix sparse vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="M"/>^<paramref name="op"/> * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
@@ -172,7 +173,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="M">The preallocated input/output sparse matrix of <see cref="SparseMatrixFormat.COOC"/> format with <c>non_zeros = <paramref name="x"/>.non_zeros * <paramref name="y"/>.non_zeros</c></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="M"/> is not of <see cref="SparseMatrixFormat.COOC"/> format or has wrong number of non-zero elements</exception>
-		public abstract void VectorSparseOuter<T>(bool conjY, T α, ISparseVector<T> x, ISparseVector<T> y, T β, SparseMatrixWrapper<T> M) where T : unmanaged, IEquatable<T>;
+		public abstract void VectorSparseOuter<T>(bool conjY, T α, ISparseVector<T> x, ISparseVector<T> y, T β, ISparseMatrix<T> M) where T : unmanaged, IEquatable<T>;
 		#endregion
 	}
 }

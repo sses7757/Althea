@@ -160,6 +160,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The type &apos;{0}&apos; is not an integral type. 的本地化字符串。
+        /// </summary>
+        internal static string MismatchNotInteger {
+            get {
+                return ResourceManager.GetString("MismatchNotInteger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The type &apos;{1}&apos; is not a real correspondence type of &apos;{0}&apos;. 的本地化字符串。
         /// </summary>
         internal static string MismatchNotRealCorrespondence {

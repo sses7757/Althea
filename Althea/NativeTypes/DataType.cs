@@ -137,6 +137,7 @@ namespace Althea.NativeTypes
 	/// </summary>
 	public static class DataTypeExtension
 	{
+		#region constants
 		/// <summary>
 		/// The type mask (from 1st bit to 2nd bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type classification as a <see cref="DataTypeClassification"/>.
@@ -186,8 +187,9 @@ namespace Althea.NativeTypes
 		/// The 8-byte base type; cannot be used separately.
 		/// </summary>
 		public const int Byte8 = 8 << ByteMaskStart;
+		#endregion
 
-
+		#region DataType extension
 		/// <summary>
 		/// Construct a <see cref="DataType"/> from given parameters
 		/// </summary>
@@ -275,7 +277,64 @@ namespace Althea.NativeTypes
 		{
 			return (dataType.IsReal() ? "Real" : "Complex") + $" Byte-{dataType.Bytes()} " + (dataType.IsFloat() ? "Float" : "Integer");
 		}
+		#endregion
 
+		#region to DataType
+		/// <summary>
+		/// Convert the <paramref name="type"/> to the <see cref="DataType"/>
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> to be converted</param>
+		/// <returns>The corresponding <see cref="DataType"/> of  <paramref name="type"/></returns>
+		/// <exception cref="NotSupportedException">If <paramref name="type"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DataType ToDataType(this Type type)
+		{
+			if (type == typeof(float))
+				return DataType.RealSingle;
+			if (type == typeof(double))
+				return DataType.RealDouble;
+			if (type == typeof(int))
+				return DataType.RealInt32;
+			if (type == typeof(long))
+				return DataType.RealInt64;
+			if (type == typeof(sbyte))
+				return DataType.RealInt8;
+			if (type == typeof(short))
+				return DataType.RealInt16;
+			if (type == typeof(uint))
+				return DataType.RealUInt32;
+			if (type == typeof(ulong))
+				return DataType.RealUInt64;
+			if (type == typeof(byte))
+				return DataType.RealUInt8;
+			if (type == typeof(ushort))
+				return DataType.RealUInt16;
+			if (type == typeof(Complex<float>))
+				return DataType.ComplexSingle;
+			if (type == typeof(Complex<double>))
+				return DataType.ComplexDouble;
+			if (type == typeof(Complex<int>))
+				return DataType.ComplexInt32;
+			if (type == typeof(Complex<long>))
+				return DataType.ComplexInt64;
+			if (type == typeof(Complex<sbyte>))
+				return DataType.ComplexInt8;
+			if (type == typeof(Complex<short>))
+				return DataType.ComplexInt16;
+			if (type == typeof(Complex<uint>))
+				return DataType.ComplexUInt32;
+			if (type == typeof(Complex<ulong>))
+				return DataType.ComplexUInt64;
+			if (type == typeof(Complex<byte>))
+				return DataType.ComplexUInt8;
+			if (type == typeof(Complex<ushort>))
+				return DataType.ComplexUInt16;
+			// otherwise
+			if (!type.IsSupportedDirect())
+				throw new NotSupportedException(Resources.Support.DataType);
+			else
+				return MakeDataType(type.IsComplexDirect(), type.GetClassificationDirect(), System.Runtime.InteropServices.Marshal.SizeOf(type));
+		}
 
 		/// <summary>
 		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
@@ -324,7 +383,8 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The data type to convert</typeparam>
 		/// <returns>the corresponding <see cref="DataType"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();
+		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();\
+		#endregion
 	}
 	#endregion
 }
