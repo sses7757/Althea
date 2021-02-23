@@ -43,7 +43,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
 		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
@@ -56,11 +56,11 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool IsSupportedVectorBinary(CombinationOfLocations location1, CombinationOfLocations location2);
 
 		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector and matrix binary operations of this implementation or not.
+		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector unary and matrix unary operations of this implementation or not.
 		/// </summary>
 		/// <param name="vector">The given <see cref="CombinationOfLocations"/> of the vector</param>
 		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of the matrix</param>
-		/// <returns>Whether binary operations between <paramref name="vector"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <returns>Whether binary operations on <paramref name="vector"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
@@ -68,7 +68,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
-		protected abstract bool IsSupportedVectorMatrixBinary(CombinationOfLocations vector, CombinationOfLocations matrix);
+		protected abstract bool IsSupportedVectorUnaryMatrixUnary(CombinationOfLocations vector, CombinationOfLocations matrix);
 
 		/// <summary>
 		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by binary vector and unary matrix operations of this implementation or not.
@@ -76,7 +76,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="vector1">The given <see cref="CombinationOfLocations"/> of the first vector</param>
 		/// <param name="vector2">The given <see cref="CombinationOfLocations"/> of the second vector</param>
 		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of matrix</param>
-		/// <returns>Whether binary vector and unary matrix operations between <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <returns>Whether binary vector and unary matrix operations on <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
@@ -93,7 +93,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
 		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
@@ -110,7 +110,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
 		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
 		/// <param name="location3">The third given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether trinary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
+		/// <returns>Whether trinary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
@@ -433,7 +433,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorMatrixBinary(locationVec, locationMat), node);
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixUnary(locationVec, locationMat), node);
 				success = node.Value.SymmHermRankOneUpdate_(fillLower, conjX, n, α, x, strideX, β, A, lda);
 			}
 			if (success && node is not null)
