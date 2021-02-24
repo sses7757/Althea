@@ -25,6 +25,45 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 
 
+		#region get empty sparse arrays
+		private static readonly Dictionary<(DataType type, bool vector), object> cache_emptySparseArray = new Dictionary<(DataType, bool), object>();
+
+		private static ISparseVector<T> GetEmptySparseVector<T>() where T : unmanaged
+		{
+			DataType type = default(T).ToDataType();
+			var key = (type, vector: true);
+			if (!cache_emptySparseArray.ContainsKey(key))
+			{
+				var value = typeof(Backend.Arrays.SparseVector<float, int>)
+									.MakeGenericType(typeof(T), typeof(int))
+									.GetConstructor(Type.EmptyTypes)?
+									.Invoke(null);
+				if (value is null)
+					throw new NotSupportedException(Resources.Support.DataType);
+				cache_emptySparseArray.Add(key, value);
+			}
+			return (ISparseVector<T>)cache_emptySparseArray[key];
+		}
+
+		private static ISparseMatrix<T> GetEmptySparseMatrix<T>() where T : unmanaged
+		{
+			DataType type = default(T).ToDataType();
+			var key = (type, vector: false);
+			if (!cache_emptySparseArray.ContainsKey(key))
+			{
+				var value = typeof(Backend.Arrays.SparseMatrix<float, int>)
+									.MakeGenericType(typeof(T), typeof(int))
+									.GetConstructor(Type.EmptyTypes)?
+									.Invoke(null);
+				if (value is null)
+					throw new NotSupportedException(Resources.Support.DataType);
+				cache_emptySparseArray.Add(key, value);
+			}
+			return (ISparseMatrix<T>)cache_emptySparseArray[key];
+		}
+		#endregion
+
+
 		#region support information
 		/// <summary>
 		/// When implemented by a derived class, check if the given <paramref name="indexType"/> is supported by vector alone operations of this implementation or not.
