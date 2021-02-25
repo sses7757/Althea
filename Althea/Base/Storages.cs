@@ -741,6 +741,20 @@ namespace Althea
 			if ((offset != 0 || length != 0) && !this.IsOffsetValid(offset, length))
 				throw new ArgumentOutOfRangeException($"{nameof(offset)}, {nameof(length)}");
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin as the <paramref name="other"/> <see cref="IStorage"/>.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
+		bool SameOriginAs(IStorage other);
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="IStorage"/>.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		bool OverlapWith(IStorage other);
 	}
 
 	/// <summary>
@@ -837,47 +851,34 @@ namespace Althea
 
 		#region other methods
 		/// <summary>
-		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin with the <paramref name="other"/> <see cref="Storage{T}"/>. The default implementation only works when both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="ReferenceStorage{T}"/>.
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin as the <paramref name="other"/> <see cref="IStorage"/>. The default implementation only works when both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="IReferenceStorage"/>.
 		/// </summary>
-		/// <param name="other">The other <see cref="Storage{T}"/> to check overlap</param>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
 		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
 		/// <exception cref="NotImplementedException">If either of this and <paramref name="other"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/></exception>
-		public virtual bool SameOriginAs(Storage<T> other)
+		public virtual bool SameOriginAs(IStorage other)
 		{
 			if (!this.IsValid() || !other.IsValid())
 				return false;
 
-			var originThis = this as ActualStorage<T> ?? (this as ReferenceStorage<T>)?.Reference;
-			var originOther = other as ActualStorage<T> ?? (other as ReferenceStorage<T>)?.Reference;
+			var originThis = this as ActualStorage<T> ?? (this as IReferenceStorage)?.Reference;
+			var originOther = other as ActualStorage<T> ?? (other as IReferenceStorage)?.Reference;
 			if (originThis is null || originOther is null)
 				throw new NotImplementedException();
 			return originThis.Equals(originOther);
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="Storage{T}"/>. The default implementation is direct if both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="ReferenceStorage{T}"/>; otherwise, it assumes that only <see cref="PointerSegment"/>s visible from <see cref="this[int]"/> can be referenced.
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="IStorage"/>. The default implementation is direct if both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="IReferenceStorage"/>; otherwise, it assumes that only <see cref="PointerSegment"/>s visible from <see cref="this[int]"/> can be referenced.
 		/// </summary>
-		/// <param name="other">The other <see cref="Storage{T}"/> to check overlap</param>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		public virtual bool OverlapWith(Storage<T> other)
+		public virtual bool OverlapWith(IStorage other)
 		{
 			if (!this.IsValid() || !other.IsValid())
 				return false;
-
-			var actualThis = this as ActualStorage<T>;
-			var actualOther = other as ActualStorage<T>;
-			var referenceThis = this as ReferenceStorage<T>;
-			var referenceOther = other as ReferenceStorage<T>;
-
-			if (actualThis is not null && actualOther is not null)
-				return actualThis.Equals(actualOther);
-			else if (actualThis is not null && referenceOther is not null)
-				return actualThis.Equals(referenceOther.Reference);
-			else if (referenceThis is not null && actualOther is not null)
-				return actualOther.Equals(referenceThis.Reference);
-			else if (referenceThis is not null && referenceOther is not null)
-				return referenceThis.Reference is not null && referenceOther is not null && referenceThis.Reference.Equals(referenceOther.Reference);
-
+			if (this.SameOriginAs(other))
+				return true;
 			// else
 			for (int i = 0; i < this.Count; i++)
 			{

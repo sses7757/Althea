@@ -165,7 +165,7 @@ namespace Althea.Backend.Arrays
 			if (other is DenseVector<T>)
 				return LAD.Dot(conjugateThis, this.Storage, 1, other.Storage, 1);
 			else if (other is ISparseVector<T> sparse)
-				return LAS.SelectImplementation(this.Storage, sparse).VectorSparseDotDense(conjugateThis, sparse, this.Storage).GenericConjugate();
+				return LAS.VectorSparseDotDense(conjugateThis, sparse, this.Storage).GenericConjugate();
 			else
 				throw new NotSupportedException();
 		}
@@ -188,7 +188,7 @@ namespace Althea.Backend.Arrays
 			if (other is DenseVector<T>)
 				LAD.VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
 			else if (other is ISparseVector<T> sparse)
-				LAS.SelectImplementation(this.Storage, sparse).VectorSparseAddToDense(scalar, sparse, this.Storage);
+				LAS.VectorSparseAddToDense(scalar, sparse, this.Storage);
 			else
 				throw new NotSupportedException();
 		}
@@ -237,11 +237,11 @@ namespace Althea.Backend.Arrays
 			}
 			else if (spMat is not null && dnVec is not null)
 			{
-				LAS.SelectImplementation(this.Storage, dnVec.Storage, spMat).MatrixSparseMultiplyVectorDense(operation, α, spMat, dnVec.Storage, β, this.Storage);
+				LAS.MatrixSparseMultiplyVectorDense(operation, α, spMat, dnVec.Storage, β, this.Storage);
 			}
 			else if (dnMat is not null && spVec is not null)
 			{
-				LAS.SelectImplementation(this.Storage, dnMat.Storage, spVec).MatrixDenseMultiplyVectorSparse(operation, α, dnMat.NRows, dnMat.NCols, dnMat.Storage, spVec, β, this.Storage);
+				LAS.MatrixDenseMultiplyVectorSparse(operation, α, operation == LinearAlgebra.MatrixOperation.None ? dnMat.NRows : dnMat.NCols, dnMat.Storage, dnMat.LeadDim, spVec, β, this.Storage);
 			}
 			else if (spMat is not null && spVec is not null)
 			{

@@ -42,7 +42,7 @@ namespace Althea.Arrays
 		/// </summary>
 		protected static readonly DataType indexDataType = default(TInd).ToDataType();
 
-		DataType ISparseVector<T>.IndexType => indexDataType;
+		DataType ISparseArray<T>.IndexType => indexDataType;
 
 		/// <summary>
 		/// The member of first index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
@@ -144,13 +144,13 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>.  The default implementation only compares <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="AbstractSparseVector{T, TInd}"/>.
+		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only compares <see cref="ISparseArray{T}.Storage"/> and the index array(s) implied in <see cref="ISparseArray{T}"/>.
 		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T, TInd}"/> to exclude before disposing this sparse vector</param>
-		public virtual void DisposeExclude(ISparseArray<T, TInd> array)
+		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing this sparse vector</param>
+		public virtual void DisposeExclude(ISparseArray<T> array)
 		{
-			var list = (IReadOnlyList<Storage<TInd>>)this;
-			var other = (IReadOnlyList<Storage<TInd>>)array;
+			var list = (IReadOnlyList<IStorage>)this;
+			var other = (IReadOnlyList<IStorage>)array;
 			if (!this.Storage.SameOriginAs(array.Storage))
 				this.Storage.Dispose();
 			for (int i = 0; i < list.Count; i++)
@@ -168,6 +168,8 @@ namespace Althea.Arrays
 					list[i].Dispose();
 			}
 		}
+
+		void ISparseArray<T, TInd>.DisposeExclude(ISparseArray<T, TInd> array) => this.DisposeExclude(array);
 
 		/// <summary>
 		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="AbstractSparseVector{T, TInd}"/>.

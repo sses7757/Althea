@@ -198,16 +198,8 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 
 
+		#region static methods as dispatchers
 		#region vector
-		/// <summary>
-		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
-		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public abstract void VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged;
-
 		/// <summary>
 		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
 		/// </summary>
@@ -216,19 +208,312 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input vector whose values will be set</param>
 		/// <param name="positions">The given positions as a <see cref="Storage{T}"/> of <see cref="int"/></param>
 		/// <param name="value">The value to set</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
-		public abstract void VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged where TInd : unmanaged;
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
+		public static void VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged where TInd : unmanaged
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = positions.LocationDescription;
+			DataType indexType = default(TInd).ToDataType();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorIndexType(indexType) && a.IsSupportedVectorUnary(location1) && a.IsSupportedIndexVectorUnary(location2), node);
+				success = node.Value.VectorSetValuesAt_(x, value, positions);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, gather the dense vector <paramref name="x"/> at <paramref name="pos"/> into another vector <paramref name="y"/>: <paramref name="y"/> = <paramref name="x"/>[<paramref name="pos"/>].
+		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
+		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		public static void VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged
+		{
+			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
+				success = node.Value.VectorSparseToDense_(x, y);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, gather the dense vector <paramref name="x"/> at the underlying position array of <paramref name="y"/> into the <see cref="ISparseArray{T}.Storage"/> of sparse vector <paramref name="y"/>: <c><paramref name="y"/>.<see cref="ISparseArray{T}.Storage">Storage</see> = <paramref name="x"/>[<paramref name="y"/>.Position]</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/> to gather from</param>
+		/// <param name="y">The input (sparse index) and output (value array) sparse vector</param>
+		/// <remarks>This is equivalent to converting dense vector to sparse vector when the sparsity is known</remarks>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		public static void VectorGatherValuesAt<T>(Storage<T> x, ISparseVector<T> y) where T : unmanaged
+		{
+			CombinationOfLocations location1 = x.LocationDescription, location2 = y.Storage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(y), node);
+				success = node.Value.VectorGatherValuesAt_(x, y);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/></param>
+		/// <param name="threshold">Any element in <paramref name="x"/> whose absolute value is less than or equals to <paramref name="threshold"/> will be regarded as zero</param>
+		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
+		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
+		/// <returns>The created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
+		public static ISparseVector<T> VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		{
+			CombinationOfLocations location1 = x.LocationDescription;
+			ISparseVector<T> result = GetEmptySparseVector<T>();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				success = node.Value.VectorDenseToSparse_(x, format, out result, threshold, createFunc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+		#endregion
+
+		#region vector and matrix
+		/// <summary>
+		/// When implemented by a derived class, convert the given sparse <paramref name="vector"/> to a sparse matrix of <paramref name="format"/> and presenting number of <paramref name="rows"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="vector">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
+		/// <param name="rows">The desired number of rows of the target sparse matrix (the number of columns is calculated from this)</param>
+		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
+		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
+		/// <returns>The created new <see cref="ISparseMatrix{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="vector"/> is null or invalid</exception>
+		public static ISparseMatrix<T> SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		{
+			CombinationOfLocations location1 = vector.Storage.LocationDescription;
+			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1) && a.IsSupportedSparseVector(vector), node);
+				success = node.Value.SparseVectorToMatrix_(vector, rows, format, out result, createFunc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
+		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
+		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
+		/// <returns>The created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="matrix"/> is null or invalid</exception>
+		public static ISparseVector<T> SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged
+		{
+			CombinationOfLocations location1 = matrix.Storage.LocationDescription;
+			ISparseVector<T> result = GetEmptySparseVector<T>();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(matrix), node);
+				success = node.Value.SparseMatrixToVector_(matrix, format, out result, createFunc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+		#endregion
+
+		#region matrix
+		/// <summary>
+		/// When implemented by a derived class, convert the given sparse matrix <paramref name="source"/> to a dense matrix <paramref name="destination"/>.
+		/// </summary>
+		/// <param name="source">The source sparse matrix to convert from</param>
+		/// <param name="destination">The storage of the destination dense matrix of the same size as <paramref name="source"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="destination"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		public static void MatrixSparseToDense<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged
+		{
+			CombinationOfLocations location1 = source.Storage.LocationDescription, location2 = destination.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2) && a.IsSupportedSparseMatrix(source), node);
+				success = node.Value.MatrixSparseToDense_(source, destination, ld);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> of to the <paramref name="format"/> format.
+		/// </summary>
+		/// <param name="m">The number of rows of <paramref name="source"/></param>
+		/// <param name="n">The number of columns of <paramref name="source"/></param>
+		/// <param name="source">The source dense matrix to convert from</param>
+		/// <param name="ld">The leading dimension of <paramref name="source"/></param>
+		/// <param name="format">The destination <see cref="SparseMatrixFormat"/> of the target sparse matrix, must be atomic</param>
+		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
+		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
+		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of the given properties</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
+		public static ISparseMatrix<T> MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		{
+			CombinationOfLocations location1 = source.LocationDescription;
+			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1), node);
+				success = node.Value.MatrixDenseToSparse_(m, n, source, ld, format, out result, threshold, createFunc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
+		/// </summary>
+		/// <param name="source">The source sparse matrix to convert from</param>
+		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
+		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> itself if the no prune is necessary</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
+		public static ISparseMatrix<T> MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold) where T : unmanaged
+		{
+			CombinationOfLocations location1 = source.Storage.LocationDescription;
+			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(source), node);
+				success = node.Value.MatrixSparsePrune_(source, threshold, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
+		/// </summary>
+		/// <param name="source">The source sparse matrix to convert from</param>
+		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
+		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		public static ISparseMatrix<T> MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format) where T : unmanaged
+		{
+			CombinationOfLocations location1 = source.Storage.LocationDescription;
+			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(source), node);
+				success = node.Value.MatrixSparseFormatConvert_(source, format, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.
+		/// </summary>
+		/// <param name="M">The sparse matrix to be filled with identity</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="NullReferenceException">If <paramref name="M"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
+		public static void MatrixSparseFillIdentity<T>(ISparseMatrix<T> M) where T : unmanaged
+		{
+			CombinationOfLocations location1 = M.Storage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(M), node);
+				success = node.Value.MatrixSparseFillIdentity_(M);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+		#endregion
+		#endregion
+
+
+		#region abstract methods that actually do computations
+		#region vector
+		/// <summary>
+		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
+		/// <param name="x">The input vector whose values will be set</param>
+		/// <param name="positions">The given positions as a <see cref="Storage{T}"/> of <see cref="int"/></param>
+		/// <param name="value">The value to set</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
+		protected abstract bool VectorSetValuesAt_<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged where TInd : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
+		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		protected abstract bool VectorSparseToDense_<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, gather the dense vector <paramref name="x"/> at the underlying position array of <paramref name="y"/> into the <see cref="ISparseArray{T}.Storage"/> of sparse vector <paramref name="y"/>: <c><paramref name="y"/>.<see cref="ISparseArray{T}.Storage">Storage</see> = <paramref name="x"/>[<paramref name="y"/>.Position]</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/> to gather from</param>
-		/// <param name="pos">The input indices indicating where to gather as a <see cref="Storage{T}"/> of <see cref="int"/></param>
-		/// <param name="y">The output vector to gather to as a <see cref="Storage{T}"/>, the first <paramref name="pos"/>.<see cref="Storage{T}.Length">Length</see> elements will be overwritten.</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="pos"/> is null or invalid</exception>
-		public abstract void VectorGatherValuesAt<T, TInd>(Storage<T> x, Storage<TInd> pos, Storage<T> y) where T : unmanaged where TInd : unmanaged;
+		/// <param name="y">The input (sparse index) and output (value array) sparse vector</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <remarks>This is equivalent to converting dense vector to sparse vector when the sparsity is known</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		protected abstract bool VectorGatherValuesAt_<T>(Storage<T> x, ISparseVector<T> y) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
@@ -239,9 +524,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
 		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		public abstract void VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, out ISparseVector<T> target, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool VectorDenseToSparse_<T>(Storage<T> x, SparseVectorFormat format, out ISparseVector<T> target, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
 		#endregion
 
 		#region vector and matrix
@@ -254,9 +540,9 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
 		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output the created new <see cref="ISparseMatrix{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></param>
-		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of desired properties</returns>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="vector"/> is null or invalid</exception>
-		public abstract void SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out ISparseMatrix<T> target, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool SparseVectorToMatrix_<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out ISparseMatrix<T> target, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
@@ -266,8 +552,9 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
 		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
 		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
-		public abstract void SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out ISparseVector<T> target, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool SparseMatrixToVector_<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out ISparseVector<T> target, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged;
 		#endregion
 
 		#region matrix
@@ -277,7 +564,9 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="destination">The storage of the destination dense matrix of the same size as <paramref name="source"/></param>
 		/// <param name="ld">The leading dimension of <paramref name="destination"/></param>
-		public abstract void MatrixSparseToDense<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged;
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		protected abstract bool MatrixSparseToDense_<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> of to the <paramref name="format"/> format.
@@ -290,36 +579,41 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
 		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of the given properties</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
-		public abstract void MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out ISparseMatrix<T> target, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool MatrixDenseToSparse_<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out ISparseMatrix<T> target, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
-		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/></param>
+		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> it self if no conversion is necessary</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		public abstract void MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold, out ISparseMatrix<T> target) where T : unmanaged;
+		protected abstract bool MatrixSparsePrune_<T>(ISparseMatrix<T> source, float threshold, out ISparseMatrix<T> target) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
-		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/></param>
+		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		public abstract void MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out ISparseMatrix<T> target) where T : unmanaged;
+		protected abstract bool MatrixSparseFormatConvert_<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out ISparseMatrix<T> target) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.
 		/// </summary>
 		/// <param name="M">The sparse matrix to be filled with identity</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="M"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
-		public abstract void MatrixSparseFillIdentity<T>(ISparseMatrix<T> M) where T : unmanaged;
+		protected abstract bool MatrixSparseFillIdentity_<T>(ISparseMatrix<T> M) where T : unmanaged;
+		#endregion
 		#endregion
 	}
 }
