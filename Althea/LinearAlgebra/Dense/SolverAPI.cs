@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Collections.Generic;
 
 using Althea.Linq;
@@ -12,6 +13,32 @@ namespace Althea.LinearAlgebra.Dense
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
+		#region dynamic invocation
+		/// <summary>
+		/// Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
+		/// </summary>
+		/// <remarks>
+		/// Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
+		/// Since there are internal caching for <see cref="DynamicObject.TryInvokeMember(InvokeMemberBinder, object[], out object)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
+		/// </remarks>
+		/// <example><code>
+		/// long number = AbstractApi.Dynamic.CholeskyDecompose(...);
+		/// </code></example>
+		public static dynamic Dynamic => singletonDynamic;
+
+		private static readonly DynamicInvocations singletonDynamic = new DynamicInvocations();
+
+		private sealed class DynamicInvocations : DynamicInvocation
+		{
+			public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+			{
+				result = DynamicInvokeExtraMethod(RecentAPIs, binder.Name, args);
+				return true;
+			}
+		}
+		#endregion
+
+
 		#region support information
 		/// <summary>
 		/// check if the given regular-typed locations <paramref name="normals"/> and its real-corresponding locations <paramref name="reals"/> are supported by such operations of this implementation or not.

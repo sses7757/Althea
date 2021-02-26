@@ -92,7 +92,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the default value of this sparse array
 		/// </summary>
-		T DefaultValue { get; }
+		T DefaultValue { get; protected internal set; }
 		#endregion
 
 		#region dispose
@@ -138,6 +138,14 @@ namespace Althea.Arrays
 		/// </summary>
 		LinearAlgebra.Sparse.SparseVectorFormat Format { get; }
 		#endregion
+
+		#region conversion
+		/// <summary>
+		/// Convert this sparse vector to a dense vector whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense vector to overwrite</param>
+		void ToDense(Storage<T> denseStorage);
+		#endregion
 	}
 
 	/// <summary>
@@ -161,6 +169,15 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the format of this sparse matrix as a <see cref="LinearAlgebra.Sparse.SparseMatrixFormat"/>
 		/// </summary>
 		LinearAlgebra.Sparse.SparseMatrixFormat Format { get; }
+		#endregion
+
+		#region conversion
+		/// <summary>
+		/// Convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix</param>
+		void ToDense(Storage<T> denseStorage, long leadDim);
 		#endregion
 	}
 	#endregion

@@ -35,7 +35,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get or set the default value (the value not specified) of this sparse vector
 		/// </summary>
-		public T DefaultValue { get; protected set; }
+		public T DefaultValue { get; protected internal set; }
+
+		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
 
 		/// <summary>
 		/// The <see cref="DataType"/> of the type parameter <typeparamref name="TInd"/>
@@ -218,117 +220,14 @@ namespace Althea.Arrays
 		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
 		#endregion
 
-		#region new method
-		/// <summary>
-		/// Convert this sparse vector to a dense vector
-		/// </summary>
-		/// <returns>The converted <see cref="Backend.Arrays.DenseVector{T}"/></returns>
-		public abstract Backend.Arrays.DenseVector<T> ToDense();
-		#endregion
-
-		#region point-wise method override
-		/// <summary>
-		/// When implemented by a derived class, fill this sparse array with given <paramref name="value"/>. The default implementation utilizes <see cref="ValueArray{T}.FillWith(T)"/> and sets <see cref="DefaultValue"/> to <paramref name="value"/>.
-		/// </summary>
-		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
-		public override void FillWith(T value)
-		{
-			base.FillWith(value);
-			this.DefaultValue = value;
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place add this sparse vector with given <paramref name="value"/>. The default implementation utilizes <see cref="ValueArray{T}.AddScalar(T)"/> and adds <paramref name="value"/> to <see cref="DefaultValue"/>.
-		/// </summary>
-		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
-		public override void AddScalar(T value)
-		{
-			base.AddScalar(value);
-			this.DefaultValue = this.DefaultValue.GenericAdd(value);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this sparse vector with given <paramref name="value"/>. The default implementation utilizes <see cref="ValueArray{T}.Scale(T)"/> and multiplies <paramref name="value"/> to <see cref="DefaultValue"/>.
-		/// </summary>
-		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-		public override void Scale(T value)
-		{
-			base.Scale(value);
-			this.DefaultValue = this.DefaultValue.GenericMultiply(value);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="ValueArray{T}.Conjugate"/> and sets the <see cref="DefaultValue"/> to its conjugate.
-		/// </summary>
-		public override void Conjugate()
-		{
-			base.Conjugate();
-			this.DefaultValue = this.DefaultValue.GenericConjugate();
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="ValueArray{T}.Power(double)"/> and powers <see cref="DefaultValue"/> by <paramref name="power"/>.
-		/// </summary>
-		/// <param name="power">The power as a <see cref="double"/></param>
-		public override void Power(double power)
-		{
-			base.Power(power);
-			this.DefaultValue = this.DefaultValue.GenericPower(power);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this sparse vector with given <paramref name="power"/>. The default implementation utilizes <see cref="ValueArray{T}.Power(T)"/> and powers <see cref="DefaultValue"/> by <paramref name="power"/>.
-		/// </summary>
-		/// <param name="power">The power as a <typeparamref name="T"/></param>
-		public override void Power(T power)
-		{
-			base.Power(power);
-			this.DefaultValue = this.DefaultValue.GenericPower(power);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place truncate this sparse vector by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="ValueArray{T}.Truncate(double)"/> and sets <see cref="DefaultValue"/> to 0 if it is smaller than or equals to <paramref name="threshold"/>.
-		/// </summary>
-		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
-		public override void Truncate(double threshold)
-		{
-			base.Truncate(threshold);
-			if (!this.DefaultValue.IsZero())
-			{
-				double abs = this.DefaultValue.GenericAbsolute();
-				if (abs <= threshold)
-					this.DefaultValue = default;
-			}
-		}
-
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in this sparse vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/> and <see cref="DefaultValue"/> by utilizing <see cref="ValueArray{T}.Sum(T)"/>.
-		/// </summary>
-		/// <returns>The aggregate sum of this sparse vector</returns>
-		public override T Sum() => this.Sum(this.DefaultValue);
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of elements in this sparse vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/> and <see cref="DefaultValue"/> by utilizing <see cref="ValueArray{T}.AbsSum(T)"/>.
-		/// </summary>
-		/// <returns>The aggregate sum of absolute values of this sparse vector</returns>
-		public override double AbsSum() => this.AbsSum(this.DefaultValue);
-
-		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this sparse vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/> and <see cref="DefaultValue"/> by utilizing <see cref="ValueArray{T}.Norm(T)"/>.
-		/// </summary>
-		/// <returns>The 2-norm of this sparse vector</returns>
-		public override double Norm() => this.Norm(this.DefaultValue);
-
-		/// <summary>
-		/// When implemented by a derived class, in-place scale this sparse vector such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes <see cref="ValueArray{T}.Normalize(T)"/>.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">If the <see cref="DefaultValue"/> alone contribute 2-norm exceeding 1.</exception>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		public override void Normalize() => this.Normalize(this.DefaultValue);
-		#endregion
-
 		#region clone related
+		/// <summary>
+		/// When implemented by a derived class, convert this sparse vector to a dense vector whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense vector to overwrite</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
+		public abstract void ToDense(Storage<T> denseStorage);
+
 		/// <summary>
 		/// When implemented by a derived class, deep clone the sparse vector, the mutable status will not be copied.
 		/// </summary>

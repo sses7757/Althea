@@ -39,6 +39,37 @@ namespace Althea.Arrays
 		public int Count => (int)this.Length;
 
 		/// <summary>
+		/// Check whether the given <paramref name="index"/> is out of range of this vector
+		/// </summary>
+		/// <param name="index">The index to be checked</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+		protected void CheckIndex(long index)
+		{
+			if (index < 0)
+				throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.CannotNegative);
+			if (index >= this.Length)
+				throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
+		}
+
+		/// <summary>
+		/// Check whether the given range indicated by <paramref name="offset"/> and <paramref name="length"/> is out of range of this vector
+		/// </summary>
+		/// <param name="offset">The starting offset index to be checked</param>
+		/// <param name="length">The length to be checked</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and/or <paramref name="length"/> is out of range</exception>
+		protected void CheckRange(long offset, long length)
+		{
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.CannotNegative);
+			if (offset >= this.Length)
+				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+			if (length < 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.CannotNegative);
+			if (offset + length > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.InvalidValue);
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, provide the basic indexed getter and setter of this vector
 		/// </summary>
 		/// <param name="index">The position of the element to get / set</param>
@@ -103,31 +134,6 @@ namespace Althea.Arrays
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
 		public abstract VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None);
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in this vector.
-		/// </summary>
-		/// <returns>The aggregate sum of this sparse vector</returns>
-		public abstract T Sum();
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of elements in this vector.
-		/// </summary>
-		/// <returns>The aggregate sum of absolute values of this sparse vector</returns>
-		public abstract double AbsSum();
-
-		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
-		/// </summary>
-		/// <returns>The 2-norm of this sparse vector</returns>
-		public abstract double Norm();
-
-		/// <summary>
-		/// When implemented by a derived class, in-place scale this sparse vector such that its 2-norm (Euclidean norm) is 1.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">If the default values alone contribute 2-norm exceeding 1.</exception>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		public abstract void Normalize();
 		#endregion
 
 		#region operators

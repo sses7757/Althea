@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Collections.Generic;
 
 using Althea.Arrays;
@@ -22,6 +23,32 @@ namespace Althea.LinearAlgebra.Sparse
 		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
 
 		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
+		#endregion
+
+
+		#region dynamic invocation
+		/// <summary>
+		/// Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
+		/// </summary>
+		/// <remarks>
+		/// Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
+		/// Since there are internal caching for <see cref="DynamicObject.TryInvokeMember(InvokeMemberBinder, object[], out object)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
+		/// </remarks>
+		/// <example><code>
+		/// long n = AbstractApi.Dynamic.SparseMatrixGetNonEmptyRows(...);
+		/// </code></example>
+		public static dynamic Dynamic => singletonDynamic;
+
+		private static readonly DynamicInvocations singletonDynamic = new DynamicInvocations();
+
+		private sealed class DynamicInvocations : DynamicInvocation
+		{
+			public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+			{
+				result = DynamicInvokeExtraMethod(RecentAPIs, binder.Name, args);
+				return true;
+			}
+		}
 		#endregion
 
 
@@ -174,13 +201,15 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="length">The desired total length in <typeparamref name="T"/></param>
+		/// <param name="nonDefaults">The desired total number of non-default values</param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/></param>
+		/// <param name="defaultValue">The desired default value as a <typeparamref name="T"/></param>
 		/// <returns>An <b>allocated</b> new <see cref="ISparseVector{T}"/> of <paramref name="length"/> and <paramref name="format"/></returns>
 		/// <remarks>
 		/// This delegate is usually used as a nullable parameter of methods in <see cref="AbstractApi"/>.<br/>
 		/// The default implementation typically shall utilize <c><see cref="Storage.StorageFactory{T}"/>.<see cref="Storage.StorageFactory{T}.CreateAlike">CreateAlike</see>(input_storage.<see cref="Storage{T}.MakeReference">MakeReference</see>(0, <paramref name="length"/>))</c>
 		/// </remarks>
-		public delegate ISparseVector<T> DelegateCreateVectorNew<T>(long length, SparseVectorFormat format) where T : unmanaged;
+		public delegate ISparseVector<T> DelegateCreateVectorNew<T>(long length, long nonDefaults, SparseVectorFormat format, T defaultValue) where T : unmanaged;
 
 		/// <summary>
 		/// Encapsulates a method that receive the presenting number of rows <paramref name="rows"/> and number of columns <paramref name="cols"/> in <typeparamref name="T"/> and the <paramref name="format"/> as the parameters and return an <b>allocated</b> new <see cref="ISparseMatrix{T}"/> of the given size.
@@ -188,20 +217,22 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="rows">The desired presenting number of rows in <typeparamref name="T"/></param>
 		/// <param name="cols">The desired presenting number of columns in <typeparamref name="T"/></param>
+		/// <param name="nonDefaults">The desired total number of non-default values</param>
 		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, must be atomic</param>
+		/// <param name="defaultValue">The desired default value as a <typeparamref name="T"/></param>
 		/// <returns>An <b>allocated</b> new <see cref="ISparseMatrix{T}"/> of the given size</returns>
 		/// <remarks>
 		/// This delegate is usually used as a nullable parameter of methods in <see cref="AbstractApi"/>.<br/>
 		/// The default implementation typically shall utilize (multiple) <c><see cref="Storage.StorageFactory{T}"/>.<see cref="Storage.StorageFactory{T}.CreateAlike">CreateAlike</see>(input_storage.<see cref="Storage{T}.MakeReference">MakeReference</see>(0, internal_length))</c>
 		/// </remarks>
-		public delegate ISparseMatrix<T> DelegateCreateMatrixNew<T>(long rows, long cols, SparseMatrixFormat format) where T : unmanaged;
+		public delegate ISparseMatrix<T> DelegateCreateMatrixNew<T>(long rows, long cols, long nonDefaults, SparseMatrixFormat format, T defaultValue) where T : unmanaged;
 		#endregion
 
 
 		#region static methods as dispatchers
 		#region vector
 		/// <summary>
-		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
+		/// Set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
@@ -226,7 +257,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
+		/// Scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
@@ -248,7 +279,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, gather the dense vector <paramref name="x"/> at the underlying position array of <paramref name="y"/> into the <see cref="ISparseArray{T}.Storage"/> of sparse vector <paramref name="y"/>: <c><paramref name="y"/>.<see cref="ISparseArray{T}.Storage">Storage</see> = <paramref name="x"/>[<paramref name="y"/>.Position]</c>.
+		/// Gather the dense vector <paramref name="x"/> at the underlying position array of <paramref name="y"/> into the <see cref="ISparseArray{T}.Storage"/> of sparse vector <paramref name="y"/>: <c><paramref name="y"/>.<see cref="ISparseArray{T}.Storage">Storage</see> = <paramref name="x"/>[<paramref name="y"/>.Position]</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/> to gather from</param>
@@ -271,7 +302,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
+		/// Convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/></param>
@@ -301,7 +332,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region vector and matrix
 		/// <summary>
-		/// When implemented by a derived class, convert the given sparse <paramref name="vector"/> to a sparse matrix of <paramref name="format"/> and presenting number of <paramref name="rows"/>.
+		/// Convert the given sparse <paramref name="vector"/> to a sparse matrix of <paramref name="format"/> and presenting number of <paramref name="rows"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="vector">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
@@ -328,7 +359,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
+		/// Convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
@@ -356,7 +387,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
-		/// When implemented by a derived class, convert the given sparse matrix <paramref name="source"/> to a dense matrix <paramref name="destination"/>.
+		/// Convert the given sparse matrix <paramref name="source"/> to a dense matrix <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="destination">The storage of the destination dense matrix of the same size as <paramref name="source"/></param>
@@ -378,7 +409,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> of to the <paramref name="format"/> format.
+		/// Convert the given dense matrix <paramref name="source"/> of to the <paramref name="format"/> format.
 		/// </summary>
 		/// <param name="m">The number of rows of <paramref name="source"/></param>
 		/// <param name="n">The number of columns of <paramref name="source"/></param>
@@ -408,7 +439,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
+		/// Prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
@@ -433,7 +464,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
+		/// Convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
@@ -457,7 +488,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.
+		/// Fill the given sparse matrix <paramref name="M"/> with identity matrix.
 		/// </summary>
 		/// <param name="M">The sparse matrix to be filled with identity</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>

@@ -54,16 +54,15 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override T this[long index] {
 			get {
-				if (index < 0 || index >= this.Length)
-					throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
+				this.CheckIndex(index);
 				return MEM.ToManaged(this.Storage.MakeReference(offset: index));
 			}
 			set {
-				if (index < 0 || index >= this.Length)
-					throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
+				this.CheckIndex(index);
 				MEM.FromManaged(this.Storage.MakeReference(offset: index), value);
 			}
 		}
+
 		/// <summary>
 		/// Get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
 		/// </summary>
@@ -73,13 +72,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
 		public override DenseVector<T> Slice(long start, long length)
 		{
-			if (start < 0 || start >= this.Length)
-				throw new ArgumentOutOfRangeException(nameof(start), Resources.Parameter.InvalidValue);
-			if (length < 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.MustPositive);
-			if (start + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.InvalidValue);
-
+			this.CheckRange(start, length);
 			return new DenseVector<T>(this, start, length);
 		}
 		#endregion
@@ -245,8 +238,9 @@ namespace Althea.Backend.Arrays
 			}
 			else if (spMat is not null && spVec is not null)
 			{
-				using var dense = spVec.ToDense();
-				this.AddMatrixMultiplyVector(matrix, dense, α, β, operation);
+				using var dense = Althea.Storage.StorageFactory<T>.CreateAlike(this.Storage);
+				spVec.ToDense(dense);
+				this.AddMatrixMultiplyVector(matrix, new DenseVector<T>(dense), α, β, operation);
 			}
 			else
 				throw new NotSupportedException();
@@ -262,30 +256,6 @@ namespace Althea.Backend.Arrays
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
 		public override DenseVector<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in this dense vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/>.
-		/// </summary>
-		/// <returns>The aggregate sum of this sparse vector</returns>
-		public override T Sum() => this.Sum();
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of elements in this dense vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/>.
-		/// </summary>
-		/// <returns>The aggregate sum of absolute values of this sparse vector</returns>
-		public override double AbsSum() => this.AbsSum();
-
-		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this dense vector. The default implementation only sums <see cref="ValueArray{T}.Storage"/>.
-		/// </summary>
-		/// <returns>The 2-norm of this sparse vector</returns>
-		public override double Norm() => this.Norm();
-
-		/// <summary>
-		/// When implemented by a derived class, in-place scale this dense vector such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes <see cref="ValueArray{T}.Normalize(T)"/>.
-		/// </summary>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		public override void Normalize() => this.Normalize();
 		#endregion
 
 		#region IKrylovVector

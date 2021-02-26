@@ -16,7 +16,7 @@ using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
 namespace Althea.Backend.Arrays
 {
 	/// <summary>
-	/// The concrete sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="SparseVector{T, TInd}.IndexStorage"/> that refers to the sorted index array storage.
+	/// The concrete sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="SparseVector{T, TInd}.IndexStorage"/> that refers to the <b>sorted</b> index array storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
@@ -44,36 +44,91 @@ namespace Althea.Backend.Arrays
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray,T defaultValue = default) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue) { }
+
+		private static SparseVector<T, TInd> CreateFunction(long length, long nonDefaults, SparseVectorFormat format, T defaultValue)
+		{
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.MustPositive);
+			if (nonDefaults <= 0)
+				throw new ArgumentOutOfRangeException(nameof(nonDefaults), Resources.Parameter.MustPositive);
+			if (format != SparseVectorFormat.Coordinated)
+				throw new ArgumentOutOfRangeException(nameof(format), Resources.Parameter.InvalidValue);
+
+			Storage<T>? value = null; Storage<TInd>? index = null;
+			try
+			{
+				value = Storage<T>.Create(, nonDefaults);
+				index = Storage<TInd>.Create(, nonDefaults);
+				return new SparseVector<T, TInd>(length, value, index, defaultValue);
+			}
+			catch (Exception)
+			{
+				value?.Dispose(); index?.Dispose();
+				throw;
+			}
+		}
 		#endregion
 
 		#region indexer
 		/// <summary>
-		/// When implemented by a derived class, provide the basic indexed getter and setter of this sparse vector
+		/// The basic indexed getter and setter of this vector.
 		/// </summary>
 		/// <param name="index">The position of the element to get / set</param>
 		/// <returns>The element at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		/// <exception cref="InvalidOperationException">If the value at <paramref name="index"/> is not stored</exception>
-		public override T this[long index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		/// <exception cref="InvalidOperationException">If this[<paramref name="index"/>] returns the <see cref="AbstractSparseVector{T, TInd}.DefaultValue"/> which cannot be set individually</exception>
+		public override T this[long index] {
+			get {
+				this.CheckIndex(index);
+				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.GenericConvert<TInd, long>());
+				if (find < 0)
+					return this.DefaultValue;
+				else
+					return MEM.ToManaged(this.Storage.MakeReference(offset: find));
+			}
+			set {
+				this.CheckIndex(index);
+				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.GenericConvert<TInd, long>());
+				if (find < 0)
+					throw new InvalidOperationException();
+				MEM.FromManaged(this.Storage.MakeReference(offset: find), value);
+			}
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
+		/// Get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
 		/// </summary>
 		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
 		/// <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
-		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>. Shall be a referenced vector if possible.</returns>
+		/// <returns>The referenced sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
-		public override VectorBase<T> Slice(long start, long length) => throw new NotImplementedException();
+		public override SparseVector<T, TInd> Slice(long start, long length)
+		{
+			this.CheckRange(start, length);
+			long lowerBound = LAS.IndexBound(this.IndexStorage, start.GenericConvert<TInd, long>(), lowerBound: true);
+			long upperBound = LAS.IndexBound(this.IndexStorage, (start + length).GenericConvert<TInd, long>(), lowerBound: false);
+			return new SparseVector<T, TInd>(length,
+											 this.Storage.MakeReference(offset: lowerBound, newLength: upperBound - lowerBound),
+											 this.IndexStorage.MakeReference(offset: lowerBound, newLength: upperBound - lowerBound),
+											 this.DefaultValue);
+		}
 		#endregion
 
 		#region reshape
 		/// <summary>
-		/// Convert this sparse vector to a dense vector
+		/// Convert this sparse vector to a dense vector whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
-		/// <returns>The converted <see cref="Backend.Arrays.DenseVector{T}"/></returns>
-		public override Backend.Arrays.DenseVector<T> ToDense() => throw new NotImplementedException();
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense vector to overwrite</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
+		public override void ToDense(Storage<T> denseStorage)
+		{
+			if (denseStorage is null || denseStorage.IsOffsetValid(0, this.Length))
+				throw new ArgumentNullException(nameof(denseStorage));
+			LAS.VectorSparseToDense(this, denseStorage);
+		}
 
 		public override ValueArray<T> ToMatrix(long leadDim = 0) => throw new NotImplementedException();
+
 		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) => throw new NotImplementedException();
 		#endregion
 
@@ -90,12 +145,12 @@ namespace Althea.Backend.Arrays
 			// check same indices
 			if (this.IndexStorage == other.IndexStorage)
 				return;
-			if (!LAD.SelectImplementation<TInd>(this.IndexStorage, other.IndexStorage).PointWiseEquals(this.IndexStorage, 1, other.IndexStorage, 1))
+			if (!LAD.PointWiseEquals(this.IndexStorage, 1, other.IndexStorage, 1))
 				throw new InvalidOperationException(Resources.Other.DifferentSparsity);
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
+		/// Compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
 		/// </summary>
 		/// <param name="other">The other vector to perform the dot product</param>
 		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
@@ -111,23 +166,37 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
 			if (other is DenseVector<T>)
-				return LAS.SelectImplementation(other.Storage, this).VectorSparseDotDense(conjugateThis, this, other.Storage);
+				return LAS.VectorSparseDotDense(conjugateThis, this, other.Storage);
 			else if (other is SparseVector<T, TInd> sparse)
-				return LAS.SelectImplementation(this, sparse).VectorSparseDotSparse(conjugateThis, this, sparse);
+				return LAS.VectorSparseDotSparse(conjugateThis, this, sparse);
 			else
 				throw new NotSupportedException();
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
+		/// Compute the addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
 		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
-		public override VectorBase<T> AddVector(VectorBase<T> other, T scalar) => throw new NotImplementedException();
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
+		public override VectorBase<T> AddVector(VectorBase<T> other, T scalar)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (other.Length != this.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+
+			if (other is SparseVector<T, TInd> sparse)
+				return (SparseVector<T, TInd>)LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated, createFunc: CreateFunction);
+			else if (other is DenseVector<T>)
+				return other.ApplyToClone(d => LAS.VectorSparseAddToDense(Scalars<T>.One, this, d.Storage));
+			else
+				throw new NotSupportedException();
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).
+		/// Compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).
 		/// </summary>
 		/// <param name="matrix">The input matrix to be multiplied</param>
 		/// <param name="vector">The input vector to be multiplied</param>
@@ -135,10 +204,36 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		public override VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None) => throw new NotImplementedException();
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SparseMatrix{T}"/></exception>
+		public override VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+		{
+			if (matrix is null || !matrix.IsValid())
+				throw new ArgumentNullException(nameof(matrix));
+			if (vector is null || !vector.IsValid())
+				throw new ArgumentNullException(nameof(vector));
+			if (vector.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NCols : matrix.NRows))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
+			if (this.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NRows : matrix.NCols))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
+
+			Storage<T>? dense = null;
+			try
+			{
+				dense = Storage<T>.Create(, this.Length);
+				this.ToDense(dense);
+				var dnVec = new DenseVector<T>(dense);
+				dnVec.AddByMatrixMultiplyVector(matrix, vector, α, β, operation);
+				return dnVec;
+			}
+			catch (Exception)
+			{
+				dense?.Dispose();
+				throw;
+			}
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
+		/// Add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
@@ -156,13 +251,13 @@ namespace Althea.Backend.Arrays
 				throw new NotSupportedException();
 
 			this.CheckSparsity(sparse);
-			LAD.SelectImplementation<T>(this.Storage, other.Storage).VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
+			LAD.VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
 		}
 		#endregion
 
 		#region clone related
 		/// <summary>
-		/// When implemented by a derived class, deep clone the sparse vector, the mutable status will not be copied.
+		/// Deep clone the sparse vector, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned array</returns>
 		public override SparseVector<T, TInd> Clone()
@@ -172,7 +267,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled.
+		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<T, TInd> NewArrayAlike()
@@ -182,7 +277,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
+		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new sparse vector alike this one</returns>
@@ -193,7 +288,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// Cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
 		/// </summary>
 		/// <typeparam name="TOut">The data type to cast to</typeparam>
 		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
@@ -216,7 +311,7 @@ namespace Althea.Backend.Arrays
 		void IKrylovVector<SparseVector<T, TInd>, T>.AddByVector(SparseVector<T, TInd> other, T scalar) => this.AddByVector(other, scalar);
 
 		/// <summary>
-		/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place. The default implementation only works when this and <paramref name="other"/> have same sparsity.
+		/// Replace this vector's content with the <paramref name="other"/> vector in-place. The default implementation only works when this and <paramref name="other"/> have same sparsity.
 		/// </summary>
 		/// <param name="other">The other dense vector to replace from</param>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
@@ -227,7 +322,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a sparse vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="SparseVector{T, TInd}"/>. The default implementation only works when this and all vectors in <paramref name="unjoinedVectors"/> have same sparsity.
+		/// Multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a sparse vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="SparseVector{T, TInd}"/>. The default implementation only works when this and all vectors in <paramref name="unjoinedVectors"/> have same sparsity.
 		/// </summary>
 		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
 		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
@@ -311,7 +406,7 @@ namespace Althea.Backend.Arrays
 
 		#region serialization
 		/// <summary>
-		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse array of that derived class type.
+		/// Get other requisite informations for re-constructing the sparse array of that derived class type.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array. Always an empty dictionary.</returns>
 		public override IReadOnlyDictionary<string, object> GetOtherInfo() => new Dictionary<string, object>(0);

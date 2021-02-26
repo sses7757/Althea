@@ -72,125 +72,151 @@ namespace Althea.Arrays
 
 		#region point-wise concrete operations
 		/// <summary>
-		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>.
+		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
 		public virtual void FillWith(T value)
 		{
 			MEM.FillWithValue(this.Storage, value);
+			if (this is ISparseArray<T> sparse)
+			{
+				sparse.DefaultValue = value;
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
 		public virtual void AddScalar(T value)
 		{
 			LAD.PointWiseAddScalar(this.Storage, 1, value);
+			if (this is ISparseArray<T> sparse && !value.IsZero())
+			{
+				sparse.DefaultValue = sparse.DefaultValue.GenericAdd(value);
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>. The default implementation does not scale the whole vector correctly if this vector is sparse and its default value is not zero.
+		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		public virtual void Scale(T value)
 		{
 			LAD.Scale(value, this.Storage, 1);
+			if (this is ISparseArray<T> sparse && !value.IsOne())
+			{
+				sparse.DefaultValue = sparse.DefaultValue.GenericMultiply(value);
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		public virtual void Conjugate()
 		{
 			LAD.PointWiseConjugate(this.Storage, 1);
+			if (this is ISparseArray<T> sparse)
+			{
+				sparse.DefaultValue = sparse.DefaultValue.GenericConjugate();
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, double)"/>.
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, double)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="power">The power as a <see cref="double"/></param>
 		public virtual void Power(double power)
 		{
 			LAD.PointWisePower(this.Storage, 1, power);
+			if (this is ISparseArray<T> sparse && power != 1)
+			{
+				sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
 		public virtual void Power(T power)
 		{
 			LAD.PointWisePower(this.Storage, 1, power);
+			if (this is ISparseArray<T> sparse && !power.IsOne())
+			{
+				sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
+		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
 		public virtual void Truncate(double threshold)
 		{
 			LAD.TruncateArray(this.Storage, threshold);
+			if (this is ISparseArray<T> sparse && !sparse.DefaultValue.IsZero())
+			{
+				double abs = sparse.DefaultValue.GenericAbsolute();
+				if (abs <= threshold)
+					sparse.DefaultValue = default;
+			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is dense or its emitted values are all <paramref name="sparseDefault"/>. <see cref="Storage"/> utilizes <see cref="LAD.AggregateSum{T}"/>.
+		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AggregateSum{T}"/>.
 		/// </summary>
-		/// <param name="sparseDefault">The default emitted value if this array is a sparse array</param>
 		/// <returns>The aggregate sum of this array</returns>
-		protected T Sum(T sparseDefault = default)
+		public virtual T Sum()
 		{
 			T sum = LAD.AggregateSum(this.Storage, 1);
-			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
 				return sum;
 			else
-				return (this.Length - this.ActualLength) * (dynamic)sparseDefault + sum;
+				return (this.Length - this.ActualLength) * (dynamic)sparse.DefaultValue + sum;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is dense or its emitted values are all <paramref name="sparseDefault"/>. <see cref="Storage"/> utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
+		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
 		/// </summary>
-		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
 		/// <returns>The aggregate sum of absolute values of this array</returns>
-		protected double AbsSum(T sparseDefault = default)
+		public virtual double AbsSum()
 		{
 			double sum = LAD.AbsoluteValueSum(this.Storage, 1);
-			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
 				return sum;
 			else
-				return (this.Length - this.ActualLength) * sparseDefault.GenericAbsolute().ToDouble() + sum;
+				return (this.Length - this.ActualLength) * sparse.DefaultValue.GenericAbsolute() + sum;
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is dense or its emitted values are all <paramref name="sparseDefault"/>. <see cref="Storage"/> utilizes <see cref="LAD.Norm{T}"/>.
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.Norm{T}"/>.
 		/// </summary>
-		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
 		/// <returns>The 2-norm of this array</returns>
-		protected double Norm(T sparseDefault = default)
+		public virtual double Norm()
 		{
 			double norm = LAD.Norm(this.Storage, 1);
-			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
 			{
 				return norm;
 			}
 			else
 			{
 				norm *= norm;
-				double abs = sparseDefault.GenericAbsolute().ToDouble();
+				double abs = sparse.DefaultValue.GenericAbsolute();
 				norm += abs * abs * (this.Length - this.ActualLength);
 				return Math.Sqrt(norm);
 			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, in-place scale this array's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes the <see cref="Norm(T)"/> and <see cref="Scale(T)"/>.
+		/// When implemented by a derived class, in-place scale this array's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
 		/// </summary>
-		/// <param name="sparseDefault">The default (emitted) value if this array is a sparse array</param>
-		/// <exception cref="ArgumentOutOfRangeException">If the default values indicated by <paramref name="sparseDefault"/> alone contribute 2-norm exceeding 1.</exception>
+		/// <exception cref="InvalidOperationException">If the default values indicated by <see cref="ISparseArray{T}.DefaultValue"/> alone contribute 2-norm exceeding 1.</exception>
 		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		protected void Normalize(T sparseDefault = default)
+		public virtual void Normalize()
 		{
-			if (this.Length == this.ActualLength || sparseDefault.IsZero())
+			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
 			{
 				double norm = this.Norm();
 				if (norm == 0)
@@ -199,10 +225,11 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				T defaultNormSquare = (this.Length - this.ActualLength) * (sparseDefault * (dynamic)sparseDefault);
+				T d = sparse.DefaultValue;
+				T defaultNormSquare = (this.Length - this.ActualLength) * (d * (dynamic)d);
 				double defaultNormDouble = defaultNormSquare.ToDouble();
 				if (defaultNormDouble > 1)
-					throw new ArgumentOutOfRangeException(nameof(sparseDefault), Resources.Parameter.InvalidValue);
+					throw new InvalidOperationException(Resources.Parameter.InvalidValue);
 				if (defaultNormDouble == 1)
 				{
 					this.FillWith(default);

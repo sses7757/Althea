@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -440,6 +441,152 @@ namespace Althea
 		/// </summary>
 		/// <param name="disposeManaged"></param>
 		protected abstract void Dispose(bool disposeManaged);
+		#endregion
+
+
+		#region dynamic method invocation
+		private readonly struct TypeHandle : IEquatable<TypeHandle>
+		{
+			private readonly RuntimeTypeHandle handle;
+
+			private TypeHandle(RuntimeTypeHandle handle) => this.handle = handle;
+
+			public bool Equals(TypeHandle other) => this.handle.Equals(other.handle);
+
+			public override bool Equals(object? obj) => obj is TypeHandle handle && this.Equals(handle);
+
+			public override int GetHashCode() => this.handle.GetHashCode();
+
+			public static implicit operator RuntimeTypeHandle(TypeHandle handle) => handle.handle;
+
+			public static implicit operator TypeHandle(RuntimeTypeHandle handle) => new TypeHandle(handle);
+		}
+
+		/// <summary>
+		/// The structure used to store the extra methods' information
+		/// </summary>
+		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>
+		{
+			private readonly FixedBuffer_56<TypeHandle> inputTypes;
+
+			private readonly string name;
+
+			/// <summary>
+			/// Create an <see cref="ExtraMethodInfo"/> from given <paramref name="name"/> and <paramref name="inputTypes"/>
+			/// </summary>
+			/// <param name="name">The name of the method</param>
+			/// <param name="inputTypes">The input types as a <see cref="ReadOnlySpan{T}"/> of <see cref="RuntimeTypeHandle"/>s</param>
+			public ExtraMethodInfo(string name, ReadOnlySpan<RuntimeTypeHandle> inputTypes)
+			{
+				if (string.IsNullOrWhiteSpace(name))
+					throw new ArgumentNullException(nameof(name));
+				if (inputTypes.Length > 56 / 8)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(inputTypes));
+
+				this.name = name;
+				this.inputTypes = new FixedBuffer_56<TypeHandle>();
+				for (int i = 0; i < inputTypes.Length; i++)
+				{
+					this.inputTypes[i] = inputTypes[i];
+				}
+			}
+
+			/// <summary>
+			/// Indicates whether the current object is equal to another object of the same type.
+			/// </summary>
+			/// <param name="other">The other <see cref="ExtraMethodInfo"/> to compare with this one.</param>
+			/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+			public bool Equals(ExtraMethodInfo other) => this.name == other.name && this.inputTypes == other.inputTypes;
+
+			/// <summary>
+			/// Indicates whether the current object is equal to another object of the same type.
+			/// </summary>
+			/// <param name="obj">The other object to compare with this one.</param>
+			/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+			public override bool Equals(object? obj) => obj is ExtraMethodInfo handle && this.Equals(handle);
+
+			/// <summary>
+			/// Get the hash code of this <see cref="ExtraMethodInfo"/>
+			/// </summary>
+			/// <returns>The hash code of this <see cref="ExtraMethodInfo"/></returns>
+			public override int GetHashCode() => HashCode.Combine(this.name, this.inputTypes);
+
+			/// <summary>
+			/// Equality operator
+			/// </summary>
+			public static bool operator ==(ExtraMethodInfo left, ExtraMethodInfo right) => left.Equals(right);
+
+			/// <summary>
+			/// Inequality operator
+			/// </summary>
+			public static bool operator !=(ExtraMethodInfo left, ExtraMethodInfo right) => !left.Equals(right);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, dynamically invoke the extra method(s) (the methods not defined in its base class) defined in this class. The default implementation simply returns false.
+		/// </summary>
+		/// <param name="methodInfo">The <see cref="ExtraMethodInfo"/> to determine the method</param>
+		/// <param name="outParam">The output result of the method determined by <paramref name="methodInfo"/></param>
+		/// <param name="inputParams">The input parameters as an array of <see cref="object"/>s</param>
+		/// <returns>Whether the invocation succeeded or not</returns>
+		protected virtual bool InvokeExtraMethod(ExtraMethodInfo methodInfo, out object? outParam, object[] inputParams)
+		{
+			outParam = null;
+			return false;
+		}
+
+		/// <summary>
+		/// Dynamically invoke a method which is not listed explicitly in the derived classes of <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">The API class type that inherits <see cref="AbstractRuntimeApi"/></typeparam>
+		/// <param name="recentApi">The recent API list</param>
+		/// <param name="name">The name of the method to be invoked</param>
+		/// <param name="args">The input arguments of the method to be invoked</param>
+		/// <returns>The returned of the method to be invoked</returns>
+		protected static object? DynamicInvokeExtraMethod<T>(LinkedList<T> recentApi, string name, object?[]? args) where T : AbstractRuntimeApi
+		{
+			if (string.IsNullOrWhiteSpace(name))
+				throw new ArgumentNullException(nameof(name));
+			if (args is null || args.Length == 0)
+				throw new ArgumentNullException(nameof(args));
+
+			Span<RuntimeTypeHandle> span = stackalloc RuntimeTypeHandle[args.Length];
+			for (int i = 0; i < args.Length; i++)
+			{
+				object? a = args[i];
+				if (a is null || (a is ICheckValid v && !v.IsValid()))
+					throw new ArgumentNullException(nameof(args));
+				span[i] = a.GetType().TypeHandle;
+			}
+			var info = new ExtraMethodInfo(name, span);
+
+			object? result = default;
+			bool success = false;
+			LinkedListNode<T>? node = recentApi.First, prevNode = null;
+			while (node is not null && !success)
+			{
+				success = node.Value.InvokeExtraMethod(info, out result, (object[])args);
+				prevNode = node; node = node.Next;
+			}
+			if (success && prevNode is not null)
+				SetImplementation(recentApi, prevNode.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// The dynamic class used to dynamically invoke method(s) not listed explicitly (the methods extra defined in derived classes of <see cref="AbstractRuntimeApi"/>)
+		/// </summary>
+		protected abstract class DynamicInvocation : DynamicObject
+		{
+			/// <summary>
+			/// Provides the implementation for operations that invoke a member.
+			/// </summary>
+			/// <param name="binder">Provides information about the dynamic operation</param>
+			/// <param name="args">The arguments that are passed to the object member during the invoke operation.</param>
+			/// <param name="result">Output the result of the member invocation.</param>
+			/// <returns>True if the operation is successful; otherwise, false.</returns>
+			public override abstract bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result);
+		}
 		#endregion
 	}
 }

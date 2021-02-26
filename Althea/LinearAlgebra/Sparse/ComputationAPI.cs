@@ -24,7 +24,7 @@ namespace Althea.LinearAlgebra.Sparse
 		#region static methods as dispatchers
 		#region vector
 		/// <summary>
-		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> scaled by scalar <paramref name="α"/> to a dense vector <paramref name="y"/>: <c><paramref name="y"/> += <paramref name="α"/> * <paramref name="x"/></c>.
+		/// Add the sparse vector <paramref name="x"/> scaled by scalar <paramref name="α"/> to a dense vector <paramref name="y"/>: <c><paramref name="y"/> += <paramref name="α"/> * <paramref name="x"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="α">The scalar to multiply <paramref name="x"/></param>
@@ -48,7 +48,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, calculate the dot (inner) product of a sparse vector <paramref name="x"/> and a dense vector <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
+		/// Calculate the dot (inner) product of a sparse vector <paramref name="x"/> and a dense vector <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
@@ -74,7 +74,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, calculate the dot (inner) product of two sparse vectors <paramref name="x"/> and <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
+		/// Calculate the dot (inner) product of two sparse vectors <paramref name="x"/> and <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
@@ -100,17 +100,17 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/> and put the result in a new sparse vector.
+		/// Add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/> and put the result in a new sparse vector.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
+		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
 		/// <returns>The result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static ISparseVector<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		public static ISparseVector<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.Storage.LocationDescription;
 			ISparseVector<T> result = GetEmptySparseVector<T>();
@@ -127,7 +127,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
+		/// Point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input/output sparse vector x</param>
@@ -149,7 +149,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, point-wise divide a sparse vector by a dense vector: <c><paramref name="x"/> /= <paramref name="y"/></c>.
+		/// Point-wise divide a sparse vector by a dense vector: <c><paramref name="x"/> /= <paramref name="y"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The input/output sparse vector x</param>
@@ -173,7 +173,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region vector and matrix
 		/// <summary>
-		/// When implemented by a derived class, compute the sparse matrix dense vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
+		/// Compute the sparse matrix dense vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
@@ -199,7 +199,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the dense matrix sparse vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
+		/// Compute the dense matrix sparse vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
@@ -227,7 +227,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute sparse vector outer product: <c><paramref name="x"/> * <paramref name="y"/>^op</c>, <c>op = <paramref name="conjY"/> ? H : T</c>.
+		/// Compute sparse vector outer product: <c><paramref name="x"/> * <paramref name="y"/>^op</c>, <c>op = <paramref name="conjY"/> ? H : T</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="conjY">Whether to conjugate <paramref name="y"/> or not</param>
@@ -257,7 +257,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
-		/// When implemented by a derived class, perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// Perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
@@ -302,7 +302,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, perform the sparse matrices multiplication: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
+		/// Perform the sparse matrices multiplication: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
@@ -340,7 +340,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
+		/// Perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="m">The number of rows of <paramref name="opA"/>(<paramref name="A"/>). (The number of columns is implied from <paramref name="opB"/> and <paramref name="B"/>)</param>
@@ -370,7 +370,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
+		/// Perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="n">The number of columns of <paramref name="opB"/>(<paramref name="B"/>). (The number of rows is implied from <paramref name="opA"/> and <paramref name="A"/>)</param>
@@ -400,7 +400,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, perform the sparse matrices Kronecker product: <c><paramref name="A"/> ⨂ <paramref name="B"/></c>.
+		/// Perform the sparse matrices Kronecker product: <c><paramref name="A"/> ⨂ <paramref name="B"/></c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="A">The first input sparse matrix</param>
@@ -429,7 +429,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region index only
 		/// <summary>
-		/// When implemented by a derived class, find the maximum value of the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// Find the maximum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <returns>The maximum value of <paramref name="array"/></returns>
@@ -452,7 +452,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// Find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <returns>The minimum value of <paramref name="array"/></returns>
@@ -475,7 +475,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// Find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
 		/// <param name="array">The storage of the integer-typed array</param>
@@ -500,7 +500,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// Find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
 		/// <param name="value">The target value to find</param>
@@ -572,11 +572,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
+		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
 		/// <param name="target">Output the result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseAddSparse_<T>(ISparseVector<T> x, ISparseVector<T> y, out ISparseVector<T> target, SparseVectorFormat format = FormatExtension.VectorAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool VectorSparseAddSparse_<T>(ISparseVector<T> x, ISparseVector<T> y, out ISparseVector<T> target, SparseVectorFormat format = FormatExtension.VectorAny, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
@@ -735,7 +735,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region index only
 		/// <summary>
-		/// When implemented by a derived class, find the maximum value of the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// When implemented by a derived class, find the maximum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <param name="max">Output the maximum value</param>
@@ -744,7 +744,7 @@ namespace Althea.LinearAlgebra.Sparse
 		protected abstract bool IndexMax_<TInd>(Storage<TInd> array, out TInd max) where TInd : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <param name="min">Output the minimum value</param>
@@ -753,7 +753,7 @@ namespace Althea.LinearAlgebra.Sparse
 		protected abstract bool IndexMin_<TInd>(Storage<TInd> array, out TInd min) where TInd : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
 		/// <param name="array">The storage of the integer-typed array</param>
@@ -764,7 +764,7 @@ namespace Althea.LinearAlgebra.Sparse
 		protected abstract bool IndexFind_<TInd>(bool sorted, Storage<TInd> array, TInd value, out long find) where TInd : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed array <paramref name="array"/>.
+		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
 		/// <param name="value">The target value to find</param>
