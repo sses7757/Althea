@@ -61,7 +61,7 @@ namespace Althea.TensorAlgebra
 				if (val is byte || val is sbyte || val is short || val is ushort || val is int || val is uint || val is long || val is ulong)
 				{
 					if ((dynamic)val < 0)
-						throw new ArgumentOutOfRangeException(nameof(tuple), Parameter.CannotNegative);
+						throw new ArgumentOutOfRangeException(nameof(tuple), tuple, Parameter.CannotNegative);
 					newOne = (checked((int)(dynamic)val), OrderType.Index);
 				}
 				else if (val is char c)
@@ -173,7 +173,7 @@ namespace Althea.TensorAlgebra
 			int rank = tensor.Rank;
 			int length = this.order.NonDefaults;
 			if (rank < length)
-				throw new ArgumentOutOfRangeException(nameof(tensor));
+				throw new ArgumentOutOfRangeException(nameof(tensor), tensor);
 			if (outputPermutation.Length != rank)
 				throw new ArgumentException(Parameter.NotSameSize, nameof(outputPermutation));
 			if (tensor.Label is null || tensor.Label.Count != rank)
@@ -192,13 +192,13 @@ namespace Althea.TensorAlgebra
 					case OrderType.Index:
 						var offset = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
 						if (offset >= rank || offset < 0)
-							throw new ArgumentOutOfRangeException(nameof(tensor));
+							throw new ArgumentOutOfRangeException(nameof(tensor), tensor);
 						outputPermutation[actualRank++] = offset;
 						break;
 					case OrderType.Char:
 						int find = label.IndexOf((char)item.Item1);
 						if (find < 0)
-							throw new ArgumentOutOfRangeException(nameof(tensor));
+							throw new ArgumentOutOfRangeException(nameof(tensor), tensor);
 						outputPermutation[actualRank++] = find;
 						break;
 					case OrderType.RangeAll:
@@ -210,7 +210,7 @@ namespace Althea.TensorAlgebra
 					case OrderType.RangeEnd:
 						int rangeEnd = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
 						if (rangeEnd <= rangeStart)
-							throw new ArgumentOutOfRangeException(nameof(tensor));
+							throw new ArgumentOutOfRangeException(nameof(tensor), tensor);
 						int count = rangeEnd - rangeStart;
 						outputPermutation.Slice(actualRank, count).FillWithRange(rangeStart);
 						actualRank += count;

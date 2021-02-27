@@ -102,7 +102,7 @@ namespace Althea.Storage
 		public static UriScheme GetScheme(this Uri uri)
 		{
 			if (!uri.IsAbsoluteUri)
-				throw new ArgumentOutOfRangeException(nameof(uri));
+				throw new ArgumentOutOfRangeException(nameof(uri), uri, Parameter.InvalidValue);
 			if (uri.Scheme == Uri.UriSchemeFile)
 				return UriScheme.File;
 			if (uri.Scheme == @"tcp" || uri.Scheme == Uri.UriSchemeNetTcp)
@@ -233,7 +233,7 @@ namespace Althea.Storage
 		protected Stream(long length)
 		{
 			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			this.Length = length;
 		}
 
@@ -342,7 +342,7 @@ namespace Althea.Storage
 		public virtual void SetValues<T>(T value, long length) where T : unmanaged
 		{
 			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
 
@@ -411,13 +411,13 @@ namespace Althea.Storage
 		public virtual void CopyTo(Stream other, long length)
 		{
 			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
 			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 			if (other.Position + length > other.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 
 			int bufferSize = BufferSizeInBytes<byte>();
 			if (this.CanTransferWithManaged && other.CanTransferWithManaged)
@@ -538,7 +538,7 @@ namespace Althea.Storage
 			if (lengths.Length == 1 && lengths[0] == 0)
 				return; // empty
 			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(lengths), lengths.ToArray(), Parameter.MustPositive);
 
 			this.LocationDescription = new CombinationOfLocations(CombinationType.PureOrMixed, locations);
 		}
@@ -690,7 +690,7 @@ namespace Althea.Storage
 		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				if (this.Reference is null)
 					throw new InvalidOperationException();
 				PointerSegment pointer = this.Reference[index - this.start];
@@ -800,7 +800,7 @@ namespace Althea.Storage
 		public override PointerSegment this[int index] {
 			get {
 				if (index != 0)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				return this.pointer;
 			}
 		}
@@ -901,7 +901,7 @@ namespace Althea.Storage
 		public override PointerSegment this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				return this.pointers[index];
 			}
 		}
@@ -1036,7 +1036,7 @@ namespace Althea.Storage
 			if (!locations.ElementsUnique())
 				throw new ArgumentException(Parameter.DuplicateValue, nameof(locations));
 			if (maxLengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(maxLengths), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxLengths), maxLengths.ToArray(), Parameter.MustPositive);
 			// check ratios
 			for (int i = 1; i < locations.Length; i++)
 			{
@@ -1080,7 +1080,7 @@ namespace Althea.Storage
 		public override PointerSegment this[int index] {
 			get {
 				if (index != 0)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				return this.GetCacheLevel(this.CacheLevels - 1);
 			}
 		}
@@ -1258,7 +1258,7 @@ namespace Althea.Storage
 		public override PointerSegment this[int index] {
 			get {
 				if (index != 0)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				if (this.Reference is null)
 					throw new InvalidOperationException();
 				return this.Reference[0].MoveBy(this.TotalOffsetInBytes, this.LengthInBytes);
@@ -1307,9 +1307,9 @@ namespace Althea.Storage
 			if (this.Reference is not ICachedStorage c)
 				return default;
 			if (totalOffsetInBytes + lengthInBytes > this.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(totalOffsetInBytes));
+				throw new ArgumentOutOfRangeException(nameof(totalOffsetInBytes), totalOffsetInBytes, Parameter.InvalidValue);
 			if (lengthInBytes > this.TopCacheSizeInBytes)
-				throw new ArgumentOutOfRangeException(nameof(lengthInBytes));
+				throw new ArgumentOutOfRangeException(nameof(lengthInBytes), lengthInBytes, Parameter.InvalidValue);
 			return c.Retrieve(this.TotalOffsetInBytes + totalOffsetInBytes, lengthInBytes, copy);
 		}
 
@@ -1377,9 +1377,9 @@ namespace Althea.Storage
 			base(stackalloc StorageLocation[2].SetValue(memoryLocation, streamLocation), stackalloc long[2].SetValue(maxMemoryCacheSize, length))
 		{
 			if (memoryLocation.Type.GetClassification() != LocationTypeExtension.ClassMemory)
-				throw new ArgumentOutOfRangeException(nameof(memoryLocation), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(memoryLocation), memoryLocation, Parameter.InvalidValue);
 			if (streamLocation.Type.GetClassification() != LocationTypeExtension.ClassStream)
-				throw new ArgumentOutOfRangeException(nameof(streamLocation), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(streamLocation), streamLocation, Parameter.InvalidValue);
 
 			try
 			{
@@ -1404,7 +1404,7 @@ namespace Althea.Storage
 		public override PointerSegment GetCacheLevel(int index)
 		{
 			if (index < 0 || index >= 2)
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 
 			if (index == 0)
 				return this.memory;
@@ -1450,12 +1450,12 @@ namespace Althea.Storage
 		public override PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (totalOffsetInBytes >= this.stream.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(totalOffsetInBytes));
+				throw new ArgumentOutOfRangeException(nameof(totalOffsetInBytes), totalOffsetInBytes, Parameter.InvalidValue);
 			long memLen = this.memory.LengthInBytes;
 			if (lengthInBytes <= 0)
 				lengthInBytes = memLen;
 			if (totalOffsetInBytes + lengthInBytes > this.stream.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(lengthInBytes));
+				throw new ArgumentOutOfRangeException(nameof(lengthInBytes), lengthInBytes, Parameter.InvalidValue);
 
 			long offset = totalOffsetInBytes;
 			if (!this.cached)

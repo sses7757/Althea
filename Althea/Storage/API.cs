@@ -105,15 +105,15 @@ namespace Althea.Storage
 		public static void ApplyUnaryFunction(this ICachedStorage cached, Action<PointerSegment> unaryFunc, long offset, long count, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
 		{
 			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.MustPositive);
 			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.InvalidValue);
 			if (offset % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(offset));
 			if (count % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(count));
 			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
@@ -142,15 +142,15 @@ namespace Althea.Storage
 		public static void ApplyUnaryFunction<TRet>(this ICachedStorage cached, Func<PointerSegment, TRet> unaryFunc, long offset, long count, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
 		{
 			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.MustPositive);
 			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.InvalidValue);
 			if (offset % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(offset));
 			if (count % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(count));
 			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
@@ -180,15 +180,15 @@ namespace Althea.Storage
 		public static void ApplyUnaryFunction<T>(this ICachedStorage cached, Action<PointerSegment, T> unaryFunc, long offset, long count, T auxiliary, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
 		{
 			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.MustPositive);
 			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.InvalidValue);
 			if (offset % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(offset));
 			if (count % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(count));
 			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
@@ -219,15 +219,15 @@ namespace Althea.Storage
 		public static void ApplyUnaryFunction<T, TRet>(this ICachedStorage cached, Func<PointerSegment, T, TRet> unaryFunc, long offset, long count, T auxiliary, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
 		{
 			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.MustPositive);
 			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.InvalidValue);
 			if (offset % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(offset));
 			if (count % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(count));
 			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
@@ -269,15 +269,15 @@ namespace Althea.Storage
 		public static void ApplyUnaryFunction<T, TRet>(this ICachedStorage cached, Func<PointerSegment, T, TRet> unaryFunc, long offset, long count, T auxiliaryOriginal, SliceDelegate<T> sliceFunc, ICachedStorage.CopyDelegate? copyFunc = null, int pack = 1)
 		{
 			if (pack <= 0)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.MustPositive);
 			if (pack > count)
-				throw new ArgumentOutOfRangeException(nameof(pack), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(pack), pack, Parameter.InvalidValue);
 			if (offset % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(offset));
 			if (count % pack != 0)
 				throw new ArgumentException(Other.CannotDivide, nameof(count));
 			if (count + offset > cached.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(count), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 			while (count > 0)
@@ -326,13 +326,13 @@ namespace Althea.Storage
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (sourceAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.MustPositive);
 			if (sourceAlign >= source.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.InvalidValue);
 			if (destinationAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.MustPositive);
 			if (destinationAlign >= destination.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.InvalidValue);
 
 			copyFunc ??= StaticCopy;
 
@@ -394,13 +394,13 @@ namespace Althea.Storage
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (sourceAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.MustPositive);
 			if (sourceAlign >= source.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.InvalidValue);
 			if (destinationAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.MustPositive);
 			if (destinationAlign >= destination.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.InvalidValue);
 
 			blockCopy ??= StaticCopy;
 			alignedCopy ??= blockCopy;
@@ -448,13 +448,13 @@ namespace Althea.Storage
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (sourceAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.MustPositive);
 			if (sourceAlign >= source.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.InvalidValue);
 			if (destinationAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.MustPositive);
 			if (destinationAlign >= destination.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.InvalidValue);
 
 			blockCopy ??= StaticCopy;
 			alignedCopy ??= blockCopy;
@@ -503,13 +503,13 @@ namespace Althea.Storage
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (sourceAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.MustPositive);
 			if (sourceAlign >= source.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(sourceAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(sourceAlign), sourceAlign, Parameter.InvalidValue);
 			if (destinationAlign <= 0)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.MustPositive);
 			if (destinationAlign >= destination.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(destinationAlign), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(destinationAlign), destinationAlign, Parameter.InvalidValue);
 
 			blockCopy ??= StaticCopy;
 			alignedCopy ??= blockCopy;
@@ -1094,7 +1094,7 @@ namespace Althea.Storage
 		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1 or larger than lengths</exception>
 		public static long StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
 		{
 			CombinationOfLocations src = source.LocationDescription, dst = destination.LocationDescription;
@@ -1628,15 +1628,15 @@ namespace Althea.Storage
 		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1 or larger than lengths</exception>
 		protected virtual bool StridedCopy_<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination, out long actualCopied) where T : unmanaged
 		{
 			actualCopied = 0;
 			long srcLen = source.Length, dstLen = destination.Length;
 			if (incrementSource <= 0 || incrementSource >= srcLen)
-				throw new ArgumentOutOfRangeException(nameof(incrementSource));
+				throw new ArgumentOutOfRangeException(nameof(incrementSource), incrementSource, Parameter.InvalidValue);
 			if (incrementDestination <= 0 || incrementDestination >= dstLen)
-				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
+				throw new ArgumentOutOfRangeException(nameof(incrementDestination), incrementDestination, Parameter.InvalidValue);
 
 			bool CopyFunc(PointerSegment s, PointerSegment d, out long c)
 			{
@@ -1702,13 +1702,13 @@ namespace Althea.Storage
 		protected virtual bool MemoryCopy2D_<T>(Storage<T> source, long sourceLD, Storage<T> destination, long destLD, long height, long width) where T : unmanaged
 		{
 			if (sourceLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceLD), sourceLD, Parameter.MustPositive);
 			if (destLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(destLD), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destLD), destLD, Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
 			if (height > sourceLD || height > destLD)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (sourceLD * width > source.LengthInBytes)
@@ -1931,11 +1931,11 @@ namespace Althea.Storage
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
 			if (leadDim == 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), leadDim, Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
 			if (height > leadDim || height > destinationLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > source.Length)
@@ -1987,11 +1987,11 @@ namespace Althea.Storage
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (leadDim == 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), leadDim, Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
 			if (height > leadDim || height > valuesLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (leadDim * width > destination.Length)

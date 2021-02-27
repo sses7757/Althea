@@ -154,17 +154,17 @@ namespace Althea.LinearAlgebra.Sparse
 		public static bool CheckLengthRegulation(this SparseMatrixFormat format, long rows, long columns, long valueLength, long rowLength, long columnLength)
 		{
 			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 			if (rows <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.Parameter.MustPositive);
 			if (columns <= 0)
-				throw new ArgumentOutOfRangeException(nameof(columns), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(columns), columns, Resources.Parameter.MustPositive);
 			if (valueLength <= 0)
-				throw new ArgumentOutOfRangeException(nameof(valueLength), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(valueLength), valueLength, Resources.Parameter.MustPositive);
 			if (rowLength <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rowLength), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(rowLength), rowLength, Resources.Parameter.MustPositive);
 			if (columnLength <= 0)
-				throw new ArgumentOutOfRangeException(nameof(columnLength), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(columnLength), columnLength, Resources.Parameter.MustPositive);
 
 			switch (format)
 			{

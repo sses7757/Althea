@@ -72,7 +72,7 @@ namespace Althea.Arrays
 			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
 				throw new NotSupportedException(Resources.Support.DataType);
 			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 
 			this.m_indexArray = indexArray; this.m_indexArrays = null;
 			this.Format = format; this.DefaultValue = defaultValue;
@@ -97,7 +97,7 @@ namespace Althea.Arrays
 			if (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger)
 				throw new NotSupportedException(Resources.Support.DataType);
 			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 
 			if (indexArrays.Length == 1)
 			{
@@ -201,9 +201,9 @@ namespace Althea.Arrays
 		Storage<TInd> IReadOnlyList<Storage<TInd>>.this[int index] {
 			get {
 				if (index < 0)
-					throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.CannotNegative);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.CannotNegative);
 				if (index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				return this.m_indexArrays?[index] ?? this.m_indexArray;
 			}
 		}

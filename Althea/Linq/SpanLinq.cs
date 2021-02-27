@@ -386,7 +386,7 @@ namespace Althea.Linq
 			if (indices is null || indices.Length == 0)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Length > array.Length || indices.Length > target.Length)
-				throw new ArgumentOutOfRangeException(nameof(indices));
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
 			for (int i = 0; i < indices.Length; i++)
 			{
@@ -406,7 +406,7 @@ namespace Althea.Linq
 			if (indices.Length == 0)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Length > array.Length || indices.Length > target.Length)
-				throw new ArgumentOutOfRangeException(nameof(indices));
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
 			for (int i = 0; i < indices.Length; i++)
 			{
@@ -428,7 +428,7 @@ namespace Althea.Linq
 			if (indices is null || indices.Count == 0)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Count > array.Count || indices.Count > target.Length)
-				throw new ArgumentOutOfRangeException(nameof(indices));
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
 			for (int i = 0; i < indices.Count; i++)
 			{
@@ -450,7 +450,7 @@ namespace Althea.Linq
 			if (indices.Length == 0)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Length > array.Count || indices.Length > target.Length)
-				throw new ArgumentOutOfRangeException(nameof(indices));
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
 			for (int i = 0; i < indices.Length; i++)
 			{
@@ -472,7 +472,7 @@ namespace Althea.Linq
 			if (indices.Length == 0)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Length > array.Length || indices.Length > target.Length)
-				throw new ArgumentOutOfRangeException(nameof(indices));
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
 			for (int i = 0; i < indices.Length; i++)
 			{

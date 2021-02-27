@@ -42,7 +42,7 @@ namespace Althea.Backend.Storage
 		public MemoryPointer(IntPtr pointer, long length, StorageLocation location)
 		{
 			if (location.Type.GetClassification() != LocationTypeExtension.ClassMemory)
-				throw new ArgumentOutOfRangeException(nameof(location), Parameter.UnexpectedValue);
+				throw new ArgumentOutOfRangeException(nameof(location), location, Parameter.UnexpectedValue);
 			this.Pointer = pointer; this.LengthInBytes = length; this.Location = location;
 		}
 
@@ -90,7 +90,7 @@ namespace Althea.Backend.Storage
 		public StreamPointer(Althea.Storage.Stream stream, StorageLocation location)
 		{
 			if (location.Type.GetClassification() != LocationTypeExtension.ClassStream)
-				throw new ArgumentOutOfRangeException(nameof(location), Parameter.UnexpectedValue);
+				throw new ArgumentOutOfRangeException(nameof(location), location, Parameter.UnexpectedValue);
 			this.NativeStream = stream; this.Location = location;
 		}
 
@@ -264,7 +264,7 @@ namespace Althea.Backend.Storage
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
 			if ((long)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(managed));
+				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
 			this.stream.Read(managed.UncheckAs<T, byte>());
 		}
@@ -297,7 +297,7 @@ namespace Althea.Backend.Storage
 		/// <param name="managed">The managed memory as a <see cref="ReadOnlySpan{T}"/> to read from</param>
 		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="ArgumentException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
@@ -308,7 +308,7 @@ namespace Althea.Backend.Storage
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
 			if ((long)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(managed));
+				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
 			this.stream.Write(managed.UncheckAs<T, byte>());
 		}
@@ -521,7 +521,7 @@ namespace Althea.Backend.Storage
 			if (!protocol.IsValid())
 				throw new ArgumentNullException(nameof(protocol));
 			if (!uri.IsDefaultPort && uri.Port != protocol.remotePort)
-				throw new ArgumentOutOfRangeException(nameof(uri), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(uri), uri, Parameter.InvalidValue);
 
 			// set fields
 			this.uri = uri;
@@ -612,7 +612,7 @@ namespace Althea.Backend.Storage
 				throw new ObjectDisposedException(nameof(FileStream));
 			long size = (long)managed.Length * Storage<T>.SizeOfT;
 			if (size + this.Position > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(managed));
+				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
 			// before read
 			var sendData = this.protocol.beforeReadSend.Invoke(this.RemotePath, this.Position, size);
@@ -659,7 +659,7 @@ namespace Althea.Backend.Storage
 		/// <param name="managed">The managed memory as a <see cref="ReadOnlySpan{T}"/> to read from</param>
 		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes written.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="managed"/> is not valid (for example, has zero length)</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
+		/// <exception cref="ArgumentException">If <paramref name="managed"/>'s length exceeds the boundary</exception>
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="IOException">If other I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
@@ -671,7 +671,7 @@ namespace Althea.Backend.Storage
 				throw new ObjectDisposedException(nameof(FileStream));
 			long size = (long)managed.Length * Storage<T>.SizeOfT;
 			if (size + this.Position > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(managed));
+				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
 			// before write
 			var sendData = this.protocol.beforeWriteSend.Invoke(this.RemotePath, this.Position, size);

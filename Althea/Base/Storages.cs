@@ -156,7 +156,7 @@ namespace Althea
 		public StorageLocation(LocationType location, int detail)
 		{
 			if (detail < 0 || detail >= 0xffffff)
-				throw new ArgumentOutOfRangeException(nameof(detail), Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(detail), detail, Parameter.InvalidValue);
 			this._data = (byte)location + (detail << 8);
 		}
 		#endregion
@@ -307,7 +307,7 @@ namespace Althea
 		public CombinationOfLocations(CombinationType type, ReadOnlySpan<StorageLocation> data)
 		{
 			if (data.Length > 15 || data.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(data), Parameter.WrongSize);
+				throw new ArgumentOutOfRangeException(nameof(data), data.ToArray(), Parameter.WrongSize);
 			// initialize
 			this.type = type;
 			this.data = new FixedBuffer_60<StorageLocation>();
@@ -397,7 +397,7 @@ namespace Althea
 		/// <param name="index">The index</param>
 		/// <returns>The element at <paramref name="index"/> as a <see cref="StorageLocation"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-		public StorageLocation this[int index] => index >= 0 && index < this.Count ? this.data[index] : throw new ArgumentOutOfRangeException(nameof(index));
+		public StorageLocation this[int index] => index >= 0 && index < this.Count ? this.data[index] : throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 
 		/// <summary>
 		/// Forms a slice out of the current <see cref="CombinationOfLocations"/> starting at a specified <paramref name="start"/> for a specified <paramref name="length"/>.
@@ -409,9 +409,9 @@ namespace Althea
 		public CombinationOfLocations Slice(int start, int length)
 		{
 			if (start < 0 || start >= this.Count)
-				throw new ArgumentOutOfRangeException(nameof(start));
+				throw new ArgumentOutOfRangeException(nameof(start), start, Parameter.InvalidValue);
 			if (length <= 0 || length + start > this.Count)
-				throw new ArgumentOutOfRangeException(nameof(length));
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 
 			Span<StorageLocation> locations = stackalloc StorageLocation[this.count];
 			this.CopyLocationsToSpan(locations);
@@ -560,14 +560,14 @@ namespace Althea
 		{
 			offset += storage.offset;
 			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset));
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
 			long off = offset;
 			if (off > storage.pointer.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(offset));
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.InvalidValue);
 			if (newLength <= 0)
 				newLength = storage.pointer.LengthInBytes - off;
 			if (off + newLength > storage.pointer.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(newLength));
+				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
 
 			this.pointer = storage.pointer; this.offset = off; this.length = newLength;
 		}
@@ -930,13 +930,13 @@ namespace Althea
 			if (locationsAndLengths.Length == 1)
 			{
 				if (locationsAndLengths[0].length <= 0)
-					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), Parameter.MustPositive);
+					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), locationsAndLengths, Parameter.MustPositive);
 				return Create(locationsAndLengths[0].location, locationsAndLengths[0].length);
 			}
 			else
 			{
 				if (locationsAndLengths.Any(static p => p.length <= 0))
-					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), Parameter.MustPositive);
+					throw new ArgumentOutOfRangeException(nameof(locationsAndLengths), locationsAndLengths, Parameter.MustPositive);
 				Span<StorageLocation> locations = stackalloc StorageLocation[locationsAndLengths.Length];
 				Span<long> lengths = stackalloc long[locationsAndLengths.Length];
 				for (int i = 0; i < locationsAndLengths.Length; i++)
@@ -1204,9 +1204,9 @@ namespace Althea
 			this.reference = storage;
 			// check
 			if (offsetInBytes < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset));
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
 			if (storage.LengthInBytes != offsetInBytes + newLengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(newLength));
+				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
 			// set offset and length
 			this.TotalOffsetInBytes = offsetInBytes;
 			this.Length = newLengthInBytes / SizeOfT;
@@ -1251,7 +1251,7 @@ namespace Althea
 		protected ActualStorage(long length)
 		{
 			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			this.Length = length;
 		}
 

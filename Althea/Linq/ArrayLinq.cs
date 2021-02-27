@@ -1477,9 +1477,9 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			if (from < 0 || from >= list.Count)
-				throw new ArgumentOutOfRangeException(nameof(from));
+				throw new ArgumentOutOfRangeException(nameof(from), from, Parameter.InvalidValue);
 			if (count + from > list.Count)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			if (list is T[] a)
 			{
@@ -1505,7 +1505,7 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			if (count > list.Count)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			if (list is T[] a)
 			{
@@ -1531,7 +1531,7 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			if (count > list.Count)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			if (list is T[] a)
 			{
@@ -1557,7 +1557,7 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			if (count > list.Count)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			if (list is T[] a)
 			{
@@ -1583,7 +1583,7 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 			if (count > list.Count)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 
 			if (list is T[] a)
 			{
@@ -2396,7 +2396,7 @@ namespace Althea.Linq
 				throw new ArgumentNullException(nameof(indices));
 			int N = indices.Max() + 1;
 			if (N > array.Count)
-				throw new ArgumentOutOfRangeException(nameof(indices));
+				throw new ArgumentOutOfRangeException(nameof(indices), indices, Parameter.InvalidValue);
 
 			var output = new T[N];
 			for (int i = 0; i < N; i++)
@@ -2461,9 +2461,9 @@ namespace Althea.Linq
 		public static int[] RandomUniqueArray(int count, int minValue, int maxValue)
 		{
 			if (count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 			if (maxValue < minValue + count)
-				throw new ArgumentOutOfRangeException(nameof(maxValue));
+				throw new ArgumentOutOfRangeException(nameof(maxValue), maxValue, Parameter.InvalidValue);
 
 			HashSet<int> set = new HashSet<int>(count);
 			while (set.Count != count)
@@ -2480,9 +2480,9 @@ namespace Althea.Linq
 		public static int[] RandomPositiveArrayOfSum(int count, int sum)
 		{
 			if (count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 			if (sum <= 0)
-				throw new ArgumentOutOfRangeException(nameof(sum));
+				throw new ArgumentOutOfRangeException(nameof(sum), sum, Parameter.InvalidValue);
 
 			int[] partition = RandomUniqueArray(count - 1, 1, sum);
 			Array.Sort(partition);
@@ -2505,9 +2505,9 @@ namespace Althea.Linq
 		public static int[] RandomNonNegativeArrayOfSum(int count, int sum)
 		{
 			if (count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
 			if (sum < count)
-				throw new ArgumentOutOfRangeException(nameof(sum));
+				throw new ArgumentOutOfRangeException(nameof(sum), sum, Parameter.InvalidValue);
 
 			int[] arr = new int[count];
 			for (int i = 0; i < sum; i++)

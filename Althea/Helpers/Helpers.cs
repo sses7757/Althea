@@ -165,7 +165,7 @@ namespace Althea.Helpers
 		public static string ToOrdinal(this int a)
 		{
 			if (a < 0)
-				throw new ArgumentOutOfRangeException(nameof(a), Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(a), a, Parameter.CannotNegative);
 			a++;
 			int c = a % 10;
 			return c switch
@@ -582,7 +582,7 @@ namespace Althea.Helpers
 			if (matrix.IsEmpty)
 				return string.Empty;
 			if (rows <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(rows), rows, Parameter.MustPositive);
 			if (matrix.Length % rows != 0)
 				throw new ArgumentException(Other.CannotDivide);
 
@@ -704,9 +704,9 @@ namespace Althea.Helpers
 		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
 		public static TO[,] InnerProduct<TL, TR, TO>(int m, int n, int k, Func<int, int, TL> left, Func<int, int, TR> right, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
 		{
-			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m));
-			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n));
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k));
+			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m), m, Parameter.MustPositive);
+			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), n, Parameter.MustPositive);
+			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
 			if (left is null) throw new ArgumentNullException(nameof(left));
 			if (right is null) throw new ArgumentNullException(nameof(right));
 			if (multiply is null) throw new ArgumentNullException(nameof(multiply));
@@ -742,8 +742,8 @@ namespace Althea.Helpers
 		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
 		public static TO[] InnerProduct<TL, TR, TO>(int m, int k, Func<int, int, TL> leftMat, Func<int, TR> rightVec, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
 		{
-			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m));
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k));
+			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m), m, Parameter.MustPositive);
+			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
 			if (leftMat is null) throw new ArgumentNullException(nameof(leftMat));
 			if (rightVec is null) throw new ArgumentNullException(nameof(rightVec));
 			if (multiply is null) throw new ArgumentNullException(nameof(multiply));
@@ -776,8 +776,8 @@ namespace Althea.Helpers
 		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
 		public static TO[] InnerProduct<TL, TR, TO>(int n, int k, Func<int, TL> leftVec, Func<int, int, TR> rightMat, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
 		{
-			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n));
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k));
+			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), n, Parameter.MustPositive);
+			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
 			if (rightMat is null) throw new ArgumentNullException(nameof(rightMat));
 			if (leftVec is null) throw new ArgumentNullException(nameof(leftVec));
 			if (multiply is null) throw new ArgumentNullException(nameof(multiply));
@@ -808,7 +808,7 @@ namespace Althea.Helpers
 		public static long GetPosition(this Index index, long length, bool check = true)
 		{
 			if (check && length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length));
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			long val;
 			if (index.IsFromEnd)
 			{
@@ -819,7 +819,7 @@ namespace Althea.Helpers
 				val = index.Value;
 			}
 			if (check && (val < 0 || val > length))
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 			return val;
 		}
 
@@ -836,10 +836,10 @@ namespace Althea.Helpers
 		public static (long Offset, long Length) GetOffsetAndCount(this Range range, long length, bool check = true)
 		{
 			if (check && length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length));
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			long start = range.Start.GetPosition(length), end = range.End.GetPosition(length);
 			if (check && (end <= start || start >= length || end < 0 || end > length))
-				throw new ArgumentOutOfRangeException(nameof(range));
+				throw new ArgumentOutOfRangeException(nameof(range), range, Parameter.InvalidValue);
 			return (start, end - start);
 		}
 		#endregion
@@ -857,7 +857,7 @@ namespace Althea.Helpers
 			if (array is null || array.Length == 0)
 				throw new ArgumentNullException(nameof(array));
 			if (array.Length % innerSize != 0)
-				throw new ArgumentOutOfRangeException(nameof(array), nameof(array.Length));
+				throw new ArgumentOutOfRangeException(nameof(array), array, nameof(array.Length));
 
 			var output = new T[array.Length / innerSize][];
 			for (int i = 0; i < array.Length / innerSize; i++)

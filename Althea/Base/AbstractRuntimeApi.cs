@@ -386,7 +386,7 @@ namespace Althea
 		protected static IImmutableSet<CombinationOfLocations>[] GenerateNaryLoactions(int N, Span<StorageLocation> locations)
 		{
 			if (N <= 0)
-				throw new ArgumentOutOfRangeException(nameof(N), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(N), N, Resources.Parameter.MustPositive);
 			if (locations.Length < N)
 				return Array.Empty<IImmutableSet<CombinationOfLocations>>();
 

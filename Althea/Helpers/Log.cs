@@ -200,7 +200,7 @@ namespace Althea.Helpers
 						Debug.WriteLine(msg, category);
 						break;
 					default:
-						throw new ArgumentOutOfRangeException(nameof(level));
+						throw new ArgumentOutOfRangeException(nameof(level), level, Resources.Parameter.InvalidValue);
 				}
 			};
 			await Task.Run(run).ConfigureAwait(true);

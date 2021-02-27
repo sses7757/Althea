@@ -46,9 +46,9 @@ namespace Althea.Arrays
 		protected void CheckIndex(long index)
 		{
 			if (index < 0)
-				throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.CannotNegative);
 			if (index >= this.Length)
-				throw new ArgumentOutOfRangeException(nameof(index), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 		}
 
 		/// <summary>
@@ -60,13 +60,13 @@ namespace Althea.Arrays
 		protected void CheckRange(long offset, long length)
 		{
 			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.CannotNegative);
 			if (offset >= this.Length)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (length < 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.CannotNegative);
 			if (offset + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
 		}
 
 		/// <summary>

@@ -508,7 +508,7 @@ namespace Althea.Arrays
 			if (size is null || size.Length == 0)
 				throw new ArgumentNullException(nameof(size));
 			if (size.Prod() != this.Length)
-				throw new ArgumentOutOfRangeException(nameof(size));
+				throw new ArgumentOutOfRangeException(nameof(size), size);
 
 			return new DenseTensor<T>(this, size);
 		}
@@ -912,14 +912,14 @@ namespace Althea.Arrays
 			if (pos is null)
 				throw new ArgumentNullException(nameof(pos));
 			if (pos.Length != this.Rank - startRank)
-				throw new ArgumentOutOfRangeException(nameof(pos));
+				throw new ArgumentOutOfRangeException(nameof(pos), pos);
 
 			long offset = 0;
 			for (int i = startRank, j = 0; i < this.Rank; i++, j++)
 			{
 				var off = pos[j].GetPosition(this.Size[i]);
 				if (off >= this.Size[i])
-					throw new ArgumentOutOfRangeException(nameof(pos));
+					throw new ArgumentOutOfRangeException(nameof(pos), pos);
 				else
 					offset += this.SizeProd[i] * off;
 			}

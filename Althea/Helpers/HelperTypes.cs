@@ -141,7 +141,7 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.Count)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (span.Length > this.Count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
 			int size = Math.Min(span.Length, this.Count);
@@ -163,7 +163,7 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.Count)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (span.Length > this.Count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
 			int size = Math.Min(span.Length, this.Count);
@@ -249,7 +249,7 @@ namespace Althea.Helpers
 		public T this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this)
 				{
 					return ((T*)t)[index];
@@ -257,7 +257,7 @@ namespace Althea.Helpers
 			}
 			set {
 				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this)
 				{
 					((T*)t)[index] = value;
@@ -419,7 +419,7 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.Count)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (span.Length > this.Count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
 			int size = Math.Min(span.Length, this.Count);
@@ -441,7 +441,7 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.Count)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (span.Length > this.Count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
 			int size = Math.Min(span.Length, this.Count);
@@ -527,7 +527,7 @@ namespace Althea.Helpers
 		public T this[int index] {
 			get {
 				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this)
 				{
 					return ((T*)t)[index];
@@ -535,7 +535,7 @@ namespace Althea.Helpers
 			}
 			set {
 				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index));
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this)
 				{
 					((T*)t)[index] = value;
@@ -677,7 +677,7 @@ namespace Althea.Helpers
 		public T[] ToArray()
 		{
 			T[] array = new T[this.size];
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			fixed (T* a = array)
 			{
 				Unsafe.CopyBlock(a, t, 128);
@@ -694,7 +694,7 @@ namespace Althea.Helpers
 		public SizedFixedBuffer_128<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
 		{
 			var newBuffer = new SizedFixedBuffer_128<TOut>();
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock(&newBuffer, t, unchecked((uint)(this.size * sizeof(T))));
 			}
@@ -715,11 +715,11 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.size)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (span.Length > this.size)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
 			int size = Math.Min(span.Length, this.size);
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				var temp = new Span<T>(t, size);
 				span.CopyTo(temp);
@@ -737,11 +737,11 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.size)
-				throw new ArgumentOutOfRangeException(nameof(offset), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (span.Length > this.size)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
 			int size = Math.Min(span.Length, this.size);
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				var temp = new ReadOnlySpan<T>(t, size);
 				temp.CopyTo(span);
@@ -762,7 +762,7 @@ namespace Althea.Helpers
 			if (size + copyStart > this.size * sizeof(T))
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
 			}
@@ -782,7 +782,7 @@ namespace Althea.Helpers
 			int size = Marshal.SizeOf<TStruct>();
 			if (size + copyStart > this.size * sizeof(T))
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
 			}
@@ -804,7 +804,7 @@ namespace Althea.Helpers
 		/// </summary>
 		public int NonDefaults {
 			get {
-				fixed (void* t = &this)
+				fixed (void* t = &this.field)
 				{
 					T* ptr = (T*)t;
 					int result = 0;
@@ -827,16 +827,16 @@ namespace Althea.Helpers
 		public T this[int index] {
 			get {
 				if (index < 0 || index >= this.size)
-					throw new ArgumentOutOfRangeException(nameof(index));
-				fixed (void* t = &this)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
 				}
 			}
 			set {
 				if (index < 0 || index >= this.size)
-					throw new ArgumentOutOfRangeException(nameof(index));
-				fixed (void* t = &this)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
 				}
@@ -867,7 +867,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(SizedFixedBuffer_128<T> other)
 		{
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				T* ptrThis = (T*)t;
 				T* ptrOther = &other.field;
@@ -898,7 +898,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			fixed (void* t = &this)
+			fixed (void* t = &this.field)
 			{
 				var temp = new ReadOnlySpan<T>(t, this.size);
 				return temp.HashCodeOfSpan();

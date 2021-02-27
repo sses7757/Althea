@@ -72,7 +72,7 @@ namespace Althea.Arrays
 					case SparseMatrixFormat.CSC:
 						return (allocRow ? Storage<int>.Create(nnz, onHost) : null, allocCol ? Storage<int>.Create(secondDim + 1, onHost) : null);
 					default:
-						throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
+						throw new ArgumentOutOfRangeException(nameof(format), format, format, Resource.FormatNotAtomic);
 				}
 			}
 			catch
@@ -105,7 +105,7 @@ namespace Althea.Arrays
 			if (!format.IsAtomic())
 			{
 				this.Storage.Dispose();
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
+				throw new ArgumentOutOfRangeException(nameof(format), format, format, Resource.FormatNotAtomic);
 			}
 			this.Format = format;
 			(this.RowPointer, this.ColumnPointer) = AllocateIndex(rows, cols, nonZeros, format, this, onHost);
@@ -135,7 +135,7 @@ namespace Althea.Arrays
 			if (!format.IsAtomic())
 			{
 				this.Storage.Dispose();
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
+				throw new ArgumentOutOfRangeException(nameof(format), format, format, Resource.FormatNotAtomic);
 			}
 			if (colPtr is null)
 			{
@@ -185,7 +185,7 @@ namespace Althea.Arrays
 			if (!format.IsAtomic())
 			{
 				this.Storage.Dispose();
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resource.FormatNotAtomic);
+				throw new ArgumentOutOfRangeException(nameof(format), format, format, Resource.FormatNotAtomic);
 			}
 			if (colPtr is null)
 			{
@@ -371,7 +371,7 @@ namespace Althea.Arrays
 		{
 			var (offset, count) = range.GetOffsetAndCount(this.NonZero);
 			if (offset + count > this.NonZero || offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(range));
+				throw new ArgumentOutOfRangeException(nameof(range), range);
 			return (offset, count);
 		}
 
@@ -402,14 +402,14 @@ namespace Althea.Arrays
 		{
 			var (offsetRow, countRow) = row.GetOffsetAndCount(this.RowIndexLength);
 			if (offsetRow < 0 || offsetRow >= this.RowIndexLength)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resource.RangeStartWrong);
+				throw new ArgumentOutOfRangeException(nameof(row), row, row, Resource.RangeStartWrong);
 			if (countRow <= 0)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resource.RangeCountWrong);
+				throw new ArgumentOutOfRangeException(nameof(row), row, row, Resource.RangeCountWrong);
 			var (offsetCol, countCol) = col.GetOffsetAndCount(this.ColumnIndexLength);
 			if (offsetCol < 0 || offsetCol >= this.IntColIdxLength)
-				throw new ArgumentOutOfRangeException(nameof(col), col, Resource.RangeStartWrong);
+				throw new ArgumentOutOfRangeException(nameof(col), col, col, Resource.RangeStartWrong);
 			if (countCol <= 0)
-				throw new ArgumentOutOfRangeException(nameof(col), col, Resource.RangeCountWrong);
+				throw new ArgumentOutOfRangeException(nameof(col), col, col, Resource.RangeCountWrong);
 			return (offsetRow, countRow, offsetCol, countCol);
 		}
 
@@ -625,7 +625,7 @@ namespace Althea.Arrays
 				case PowerOperation.Dagger:
 					return base.ConjugateOutOfPlace() as SparseMatrix<T>;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(op));
+					throw new ArgumentOutOfRangeException(nameof(op), op);
 			}
 		}
 		#endregion
@@ -976,7 +976,7 @@ namespace Althea.Arrays
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
 		public AbstractSparseVector<T> GetColumnAt(Index index, AbstractSparseVector<T> overwrite = null)
 		{
-			var (_, colIdx) = CheckRange(0, index);
+			var (_, colIdx) = CheckIndex(0, index);
 			if (this.Format == SparseMatrixFormat.CSC)
 			{
 				var fromOffset = RT.CopyOut(this.ColumnPointer, offset: colIdx);
@@ -1019,7 +1019,7 @@ namespace Althea.Arrays
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
 		public AbstractSparseVector<T> GetRowAt(Index index, AbstractSparseVector<T> overwrite = null)
 		{
-			var (rowIdx, _) = CheckRange(index, 0);
+			var (rowIdx, _) = CheckIndex(index, 0);
 			if (this.Format == SparseMatrixFormat.CSR)
 			{
 				var fromOffset = RT.CopyOut(this.RowPointer, offset: rowIdx);
@@ -1220,7 +1220,7 @@ namespace Althea.Arrays
 			if (B is null || B == EmptyDnMat)
 				throw new ArgumentNullException(nameof(B), Resource.ArrayCannotNull);
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			if (this.NRows != (opA == MatrixOperation.None ? A.NRows : A.NCols) || this.NCols != (opB == MatrixOperation.None ? B.NCols : B.NRows))
 				throw new ArgumentException(Resource.MatrixWrongSize);
 
@@ -1597,7 +1597,7 @@ namespace Althea.Arrays
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
 		public DenseVector<T> GetColumnAt(Index index, DenseVector<T> overwrite = null)
 		{
-			var (_, colIdx) = CheckRange(0, index);
+			var (_, colIdx) = CheckIndex(0, index);
 			int fromOffset, newNNZ;
 			if (this.Format == SparseMatrixFormat.CSC)
 			{
@@ -1635,7 +1635,7 @@ namespace Althea.Arrays
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
 		public DenseVector<T> GetRowAt(Index index, DenseVector<T> overwrite = null)
 		{
-			var (rowIdx, _) = CheckRange(index, 0);
+			var (rowIdx, _) = CheckIndex(index, 0);
 			int fromOffset, newNNZ;
 			if (this.Format == SparseMatrixFormat.CSR)
 			{
@@ -1793,7 +1793,7 @@ namespace Althea.Arrays
 			if (B is null || B == EmptyDnMat)
 				throw new ArgumentNullException(nameof(B), Resource.ArrayCannotNull);
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			if (this.NRows != (opA == MatrixOperation.None ? A.NRows : A.NCols) || this.NCols != (opB == MatrixOperation.None ? B.NCols : B.NRows))
 				throw new ArgumentException(Resource.MatrixWrongSize);
 
@@ -1913,7 +1913,7 @@ namespace Althea.Arrays
 			if (B is null || B == EmptyDnMat)
 				throw new ArgumentNullException(nameof(B), Resource.ArrayCannotNull);
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			if (this.NRows != (opA == MatrixOperation.None ? A.NRows : A.NCols) || this.NCols != (opB == MatrixOperation.None ? B.NCols : B.NRows))
 				throw new ArgumentException(Resource.MatrixWrongSize);
 
@@ -2334,7 +2334,7 @@ namespace Althea.Arrays
 		public override void Mulβ_AddBy_αAB(MatrixBase<T> A, MatrixBase<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			DenseMatrix<T> dA = A as DenseMatrix<T>, dB = B as DenseMatrix<T>;
 			SparseMatrix<T> sA = A as SparseMatrix<T>, sB = B as SparseMatrix<T>;
 			if (dA is null && sA is null)
@@ -2493,7 +2493,7 @@ namespace Althea.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int FindIndex(Index row, Index column)
 		{
-			var (px, py) = CheckRange(row, column);
+			var (px, py) = CheckIndex(row, column);
 			return this.FindIndex(px, py);
 		}
 
@@ -2538,7 +2538,7 @@ namespace Althea.Arrays
 					return default;
 			}
 			set {
-				var (r, c) = CheckRange(row, column);
+				var (r, c) = CheckIndex(row, column);
 				this[r, c] = value;
 			}
 		}

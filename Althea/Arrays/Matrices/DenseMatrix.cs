@@ -196,7 +196,7 @@ namespace Althea.Arrays
 		public override SparseMatrix<T> ToSparse(float threshold = default, SparseMatrixFormat targetFormat = SparseMatrixFormat.Any, DenseMatrixToSparseAlgorithm? algorithm = null)
 		{
 			if (threshold < 0)
-				throw new ArgumentOutOfRangeException(nameof(threshold), threshold, Resource.ParaCannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(threshold), threshold, threshold, Resource.ParaCannotNegative);
 			// set defaults
 			if (threshold == 0)
 				algorithm ??= DenseMatrixToSparseAlgorithm.NonzeroThresholdDefault;
@@ -206,7 +206,7 @@ namespace Althea.Arrays
 				algorithm ??= DenseMatrixToSparseAlgorithm.NonzeroThresholdDefault;
 			// check algorithm
 			if (!this.IsRealType && algorithm.Value == DenseMatrixToSparseAlgorithm.RealDefault)
-				throw new ArgumentOutOfRangeException(nameof(algorithm));
+				throw new ArgumentOutOfRangeException(nameof(algorithm), algorithm);
 
 			// perform conversion
 			SparseMatrix<T> mat = null;
@@ -468,7 +468,7 @@ namespace Althea.Arrays
 		/// <returns>The selected column as a <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T> GetColumnAt(Index index, DenseVector<T> overwrite = null)
 		{
-			var (_, from) = CheckRange(Index.Start, index);
+			var (_, from) = CheckIndex(Index.Start, index);
 			if (overwrite is null || !CanOverwrite(overwrite, len: this.NRows))
 			{
 				var vector = new DenseVector<T>(this, this.NRows, from * this.LeadDim);
@@ -487,7 +487,7 @@ namespace Althea.Arrays
 		/// <returns>The selected column as a <see cref="DenseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
 		public DenseVector<T> GetRowAt(Index index, DenseVector<T> overwrite = null)
 		{
-			var (from, _) = CheckRange(index, Index.Start);
+			var (from, _) = CheckIndex(index, Index.Start);
 			DenseVector<T> vec;
 			if (overwrite is null || !CanOverwrite(overwrite, len: this.NCols))
 				vec = new DenseVector<T>(this.NCols, this.OnHost);
@@ -754,7 +754,7 @@ namespace Althea.Arrays
 		public void Mulβ_AddBy_αAB(DenseMatrix<T> A, DenseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			BLAS.MatrixMultiply(A, B, this, α, β, opA, opB);
 		}
 
@@ -967,7 +967,7 @@ namespace Althea.Arrays
 		public void Mulβ_AddBy_αAB(SparseMatrix<T> A, SparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			if (A is null || A == EmptySpMat)
 				throw new ArgumentNullException(nameof(A), Resource.ArrayCannotNull);
 			if (B is null || B == EmptySpMat)
@@ -1039,7 +1039,7 @@ namespace Althea.Arrays
 		public void Mulβ_AddBy_αAB(DenseMatrix<T> A, SparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 
 			Sparse.MatrixDenseMultiplySparse(A, B, this, α, β, opA, opB);
 		}
@@ -1060,7 +1060,7 @@ namespace Althea.Arrays
 		public void Mulβ_AddBy_αAB(SparseMatrix<T> A, DenseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 
 			Sparse.MatrixSparseMultiplyDense(A, B, this, α, β, opA, opB);
 		}
@@ -1272,7 +1272,7 @@ namespace Althea.Arrays
 		public override void Mulβ_AddBy_αAB(MatrixBase<T> A, MatrixBase<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resource.ParaCannotZero);
+				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			DenseMatrix<T> dA = A as DenseMatrix<T>, dB = B as DenseMatrix<T>;
 			SparseMatrix<T> sA = A as SparseMatrix<T>, sB = B as SparseMatrix<T>;
 			if (dA is null && sA is null)
@@ -1697,11 +1697,11 @@ namespace Althea.Arrays
 		/// <remarks>Since a value cannot hold reference, altering the retrieved value does not change this array's value at that position.</remarks>
 		public override T this[Index row, Index column] {
 			get {
-				var (px, py) = CheckRange(row, column);
+				var (px, py) = CheckIndex(row, column);
 				return RT.CopyOut(this, offset: py * LeadDim + px);
 			}
 			set {
-				var (px, py) = CheckRange(row, column);
+				var (px, py) = CheckIndex(row, column);
 				RT.CopyInto(this, value, offset: py * LeadDim + px);
 			}
 		}

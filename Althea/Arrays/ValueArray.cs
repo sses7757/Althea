@@ -255,7 +255,7 @@ namespace Althea.Arrays
 		/// <param name="array">The original array as a <see cref="ValueArray{T}"/> to check</param>
 		/// <param name="newSize">The new size as a <see cref="Span{T}"/> to check which can have at most one uncertain dimension indicated by a non-positive number. Overwritten by the new size without uncertain dimension at exit.</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="newSize"/> is of length 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="newSize"/> is of length 2 and are all non-positive while the length of <paramref name="array"/> is not a perfect square</exception>
+		/// <exception cref="ArgumentException">If <paramref name="newSize"/> is of length 2 and are all non-positive while the length of <paramref name="array"/> is not a perfect square; or <paramref name="newSize"/> has more than one uncertain dimensions</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If the product of <paramref name="newSize"/> is not the same as the presenting length of <paramref name="array"/></exception>
 		protected static void CheckSize(ValueArray<T> array, Span<long> newSize)
 		{
@@ -275,7 +275,7 @@ namespace Althea.Arrays
 			{
 				// no uncertain index
 				if (newSize.Prod() != array.Length)
-					throw new ArgumentOutOfRangeException(nameof(newSize));
+					throw new ArgumentOutOfRangeException(nameof(newSize), newSize.Prod(), Resources.Parameter.InvalidValue);
 				return;
 			}
 			int lastFind = newSize.LastIndexOf(static r => r <= 0);
@@ -286,14 +286,14 @@ namespace Althea.Arrays
 				var prod = newSize.Prod();
 				var remain = array.Length % prod;
 				if (remain != 0)
-					throw new ArgumentOutOfRangeException(nameof(newSize));
+					throw new ArgumentOutOfRangeException(nameof(newSize), remain, Resources.Parameter.InvalidValue);
 				else
 					newSize[firstFind] = array.Length / prod;
 			}
 			else
 			{
 				// more than one uncertain indices
-				throw new ArgumentOutOfRangeException(nameof(newSize));
+				throw new ArgumentException(Resources.Parameter.UnexpectedValue, nameof(newSize));
 			}
 		}
 

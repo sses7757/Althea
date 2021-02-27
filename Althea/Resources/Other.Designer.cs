@@ -151,7 +151,16 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 The size of the target matrix canno be obtained since the length of array is not a perfect square. 的本地化字符串。
+        ///   查找类似 The diagonal accessor of this matrix cannot be obtained since the it is not a square matrix. 的本地化字符串。
+        /// </summary>
+        internal static string MatrixSquare {
+            get {
+                return ResourceManager.GetString("MatrixSquare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The size of the target matrix cannot be obtained since the length of array is not a perfect square. 的本地化字符串。
         /// </summary>
         internal static string PerfectSquare {
             get {

@@ -196,7 +196,7 @@ namespace Althea.Linq
 
 		private readonly T data;
 
-		public T this[int index] => this.hasValue && index == 0 ? this.data : throw new ArgumentOutOfRangeException(nameof(index));
+		public T this[int index] => this.hasValue && index == 0 ? this.data : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 
 		public int Count => this.hasValue ? 1 : 0;
 
@@ -359,7 +359,7 @@ namespace Althea.Linq
 		#region basic
 		private readonly T data1, data2;
 
-		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : throw new ArgumentOutOfRangeException(nameof(index));
+		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 
 		public int Count => 2;
 
@@ -534,7 +534,7 @@ namespace Althea.Linq
 		#region basic
 		private readonly T data1, data2, data3;
 
-		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : index == 2 ? data3 : throw new ArgumentOutOfRangeException(nameof(index));
+		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : index == 2 ? data3 : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 
 		public int Count => 3;
 

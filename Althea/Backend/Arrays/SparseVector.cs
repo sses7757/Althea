@@ -45,20 +45,20 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray,T defaultValue = default) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue) { }
 
-		private static SparseVector<T, TInd> CreateFunction(long length, long nonDefaults, SparseVectorFormat format, T defaultValue)
+		private SparseVector<T, TInd> CreateFunction(long length, long nonDefaults, SparseVectorFormat format, T defaultValue)
 		{
 			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.MustPositive);
 			if (nonDefaults <= 0)
-				throw new ArgumentOutOfRangeException(nameof(nonDefaults), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(nonDefaults), nonDefaults, Resources.Parameter.MustPositive);
 			if (format != SparseVectorFormat.Coordinated)
-				throw new ArgumentOutOfRangeException(nameof(format), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 
 			Storage<T>? value = null; Storage<TInd>? index = null;
 			try
 			{
-				value = Storage<T>.Create(, nonDefaults);
-				index = Storage<TInd>.Create(, nonDefaults);
+				value = Storage<T>.Create(this.Storage[0].Location, nonDefaults);
+				index = Storage<TInd>.Create(this.IndexStorage[0].Location, nonDefaults);
 				return new SparseVector<T, TInd>(length, value, index, defaultValue);
 			}
 			catch (Exception)
@@ -188,7 +188,7 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
 			if (other is SparseVector<T, TInd> sparse)
-				return (SparseVector<T, TInd>)LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated, createFunc: CreateFunction);
+				return (SparseVector<T, TInd>)LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated, createFunc: this.CreateFunction);
 			else if (other is DenseVector<T>)
 				return other.ApplyToClone(d => LAS.VectorSparseAddToDense(Scalars<T>.One, this, d.Storage));
 			else
@@ -211,15 +211,18 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentNullException(nameof(matrix));
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
-			if (vector.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NCols : matrix.NRows))
+			if (vector.Length != (operation == MatrixOperation.None ? matrix.NCols : matrix.NRows))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
-			if (this.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NRows : matrix.NCols))
+			if (this.Length != (operation == MatrixOperation.None ? matrix.NRows : matrix.NCols))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
 
 			Storage<T>? dense = null;
 			try
 			{
-				dense = Storage<T>.Create(, this.Length);
+				if (vector is DenseVector<T> d)
+					dense = Althea.Storage.StorageFactory<T>.CreateAlike(d.Storage);
+				else
+					dense = Storage<T>.Create(this.Storage[0].Location, this.Length);
 				this.ToDense(dense);
 				var dnVec = new DenseVector<T>(dense);
 				dnVec.AddByMatrixMultiplyVector(matrix, vector, α, β, operation);

@@ -55,7 +55,7 @@ namespace Althea.Arrays
 			if (size.Length == 1 && size[0] == 0)
 				return;
 			if (size.Any(static s => s <= 0))
-				throw new ArgumentOutOfRangeException(nameof(size), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(size), size.ToArray(), Resources.Parameter.MustPositive);
 
 			this.m_size = new SizedFixedBuffer_128<long>(size);
 			this.m_length = size.Prod();

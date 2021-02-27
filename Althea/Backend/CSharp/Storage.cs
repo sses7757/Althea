@@ -216,13 +216,13 @@ namespace Althea.Backend.CSharp.Storage
 		protected override bool MemoryCopy2D_(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
 		{
 			if (sourceLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceLD), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(sourceLD), sourceLD, Parameter.MustPositive);
 			if (destinationLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(destinationLD), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(destinationLD), destinationLD, Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
 			if (height > sourceLD || height > destinationLD)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 			if (sourceLD * width > source.LengthInBytes)
@@ -290,9 +290,9 @@ namespace Althea.Backend.CSharp.Storage
 		{
 			long srcLen = source.LengthInBytes / Storage<T>.SizeOfT, dstLen = destination.LengthInBytes / Storage<T>.SizeOfT;
 			if (incrementSource <= 0 || incrementSource >= srcLen)
-				throw new ArgumentOutOfRangeException(nameof(incrementSource));
+				throw new ArgumentOutOfRangeException(nameof(incrementSource), incrementSource, Parameter.InvalidValue);
 			if (incrementDestination <= 0 || incrementDestination >= dstLen)
-				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
+				throw new ArgumentOutOfRangeException(nameof(incrementDestination), incrementDestination, Parameter.InvalidValue);
 
 			// shortcut
 			if (incrementSource == 1 && incrementDestination == 1)
@@ -461,11 +461,11 @@ namespace Althea.Backend.CSharp.Storage
 		protected override bool ToManaged2D_<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0)
 		{
 			if (leadDim == 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), leadDim, Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
 			if (height > leadDim || height > destinationLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 
@@ -499,11 +499,11 @@ namespace Althea.Backend.CSharp.Storage
 		protected override bool FromManaged2D_<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim)
 		{
 			if (leadDim == 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), leadDim, Parameter.MustPositive);
 			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
 			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
 			if (height > leadDim || height > valuesLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 
