@@ -9,7 +9,7 @@ using SOLVER = Althea.Solver.API;
 using Sparse = Althea.SparseBlas.API;
 
 
-namespace Althea.Arrays
+namespace Althea.Backend.Arrays
 {
 
 	/// <summary>
@@ -186,14 +186,14 @@ namespace Althea.Arrays
 		public override DenseMatrix<T> ToDense(SparseMatrixToDenseAlgorithm algorithm = default) => this;
 
 		/// <summary>
-		/// Convert this matrix to a <see cref="SparseMatrix{T}"/>. The out-of-place conversion may be performed.
+		/// Convert this matrix to a <see cref="AbstractSparseMatrix{T}"/>. The out-of-place conversion may be performed.
 		/// </summary>
 		/// <param name="threshold">values smaller than threshold are regarded as zeros, must be larger than or equal to 0</param>
-		/// <param name="targetFormat">The target <see cref="SparseMatrix{T}"/>'s format, see <see cref="SparseMatrixFormat"/></param>
+		/// <param name="targetFormat">The target <see cref="AbstractSparseMatrix{T}"/>'s format, see <see cref="SparseMatrixFormat"/></param>
 		/// <param name="algorithm">The <see cref="DenseMatrixToSparseAlgorithm"/> to use, default is null which means that the default algorithms corresponding to the <paramref name="targetFormat"/> and <typeparamref name="T"/> will be used</param>
-		/// <returns>Converted <see cref="SparseMatrix{T}"/></returns>
+		/// <returns>Converted <see cref="AbstractSparseMatrix{T}"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="threshold"/> &lt; 0 or the <paramref name="algorithm"/> is incompatible with <typeparamref name="T"/></exception>
-		public override SparseMatrix<T> ToSparse(float threshold = default, SparseMatrixFormat targetFormat = SparseMatrixFormat.Any, DenseMatrixToSparseAlgorithm? algorithm = null)
+		public override AbstractSparseMatrix<T> ToSparse(float threshold = default, SparseMatrixFormat targetFormat = SparseMatrixFormat.Any, DenseMatrixToSparseAlgorithm? algorithm = null)
 		{
 			if (threshold < 0)
 				throw new ArgumentOutOfRangeException(nameof(threshold), threshold, threshold, Resource.ParaCannotNegative);
@@ -209,7 +209,7 @@ namespace Althea.Arrays
 				throw new ArgumentOutOfRangeException(nameof(algorithm), algorithm);
 
 			// perform conversion
-			SparseMatrix<T> mat = null;
+			AbstractSparseMatrix<T> mat = null;
 			try
 			{
 				switch (algorithm.Value)
@@ -254,7 +254,7 @@ namespace Althea.Arrays
 					case DenseMatrixToSparseAlgorithm.ViaVector:
 						var vec = this.ToVector() as DenseVector<T>;            // to dense vector
 						var spVec = vec.ToSparse(threshold);                    // to sparse vector
-						mat = spVec.ToMatrix(this.NRows) as SparseMatrix<T>;  // to COO matrix
+						mat = spVec.ToMatrix(this.NRows) as AbstractSparseMatrix<T>;  // to COO matrix
 						break;
 					default:
 						throw new NotSupportedException($"The algorithm {algorithm.Value}" + Resource.BaseNotSupport);
@@ -893,15 +893,15 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, from <see cref="IMatrix{TMat, T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">The <see cref="SparseMatrix{T}"/> A, can be null</param>
+		/// <param name="A">The <see cref="AbstractSparseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="AbstractSparseMatrix{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal returns error status</exception>
-		public void From_αA_Add_βB(SparseMatrix<T> A, SparseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void From_αA_Add_βB(AbstractSparseMatrix<T> A, AbstractSparseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			bool zeroA = α.Equals(Scalars<T>.Zero) || A is null || A == EmptySpMat;
 			bool zeroB = β.Equals(Scalars<T>.Zero) || B is null || B == EmptySpMat;
@@ -964,7 +964,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="α"/> is zero</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
-		public void Mulβ_AddBy_αAB(SparseMatrix<T> A, SparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void Mulβ_AddBy_αAB(AbstractSparseMatrix<T> A, AbstractSparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
 				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
@@ -991,7 +991,7 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, from <see cref="IMatrix{TMat, T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">The <see cref="SparseMatrix{T}"/> A, can be null</param>
+		/// <param name="A">The <see cref="AbstractSparseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
 		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B, can be null</param>
@@ -999,7 +999,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal returns error status</exception>
-		public void From_αA_Add_βB(SparseMatrix<T> A, DenseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void From_αA_Add_βB(AbstractSparseMatrix<T> A, DenseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			bool zeroA = α.Equals(Scalars<T>.Zero) || A is null || A == EmptyDnMat;
 			bool zeroB = β.Equals(Scalars<T>.Zero) || B is null || B == EmptyDnMat;
@@ -1029,14 +1029,14 @@ namespace Althea.Arrays
 		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="AbstractSparseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="α"/> is zero</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
-		public void Mulβ_AddBy_αAB(DenseMatrix<T> A, SparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void Mulβ_AddBy_αAB(DenseMatrix<T> A, AbstractSparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
 				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
@@ -1047,7 +1047,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$, from <see cref="IMatrix{TMat, T}.Mulβ_AddBy_αAB(TMat, TMat, T, T, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
-		/// <param name="A">The input <see cref="SparseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="AbstractSparseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
 		/// <param name="B">The input <see cref="DenseMatrix{T}"/> B</param>
@@ -1057,7 +1057,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="α"/> is zero</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
-		public void Mulβ_AddBy_αAB(SparseMatrix<T> A, DenseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void Mulβ_AddBy_αAB(AbstractSparseMatrix<T> A, DenseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (α.Equals(Scalars<T>.Zero))
 				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
@@ -1090,7 +1090,7 @@ namespace Althea.Arrays
 		/// Join the array of <see cref="VectorBase{T}"/> forming into a <see cref="MatrixBase{T}"/>
 		/// </summary>
 		/// <param name="vecs">The input array of <see cref="VectorBase{T}"/>, <see cref="SparseVector{T}"/> is not supported here</param>
-		/// <remarks>For <see cref="ISparseArray{T}"/>, please use <see cref="SparseMatrix{T}.FromColumnVectors(VectorBase{T}[])"/> instead.</remarks>
+		/// <remarks>For <see cref="ISparseArray{T}"/>, please use <see cref="AbstractSparseMatrix{T}.FromColumnVectors(VectorBase{T}[])"/> instead.</remarks>
 		public override void FromColumnVectors(VectorBase<T>[] vecs)
 		{
 			if (vecs is null)
@@ -1218,7 +1218,7 @@ namespace Althea.Arrays
 			if (zeroA && zeroB)
 				throw new ArgumentException(Resource.ParaCannotZero);
 			DenseMatrix<T> dA = A as DenseMatrix<T>, dB = B as DenseMatrix<T>;
-			SparseMatrix<T> sA = A as SparseMatrix<T>, sB = B as SparseMatrix<T>;
+			AbstractSparseMatrix<T> sA = A as AbstractSparseMatrix<T>, sB = B as AbstractSparseMatrix<T>;
 			if (dA is null && sA is null)
 			{
 				A.From_αA_Add_βB_Opposite(this, B, α, β, opA, opB);
@@ -1274,7 +1274,7 @@ namespace Althea.Arrays
 			if (α.Equals(Scalars<T>.Zero))
 				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			DenseMatrix<T> dA = A as DenseMatrix<T>, dB = B as DenseMatrix<T>;
-			SparseMatrix<T> sA = A as SparseMatrix<T>, sB = B as SparseMatrix<T>;
+			AbstractSparseMatrix<T> sA = A as AbstractSparseMatrix<T>, sB = B as AbstractSparseMatrix<T>;
 			if (dA is null && sA is null)
 			{
 				A.Mulβ_AddBy_αAB_Opposite(this, B, SideMode.Left, α, β, opA, opB);

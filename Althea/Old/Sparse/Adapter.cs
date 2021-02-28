@@ -15,7 +15,7 @@ namespace Althea.SparseBlas
 			return new SparseVectorWrapper<T>(vector.Storage, vector.IndexPointer);
 		}
 
-		internal static SparseMatrixWrapper<T> ToWrapper<T>(this SparseMatrix<T> matrix) where T : struct, IComparable<T>
+		internal static SparseMatrixWrapper<T> ToWrapper<T>(this AbstractSparseMatrix<T> matrix) where T : struct, IComparable<T>
 		{
 			return new SparseMatrixWrapper<T>(matrix.Storage, matrix.RowPointer, matrix.ColumnPointer);
 		}

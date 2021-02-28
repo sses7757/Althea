@@ -261,7 +261,7 @@ namespace Althea.Arrays
 		/// <returns>the created <see cref="MatrixBase{T}"/></returns>
 		public static MatrixBase<T> FromIndexedArray<T>(T[] array, int[] rowIndex, int[] columnIndex, int rows = 0, int columns = 0, bool onHost = false) where T : struct, IComparable<T>
 		{
-			return (SparseMatrix<T>)(array, rowIndex, columnIndex, rows == 0 ? rowIndex.Max() : rows, columns == 0 ? columnIndex.Max() : columns, SparseMatrixFormat.COOC, onHost);
+			return (AbstractSparseMatrix<T>)(array, rowIndex, columnIndex, rows == 0 ? rowIndex.Max() : rows, columns == 0 ? columnIndex.Max() : columns, SparseMatrixFormat.COOC, onHost);
 		}
 		#endregion
 
@@ -462,12 +462,12 @@ namespace Althea.Arrays
 
 	internal sealed class SparseMatrixFactory : IArrayFactory
 	{
-		private const string RowIndexName = nameof(SparseMatrix<int>.RowPointer);
-		private const string ColumnIndexName = nameof(SparseMatrix<int>.ColumnPointer);
+		private const string RowIndexName = nameof(AbstractSparseMatrix<int>.RowPointer);
+		private const string ColumnIndexName = nameof(AbstractSparseMatrix<int>.ColumnPointer);
 
-		private const string NonZerosName = nameof(SparseMatrix<int>.NonZero);
-		private const string HermitianName = nameof(SparseMatrix<int>.Hermitian);
-		private const string FormatName = nameof(SparseMatrix<int>.Format);
+		private const string NonZerosName = nameof(AbstractSparseMatrix<int>.NonZero);
+		private const string HermitianName = nameof(AbstractSparseMatrix<int>.Hermitian);
+		private const string FormatName = nameof(AbstractSparseMatrix<int>.Format);
 
 		private static (long nnz, SparseMatrixFormat format, bool herm) Check(IReadOnlyList<long> size, IReadOnlyDictionary<string, object> otherInfo)
 		{
@@ -616,16 +616,16 @@ namespace Althea.Arrays
 		public ValueArray<T> CreateArray<T>(IReadOnlyList<long> size, bool onHost, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (nnz, format, herm) = Check(size, otherInfo);
-			return new SparseMatrix<T>(size[0], size[1], nnz, format, onHost, herm);
+			return new AbstractSparseMatrix<T>(size[0], size[1], nnz, format, onHost, herm);
 		}
 
 		public ValueArray<T> ReconstructArray<T>(IReadOnlyList<long> size, IReadOnlyDictionary<string, IStorage> pointers, IReadOnlyDictionary<string, object> otherInfo = null) where T : struct, IComparable<T>
 		{
 			var (format, herm, value, row, col) = Check<T>(size, pointers, otherInfo);
-			return new SparseMatrix<T>(size[0], size[1], value, row, col, format, herm);
+			return new AbstractSparseMatrix<T>(size[0], size[1], value, row, col, format, herm);
 		}
 
-		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(SparseMatrix<T> mat) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, IStorage> GetPointers<T>(AbstractSparseMatrix<T> mat) where T : struct, IComparable<T>
 		{
 			return new Dictionary<string, IStorage>
 			{
@@ -635,7 +635,7 @@ namespace Althea.Arrays
 			};
 		}
 
-		internal static IReadOnlyDictionary<string, object> GetOtherInfo<T>(SparseMatrix<T> mat) where T : struct, IComparable<T>
+		internal static IReadOnlyDictionary<string, object> GetOtherInfo<T>(AbstractSparseMatrix<T> mat) where T : struct, IComparable<T>
 		{
 			return new Dictionary<string, object>
 			{

@@ -1044,6 +1044,30 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Returns a reference to the element of the span at index 0.
+		/// </summary>
+		/// <typeparam name="T">The type of items in the span.</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> from which the reference is retrieved.</param>
+		/// <returns>A reference to the element at index 0.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T Ref<T>(this Span<T> span)
+		{
+			return ref MemoryMarshal.GetReference(span);
+		}
+
+		/// <summary>
+		/// Returns a reference to the element of the span at index 0.
+		/// </summary>
+		/// <typeparam name="T">The type of items in the span.</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> from which the reference is retrieved.</param>
+		/// <returns>A reference to the element at index 0.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T Ref<T>(this ReadOnlySpan<T> span)
+		{
+			return ref MemoryMarshal.GetReference(span);
+		}
+
+		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
 		/// </summary>
 		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
@@ -1051,16 +1075,17 @@ namespace Althea.Linq
 		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static ReadOnlySpan<TTo> UncheckAs<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
 		{
 			if (sizeof(TTo) == sizeof(TFrom))
 			{
-				return new ReadOnlySpan<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), span.Length);
+				return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), span.Length);
 			}
 			long size = (long)span.Length * sizeof(TFrom);
 			if (size % sizeof(TTo) != 0)
 				throw new ArgumentException(Other.CannotDivide);
-			return new ReadOnlySpan<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), (int)(size / sizeof(TTo)));
+			return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), (int)(size / sizeof(TTo)));
 		}
 
 		/// <summary>
@@ -1071,16 +1096,17 @@ namespace Althea.Linq
 		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static Span<TTo> UncheckAs<TFrom, TTo>(this Span<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
 		{
 			if (sizeof(TTo) == sizeof(TFrom))
 			{
-				return new Span<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), span.Length);
+				return MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), span.Length);
 			}
 			long size = (long)span.Length * sizeof(TFrom);
 			if (size % sizeof(TTo) != 0)
 				throw new ArgumentException(Other.CannotDivide);
-			return new Span<TTo>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), (int)(size / sizeof(TTo)));
+			return MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), (int)(size / sizeof(TTo)));
 		}
 
 		/// <summary>
@@ -1091,6 +1117,7 @@ namespace Althea.Linq
 		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		/// <exception cref="ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ReadOnlySpan<TTo> As<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : struct where TTo : struct
 		{
 			return MemoryMarshal.Cast<TFrom, TTo>(span);
@@ -1103,6 +1130,7 @@ namespace Althea.Linq
 		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
 		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<TTo> As<TFrom, TTo>(this Span<TFrom> span) where TFrom : struct where TTo : struct
 		{
 			return MemoryMarshal.Cast<TFrom, TTo>(span);
@@ -1121,31 +1149,28 @@ namespace Althea.Linq
 		/// Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
 		/// </code>
 		/// </example>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> AsReferenceType<T>(this Span<IntPtr> span) where T : class
 		{
 			return MemoryMarshal.CreateSpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
 		}
 
 		/// <summary>
-		/// Returns a reference to the element of the span at index 0.
+		/// Cast the given <paramref name="span"/> of <see cref="IntPtr"/> to a <see cref="Span{T}"/> of reference-type <typeparamref name="T"/>
 		/// </summary>
-		/// <typeparam name="T">The type of items in the span.</typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> from which the reference is retrieved.</param>
-		/// <returns>A reference to the element at index 0.</returns>
-		public static ref T Ref<T>(this Span<T> span)
+		/// <typeparam name="T">The reference type to cast to</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> of <see cref="IntPtr"/> to cast from</param>
+		/// <returns>The <see cref="Span{T}"/> of reference-type <typeparamref name="T"/> casted from <paramref name="span"/></returns>
+		/// <example>
+		/// <code>
+		/// Span&lt;IntPtr&gt; span = stackalloc IntPtr[5];<br/>
+		/// Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
+		/// </code>
+		/// </example>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<T> AsReferenceType<T>(this ReadOnlySpan<IntPtr> span) where T : class
 		{
-			return ref MemoryMarshal.GetReference(span);
-		}
-
-		/// <summary>
-		/// Returns a reference to the element of the span at index 0.
-		/// </summary>
-		/// <typeparam name="T">The type of items in the span.</typeparam>
-		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> from which the reference is retrieved.</param>
-		/// <returns>A reference to the element at index 0.</returns>
-		public static ref T Ref<T>(this ReadOnlySpan<T> span)
-		{
-			return ref MemoryMarshal.GetReference(span);
+			return MemoryMarshal.CreateSpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
 		}
 
 		/// <summary>
@@ -1154,6 +1179,7 @@ namespace Althea.Linq
 		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="span">span to get hash code</param>
 		/// <returns>the hash code of <paramref name="span"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int HashCodeOfSpan<T>(this ReadOnlySpan<T> span) where T : struct
 		{
 			if (span.IsEmpty)

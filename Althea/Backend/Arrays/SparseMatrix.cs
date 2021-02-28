@@ -9,7 +9,7 @@ using BLAS = Althea.Blas.API;
 using Sparse = Althea.SparseBlas.API;
 
 
-namespace Althea.Arrays
+namespace Althea.Backend.Arrays
 {
 	/// <summary>
 	/// The sparse matrix class that inherit the <see cref="MatrixBase{T}"/> and implements <see cref="ISparseArray{T}"/>.
@@ -58,7 +58,7 @@ namespace Althea.Arrays
 
 
 		#region initialize and destroy
-		private static (Storage<int> row, Storage<int> col) AllocateIndex(long leadDim, long secondDim, long nnz, SparseMatrixFormat format, SparseMatrix<T> mat, bool onHost, bool allocRow = true, bool allocCol = true)
+		private static (Storage<int> row, Storage<int> col) AllocateIndex(long leadDim, long secondDim, long nnz, SparseMatrixFormat format, AbstractSparseMatrix<T> mat, bool onHost, bool allocRow = true, bool allocCol = true)
 		{
 			try
 			{
@@ -85,7 +85,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Empty constructor
 		/// </summary>
-		public SparseMatrix() : this(0, 0, 0, default, onHost: false) { }
+		public AbstractSparseMatrix() : this(0, 0, 0, default, onHost: false) { }
 
 		/// <summary>
 		/// Matrix constructor with all pointers allocated inside.
@@ -98,7 +98,7 @@ namespace Althea.Arrays
 		/// <param name="onHost">allocate on host memory or device memory</param>
 		/// <exception cref="ArgumentException">if <c>3 * <paramref name="nonZeros"/> ≥ <paramref name="rows"/> * <paramref name="cols"/></c> and <paramref name="rows"/> * <paramref name="cols"/> &gt; <see cref="GlobalSettings.SparseMatrixUncheck"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="format"/> is not atomic</exception>
-		public SparseMatrix(long rows, long cols, long nonZeros, SparseMatrixFormat format, bool onHost = false, bool herm = false) : base(nonZeros, rows, cols, onHost, herm)
+		public AbstractSparseMatrix(long rows, long cols, long nonZeros, SparseMatrixFormat format, bool onHost = false, bool herm = false) : base(nonZeros, rows, cols, onHost, herm)
 		{
 			if (rows == 0 || cols == 0 || nonZeros == 0)
 				return;
@@ -130,7 +130,7 @@ namespace Althea.Arrays
 		/// <param name="refRow"><paramref name="rowPtr"/> a reference or not</param>
 		/// <exception cref="ArgumentException">if <c>3 * <see cref="NonZero"/> ≥ <paramref name="rows"/> * <paramref name="cols"/></c> and <paramref name="rows"/> * <paramref name="cols"/> &gt; <see cref="GlobalSettings.SparseMatrixUncheck"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="format"/> is not atomic</exception>
-		public SparseMatrix(long rows, long cols, Storage<T> value, Storage<int> rowPtr, Storage<int> colPtr, SparseMatrixFormat format, bool herm = false, bool refVal = false, bool refRow = false, bool refCol = false) : base(refVal ? value + 0 : value, rows, cols, herm: herm)
+		public AbstractSparseMatrix(long rows, long cols, Storage<T> value, Storage<int> rowPtr, Storage<int> colPtr, SparseMatrixFormat format, bool herm = false, bool refVal = false, bool refRow = false, bool refCol = false) : base(refVal ? value + 0 : value, rows, cols, herm: herm)
 		{
 			if (!format.IsAtomic())
 			{
@@ -180,7 +180,7 @@ namespace Althea.Arrays
 		/// <param name="refRow"><paramref name="rowPtr"/> a reference or not</param>
 		/// <exception cref="ArgumentException">if <c>3 * <see cref="NonZero"/> ≥ <paramref name="rows"/> * <paramref name="cols"/></c> and <paramref name="rows"/> * <paramref name="cols"/> &gt; <see cref="GlobalSettings.SparseMatrixUncheck"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="format"/> is not atomic</exception>
-		public SparseMatrix(ValueArray<T> refArray, long rows, long cols, Storage<int> rowPtr, Storage<int> colPtr, SparseMatrixFormat format, bool herm = false, long offsetRef = 0, bool refRow = false, bool refCol = false) : base(refArray, refArray.ActualLength, rows, cols, herm, offsetRef)
+		public AbstractSparseMatrix(ValueArray<T> refArray, long rows, long cols, Storage<int> rowPtr, Storage<int> colPtr, SparseMatrixFormat format, bool herm = false, long offsetRef = 0, bool refRow = false, bool refCol = false) : base(refArray, refArray.ActualLength, rows, cols, herm, offsetRef)
 		{
 			if (!format.IsAtomic())
 			{
@@ -213,9 +213,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Sparse matrix copy constructor.
 		/// </summary>
-		/// <param name="M">The <see cref="SparseMatrix{T}"/> to copy</param>
+		/// <param name="M">The <see cref="AbstractSparseMatrix{T}"/> to copy</param>
 		/// <param name="copyIndex">copy sparse pattern indices or not</param>
-		public SparseMatrix(SparseMatrix<T> M, bool copyIndex) : base(M != null ? M.NonZero : throw new ArgumentNullException(nameof(M), Resource.ArrayCannotNull), M.NRows, M.NCols, onHost: M.OnHost, herm: M.Hermitian)
+		public AbstractSparseMatrix(AbstractSparseMatrix<T> M, bool copyIndex) : base(M != null ? M.NonZero : throw new ArgumentNullException(nameof(M), Resource.ArrayCannotNull), M.NRows, M.NCols, onHost: M.OnHost, herm: M.Hermitian)
 		{
 			this.Format = M.Format;
 			try
@@ -257,7 +257,7 @@ namespace Althea.Arrays
 		/// <param name="format"><see cref="SparseMatrixFormat"/> of this sparse matrix</param>
 		/// <param name="herm">Hermitian or not</param>
 		/// <param name="offset">offset to the pointer of <paramref name="refArray"/></param>
-		public SparseMatrix(ValueArray<T> refArray, long rows, long cols, SparseMatrixFormat format, bool herm = false, long offset = 0) : base(refArray, refArray.ActualLength, rows, cols, herm, offset)
+		public AbstractSparseMatrix(ValueArray<T> refArray, long rows, long cols, SparseMatrixFormat format, bool herm = false, long offset = 0) : base(refArray, refArray.ActualLength, rows, cols, herm, offset)
 		{
 			this.Format = format;
 			(this.RowPointer, this.ColumnPointer) = AllocateIndex(rows, cols, this.NonZero, format, this, this.OnHost);
@@ -507,7 +507,7 @@ namespace Althea.Arrays
 		/// <param name="array">The target <see cref="ISparseArray{T}"/> to compare</param>
 		public void DisposeExclude(ISparseArray<T> array)
 		{
-			if (this == (array as SparseMatrix<T>))
+			if (this == (array as AbstractSparseMatrix<T>))
 				return;
 			if (array is AbstractSparseVector<T> sv)
 			{
@@ -516,7 +516,7 @@ namespace Althea.Arrays
 				this.RowPointer.Dispose();
 				this.ColumnPointer.Dispose();
 			}
-			else if (array is SparseMatrix<T> sm)
+			else if (array is AbstractSparseMatrix<T> sm)
 			{
 				if (this.Storage != sm.Storage)
 					this.Storage.Dispose();
@@ -545,10 +545,10 @@ namespace Althea.Arrays
 		/// Prune this sparse matrix of <see cref="SparseMatrixFormat.Compressed"/> to a new one.
 		/// </summary>
 		/// <param name="threshold">values smaller than threshold are regarded as zeros, must be larger than or equal to 0</param>
-		/// <returns>The pruned <see cref="SparseMatrix{T}"/>.</returns>
+		/// <returns>The pruned <see cref="AbstractSparseMatrix{T}"/>.</returns>
 		/// <exception cref="NotSupportedException">if this matrix is not of <see cref="SparseMatrixFormat.Compressed"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="threshold"/> ≤ 0</exception>
-		public SparseMatrix<T> Prune(float threshold = default)
+		public AbstractSparseMatrix<T> Prune(float threshold = default)
 		{
 			if ((this.Format & SparseMatrixFormat.Compressed) != 0)
 				return Sparse.MatrixCompressedPrune(this, threshold);
@@ -576,7 +576,7 @@ namespace Althea.Arrays
 		/// <param name="disposeThis">dispose this matrix during the progress or not.</param>
 		/// <returns>Converted sparse matrix with format <paramref name="target"/>.</returns>
 		/// <remarks>If the <paramref name="target"/> is compatible with <see cref="Format"/>, this matrix will be returned directly leaving <paramref name="disposeThis"/> ignored.</remarks>
-		public SparseMatrix<T> ToFormat(SparseMatrixFormat target, bool disposeThis = false)
+		public AbstractSparseMatrix<T> ToFormat(SparseMatrixFormat target, bool disposeThis = false)
 		{
 			if ((target & this.Format) != 0) // early return if target
 				return this;
@@ -601,7 +601,7 @@ namespace Althea.Arrays
 		/// </list>
 		/// Other transpositions with different <paramref name="target"/> formats are done by using <see cref="ToFormat"/> first.
 		/// </remarks>
-		public SparseMatrix<T> Transpose(SparseMatrixFormat target = SparseMatrixFormat.Any)
+		public AbstractSparseMatrix<T> Transpose(SparseMatrixFormat target = SparseMatrixFormat.Any)
 		{
 			return Sparse.MatrixSparseFormatConvert(this, target, MatrixOperation.Transpose);
 		}
@@ -613,8 +613,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="op"><see cref="PowerOperation"/> to apply</param>
 		/// <param name="target">target <see cref="SparseMatrixFormat"/></param>
-		/// <returns>A new <see cref="SparseMatrix{T}"/> with <paramref name="op"/> applied and format <paramref name="target"/> and all three arrays are correctly referenced to this one.</returns>
-		public SparseMatrix<T> ApplyOpWithFormat(PowerOperation op, SparseMatrixFormat target)
+		/// <returns>A new <see cref="AbstractSparseMatrix{T}"/> with <paramref name="op"/> applied and format <paramref name="target"/> and all three arrays are correctly referenced to this one.</returns>
+		public AbstractSparseMatrix<T> ApplyOpWithFormat(PowerOperation op, SparseMatrixFormat target)
 		{
 			switch (op)
 			{
@@ -623,7 +623,7 @@ namespace Althea.Arrays
 				case PowerOperation.Transpose:
 					return Sparse.MatrixSparseFormatConvert(this, target, MatrixOperation.Transpose);
 				case PowerOperation.Dagger:
-					return base.ConjugateOutOfPlace() as SparseMatrix<T>;
+					return base.ConjugateOutOfPlace() as AbstractSparseMatrix<T>;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(op), op);
 			}
@@ -634,7 +634,7 @@ namespace Althea.Arrays
 
 
 		#region checkers
-		private bool CanOverwrite(SparseMatrix<T> overwrite, SparseMatrixFormat format = (SparseMatrixFormat)(-1), long rows = 0, long cols = 0, long nnz = 0)
+		private bool CanOverwrite(AbstractSparseMatrix<T> overwrite, SparseMatrixFormat format = (SparseMatrixFormat)(-1), long rows = 0, long cols = 0, long nnz = 0)
 		{
 			if (overwrite is null || overwrite == EmptySpMat)
 				return false;
@@ -698,7 +698,7 @@ namespace Althea.Arrays
 		#region sparse matrix sparse vector restricted
 		#region other methods
 		/// <summary>
-		/// Join the array of <see cref="SparseVector{T}"/> forming into a <see cref="SparseMatrix{T}"/>. From <see cref="IMatrix{TMat, TVec, T}.FromColumnVectors"/>.
+		/// Join the array of <see cref="SparseVector{T}"/> forming into a <see cref="AbstractSparseMatrix{T}"/>. From <see cref="IMatrix{TMat, TVec, T}.FromColumnVectors"/>.
 		/// </summary>
 		/// <param name="vecs">The input array of <see cref="SparseVector{T}"/></param>
 		public void FromColumnVectors(AbstractSparseVector<T>[] vecs)
@@ -733,10 +733,10 @@ namespace Althea.Arrays
 		/// Get a new matrix by the column index range, from <see cref="IMatrix{TMat, T}.GetColumnRange(Range, TMat)"/>.
 		/// </summary>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these columns. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.ColumnMajor"/></exception>
-		public SparseMatrix<T> GetColumnRange(Range columnRange, SparseMatrix<T> overwrite = null)
+		public AbstractSparseMatrix<T> GetColumnRange(Range columnRange, AbstractSparseMatrix<T> overwrite = null)
 		{
 			var (_, _, from, count) = CheckRange(Range.All, columnRange);
 			
@@ -752,7 +752,7 @@ namespace Althea.Arrays
 				Sparse.IndexAddScalar(newColPtr, -RT.CopyOut(newColPtr), count + 1);
 				if (!CanOverwrite(overwrite, format: this.Format, rows: this.NRows, cols: count, nnz: newNNZ))
 				{
-					return new SparseMatrix<T>(this, this.NRows, count, offsetRef: fromOffset, rowPtr: this.RowPointer + fromOffset, colPtr: newColPtr, format: this.Format, herm: this.Hermitian);
+					return new AbstractSparseMatrix<T>(this, this.NRows, count, offsetRef: fromOffset, rowPtr: this.RowPointer + fromOffset, colPtr: newColPtr, format: this.Format, herm: this.Hermitian);
 				}
 				else
 				{
@@ -770,7 +770,7 @@ namespace Althea.Arrays
 				var newNNZ = ub - lb;
 				if (!CanOverwrite(overwrite, format: this.Format, rows: this.NRows, cols: count, nnz: newNNZ))
 				{
-					return new SparseMatrix<T>(this, this.NRows, count, offsetRef: lb, rowPtr: this.RowPointer + lb, colPtr: this.ColumnPointer + lb, format: this.Format);
+					return new AbstractSparseMatrix<T>(this, this.NRows, count, offsetRef: lb, rowPtr: this.RowPointer + lb, colPtr: this.ColumnPointer + lb, format: this.Format);
 				}
 				else
 				{
@@ -788,10 +788,10 @@ namespace Althea.Arrays
 		/// Get a new matrix by the row index range, from <see cref="IMatrix{TMat, T}.GetRowRange(Range, TMat)"/>.
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a ref matrix</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a ref matrix</param>
 		/// <returns>A matrix constructed by these rows. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.RowMajor"/></exception>
-		public SparseMatrix<T> GetRowRange(Range rowRange, SparseMatrix<T> overwrite = null)
+		public AbstractSparseMatrix<T> GetRowRange(Range rowRange, AbstractSparseMatrix<T> overwrite = null)
 		{
 			var (from, count, _, _) = CheckRange(rowRange, Range.All);
 			if (this.Format == SparseMatrixFormat.CSR)
@@ -806,7 +806,7 @@ namespace Althea.Arrays
 				Sparse.IndexAddScalar(newRowPtr, -RT.CopyOut(newRowPtr), count + 1);
 				if (!CanOverwrite(overwrite, format: this.Format, rows: count, cols: this.NCols, nnz: newNNZ))
 				{
-					return new SparseMatrix<T>(this, count, this.NRows, offsetRef: fromOffset, rowPtr: newRowPtr, colPtr: this.ColumnPointer + fromOffset, format: this.Format, herm: this.Hermitian);
+					return new AbstractSparseMatrix<T>(this, count, this.NRows, offsetRef: fromOffset, rowPtr: newRowPtr, colPtr: this.ColumnPointer + fromOffset, format: this.Format, herm: this.Hermitian);
 				}
 				else
 				{
@@ -824,7 +824,7 @@ namespace Althea.Arrays
 				var newNNZ = ub - lb;
 				if (!CanOverwrite(overwrite, format: this.Format, rows: count, cols: this.NCols, nnz: newNNZ))
 				{
-					return new SparseMatrix<T>(this, count, this.NCols, offsetRef: lb, rowPtr: this.RowPointer + lb, colPtr: this.ColumnPointer + lb, format: this.Format);
+					return new AbstractSparseMatrix<T>(this, count, this.NCols, offsetRef: lb, rowPtr: this.RowPointer + lb, colPtr: this.ColumnPointer + lb, format: this.Format);
 				}
 				else
 				{
@@ -843,9 +843,9 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
 		/// <returns>A sub-matrix in this region. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		public SparseMatrix<T> GetSubmatrix(Range rowRange, Range columnRange, SparseMatrix<T> overwrite = null)
+		public AbstractSparseMatrix<T> GetSubmatrix(Range rowRange, Range columnRange, AbstractSparseMatrix<T> overwrite = null)
 		{
 			CheckRange(rowRange, columnRange);
 			switch (this.Format)
@@ -878,7 +878,7 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The output array of <see cref="SparseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.CSC"/></exception>
-		/// <remarks>The <see cref="SparseMatrixFormat.COOC"/> is no longer supported (compared to <see cref="GetColumnRange(Range, SparseMatrix{T})"/>) since the finding of index will be executed multiple times.</remarks>
+		/// <remarks>The <see cref="SparseMatrixFormat.COOC"/> is no longer supported (compared to <see cref="GetColumnRange(Range, AbstractSparseMatrix{T})"/>) since the finding of index will be executed multiple times.</remarks>
 		public AbstractSparseVector<T>[] GetColumns(Range colRange, AbstractSparseVector<T>[] overwrite = null)
 		{
 			if (this.Format != SparseMatrixFormat.CSC)
@@ -926,7 +926,7 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The output array of <see cref="SparseVector{T}"/> to overwrite, default null means creating ref vectors if possible</param>
 		/// <returns>An array of data type <see cref="SparseVector{T}"/>. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		/// <exception cref="InvalidOperationException">if this matrix is not of <see cref="SparseMatrixFormat.CSR"/></exception>
-		///  <remarks>The <see cref="SparseMatrixFormat.COOR"/> is no longer supported (compared to <see cref="GetRowRange(Range, SparseMatrix{T})"/>) since the finding of index will be executed multiple times.</remarks>
+		///  <remarks>The <see cref="SparseMatrixFormat.COOR"/> is no longer supported (compared to <see cref="GetRowRange(Range, AbstractSparseMatrix{T})"/>) since the finding of index will be executed multiple times.</remarks>
 		public AbstractSparseVector<T>[] GetRows(Range rowRange, AbstractSparseVector<T>[] overwrite = null)
 		{
 			if (this.Format != SparseMatrixFormat.CSR)
@@ -1100,9 +1100,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the transpose of this matrix, from <see cref="IMatrix{TMat, T}.Transpose(TMat)"/>;
 		/// </summary>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The transposed matrix out-of-place. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
-		public SparseMatrix<T> Transpose(SparseMatrix<T> overwrite = null)
+		public AbstractSparseMatrix<T> Transpose(AbstractSparseMatrix<T> overwrite = null)
 		{
 			if (this.Hermitian && this.IsRealType)
 				return this;
@@ -1122,9 +1122,9 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Calculate the conjugate transpose of this matrix, from <see cref="IMatrix{TMat, T}.ConjugateTranspose(TMat)"/>.
 		/// </summary>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a new matrix</param>
 		/// <returns>The conjugate transposed matrix out-of-place. If <paramref name="overwrite"/> does not fit, it will not be used.</returns>
-		public SparseMatrix<T> ConjugateTranspose(SparseMatrix<T> overwrite = null)
+		public AbstractSparseMatrix<T> ConjugateTranspose(AbstractSparseMatrix<T> overwrite = null)
 		{
 			if (this.Hermitian)
 				return this;
@@ -1148,11 +1148,11 @@ namespace Althea.Arrays
 		/// Symmetrize this matrix by adding its conjugate transpose out-of-place, from <see cref="IMatrix{TMat, T}.Symmetrize(bool, TMat)"/>.
 		/// </summary>
 		/// <param name="conjugateAtLast">return the original </param>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a new matrix; note that it cannot always be overwritten</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a new matrix; note that it cannot always be overwritten</param>
 		/// <returns>If <c><paramref name="conjugateAtLast"/> == false</c>: $B_{\text{result}}=\frac{A + A^H}{2}$; otherwise: $B_{\text{result}}=\frac{\bar{A} + A^T}{2}$</returns>
-		public SparseMatrix<T> Symmetrize(bool conjugateAtLast = false, SparseMatrix<T> overwrite = null)
+		public AbstractSparseMatrix<T> Symmetrize(bool conjugateAtLast = false, AbstractSparseMatrix<T> overwrite = null)
 		{
-			return base.Symmetrize(conjugateAtLast, overwrite) as SparseMatrix<T>;
+			return base.Symmetrize(conjugateAtLast, overwrite) as AbstractSparseMatrix<T>;
 		}
 		#endregion
 
@@ -1161,16 +1161,16 @@ namespace Althea.Arrays
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} + \beta B^{\text{opB}}$, from <see cref="IMatrix{TMat, T}.From_αA_Add_βB"/>.
 		/// </summary>
 		/// <param name="α">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> can be an invalid input</param>
-		/// <param name="A">The input <see cref="SparseMatrix{T}"/> A, can be null</param>
+		/// <param name="A">The input <see cref="AbstractSparseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="AbstractSparseMatrix{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal returns error status</exception>
 		/// <remarks>This operation cannot overwrite this matrix when both <paramref name="A"/> and <paramref name="B"/> are built-in matrix classes.</remarks>
-		public void From_αA_Add_βB(SparseMatrix<T> A, SparseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void From_αA_Add_βB(AbstractSparseMatrix<T> A, AbstractSparseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			bool zeroA = α.Equals(Scalars<T>.Zero) || A is null || A == EmptyDnMat;
 			bool zeroB = β.Equals(Scalars<T>.Zero) || B is null || B == EmptyDnMat;
@@ -1201,19 +1201,19 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute $C_{\text{this}} = \alpha A^{\text{opA}} B^{\text{opB}} + \beta C_{\text{this}}$, from <see cref="IMatrix{TMat, T}.Mulβ_AddBy_αAB"/>.
 		/// </summary>
-		/// <param name="A">The input <see cref="SparseMatrix{T}"/> A</param>
+		/// <param name="A">The input <see cref="AbstractSparseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="AbstractSparseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
-		/// <returns>A new <see cref="SparseMatrix{T}"/> as the result.</returns>
+		/// <returns>A new <see cref="AbstractSparseMatrix{T}"/> as the result.</returns>
 		/// <exception cref="ArgumentNullException">if any of the array is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="α"/> is zero</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
 		/// <remarks>This operation cannot overwrite this matrix when both <paramref name="A"/> and <paramref name="B"/> are built-in matrix classes.</remarks>
-		public void Mulβ_AddBy_αAB(SparseMatrix<T> A, SparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void Mulβ_AddBy_αAB(AbstractSparseMatrix<T> A, AbstractSparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (A is null || A == EmptyDnMat)
 				throw new ArgumentNullException(nameof(A), Resource.ArrayCannotNull);
@@ -1230,11 +1230,11 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Compute Kronecker product $A \otimes B$. If <paramref name="forceHerm"/> is true, then $(A \otimes B^H + A^H \otimes B)/2$ will be calculated. From <see cref="IMatrix{TMat, T}.KroneckerProd"/>.
 		/// </summary>
-		/// <param name="B">right <see cref="SparseMatrix{T}"/></param>
+		/// <param name="B">right <see cref="AbstractSparseMatrix{T}"/></param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">The <see cref="SparseMatrix{T}"/> to overwrite by result, default null</param>
-		/// <returns>The result of Kronecker product, a new <see cref="SparseMatrix{T}"/> or <paramref name="overwrite"/> if it is not null.</returns>
-		public SparseMatrix<T> KroneckerProd(SparseMatrix<T> B, bool forceHerm = true, SparseMatrix<T> overwrite = null)
+		/// <param name="overwrite">The <see cref="AbstractSparseMatrix{T}"/> to overwrite by result, default null</param>
+		/// <returns>The result of Kronecker product, a new <see cref="AbstractSparseMatrix{T}"/> or <paramref name="overwrite"/> if it is not null.</returns>
+		public AbstractSparseMatrix<T> KroneckerProd(AbstractSparseMatrix<T> B, bool forceHerm = true, AbstractSparseMatrix<T> overwrite = null)
 		{
 			if (B is null || B == EmptyDnMat)
 				throw new ArgumentNullException(nameof(B), Resource.ArrayCannotNull);
@@ -1243,12 +1243,12 @@ namespace Althea.Arrays
 			if (B.OnHost != this.OnHost)
 				throw new ArgumentException(Resource.RequireSamePos, nameof(B));
 
-			SparseMatrix<T> sA = null, sB = null, output = null;
+			AbstractSparseMatrix<T> sA = null, sB = null, output = null;
 			try
 			{
 				sB = B.ToFormat(SparseMatrixFormat.Coordinated);
 				sA = this.ToFormat(SparseMatrixFormat.Coordinated);
-				output = CanOverwrite(overwrite, format: SparseMatrixFormat.Coordinated, rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nnz: this.NonZero * B.NonZero) ? overwrite : new SparseMatrix<T>(rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nonZeros: this.NonZero * B.NonZero, format: SparseMatrixFormat.COOR, onHost: this.OnHost, herm: this.Hermitian && B.Hermitian);
+				output = CanOverwrite(overwrite, format: SparseMatrixFormat.Coordinated, rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nnz: this.NonZero * B.NonZero) ? overwrite : new AbstractSparseMatrix<T>(rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nonZeros: this.NonZero * B.NonZero, format: SparseMatrixFormat.COOR, onHost: this.OnHost, herm: this.Hermitian && B.Hermitian);
 
 				if ((this.Hermitian && B.Hermitian) || !forceHerm)
 				{
@@ -1258,14 +1258,14 @@ namespace Althea.Arrays
 				{
 					if (output != overwrite)
 						output.Dispose();
-					SparseMatrix<T> A_T = null, B_T = null;
+					AbstractSparseMatrix<T> A_T = null, B_T = null;
 					try
 					{
 						A_T = this.ApplyOpWithFormat(PowerOperation.Dagger, SparseMatrixFormat.Coordinated);
 						B_T = B.ApplyOpWithFormat(PowerOperation.Dagger, SparseMatrixFormat.Coordinated);
-						using var A_Bt = output.NewArrayAlike() as SparseMatrix<T>;
+						using var A_Bt = output.NewArrayAlike() as AbstractSparseMatrix<T>;
 						Sparse.SparseMatrixKronecker(sA, B_T, A_Bt, targetCOOC: false);
-						using var At_B = output.NewArrayAlike() as SparseMatrix<T>;
+						using var At_B = output.NewArrayAlike() as AbstractSparseMatrix<T>;
 						Sparse.SparseMatrixKronecker(A_T, sB, At_B, targetCOOC: false);
 						Sparse.MatrixSparseAddSparse(A_Bt, At_B, output, α: Scalars<T>.Half, β: Scalars<T>.Half);
 					}
@@ -1294,9 +1294,9 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="B">right <see cref="DenseMatrix{T}"/></param>
 		/// <param name="forceHerm">if the result is made Hermitian or not</param>
-		/// <param name="overwrite">The <see cref="SparseMatrix{T}"/> to overwrite by result, default null</param>
-		/// <returns>The result of Kronecker sum, a new <see cref="SparseMatrix{T}"/> (<paramref name="overwrite"/> will not be used)</returns>
-		public SparseMatrix<T> KroneckerSum(SparseMatrix<T> B, bool forceHerm = true, SparseMatrix<T> overwrite = null)
+		/// <param name="overwrite">The <see cref="AbstractSparseMatrix{T}"/> to overwrite by result, default null</param>
+		/// <returns>The result of Kronecker sum, a new <see cref="AbstractSparseMatrix{T}"/> (<paramref name="overwrite"/> will not be used)</returns>
+		public AbstractSparseMatrix<T> KroneckerSum(AbstractSparseMatrix<T> B, bool forceHerm = true, AbstractSparseMatrix<T> overwrite = null)
 		{
 			if (B is null || B == EmptyDnMat)
 				throw new ArgumentNullException(nameof(B), Resource.ArrayCannotNull);
@@ -1305,25 +1305,25 @@ namespace Althea.Arrays
 			if (B.OnHost != this.OnHost)
 				throw new ArgumentException(Resource.RequireSamePos, nameof(B));
 
-			SparseMatrix<T> output = null;
+			AbstractSparseMatrix<T> output = null;
 			try
 			{
-				output = CanOverwrite(overwrite, format: SparseMatrixFormat.Coordinated, rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nnz: this.NonZero * B.NonZero) ? overwrite : new SparseMatrix<T>(rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nonZeros: this.NonZero * B.NonZero, format: SparseMatrixFormat.COOR, onHost: this.OnHost, herm: this.Hermitian && B.Hermitian);
-				using var eyeA = new SparseMatrix<T>(this.NRows, this.NRows, this.NRows, SparseMatrixFormat.COOC, this.OnHost);
-				using var eyeB = new SparseMatrix<T>(B.NRows, B.NRows, B.NRows, SparseMatrixFormat.COOC, this.OnHost);
+				output = CanOverwrite(overwrite, format: SparseMatrixFormat.Coordinated, rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nnz: this.NonZero * B.NonZero) ? overwrite : new AbstractSparseMatrix<T>(rows: this.NRows * B.NRows, cols: this.NCols * B.NCols, nonZeros: this.NonZero * B.NonZero, format: SparseMatrixFormat.COOR, onHost: this.OnHost, herm: this.Hermitian && B.Hermitian);
+				using var eyeA = new AbstractSparseMatrix<T>(this.NRows, this.NRows, this.NRows, SparseMatrixFormat.COOC, this.OnHost);
+				using var eyeB = new AbstractSparseMatrix<T>(B.NRows, B.NRows, B.NRows, SparseMatrixFormat.COOC, this.OnHost);
 				eyeA.FillWithIdentity();
 				eyeB.FillWithIdentity();
 
 				if ((this.Hermitian && B.Hermitian) || !forceHerm)
 				{
-					SparseMatrix<T> sA = null, sB = null;
+					AbstractSparseMatrix<T> sA = null, sB = null;
 					try
 					{
 						sB = B.ToFormat(SparseMatrixFormat.Coordinated);
 						sA = this.ToFormat(SparseMatrixFormat.Coordinated);
-						using var A_eyeB = output.NewArrayAlike() as SparseMatrix<T>;
+						using var A_eyeB = output.NewArrayAlike() as AbstractSparseMatrix<T>;
 						Sparse.SparseMatrixKronecker(sA, eyeB, A_eyeB, targetCOOC: false);
-						using var eyeA_B = output.NewArrayAlike() as SparseMatrix<T>;
+						using var eyeA_B = output.NewArrayAlike() as AbstractSparseMatrix<T>;
 						Sparse.SparseMatrixKronecker(eyeA, sB, eyeA_B, targetCOOC: false);
 						Sparse.MatrixSparseAddSparse(A_eyeB, eyeA_B, output, α: Scalars<T>.One, β: Scalars<T>.One);
 					}
@@ -1335,16 +1335,16 @@ namespace Althea.Arrays
 				}
 				else
 				{
-					SparseMatrix<T> symmA = null, symmB = null;
+					AbstractSparseMatrix<T> symmA = null, symmB = null;
 					try
 					{
 						symmA = this.Symmetrize(overwrite: EmptySpMat);
 						symmA = symmA.ToFormat(SparseMatrixFormat.Coordinated, disposeThis: symmA != this);
 						symmB = B.Symmetrize(overwrite: EmptySpMat);
 						symmB = symmB.ToFormat(SparseMatrixFormat.Coordinated, disposeThis: symmB != B);
-						using var A_eyeB = output.NewArrayAlike() as SparseMatrix<T>;
+						using var A_eyeB = output.NewArrayAlike() as AbstractSparseMatrix<T>;
 						Sparse.SparseMatrixKronecker(symmA, eyeB, A_eyeB, targetCOOC: false);
-						using var eyeA_B = output.NewArrayAlike() as SparseMatrix<T>;
+						using var eyeA_B = output.NewArrayAlike() as AbstractSparseMatrix<T>;
 						Sparse.SparseMatrixKronecker(eyeA, symmB, eyeA_B, targetCOOC: false);
 						Sparse.MatrixSparseAddSparse(A_eyeB, eyeA_B, output, α: Scalars<T>.One, β: Scalars<T>.One);
 					}
@@ -1395,7 +1395,7 @@ namespace Althea.Arrays
 				using var newColPtr = Storage<int>.Create(length: count + 1, this.OnHost);
 				RT.CopyTo(source: this.ColumnPointer, dest: newColPtr, length: count + 1, offsetSource: from);
 				Sparse.IndexAddScalar(newColPtr, -RT.CopyOut(newColPtr), count + 1);
-				using var spMat = new SparseMatrix<T>(this, this.NRows, count, offsetRef: fromOffset, rowPtr: this.RowPointer + fromOffset, colPtr: newColPtr, format: this.Format, herm: this.Hermitian);
+				using var spMat = new AbstractSparseMatrix<T>(this, this.NRows, count, offsetRef: fromOffset, rowPtr: this.RowPointer + fromOffset, colPtr: newColPtr, format: this.Format, herm: this.Hermitian);
 				if (!CanOverwrite(overwrite, rows: this.NRows, cols: count))
 				{
 					return spMat.ToDense();
@@ -1428,7 +1428,7 @@ namespace Althea.Arrays
 				using var newRowPtr = Storage<int>.Create(length: count + 1, this.OnHost);
 				RT.CopyTo(source: this.RowPointer, dest: newRowPtr, length: count + 1, offsetSource: from);
 				Sparse.IndexAddScalar(newRowPtr, -RT.CopyOut(newRowPtr), count + 1);
-				using var spMat = new SparseMatrix<T>(this, count, this.NRows, offsetRef: fromOffset, rowPtr: newRowPtr, colPtr: this.ColumnPointer + fromOffset, format: this.Format, herm: this.Hermitian);
+				using var spMat = new AbstractSparseMatrix<T>(this, count, this.NRows, offsetRef: fromOffset, rowPtr: newRowPtr, colPtr: this.ColumnPointer + fromOffset, format: this.Format, herm: this.Hermitian);
 				if (!CanOverwrite(overwrite, rows: count, cols: this.NCols))
 				{
 					return spMat.ToDense();
@@ -1448,7 +1448,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="rowRange"><see cref="Range"/> of rows</param>
 		/// <param name="columnRange"><see cref="Range"/> of columns</param>
-		/// <param name="overwrite">The output <see cref="SparseMatrix{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
+		/// <param name="overwrite">The output <see cref="AbstractSparseMatrix{T}"/> to overwrite, default null means creating a ref matrix (if possible)</param>
 		/// <returns>A sub-matrix in this region. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
 		public DenseMatrix<T> GetSubmatrix(Range rowRange, Range columnRange, DenseMatrix<T> overwrite = null)
 		{
@@ -1858,14 +1858,14 @@ namespace Althea.Arrays
 		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A, can be null</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> can be an invalid input</param>
-		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B, can be null</param>
+		/// <param name="B">The input <see cref="AbstractSparseMatrix{T}"/> B, can be null</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <returns>A new <see cref="DenseMatrix{T}"/> as a result.</returns>
 		/// <exception cref="ArgumentNullException">if all of the array are null</exception>
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal returns error status</exception>
 		/// <remarks>This operation cannot overwrite this matrix when both <paramref name="A"/> and <paramref name="B"/> are built-in matrix classes.</remarks>
-		public void From_αA_Add_βB(DenseMatrix<T> A, SparseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void From_αA_Add_βB(DenseMatrix<T> A, AbstractSparseMatrix<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			bool zeroA = α.Equals(Scalars<T>.Zero) || A is null || A == EmptyDnMat;
 			bool zeroB = β.Equals(Scalars<T>.Zero) || B is null || B == EmptyDnMat;
@@ -1897,7 +1897,7 @@ namespace Althea.Arrays
 		/// <param name="A">The input <see cref="DenseMatrix{T}"/> A</param>
 		/// <param name="opA">operation to matrix <paramref name="A"/></param>
 		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		/// <param name="B">The input <see cref="SparseMatrix{T}"/> B</param>
+		/// <param name="B">The input <see cref="AbstractSparseMatrix{T}"/> B</param>
 		/// <param name="opB">operation to matrix <paramref name="B"/></param>
 		/// <param name="β">scalar of type <typeparamref name="T"/> with default 0</param>
 		/// <returns>A new <see cref="DenseMatrix{T}"/> as the result.</returns>
@@ -1906,7 +1906,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">if the arrays do not match in size</exception>
 		/// <exception cref="StatusException">if the internal calculation returns error status</exception>
 		/// <remarks>This operation cannot overwrite this matrix when both <paramref name="A"/> and <paramref name="B"/> are built-in matrix classes.</remarks>
-		public void Mulβ_AddBy_αAB(DenseMatrix<T> A, SparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public void Mulβ_AddBy_αAB(DenseMatrix<T> A, AbstractSparseMatrix<T> B, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			if (A is null || A == EmptyDnMat)
 				throw new ArgumentNullException(nameof(A), Resource.ArrayCannotNull);
@@ -1939,7 +1939,7 @@ namespace Althea.Arrays
 		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one if this array is on host memory</returns>
 		public override ValueArray<T> ToTheOtherMemory()
 		{
-			var newVec = new SparseMatrix<T>(this.NRows, this.NCols, this.NonZero, this.Format, !this.OnHost, this.Hermitian);
+			var newVec = new AbstractSparseMatrix<T>(this.NRows, this.NCols, this.NonZero, this.Format, !this.OnHost, this.Hermitian);
 			try
 			{
 				RT.CopyTo(source: this.Storage, dest: newVec.Storage, length: this.NonZero);
@@ -2000,19 +2000,19 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Convert this matrix to a <see cref="SparseMatrix{T}"/>. The out-of-place conversion may be performed.
+		/// Convert this matrix to a <see cref="AbstractSparseMatrix{T}"/>. The out-of-place conversion may be performed.
 		/// </summary>
 		/// <param name="threshold">values smaller than thresholds are regarded as zeros, must be larger than or equal to 0</param>
-		/// <param name="targetFormat">The target <see cref="SparseMatrix{T}"/>'s format, see <see cref="SparseMatrixFormat"/></param>
+		/// <param name="targetFormat">The target <see cref="AbstractSparseMatrix{T}"/>'s format, see <see cref="SparseMatrixFormat"/></param>
 		/// <param name="algorithm">The <see cref="DenseMatrixToSparseAlgorithm"/> to use, default is null which means that the default algorithms corresponding to the <paramref name="targetFormat"/> and <typeparamref name="T"/> will be used</param>
 		/// <returns>This matrix.</returns>
-		public override SparseMatrix<T> ToSparse(float threshold = default, SparseMatrixFormat targetFormat = SparseMatrixFormat.Any, DenseMatrixToSparseAlgorithm? algorithm = null) => this.ToFormat(targetFormat);
+		public override AbstractSparseMatrix<T> ToSparse(float threshold = default, SparseMatrixFormat targetFormat = SparseMatrixFormat.Any, DenseMatrixToSparseAlgorithm? algorithm = null) => this.ToFormat(targetFormat);
 
 		/// <summary>
 		/// Create a new array with same immutable properties as this one, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The array alike this one.</returns>
-		public override AbstractArray<T> NewArrayAlike() => new SparseMatrix<T>(this.NRows, this.NCols, this.NonZero, this.Format, this.Hermitian);
+		public override AbstractArray<T> NewArrayAlike() => new AbstractSparseMatrix<T>(this.NRows, this.NCols, this.NonZero, this.Format, this.Hermitian);
 
 		/// <summary>
 		/// Take out the data array as a new <see cref="DenseVector{T}"/>, override <see cref="ValueArray{T}.AsDenseVector"/>.
@@ -2025,7 +2025,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">The new data type</typeparam>
 		/// <returns>the new array</returns>
-		public override ValueArray<TOut> NewArrayAlike<TOut>() => new SparseMatrix<TOut>(this.NRows, this.NCols, this.NonZero, this.Format, this.Hermitian);
+		public override ValueArray<TOut> NewArrayAlike<TOut>() => new AbstractSparseMatrix<TOut>(this.NRows, this.NCols, this.NonZero, this.Format, this.Hermitian);
 
 		/// <summary>
 		/// Cast this array into another data type <typeparamref name="TOut"/>.
@@ -2036,7 +2036,7 @@ namespace Althea.Arrays
 		{
 			if (typeof(TOut) == typeof(T))
 				return this as AbstractSparseVector<TOut>;
-			var mat = base.DataTypeCast<TOut>() as SparseMatrix<TOut>;
+			var mat = base.DataTypeCast<TOut>() as AbstractSparseMatrix<TOut>;
 			try
 			{
 				RT.CopyTo(this.RowPointer, mat.RowPointer, this.RowIndexLength);
@@ -2065,7 +2065,7 @@ namespace Althea.Arrays
 		/// Override the <see cref="AbstractArray{T}.Clone"/>.
 		/// </summary>
 		/// <returns>Copied matrix</returns>
-		public override object Clone() => new SparseMatrix<T>(this, copyIndex: true);
+		public override object Clone() => new AbstractSparseMatrix<T>(this, copyIndex: true);
 
 		/// <summary>
 		/// Make this matrix actually Hermitian (if <see cref="MatrixBase{T}.Hermitian"/> is true now) by setting the lower half same as upper, override <see cref="MatrixBase{T}.CopyUpperToLower"/>.
@@ -2091,7 +2091,7 @@ namespace Althea.Arrays
 		{
 			if (overwrite != null && overwrite is DenseMatrix<T> dm)
 				return this.GetColumnRange(columnRange, dm);
-			else if (overwrite != null && overwrite is SparseMatrix<T> sm)
+			else if (overwrite != null && overwrite is AbstractSparseMatrix<T> sm)
 				return this.GetColumnRange(columnRange, sm);
 			else
 				return this.GetColumnRange(columnRange, EmptySpMat);
@@ -2107,7 +2107,7 @@ namespace Althea.Arrays
 		{
 			if (overwrite != null && overwrite is DenseMatrix<T> dm)
 				return this.GetRowRange(rowRange, dm);
-			else if (overwrite != null && overwrite is SparseMatrix<T> sm)
+			else if (overwrite != null && overwrite is AbstractSparseMatrix<T> sm)
 				return this.GetRowRange(rowRange, sm);
 			else
 				return this.GetRowRange(rowRange, EmptySpMat);
@@ -2124,7 +2124,7 @@ namespace Althea.Arrays
 		{
 			if (overwrite != null && overwrite is DenseMatrix<T> dm)
 				return this.GetSubmatrix(rowRange, columnRange, dm);
-			else if (overwrite != null && overwrite is SparseMatrix<T> sm)
+			else if (overwrite != null && overwrite is AbstractSparseMatrix<T> sm)
 				return this.GetSubmatrix(rowRange, columnRange, sm);
 			else
 				return this.GetSubmatrix(rowRange, columnRange, EmptySpMat);
@@ -2209,7 +2209,7 @@ namespace Althea.Arrays
 				return this;
 			if (overwrite is null || overwrite == EmptyDnMat)
 				return this.Transpose(EmptySpMat);
-			if (overwrite is SparseMatrix<T> sm)
+			if (overwrite is AbstractSparseMatrix<T> sm)
 				return this.Transpose(sm);
 			// else
 			return this.Transpose(EmptySpMat);
@@ -2230,7 +2230,7 @@ namespace Althea.Arrays
 
 			if (overwrite is null || overwrite == EmptyDnMat)
 				return this.ConjugateTranspose(EmptySpMat);
-			if (overwrite is SparseMatrix<T> sm)
+			if (overwrite is AbstractSparseMatrix<T> sm)
 				return this.ConjugateTranspose(sm);
 			// else
 			return this.ConjugateTranspose(EmptySpMat);
@@ -2263,7 +2263,7 @@ namespace Althea.Arrays
 				B = EmptyDnMat;
 
 			DenseMatrix<T> dA = A as DenseMatrix<T>, dB = B as DenseMatrix<T>;
-			SparseMatrix<T> sA = A as SparseMatrix<T>, sB = B as SparseMatrix<T>;
+			AbstractSparseMatrix<T> sA = A as AbstractSparseMatrix<T>, sB = B as AbstractSparseMatrix<T>;
 			if (dA is null && sA is null)
 			{
 				From_αA_Add_βB_Opposite(this, B, α, β, opA, opB);
@@ -2309,11 +2309,11 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// DO NOT Call this method since <see cref="SparseMatrix{T}"/> have no need to implement it.
+		/// DO NOT Call this method since <see cref="AbstractSparseMatrix{T}"/> have no need to implement it.
 		/// </summary>
 		protected internal override void From_αA_Add_βB_Opposite(MatrixBase<T> C, MatrixBase<T> B, T α = default, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			throw new NotImplementedException(string.Format(Resource.Culture, Resource.BuiltInClassImp, nameof(SparseMatrix<T>)));
+			throw new NotImplementedException(string.Format(Resource.Culture, Resource.BuiltInClassImp, nameof(AbstractSparseMatrix<T>)));
 		}
 
 		/// <summary>
@@ -2336,7 +2336,7 @@ namespace Althea.Arrays
 			if (α.Equals(Scalars<T>.Zero))
 				throw new ArgumentOutOfRangeException(nameof(α), α, α, Resource.ParaCannotZero);
 			DenseMatrix<T> dA = A as DenseMatrix<T>, dB = B as DenseMatrix<T>;
-			SparseMatrix<T> sA = A as SparseMatrix<T>, sB = B as SparseMatrix<T>;
+			AbstractSparseMatrix<T> sA = A as AbstractSparseMatrix<T>, sB = B as AbstractSparseMatrix<T>;
 			if (dA is null && sA is null)
 			{
 				Mulβ_AddBy_αAB_Opposite(this, B, SideMode.Left, α, β, opA, opB);
@@ -2364,11 +2364,11 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// DO NOT Call this method since <see cref="SparseMatrix{T}"/> have no need to implement it.
+		/// DO NOT Call this method since <see cref="AbstractSparseMatrix{T}"/> have no need to implement it.
 		/// </summary>
 		protected internal override void Mulβ_AddBy_αAB_Opposite(MatrixBase<T> C, MatrixBase<T> B, SideMode side, T α, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			throw new NotImplementedException(string.Format(Resource.Culture, Resource.BuiltInClassImp, nameof(SparseMatrix<T>)));
+			throw new NotImplementedException(string.Format(Resource.Culture, Resource.BuiltInClassImp, nameof(AbstractSparseMatrix<T>)));
 		}
 
 		/// <summary>
@@ -2376,7 +2376,7 @@ namespace Althea.Arrays
 		/// </summary>
 		internal protected override VectorBase<T> Mulx_AddTo_y(VectorBase<T> x, VectorBase<T> y, T α, T β = default, MatrixOperation op = MatrixOperation.None)
 		{
-			throw new NotImplementedException(string.Format(Resource.Culture, Resource.BuiltInClassImp, nameof(SparseMatrix<T>)));
+			throw new NotImplementedException(string.Format(Resource.Culture, Resource.BuiltInClassImp, nameof(AbstractSparseMatrix<T>)));
 		}
 
 		/// <summary>
@@ -2395,7 +2395,7 @@ namespace Althea.Arrays
 
 			if (B is DenseMatrix<T> dB)
 				return this.KroneckerProd(dB, forceHerm, overwrite);
-			else if (B is SparseMatrix<T> sB)
+			else if (B is AbstractSparseMatrix<T> sB)
 				return this.KroneckerProd(sB, forceHerm, overwrite);
 			else
 			{
@@ -2429,7 +2429,7 @@ namespace Althea.Arrays
 
 			if (B is DenseMatrix<T> dB)
 				return this.KroneckerSum(dB, forceHerm, overwrite);
-			else if (B is SparseMatrix<T> sB)
+			else if (B is AbstractSparseMatrix<T> sB)
 				return this.KroneckerSum(sB, forceHerm, overwrite);
 			else
 			{
@@ -2685,13 +2685,13 @@ namespace Althea.Arrays
 		/// Initialize from managed C# two-dimensional array to a sparse matrix of <see cref="SparseMatrixFormat.COOR"/>.
 		/// </summary>
 		/// <param name="input">The C# multidimensional array of type <typeparamref name="T"/> and on host indicator</param>
-		public static explicit operator SparseMatrix<T>((T[,] value, bool onHost) input) => (SparseMatrix<T>)(input.value, default(T), input.onHost);
+		public static explicit operator AbstractSparseMatrix<T>((T[,] value, bool onHost) input) => (AbstractSparseMatrix<T>)(input.value, default(T), input.onHost);
 
 		/// <summary>
 		/// Initialize from managed C# two-dimensional array to a sparse matrix of <see cref="SparseMatrixFormat.COOR"/> with thresholds.
 		/// </summary>
 		/// <param name="input">The C# multidimensional array of type <typeparamref name="T"/>, the threshold and the on host indicator</param>
-		public static explicit operator SparseMatrix<T>((T[,] value, T threshold, bool onHost) input)
+		public static explicit operator AbstractSparseMatrix<T>((T[,] value, T threshold, bool onHost) input)
 		{
 			var (value, threshold, onHost) = input;
 			List<int> indRow = new List<int>(), indCol = new List<int>();
@@ -2707,7 +2707,7 @@ namespace Althea.Arrays
 			}
 			value.ForEach(AddList);
 			var (rows, cols) = value.GetRowColumns();
-			var mat = new SparseMatrix<T>(rows, cols, val.Count, SparseMatrixFormat.COOR, onHost, herm: value.IsHermitian());
+			var mat = new AbstractSparseMatrix<T>(rows, cols, val.Count, SparseMatrixFormat.COOR, onHost, herm: value.IsHermitian());
 			try
 			{
 				RT.CopyIntoArray(mat, val.ToArray());
@@ -2726,7 +2726,7 @@ namespace Althea.Arrays
 		/// Initialize from C# one-dimensional value and index arrays.
 		/// </summary>
 		/// <param name="input">The 1D value array of type <typeparamref name="T"/>, the 1D row index array, the 1D column index array, the <see cref="SparseMatrixFormat"/> and the on host indicator</param>
-		public static explicit operator SparseMatrix<T>((T[] value, int[] row, int[] col, int rows, int cols, SparseMatrixFormat format, bool onHost) input)
+		public static explicit operator AbstractSparseMatrix<T>((T[] value, int[] row, int[] col, int rows, int cols, SparseMatrixFormat format, bool onHost) input)
 		{
 			var (value, row, col, rows, cols, format, onHost) = input;
 			int nnz = value.Length;
@@ -2748,7 +2748,7 @@ namespace Althea.Arrays
 				default:
 					throw new NotSupportedException(Resource.NotSupportedFormat);
 			}
-			var mat = new SparseMatrix<T>(rows, cols, nnz, format, onHost, herm: false);
+			var mat = new AbstractSparseMatrix<T>(rows, cols, nnz, format, onHost, herm: false);
 			try
 			{
 				RT.CopyIntoArray(mat, value);
@@ -2779,7 +2779,7 @@ namespace Althea.Arrays
 			{
 				return this.RowPointer.ShareMemoryWith(sv.IndexPointer) || this.ColumnPointer.ShareMemoryWith(sv.IndexPointer);
 			}
-			else if (another is SparseMatrix<T> sm)
+			else if (another is AbstractSparseMatrix<T> sm)
 			{
 				return	this.RowPointer.ShareMemoryWith(sm.RowPointer) || this.ColumnPointer.ShareMemoryWith(sm.ColumnPointer) ||
 						this.ColumnPointer.ShareMemoryWith(sm.RowPointer) || this.RowPointer.ShareMemoryWith(sm.ColumnPointer);
@@ -2804,7 +2804,7 @@ namespace Althea.Arrays
 				return false;
 			else if (this.Storage != a.Storage)
 				return false;
-			if (obj is SparseMatrix<T> s)
+			if (obj is AbstractSparseMatrix<T> s)
 				return this.Format == s.Format && this.NonZero == s.NonZero &&
 						this.RowPointer == s.RowPointer && this.ColumnPointer == s.ColumnPointer;
 			return false;

@@ -240,6 +240,32 @@ namespace Althea.Arrays
 				this.Scale((Math.Sqrt(1 - defaultNormDouble) / norm).FromDouble<T>());
 			}
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, get the maximum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMax{T}"/>.
+		/// </summary>
+		/// <returns>The maximum one of all absolute values of the elements in this array</returns>
+		public virtual double AbsMax()
+		{
+			double max = MEM.ToManaged(this.Storage.MakeReference(LAD.AbsoluteValueArgMax(this.Storage, 1))).GenericAbsolute();
+			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
+				return max;
+			else
+				return Math.Max(sparse.DefaultValue.GenericAbsolute(), max);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, get the minimum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMin{T}"/>.
+		/// </summary>
+		/// <returns>The minimum one of all absolute values of the elements in this array</returns>
+		public virtual double AbsMin()
+		{
+			double min = MEM.ToManaged(this.Storage.MakeReference(LAD.AbsoluteValueArgMin(this.Storage, 1))).GenericAbsolute();
+			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
+				return min;
+			else
+				return Math.Min(sparse.DefaultValue.GenericAbsolute(), min);
+		}
 		#endregion
 
 		#region reshape (mostly abstract)

@@ -105,7 +105,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new vector alike this one</returns>
 		public override DenseVector<TOut> NewArrayAlike<TOut>()
 		{
-			var c = Althea.Storage.StorageFactory<T>.CreateAlike<TOut>(this.Storage);
+			var c = this.Storage.CreateAlike<TOut>();
 			return new DenseVector<TOut>(c);
 		}
 		#endregion
@@ -206,7 +206,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="SparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="AbstractSparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
 		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)

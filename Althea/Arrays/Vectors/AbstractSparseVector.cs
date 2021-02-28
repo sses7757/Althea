@@ -23,7 +23,7 @@ namespace Althea.Arrays
 	{
 		#region basic
 		/// <summary>
-		/// When implemented by a derived class, get the number of stored values of this sparse array. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
+		/// When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
 		public virtual long NStored => this.ActualLength;
 
@@ -38,13 +38,6 @@ namespace Althea.Arrays
 		public T DefaultValue { get; protected internal set; }
 
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
-
-		/// <summary>
-		/// The <see cref="DataType"/> of the type parameter <typeparamref name="TInd"/>
-		/// </summary>
-		protected static readonly DataType indexDataType = default(TInd).ToDataType();
-
-		DataType ISparseArray<T>.IndexType => indexDataType;
 
 		/// <summary>
 		/// The member of first index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
@@ -65,6 +58,7 @@ namespace Althea.Arrays
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
 		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default) : base(valueArray, length)
 		{
@@ -73,6 +67,8 @@ namespace Althea.Arrays
 				throw new NotSupportedException(Resources.Support.DataType);
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			if (indexArray is null || !indexArray.IsValid())
+				throw new ArgumentNullException(nameof(indexArray));
 
 			this.m_indexArray = indexArray; this.m_indexArrays = null;
 			this.Format = format; this.DefaultValue = defaultValue;
@@ -86,7 +82,7 @@ namespace Althea.Arrays
 		/// <param name="indexArrays">The index array(s) as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="indexArrays"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
 		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd>[] indexArrays, SparseVectorFormat format, T defaultValue = default) : base(valueArray, length)
@@ -98,6 +94,8 @@ namespace Althea.Arrays
 				throw new NotSupportedException(Resources.Support.DataType);
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			if (indexArrays.Any(static a => a is null || !a.IsValid()))
+				throw new ArgumentNullException(nameof(indexArrays));
 
 			if (indexArrays.Length == 1)
 			{
@@ -119,7 +117,7 @@ namespace Althea.Arrays
 		public override bool IsValid() => base.IsValid() && this.NStored > 0 && this.m_indexArray is not null && this.m_indexArray.IsValid() && (this.m_indexArrays is null || this.m_indexArrays.All(static a => a is not null && a.IsValid()));
 
 		/// <summary>
-		/// When implemented by a derived class, check if this sparse vector share some storage(s) with the <paramref name="other"/> one. The default implementation only compares the <see cref="ValueArray{T}.Storage"/> and the index array(s).
+		/// When implemented by a derived class, check if this sparse vector share some storage(s) with the <paramref name="other"/> one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.OverlapWith(ISparseArray{T, TIndex})"/>
 		/// </summary>
 		/// <param name="other">The other <see cref="ValueArray{T}"/> to check</param>
 		/// <returns>True if they do share some storage, false otherwise</returns>
@@ -130,48 +128,14 @@ namespace Althea.Arrays
 			if (other is not ISparseArray<T, TInd> sparse)
 				return false;
 			// else
-			var list = (IReadOnlyList<Storage<TInd>>)this;
-			var array = (IReadOnlyList<Storage<TInd>>)sparse;
-			for (int i = 0; i < list.Count; i++)
-			{
-				for (int j = 0; j < array.Count; j++)
-				{
-					if (list[i].OverlapWith(array[j]))
-					{
-						return true;
-					}
-				}
-			}
-			return false;
+			return ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only compares <see cref="ISparseArray{T}.Storage"/> and the index array(s) implied in <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T}.DisposeExclude(ISparseArray{T})"/>.
 		/// </summary>
 		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing this sparse vector</param>
-		public virtual void DisposeExclude(ISparseArray<T> array)
-		{
-			var list = (IReadOnlyList<IStorage>)this;
-			var other = (IReadOnlyList<IStorage>)array;
-			if (!this.Storage.SameOriginAs(array.Storage))
-				this.Storage.Dispose();
-			for (int i = 0; i < list.Count; i++)
-			{
-				bool canDispose = true;
-				for (int j = 0; j < other.Count; j++)
-				{
-					if (list[i].SameOriginAs(other[j]))
-					{
-						canDispose = false;
-						break;
-					}
-				}
-				if (canDispose)
-					list[i].Dispose();
-			}
-		}
-
-		void ISparseArray<T, TInd>.DisposeExclude(ISparseArray<T, TInd> array) => this.DisposeExclude(array);
+		public virtual void DisposeExclude(ISparseArray<T> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 
 		/// <summary>
 		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="AbstractSparseVector{T, TInd}"/>.
@@ -191,7 +155,7 @@ namespace Althea.Arrays
 		}
 		#endregion
 
-		#region IReadOnlyList
+		#region IReadOnlyList of ISparseArray
 		int IReadOnlyCollection<Storage<TInd>>.Count => this.m_indexArrays?.Length ?? 1;
 
 		int IReadOnlyCollection<IStorage>.Count => this.m_indexArrays?.Length ?? 1;
@@ -202,8 +166,9 @@ namespace Althea.Arrays
 			get {
 				if (index < 0)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.CannotNegative);
-				if (index >= this.Count)
+				if (index >= ((IReadOnlyCollection<IStorage>)this).Count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+
 				return this.m_indexArrays?[index] ?? this.m_indexArray;
 			}
 		}
@@ -235,86 +200,6 @@ namespace Althea.Arrays
 		public override abstract AbstractSparseVector<T, TInd> Clone();
 
 		/// <summary>
-		/// The helper method of <see cref="Clone()"/> used to clone the value array and index array(s) of this sparse vector
-		/// </summary>
-		/// <param name="valueArray">The cloned output value array</param>
-		/// <param name="firstIndexArray">The cloned output first index array</param>
-		/// <param name="indexArrays">The cloned output all index arrays, may be null if there is only one index array</param>
-		protected void Clone(out ActualStorage<T> valueArray, out ActualStorage<TInd> firstIndexArray, out ActualStorage<TInd>[]? indexArrays)
-		{
-			ActualStorage<T>? value = null;
-			ActualStorage<TInd>? index = null;
-			ActualStorage<TInd>[]? indices = null;
-			try
-			{
-				value = this.Storage.Clone();
-				if (this.m_indexArrays is null)
-				{
-					index = this.m_indexArray.Clone();
-				}
-				else
-				{
-					indices = new ActualStorage<TInd>[this.m_indexArrays.Length];
-					for (int i = 0; i < this.m_indexArrays.Length; i++)
-					{
-						indices[i] = this.m_indexArrays[i].Clone();
-					}
-					index = indices[0];
-				}
-				valueArray = value;
-				firstIndexArray = index;
-				indexArrays = indices;
-			}
-			catch (Exception)
-			{
-				value?.Dispose();
-				index?.Dispose();
-				indices?.ForEach(static a => a?.Dispose());
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// The helper method of <see cref="NewArrayAlike()"/> used to create new storages alike the value array and index array(s) of this sparse vector
-		/// </summary>
-		/// <param name="valueArray">The output alike new storage of value array</param>
-		/// <param name="firstIndexArray">The output alike new storage  first index array</param>
-		/// <param name="indexArrays">The output alike new storages of all index arrays, may be null if there is only one index array</param>
-		protected void NewArrayAlike<TOut>(out ActualStorage<TOut> valueArray, out ActualStorage<TInd> firstIndexArray, out ActualStorage<TInd>[]? indexArrays) where TOut : unmanaged
-		{
-			ActualStorage<TOut>? value = null;
-			ActualStorage<TInd>? index = null;
-			ActualStorage<TInd>[]? indices = null;
-			try
-			{
-				value = Althea.Storage.StorageFactory<T>.CreateAlike<TOut>(this.Storage);
-				if (this.m_indexArrays is null)
-				{
-					index = Althea.Storage.StorageFactory<TInd>.CreateAlike(this.m_indexArray);
-				}
-				else
-				{
-					indices = new ActualStorage<TInd>[this.m_indexArrays.Length];
-					for (int i = 0; i < this.m_indexArrays.Length; i++)
-					{
-						indices[i] = Althea.Storage.StorageFactory<TInd>.CreateAlike(this.m_indexArrays[i]);
-					}
-					index = indices[0];
-				}
-				valueArray = value;
-				firstIndexArray = index;
-				indexArrays = indices;
-			}
-			catch (Exception)
-			{
-				value?.Dispose();
-				index?.Dispose();
-				indices?.ForEach(static a => a?.Dispose());
-				throw;
-			}
-		}
-
-		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
@@ -333,30 +218,6 @@ namespace Althea.Arrays
 		/// <typeparam name="TOut">The data type to cast to</typeparam>
 		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
 		public override abstract AbstractSparseVector<TOut, TInd> DataTypeCast<TOut>();
-
-		/// <summary>
-		/// The helper method of <see cref="DataTypeCast{TOut}()"/> used to create an storage casted from the value array of this sparse vector
-		/// </summary>
-		/// <typeparam name="TOut">The data type to cast to</typeparam>
-		/// <param name="valueArray">A created storage casted from the value array of this sparse vector, or <see cref="ValueArray{T}.Storage"/> if <typeparamref name="T"/> == <typeparamref name="TOut"/></param>
-		protected void DataTypeCast<TOut>(out Storage<TOut> valueArray) where TOut : unmanaged, IFormattable, IEquatable<TOut>
-		{
-			if (typeof(T) == typeof(TOut))
-			{
-				valueArray = this.Storage as Storage<TOut> ?? Storage<TOut>.Empty;
-				return;
-			}
-			valueArray = Althea.Storage.StorageFactory<T>.CreateAlike<TOut>(this.Storage);
-			try
-			{
-				LAD.PointWiseCast(this.Storage, 1, valueArray, 1);
-			}
-			catch (Exception)
-			{
-				valueArray?.Dispose();
-				throw;
-			}
-		}
 		#endregion
 
 		#region equality

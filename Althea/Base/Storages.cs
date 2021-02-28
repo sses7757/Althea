@@ -913,6 +913,19 @@ namespace Althea
 		}
 
 		/// <summary>
+		/// When implemented by a derived class, allocate and creates a new <see cref="Storage{T}"/> alike the current one. The default implementation utilizes <see cref="Althea.Storage.StorageFactory{T}.CreateAlike(Storage{T})"/>.
+		/// </summary>
+		/// <returns>A new <see cref="Storage{T}"/> that is a copy of the current instance</returns>
+		public virtual ActualStorage<T> CreateAlike() => Storage.StorageFactory<T>.CreateAlike(this);
+
+		/// <summary>
+		/// When implemented by a derived class, allocate and creates a new <see cref="Storage{T}"/> alike the current one but with a new type <typeparamref name="TOut"/>. The default implementation utilizes <see cref="Althea.Storage.StorageFactory{T}.CreateAlike{TOut}(Storage{T})"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
+		/// <returns>A new <see cref="Storage{T}"/> of <typeparamref name="TOut"/> that is a copy of the current instance</returns>
+		public virtual ActualStorage<TOut> CreateAlike<TOut>() where TOut : unmanaged => Storage.StorageFactory<T>.CreateAlike<TOut>(this);
+
+		/// <summary>
 		/// <b>Allocate</b> and create a new <see cref="Storage{T}"/> of given <paramref name="combinationType"/> and given locations and lengths. This implementation utilizes the <see cref="Storage.StorageFactory{T}"/>.
 		/// </summary>
 		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>

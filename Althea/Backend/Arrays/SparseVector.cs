@@ -204,7 +204,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="AbstractSparseMatrix{T}"/></exception>
 		public override VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())

@@ -386,30 +386,6 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		Conjugate = 3,
 	}
-
-	// TODO: ????
-	/// <summary>
-	/// Used in overloading operators
-	/// </summary>
-	public enum PowerOperation
-	{
-		/// <summary>
-		/// Nothing
-		/// </summary>
-		None = 0,
-		/// <summary>
-		/// Transpose only
-		/// </summary>
-		Transpose = ~0, // -1
-		/// <summary>
-		/// Conjugate only
-		/// </summary>
-		Conjugate = int.MaxValue,
-		/// <summary>
-		/// conjugate transpose
-		/// </summary>
-		Dagger = ~int.MaxValue // int.MinValue
-	}
 	#endregion
 
 

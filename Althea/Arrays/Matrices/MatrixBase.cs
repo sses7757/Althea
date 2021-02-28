@@ -222,109 +222,160 @@ namespace Althea.Arrays
 
 		#region defined operators
 		/// <summary>
-		/// The matrix negation operator that .
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/>, will be overwritten if it is in-place</param>
-		/// <returns>The negation <see cref="MatrixBase{T}"/></returns>
-		public static MatrixBase<T> operator -(MatrixBase<T> A) => A * Scalars<T>.MinusOne;
+		/// <param name="matrix">The input <see cref="MatrixBase{T}"/> whose elements will be used</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the negation of <paramref name="matrix"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public static MatrixBase<T> operator -(MatrixBase<T> matrix) => matrix * Scalars<T>.MinusOne;
 
 		/// <summary>
-		/// Matrix scaling.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/>, will be overwritten if it is in-place</param>
-		/// <param name="α">input scalar of type <typeparamref name="T"/></param>
-		/// <returns>output <see cref="MatrixBase{T}"/> C</returns>
-		/// <remarks>This operator is implemented by the <see cref="VectorBase{T}.Scale(T)"/> rather than a dedicate abstract operation in <see cref="MatrixBase{T}"/>.</remarks>
-		public static MatrixBase<T> operator *(MatrixBase<T> A, T α)
+		/// <param name="matrix">The input <see cref="MatrixBase{T}"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the multiplier</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public static MatrixBase<T> operator *(MatrixBase<T> matrix, T scalar)
 		{
-			if (A is null || !A.IsValid())
-				throw new ArgumentNullException(nameof(A));
-			return A.ApplyToClone(newA => newA.Scale(α));
+			if (matrix is null || !matrix.IsValid())
+				throw new ArgumentNullException(nameof(matrix));
+			return matrix.ApplyToClone(newA => newA.Scale(scalar));
 		}
 
 		/// <summary>
-		/// Matrix scaling.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/>, will be overwritten if it is in-place</param>
-		/// <param name="α">input scalar of type <typeparamref name="T"/></param>
-		/// <returns>output <see cref="MatrixBase{T}"/> C</returns>
-		/// <remarks>This operator is implemented by the <see cref="VectorBase{T}.Scale(T)"/> rather than a dedicate abstract operation in <see cref="MatrixBase{T}"/>.</remarks>
-		public static MatrixBase<T> operator *(T α, MatrixBase<T> A) => A * α;
+		/// <param name="matrix">The input <see cref="MatrixBase{T}"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the multiplier</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public static MatrixBase<T> operator *(T scalar, MatrixBase<T> matrix) => matrix * scalar;
 
 		/// <summary>
-		/// Matrix number multiply out-of-place, i.e. $C = \frac{1}{\alpha} A$.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise division result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/></param>
-		/// <param name="α">input scalar of type <typeparamref name="T"/></param>
-		/// <returns>output <see cref="MatrixBase{T}"/> C</returns>
-		/// <remarks>This operator is implemented by the <see cref="VectorBase{T}.Scale(T)"/> rather than a dedicate abstract operation in <see cref="MatrixBase{T}"/>.</remarks>
-		public static MatrixBase<T> operator /(MatrixBase<T> A, T α) => A * α.GenericReciprocal();
+		/// <param name="matrix">The input <see cref="MatrixBase{T}"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the divider</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public static MatrixBase<T> operator /(MatrixBase<T> matrix, T scalar) => matrix * scalar.GenericReciprocal();
 
 		/// <summary>
-		/// Matrix Transpose, conjugate and conjugate transpose, <b>out-of-place</b>.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.
 		/// </summary>
-		/// <param name="M">input <see cref="MatrixBase{T}"/></param>
-		/// <param name="op">The <see cref="PowerOperation"/></param>
-		/// <returns>a <see cref="MatrixBase{T}"/> after the <paramref name="op"/></returns>
-		/// <remarks>If the result matrix is itself, this matrix will directly be returned where no new matrix will be created.</remarks>
-		public static MatrixBase<T> operator ^(MatrixBase<T> M, PowerOperation op)
+		/// <param name="matrix">The input <see cref="MatrixBase{T}"/> whose elements will be used</param>
+		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the operation</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="operation"/>(<paramref name="matrix"/>)</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public static MatrixBase<T> operator ^(MatrixBase<T> matrix, MatrixOperation operation)
 		{
-			if (M is null || !M.IsValid())
-				throw new ArgumentNullException(nameof(M));
+			if (matrix is null || !matrix.IsValid())
+				throw new ArgumentNullException(nameof(matrix));
 
+			return matrix.ApplyOperation(operation);
 		}
 
 		/// <summary>
-		/// Addition of two matrices, <b>out-of-place</b>.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/> A</param>
-		/// <param name="B">input <see cref="MatrixBase{T}"/> B</param>
-		/// <returns>output <see cref="MatrixBase{T}"/> C</returns>
-		public static MatrixBase<T> operator +(MatrixBase<T> A, MatrixBase<T> B)
+		/// <param name="left">The input left <see cref="MatrixBase{T}"/> to be added</param>
+		/// <param name="right">The input right <see cref="MatrixBase{T}"/> to be added</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="left"/> + <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		public static MatrixBase<T> operator +(MatrixBase<T> left, MatrixBase<T> right)
 		{
-			if (A is null || !A.IsValid())
-				throw new ArgumentNullException(nameof(A));
-			if (B is null || !B.IsValid())
-				throw new ArgumentNullException(nameof(B));
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
 
+			return left.AddMatrix(Scalars<T>.One, Scalars<T>.One, right);
 		}
 
 		/// <summary>
-		/// Subtraction of two matrices, <b>out-of-place</b>.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise subtraction result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/> A</param>
-		/// <param name="B">input <see cref="MatrixBase{T}"/> B</param>
-		/// <returns>output <see cref="MatrixBase{T}"/> C</returns>
-		public static MatrixBase<T> operator -(MatrixBase<T> A, MatrixBase<T> B)
+		/// <param name="left">The input left <see cref="MatrixBase{T}"/> to be subtracted from</param>
+		/// <param name="right">The input right <see cref="MatrixBase{T}"/> to subtract</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="left"/> - <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the subtraction cannot be performed due to incompatible sizes</exception>
+		public static MatrixBase<T> operator -(MatrixBase<T> left, MatrixBase<T> right)
 		{
-			if (A is null || !A.IsValid())
-				throw new ArgumentNullException(nameof(A));
-			if (B is null || !B.IsValid())
-				throw new ArgumentNullException(nameof(B));
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
 
+			return left.AddMatrix(Scalars<T>.One, Scalars<T>.MinusOne, right);
 		}
 
 		/// <summary>
-		/// Multiply two matrices, <b>out-of-place</b>.
+		/// Create a new <see cref="MatrixBase{T}"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
 		/// </summary>
-		/// <param name="A">input <see cref="MatrixBase{T}"/> A</param>
-		/// <param name="B">input <see cref="MatrixBase{T}"/> B</param>
-		/// <returns>output <see cref="MatrixBase{T}"/> C</returns>
-		public static MatrixBase<T> operator *(MatrixBase<T> A, MatrixBase<T> B)
+		/// <param name="left">The input <see cref="MatrixBase{T}"/> to be multiplied at left</param>
+		/// <param name="right">The input <see cref="MatrixBase{T}"/> to be multiplied at right</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public static MatrixBase<T> operator *(MatrixBase<T> left, MatrixBase<T> right)
 		{
-			if (A is null || !A.IsValid())
-				throw new ArgumentNullException(nameof(A));
-			if (B is null || !B.IsValid())
-				throw new ArgumentNullException(nameof(B));
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
 
+			return new DenseMatrix<T>().AddMatricesMultiplication(Scalars<T>.One, left, right);
 		}
 		#endregion
 
+		#region linear algebra
+		/// <summary>
+		/// Create a new <see cref="MatrixBase{T}"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
+		/// </summary>
+		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the simple operation to be applied</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="operation"/>(this)</returns>
+		/// <exception cref="NotSupportedException">If the given <paramref name="operation"/> is not supported</exception>
+		public abstract MatrixBase<T> ApplyOperation(MatrixOperation operation);
+
+		/// <summary>
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
+		/// </summary>
+		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
+		/// <param name="other">The input right <see cref="MatrixBase{T}"/> to be added</param>
+		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
+		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="scalarThis"/> and <paramref name="opOther"/> are 0</exception>
+		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		public abstract MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
+
+		/// <summary>
+		/// Create a new <see cref="MatrixBase{T}"/> which is the addition result of this matrix and the multiplication the given <paramref name="otherLeft"/> and <paramref name="opRight"/> matrices.
+		/// </summary>
+		/// <param name="scalarOther">The scalar to multiply to the matrix multiplication result before addition</param>
+		/// <param name="otherLeft">The input <see cref="MatrixBase{T}"/> to be multiplied at left</param>
+		/// <param name="otherRight">The input <see cref="MatrixBase{T}"/> to be multiplied at right</param>
+		/// <param name="scalarThis">The scalar to multiply to this matrix before addition. If <paramref name="scalarThis"/> is 0, this matrix can be invalid.</param>
+		/// <param name="opLeft">The <see cref="MatrixOperation"/> to apply to <paramref name="otherLeft"/> before multiplication</param>
+		/// <param name="opRight">The <see cref="MatrixOperation"/> to apply to <paramref name="otherRight"/> before multiplication</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalarThis"/> * this + <paramref name="scalarOther"/> * <paramref name="opLeft"/>(<paramref name="otherLeft"/>) * <paramref name="opRight"/>(<paramref name="otherRight"/>)</c></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="otherLeft"/> or <paramref name="otherRight"/> is null or empty</exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opLeft"/> or <paramref name="opRight"/> is not supported</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="scalarThis"/> and <paramref name="opRight"/> are 0</exception>
+		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		public abstract MatrixBase<T> AddMatricesMultiplication(T scalarOther, MatrixBase<T> otherLeft, MatrixBase<T> otherRight, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
+		#endregion
 	}
 
 
 	/// <summary>
-	/// The diagonal element access class
+	/// The wrapper structure used to access diagonal elements of a <see cref="MatrixBase{T}"/>
 	/// </summary>
 	public readonly struct MatrixDiagonalAccessor<T> : IEquatable<MatrixDiagonalAccessor<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{
