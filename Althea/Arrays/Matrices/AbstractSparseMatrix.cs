@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 using Althea.Linq;
+using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.LinearAlgebra.Sparse;
 
 using MEM = Althea.Storage.AbstractApi;
-using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 
 
 namespace Althea.Arrays
@@ -204,16 +205,39 @@ namespace Althea.Arrays
 		}
 
 		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
 		#endregion
 
 		#region clone related
 		/// <summary>
-		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="matrix"/>
+		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="matrix"/>. The default implementation utilizes <see cref="ToDense(Storage{T}, long, long, long)"/> and works if <see cref="AbstractArray{T}.Length"/> == <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
 		/// <param name="matrix">The <see cref="MatrixBase{T}"/> as the dense matrix to overwrite</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
 		/// <exception cref="ArgumentException">If <paramref name="matrix"/> is a sparse matrix</exception>
-		public abstract void ToDense(MatrixBase<T> matrix);
+		public virtual void ToDense(MatrixBase<T> matrix)
+		{
+			if (matrix is null || !matrix.IsValid())
+				throw new ArgumentNullException(nameof(matrix));
+			long length = matrix.Storage.Length;
+			if (matrix.Length != length)
+				throw new ArgumentException(Resources.Parameter.UnexpectedValue, nameof(matrix));
+
+			this.ToDense(matrix.Storage, length / matrix.NCols, matrix.NRows, matrix.NCols);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix</param>
+		/// <param name="rows">The number of rows of the dense matrix</param>
+		/// <param name="cols">The number of columns of the dense matrix</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> or <paramref name="leadDim"/> is less than 1</exception>
+		/// <exception cref="ArgumentException">If <paramref name="rows"/> &gt; <paramref name="leadDim"/> or <paramref name="leadDim"/> * <paramref name="cols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		public abstract void ToDense(Storage<T> denseStorage, long leadDim, long rows, long cols);
 
 		/// <summary>
 		/// When implemented by a derived class, deep clone the sparse matrix, the mutable status will not be copied.
@@ -242,5 +266,92 @@ namespace Althea.Arrays
 		public override abstract AbstractSparseMatrix<TOut, TInd> DataTypeCast<TOut>();
 		#endregion
 
+		#region equality
+		/// <summary>
+		/// When implemented by a derived class, get the hash code this sparse matrix. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.GetHashCode"/>.
+		/// </summary>
+		/// <returns>The hash code of this sparse matrix</returns>
+		public override int GetHashCode() => ((ISparseArray<T, TInd>)this).GetHashCode();
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this sparse matrix is equal to another one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.Equals(object?)"/>.
+		/// </summary>
+		/// <param name="obj">The other object to compare with</param>
+		/// <returns>True if this == <paramref name="obj"/></returns>
+		public override bool Equals(object? obj) => ((ISparseArray<T, TInd>)this).Equals(obj);
+		#endregion
+
+		#region print
+		/// <summary>
+		/// The helper method used in <see cref="Print(PrintSettings?)"/> to get the first several row and column indices of this sparse matrix
+		/// </summary>
+		/// <param name="rowIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the row indices</param>
+		/// <param name="colIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the column indices</param>
+		protected abstract void GetIndices(Span<long> rowIndices, Span<long> colIndices);
+
+		/// <summary>
+		/// When implemented by a derived class, print out this sparse matrix.
+		/// </summary>
+		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
+		/// <returns>The detailed string representation of this sparse matrix</returns>
+		public override string Print(PrintSettings? overrideSetting = null)
+		{
+			string description = this.ToString();
+			if (this.Disposed)
+				return description;
+
+			var settings = overrideSetting ?? Settings.PrintSetting;
+
+			string detail = ":" + Environment.NewLine;
+			// get managed arrays
+			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
+			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
+			MEM.ToManaged(this.Storage, values);
+			Span<long> row = length.CheckStockLimit<long>() ?? stackalloc long[length];
+			Span<long> col = length.CheckStockLimit<long>() ?? stackalloc long[length];
+			this.GetIndices(row, col);
+			// to matrix string
+			detail += values.ToSparseMatrixString(row, col, precision: settings.Precision);
+			if (this.Length > values.Length)
+				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
+			return description + detail;
+		}
+		#endregion
+
+		#region serialization
+		/// <summary>
+		/// The helper method used by <see cref="GetPointers"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
+		/// </summary>
+		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse matrix</param>
+		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
+		protected abstract string IndexStorageNameOf(int orderOfIndexStorage);
+
+		/// <summary>
+		/// The name of the row index storage to be used when the sparse array only contains one index storage
+		/// </summary>
+		protected const string RowIndexStorageName = @"RowIndexStorage";
+		/// <summary>
+		/// The name of the column index storage to be used when the sparse array only contains one index storage
+		/// </summary>
+		protected const string ColIndexStorageName = @"ColIndexStorage";
+
+		/// <summary>
+		/// When implemented by a derived class, get all the storages of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.Storage"/> and the index array(s) (whose names are from <see cref="IndexStorageNameOf(int)"/>) used to construct this sparse matrix.
+		/// </summary>
+		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
+		public override IReadOnlyDictionary<string, IStorage> GetPointers()
+		{
+			if (this.m_indexArrays is null)
+			{
+				return new Dictionary<string, IStorage>(3) { [StorageName] = this.Storage, [RowIndexStorageName] = this.m_rowIndexArray, [ColIndexStorageName] = this.m_colIndexArray };
+			}
+			var dict = new Dictionary<string, IStorage>(this.m_indexArrays.Length + 1) { [StorageName] = this.Storage };
+			for (int i = 0; i < this.m_indexArrays.Length; i++)
+			{
+				dict.Add(this.IndexStorageNameOf(i), this.m_indexArrays[i]);
+			}
+			return dict;
+		}
+		#endregion
 	}
 }

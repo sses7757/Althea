@@ -70,6 +70,25 @@ namespace Althea.Arrays
 		public abstract void SetSubmatrix(long rowStart, long columnStart, MatrixBase<T> value);
 
 		/// <summary>
+		/// Check the row and column indices
+		/// </summary>
+		/// <param name="row">The row index as a <see cref="long"/></param>
+		/// <param name="col">The column index as a <see cref="long"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected void CheckIndex(long row, long col)
+		{
+			if (row < 0)
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.CannotNegative);
+			if (row >= this.NRows)
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+			if (col < 0)
+				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.CannotNegative);
+			if (col >= this.NCols)
+				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.InvalidValue);
+		}
+
+		/// <summary>
 		/// Check the row and column index then return the offset of them.
 		/// </summary>
 		/// <param name="row">The row <see cref="Index"/></param>
@@ -80,19 +99,12 @@ namespace Althea.Arrays
 		protected (long row, long col) CheckIndex(Index row, Index col)
 		{
 			long rowPos = row.GetPosition(this.NRows), colPos = col.GetPosition(this.NCols);
-			if (rowPos < 0)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.CannotNegative);
-			if (rowPos >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
-			if (colPos < 0)
-				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.CannotNegative);
-			if (colPos >= this.NCols)
-				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.InvalidValue);
+			this.CheckIndex(rowPos, colPos);
 			return (rowPos, colPos);
 		}
 
 		/// <summary>
-		/// Check the row and column range
+		/// Check the row and column ranges
 		/// </summary>
 		/// <returns>The row and column offsets and lengths</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
@@ -205,19 +217,34 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// The method to get diagonal elements.
+		/// When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements.
 		/// </summary>
-		/// <param name="k">diagonal index, 0 for diag, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> to overwrite, default null means creating a new vector</param>
-		/// <returns>A new <see cref="VectorBase{T}"/> containing the (super-/sub-)diagonal elements. If <paramref name="overwrite"/> does not fit, it will not be returned.</returns>
-		public abstract VectorBase<T> GetDiag(long k, VectorBase<T> overwrite = null);
+		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+		/// <returns>A new <see cref="VectorBase{T}"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
+		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+		public abstract VectorBase<T> GetDiag(long k);
 
 		/// <summary>
-		/// The method to set diagonal elements.
+		/// When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements and write the result to <paramref name="overwrite"/>.
 		/// </summary>
-		/// <param name="k">diagonal index, 0 for diag, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="vec">The <see cref="VectorBase{T}"/> </param>
-		public abstract void SetDiag(long k, VectorBase<T> vec);
+		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> which will contain the <paramref name="k"/>-th diagonal elements at exit</param>
+		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
+		public abstract void GetDiag(long k, VectorBase<T> overwrite);
+
+		/// <summary>
+		/// When implemented by a derived class, set the <paramref name="k"/>-th diagonal elements to <paramref name="value"/>.
+		/// </summary>
+		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+		/// <param name="value">The <paramref name="k"/>-th diagonal elements to set as a <see cref="VectorBase{T}"/></param>
+		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		public abstract void SetDiag(long k, VectorBase<T> value);
 		#endregion
 
 		#region defined operators
@@ -327,7 +354,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return new DenseMatrix<T>().AddMatricesMultiplication(Scalars<T>.One, left, right);
+			return new Backend.Arrays.DenseMatrix<T>().AddMatricesMultiplication(Scalars<T>.One, left, right);
 		}
 		#endregion
 
@@ -387,7 +414,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The indexer of getting and setting diagonal or sub-diagonal or super-diagonal elements as a whole
 		/// </summary>
-		/// <param name="k">The diagonal index, 0 for diag, 1 for super-diagonal, -1 for sub-diagonal, etc.</param>
+		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		public VectorBase<T> this[long k] {
 			get => _owner.GetDiag(k);
 			set => _owner.SetDiag(k, value);

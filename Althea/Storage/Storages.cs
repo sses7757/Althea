@@ -546,13 +546,13 @@ namespace Althea.Storage
 
 		#region override
 		/// <summary>
-		/// Make a <see cref="PureOrMixedReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
+		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
-		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
+		public override ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
 		}
@@ -823,6 +823,131 @@ namespace Althea.Storage
 				throw;
 			}
 		}
+
+		/// <summary>
+		/// Make a <see cref="PureReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <returns>A <see cref="PureReferenceStorage{T}"/> of this one</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		public override PureReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
+		{
+			return new PureReferenceStorage<T>(this, offset, newLength);
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The storage class that references to a <see cref="PureStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
+	/// </summary>
+	/// <typeparam name="T">any unmanaged data type</typeparam>
+	/// <remarks>Although the <see cref="PureOrMixedReferenceStorage{T}"/> covers the usage of this class, this class is specially separated to improve performance.</remarks>
+	public sealed class PureReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
+	{
+		#region basic
+		private readonly PointerSegment refPointer;
+
+		/// <summary>
+		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// </summary>
+		public override int Count => 1;
+
+		/// <summary>
+		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
+		/// </summary>
+		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription[this.start..this.end] ?? default;
+
+		/// <summary>
+		/// Create an empty <see cref="PureReferenceStorage{T}"/>
+		/// </summary>
+		internal PureReferenceStorage() : base(null) { }
+
+		/// <summary>
+		/// Create a <see cref="PureReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
+		/// </summary>
+		/// <param name="storage">The <see cref="PureStorage{T}"/> to be referenced</param>
+		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorage{T}"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		public PureReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
+		{
+			if (this.Reference is null)
+				return;
+			// check 
+			if (this.Reference is not PureStorage<T> && !this.Reference.GetType().MakeGenericType(typeof(T)).IsAssignableTo(typeof(PureStorage<T>)))
+				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
+			// set
+			this.refPointer = this.Reference[0].MoveBy(this.TotalOffsetInBytes, this.LengthInBytes);
+		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="PureReferenceStorage{T}"/> (in presenting order)
+		/// </summary>
+		/// <param name="index">The element index</param>
+		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
+		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureReferenceStorage{T}"/> is null</exception>
+		public override PointerSegment this[int index] {
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+				if (this.Reference is null)
+					throw new InvalidOperationException();
+				return this.refPointer;
+			}
+		}
+
+		/// <summary>
+		/// Make a <see cref="PureReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
+		/// <returns>A <see cref="PureReferenceStorage{T}"/> of this one</returns>
+		public override PureReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
+		{
+			return new PureReferenceStorage<T>(this, offset, newLength);
+		}
+
+		/// <summary>
+		/// Convert this <see cref="PureReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">The output data type</typeparam>
+		/// <returns>a referenced <see cref="PureReferenceStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		public override PureReferenceStorage<TOut> As<TOut>()
+		{
+			if (this.Reference is null)
+				return new PureReferenceStorage<TOut>(null, 0, 0);
+			long offset = CheckCast<TOut>(this.TotalOffsetInBytes, sizeInBytes: true);
+			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
+			return new PureReferenceStorage<TOut>(this.Reference, offset, length);
+		}
+
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">another object</param>
+		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		public override bool Equals(Storage<T>? obj)
+		{
+			if (obj is not null && obj is PureReferenceStorage<T> @ref)
+			{
+				return this.Reference == @ref.Reference && this.TotalOffsetInBytes == @ref.TotalOffsetInBytes && this.Length == @ref.Length;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
+		/// </summary>
+		/// <returns>the hash code</returns>
+		public override int GetHashCode() => HashCode.Combine(this.Reference, this.TotalOffsetInBytes, this.Length);
 		#endregion
 	}
 

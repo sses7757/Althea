@@ -26,7 +26,7 @@ namespace Althea.Arrays
 		public Storage<T> Storage { get; }
 
 		/// <summary>
-		/// Get the total actual length of the value array <see cref="Storage"/> in memory, in <typeparamref name="T"/> rather than bytes
+		/// When implemented by a derived class, get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. The default implementation simply returns <see cref="Storage"/>.<see cref="Storage{T}.Length">Length</see>.
 		/// </summary>
 		public virtual long ActualLength => this.Storage.Length;
 

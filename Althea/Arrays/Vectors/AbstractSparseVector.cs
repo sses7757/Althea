@@ -7,7 +7,6 @@ using Althea.NativeTypes;
 using Althea.LinearAlgebra.Sparse;
 
 using MEM = Althea.Storage.AbstractApi;
-using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 
 
 namespace Althea.Arrays
@@ -222,24 +221,17 @@ namespace Althea.Arrays
 
 		#region equality
 		/// <summary>
-		/// When implemented by a derived class, get the hash code this sparse vector. The default implementation only takes <see cref="ValueArray{T}.Storage"/> and the index array(s) used to construct this sparse vector into account.
+		/// When implemented by a derived class, get the hash code this sparse vector. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.GetHashCode"/>.
 		/// </summary>
-		/// <returns>The hash code of <see cref="ValueArray{T}.Storage"/> and the index array(s) used to construct this sparse vector</returns>
-		public override int GetHashCode() => this.m_indexArrays is null ? HashCode.Combine(this.Storage, this.m_indexArray) : HashCode.Combine(this.Storage, this.m_indexArrays.HashCodeOfArray());
+		/// <returns>The hash code of this sparse vector</returns>
+		public override int GetHashCode() => ((ISparseArray<T, TInd>)this).GetHashCode();
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this sparse vector is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/> and the index array(s) used to construct this sparse vector.
+		/// When implemented by a derived class, check whether this sparse vector is equal to another one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.Equals(object?)"/>.
 		/// </summary>
 		/// <param name="obj">The other object to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj)
-		{
-			if (!(obj is AbstractSparseVector<T, TInd> sv && this.Storage == sv.Storage))
-				return false;
-			var list1 = (IReadOnlyList<Storage<TInd>>)this;
-			var list2 = (IReadOnlyList<Storage<TInd>>)sv;
-			return list1.SequenceEqual(list2);
-		}
+		public override bool Equals(object? obj) => ((ISparseArray<T, TInd>)this).Equals(obj);
 		#endregion
 
 		#region print
@@ -272,7 +264,7 @@ namespace Althea.Arrays
 			// to vector string
 			detail += values.ToSparseVectorString(indices, precision: settings.Precision);
 			if (this.Length > values.Length)
-				detail += Environment.NewLine + $"...{this.NStored - values.Length} more stored elements";
+				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
 			return description + detail;
 		}
 		#endregion

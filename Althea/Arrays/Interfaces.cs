@@ -180,7 +180,26 @@ namespace Althea.Arrays
 		void DisposeExclude(ISparseArray<T, TIndex> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 		#endregion
 
-		#region overlap
+		#region helpers
+		/// <summary>
+		/// When implemented by a derived class, get the hash code this sparse array. The default implementation only takes <see cref="Storage"/> and the index array(s) into account.
+		/// </summary>
+		/// <returns>The hash code of <see cref="Storage"/> and the index array(s) of this sparse array</returns>
+		int GetHashCode() => HashCode.Combine(this.Storage, ((IReadOnlyList<Storage<TIndex>>)this).HashCodeOfArray());
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this sparse array is equal to another one. The default implementation only compares <see cref="Storage"/> and the index array(s) of this sparse array.
+		/// </summary>
+		/// <param name="obj">The other object to compare with</param>
+		/// <returns>True if this == <paramref name="obj"/></returns>
+		bool Equals(object? obj)
+		{
+			if (!(obj is ISparseArray<T, TIndex> sv && this.Storage == sv.Storage))
+				return false;
+			IReadOnlyList<Storage<TIndex>> list1 = this, list2 = sv;
+			return list1.SequenceEqual(list2);
+		}
+
 		/// <summary>
 		/// When implemented by a derived class, check if this sparse array share some storage(s) with the <paramref name="other"/> one. The default implementation only compares the <see cref="ValueArray{T}.Storage"/> and the index array(s).
 		/// </summary>
@@ -188,8 +207,7 @@ namespace Althea.Arrays
 		/// <returns>True if they do share some storage, false otherwise</returns>
 		bool OverlapWith(ISparseArray<T, TIndex> other)
 		{
-			var list = (IReadOnlyList<Storage<TIndex>>)this;
-			var array = (IReadOnlyList<Storage<TIndex>>)other;
+			IReadOnlyList<Storage<TIndex>> list = this, array = other;
 			for (int i = 0; i < list.Count; i++)
 			{
 				for (int j = 0; j < array.Count; j++)
@@ -202,9 +220,7 @@ namespace Althea.Arrays
 			}
 			return false;
 		}
-		#endregion
 
-		#region new array like helper
 		/// <summary>
 		/// The helper method used to create new array alike (and copy contents) the value array and index array(s) of this sparse array
 		/// </summary>
@@ -301,11 +317,16 @@ namespace Althea.Arrays
 
 		#region conversion
 		/// <summary>
-		/// Convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
 		/// <param name="leadDim">The leading dimension of the target dense matrix</param>
-		void ToDense(Storage<T> denseStorage, long leadDim);
+		/// <param name="rows">The number of rows of the dense matrix</param>
+		/// <param name="cols">The number of columns of the dense matrix</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> or <paramref name="leadDim"/> is less than 1</exception>
+		/// <exception cref="ArgumentException">If <paramref name="rows"/> &gt; <paramref name="leadDim"/> or <paramref name="leadDim"/> * <paramref name="cols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		void ToDense(Storage<T> denseStorage, long leadDim, long rows, long cols);
 		#endregion
 	}
 	#endregion
