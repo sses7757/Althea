@@ -27,6 +27,11 @@ namespace Althea.Arrays
 		public long NCols => this.m_size[1];
 
 		/// <summary>
+		/// When implemented by a derived class, get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. 
+		/// </summary>
+		public override abstract long ActualLength { get; }
+
+		/// <summary>
 		/// Construct a <see cref="MatrixBase{T}"/> with value array <paramref name="values"/> and presenting size <paramref name="rows"/>, <paramref name="cols"/>
 		/// </summary>
 		/// <param name="values"></param>

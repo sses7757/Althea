@@ -164,7 +164,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the hash code this sparse array. The default implementation only takes <see cref="Storage"/> and the index array(s) into account.
 		/// </summary>
 		/// <returns>The hash code of <see cref="Storage"/> and the index array(s) of this sparse array</returns>
-		int GetHashCode() => HashCode.Combine(this.Storage, ((IReadOnlyList<Storage<TIndex>>)this).HashCodeOfArray());
+		int GetHashCode() => HashCode.Combine(this.Storage.MakeReference(newLength: this.NStored), ((IReadOnlyList<Storage<TIndex>>)this).HashCodeOfArray());
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this sparse array is equal to another one. The default implementation only compares <see cref="Storage"/> and the index array(s) of this sparse array.
@@ -173,7 +173,7 @@ namespace Althea.Arrays
 		/// <returns>True if this == <paramref name="obj"/></returns>
 		bool Equals(object? obj)
 		{
-			if (!(obj is ISparseArray<T, TIndex> sv && this.Storage == sv.Storage))
+			if (!(obj is ISparseArray<T, TIndex> sv && this.NStored == sv.NStored && this.Storage.MakeReference(newLength: this.NStored) == sv.Storage.MakeReference(newLength: this.NStored)))
 				return false;
 			IReadOnlyList<Storage<TIndex>> list1 = this, list2 = sv;
 			return list1.SequenceEqual(list2);

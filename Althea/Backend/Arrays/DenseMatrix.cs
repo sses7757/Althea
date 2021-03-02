@@ -27,14 +27,14 @@ namespace Althea.Backend.Arrays
 		public long LeadDim { get; }
 
 		/// <summary>
-		/// Get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. This override returns the actual valid length of <see cref="ValueArray{T}.Storage"/>.
+		/// Get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. 
 		/// </summary>
 		public override long ActualLength => this.LeadDim * (this.NCols - 1) + this.NRows;
 
 		/// <summary>
 		/// Construct a <see cref="DenseMatrix{T}"/> with value array <paramref name="values"/> and size <paramref name="rows"/>, <paramref name="cols"/>
 		/// </summary>
-		/// <param name="values"></param>
+		/// <param name="values">The value array as a <see cref="Storage{T}"/></param>
 		/// <param name="rows">The number of rows of this matrix</param>
 		/// <param name="cols">The number of columns of this matrix</param>
 		/// <param name="leadDim">The leading dimension of this matrix. Default 0 means <paramref name="rows"/>.</param>

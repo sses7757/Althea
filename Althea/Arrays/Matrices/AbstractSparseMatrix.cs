@@ -25,7 +25,12 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
-		public virtual long NStored => this.ActualLength;
+		public virtual long NStored { get; }
+
+		/// <summary>
+		/// Get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. Simply returns <see cref="NStored"/>.
+		/// </summary>
+		public override long ActualLength => this.NStored;
 
 		/// <summary>
 		/// Get the sparse format of this sparse matrix as a <see cref="SparseMatrixFormat"/>
@@ -53,6 +58,25 @@ namespace Althea.Arrays
 		/// </summary>
 		protected readonly Storage<TInd>[]? m_indexArrays = null;
 
+		private static void CheckTypeFormat(SparseMatrixFormat format)
+		{
+			var type = default(TInd).GetClassification();
+			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
+				throw new NotSupportedException(Resources.Support.DataType);
+			if (!format.IsAtomic())
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+		}
+
+		private static void CheckNStored(long length, Storage<T> valueArray, ref long stores)
+		{
+			if (stores == 0)
+				stores = valueArray.Length;
+			if (stores < 0)
+				throw new ArgumentOutOfRangeException(nameof(stores), Resources.Parameter.CannotNegative);
+			if (stores > valueArray.Length || stores > length)
+				throw new ArgumentOutOfRangeException(nameof(stores), Resources.Parameter.InvalidValue);
+		}
+
 		/// <summary>
 		/// Create a <see cref="AbstractSparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/>, <paramref name="rowIndexArray"/> and <paramref name="colIndexArray"/>
 		/// </summary>
@@ -63,23 +87,26 @@ namespace Althea.Arrays
 		/// <param name="colIndexArray">The column index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseMatrixFormat"/> of this sparse matrix, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="rowIndexArray"/> or <paramref name="colIndexArray"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default) : base(valueArray, rows, cols)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
+		protected AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) : base(valueArray, rows, cols)
 		{
-			var type = default(TInd).GetClassification();
-			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			CheckTypeFormat(format);
+			if (rows == 0 && cols == 0)
+			{
+				this.m_rowIndexArray = this.m_colIndexArray = Storage<TInd>.Empty;
+				return;
+			}
 			if (rowIndexArray is null || !rowIndexArray.IsValid())
 				throw new ArgumentNullException(nameof(rowIndexArray));
 			if (colIndexArray is null || !colIndexArray.IsValid())
 				throw new ArgumentNullException(nameof(colIndexArray));
+			CheckNStored(rows * cols, valueArray, ref stores);
 
 			this.m_rowIndexArray = rowIndexArray; this.m_colIndexArray = colIndexArray ; this.m_indexArrays = null;
-			this.Format = format; this.DefaultValue = defaultValue;
+			this.Format = format; this.DefaultValue = defaultValue; this.NStored = stores;
 		}
 
 		/// <summary>
@@ -91,26 +118,27 @@ namespace Althea.Arrays
 		/// <param name="indexArrays">The index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseMatrixFormat"/> of this sparse matrix, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="indexArrays"/> is null or empty</exception>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="indexArrays"/> is less than 2</exception>
-		protected AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd>[] indexArrays, SparseMatrixFormat format, T defaultValue = default) : base(valueArray, rows, cols)
+		protected AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd>[] indexArrays, SparseMatrixFormat format, T defaultValue = default, long stores = 0) : base(valueArray, rows, cols)
 		{
-			if (indexArrays is null || indexArrays.Length == 0)
-				throw new ArgumentNullException(nameof(indexArrays));
-			var type = default(TInd).GetClassification();
-			if (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger)
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			CheckTypeFormat(format);
+			if (rows == 0 && cols == 0)
+			{
+				this.m_rowIndexArray = this.m_colIndexArray = Storage<TInd>.Empty;
+				return;
+			}
 			if (indexArrays.Any(static a => a is null || !a.IsValid()))
 				throw new ArgumentNullException(nameof(indexArrays));
 			if (indexArrays.Length < 2)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(indexArrays));
+			CheckNStored(rows * cols, valueArray, ref stores);
 
 			this.m_rowIndexArray = indexArrays[0]; this.m_colIndexArray = indexArrays[1]; this.m_indexArrays = (Storage<TInd>[])indexArrays.Clone();
-			this.Format = format; this.DefaultValue = defaultValue;
+			this.Format = format; this.DefaultValue = defaultValue; this.NStored = stores;
 		}
 		#endregion
 

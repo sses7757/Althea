@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Althea.Arrays;
 using Althea.Helpers;
 
 
@@ -32,21 +31,25 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		COOR = 1 << 0,
 		/// <summary>
-		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the column-first order.
+		/// Coordinate Format (COO) that stores each non-zero element's <c>x</c> and <c>y</c> coordinates which are sorted in the column-first order. The transpose of a <see cref="COOR"/> format is the <see cref="COOC"/> format.
 		/// </summary>
 		COOC = 1 << 1,
 		/// <summary>
-		/// Compressed Sparse Row Format (CSR). The only way the <see cref="CSR"/> differs from the <see cref="COOR"/> format is that the array containing the row indices is compressed, that is, the row index array only stores the end-of-row offsets of <c>size == number_of_rows + 1</c> of the value array.
+		/// Compressed Sparse Row Format (CSR). The only way the <see cref="CSR"/> differs from the <see cref="COOR"/> format is that the array containing the row indices is compressed, that is, the row index array only stores the end-of-row offsets with <c>size == number_of_rows + 1</c> whose first element is 0.
 		/// </summary>
 		CSR = 1 << 2,
 		/// <summary>
-		/// Compressed Sparse Column Format (CSC). The only way the <see cref="CSC"/> differs from the <see cref="CSR"/> format is that the column index array instead of row indices array stores the end-of-column (not end-of-row) offsets.
+		/// Compressed Sparse Column Format (CSC). The only way the <see cref="CSC"/> differs from the <see cref="CSR"/> format is that the column index array instead of row index array stores the end-of-column (not end-of-row) offsets. The transpose of a <see cref="CSR"/> format is the <see cref="CSC"/> format.
 		/// </summary>
 		CSC = 1 << 3,
 		/// <summary>
 		/// Block Sparse Row Format (BSR). The only way the <see cref="BSR"/> differs from the <see cref="CSR"/> format is that instead of indexing values, <see cref="BSR"/> indexes the dense block sub-matrices. Therefore, this requires additional parameters: number of non-zero blocks instead of non-zero values, number of block matrix rows, number of block matrix columns, end-of-row offsets are counted in blocks and therefore is of <c>size == number_of_rows / block_rows + 1</c>.
 		/// </summary>
 		BSR = 1 << 4,
+		/// <summary>
+		/// Block Sparse Column Format (BSC). The only way the <see cref="BSC"/> differs from the <see cref="BSR"/> format is that the column index array instead of row index array stores the end-of-column (not end-of-row) offsets of blocks. The transpose of a <see cref="BSR"/> format is the <see cref="BSC"/> format.
+		/// </summary>
+		BSC = 1 << 5,
 	}
 	#endregion
 
@@ -66,7 +69,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// The compressed formats for sparse matrices.
 		/// </summary>
-		public const SparseMatrixFormat Compressed = SparseMatrixFormat.CSR | SparseMatrixFormat.CSC | SparseMatrixFormat.BSR;
+		public const SparseMatrixFormat Compressed = SparseMatrixFormat.CSR | SparseMatrixFormat.CSC | SparseMatrixFormat.BSR | SparseMatrixFormat.BSC;
 
 		/// <summary>
 		/// The row majored formats for sparse matrices.
@@ -76,7 +79,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// The column majored formats for sparse matrices.
 		/// </summary>
-		public const SparseMatrixFormat ColumnMajor = SparseMatrixFormat.COOC | SparseMatrixFormat.CSC;
+		public const SparseMatrixFormat ColumnMajor = SparseMatrixFormat.COOC | SparseMatrixFormat.CSC | SparseMatrixFormat.BSC;
 
 
 		/// <summary>

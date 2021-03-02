@@ -24,7 +24,12 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
-		public virtual long NStored => this.ActualLength;
+		public virtual long NStored { get; }
+
+		/// <summary>
+		/// Get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. Simply returns <see cref="NStored"/>.
+		/// </summary>
+		public override long ActualLength => this.NStored;
 
 		/// <summary>
 		/// Get the sparse format of this sparse vector as a <see cref="SparseVectorFormat"/>
@@ -48,6 +53,25 @@ namespace Althea.Arrays
 		/// </summary>
 		protected readonly Storage<TInd>[]? m_indexArrays = null;
 
+		private static void CheckTypeFormat(SparseVectorFormat format)
+		{
+			var type = default(TInd).GetClassification();
+			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
+				throw new NotSupportedException(Resources.Support.DataType);
+			if (!format.IsAtomic())
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+		}
+
+		private static void CheckNStored(long length, Storage<T> valueArray, ref long stores)
+		{
+			if (stores == 0)
+				stores = valueArray.Length;
+			if (stores < 0)
+				throw new ArgumentOutOfRangeException(nameof(stores), Resources.Parameter.CannotNegative);
+			if (stores > valueArray.Length || stores > length)
+				throw new ArgumentOutOfRangeException(nameof(stores), Resources.Parameter.InvalidValue);
+		}
+
 		/// <summary>
 		/// Create a <see cref="AbstractSparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArray"/>
 		/// </summary>
@@ -56,21 +80,19 @@ namespace Althea.Arrays
 		/// <param name="indexArray">The index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default) : base(valueArray, length)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this vector</exception>
+		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) : base(valueArray, length)
 		{
-			var type = default(TInd).GetClassification();
-			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			CheckTypeFormat(format);
 			if (indexArray is null || !indexArray.IsValid())
 				throw new ArgumentNullException(nameof(indexArray));
+			CheckNStored(length, valueArray, ref stores);
 
 			this.m_indexArray = indexArray; this.m_indexArrays = null;
-			this.Format = format; this.DefaultValue = defaultValue;
+			this.Format = format; this.DefaultValue = defaultValue; this.NStored = stores;
 		}
 
 		/// <summary>
@@ -81,20 +103,18 @@ namespace Althea.Arrays
 		/// <param name="indexArrays">The index array(s) as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd>[] indexArrays, SparseVectorFormat format, T defaultValue = default) : base(valueArray, length)
+		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd>[] indexArrays, SparseVectorFormat format, T defaultValue = default, long stores = 0) : base(valueArray, length)
 		{
+			CheckTypeFormat(format);
 			if (indexArrays is null || indexArrays.Length == 0)
 				throw new ArgumentNullException(nameof(indexArrays));
-			var type = default(TInd).GetClassification();
-			if (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger)
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 			if (indexArrays.Any(static a => a is null || !a.IsValid()))
 				throw new ArgumentNullException(nameof(indexArrays));
+			CheckNStored(length, valueArray, ref stores);
 
 			if (indexArrays.Length == 1)
 			{
@@ -104,7 +124,7 @@ namespace Althea.Arrays
 			{
 				this.m_indexArray = indexArrays[0]; this.m_indexArrays = (Storage<TInd>[])indexArrays.Clone();
 			}
-			this.Format = format; this.DefaultValue = defaultValue;
+			this.Format = format; this.DefaultValue = defaultValue; this.NStored = stores;
 		}
 		#endregion
 
