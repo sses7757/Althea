@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
-using Althea.Storage;
-using RT = Althea.Runtime.API;
-using BLAS = Althea.Blas.API;
-using Sparse = Althea.SparseBlas.API;
+using Althea.Arrays;
 
 
 namespace Althea.Backend.Arrays
 {
 	/// <summary>
-	/// The sparse matrix class that inherit the <see cref="MatrixBase{T}"/> and implements <see cref="ISparseArray{T}"/>.
+	/// The concrete sparse matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
 	/// </summary>
-	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	/// <remarks>For compatibility issues, only general sparse matrix is supported</remarks>
-	public sealed class SparseMatrix<T> : MatrixBase<T>, ISparseArray<T>, IMatrix<SparseMatrix<T>, AbstractSparseVector<T>, T>, IMatrix<DenseMatrix<T>, DenseVector<T>, T> where T : struct, IComparable<T>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
+	public class SparseMatrix<T, TInd> : AbstractSparseMatrix<T, TInd>
+		where T : unmanaged, IFormattable, IEquatable<T>
+		where TInd : unmanaged
 	{
 		#region sparse matrix special
 		/// <summary>

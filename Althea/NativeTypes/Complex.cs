@@ -30,6 +30,12 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <returns>The absolute value of this complex</returns>
 		T Abs();
+
+		/// <summary>
+		/// Compute the argument of this complex
+		/// </summary>
+		/// <returns>The argument of this complex</returns>
+		T Arg();
 	}
 	#endregion
 
@@ -411,12 +417,23 @@ namespace Althea.NativeTypes
 		public static Complex<T> operator /(T b, Complex<T> a) => new Complex<T>(b) / a;
 
 		/// <summary>
-		/// Complex absolute value
+		/// Complex absolute value of this complex
 		/// </summary>
+		/// <returns>The absolute value of this complex</returns>
 		public T Abs()
 		{
 			dynamic r = this.real, i = this.imag;
 			return (T)(dynamic)Math.Sqrt((double)(r * r + i * i));
+		}
+
+		/// <summary>
+		/// Compute the argument of this complex
+		/// </summary>
+		/// <returns>The argument of this complex</returns>
+		public T Arg()
+		{
+			dynamic r = this.real, i = this.imag;
+			return (T)(dynamic)Math.Atan2((double)i, (double)r);
 		}
 
 		/// <summary>
@@ -444,7 +461,7 @@ namespace Althea.NativeTypes
 		private static Complex<double> Log(Complex<double> c)
 		{
 			double real = 0.5 * Math.Log(c.real * c.real + c.imag * c.imag);
-			double imag = Math.Atan2(c.real, c.imag);
+			double imag = Math.Atan2(c.imag, c.real);
 			return new Complex<double>(real, imag);
 		}
 
@@ -498,6 +515,24 @@ namespace Althea.NativeTypes
 			}
 			result = Exp(result);
 			return (Complex<T>)result;
+		}
+
+		private static Complex<double> Sqrt(Complex<double> c)
+		{
+			double arg = 0.5 * Math.Atan2(c.imag, c.real);
+			double scale = Math.Pow(c.real * c.real + c.imag * c.imag, 0.25);
+			double real = Math.Cos(arg);
+			double imag = Math.Sin(arg);
+			return new Complex<double>(scale * real, scale * imag);
+		}
+
+		/// <summary>
+		/// Get the complex square root of this complex
+		/// </summary>
+		/// <returns>The complex square root of this complex</returns>
+		public Complex<T> Sqrt()
+		{
+			return (Complex<T>)Sqrt((Complex<double>)this);
 		}
 
 		/// <summary>

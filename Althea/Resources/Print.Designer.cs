@@ -61,11 +61,29 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 &quot;...{0} more stored elements&quot; 的本地化字符串。
+        ///   查找类似 ... {0} more stored rows 的本地化字符串。
+        /// </summary>
+        internal static string MoreRows {
+            get {
+                return ResourceManager.GetString("MoreRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ... {0} more stored elements 的本地化字符串。
         /// </summary>
         internal static string MoreStored {
             get {
                 return ResourceManager.GetString("MoreStored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ... {0} more 的本地化字符串。
+        /// </summary>
+        internal static string RowMore {
+            get {
+                return ResourceManager.GetString("RowMore", resourceCulture);
             }
         }
     }

@@ -250,6 +250,49 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
+		/// Generic type number square root.
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The input number</param>
+		/// <returns>The square root of <paramref name="a"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GenericSqrt<T>(this T a) where T : unmanaged, IEquatable<T>
+		{
+			T? result = a switch
+			{
+				sbyte or short or int or long => (T)Math.Sqrt((dynamic)a),
+				byte or ushort or uint or ulong => (T)Math.Sqrt((dynamic)a),
+				float or double => (T)Math.Sqrt((dynamic)a),
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Sqrt(),
+				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Sqrt(),
+				Complex<float> or Complex<double> => (T)((dynamic)a).Sqrt(),
+				_ => null,
+			};
+			if (result.HasValue)
+			{
+				return result.Value;
+			}
+			if (!typeof(T).IsSupportedDirect())
+				throw new NotSupportedException(Resources.Support.DataType);
+			if (typeof(T).IsComplexDirect())
+			{
+				try
+				{
+					return (T)((dynamic)a).Sqrt();
+				}
+				catch (Exception)
+				{
+					double r = (double)((dynamic)a).Real, i = (double)((dynamic)a).Imag;
+					var sqrt = new Complex<double>(r, i).Sqrt();
+					return (T)(dynamic)sqrt;
+				}
+			}
+			else
+				return (T)Math.Sqrt((dynamic)a);
+		}
+
+		/// <summary>
 		/// Generic type number conjugation.
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
@@ -263,7 +306,7 @@ namespace Althea.NativeTypes
 			{
 				sbyte or short or int or long => a,
 				byte or ushort or uint or ulong => a,
-				float or double or decimal => a,
+				float or double => a,
 				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Conjugate(),
 				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Conjugate(),
 				Complex<float> or Complex<double> => (T)((dynamic)a).Conjugate(),
@@ -296,7 +339,7 @@ namespace Althea.NativeTypes
 			{
 				sbyte or short or int or long => Math.Pow((dynamic)a, power),
 				byte or ushort or uint or ulong => Math.Pow((dynamic)a, power),
-				float or double or decimal => Math.Pow((dynamic)a, power),
+				float or double => Math.Pow((dynamic)a, power),
 				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Pow((sbyte)power),
 				Complex<short> a_short => (T)(dynamic)a_short.Pow((short)power),
 				Complex<int> a_int => (T)(dynamic)a_int.Pow((int)power),
@@ -334,7 +377,7 @@ namespace Althea.NativeTypes
 			{
 				sbyte or short or int or long => Math.Pow((dynamic)a, (dynamic)power),
 				byte or ushort or uint or ulong => Math.Pow((dynamic)a, (dynamic)power),
-				float or double or decimal => Math.Pow((dynamic)a, (dynamic)power),
+				float or double => Math.Pow((dynamic)a, (dynamic)power),
 				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Pow(power),
 				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Pow(power),
 				Complex<float> or Complex<double> => (T)((dynamic)a).Pow(power),
@@ -363,7 +406,7 @@ namespace Althea.NativeTypes
 			{
 				sbyte or short or int or long => Math.Abs((dynamic)a),
 				byte or ushort or uint or ulong => a,
-				float or double or decimal => Math.Abs((dynamic)a),
+				float or double => Math.Abs((dynamic)a),
 				Complex<sbyte> a_sbyte => a_sbyte.Abs(),
 				Complex<short> a_short => a_short.Abs(),
 				Complex<int> a_int => a_int.Abs(),
@@ -456,7 +499,7 @@ namespace Althea.NativeTypes
 				T? res = default(T) switch
 				{
 					// built-in float types
-					float or double or decimal => (T)(dynamic)double.Parse(str),
+					float or double => (T)(dynamic)double.Parse(str),
 					// built-in integer types
 					sbyte or short or int or long => (T)(dynamic)long.Parse(str),
 					byte or ushort or uint or ulong => (T)(dynamic)long.Parse(str),

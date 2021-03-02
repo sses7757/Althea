@@ -354,13 +354,20 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return new Backend.Arrays.DenseMatrix<T>().AddMatricesMultiplication(Scalars<T>.One, left, right);
+			return left.MultiplyMatrix(Scalars<T>.One, right);
 		}
 		#endregion
 
 		#region linear algebra
 		/// <summary>
-		/// Create a new <see cref="MatrixBase{T}"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
+		/// When implemented by a derived class, reshape this matrix to a matrix with leading dimension = <paramref name="rows"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <returns>The reshaped matrix, may be this matrix itself</returns>
+		public override abstract MatrixBase<T> ToMatrix(long rows = 0);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <see cref="MatrixBase{T}"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
 		/// </summary>
 		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the simple operation to be applied</param>
 		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="operation"/>(this)</returns>
@@ -368,7 +375,7 @@ namespace Althea.Arrays
 		public abstract MatrixBase<T> ApplyOperation(MatrixOperation operation);
 
 		/// <summary>
-		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
+		/// When implemented by a derived class, create a new <see cref="MatrixBase{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
 		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
@@ -378,25 +385,23 @@ namespace Althea.Arrays
 		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
 		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="scalarThis"/> and <paramref name="opOther"/> are 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
 		public abstract MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
 
 		/// <summary>
-		/// Create a new <see cref="MatrixBase{T}"/> which is the addition result of this matrix and the multiplication the given <paramref name="otherLeft"/> and <paramref name="opRight"/> matrices.
+		/// When implemented by a derived class, create a new <see cref="MatrixBase{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
 		/// </summary>
-		/// <param name="scalarOther">The scalar to multiply to the matrix multiplication result before addition</param>
-		/// <param name="otherLeft">The input <see cref="MatrixBase{T}"/> to be multiplied at left</param>
-		/// <param name="otherRight">The input <see cref="MatrixBase{T}"/> to be multiplied at right</param>
-		/// <param name="scalarThis">The scalar to multiply to this matrix before addition. If <paramref name="scalarThis"/> is 0, this matrix can be invalid.</param>
-		/// <param name="opLeft">The <see cref="MatrixOperation"/> to apply to <paramref name="otherLeft"/> before multiplication</param>
-		/// <param name="opRight">The <see cref="MatrixOperation"/> to apply to <paramref name="otherRight"/> before multiplication</param>
-		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalarThis"/> * this + <paramref name="scalarOther"/> * <paramref name="opLeft"/>(<paramref name="otherLeft"/>) * <paramref name="opRight"/>(<paramref name="otherRight"/>)</c></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="otherLeft"/> or <paramref name="otherRight"/> is null or empty</exception>
-		/// <exception cref="NotSupportedException">If the given <paramref name="opLeft"/> or <paramref name="opRight"/> is not supported</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="scalarThis"/> and <paramref name="opRight"/> are 0</exception>
-		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
-		public abstract MatrixBase<T> AddMatricesMultiplication(T scalarOther, MatrixBase<T> otherLeft, MatrixBase<T> otherRight, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="other">The input right <see cref="MatrixBase{T}"/> to be multiplied</param>
+		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
+		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
 		#endregion
 	}
 

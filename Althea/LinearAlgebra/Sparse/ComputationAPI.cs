@@ -257,6 +257,36 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
+		/// When implemented by a derived class, perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
+		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
+		/// <param name="A">The input dense matrix</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="β">The scalar to multiply to <paramref name="B"/></param>
+		/// <param name="B">The input sparse matrix</param>
+		/// <param name="C">The input/output dense matrix</param>
+		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
+		public static void MatrixDenseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, Storage<T> A, long lda, T β, ISparseMatrix<T> B, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		{
+			CombinationOfLocations matrix1 = A.LocationDescription, matrix2 = B.Storage.LocationDescription, matrix3 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(B), node);
+				success = node.Value.MatrixDenseAddSparse_(opA, opB, α, A, lda, β, B, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
 		/// Perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
@@ -647,6 +677,24 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
+		/// When implemented by a derived class, perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
+		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
+		/// <param name="A">The input dense matrix</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="β">The scalar to multiply to <paramref name="B"/></param>
+		/// <param name="B">The input sparse matrix</param>
+		/// <param name="C">The input/output dense matrix</param>
+		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
+		protected abstract bool MatrixDenseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, Storage<T> A, long lda, T β, ISparseMatrix<T> B, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+
+		/// <summary>
 		/// When implemented by a derived class, perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
@@ -681,6 +729,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="target">Output a new sparse matrix as the product (and sum) with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
 		protected abstract bool MatrixSparseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, out ISparseMatrix<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
@@ -699,6 +748,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
 		protected abstract bool MatrixDenseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, long m, T α, Storage<T> A, long lda, ISparseMatrix<T> B, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
@@ -717,6 +767,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
 		protected abstract bool MatrixSparseMultiplyDense_<T>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseMatrix<T> A, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>

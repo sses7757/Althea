@@ -257,13 +257,6 @@ namespace Althea.Arrays
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new sparse matrix alike this one</returns>
 		public override abstract AbstractSparseMatrix<TOut, TInd> NewArrayAlike<TOut>();
-
-		/// <summary>
-		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
-		/// </summary>
-		/// <typeparam name="TOut">The data type to cast to</typeparam>
-		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
-		public override abstract AbstractSparseMatrix<TOut, TInd> DataTypeCast<TOut>();
 		#endregion
 
 		#region equality

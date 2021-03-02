@@ -110,16 +110,22 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region conversion methods
+		#region reshape
 		/// <summary>
-		/// Reshape the vector to a matrix with leading dimension = <paramref name="leadDim"/>
+		/// Reshape that simply returns this vector.
 		/// </summary>
-		/// <param name="leadDim">The leading dimension of target matrix; if <paramref name="leadDim"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <returns>This vector</returns>
+		public override DenseVector<T> ToVector() => this;
+
+		/// <summary>
+		/// Reshape the vector to a matrix with leading dimension = <paramref name="rows"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public override ValueArray<T> ToMatrix(long leadDim = 0)
+		public override DenseMatrix<T> ToMatrix(long rows = 0)
 		{
 			Span<long> size = stackalloc long[2];
-			size[0] = leadDim;
+			size[0] = rows;
 			CheckSize(this, size);
 			return new DenseMatrix<T>(this.Storage, size[0], size[1]);
 		}
@@ -129,7 +135,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size)
+		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size)
 		{
 			Span<long> newSize = stackalloc long[size.Length];
 			size.CopyTo(newSize);
@@ -206,7 +212,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="AbstractSparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="AbstractSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
 		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)
@@ -267,7 +273,7 @@ namespace Althea.Backend.Arrays
 
 		T IKrylovVector<DenseVector<T>, T>.Dot(DenseVector<T> other) => this.Dot(other);
 
-		void IKrylovVector<DenseVector<T>, T>.AddByVector(DenseVector<T> other, T scalar) => this.AddByVector(other, scalar);
+		void IKrylovVector<DenseVector<T>, T>.AddBy(DenseVector<T> other, T scalar) => this.AddByVector(other, scalar);
 
 		/// <summary>
 		/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.

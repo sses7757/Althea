@@ -41,6 +41,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
 		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		T Dot(TVec other);
 
 		/// <summary>
@@ -48,22 +49,26 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="other">The other <typeparamref name="TVec"/> to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		void AddByVector(TVec other, T scalar);
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		void AddBy(TVec other, T scalar);
 
 		/// <summary>
 		/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
 		/// </summary>
 		/// <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
 		void ReplaceBy(TVec other);
 
 		/// <summary>
-		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="VectorBase{T}"/>.
+		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
 		/// </summary>
 		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
 		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <see cref="VectorBase{T}"/></returns>
+		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
 		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
+		/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
 		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input);
 		#endregion
 	}
@@ -123,32 +128,6 @@ namespace Althea.Arrays
 				}
 				if (canDispose)
 					list[i].Dispose();
-			}
-		}
-		#endregion
-
-		#region data type cast helper
-		/// <summary>
-		/// The helper method used to create an storage casted from the value array of this sparse vector
-		/// </summary>
-		/// <typeparam name="TOut">The data type to cast to</typeparam>
-		/// <param name="valueArray">A created storage casted from the value array of this sparse vector, or <see cref="ValueArray{T}.Storage"/> if <typeparamref name="T"/> == <typeparamref name="TOut"/></param>
-		protected void DataTypeCast<TOut>(out Storage<TOut> valueArray) where TOut : unmanaged, IFormattable, IEquatable<TOut>
-		{
-			if (typeof(T) == typeof(TOut))
-			{
-				valueArray = this.Storage as Storage<TOut> ?? Storage<TOut>.Empty;
-				return;
-			}
-			valueArray = this.Storage.CreateAlike<TOut>();
-			try
-			{
-				LinearAlgebra.Dense.AbstractApi.PointWiseCast(this.Storage, 1, valueArray, 1);
-			}
-			catch (Exception)
-			{
-				valueArray?.Dispose();
-				throw;
 			}
 		}
 		#endregion
@@ -228,10 +207,11 @@ namespace Althea.Arrays
 		/// <param name="valueArray">The cloned output value array</param>
 		/// <param name="indexArrays">The cloned output all index arrays, must has length equaling this.<see cref="IReadOnlyCollection{T}.Count">Count</see></param>
 		/// <param name="copyContent">Copy the contents from original arrays to the new arrays or not</param>
+		/// <returns>The <paramref name="indexArrays"/> as a <see cref="Span{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndex"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="copyContent"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="copyContent"/> has incompatible length</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <typeparamref name="T"/> is not <typeparamref name="TOut"/> while <paramref name="copyContent"/> is true</exception>
-		protected void NewArraysAlike<TOut>(out ActualStorage<TOut> valueArray, Span<IntPtr> indexArrays, bool copyContent) where TOut : unmanaged
+		Span<ActualStorage<TIndex>> NewArraysAlike<TOut>(out ActualStorage<TOut> valueArray, Span<IntPtr> indexArrays, bool copyContent) where TOut : unmanaged
 		{
 			if (indexArrays.IsEmpty)
 				throw new ArgumentNullException(nameof(indexArrays));
@@ -251,6 +231,7 @@ namespace Althea.Arrays
 					indices[i] = copyContent ? list[i].Clone() : list[i].CreateAlike();
 				}
 				valueArray = value;
+				return indices;
 			}
 			catch (Exception)
 			{

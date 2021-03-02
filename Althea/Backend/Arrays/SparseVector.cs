@@ -204,7 +204,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="AbstractSparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
@@ -265,8 +265,9 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned array</returns>
 		public override SparseVector<T, TInd> Clone()
 		{
-			this.Clone(out ActualStorage<T> value, out ActualStorage<TInd> index, out _);
-			return new SparseVector<T, TInd>(this.Length, value, index, this.DefaultValue);
+			Span<IntPtr> temp = stackalloc IntPtr[1];
+			var span = ((ISparseArray<T, TInd>)this).NewArraysAlike(out ActualStorage<T> value, temp, copyContent: true);
+			return new SparseVector<T, TInd>(this.Length, value, span[0], this.DefaultValue);
 		}
 
 		/// <summary>
@@ -275,8 +276,9 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<T, TInd> NewArrayAlike()
 		{
-			this.NewArrayAlike(out ActualStorage<T> value, out ActualStorage<TInd> index, out _);
-			return new SparseVector<T, TInd>(this.Length, value, index, this.DefaultValue);
+			Span<IntPtr> temp = stackalloc IntPtr[1];
+			var span = ((ISparseArray<T, TInd>)this).NewArraysAlike(out ActualStorage<T> value, temp, copyContent: false);
+			return new SparseVector<T, TInd>(this.Length, value, span[0], this.DefaultValue);
 		}
 
 		/// <summary>
@@ -286,19 +288,9 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<TOut, TInd> NewArrayAlike<TOut>()
 		{
-			this.NewArrayAlike(out ActualStorage<TOut> value, out ActualStorage<TInd> index, out _);
-			return new SparseVector<TOut, TInd>(this.Length, value, index, this.DefaultValue.GenericConvert<TOut, T>());
-		}
-
-		/// <summary>
-		/// Cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
-		/// </summary>
-		/// <typeparam name="TOut">The data type to cast to</typeparam>
-		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
-		public override SparseVector<TOut, TInd> DataTypeCast<TOut>()
-		{
-			this.DataTypeCast(out Storage<TOut> value);
-			return new SparseVector<TOut, TInd>(this.Length, value, this.IndexStorage, this.DefaultValue.GenericConvert<TOut, T>());
+			Span<IntPtr> temp = stackalloc IntPtr[1];
+			var span = ((ISparseArray<T, TInd>)this).NewArraysAlike(out ActualStorage<TOut> value, temp, copyContent: true);
+			return new SparseVector<TOut, TInd>(this.Length, value, span[0], this.DefaultValue.GenericConvert<TOut, T>());
 		}
 		#endregion
 
@@ -311,7 +303,7 @@ namespace Althea.Backend.Arrays
 
 		T IKrylovVector<SparseVector<T, TInd>, T>.Dot(SparseVector<T, TInd> other) => this.Dot(other);
 
-		void IKrylovVector<SparseVector<T, TInd>, T>.AddByVector(SparseVector<T, TInd> other, T scalar) => this.AddByVector(other, scalar);
+		void IKrylovVector<SparseVector<T, TInd>, T>.AddBy(SparseVector<T, TInd> other, T scalar) => this.AddByVector(other, scalar);
 
 		/// <summary>
 		/// Replace this vector's content with the <paramref name="other"/> vector in-place. The default implementation only works when this and <paramref name="other"/> have same sparsity.

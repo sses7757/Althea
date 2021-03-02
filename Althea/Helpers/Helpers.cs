@@ -67,7 +67,7 @@ namespace Althea.Helpers
 	/// </summary>
 	public static class ReflectionHelper
 	{
-		private static readonly Dictionary<(Type t1, Type t2), Delegate?> _conversionCache = new Dictionary<(Type t1, Type t2), Delegate?>();
+		private static readonly Dictionary<(RuntimeTypeHandle t1, RuntimeTypeHandle t2), Delegate?> _conversionCache = new Dictionary<(RuntimeTypeHandle, RuntimeTypeHandle), Delegate?>();
 
 		/// <summary>
 		/// Generic convert <paramref name="obj"/> of <typeparamref name="T1"/> to <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators.
@@ -84,19 +84,20 @@ namespace Althea.Helpers
 																		m.GetParameters()[0].ParameterType.IsAssignableFrom(typeof(T1));
 
 			Type t1 = typeof(T1), t2 = typeof(T2);
-			if (!_conversionCache.ContainsKey((t1, t2)))
+			var key = (t1.TypeHandle, t2.TypeHandle);
+			if (!_conversionCache.ContainsKey(key))
 			{
 				var conversionOperator = t1.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
 												 .Where(predicator).FirstOrDefault();
 				conversionOperator ??= t2.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
 												 .Where(predicator).FirstOrDefault();
 				if (conversionOperator is null)
-					_conversionCache.Add((t1, t2), null);
+					_conversionCache.Add(key, null);
 				else
-					_conversionCache.Add((t1, t2), conversionOperator.CreateDelegate<Converter<T1, T2>>());
+					_conversionCache.Add(key, conversionOperator.CreateDelegate<Converter<T1, T2>>());
 			}
-			if (_conversionCache[(t1, t2)] is not Converter<T1, T2> converter)
-				return (T2)(dynamic)obj;
+			if (_conversionCache[key] is not Converter<T1, T2> converter)
+				return (T2)(dynamic)obj; // default dynamic converter
 			else
 				return converter.Invoke(obj);
 		}
@@ -572,12 +573,12 @@ namespace Althea.Helpers
 		/// <param name="matrix">The column-major values of the dense matrix to print</param>
 		/// <param name="rows">The number of rows of the given matrix</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-		/// <param name="hasMore">Whether each row of <paramref name="matrix"/> is complete or not</param>
+		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
 		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this Span<T> matrix, int rows, bool hasMore, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
 		{
 			if (matrix.IsEmpty)
 				return string.Empty;
@@ -589,16 +590,16 @@ namespace Althea.Helpers
 			int cols = matrix.Length / rows;
 			string format = GetFormatString(ref precision);
 			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
+			string moreStr = more > 0 ? string.Format("  " + Print.RowMore, more) : "  ";
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < rows; i++)
 			{
 				StringBuilder line = new StringBuilder();
 				for (int j = 0; j < cols; j++)
 				{
-					line.Append(toStringFunc.Invoke(matrix[i + j * rows], format, precision)).Append("  ");
+					line.Append(toStringFunc.Invoke(matrix[i + j * rows], format, precision));
 				}
-				if (hasMore)
-					line.Append("...");
+				line.Append(moreStr);
 				sb.AppendLine(line.ToString());
 			}
 			return sb.ToString();

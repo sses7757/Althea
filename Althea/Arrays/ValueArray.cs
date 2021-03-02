@@ -351,11 +351,11 @@ namespace Althea.Arrays
 		public abstract ValueArray<T> ToVector();
 
 		/// <summary>
-		/// When implemented by a derived class, reshape the array to a matrix with leading dimension = <paramref name="leadDim"/>
+		/// When implemented by a derived class, reshape the array to a matrix with leading dimension = <paramref name="rows"/>
 		/// </summary>
-		/// <param name="leadDim">The leading dimension of target matrix; if <paramref name="leadDim"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public abstract ValueArray<T> ToMatrix(long leadDim = 0);
+		public abstract ValueArray<T> ToMatrix(long rows = 0);
 
 		/// <summary>
 		/// When implemented by a derived class, reshape the array to a tensor with dimensionality = <paramref name="size"/>.
@@ -508,8 +508,7 @@ namespace Althea.Arrays
 		/// <returns>The new <see cref="ValueArray{TOut}"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
 		public override ValueArray<TOut> DataTypeCast<TOut>()
 		{
-			DataType typeT = default(T).ToDataType(), typeOut = default(TOut).ToDataType();
-			if (typeT == typeOut)
+			if (typeof(T) == typeof(TOut))
 			{
 				var ret = this as ValueArray<TOut>;
 				return ret ?? new DenseVector<TOut>();
