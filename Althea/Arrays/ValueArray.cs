@@ -20,6 +20,8 @@ namespace Althea.Arrays
 	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region properties
+		private readonly Storage<T> m_orginalStorage;
+
 		/// <summary>
 		/// Get the raw storage of this array
 		/// </summary>
@@ -43,17 +45,30 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="storage">The preallocated <see cref="Storage{T}"/> (can be a <see cref="ReferenceStorage{T}"/>) as the underlying <see cref="Storage"/> of this array</param>
 		/// <param name="size">The presenting size of this array</param>
-		/// <exception cref="ArgumentException">If the product of <paramref name="size"/> is not the same as the length of <paramref name="storage"/></exception>
-		protected ValueArray(Storage<T> storage, ReadOnlySpan<long> size) : base(size)
+		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="storage"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="size"/> is not 0 while <paramref name="storage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="actualLength"/> is out of the length range of <paramref name="storage"/> or <paramref name="size"/></exception>
+		protected ValueArray(Storage<T> storage, ReadOnlySpan<long> size, long actualLength = 0) : base(size)
 		{
-			this.Storage = storage;
 			if (size.Length == 1 && size[0] == 0)
+			{
+				this.m_orginalStorage = this.Storage = Storage<T>.Empty;
 				return;
-			// checks if not an empty array
+			}
+			// checks
 			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
-			if (this.Length != storage.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
+			if (actualLength == 0)
+				actualLength = storage.Length;
+			if (actualLength < 0)
+				throw new ArgumentOutOfRangeException(nameof(actualLength), actualLength, Resources.Parameter.CannotNegative);
+			if (actualLength > storage.Length)
+				throw new ArgumentOutOfRangeException(nameof(actualLength), actualLength, Resources.Parameter.InvalidValue);
+			if (actualLength > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(actualLength), actualLength, Resources.Parameter.WrongSize);
+
+			this.Storage = storage.MakeReference(newLength: actualLength);
+			this.m_orginalStorage = storage;
 		}
 
 		/// <summary>
@@ -66,7 +81,7 @@ namespace Althea.Arrays
 			{
 				return;
 			}
-			this.Storage.Dispose();
+			this.m_orginalStorage.Dispose();
 		}
 		#endregion
 

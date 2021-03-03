@@ -21,7 +21,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
 		/// <param name="length">The presenting size of the vector</param>
-		protected VectorBase(Storage<T> values, long length) : base(values, stackalloc long[1].SetValue(length)) { }
+		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
+		protected VectorBase(Storage<T> values, long length, long actualLength = 0) : base(values, stackalloc long[1].SetValue(length), actualLength) { }
 		#endregion
 
 		#region reshape

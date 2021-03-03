@@ -58,6 +58,7 @@ namespace Althea.Arrays
 		/// </summary>
 		protected readonly Storage<TInd>[]? m_indexArrays = null;
 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private static void CheckTypeFormat(SparseMatrixFormat format)
 		{
 			var type = default(TInd).GetClassification();
@@ -67,6 +68,7 @@ namespace Althea.Arrays
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 		}
 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private static void CheckNStored(long length, Storage<T> valueArray, ref long stores)
 		{
 			if (stores == 0)
@@ -144,38 +146,17 @@ namespace Althea.Arrays
 
 		#region storage related
 		/// <summary>
-		/// When implemented by a derived class, check whether this sparse matrix is a valid one or not. The default implementation only checks <see cref="AbstractArray{T}.Length"/>, <see cref="NStored"/>, <see cref="ValueArray{T}.Storage"/> and the underlying index array(s) of this sparse matrix.
+		/// When implemented by a derived class, check whether this sparse matrix is a valid one or not. The default implementation only utilizes the default implementation of <see cref="ICheckValid.IsValid"/> in <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <returns>The validness of this array</returns>
-		public override bool IsValid()
-		{
-			if (!base.IsValid() || this.NStored <= 0)
-				return false;
-			if (this.m_indexArrays is null)
-			{
-				return	this.m_rowIndexArray is not null && this.m_rowIndexArray.IsValid() &&
-						this.m_colIndexArray is not null && this.m_colIndexArray.IsValid();
-			}
-			else
-			{
-				return this.m_indexArrays.All(static a => a is not null && a.IsValid());
-			}
-		}
+		public override bool IsValid() => ((ISparseArray<T>)this).IsValid();
 
 		/// <summary>
-		/// When implemented by a derived class, check if this sparse matrix share some storage(s) with the <paramref name="other"/> one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.OverlapWith(ISparseArray{T, TIndex})"/>
+		/// When implemented by a derived class, check if this sparse matrix share some storage(s) with the <paramref name="other"/> one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.OverlapWith(ISparseArray{T, TIndex})"/>.
 		/// </summary>
 		/// <param name="other">The other <see cref="ValueArray{T}"/> to check</param>
 		/// <returns>True if they do share some storage, false otherwise</returns>
-		public override bool OverlapWith(ValueArray<T> other)
-		{
-			if (base.OverlapWith(other))
-				return true;
-			if (other is not ISparseArray<T, TInd> sparse)
-				return false;
-			// else
-			return ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
-		}
+		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
 
 		/// <summary>
 		/// When implemented by a derived class, dispose this sparse matrix after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T}.DisposeExclude(ISparseArray{T})"/>.

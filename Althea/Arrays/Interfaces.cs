@@ -80,7 +80,7 @@ namespace Althea.Arrays
 	/// Simple interface for sparse arrays, inherits <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>. The index type is not indicated
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface ISparseArray<T> : IReadOnlyList<IStorage> where T : unmanaged
+	public interface ISparseArray<T> : IReadOnlyList<IStorage>, ICheckValid where T : unmanaged
 	{
 		#region property
 		/// <summary>
@@ -131,6 +131,16 @@ namespace Althea.Arrays
 			}
 		}
 		#endregion
+
+		#region helper
+		bool ICheckValid.IsValid()
+		{
+			if (this.Storage is null || !this.Storage.IsValid() || this.NStored <= 0)
+				return false;
+			IReadOnlyList<IStorage> list = this;
+			return list.All(static l => l is not null && l.IsValid());
+		}
+		#endregion
 	}
 
 	/// <summary>
@@ -149,14 +159,6 @@ namespace Althea.Arrays
 		protected static readonly DataType indexDataType = default(TIndex).ToDataType();
 
 		DataType ISparseArray<T>.IndexType => indexDataType;
-		#endregion
-
-		#region dispose
-		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T}.DisposeExclude(ISparseArray{T})"/>.
-		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T, TIndex}"/> to exclude before disposing</param>
-		void DisposeExclude(ISparseArray<T, TIndex> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 		#endregion
 
 		#region helpers
@@ -186,6 +188,8 @@ namespace Althea.Arrays
 		/// <returns>True if they do share some storage, false otherwise</returns>
 		bool OverlapWith(ISparseArray<T, TIndex> other)
 		{
+			if (this.Storage.OverlapWith(other.Storage))
+				return true;
 			IReadOnlyList<Storage<TIndex>> list = this, array = other;
 			for (int i = 0; i < list.Count; i++)
 			{
