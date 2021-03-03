@@ -26,7 +26,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// </code></example>
 		public static dynamic Dynamic => singletonDynamic;
 
-		private static readonly DynamicInvocations singletonDynamic = new DynamicInvocations();
+		private static readonly DynamicInvocations singletonDynamic = new();
 
 		private sealed class DynamicInvocations : DynamicInvocation
 		{

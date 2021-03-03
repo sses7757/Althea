@@ -197,7 +197,7 @@ namespace Althea.Runtime.Mkl
 		public (int major, int minor) DriverVersion {
 			get {
 				int len = 198;
-				StringBuilder str = new StringBuilder(len);
+				StringBuilder str = new(len);
 				NativeMethods.MKL_Get_Version_String(str, len);
 				var s = str.ToString();
 				int versionStart = s.IndexOf("Version") + "Version".Length + 1;

@@ -78,7 +78,7 @@ namespace Althea.Arrays
 		#endregion
 
 		#region create
-		private static readonly Dictionary<Type, Delegate> cacheCreate = new Dictionary<Type, Delegate>();
+		private static readonly Dictionary<Type, Delegate> cacheCreate = new();
 
 		/// <summary>
 		/// Create an array of concrete type <typeparamref name="TArray"/> using reflection.
@@ -126,7 +126,7 @@ namespace Althea.Arrays
 		#endregion
 
 		#region reconstruct
-		private static readonly Dictionary<Type, Delegate> cacheReconstruct = new Dictionary<Type, Delegate>();
+		private static readonly Dictionary<Type, Delegate> cacheReconstruct = new();
 
 		/// <summary>
 		/// Reconstruct an array of concrete type <typeparamref name="TArray"/> using reflection.

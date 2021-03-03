@@ -209,8 +209,8 @@ namespace Althea
 		#endregion
 
 		#region string related
-		private static readonly Dictionary<LocationType, string> static_OtherLocationNames = new Dictionary<LocationType, string>();
-		private static readonly Dictionary<LocationType, Func<int, KeyValuePair<string, string>>> static_OtherDetailNames = new Dictionary<LocationType, Func<int, KeyValuePair<string, string>>>();
+		private static readonly Dictionary<LocationType, string> static_OtherLocationNames = new();
+		private static readonly Dictionary<LocationType, Func<int, KeyValuePair<string, string>>> static_OtherDetailNames = new();
 
 		/// <summary>
 		/// Set the name of <see cref="Type"/> used for <see cref="ToString"/> of this if it represents a storage position in other types like <see cref="LocationType.OtherRam_0"/>
@@ -442,7 +442,7 @@ namespace Althea
 		/// Implicitly convert a <see cref="StorageLocation"/> to a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		/// <param name="storageDetail">The <see cref="StorageLocation"/> to be converted</param>
-		public static implicit operator CombinationOfLocations(StorageLocation storageDetail) => new CombinationOfLocations(storageDetail);
+		public static implicit operator CombinationOfLocations(StorageLocation storageDetail) => new(storageDetail);
 
 		/// <summary>
 		/// Copy the <see cref="StorageLocation"/>s of this combination to a given <paramref name="span"/>

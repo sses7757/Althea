@@ -122,7 +122,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>True if <paramref name="valueLength"/>, <paramref name="rowLength"/> and <paramref name="columnLength"/> obey the underlying regulation of underlying format, false otherwise.</returns>
 		public delegate bool CheckLengthRegulationDelegate(long rows, long columns, long valueLength, long rowLength, long columnLength);
 
-		private static readonly Dictionary<SparseMatrixFormat, CheckLengthRegulationDelegate> cache_regulations = new Dictionary<SparseMatrixFormat, CheckLengthRegulationDelegate>();
+		private static readonly Dictionary<SparseMatrixFormat, CheckLengthRegulationDelegate> cache_regulations = new();
 
 		/// <summary>
 		/// Set the length regulation of given <paramref name="format"/> by indicating length-regulation-check function.

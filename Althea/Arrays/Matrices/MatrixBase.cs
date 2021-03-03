@@ -27,17 +27,13 @@ namespace Althea.Arrays
 		public long NCols => this.m_size[1];
 
 		/// <summary>
-		/// When implemented by a derived class, get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. 
-		/// </summary>
-		public override abstract long ActualLength { get; }
-
-		/// <summary>
 		/// Construct a <see cref="MatrixBase{T}"/> with value array <paramref name="values"/> and presenting size <paramref name="rows"/>, <paramref name="cols"/>
 		/// </summary>
 		/// <param name="values"></param>
 		/// <param name="rows">The presenting number of rows of this matrix</param>
 		/// <param name="cols">The presenting number of columns of this matrix</param>
-		protected MatrixBase(Storage<T> values, long rows, long cols) : base(values, stackalloc long[2].SetValue(rows, cols)) { }
+		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
+		protected MatrixBase(Storage<T> values, long rows, long cols, long actualLength = 0) : base(values, stackalloc long[2].SetValue(rows, cols), actualLength) { }
 		#endregion
 
 		#region basic indexers

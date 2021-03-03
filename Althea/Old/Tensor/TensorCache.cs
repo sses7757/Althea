@@ -241,11 +241,11 @@ namespace Althea.Tensor
 	/// <typeparam name="TPlan">The type of contraction plan</typeparam>
 	public static class ContractionCache<TPlan> where TPlan : struct, IDisposable
 	{
-		private static readonly List<int> HashCodes = new List<int>();
+		private static readonly List<int> HashCodes = new();
 
-		private static readonly List<ContractionInput> Inputs = new List<ContractionInput>();
+		private static readonly List<ContractionInput> Inputs = new();
 
-		private static readonly List<TPlan> Outputs = new List<TPlan>();
+		private static readonly List<TPlan> Outputs = new();
 
 		/// <summary>
 		/// Clear all cache of current type <typeparamref name="TPlan"/>.
@@ -314,13 +314,13 @@ namespace Althea.Tensor
 		where TAdditionInput : struct, IEquatable<TAdditionInput>
 		where TPlan : struct, IDisposable
 	{
-		private static readonly List<int> HashCodes = new List<int>();
+		private static readonly List<int> HashCodes = new();
 
-		private static readonly List<ContractionInput> Inputs = new List<ContractionInput>();
+		private static readonly List<ContractionInput> Inputs = new();
 
-		private static readonly List<TAdditionInput> Additions = new List<TAdditionInput>();
+		private static readonly List<TAdditionInput> Additions = new();
 
-		private static readonly List<TPlan> Outputs = new List<TPlan>();
+		private static readonly List<TPlan> Outputs = new();
 
 		/// <summary>
 		/// Clear all cache of current type <typeparamref name="TPlan"/>.
@@ -492,11 +492,11 @@ namespace Althea.Tensor
 	/// <typeparam name="TPlan">The type of contraction plan</typeparam>
 	public static class PermuteCache<TPlan> where TPlan : struct, IDisposable
 	{
-		private static readonly List<int> HashCodes = new List<int>();
+		private static readonly List<int> HashCodes = new();
 
-		private static readonly List<PermuteInput> Inputs = new List<PermuteInput>();
+		private static readonly List<PermuteInput> Inputs = new();
 
-		private static readonly List<TPlan> Outputs = new List<TPlan>();
+		private static readonly List<TPlan> Outputs = new();
 
 		/// <summary>
 		/// Clear all cache of current type <typeparamref name="TPlan"/>.

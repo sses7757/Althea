@@ -28,7 +28,7 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get the index array's storage as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public Storage<TInd> IndexStorage => this.m_indexArray;
+		public Storage<TInd> IndexStorage => this.m_indexArrays[0];
 
 		/// <summary>
 		/// Create an empty <see cref="SparseVector{T, TInd}"/>
@@ -42,8 +42,9 @@ namespace Althea.Backend.Arrays
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
 		/// <param name="indexArray">The index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray,T defaultValue = default) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue) { }
+		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray,T defaultValue = default, long stores = 0) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue, stores) { }
 
 		private SparseVector<T, TInd> CreateFunction(long length, long nonDefaults, SparseVectorFormat format, T defaultValue)
 		{
@@ -265,9 +266,8 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned array</returns>
 		public override SparseVector<T, TInd> Clone()
 		{
-			Span<IntPtr> temp = stackalloc IntPtr[1];
-			var span = ((ISparseArray<T, TInd>)this).NewArraysAlike(out ActualStorage<T> value, temp, copyContent: true);
-			return new SparseVector<T, TInd>(this.Length, value, span[0], this.DefaultValue);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: true);
+			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
 		}
 
 		/// <summary>
@@ -276,9 +276,8 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<T, TInd> NewArrayAlike()
 		{
-			Span<IntPtr> temp = stackalloc IntPtr[1];
-			var span = ((ISparseArray<T, TInd>)this).NewArraysAlike(out ActualStorage<T> value, temp, copyContent: false);
-			return new SparseVector<T, TInd>(this.Length, value, span[0], this.DefaultValue);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: false);
+			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
 		}
 
 		/// <summary>
@@ -288,9 +287,21 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<TOut, TInd> NewArrayAlike<TOut>()
 		{
-			Span<IntPtr> temp = stackalloc IntPtr[1];
-			var span = ((ISparseArray<T, TInd>)this).NewArraysAlike(out ActualStorage<TOut> value, temp, copyContent: true);
-			return new SparseVector<TOut, TInd>(this.Length, value, span[0], this.DefaultValue.GenericConvert<TOut, T>());
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TInd>(out ActualStorage<TOut> value, copyContent: true);
+			return new SparseVector<TOut, TInd>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
+		}
+
+		/// <summary>
+		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new sparse vector alike this one</returns>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
+		public override SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+		{
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyContent: true);
+			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
 		}
 		#endregion
 

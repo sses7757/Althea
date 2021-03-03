@@ -87,7 +87,7 @@ namespace Althea.Helpers
 		}
 
 		private readonly Queue<(string msg, string category, LogLevel level)> buffers =
-							new Queue<(string msg, string category, LogLevel level)>(Log.BufferSize);
+							new(Log.BufferSize);
 
 		private int maxCategoryLength = 10;
 
@@ -136,10 +136,10 @@ namespace Althea.Helpers
 		private static string Wrap(string sentence, int indent, int limit)
 		{
 			string[] words = sentence.Split(' ');
-			string indentStr = new string(' ', indent);
+			string indentStr = new(' ', indent);
 
-			StringBuilder newSentence = new StringBuilder();
-			StringBuilder line = new StringBuilder();
+			StringBuilder newSentence = new();
+			StringBuilder line = new();
 			for (int i = 0; i < words.Length; i++)
 			{
 				if (line.Length + words[i].Length > limit)
@@ -209,7 +209,7 @@ namespace Althea.Helpers
 
 	internal class LogTraceListener : TraceListener
 	{
-		private readonly Timer timer = new Timer(3000);
+		private readonly Timer timer = new(3000);
 
 		private readonly StreamWriter stream;
 
@@ -333,7 +333,7 @@ namespace Althea.Helpers
 		#endregion
 
 		#region singleton logger
-		private static readonly Logger logger = new Logger();
+		private static readonly Logger logger = new();
 
 		static Log()
 		{

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using Althea.Linq;
+using Althea.Helpers;
 using Althea.NativeTypes;
 
 
@@ -208,31 +209,32 @@ namespace Althea.Arrays
 		/// The helper method used to create new array alike (and copy contents) the value array and index array(s) of this sparse array
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
+		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the output type</typeparam>
 		/// <param name="valueArray">The cloned output value array</param>
-		/// <param name="indexArrays">The cloned output all index arrays, must has length equaling this.<see cref="IReadOnlyCollection{T}.Count">Count</see></param>
 		/// <param name="copyContent">Copy the contents from original arrays to the new arrays or not</param>
-		/// <returns>The <paramref name="indexArrays"/> as a <see cref="Span{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndex"/></returns>
+		/// <returns>The output index array as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndex"/></returns>
+		/// <exception cref="TypeMismatchException">If M<typeparamref name="TIndexOut"/> is not an integral type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="copyContent"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="copyContent"/> has incompatible length</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <typeparamref name="T"/> is not <typeparamref name="TOut"/> while <paramref name="copyContent"/> is true</exception>
-		Span<ActualStorage<TIndex>> NewArraysAlike<TOut>(out ActualStorage<TOut> valueArray, Span<IntPtr> indexArrays, bool copyContent) where TOut : unmanaged
+		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> NewArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyContent)
+			where TOut : unmanaged where TIndexOut : unmanaged
 		{
-			if (indexArrays.IsEmpty)
-				throw new ArgumentNullException(nameof(indexArrays));
-			if (typeof(T) != typeof(TOut) && copyContent)
+			if ((typeof(T) != typeof(TOut) || typeof(TIndex) != typeof(TIndexOut)) && copyContent)
 				throw new ArgumentOutOfRangeException(nameof(copyContent), Resources.Parameter.InvalidValue);
-			IReadOnlyList<Storage<TIndex>> list = this;
-			if (indexArrays.Length != list.Count)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(indexArrays));
+			var type = default(TIndexOut).ToDataType().GetClassification();
+			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
+				throw new TypeMismatchException(typeof(TIndexOut), TypeMismatchException.MismatchReason.NotInteger);
 
+			IReadOnlyList<Storage<TIndex>> list = this;
 			ActualStorage<TOut>? value = null;
-			Span<ActualStorage<TIndex>> indices = indexArrays.AsReferenceType<ActualStorage<TIndex>>();
+			SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> indices = new(list.Count);
 			try
 			{
 				value = copyContent ? (this.Storage.Clone() as ActualStorage<TOut> ?? ActualStorage<TOut>.Empty) : this.Storage.CreateAlike<TOut>();
 				for (int i = 0; i < list.Count; i++)
 				{
-					indices[i] = copyContent ? list[i].Clone() : list[i].CreateAlike();
+					indices[i] = copyContent ? (list[i].Clone() as ActualStorage<TIndexOut> ?? ActualStorage<TIndexOut>.Empty) : list[i].CreateAlike<TIndexOut>();
 				}
 				valueArray = value;
 				return indices;
@@ -240,7 +242,7 @@ namespace Althea.Arrays
 			catch (Exception)
 			{
 				value?.Dispose();
-				for (int i = 0; i < indices.Length; i++)
+				for (int i = 0; i < indices.Count; i++)
 				{
 					indices[i]?.Dispose();
 				}

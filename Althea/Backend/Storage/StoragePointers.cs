@@ -148,7 +148,7 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		public override bool CanTransferWithManaged => true;
 
-		private static readonly StorageLocation supportedLocation = new StorageLocation(LocationType.CpuRam, 0);
+		private static readonly StorageLocation supportedLocation = new(LocationType.CpuRam, 0);
 
 		/// <summary>
 		/// <b>Statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
@@ -486,7 +486,7 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		public override bool CanTransferWithManaged => true;
 
-		private static readonly StorageLocation supportedLocation = new StorageLocation(LocationType.CpuRam, 0);
+		private static readonly StorageLocation supportedLocation = new(LocationType.CpuRam, 0);
 
 		/// <summary>
 		/// <b>Statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
@@ -695,9 +695,9 @@ namespace Althea.Backend.Storage
 
 	internal static class ConcretePointersExtension
 	{
-		public static readonly StorageLocation CpuAlone = new StorageLocation(LocationType.CpuRam, 0);
-		public static readonly StorageLocation FileAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
-		public static readonly StorageLocation TcpAlone = new StorageLocation(LocationType.Uri, (int)UriScheme.TCP);
+		public static readonly StorageLocation CpuAlone = new(LocationType.CpuRam, 0);
+		public static readonly StorageLocation FileAlone = new(LocationType.Uri, (int)UriScheme.File);
+		public static readonly StorageLocation TcpAlone = new(LocationType.Uri, (int)UriScheme.TCP);
 
 		public const long INVALID = -1, NOT_SUPPORT = -2;
 
@@ -801,7 +801,7 @@ namespace Althea.Backend.Storage.Tcp
 		/// <summary>
 		/// The default <see cref="TcpProtocol"/> which utilize the protocol defined by <see cref="DefaultSendData"/> and <see cref="DefaultReceiveData"/>
 		/// </summary>
-		public static readonly TcpProtocol DefaultTcpProtocol = new TcpProtocol(DefaultInitializationSend, DefaultAcknowledge, DefaultDestroySend,
+		public static readonly TcpProtocol DefaultTcpProtocol = new(DefaultInitializationSend, DefaultAcknowledge, DefaultDestroySend,
 																	DefaultBeforeWriteSend, DefaultAcknowledge, DefaultAcknowledge,
 																	DefaultBeforeReadSend, DefaultAcknowledge,
 																	1 << 16, PORT);

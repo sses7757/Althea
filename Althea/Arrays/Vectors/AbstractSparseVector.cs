@@ -21,6 +21,21 @@ namespace Althea.Arrays
 		where TInd : unmanaged
 	{
 		#region basic
+		// offset = 0
+		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
+		// offset = 64
+		/// <summary>
+		/// The member of all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>, is null if there is only one index array
+		/// </summary>
+		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
+
+		// offset = 132
+		private readonly SparseVectorFormat m_format;
+
+		// offset = 136
+		private T m_defaultValue;
+		// offset = 136 + size of T
+
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
@@ -29,42 +44,47 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the sparse format of this sparse vector as a <see cref="SparseVectorFormat"/>
 		/// </summary>
-		public SparseVectorFormat Format { get; }
+		public SparseVectorFormat Format => this.m_format;
 
 		/// <summary>
 		/// Get or set the default value (the value not specified) of this sparse vector
 		/// </summary>
-		public T DefaultValue { get; protected internal set; }
+		public T DefaultValue { get => this.m_defaultValue; protected internal set => this.m_defaultValue = value; }
 
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
-
-		/// <summary>
-		/// The member to store the number of the index arrays
-		/// </summary>
-		protected readonly int m_indexArrayCount;
-
-		// TODO: fixed sized struct to store index arrays
-
-		private readonly Storage<TInd> m_originalIndexArray;
-		/// <summary>
-		/// The member of first index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
-		/// </summary>
-		protected readonly Storage<TInd> m_indexArray;
-
-		private readonly Storage<TInd>[]? m_originalIndexArrays = null;
-		/// <summary>
-		/// The member of all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>, is null if there is only one index array
-		/// </summary>
-		protected readonly Storage<TInd>[]? m_indexArrays = null;
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private static void CheckTypeFormat(SparseVectorFormat format)
 		{
 			var type = default(TInd).GetClassification();
 			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
-				throw new NotSupportedException(Resources.Support.DataType);
+				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		private AbstractSparseVector(long length, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseVectorFormat format, T defaultValue) : base(valueArray, length, stores)
+		{
+			CheckTypeFormat(format);
+			if (indexArrays.Count != indexRealLengths.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize);
+			if (indexArrays.Any(static a => a is null || !a.IsValid()))
+				throw new ArgumentNullException(nameof(indexArrays));
+
+			this.m_originalIndexArrays = indexArrays;
+			this.m_indexArrays = new SizedFixedClassBuffer_8<Storage<TInd>>(indexArrays.Count);
+			for (int i = 0; i < indexArrays.Count; i++)
+			{
+				long len = indexRealLengths[i];
+				if (len < 0)
+					throw new ArgumentOutOfRangeException(nameof(indexRealLengths), len, Resources.Parameter.CannotNegative);
+				if (len == 0)
+					this.m_indexArrays[i] = indexArrays[i];
+				else
+					this.m_indexArrays[i] = indexArrays[i].MakeReference(newLength: len);
+			}
+			this.m_format = format; this.m_defaultValue = defaultValue;
 		}
 
 		/// <summary>
@@ -76,58 +96,28 @@ namespace Althea.Arrays
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or <paramref name="indexArray"/> or larger than the presenting length of this vector</exception>
-		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) : base(valueArray, length, stores)
-		{
-			CheckTypeFormat(format);
-			if (indexArray is null || !indexArray.IsValid())
-				throw new ArgumentNullException(nameof(indexArray));
-			if (stores > indexArray.Length)
-				throw new ArgumentOutOfRangeException(nameof(stores), stores, Resources.Parameter.InvalidValue);
-
-			this.m_originalIndexArray = indexArray; this.m_originalIndexArrays = null;
-			this.m_indexArray = indexArray.MakeReference(newLength: this.ActualLength); this.m_indexArrays = null;
-			this.Format = format; this.DefaultValue = defaultValue;
-		}
+		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
+			this(length, valueArray, stores, indexArray, stackalloc long[1].SetValue(stores), format, defaultValue) { }
 
 		/// <summary>
 		/// Create a <see cref="AbstractSparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
 		/// </summary>
 		/// <param name="length">The presenting length of this sparse vector</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="indexArrays">The index array(s) as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="indexArrays">The index array(s) as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="realIndexArrayLengths">The actual presenting length of each array in <paramref name="indexArrays"/></param>
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
-		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected AbstractSparseVector(long length, Storage<T> valueArray, IReadOnlyList<Storage<TInd>> indexArrays, SparseVectorFormat format, T defaultValue = default, long stores = 0) : base(valueArray, length)
-		{
-			CheckTypeFormat(format);
-			if (indexArrays is null || indexArrays.Count == 0)
-				throw new ArgumentNullException(nameof(indexArrays));
-			if (indexArrays.Any(static a => a is null || !a.IsValid()))
-				throw new ArgumentNullException(nameof(indexArrays));
-
-			if (indexArrays.Count == 1)
-			{
-				this.m_originalIndexArray = indexArrays[0]; this.m_originalIndexArrays = null;
-				this.m_indexArray = indexArrays[0].MakeReference(newLength: stores); this.m_indexArrays = null;
-			}
-			else
-			{
-				stores = this.ActualLength;
-				if (indexArrays.Any(a => stores > a.Length))
-					throw new ArgumentOutOfRangeException(nameof(stores), Resources.Parameter.InvalidValue);
-
-				this.m_originalIndexArray = indexArrays[0]; this.m_originalIndexArrays = indexArrays.ToCopiedArray();
-				this.m_indexArray = indexArrays[0]; this.m_indexArrays = indexArrays.ToCopiedArray();
-			}
-			this.Format = format; this.DefaultValue = defaultValue;
-		}
+		protected AbstractSparseVector(long length, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
+			this(length, valueArray, stores, indexArrays, realIndexArrayLengths, format, defaultValue) { }
 		#endregion
 
 		#region storage related
@@ -157,43 +147,23 @@ namespace Althea.Arrays
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			this.m_originalIndexArray?.Dispose();
-			if (this.m_originalIndexArrays is not null)
+			for (int i = 0; i < this.m_indexArrays.Count; i++)
 			{
-				for (int i = 0; i < this.m_originalIndexArrays.Length; i++)
-				{
-					this.m_originalIndexArrays[i]?.Dispose();
-				}
+				this.m_originalIndexArrays[i]?.Dispose();
 			}
 		}
 		#endregion
 
 		#region IReadOnlyList of ISparseArray
-		int IReadOnlyCollection<Storage<TInd>>.Count => this.m_indexArrays?.Length ?? 1;
+		int IReadOnlyCollection<Storage<TInd>>.Count => this.m_indexArrays.Count;
 
-		int IReadOnlyCollection<IStorage>.Count => this.m_indexArrays?.Length ?? 1;
+		int IReadOnlyCollection<IStorage>.Count => this.m_indexArrays.Count;
 
-		IStorage IReadOnlyList<IStorage>.this[int index] => ((IReadOnlyList<Storage<TInd>>)this)[index];
+		IStorage IReadOnlyList<IStorage>.this[int index] => this.m_indexArrays[index];
 
-		Storage<TInd> IReadOnlyList<Storage<TInd>>.this[int index] {
-			get {
-				if (index < 0)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.CannotNegative);
-				if (index >= ((IReadOnlyCollection<IStorage>)this).Count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+		Storage<TInd> IReadOnlyList<Storage<TInd>>.this[int index] => this.m_indexArrays[index];
 
-				return this.m_indexArrays?[index] ?? this.m_indexArray;
-			}
-		}
-
-		IEnumerator<Storage<TInd>> IEnumerable<Storage<TInd>>.GetEnumerator()
-		{
-			var list = (IReadOnlyList<Storage<TInd>>)this;
-			for (int i = 0; i < list.Count; i++)
-			{
-				yield return list[i];
-			}
-		}
+		IEnumerator<Storage<TInd>> IEnumerable<Storage<TInd>>.GetEnumerator() => this.m_indexArrays.GetEnumerator();
 
 		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
 		#endregion
@@ -224,6 +194,17 @@ namespace Althea.Arrays
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new sparse vector alike this one</returns>
 		public override abstract AbstractSparseVector<TOut, TInd> NewArrayAlike<TOut>();
+
+		/// <summary>
+		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new sparse vector alike this one</returns>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
+		public abstract AbstractSparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+			where TOut : unmanaged, IFormattable, IEquatable<TOut>
+			where TIndOut : unmanaged;
 		#endregion
 
 		#region equality
@@ -295,12 +276,12 @@ namespace Althea.Arrays
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
 		public override IReadOnlyDictionary<string, IStorage> GetPointers()
 		{
-			if (this.m_indexArrays is null)
+			if (this.m_indexArrays.Count == 1)
 			{
-				return new Dictionary<string, IStorage>(2) { [StorageName] = this.Storage, [IndexStorageName] = this.m_indexArray };
+				return new Dictionary<string, IStorage>(2) { [StorageName] = this.Storage, [IndexStorageName] = this.m_indexArrays[0] };
 			}
-			var dict = new Dictionary<string, IStorage>(this.m_indexArrays.Length + 1) { [StorageName] = this.Storage };
-			for (int i = 0; i < this.m_indexArrays.Length; i++)
+			var dict = new Dictionary<string, IStorage>(this.m_indexArrays.Count + 1) { [StorageName] = this.Storage };
+			for (int i = 0; i < this.m_indexArrays.Count; i++)
 			{
 				dict.Add(this.IndexStorageNameOf(i), this.m_indexArrays[i]);
 			}

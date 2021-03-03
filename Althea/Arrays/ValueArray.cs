@@ -288,7 +288,7 @@ namespace Althea.Arrays
 		/// Take out the data <see cref="Storage"/> to form a new referenced <see cref="DenseVector{T}"/>.
 		/// </summary>
 		/// <returns>A new referenced <see cref="DenseVector{T}"/> containing the data <see cref="Storage"/> of this one.</returns>
-		public DenseVector<T> AsDenseVector() => new DenseVector<T>(this, this.ActualLength);
+		public DenseVector<T> AsDenseVector() => new(this, this.ActualLength);
 
 		/// <summary>
 		/// Check the new size (dimensionality) to reshape to with respect to the original <paramref name="array"/> and find out the uncertain dimension.
@@ -447,7 +447,7 @@ namespace Althea.Arrays
 				}
 			}
 			// output include terms and other terms
-			StringBuilder output = new StringBuilder(name);
+			StringBuilder output = new(name);
 			output.Append(this.Disposed ? " (disposed) " : " ").Append('[');
 			foreach (var item in include)
 			{

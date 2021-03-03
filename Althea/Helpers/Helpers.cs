@@ -67,7 +67,7 @@ namespace Althea.Helpers
 	/// </summary>
 	public static class ReflectionHelper
 	{
-		private static readonly Dictionary<(RuntimeTypeHandle t1, RuntimeTypeHandle t2), Delegate?> _conversionCache = new Dictionary<(RuntimeTypeHandle, RuntimeTypeHandle), Delegate?>();
+		private static readonly Dictionary<(RuntimeTypeHandle t1, RuntimeTypeHandle t2), Delegate?> _conversionCache = new();
 
 		/// <summary>
 		/// Generic convert <paramref name="obj"/> of <typeparamref name="T1"/> to <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators.
@@ -484,7 +484,7 @@ namespace Althea.Helpers
 
 		private delegate string getNumberStringDelegate<T>(T input, string format, int precision) where T : unmanaged, IEquatable<T>, IFormattable;
 
-		private static readonly Dictionary<Type, Delegate> cache_getNumberString = new Dictionary<Type, Delegate>();
+		private static readonly Dictionary<Type, Delegate> cache_getNumberString = new();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static getNumberStringDelegate<T> GetDelegateOfGetNumberString<T>() where T : unmanaged, IEquatable<T>, IFormattable
@@ -531,7 +531,7 @@ namespace Althea.Helpers
 				return string.Empty;
 			string format = GetFormatString(ref precision);
 			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			for (int i = 0; i < input.Length; i++)
 			{
 				sb.AppendLine(toStringFunc.Invoke(input[i], format, precision));
@@ -558,7 +558,7 @@ namespace Althea.Helpers
 
 			string format = GetFormatString(ref precision);
 			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			for (int i = 0; i < values.Length; i++)
 			{
 				sb.AppendLine($"{indices[i]} -> {toStringFunc.Invoke(values[i], format, precision)}");
@@ -591,10 +591,10 @@ namespace Althea.Helpers
 			string format = GetFormatString(ref precision);
 			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
 			string moreStr = more > 0 ? string.Format("  " + Print.RowMore, more) : "  ";
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			for (int i = 0; i < rows; i++)
 			{
-				StringBuilder line = new StringBuilder();
+				StringBuilder line = new();
 				for (int j = 0; j < cols; j++)
 				{
 					line.Append(toStringFunc.Invoke(matrix[i + j * rows], format, precision));
@@ -627,7 +627,7 @@ namespace Althea.Helpers
 
 			string format = GetFormatString(ref precision);
 			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new();
 			for (int i = 0; i < values.Length; i++)
 			{
 				sb.AppendLine($"({indx[i]}, {indy[i]}) -> {toStringFunc.Invoke(values[i], format, precision)}");

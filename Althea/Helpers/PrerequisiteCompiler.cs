@@ -101,7 +101,7 @@ The prerequisite compiler program for Althea.
 		private static void ProcessRun(string name, string arguments, string errorOut, Action postAction = null)
 		{
 			Console.WriteLine($"Executing command:{Environment.NewLine}\t{name} {arguments}");
-			Process proc = new Process
+			Process proc = new()
 			{
 				StartInfo = new ProcessStartInfo
 				{

@@ -579,7 +579,7 @@ namespace Althea.Arrays
 		/// Return a reference <see cref="DenseTensor{T}"/> of this one with same properties
 		/// </summary>
 		/// <returns>A reference <see cref="DenseTensor{T}"/> of this one</returns>
-		public DenseTensor<T> MakeReference() => new DenseTensor<T>(this, this.Size.ToArray());
+		public DenseTensor<T> MakeReference() => new(this, this.Size.ToArray());
 
 		void ITensor<T>.DualInPlace() { /*do nothing*/ }
 
@@ -1021,7 +1021,7 @@ namespace Althea.Arrays
 			// else
 			int maxCount = (!(overrideSetting is null) && overrideSetting.ContainsKey(PrintSetting.ArrayLength)) ? overrideSetting[PrintSetting.ArrayLength] : GlobalSettings.PrintConfig[PrintSetting.ArrayLength];
 			int count = 0;
-			StringBuilder sb = new StringBuilder(description);
+			StringBuilder sb = new(description);
 			for (long offset = 0; offset < this.Length; offset += this.SizeProd[2])
 			{
 				if (count >= maxCount)

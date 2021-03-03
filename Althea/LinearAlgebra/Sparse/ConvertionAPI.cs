@@ -20,7 +20,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
 		public static AbstractApi? Current => RecentAPIs.First?.Value;
 
-		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
+		private static readonly LinkedList<AbstractApi> RecentAPIs = new();
 
 		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
 		#endregion
@@ -39,7 +39,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </code></example>
 		public static dynamic Dynamic => singletonDynamic;
 
-		private static readonly DynamicInvocations singletonDynamic = new DynamicInvocations();
+		private static readonly DynamicInvocations singletonDynamic = new();
 
 		private sealed class DynamicInvocations : DynamicInvocation
 		{
@@ -53,7 +53,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 
 		#region get empty sparse arrays
-		private static readonly Dictionary<(DataType type, bool vector), object> cache_emptySparseArray = new Dictionary<(DataType, bool), object>();
+		private static readonly Dictionary<(DataType type, bool vector), object> cache_emptySparseArray = new();
 
 		private static ISparseVector<T> GetEmptySparseVector<T>() where T : unmanaged
 		{

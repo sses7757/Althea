@@ -27,11 +27,6 @@ namespace Althea.Backend.Arrays
 		public long LeadDim { get; }
 
 		/// <summary>
-		/// Get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. 
-		/// </summary>
-		public override long ActualLength => this.LeadDim * (this.NCols - 1) + this.NRows;
-
-		/// <summary>
 		/// Construct a <see cref="DenseMatrix{T}"/> with value array <paramref name="values"/> and size <paramref name="rows"/>, <paramref name="cols"/>
 		/// </summary>
 		/// <param name="values">The value array as a <see cref="Storage{T}"/></param>
@@ -40,16 +35,14 @@ namespace Althea.Backend.Arrays
 		/// <param name="leadDim">The leading dimension of this matrix. Default 0 means <paramref name="rows"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> or <paramref name="leadDim"/> is not positive</exception>
 		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> is less than <paramref name="rows"/> or the given size exceeds the boundary of <paramref name="values"/></exception>
-		public DenseMatrix(Storage<T> values, long rows, long cols, long leadDim = 0) : base(values, rows, cols)
+		public DenseMatrix(Storage<T> values, long rows, long cols, long leadDim = 0) : base(values, rows, cols, actualLength: leadDim * (cols - 1) + rows)
 		{
 			if (leadDim == 0)
 				leadDim = rows;
 			if (leadDim < 0)
-				throw new ArgumentOutOfRangeException(nameof(leadDim), Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(leadDim), leadDim, Resources.Parameter.MustPositive);
 			if (leadDim < rows)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-			if (leadDim * (cols - 1) + rows > values.Length)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(values));
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(leadDim));
 
 			this.LeadDim = leadDim;
 		}

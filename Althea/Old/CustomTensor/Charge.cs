@@ -359,7 +359,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 		/// Converter from quantum number as an <see cref="int"/>
 		/// </summary>
 		/// <param name="quantumNumber">the quantum number as an <see cref="int"/></param>
-		public static implicit operator U1Symmetry(int quantumNumber) => new U1Symmetry(quantumNumber);
+		public static implicit operator U1Symmetry(int quantumNumber) => new(quantumNumber);
 
 		/// <summary>
 		/// Get the string representation of this <see cref="U1Symmetry"/>.

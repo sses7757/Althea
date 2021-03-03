@@ -280,7 +280,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			// create arrays and block position set
 			T[] array = input.ToFortranOrderArray();
 			TC? quantumSum = null;
-			HashSet<(int x, int y)> blocks = new HashSet<(int, int)>();
+			HashSet<(int x, int y)> blocks = new();
 			// add to block position set
 			for (int j = 0; j < input.Size[0]; j++) // column
 			{

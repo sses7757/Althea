@@ -16,7 +16,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
 		public static AbstractApi? Current => RecentAPIs.First?.Value;
 
-		private static readonly LinkedList<AbstractApi> RecentAPIs = new LinkedList<AbstractApi>();
+		private static readonly LinkedList<AbstractApi> RecentAPIs = new();
 
 		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
 		#endregion

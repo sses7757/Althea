@@ -459,7 +459,7 @@ namespace Althea
 
 			public static implicit operator RuntimeTypeHandle(TypeHandle handle) => handle.handle;
 
-			public static implicit operator TypeHandle(RuntimeTypeHandle handle) => new TypeHandle(handle);
+			public static implicit operator TypeHandle(RuntimeTypeHandle handle) => new(handle);
 		}
 
 		/// <summary>

@@ -313,7 +313,7 @@ namespace Althea.General
 			Log.Write($"Starting with matrix size = {size}, iterations per restart = {iterPerRestart}");
 			double beta = initial.Norm();
 			T[] a = new[] { beta.FromDouble<T>() };
-			List<TVec> qs = new List<TVec>(iterPerRestart);
+			List<TVec> qs = new(iterPerRestart);
 			Array.DenseMatrix<T> H = new Array.DenseMatrix<T>(iterPerRestart, iterPerRestart, onHost: true);
 			H.FillWithZeros();
 			initial = initial.Clone() as TVec; // preserve original initial vector
@@ -605,7 +605,7 @@ namespace Althea.General
 
 			// auto managed list
 			double normB = b.Norm();
-			List<TVec> qs = new List<TVec>(iterPerRestart);
+			List<TVec> qs = new(iterPerRestart);
 
 			// for restart
 			T[][] vecs = null;

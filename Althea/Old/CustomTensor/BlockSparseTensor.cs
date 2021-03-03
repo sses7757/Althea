@@ -1253,9 +1253,9 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			using var temp = new BlockSparseTensor<T, TC>(2 * originalLength, matrix.OnHost, matrix.Size.ToArray(), tempFlows, tempCharges, tempMultiplicities);
 			{
 				int estimateTempNonzeroBlocks = 2 * (int)matrix.NonZeroBlocks;
-				List<long> outputBlockIndexList = new List<long>(estimateTempNonzeroBlocks);
-				List<long> tempBlockIndex = new List<long>(estimateTempNonzeroBlocks);
-				List<long> tempBlockOffsets = new List<long>(estimateTempNonzeroBlocks + 1) { 0 };
+				List<long> outputBlockIndexList = new(estimateTempNonzeroBlocks);
+				List<long> tempBlockIndex = new(estimateTempNonzeroBlocks);
+				List<long> tempBlockOffsets = new(estimateTempNonzeroBlocks + 1) { 0 };
 				Althea.Blas.IBlas.DelegateAbsSum<T> absSumFunc = matrix.OnHost ? new Althea.Blas.IBlas.DelegateAbsSum<T>(BLAS.CPU.AbsSum) : BLAS.GPU.AbsSum;
 				for (int i = 0; i < matrix.NonZeroBlocks; i++)
 				{
@@ -1359,7 +1359,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			int rank = size.Length;
 			Span<int> splits = stackalloc int[rank + 1]; splits[0] = 0;
 			{
-				List<long> newBlockSizeList = new List<long>(rank + 1) { 1 };
+				List<long> newBlockSizeList = new(rank + 1) { 1 };
 				long prod = 1;
 				int sizeInd = 0;
 				for (int i = 0; i < this.Rank; i++)
@@ -1439,7 +1439,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 		/// Return a reference <see cref="BlockSparseTensor{T, TC}"/> of this one with same properties
 		/// </summary>
 		/// <returns>A reference <see cref="BlockSparseTensor{T, TC}"/> of this one</returns>
-		public BlockSparseTensor<T, TC> MakeReference() => new BlockSparseTensor<T, TC>(this);
+		public BlockSparseTensor<T, TC> MakeReference() => new(this);
 
 		/// <summary>
 		/// Flatten the array to a vector.
@@ -2226,7 +2226,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 		{
 			Span<long> blockSizePermProd = stackalloc long[perm.Length + 1];
 			GetBlockSizePermProd(this.blockSize, perm, blockSizePermProd);
-			List<long> newBlockIndex = new List<long>((int)this.NonZeroBlocks);
+			List<long> newBlockIndex = new((int)this.NonZeroBlocks);
 			for (int i = 0; i < this.NonZeroBlocks; i++)
 			{
 				long newVal = this.BlockIndexPermute(this._blockIndex[i], perm, blockSizePermProd);
@@ -2241,7 +2241,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 		private long[] BlockIndexPartialPermute(int[] perm, Span<long> blockSizePermProd)
 		{
 			GetBlockSizePermProd(this.blockSize, perm, blockSizePermProd);
-			List<long> newBlockIndex = new List<long>((int)this.NonZeroBlocks);
+			List<long> newBlockIndex = new((int)this.NonZeroBlocks);
 			for (int i = 0; i < this.NonZeroBlocks; i++)
 			{
 				long newVal = this.BlockIndexPermute(this._blockIndex[i], perm, blockSizePermProd);
@@ -2336,9 +2336,9 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			#endregion
 
 			#region get sparse vector index of C
-			List<long> blockIndexCList = new List<long>(freeLengthA * freeLengthB);
-			List<int> indicesPermAList = new List<int>(freeLengthA * freeLengthB);
-			List<int> indicesPermBList = new List<int>(freeLengthA * freeLengthB);
+			List<long> blockIndexCList = new(freeLengthA * freeLengthB);
+			List<int> indicesPermAList = new(freeLengthA * freeLengthB);
+			List<int> indicesPermBList = new(freeLengthA * freeLengthB);
 			// temp array on stack
 			Span<long> posA = stackalloc long[A.Rank], posB = stackalloc long[B.Rank];
 			Span<long> freePosA = stackalloc long[input.LeftFreeIndex.Length], freePosB = stackalloc long[input.RightFreeIndex.Length];
@@ -2419,7 +2419,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			#endregion
 
 			#region look up cache or add to cache
-			BSTContractionInput<TC> addition = new BSTContractionInput<TC>(A._blockIndex, A._multiplicities, A._charges, A.flow, B._blockIndex, B._multiplicities, B._charges, B.flow);
+			BSTContractionInput<TC> addition = new(A._blockIndex, A._multiplicities, A._charges, A.flow, B._blockIndex, B._multiplicities, B._charges, B.flow);
 			Althea.Tensor.ContractionCache<BSTContractionInput<TC>, BSTContractionOutput<TC>>.TryGet(A.Size.ToArray(), B.Size.ToArray(), sizeC, concA, concB, freeA, freeCA, freeB, freeCB, addition, out var planNullable, out var input);
 			BSTContractionOutput<TC> outputInfo;
 			if (planNullable.HasValue)
@@ -2494,7 +2494,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			Span<int> freeA = stackalloc int[A.Rank - commonRank], freeCA = stackalloc int[freeA.Length];
 			Span<int> freeB = stackalloc int[B.Rank - commonRank], freeCB = stackalloc int[freeB.Length];
 			TENSOR.ContractCheck(A.Size, A.Label, B.Size, B.Label, C.Size, C.Label, concA, concB, freeA, freeCA, freeB, freeCB);
-			BSTContractionInput<TC> addition = new BSTContractionInput<TC>(A._blockIndex, A._multiplicities, A._charges, A.flow, B._blockIndex, B._multiplicities, B._charges, B.flow);
+			BSTContractionInput<TC> addition = new(A._blockIndex, A._multiplicities, A._charges, A.flow, B._blockIndex, B._multiplicities, B._charges, B.flow);
 			Althea.Tensor.ContractionCache<BSTContractionInput<TC>, BSTContractionOutput<TC>>.TryGet(A.Size.ToArray(), B.Size.ToArray(), C.Size.ToArray(), concA, concB, freeA, freeCA, freeB, freeCB, addition, out var planNullable, out var input);
 			bool cached = planNullable.HasValue;
 			BSTContractionOutput<TC> outputInfo;
@@ -3398,7 +3398,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			if (this.Disposed)
 				return this.ToString();
 			// else
-			StringBuilder builder = new StringBuilder();
+			StringBuilder builder = new();
 			builder.Append(this.ToString());
 			builder.AppendLine(":");
 			long[] posArr = new long[this.Rank], sizeArr = new long[this.Rank];

@@ -1014,7 +1014,7 @@ namespace Althea.General
 			#region flow control
 			var info = new LanczosInfo(reorthogonalize: reorthogonalize, orthogonalizeConverged: false, useGap: useGap, tolerance: tolerance);
 			var restartInfo = new RestartBasicInfo<TVec, T>(residual: guess);
-			List<double> eigenvalues = new List<double>(smallestK);
+			List<double> eigenvalues = new(smallestK);
 			while (true)
 			{
 				// calculate

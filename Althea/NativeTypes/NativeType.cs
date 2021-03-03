@@ -483,7 +483,7 @@ namespace Althea.NativeTypes
 		#region parse native type values
 		private delegate object _parseFunc(string str);
 
-		private static readonly Dictionary<Type, _parseFunc> _parseCache = new Dictionary<Type, _parseFunc>();
+		private static readonly Dictionary<Type, _parseFunc> _parseCache = new();
 
 		/// <summary>
 		/// Try to parse a <see cref="string"/> to a native type (including types that implements <see cref="ICustomNativeType{T}"/>)
@@ -542,7 +542,7 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region check whether native types are complex types
-		private static readonly Dictionary<Type, bool> _complexCache = new Dictionary<Type, bool>();
+		private static readonly Dictionary<Type, bool> _complexCache = new();
 
 		internal static bool IsComplexDirect(this Type type)
 		{
@@ -630,7 +630,7 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region check whether native types are supported
-		private static readonly Dictionary<Type, bool> _supportCache = new Dictionary<Type, bool>();
+		private static readonly Dictionary<Type, bool> _supportCache = new();
 
 		internal static bool IsSupportedDirect(this Type type)
 		{
@@ -710,7 +710,7 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region get floating point or integral of native types
-		private static readonly Dictionary<Type, DataTypeClassification> _classificationCache = new Dictionary<Type, DataTypeClassification>();
+		private static readonly Dictionary<Type, DataTypeClassification> _classificationCache = new();
 
 		internal static DataTypeClassification GetClassificationDirect(this Type type)
 		{

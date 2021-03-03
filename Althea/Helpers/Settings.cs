@@ -290,7 +290,7 @@ namespace Althea.Helpers
 		#endregion
 
 		#region import and export
-		private static readonly JsonSerializerOptions options = new JsonSerializerOptions
+		private static readonly JsonSerializerOptions options = new()
 		{
 			DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
 			IncludeFields = true,

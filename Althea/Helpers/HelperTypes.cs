@@ -1334,7 +1334,317 @@ namespace Althea.Helpers
 		/// Implicitly convert the given <paramref name="span"/> to a <see cref="SizedFixedBuffer_128{T}"/>
 		/// </summary>
 		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to be converted</param>
-		public static implicit operator SizedFixedBuffer_128<T>(ReadOnlySpan<T> span) => new SizedFixedBuffer_128<T>(span);
+		public static implicit operator SizedFixedBuffer_128<T>(ReadOnlySpan<T> span) => new(span);
+		#endregion
+	}
+
+
+
+	/// <summary>
+	/// The fixed buffer struct of class type <typeparamref name="T"/> with size = 8.
+	/// </summary>
+	/// <typeparam name="T">Any class</typeparam>
+	[StructLayout(LayoutKind.Sequential)]
+	public struct FixedClassBuffer_8<T> : IReadOnlyList<T> where T : class
+	{
+		#region basic
+		private T? a0, a1, a2, a3, a4, a5, a6, a7;
+
+		/// <summary>
+		/// Create a <see cref="SizedFixedClassBuffer_8{T}"/> with a given <paramref name="array"/>
+		/// </summary>
+		/// <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+		/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null</exception>
+		public FixedClassBuffer_8(params T[] array) : this((IReadOnlyList<T>)array) { }
+
+		/// <summary>
+		/// Create a <see cref="SizedFixedClassBuffer_8{T}"/> with a given <paramref name="list"/>
+		/// </summary>
+		/// <param name="list">The given <see cref="IReadOnlyList{T}"/> of <typeparamref name="T"/> used to create</param>
+		/// <exception cref="ArgumentException">If the size of <paramref name="list"/> is larger than 8</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="list"/> is null</exception>
+		public FixedClassBuffer_8(IReadOnlyList<T> list)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+			a0 = a1 = a2 = a3 = a4 = a5 = a6 = a7 = default;
+			switch (list.Count)
+			{
+				case 8:
+					a7 = list[7];
+					goto case 7;
+				case 7:
+					a6 = list[6];
+					goto case 6;
+				case 6:
+					a6 = list[6];
+					goto case 6;
+				case 5:
+					a6 = list[6];
+					goto case 4;
+				case 4:
+					a6 = list[6];
+					goto case 3;
+				case 3:
+					a6 = list[6];
+					goto case 2;
+				case 2:
+					a6 = list[6];
+					goto case 1;
+				case 1:
+					a0 = list[0];
+					break;
+				default:
+					break;
+			}
+		}
+		#endregion
+
+		#region indexer
+		/// <summary>
+		/// Basic indexer of this fixed buffer
+		/// </summary>
+		/// <param name="index">The index</param>
+		/// <returns>The value at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+		public T this[int index] {
+			get {
+				T? res = index switch
+				{
+					0 => a0,
+					1 => a1,
+					2 => a2,
+					3 => a3,
+					4 => a4,
+					5 => a5,
+					6 => a6,
+					7 => a7,
+					_ => null,
+				};
+				return res ?? throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+			}
+			set {
+				switch (index)
+				{
+					case 7:
+						this.a7 = value;
+						return;
+					case 6:
+						this.a6 = value;
+						return;
+					case 5:
+						this.a5 = value;
+						return;
+					case 4:
+						this.a4 = value;
+						return;
+					case 3:
+						this.a3 = value;
+						return;
+					case 2:
+						this.a2 = value;
+						return;
+					case 1:
+						this.a1 = value;
+						return;
+					case 0:
+						this.a0 = value;
+						return;
+					default:
+						throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Get the number of elements in this fixed buffer
+		/// </summary>
+		public int Count => 8;
+
+		/// <summary>
+		/// Returns an enumerator that iterates through the collection.
+		/// </summary>
+		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
+
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+		#endregion
+
+		#region converter
+		/// <summary>
+		/// Implicitly convert a <see cref="SizedFixedClassBuffer_8{T}"/> to a <see cref="FixedClassBuffer_8{T}"/>
+		/// </summary>
+		/// <param name="sized">The input <see cref="SizedFixedClassBuffer_8{T}"/></param>
+		public static implicit operator FixedClassBuffer_8<T>(SizedFixedClassBuffer_8<T> sized) => new(sized);
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The sized fixed buffer struct of class type <typeparamref name="T"/> with maximum size = 8.
+	/// </summary>
+	/// <typeparam name="T">Any class</typeparam>
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SizedFixedClassBuffer_8<T> : IReadOnlyList<T> where T : class
+	{
+		#region basic
+		private T? a0, a1, a2, a3, a4, a5, a6, a7;
+
+		private readonly int size;
+
+		/// <summary>
+		/// Create a <see cref="SizedFixedClassBuffer_8{T}"/> of the given <paramref name="size"/>
+		/// </summary>
+		/// <param name="size">The size</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		public SizedFixedClassBuffer_8(int size)
+		{
+			if (size <= 0 || size > 8)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			a0 = a1 = a2 = a3 = a4 = a5 = a6 = a7 = default;
+			this.size = size;
+		}
+
+		/// <summary>
+		/// Create a <see cref="SizedFixedClassBuffer_8{T}"/> with a given <paramref name="array"/>
+		/// </summary>
+		/// <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+		/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null</exception>
+		public SizedFixedClassBuffer_8(params T[] array) : this((IReadOnlyList<T>)array) { }
+
+		/// <summary>
+		/// Create a <see cref="SizedFixedClassBuffer_8{T}"/> with a given <paramref name="list"/>
+		/// </summary>
+		/// <param name="list">The given <see cref="IReadOnlyList{T}"/> of <typeparamref name="T"/> used to create</param>
+		/// <exception cref="ArgumentException">If the size of <paramref name="list"/> is larger than 8</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="list"/> is null</exception>
+		public SizedFixedClassBuffer_8(IReadOnlyList<T> list)
+		{
+			if (list is null)
+				throw new ArgumentNullException(nameof(list));
+			a0 = a1 = a2 = a3 = a4 = a5 = a6 = a7 = default;
+			switch (list.Count)
+			{
+				case 8:
+					a7 = list[7];
+					goto case 7;
+				case 7:
+					a6 = list[6];
+					goto case 6;
+				case 6:
+					a6 = list[6];
+					goto case 6;
+				case 5:
+					a6 = list[6];
+					goto case 4;
+				case 4:
+					a6 = list[6];
+					goto case 3;
+				case 3:
+					a6 = list[6];
+					goto case 2;
+				case 2:
+					a6 = list[6];
+					goto case 1;
+				case 1:
+					a0 = list[0];
+					break;
+				default:
+					break;
+			}
+			this.size = list.Count;
+		}
+		#endregion
+
+		#region indexer
+		/// <summary>
+		/// Basic indexer of this fixed buffer
+		/// </summary>
+		/// <param name="index">The index</param>
+		/// <returns>The value at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+		public T this[int index] {
+			get {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+#pragma warning disable CS8603
+				return index switch
+				{
+					0 => a0,
+					1 => a1,
+					2 => a2,
+					3 => a3,
+					4 => a4,
+					5 => a5,
+					6 => a6,
+					7 => a7,
+					_ => null,
+				};
+#pragma warning restore CS8603
+			}
+			set {
+				if (index < 0 || index >= this.Count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				switch (index)
+				{
+					case 7:
+						this.a7 = value;
+						return;
+					case 6:
+						this.a6 = value;
+						return;
+					case 5:
+						this.a5 = value;
+						return;
+					case 4:
+						this.a4 = value;
+						return;
+					case 3:
+						this.a3 = value;
+						return;
+					case 2:
+						this.a2 = value;
+						return;
+					case 1:
+						this.a1 = value;
+						return;
+					case 0:
+						this.a0 = value;
+						return;
+					default:
+						return;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Get the number of elements in this fixed buffer
+		/// </summary>
+		public int Count => this.size;
+
+		/// <summary>
+		/// Returns an enumerator that iterates through the collection.
+		/// </summary>
+		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
+
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+		#endregion
+
+		#region converter
+		/// <summary>
+		/// Implicitly convert a <typeparamref name="T"/> to a <see cref="SizedFixedClassBuffer_8{T}"/>
+		/// </summary>
+		/// <param name="value">The value of type <typeparamref name="T"/> to be converted</param>
+		public static implicit operator SizedFixedClassBuffer_8<T>(T value) => new(1) { a0 = value };
+
+		/// <summary>
+		/// Implicitly convert a tuple of <typeparamref name="T"/> to a <see cref="SizedFixedClassBuffer_8{T}"/>
+		/// </summary>
+		/// <param name="value">The value tuple of type <typeparamref name="T"/> to be converted</param>
+		public static implicit operator SizedFixedClassBuffer_8<T>(ValueTuple<T, T> value) => new(1) { a0 = value.Item1, a1 = value.Item2 };
 		#endregion
 	}
 }

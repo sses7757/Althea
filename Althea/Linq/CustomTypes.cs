@@ -47,7 +47,7 @@ namespace Althea.Linq
 
 	internal interface IStructImmutableSet<T> : IImmutableSet<T>
 	{
-		ImmutableSet<T> ToNormal() => new ImmutableSet<T>(this.ToArray());
+		ImmutableSet<T> ToNormal() => new(this.ToArray());
 	}
 	#endregion
 
@@ -521,7 +521,7 @@ namespace Althea.Linq
 		/// Implicitly convert a <see cref="ValueTuple{T1, T2}"/> to a <see cref="ImmutableTwoElementSet{T}"/>.
 		/// </summary>
 		/// <param name="v">The <see cref="ValueTuple{T1, T2}"/> to convert</param>
-		public static implicit operator ImmutableTwoElementSet<T>(ValueTuple<T, T>  v) => new ImmutableTwoElementSet<T>(v.Item1, v.Item2);
+		public static implicit operator ImmutableTwoElementSet<T>(ValueTuple<T, T>  v) => new(v.Item1, v.Item2);
 		#endregion
 	}
 
@@ -706,7 +706,7 @@ namespace Althea.Linq
 		/// Implicitly convert a <see cref="ValueTuple{T1, T2, T3}"/> to a <see cref="ImmutableThreeElementSet{T}"/>.
 		/// </summary>
 		/// <param name="v">The <see cref="ValueTuple{T1, T2, T3}"/> to convert</param>
-		public static implicit operator ImmutableThreeElementSet<T>(ValueTuple<T, T, T> v) => new ImmutableThreeElementSet<T>(v.Item1, v.Item2, v.Item3);
+		public static implicit operator ImmutableThreeElementSet<T>(ValueTuple<T, T, T> v) => new(v.Item1, v.Item2, v.Item3);
 		#endregion
 	}
 

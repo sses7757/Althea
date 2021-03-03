@@ -101,7 +101,7 @@ namespace Althea.Backend.CSharp.Storage
 				if (location == FileAlone)
 				{
 					string file = Path.Combine(this.TempFileFolder, Guid.NewGuid().ToString());
-					Uri uri = new Uri(Uri.UriSchemeFile + Uri.SchemeDelimiter + file);
+					Uri uri = new(Uri.UriSchemeFile + Uri.SchemeDelimiter + file);
 					pointer = new StreamPointer(new Backend.Storage.FileStream(uri, length), location);
 				}
 				else if (this.TempTcpFolder is not null) // TCP

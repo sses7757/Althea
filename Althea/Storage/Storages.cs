@@ -53,9 +53,9 @@ namespace Althea.Storage
 	/// </summary>
 	public static class UriSchemeExtension
 	{
-		private static readonly Dictionary<UriScheme, string> static_names = new Dictionary<UriScheme, string>();
+		private static readonly Dictionary<UriScheme, string> static_names = new();
 
-		private static readonly Dictionary<string, UriScheme> static_names_inv = new Dictionary<string, UriScheme>();
+		private static readonly Dictionary<string, UriScheme> static_names_inv = new();
 
 		/// <summary>
 		/// Set the name (string representation) of given <see cref="UriScheme"/>
@@ -167,7 +167,7 @@ namespace Althea.Storage
 		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
 		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new Span<T>(this.UnmangedPointer<T>(offset), length <= 0 ? checked((int)(this.LengthInBytes / sizeof(T))) : length);
+		protected internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new(this.UnmangedPointer<T>(offset), length <= 0 ? checked((int)(this.LengthInBytes / sizeof(T))) : length);
 
 		/// <summary>
 		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
@@ -328,7 +328,7 @@ namespace Althea.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / Storage<T>.SizeOfT * Storage<T>.SizeOfT;
 
-		private static readonly Dictionary<Type, StorageLocation> cache_single_location = new Dictionary<Type, StorageLocation>();
+		private static readonly Dictionary<Type, StorageLocation> cache_single_location = new();
 
 		/// <summary>
 		/// When overridden in a derived class, fill some values of this <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
@@ -397,7 +397,7 @@ namespace Althea.Storage
 			this.Flush();
 		}
 
-		private static readonly Dictionary<ImmutableTwoElementSet<Type>, StorageLocation> cache_double_location = new Dictionary<ImmutableTwoElementSet<Type>, StorageLocation>();
+		private static readonly Dictionary<ImmutableTwoElementSet<Type>, StorageLocation> cache_double_location = new();
 
 		/// <summary>
 		/// When overridden in a derived class, copy some data from this <see cref="Stream"/> to <paramref name="other"/> <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
@@ -1686,7 +1686,7 @@ namespace Althea.Storage
 		/// <remarks>Independent checks for parameters are not necessary</remarks>
 		public delegate ActualStorage<T> CreateDelegate(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
 
-		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new Dictionary<CombinationType, CreateDelegate>
+		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new()
 		{
 			[CombinationType.PureOrMixed] = DefaultCreatePureOrMixed,
 			[CombinationType.Cached] = DefaultCreateCached,
@@ -1774,7 +1774,7 @@ namespace Althea.Storage
 					var ctor = type.GetConstructor(constructorArgTypes);
 					if (ctor is null)
 						continue;
-					DynamicMethod dynamic = new DynamicMethod(string.Empty, type, constructorArgTypes, type);
+					DynamicMethod dynamic = new(string.Empty, type, constructorArgTypes, type);
 					ILGenerator il = dynamic.GetILGenerator();
 					il.DeclareLocal(type);
 					il.Emit(OpCodes.Newobj, ctor);

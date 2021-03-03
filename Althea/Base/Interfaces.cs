@@ -51,7 +51,7 @@ namespace Althea
 			{
 				props = System.Linq.Enumerable.Concat(props, properties[i]);
 			}
-			StringBuilder stringBuilder = new StringBuilder(main);
+			StringBuilder stringBuilder = new(main);
 			stringBuilder.Append(' ').Append('[');
 			foreach (var item in props)
 			{

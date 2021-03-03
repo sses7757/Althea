@@ -1266,7 +1266,7 @@ namespace Althea.Linq
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));
 
-			List<int> indices = new List<int>(list.Count);
+			List<int> indices = new(list.Count);
 			for (int i = 0; i < list.Count; i++)
 				if (value.Equals(list[i]))
 					indices.Add(i);
@@ -1313,7 +1313,7 @@ namespace Althea.Linq
 				throw new ArgumentNullException(nameof(list));
 
 			comparer ??= EqualityComparer<T>.Default;
-			List<int> indices = new List<int>(list.Count);
+			List<int> indices = new(list.Count);
 			for (int i = 0; i < list.Count; i++)
 				if (comparer.Equals(list[i], value))
 					indices.Add(i);
@@ -2261,8 +2261,8 @@ namespace Althea.Linq
 			if (valueSelector is null)
 				throw new ArgumentNullException(nameof(valueSelector));
 
-			List<TKey> keys = new List<TKey>();
-			List<List<TValue>> values = new List<List<TValue>>();
+			List<TKey> keys = new();
+			List<List<TValue>> values = new();
 			for (int i = 0; i < list.Count; i++)
 			{
 				var key = keySelector(list[i]);
@@ -2424,7 +2424,7 @@ namespace Althea.Linq
 		#endregion
 
 		#region randoms
-		private static readonly Random random = new Random();
+		private static readonly Random random = new();
 
 		/// <summary>
 		/// Random shuffle the <paramref name="list"/> by random generator <paramref name="rand"/>
@@ -2465,7 +2465,7 @@ namespace Althea.Linq
 			if (maxValue < minValue + count)
 				throw new ArgumentOutOfRangeException(nameof(maxValue), maxValue, Parameter.InvalidValue);
 
-			HashSet<int> set = new HashSet<int>(count);
+			HashSet<int> set = new(count);
 			while (set.Count != count)
 				set.Add(random.Next(minValue, maxValue));
 			return System.Linq.Enumerable.ToArray(set);

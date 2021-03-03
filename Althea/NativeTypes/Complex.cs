@@ -103,23 +103,23 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// <see cref="Complex{T}"/> 0
 		/// </summary>
-		public static readonly Complex<T> Zero = new Complex<T>(default);
+		public static readonly Complex<T> Zero = new(default);
 		/// <summary>
 		/// <see cref="Complex{T}"/> 1
 		/// </summary>
-		public static readonly Complex<T> One = new Complex<T>(_oneT);
+		public static readonly Complex<T> One = new(_oneT);
 		/// <summary>
 		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static readonly Complex<T> MinusOne = new Complex<T>(_minusOneT);
+		public static readonly Complex<T> MinusOne = new(_minusOneT);
 		/// <summary>
 		/// <see cref="Complex{T}"/> i
 		/// </summary>
-		public static readonly Complex<T> ImOne = new Complex<T>(default, _oneT);
+		public static readonly Complex<T> ImOne = new(default, _oneT);
 		/// <summary>
 		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static readonly Complex<T> MinusImOne = new Complex<T>(default, _minusOneT);
+		public static readonly Complex<T> MinusImOne = new(default, _minusOneT);
 		#endregion
 
 		#region parser
@@ -261,22 +261,22 @@ namespace Althea.NativeTypes
 		/// Convert from int
 		/// </summary>
 		/// <param name="a">a int</param>
-		public static implicit operator Complex<T>(int a) => new Complex<T>((T)(dynamic)a);
+		public static implicit operator Complex<T>(int a) => new((T)(dynamic)a);
 		/// <summary>
 		/// Convert from T
 		/// </summary>
 		/// <param name="a">a T</param>
-		public static implicit operator Complex<T>(T a) => new Complex<T>(a);
+		public static implicit operator Complex<T>(T a) => new(a);
 		/// <summary>
 		/// Convert from int tuple
 		/// </summary>
 		/// <param name="a">a int tuple</param>
-		public static implicit operator Complex<T>((int r, int i) a) => new Complex<T>((T)(dynamic)a.r, (T)(dynamic)a.i);
+		public static implicit operator Complex<T>((int r, int i) a) => new((T)(dynamic)a.r, (T)(dynamic)a.i);
 		/// <summary>
 		/// Convert from T tuple
 		/// </summary>
 		/// <param name="a">a T tuple</param>
-		public static implicit operator Complex<T>((T r, T i) a) => new Complex<T>(a.r, a.i);
+		public static implicit operator Complex<T>((T r, T i) a) => new(a.r, a.i);
 
 		/// <summary>
 		/// Convert to <see cref="double"/> typed complex
@@ -352,32 +352,32 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex negate
 		/// </summary>
-		public static Complex<T> operator -(Complex<T> a) => new Complex<T>(-(dynamic)a.real, -(dynamic)a.imag);
+		public static Complex<T> operator -(Complex<T> a) => new(-(dynamic)a.real, -(dynamic)a.imag);
 
 		/// <summary>
 		/// Complex add
 		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new Complex<T>(a.real + (dynamic)b.real, a.imag + (dynamic)b.imag);
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real + (dynamic)b.real, a.imag + (dynamic)b.imag);
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
-		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new Complex<T>(a.real - (dynamic)b.real, a.imag - (dynamic)b.imag);
+		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real - (dynamic)b.real, a.imag - (dynamic)b.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, T b) => new Complex<T>(a.real + (dynamic)b, a.imag);
+		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real + (dynamic)b, a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		public static Complex<T> operator +(T b, Complex<T> a) => new Complex<T>(a.real + (dynamic)b, a.imag);
+		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real + (dynamic)b, a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
-		public static Complex<T> operator -(Complex<T> a, T b) => new Complex<T>(a.real - (dynamic)b, a.imag);
+		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real - (dynamic)b, a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
-		public static Complex<T> operator -(T b, Complex<T> a) => new Complex<T>(b - (dynamic)a.real, -(dynamic)a.imag);
+		public static Complex<T> operator -(T b, Complex<T> a) => new(b - (dynamic)a.real, -(dynamic)a.imag);
 
 		/// <summary>
 		/// Complex multiply
@@ -402,15 +402,15 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
-		public static Complex<T> operator *(Complex<T> a, T b) => new Complex<T>((dynamic)a.real * b, (dynamic)a.imag * b);
+		public static Complex<T> operator *(Complex<T> a, T b) => new((dynamic)a.real * b, (dynamic)a.imag * b);
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
-		public static Complex<T> operator *(T b, Complex<T> a) => new Complex<T>((dynamic)a.real * b, (dynamic)a.imag * b);
+		public static Complex<T> operator *(T b, Complex<T> a) => new((dynamic)a.real * b, (dynamic)a.imag * b);
 		/// <summary>
 		/// Complex divide real number
 		/// </summary>
-		public static Complex<T> operator /(Complex<T> a, T b) => new Complex<T>((dynamic)a.real / b, (dynamic)a.imag / b);
+		public static Complex<T> operator /(Complex<T> a, T b) => new((dynamic)a.real / b, (dynamic)a.imag / b);
 		/// <summary>
 		/// Real number divide complex 
 		/// </summary>
@@ -439,7 +439,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
-		public Complex<T> Conjugate() => new Complex<T>(this.real, -(dynamic)this.imag);
+		public Complex<T> Conjugate() => new(this.real, -(dynamic)this.imag);
 
 		private static Complex<double> Exp(Complex<double> c)
 		{

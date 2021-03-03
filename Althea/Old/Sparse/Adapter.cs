@@ -1937,7 +1937,7 @@ namespace Althea.SparseBlas.Cuda
 				DataType.ComplexDouble => Customs.NativeMethods.vecPruneZ,
 				_ => throw new NotSupportedException(Resource.DataTypeNotSupport),
 			};
-			IntPtr indexOut = new IntPtr(), valueOut = new IntPtr();
+			IntPtr indexOut = new(), valueOut = new();
 			long nnz = 0;
 			var status = func(y, n, threshold, buffer, ref nnz, ref indexOut, ref valueOut);
 			if (status != CudaError.Success)
@@ -1965,7 +1965,7 @@ namespace Althea.SparseBlas.Cuda
 				DataType.ComplexDouble => Customs.NativeMethods.vecSpAddZ,
 				_ => throw new NotSupportedException(Resource.DataTypeNotSupport),
 			};
-			IntPtr indexOut = new IntPtr(), valueOut = new IntPtr();
+			IntPtr indexOut = new(), valueOut = new();
 			long nnz = 0;
 			var status = func(x.Indices, x.Values, x.Values.Length, y.Indices, y.Values, y.Values.Length, buffer, ref nnz, ref indexOut, ref valueOut);
 			if (status != CudaError.Success)
@@ -2020,7 +2020,7 @@ namespace Althea.SparseBlas.Cuda
 			using var buffer = Storage<byte>.Create(bufferSize, onHost: false);
 			// calculate
 			int neiTotal = -1;
-			IntPtr result = new IntPtr();
+			IntPtr result = new();
 			Customs.NativeMethods.CSRGetNer(pointer, rowcols, ref neiTotal, buffer, ref result).Check();
 			return Storage<int>.Create(result, neiTotal, onHost: false);
 		}
