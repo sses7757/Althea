@@ -8,7 +8,7 @@ using Althea.NativeTypes;
 
 namespace Althea.Arrays
 {
-	#region vector
+	#region vector and matrix
 	/// <summary>
 	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
 	/// </summary>
@@ -71,6 +71,29 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
 		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input);
+		#endregion
+	}
+
+	/// <summary>
+	/// Simple interface for dense matrices
+	/// </summary>
+	public interface IDenseMatrix
+	{
+		#region properties
+		/// <summary>
+		/// When implemented by a derived class, get the length of the leading dimension of this dense matrix
+		/// </summary>
+		long LeadDim { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the number of rows of this dense matrix
+		/// </summary>
+		long NRows { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the number of columns of this dense matrix
+		/// </summary>
+		long NCols { get; }
 		#endregion
 	}
 	#endregion
@@ -307,13 +330,11 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
-		/// <param name="leadDim">The leading dimension of the target dense matrix</param>
-		/// <param name="rows">The number of rows of the dense matrix</param>
-		/// <param name="cols">The number of columns of the dense matrix</param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="NRows"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> or <paramref name="leadDim"/> is less than 1</exception>
-		/// <exception cref="ArgumentException">If <paramref name="rows"/> &gt; <paramref name="leadDim"/> or <paramref name="leadDim"/> * <paramref name="cols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
-		void ToDense(Storage<T> denseStorage, long leadDim, long rows, long cols);
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="NRows"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		void ToDense(Storage<T> denseStorage, long leadDim = 0);
 		#endregion
 	}
 	#endregion

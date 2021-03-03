@@ -18,7 +18,7 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T> where T : unmanaged, IFormattable, IEquatable<T>
+	public class DenseMatrix<T> : MatrixBase<T>, IDenseMatrix, IKrylovVector<DenseMatrix<T>, T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region basic
 		/// <summary>
@@ -117,7 +117,7 @@ namespace Althea.Backend.Arrays
 			else if (value is ISparseMatrix<T> sparse)
 			{
 				using var dn = this.Storage.MakeReference(newLength: sparse.NRows * sparse.NCols).CreateAlike();
-				sparse.ToDense(dn, sparse.NRows, sparse.NRows, sparse.NCols);
+				sparse.ToDense(dn, sparse.NRows);
 				MEM.MemoryCopy2D(dn, sparse.NRows, this.Storage.MakeReference(rowStart * this.LeadDim + columnStart), this.LeadDim, sparse.NRows, sparse.NCols);
 			}
 			else
@@ -362,7 +362,7 @@ namespace Althea.Backend.Arrays
 		{
 			// shortcut
 			if (operation == MatrixOperation.None)
-				return (DenseMatrix<T>)this.Clone();
+				return this.Clone();
 			// otherwise
 			var (m, n) = (this.NCols, this.NRows);
 			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
@@ -490,8 +490,10 @@ namespace Althea.Backend.Arrays
 		{
 			if (scalarA.IsZero() && scalarB.IsZero())
 				throw new ArgumentException(Resources.Parameter.CannotZero);
-			if ((A is null || !A.IsValid()) && (B is null || !B.IsValid()))
-				throw new ArgumentNullException($"{nameof(A)}, {nameof(B)}");
+			if (A is null || !A.IsValid())
+				throw new ArgumentNullException(nameof(A));
+			if (B is null || !B.IsValid())
+				throw new ArgumentNullException(nameof(B));
 			if (ReferenceEquals(this, A) && opA != MatrixOperation.None)
 				throw new ArgumentOutOfRangeException(nameof(opA), Resources.Parameter.InvalidValue);
 			if (ReferenceEquals(this, B) && opB != MatrixOperation.None)
@@ -872,7 +874,7 @@ namespace Althea.Backend.Arrays
 		public virtual void AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Scalars<T>.One, scalar);
 
 		/// <summary>
-		/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
+		/// When implemented by a derived class, replace this matrix's content with the <paramref name="other"/> vector in-place.
 		/// </summary>
 		/// <param name="other">The other dense vector to replace from</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
@@ -893,9 +895,9 @@ namespace Althea.Backend.Arrays
 		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
 		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
 		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <see cref="DenseMatrix{T}"/></returns>
-		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
+		/// <remarks>The method shall be basically static, the information of this matrix shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="unjoinedVectors"/> or any of its element is null or invalid, or <paramref name="input"/> is empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
+		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this matrix</exception>
 		public DenseMatrix<T> OperateOn(IReadOnlyList<DenseMatrix<T>> unjoinedVectors, ReadOnlySpan<T> input)
 		{
 			if (unjoinedVectors is null || unjoinedVectors.Count == 0)
@@ -945,7 +947,7 @@ namespace Althea.Backend.Arrays
 		/// When implemented by a derived class, get the hash code this dense vector. The default implementation only takes <see cref="ValueArray{T}.Storage"/>'s hash code.
 		/// </summary>
 		/// <returns>The hash code of <see cref="ValueArray{T}.Storage"/></returns>
-		public override int GetHashCode() => HashCode.Combine(this.Storage.MakeReference(newLength: this.ActualLength), this.LeadDim, this.NRows, this.NCols);
+		public override int GetHashCode() => HashCode.Combine(this.Storage, this.LeadDim, this.NRows, this.NCols);
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/>.
@@ -954,7 +956,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>True if this == <paramref name="obj"/></returns>
 		public override bool Equals(object? obj)
 		{
-			return obj is DenseMatrix<T> dm && this.LeadDim == dm.LeadDim && this.NRows == dm.NRows && this.NCols == dm.NCols && this.Storage.MakeReference(newLength: this.ActualLength) == dm.Storage.MakeReference(newLength: this.ActualLength);
+			return obj is DenseMatrix<T> dm && this.LeadDim == dm.LeadDim && this.NRows == dm.NRows && this.NCols == dm.NCols && this.Storage == dm.Storage;
 		}
 		#endregion
 
@@ -990,7 +992,7 @@ namespace Althea.Backend.Arrays
 		/// Get all the storages of this array. Only returns the <see cref="ValueArray{T}.Storage"/>.
 		/// </summary>
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetPointers() => new Dictionary<string, IStorage>(1) { [StorageName] = this.Storage.MakeReference(newLength: this.ActualLength) };
+		public override IReadOnlyDictionary<string, IStorage> GetPointers() => new Dictionary<string, IStorage>(1) { [StorageName] = this.Storage };
 
 		/// <summary>
 		/// The print name of the <see cref="LeadDim"/>

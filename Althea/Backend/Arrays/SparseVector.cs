@@ -409,13 +409,5 @@ namespace Althea.Backend.Arrays
 		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
 		protected override string IndexStorageNameOf(int orderOfIndexStorage) => IndexStorageName;
 		#endregion
-
-		#region serialization
-		/// <summary>
-		/// Get other requisite informations for re-constructing the sparse array of that derived class type.
-		/// </summary>
-		/// <returns>Other requisite informations used to re-construct this array. Always an empty dictionary.</returns>
-		public override IReadOnlyDictionary<string, object> GetOtherInfo() => new Dictionary<string, object>(0);
-		#endregion
 	}
 }

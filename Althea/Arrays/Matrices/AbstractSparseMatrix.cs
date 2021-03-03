@@ -184,33 +184,31 @@ namespace Althea.Arrays
 
 		#region clone related
 		/// <summary>
-		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="matrix"/>. The default implementation utilizes <see cref="ToDense(Storage{T}, long, long, long)"/> and works if <see cref="AbstractArray{T}.Length"/> == <see cref="ValueArray{T}.ActualLength"/>.
+		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="matrix"/>. The default implementation utilizes <see cref="ToDense(Storage{T}, long)"/> and works if <see cref="AbstractArray{T}.Length"/> == <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
 		/// <param name="matrix">The <see cref="MatrixBase{T}"/> as the dense matrix to overwrite</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
-		/// <exception cref="ArgumentException">If <paramref name="matrix"/> is a sparse matrix</exception>
+		/// <exception cref="ArgumentException">If <paramref name="matrix"/> is not a dense matrix</exception>
 		public virtual void ToDense(MatrixBase<T> matrix)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));
 			long length = matrix.Storage.Length;
-			if (matrix.Length != length)
+			if (matrix is not IDenseMatrix && matrix.Length != length)
 				throw new ArgumentException(Resources.Parameter.UnexpectedValue, nameof(matrix));
 
-			this.ToDense(matrix.Storage, length / matrix.NCols, matrix.NRows, matrix.NCols);
+			this.ToDense(matrix.Storage, length / matrix.NCols);
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
-		/// <param name="leadDim">The leading dimension of the target dense matrix</param>
-		/// <param name="rows">The number of rows of the dense matrix</param>
-		/// <param name="cols">The number of columns of the dense matrix</param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="MatrixBase{T}.NRows"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> or <paramref name="leadDim"/> is less than 1</exception>
-		/// <exception cref="ArgumentException">If <paramref name="rows"/> &gt; <paramref name="leadDim"/> or <paramref name="leadDim"/> * <paramref name="cols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
-		public abstract void ToDense(Storage<T> denseStorage, long leadDim, long rows, long cols);
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="MatrixBase{T}.NRows"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="MatrixBase{T}.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		public abstract void ToDense(Storage<T> denseStorage, long leadDim = 0);
 
 		/// <summary>
 		/// When implemented by a derived class, deep clone the sparse matrix, the mutable status will not be copied.
@@ -329,6 +327,16 @@ namespace Althea.Arrays
 			}
 			return dict;
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="DefaultValue"/> and <see cref="Format"/>.
+		/// </summary>
+		/// <returns>Other requisite informations used to re-construct this sparse matrix</returns>
+		public override IReadOnlyDictionary<string, object> GetOtherInfo() => new Dictionary<string, object>(2)
+		{
+			[nameof(DefaultValue)] = this.m_defaultValue,
+			[nameof(Format)] = this.m_format,
+		};
 		#endregion
 	}
 }

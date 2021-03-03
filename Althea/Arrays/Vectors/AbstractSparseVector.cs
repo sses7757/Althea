@@ -287,6 +287,16 @@ namespace Althea.Arrays
 			}
 			return dict;
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="DefaultValue"/> and <see cref="Format"/>.
+		/// </summary>
+		/// <returns>Other requisite informations used to re-construct this sparse vector.</returns>
+		public override IReadOnlyDictionary<string, object> GetOtherInfo() => new Dictionary<string, object>(2)
+		{
+			[nameof(DefaultValue)] = this.m_defaultValue,
+			[nameof(Format)] = this.m_format,
+		};
 		#endregion
 	}
 }
