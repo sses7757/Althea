@@ -857,7 +857,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription[this.start..this.end] ?? default;
+		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription ?? default;
 
 		/// <summary>
 		/// Create an empty <see cref="PureReferenceStorage{T}"/>

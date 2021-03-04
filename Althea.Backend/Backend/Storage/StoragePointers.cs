@@ -4,10 +4,14 @@ using System.Text;
 using System.Text.Json;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.Storage;
 using Althea.Resources;
+
+
+[assembly: CLSCompliant(true)]
 
 
 namespace Althea.Backend.Storage
@@ -693,8 +697,22 @@ namespace Althea.Backend.Storage
 	}
 
 
+	#region extension methods
 	internal static class ConcretePointersExtension
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe T* UnmangedPointer<T>(this IMemoryPointer p, long offset = 0) where T : unmanaged => (T*)p.Pointer.ToPointer() + offset;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void* NativePointer(this IMemoryPointer p, long offset = 0) => (byte*)p.Pointer.ToPointer() + offset;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe Span<T> AsSpan<T>(this IMemoryPointer p, long offset = 0, int length = 0) where T : unmanaged => new(p.UnmangedPointer<T>(offset), length <= 0 ? checked((int)(p.LengthInBytes / sizeof(T))) : length);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static Span<T> AsSpan<T>(this IMemoryPointer p, PointerSegment pointerSegment) where T : unmanaged => p.AsSpan<T>(checked(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
+
+
 		public static readonly StorageLocation CpuAlone = new(LocationType.CpuRam, 0);
 		public static readonly StorageLocation FileAlone = new(LocationType.Uri, (int)UriScheme.File);
 		public static readonly StorageLocation TcpAlone = new(LocationType.Uri, (int)UriScheme.TCP);
@@ -734,6 +752,7 @@ namespace Althea.Backend.Storage
 
 		public static long GetPointerOffset(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) => GetPointerOffset<byte>(pointer, out memoryPointer, out streamPointer, @throw);
 	}
+	#endregion
 }
 
 
@@ -788,6 +807,7 @@ namespace Althea.Backend.Storage.Tcp
 	}
 	#endregion
 
+	#region default methods
 	/// <summary>
 	/// The class containing default TCP stream methods
 	/// </summary>
@@ -868,4 +888,5 @@ namespace Althea.Backend.Storage.Tcp
 			return DefaultSend(data);
 		}
 	}
+	#endregion
 }

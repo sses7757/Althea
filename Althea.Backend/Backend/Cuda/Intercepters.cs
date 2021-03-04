@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Diagnostics;
 
 
-namespace Althea
+namespace Althea.Backend.Cuda
 {
 	internal static class CudaStatusUtilities
 	{
@@ -107,21 +107,6 @@ namespace Althea
 		internal static void Check(this Tensor.Cuda.Status err)
 		{
 			if (err != Tensor.Cuda.Status.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
-
-		internal static void Check(this Storage.ReadFileEnum err, string name)
-		{
-			if (err != Storage.ReadFileEnum.Success)
-			{
-				throw new StatusException(err, name);
-			}
-		}
-		internal static void Check(this Storage.ReadFileEnum err)
-		{
-			if (err != Storage.ReadFileEnum.Success)
 			{
 				throw new StatusException(err, new StackTrace(0));
 			}
@@ -305,127 +290,4 @@ namespace Althea
 			}
 		}
 	}
-
-	#region PostSharp things obsoleted
-	/////// <summary>
-	/////// Function decorator on CUDA native / custom kernel methods that
-	/////// <list type="bullet">
-	/////// <item>
-	/////// <description>checks all CUDA error types and throws them when error actually happens</description>
-	/////// </item>
-	/////// <item>
-	/////// <description>print memory difference between the start and the end of the method if necessary</description>
-	/////// </item>
-	/////// <item>
-	/////// <description>print the calling of the method if necessary</description>
-	/////// </item>
-	/////// </list>
-	/////// </summary>
-	/////// <remarks>This is actually an Aspect Oriented Programming (AOP) design principle that helps to separate concerns of computation,  checking and monitoring</remarks>
-	////[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-	////public class NativeMethodBoundaryAttribute : OnMethodBoundaryAspect
-	////{
-	////	private Type ReturnType;
-
-	////	private long FreeMemAtBegin;
-
-	////	private int FindErrorType(Type type)
-	////	{
-	////		for (int i = 0; i < Global.StatusTypes.Length; ++i)
-	////		{
-	////			if (type.IsAssignableFrom(Global.StatusTypes[i]))
-	////				return i;
-	////		}
-	////		return -1;
-	////	}
-
-	////	/// <summary>
-	////	/// Override <see cref="MethodLevelAspect.CompileTimeValidate(MethodBase)"/>
-	////	/// </summary>
-	////	/// <param name="method"></param>
-	////	public override bool CompileTimeValidate(MethodBase method)
-	////	{
-	////		if (method is null)
-	////			throw new ArgumentNullException(nameof(method));
-	////		base.CompileTimeValidate(method);
-	////		if (FindErrorType((method as MethodInfo).ReturnType) < 0)
-	////		{
-	////			Message.Write(MessageLocation.Unknown, SeverityType.Error, "DMRG_ERROR_CheckCudaError", "Can not apply [CheckCudaError] to method {0} because it does not return a type that is assignable from any CudaError.", method.Name);
-	////			return false;
-	////		}
-	////		return true;
-	////	}
-
-	////	/// <summary>
-	////	/// Override <see cref="MethodLevelAspect.CompileTimeInitialize(MethodBase, AspectInfo)"/>
-	////	/// </summary>
-	////	/// <param name="method"></param>
-	////	/// <param name="aspectInfo"></param>
-	////	public override void CompileTimeInitialize(MethodBase method, AspectInfo aspectInfo)
-	////	{
-	////		if (method is null)
-	////			throw new ArgumentNullException(nameof(method));
-	////		base.CompileTimeInitialize(method, aspectInfo);
-	////		this.ReturnType = Global.StatusTypes[FindErrorType((method as MethodInfo).ReturnType)];
-	////	}
-
-	////	/// <summary>
-	////	/// Override <see cref="OnMethodBoundaryAspect.OnEntry(MethodExecutionArgs)"/>
-	////	/// </summary>
-	////	/// <param name="args"></param>
-	////	public override void OnEntry(MethodExecutionArgs args)
-	////	{
-	////		if (args is null)
-	////			throw new ArgumentNullException(nameof(args));
-	////		base.OnEntry(args);
-	////		if (Log.TrackMemory)
-	////			this.FreeMemAtBegin = CudaRuntime.API.AvailableMemory;
-	////		if (Log.TrackMethod)
-	////			Log.Write($"starts", category: args.Method.Name, level: MsgLevel.Trace);
-	////	}
-
-	////	/// <summary>
-	////	/// Override <see cref="OnMethodBoundaryAspect.OnExit(MethodExecutionArgs)"/>
-	////	/// </summary>
-	////	/// <param name="args"></param>
-	////	public override void OnExit(MethodExecutionArgs args)
-	////	{
-	////		if (args is null)
-	////			throw new ArgumentNullException(nameof(args));
-	////		base.OnExit(args);
-	////		if (Log.TrackMemory)
-	////		{
-	////			long diff = CudaRuntime.API.AvailableMemory - this.FreeMemAtBegin;
-	////			if (diff > 0)
-	////				Log.Write($"used {(diff / 1024.0 / 1024.0):N2}MiB memory", category: args.Method.Name, level: MsgLevel.Trace);
-	////			else
-	////				Log.Write($"freed {(diff / 1024.0 / 1024.0):N2}MiB memory", category: args.Method.Name, level: MsgLevel.Trace);
-	////		}
-	////		if (Log.TrackMethod)
-	////			Log.Write($"finished", category: args.Method.Name, level: MsgLevel.Trace);
-	////	}
-
-	////	/// <summary>
-	////	/// Override <see cref="OnMethodBoundaryAspect.OnSuccess(MethodExecutionArgs)"/>
-	////	/// </summary>
-	////	/// <param name="args"></param>
-	////	/// <exception cref="CudaStatusException">if <see cref="Global.CheckCudaErrors"/> is true and the underlying method's return value is not a success status</exception>
-	////	public override void OnSuccess(MethodExecutionArgs args)
-	////	{
-	////		if (args is null)
-	////			throw new ArgumentNullException(nameof(args));
-	////		base.OnSuccess(args);
-	////		if (Global.CheckCudaErrors)
-	////		{
-	////			// here, err is a unknown Enum type and hence can be casted into int
-	////			var err = Convert.ChangeType(args.ReturnValue, this.ReturnType, Resource.Culture);
-	////			if ((int)err != 0)
-	////			{
-	////				// since the ToString() method of object is virtual, the actual ToString() that invoked is the Enum.ToString()
-	////				throw new CudaStatusException((Enum)err, new StackTrace(skipFrames: 1));
-	////			}
-	////		}
-	////	}
-	////}
-	#endregion
 }
