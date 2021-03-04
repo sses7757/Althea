@@ -1893,8 +1893,8 @@ namespace Althea.Storage
 		public static ActualStorage<TOut> CreateAlike<TOut>(Storage<T> storage) where TOut : unmanaged
 		{
 			// shortcut
-			if (typeof(T) == typeof(TOut))
-				return CreateAlike(storage) as ActualStorage<TOut> ?? ActualStorage<TOut>.Empty; // never empty
+			if (storage is Storage<TOut> s)
+				return s.CreateAlike();
 			// otherwise
 			int sizeT = Storage<T>.SizeOfT;
 			var descr = storage.LocationDescription;

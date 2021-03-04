@@ -69,7 +69,7 @@ namespace Althea.Backend.Arrays
 		public override DenseMatrix<T> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
 			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
-			return new DenseMatrix<T>(this.Storage.MakeReference(offsetCol * this.LeadDim + offsetRow), countRow, countCol, this.LeadDim);
+			return new DenseMatrix<T>(this.Storage + (offsetCol * this.LeadDim + offsetRow), countRow, countCol, this.LeadDim);
 		}
 
 		/// <summary>
@@ -92,7 +92,7 @@ namespace Althea.Backend.Arrays
 			if (dense.NRows < countRow || dense.NCols < countCol)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 
-			MEM.MemoryCopy2D(this.Storage.MakeReference(offsetCol * this.LeadDim + offsetRow), this.LeadDim, dense.Storage, dense.LeadDim, countRow, countCol);
+			MEM.MemoryCopy2D(this.Storage + (offsetCol * this.LeadDim + offsetRow), this.LeadDim, dense.Storage, dense.LeadDim, countRow, countCol);
 		}
 
 		/// <summary>
@@ -112,13 +112,13 @@ namespace Althea.Backend.Arrays
 
 			if (value is DenseMatrix<T> dense)
 			{
-				MEM.MemoryCopy2D(dense.Storage, dense.LeadDim, this.Storage.MakeReference(rowStart * this.LeadDim + columnStart), this.LeadDim, dense.NRows, dense.NCols);
+				MEM.MemoryCopy2D(dense.Storage, dense.LeadDim, this.Storage + (rowStart * this.LeadDim + columnStart), this.LeadDim, dense.NRows, dense.NCols);
 			}
 			else if (value is ISparseMatrix<T> sparse)
 			{
 				using var dn = this.Storage.MakeReference(newLength: sparse.NRows * sparse.NCols).CreateAlike();
 				sparse.ToDense(dn, sparse.NRows);
-				MEM.MemoryCopy2D(dn, sparse.NRows, this.Storage.MakeReference(rowStart * this.LeadDim + columnStart), this.LeadDim, sparse.NRows, sparse.NCols);
+				MEM.MemoryCopy2D(dn, sparse.NRows, this.Storage + (rowStart * this.LeadDim + columnStart), this.LeadDim, sparse.NRows, sparse.NCols);
 			}
 			else
 				throw new NotSupportedException();
@@ -133,18 +133,18 @@ namespace Althea.Backend.Arrays
 		public override T this[long x, long y] {
 			get {
 				this.CheckIndex(x, y);
-				return MEM.ToManaged(this.Storage.MakeReference(y * this.LeadDim + x));
+				return MEM.ToManaged(this.Storage + (y * this.LeadDim + x));
 			}
 			set {
 				this.CheckIndex(x, y);
-				MEM.FromManaged(this.Storage.MakeReference(y * this.LeadDim + x), value);
+				MEM.FromManaged(this.Storage + (y * this.LeadDim + x), value);
 			}
 		}
 		#endregion
 
 		#region diagonal indexers
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		private Storage<T> GetDiagStorage(long k) => this.Storage.MakeReference(k <= 0 ? k : k * this.LeadDim);
+		private Storage<T> GetDiagStorage(long k) => this.Storage + (k <= 0 ? k : k * this.LeadDim);
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private int GetDiagStride() => checked((int)(this.LeadDim + 1));
@@ -777,7 +777,7 @@ namespace Althea.Backend.Arrays
 		public override double AbsMax()
 		{
 			[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-			static double GetMax(Storage<T> storage, int stride) => MEM.ToManaged(storage.MakeReference(LAD.AbsoluteValueArgMax(storage, stride))).GenericAbsolute();
+			static double GetMax(Storage<T> storage, int stride) => MEM.ToManaged(storage + LAD.AbsoluteValueArgMax(storage, stride)).GenericAbsolute();
 
 			if (this.NRows == this.LeadDim)
 			{
@@ -800,7 +800,7 @@ namespace Althea.Backend.Arrays
 		public override double AbsMin()
 		{
 			[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-			static double GetMin(Storage<T> storage, int stride) => MEM.ToManaged(storage.MakeReference(LAD.AbsoluteValueArgMax(storage, stride))).GenericAbsolute();
+			static double GetMin(Storage<T> storage, int stride) => MEM.ToManaged(storage + LAD.AbsoluteValueArgMax(storage, stride)).GenericAbsolute();
 
 			if (this.NRows == this.LeadDim)
 			{

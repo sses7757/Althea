@@ -436,9 +436,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic numeric value converter from any type to <see cref="double"/>.
 		/// </summary>
-		/// <typeparam name="T">convert source type</typeparam>
-		/// <param name="a">number to convert</param>
-		/// <returns>the converted number as a <see cref="double"/></returns>
+		/// <typeparam name="T">The convert source type</typeparam>
+		/// <param name="a">The number to convert</param>
+		/// <returns>The converted number as a <see cref="double"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double ToDouble<T>(this T a) where T : unmanaged
 		{
@@ -452,10 +452,9 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Generic numeric value converter from <see cref="double"/> to any type.
 		/// </summary>
-		/// <typeparam name="T">convert target type</typeparam>
-		/// <param name="a">number to convert</param>
-		/// <returns>the converted number as <typeparamref name="T"/></returns>
-		/// <remarks>extend method, the supported data type</remarks>
+		/// <typeparam name="T">The convert target type</typeparam>
+		/// <param name="a">The number to convert</param>
+		/// <returns>The converted number as <typeparamref name="T"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T FromDouble<T>(this double a) where T : unmanaged
 		{
@@ -467,16 +466,58 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
+		/// Generic numeric value converter from any integral type to <see cref="long"/>.
+		/// </summary>
+		/// <typeparam name="T">The convert source type, must be an integral type</typeparam>
+		/// <param name="a">The number to convert</param>
+		/// <returns>The converted number as a <see cref="long"/></returns>
+		/// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ToLong<T>(this T a) where T : unmanaged
+		{
+			////if (a.ToDataType().IsFloat())
+			////	throw new Helpers.TypeMismatchException(typeof(T), Helpers.TypeMismatchException.MismatchReason.NotInteger);
+			return a switch
+			{
+				long aa => aa,
+				_ => (long)(dynamic)a,
+			};
+		}
+
+		/// <summary>
+		/// Generic numeric value converter from <see cref="long"/> to any integral type.
+		/// </summary>
+		/// <typeparam name="T">The convert target type, must be an integral type</typeparam>
+		/// <param name="a">The number to convert</param>
+		/// <returns>The converted number as <typeparamref name="T"/></returns>
+		/// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T FromLong<T>(this long a) where T : unmanaged
+		{
+			////if (default(T).ToDataType().IsFloat())
+			////	throw new Helpers.TypeMismatchException(typeof(T), Helpers.TypeMismatchException.MismatchReason.NotInteger);
+			return a switch
+			{
+				T aa => aa,
+				_ => (T)(dynamic)a,
+			};
+		}
+
+		/// <summary>
 		/// Generic numeric value converter.
 		/// </summary>
-		/// <typeparam name="TOut">convert target type</typeparam>
-		/// <typeparam name="TIn">convert source type</typeparam>
-		/// <param name="a">number to convert</param>
-		/// <returns>the converted number</returns>
+		/// <typeparam name="TOut">The convert target type</typeparam>
+		/// <typeparam name="TIn">The convert source type</typeparam>
+		/// <param name="a">The number to convert</param>
+		/// <returns>The converted number</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TOut GenericConvert<TOut, TIn>(this TIn a) where TOut : unmanaged where TIn : unmanaged
 		{
-			return (TOut)(dynamic)a;
+			return a switch
+			{
+				TOut aa => aa,
+				_ => (TOut)(dynamic)a,
+			};
 		}
 		#endregion
 
@@ -539,6 +580,29 @@ namespace Althea.NativeTypes
 				return true;
 			}
 		}
+		#endregion
+
+		#region check whether native types are integer types
+		/// <summary>
+		/// Check whether the given type <typeparamref name="T"/> is an integral type or not
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged type to check</typeparam>
+		/// <param name="a">An instance of <typeparamref name="T"/></param>
+		/// <returns>Whether <typeparamref name="T"/> is an integral type or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsIntegralType<T>(this T a) where T : unmanaged
+		{
+			var type = a.ToDataType().GetClassification();
+			return !type.IsComplex() && (type == DataTypeClassification.SignedInteger || type == DataTypeClassification.UnsignedInteger);
+		}
+
+		/// <summary>
+		/// Check whether the given type <typeparamref name="T"/> is an integral type or not
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged type to check</typeparam>
+		/// <returns>Whether <typeparamref name="T"/> is an integral type or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsIntegralType<T>() where T : unmanaged => default(T).IsIntegralType();
 		#endregion
 
 		#region check whether native types are complex types

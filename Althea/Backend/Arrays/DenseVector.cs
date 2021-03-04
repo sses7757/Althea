@@ -31,14 +31,6 @@ namespace Althea.Backend.Arrays
 		public DenseVector(Storage<T> storage) : base(storage, storage.Length) { }
 
 		/// <summary>
-		/// Create a referenced dense vector from the given <paramref name="array"/> and <paramref name="offset"/> and <paramref name="length"/>.
-		/// </summary>
-		/// <param name="array">The given <see cref="ValueArray{T}"/> whose <see cref="ValueArray{T}.Storage"/> acts as the value array of this vector</param>
-		/// <param name="offset">The offset to <paramref name="array"/>'s <see cref="ValueArray{T}.Storage"/> in <typeparamref name="T"/></param>
-		/// <param name="length">The new presenting length of this vector</param>
-		public DenseVector(ValueArray<T> array, long offset = 0, long length = 0) : base(array.Storage.MakeReference(offset, length), length) { }
-
-		/// <summary>
 		/// Actually the dispose this array by disposing <see cref="ValueArray{T}.Storage"/>.
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>
@@ -55,11 +47,11 @@ namespace Althea.Backend.Arrays
 		public override T this[long index] {
 			get {
 				this.CheckIndex(index);
-				return MEM.ToManaged(this.Storage.MakeReference(offset: index));
+				return MEM.ToManaged(this.Storage + index);
 			}
 			set {
 				this.CheckIndex(index);
-				MEM.FromManaged(this.Storage.MakeReference(offset: index), value);
+				MEM.FromManaged(this.Storage + index, value);
 			}
 		}
 
@@ -73,7 +65,7 @@ namespace Althea.Backend.Arrays
 		public override DenseVector<T> Slice(long start, long length)
 		{
 			this.CheckRange(start, length);
-			return new DenseVector<T>(this, start, length);
+			return new DenseVector<T>(this.Storage.MakeReference(start, length));
 		}
 		#endregion
 

@@ -56,8 +56,7 @@ namespace Althea.Arrays
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private static void CheckTypeFormat(SparseVectorFormat format)
 		{
-			var type = default(TInd).GetClassification();
-			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
+			if (!default(TInd).IsIntegralType())
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
@@ -80,7 +79,7 @@ namespace Althea.Arrays
 				if (len < 0)
 					throw new ArgumentOutOfRangeException(nameof(indexRealLengths), len, Resources.Parameter.CannotNegative);
 				if (len == 0)
-					this.m_indexArrays[i] = indexArrays[i];
+					this.m_indexArrays[i] = indexArrays[i].MakeReference();
 				else
 					this.m_indexArrays[i] = indexArrays[i].MakeReference(newLength: len);
 			}
@@ -200,11 +199,37 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
-		/// <returns>The new sparse vector alike this one</returns>
+		/// <returns>The new sparse vector of type (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public abstract AbstractSparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 			where TOut : unmanaged, IFormattable, IEquatable<TOut>
 			where TIndOut : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, cast this sparse vector into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new <see cref="AbstractSparseVector{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
+		public virtual AbstractSparseVector<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
+			where TOut : unmanaged, IFormattable, IEquatable<TOut>
+			where TIndOut : unmanaged, IEquatable<TIndOut>
+		{
+			var matrix = this.NewArrayAlike<TOut, TIndOut>();
+			try
+			{
+				((ISparseArray<T, TInd>)this).TypeCast(matrix);
+				return matrix;
+			}
+			catch (Exception)
+			{
+				matrix?.Dispose();
+				throw;
+			}
+		}
+		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.NewArrayAlike<TOut, TIndexOut>() => this.NewArrayAlike<TOut, TIndexOut>();
+
+		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.DataTypeCast<TOut, TIndexOut>() => this.DataTypeCast<TOut, TIndexOut>();
 		#endregion
 
 		#region equality

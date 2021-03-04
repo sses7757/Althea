@@ -987,6 +987,12 @@ namespace Althea
 		public abstract ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0);
 
 		/// <summary>
+		/// When implemented by a derived class, make a direct <see cref="ReferenceStorage{T}"/> of this one.
+		/// </summary>
+		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
+		public virtual ReferenceStorage<T> MakeReference() => this is ReferenceStorage<T> @ref ? @ref : this.MakeReference(0, 0);
+
+		/// <summary>
 		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
@@ -1040,22 +1046,25 @@ namespace Althea
 		/// <returns>The validness of this <see cref="Storage{T}"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
 		public virtual bool IsOffsetValid(long offset, long newLength = 0)
 		{
+			if (newLength < 0)
+				return false;
 			if (this is IReferenceStorage reference)
 			{
 				if (reference.Reference is null)
 					return false;
+				offset *= SizeOfT;
 				offset += reference.TotalOffsetInBytes;
 				if (offset < 0 || offset >= reference.Reference.LengthInBytes)
 					return false;
-				if (newLength > 0 && newLength + offset >= reference.Reference.LengthInBytes)
+				if (newLength > 0 && newLength * SizeOfT + offset > reference.Reference.LengthInBytes)
 					return false;
 				return true;
 			}
 			else
 			{
-				if (offset < 0 || offset >= this.LengthInBytes)
+				if (offset < 0 || offset >= this.Length)
 					return false;
-				if (newLength > 0 && newLength + offset >= this.LengthInBytes)
+				if (newLength > 0 && newLength + offset > this.Length)
 					return false;
 				return true;
 			}
@@ -1145,20 +1154,21 @@ namespace Althea
 
 		#region operator
 		/// <summary>
-		/// Add offset (in bytes) to a <see cref="Storage{T}"/> to get another.
+		/// Add offset (in <typeparamref name="T"/> rather than bytes) to a <see cref="Storage{T}"/> to get a <see cref="ReferenceStorage{T}"/>.
 		/// </summary>
 		/// <param name="storage">The <see cref="Storage{T}"/></param>
-		/// <param name="offset">The offset of type <see cref="long"/></param>
-		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		public static Storage<T> operator +(Storage<T> storage, long offset) => storage.MakeReference(offset);
+		/// <param name="offset">The offset in <typeparamref name="T"/> of type <see cref="long"/></param>
+		/// <returns>a <see cref="ReferenceStorage{T}"/> with <paramref name="offset"/> added to the <paramref name="storage"/></returns>
+		public static ReferenceStorage<T> operator +(Storage<T> storage, long offset) => storage.MakeReference(offset);
 
 		/// <summary>
-		/// Subtract offset (in bytes) to a <see cref="Storage{T}"/> to get another.
+		/// Subtract offset (in <typeparamref name="T"/> rather than bytes) from a <see cref="Storage{T}"/> to get a <see cref="ReferenceStorage{T}"/>.
 		/// </summary>
 		/// <param name="storage">The <see cref="Storage{T}"/></param>
-		/// <param name="offset">The offset of type <see cref="long"/></param>
-		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		public static Storage<T> operator -(Storage<T> storage, long offset) => storage.MakeReference(-offset);
+		/// <param name="offset">The offset in <typeparamref name="T"/> of type <see cref="long"/></param>
+		/// <returns>a <see cref="ReferenceStorage{T}"/> with <paramref name="offset"/> subtracted from the <paramref name="storage"/></returns>
+		public static ReferenceStorage<T> operator -(Storage<T> storage, long offset) => storage.MakeReference(-offset);
+
 		#endregion
 	}
 

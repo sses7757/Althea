@@ -173,7 +173,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TIndex">Any integer-typed unmanaged struct as the index data type</typeparam>
 	public interface ISparseArray<T, TIndex> : ISparseArray<T>, IReadOnlyList<Storage<TIndex>>
-		where T : unmanaged, IEquatable<T>
+		where T : unmanaged
 		where TIndex : unmanaged
 	{
 		#region properties
@@ -235,18 +235,12 @@ namespace Althea.Arrays
 		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the output type</typeparam>
 		/// <param name="valueArray">The cloned output value array</param>
 		/// <param name="copyContent">Copy the contents from original arrays to the new arrays or not</param>
-		/// <returns>The output index array as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndex"/></returns>
-		/// <exception cref="TypeMismatchException">If M<typeparamref name="TIndexOut"/> is not an integral type</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="copyContent"/> is empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="copyContent"/> has incompatible length</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <typeparamref name="T"/> is not <typeparamref name="TOut"/> while <paramref name="copyContent"/> is true</exception>
+		/// <returns>The output index arrays as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndexOut"/></returns>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="TIndexOut"/> is not an integral type</exception>
 		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> NewArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyContent)
 			where TOut : unmanaged where TIndexOut : unmanaged
 		{
-			if ((typeof(T) != typeof(TOut) || typeof(TIndex) != typeof(TIndexOut)) && copyContent)
-				throw new ArgumentOutOfRangeException(nameof(copyContent), Resources.Parameter.InvalidValue);
-			var type = default(TIndexOut).ToDataType().GetClassification();
-			if (type.IsComplex() || (type != DataTypeClassification.SignedInteger && type != DataTypeClassification.UnsignedInteger))
+			if (!default(TIndexOut).IsIntegralType())
 				throw new TypeMismatchException(typeof(TIndexOut), TypeMismatchException.MismatchReason.NotInteger);
 
 			IReadOnlyList<Storage<TIndex>> list = this;
@@ -254,10 +248,14 @@ namespace Althea.Arrays
 			SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> indices = new(list.Count);
 			try
 			{
-				value = copyContent ? (this.Storage.Clone() as ActualStorage<TOut> ?? ActualStorage<TOut>.Empty) : this.Storage.CreateAlike<TOut>();
+				value = this.Storage.CreateAlike<TOut>();
+				if (copyContent)
+					LinearAlgebra.Dense.AbstractApi.PointWiseCast(this.Storage, 1, value, 1);
 				for (int i = 0; i < list.Count; i++)
 				{
-					indices[i] = copyContent ? (list[i].Clone() as ActualStorage<TIndexOut> ?? ActualStorage<TIndexOut>.Empty) : list[i].CreateAlike<TIndexOut>();
+					indices[i] = list[i].CreateAlike<TIndexOut>();
+					if (copyContent)
+						LinearAlgebra.Dense.AbstractApi.PointWiseCast(list[i], 1, indices[i], 1);
 				}
 				valueArray = value;
 				return indices;
@@ -272,6 +270,47 @@ namespace Althea.Arrays
 				throw;
 			}
 		}
+
+		/// <summary>
+		/// The helper method used to create new array alike (and copy contents) the value array and index array(s) of this sparse array
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
+		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the output type</typeparam>
+		/// <param name="target">The target <see cref="ISparseArray{T, TIndex}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndexOut"/>) to cast to</param>
+		void TypeCast<TOut, TIndexOut>(ISparseArray<TOut, TIndexOut> target)
+			where TOut : unmanaged where TIndexOut : unmanaged
+		{
+			IReadOnlyList<Storage<TIndex>> list = this;
+			IReadOnlyList<Storage<TIndexOut>> other = target;
+			LinearAlgebra.Dense.AbstractApi.PointWiseCast(this.Storage, 1, target.Storage, 1);
+			for (int i = 0; i < list.Count; i++)
+			{
+				LinearAlgebra.Dense.AbstractApi.PointWiseCast(list[i], 1, other[i], 1);
+			}
+		}
+		#endregion
+
+		#region clone related
+		/// <summary>
+		/// When implemented by a derived class, create a new sparse array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndexOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new sparse array of type (<typeparamref name="TOut"/>, <typeparamref name="TIndexOut"/>) alike this one</returns>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndexOut"/> is not an integral type</exception>
+		ISparseArray<TOut, TIndexOut> NewArrayAlike<TOut, TIndexOut>()
+			where TOut : unmanaged, IFormattable, IEquatable<TOut>
+			where TIndexOut : unmanaged, IEquatable<TIndexOut>;
+
+		/// <summary>
+		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new <see cref="ISparseArray{T, TIndex}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndexOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndexOut"/> == <typeparamref name="TIndex"/></returns>
+		ISparseArray<TOut, TIndexOut> DataTypeCast<TOut, TIndexOut>()
+			where TOut : unmanaged, IFormattable, IEquatable<TOut>
+			where TIndexOut : unmanaged, IEquatable<TIndexOut>;
 		#endregion
 	}
 

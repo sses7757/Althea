@@ -20,6 +20,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
+	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	public class SparseVector<T, TInd> : AbstractSparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
 		where T : unmanaged, IFormattable, IEquatable<T>
 		where TInd : unmanaged
@@ -81,37 +82,43 @@ namespace Althea.Backend.Arrays
 		public override T this[long index] {
 			get {
 				this.CheckIndex(index);
-				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.GenericConvert<TInd, long>());
+				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.FromLong<TInd>());
 				if (find < 0)
 					return this.DefaultValue;
 				else
-					return MEM.ToManaged(this.Storage.MakeReference(offset: find));
+					return MEM.ToManaged(this.Storage + find);
 			}
 			set {
 				this.CheckIndex(index);
-				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.GenericConvert<TInd, long>());
+				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.FromLong<TInd>());
 				if (find < 0)
 					throw new InvalidOperationException();
-				MEM.FromManaged(this.Storage.MakeReference(offset: find), value);
+				MEM.FromManaged(this.Storage + find, value);
 			}
 		}
 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		internal static void Slice(TInd start, TInd end, ref Storage<T> value, ref Storage<TInd> index)
+		{
+			long offset = LAS.IndexBound(index, start, lowerBound: true);
+			long length = LAS.IndexBound(index, end, lowerBound: false) - offset;
+			value = value.MakeReference(offset, length);
+			index = index.MakeReference(offset, length);
+		}
+
 		/// <summary>
-		/// Get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
+		/// Get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>
 		/// </summary>
 		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
-		/// <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
-		/// <returns>The referenced sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
-		public override SparseVector<T, TInd> Slice(long start, long length)
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <returns>The referenced sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		public override SparseVector<T, TInd> Slice(long start, long count)
 		{
-			this.CheckRange(start, length);
-			long lowerBound = LAS.IndexBound(this.IndexStorage, start.GenericConvert<TInd, long>(), lowerBound: true);
-			long upperBound = LAS.IndexBound(this.IndexStorage, (start + length).GenericConvert<TInd, long>(), lowerBound: false);
-			return new SparseVector<T, TInd>(length,
-											 this.Storage.MakeReference(offset: lowerBound, newLength: upperBound - lowerBound),
-											 this.IndexStorage.MakeReference(offset: lowerBound, newLength: upperBound - lowerBound),
-											 this.DefaultValue);
+			this.CheckRange(start, count);
+			var value = this.Storage; var index = this.IndexStorage;
+			Slice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), ref value, ref index);
+			return new SparseVector<T, TInd>(count, value, index, this.DefaultValue);
 		}
 		#endregion
 

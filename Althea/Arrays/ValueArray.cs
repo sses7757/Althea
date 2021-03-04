@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using Althea.Linq;
 using Althea.Helpers;
 using Althea.NativeTypes;
-using Althea.Backend.Arrays;
 
 using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
@@ -262,7 +261,7 @@ namespace Althea.Arrays
 		/// <returns>The maximum one of all absolute values of the elements in this array</returns>
 		public virtual double AbsMax()
 		{
-			double max = MEM.ToManaged(this.Storage.MakeReference(LAD.AbsoluteValueArgMax(this.Storage, 1))).GenericAbsolute();
+			double max = MEM.ToManaged(this.Storage + LAD.AbsoluteValueArgMax(this.Storage, 1)).GenericAbsolute();
 			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
 				return max;
 			else
@@ -275,7 +274,7 @@ namespace Althea.Arrays
 		/// <returns>The minimum one of all absolute values of the elements in this array</returns>
 		public virtual double AbsMin()
 		{
-			double min = MEM.ToManaged(this.Storage.MakeReference(LAD.AbsoluteValueArgMin(this.Storage, 1))).GenericAbsolute();
+			double min = MEM.ToManaged(this.Storage + LAD.AbsoluteValueArgMin(this.Storage, 1)).GenericAbsolute();
 			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
 				return min;
 			else
@@ -284,12 +283,6 @@ namespace Althea.Arrays
 		#endregion
 
 		#region reshape (mostly abstract)
-		/// <summary>
-		/// Take out the data <see cref="Storage"/> to form a new referenced <see cref="DenseVector{T}"/>.
-		/// </summary>
-		/// <returns>A new referenced <see cref="DenseVector{T}"/> containing the data <see cref="Storage"/> of this one.</returns>
-		public DenseVector<T> AsDenseVector() => new(this, this.ActualLength);
-
 		/// <summary>
 		/// Check the new size (dimensionality) to reshape to with respect to the original <paramref name="array"/> and find out the uncertain dimension.
 		/// </summary>
@@ -525,8 +518,9 @@ namespace Althea.Arrays
 		{
 			if (typeof(T) == typeof(TOut))
 			{
-				var ret = this as ValueArray<TOut>;
-				return ret ?? new DenseVector<TOut>();
+#pragma warning disable CS8603 // the 'as' here cannot return null
+				return this as ValueArray<TOut>;
+#pragma warning restore CS8603
 			}
 			var alike = this.NewArrayAlike<TOut>();
 			try
@@ -564,7 +558,7 @@ namespace Althea.Arrays
 			{
 				index = LAD.AbsoluteValueArgMax(array.Storage, 1);
 			}
-			double val = MEM.ToManaged(array.Storage.MakeReference(offset: index))
+			double val = MEM.ToManaged(array.Storage + index)
 							.GenericAbsolute()
 							.ToDouble();
 			return val <= 1E-6;

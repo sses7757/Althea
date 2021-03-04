@@ -97,7 +97,7 @@
       <LastGenOutput>Backend.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Parameter.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Parameter.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Print.resx">
@@ -118,10 +118,10 @@
     <None Update="Althea.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Backend\Mkl\BlasSupplementOMP.dll">
+    <None Update="Backend\Cuda\BlasSupplementCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Backend\Cuda\BlasSupplementCUDA.dll">
+    <None Update="Backend\Mkl\BlasSupplementOMP.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="cuTT.dll">

@@ -83,6 +83,8 @@ namespace Althea.Helpers
 																		m.ReturnType == typeof(T2) && m.GetParameters().Length == 1 &&
 																		m.GetParameters()[0].ParameterType.IsAssignableFrom(typeof(T1));
 
+			if (obj is T2 a)
+				return a;
 			Type t1 = typeof(T1), t2 = typeof(T2);
 			var key = (t1.TypeHandle, t2.TypeHandle);
 			if (!_conversionCache.ContainsKey(key))

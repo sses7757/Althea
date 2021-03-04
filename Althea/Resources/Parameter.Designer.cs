@@ -22,7 +22,7 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Parameter {
+    public class Parameter {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Althea.Resources {
         ///   返回此类使用的缓存的 ResourceManager 实例。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Parameter", typeof(Parameter).Assembly);
@@ -51,7 +51,7 @@ namespace Althea.Resources {
         ///   使用此强类型资源类的所有资源查找执行重写。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter cannot be less than zero. 的本地化字符串。
         /// </summary>
-        internal static string CannotNegative {
+        public static string CannotNegative {
             get {
                 return ResourceManager.GetString("CannotNegative", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter cannot be larger than zero. 的本地化字符串。
         /// </summary>
-        internal static string CannotPositive {
+        public static string CannotPositive {
             get {
                 return ResourceManager.GetString("CannotPositive", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter cannot be zero. 的本地化字符串。
         /// </summary>
-        internal static string CannotZero {
+        public static string CannotZero {
             get {
                 return ResourceManager.GetString("CannotZero", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter contains duplicate indices which is not allowed. 的本地化字符串。
         /// </summary>
-        internal static string DuplicateIndices {
+        public static string DuplicateIndices {
             get {
                 return ResourceManager.GetString("DuplicateIndices", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter contains duplicate values, which is not allowed. 的本地化字符串。
         /// </summary>
-        internal static string DuplicateValue {
+        public static string DuplicateValue {
             get {
                 return ResourceManager.GetString("DuplicateValue", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given enum parameter must be a bit flag. 的本地化字符串。
         /// </summary>
-        internal static string EnumNotFlag {
+        public static string EnumNotFlag {
             get {
                 return ResourceManager.GetString("EnumNotFlag", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter has invalid value. 的本地化字符串。
         /// </summary>
-        internal static string InvalidValue {
+        public static string InvalidValue {
             get {
                 return ResourceManager.GetString("InvalidValue", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter cannot be larger than or equal to zero. 的本地化字符串。
         /// </summary>
-        internal static string MustNegative {
+        public static string MustNegative {
             get {
                 return ResourceManager.GetString("MustNegative", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter cannot be less than or equal to zero. 的本地化字符串。
         /// </summary>
-        internal static string MustPositive {
+        public static string MustPositive {
             get {
                 return ResourceManager.GetString("MustPositive", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameters have different size, which is not allowed. 的本地化字符串。
         /// </summary>
-        internal static string NotSameSize {
+        public static string NotSameSize {
             get {
                 return ResourceManager.GetString("NotSameSize", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter is of an unexpected type. 的本地化字符串。
         /// </summary>
-        internal static string UnexpectedType {
+        public static string UnexpectedType {
             get {
                 return ResourceManager.GetString("UnexpectedType", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter contains unexpected value(s). 的本地化字符串。
         /// </summary>
-        internal static string UnexpectedValue {
+        public static string UnexpectedValue {
             get {
                 return ResourceManager.GetString("UnexpectedValue", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter has incompatible size. 的本地化字符串。
         /// </summary>
-        internal static string WrongSize {
+        public static string WrongSize {
             get {
                 return ResourceManager.GetString("WrongSize", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given parameter has size of zero which is not allowed. 的本地化字符串。
         /// </summary>
-        internal static string ZeroSize {
+        public static string ZeroSize {
             get {
                 return ResourceManager.GetString("ZeroSize", resourceCulture);
             }

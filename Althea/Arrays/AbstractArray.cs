@@ -10,11 +10,17 @@ namespace Althea.Arrays
 	/// The abstract array class for any kind of array. It is the top level abstract of all built-in array classes. It implements the <see cref="IDisposable"/> and <see cref="ICloneable{T}"/> interface.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <remarks>
+	/// Since the <see cref="AbstractArray{T}"/> may be reference created quite frequently, storing the size as a C# <see cref="Array"/> is rather expensive.<br/>
+	/// Thus the C++ equivalent "<c>struct { int rank, long size[16] }</c>" of <see cref="SizedFixedBuffer_128{T}"/> is used instead to reduce the GC pressure.<br/>
+	/// Also, the <see cref="AbstractArray{T}"/> has no finalizer and if it is composed of <see cref="ReferenceStorage{T}"/> which still has no finalizer, the instance stays in GC generation 0 which is quite fast in deallocation.<br/>
+	/// Therefore, the derived class shall follow the same strategy, such as <see cref="AbstractSparseVector{T, TInd}"/> and <see cref="AbstractSparseMatrix{T, TInd}"/>.
+	/// </remarks>
 	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region members
 		/// <summary>
-		/// The member that actually stores the size
+		/// The member that actually stores the size of this array
 		/// </summary>
 		protected readonly SizedFixedBuffer_128<long> m_size = default;
 

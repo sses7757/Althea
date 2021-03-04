@@ -290,16 +290,16 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="α"/></c> (point-wise addition).
+		/// Compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalar"/></c> (point-wise addition).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be added in-place</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="α">The scalar to add</param>
+		/// <param name="scalar">The scalar to add</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		public static void PointWiseAddScalar<T>(Storage<T> x, int stride, T α) where T : unmanaged, IEquatable<T>
+		public static void PointWiseAddScalar<T>(Storage<T> x, int stride, T scalar) where T : unmanaged, IEquatable<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription;
 			bool success = false;
@@ -307,7 +307,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
-				success = node.Value.PointWiseAddScalar_(x, stride, α);
+				success = node.Value.PointWiseAddScalar_(x, stride, scalar);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -405,6 +405,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSrc"/> or <paramref name="strideDst"/> is less than 1</exception>
 		public static void PointWiseCast<T, TOut>(Storage<T> source, int strideSrc, Storage<TOut> destination, int strideDst) where T : unmanaged where TOut : unmanaged
 		{
+			if (destination is Storage<T> dst)
+			{
+				Storage.AbstractApi.StridedCopy(source, strideSrc, dst, strideDst);
+				return;
+			}
 			CombinationOfLocations location1 = source.LocationDescription, location2 = destination.LocationDescription;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
@@ -735,16 +740,16 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="α"/></c> (point-wise addition).
+		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be added in-place</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="α">The scalar to add</param>
+		/// <param name="scalr">The scalar to add</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		protected abstract bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T α) where T : unmanaged, IEquatable<T>;
+		protected abstract bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region custom BLAS level 3
