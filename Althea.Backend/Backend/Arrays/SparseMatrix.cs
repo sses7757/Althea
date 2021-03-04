@@ -818,8 +818,8 @@ namespace Althea.Backend.Arrays
 
 			// sort first to reduce errors
 			int length = input.Length;
-			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStockLimit<double>() ?? stackalloc double[length];
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
 			for (int i = 0; i < length; i++)
 			{
 				values[i] = input[i];

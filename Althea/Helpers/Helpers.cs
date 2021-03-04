@@ -20,14 +20,6 @@ namespace Althea.Helpers
 			}
 		}
 
-		internal static T[]? CheckStockLimit<T>(this int length) where T : unmanaged
-		{
-			if (length * Storage<T>.SizeOfT > Settings.StackAllocLimit)
-				return new T[length];
-			else
-				return null;
-		}
-
 		// TODO: move to native codes?
 		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
 										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);

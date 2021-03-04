@@ -22,7 +22,7 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Support {
+    public class Support {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Althea.Resources {
         ///   返回此类使用的缓存的 ResourceManager 实例。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Support", typeof(Support).Assembly);
@@ -51,7 +51,7 @@ namespace Althea.Resources {
         ///   使用此强类型资源类的所有资源查找执行重写。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似  is/are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string BaseNotSupport {
+        public static string BaseNotSupport {
             get {
                 return ResourceManager.GetString("BaseNotSupport", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Other data type(s) are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string DataType {
+        public static string DataType {
             get {
                 return ResourceManager.GetString("DataType", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Other format(s) are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string Format {
+        public static string Format {
             get {
                 return ResourceManager.GetString("Format", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Ohter location(s) is/are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string Location {
+        public static string Location {
             get {
                 return ResourceManager.GetString("Location", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Not dense neither sparse array(s) is/are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string OtherArray {
+        public static string OtherArray {
             get {
                 return ResourceManager.GetString("OtherArray", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Other routine(s) is/are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string Routine {
+        public static string Routine {
             get {
                 return ResourceManager.GetString("Routine", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Tensors are not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string Tensor {
+        public static string Tensor {
             get {
                 return ResourceManager.GetString("Tensor", resourceCulture);
             }

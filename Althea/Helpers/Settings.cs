@@ -61,15 +61,17 @@ namespace Althea.Helpers
 		{
 			public bool DisposeNotCurrentImplementation;
 
-			public Type Storage, LinearAlgebra, TensorAlgebra, Statistics, Solver;
+			public Type Storage, LinearAlgebraDense, LinearAlgebraSparse, TensorAlgebraDense, TensorAlgebraSparse, Statistics, Solver;
 
 			internal ImplementationSettings(bool _)
 			{
 				DisposeNotCurrentImplementation = true;
-				Backend.ISetBackend impls = new Backend.CSharp.CSharpImplementations();
+				ISetBackend impls = new Backend.CSharp.CSharpImplementations();
 				Storage = impls.StorageImplementation;
-				LinearAlgebra = impls.LinearAlgebraImplementation;
-				TensorAlgebra = impls.TensorAlgebraImplementation;
+				LinearAlgebraDense = impls.DenseLinearAlgebraImplementation;
+				LinearAlgebraSparse = impls.SparseLinearAlgebraImplementation;
+				TensorAlgebraDense = impls.DenseTensorAlgebraImplementation;
+				TensorAlgebraSparse = impls.SparseTensorAlgebraImplementation;
 				Statistics = impls.StatisticsImplementation;
 				Solver = impls.SolverImplementation;
 			}
@@ -78,7 +80,7 @@ namespace Althea.Helpers
 			internal ImplementationSettings(bool disposeNotCurrentImplementation, string storage, string linearAlgebra, string tensorAlgebra, string statistics, string solver)
 			{
 				DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
-				Backend.ISetBackend impls = new Backend.CSharp.CSharpImplementations();
+				ISetBackend impls = new Backend.CSharp.CSharpImplementations();
 				try
 				{
 					Storage = Type.GetType(storage) ?? impls.StorageImplementation;
@@ -90,20 +92,38 @@ namespace Althea.Helpers
 
 				try
 				{
-					LinearAlgebra = Type.GetType(linearAlgebra) ?? impls.LinearAlgebraImplementation;
+					LinearAlgebraDense = Type.GetType(linearAlgebra) ?? impls.DenseLinearAlgebraImplementation;
 				}
 				catch (Exception)
 				{
-					LinearAlgebra = impls.LinearAlgebraImplementation;
+					LinearAlgebraDense = impls.DenseLinearAlgebraImplementation;
 				}
 
 				try
 				{
-					TensorAlgebra = Type.GetType(tensorAlgebra) ?? impls.TensorAlgebraImplementation;
+					LinearAlgebraSparse = Type.GetType(linearAlgebra) ?? impls.SparseLinearAlgebraImplementation;
 				}
 				catch (Exception)
 				{
-					TensorAlgebra = impls.TensorAlgebraImplementation;
+					LinearAlgebraSparse = impls.SparseLinearAlgebraImplementation;
+				}
+
+				try
+				{
+					TensorAlgebraDense = Type.GetType(tensorAlgebra) ?? impls.DenseTensorAlgebraImplementation;
+				}
+				catch (Exception)
+				{
+					TensorAlgebraDense = impls.DenseTensorAlgebraImplementation;
+				}
+
+				try
+				{
+					TensorAlgebraSparse = Type.GetType(tensorAlgebra) ?? impls.SparseTensorAlgebraImplementation;
+				}
+				catch (Exception)
+				{
+					TensorAlgebraSparse = impls.SparseTensorAlgebraImplementation;
 				}
 
 				try
@@ -229,21 +249,39 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Which linear algebra implementation to use
+		/// Which dense linear algebra implementation to use
 		/// </summary>
 		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type LinearAlgebraImplementation {
-			get => singletonSettings.ImplementationSettings.LinearAlgebra;
-			set => singletonSettings.ImplementationSettings.LinearAlgebra = LinearAlgebra.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		public static Type DenseLinearAlgebraImplementation {
+			get => singletonSettings.ImplementationSettings.LinearAlgebraDense;
+			set => singletonSettings.ImplementationSettings.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
-		/// Which tensor algebra implementation to use
+		/// Which sparse linear algebra implementation to use
 		/// </summary>
 		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type TensorAlgebraImplementation {
-			get => singletonSettings.ImplementationSettings.TensorAlgebra;
-			set => singletonSettings.ImplementationSettings.TensorAlgebra = TensorAlgebra.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		public static Type SparseLinearAlgebraImplementation {
+			get => singletonSettings.ImplementationSettings.LinearAlgebraSparse;
+			set => singletonSettings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		}
+
+		/// <summary>
+		/// Which dense tensor algebra implementation to use
+		/// </summary>
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type DenseTensorAlgebraImplementation {
+			get => singletonSettings.ImplementationSettings.TensorAlgebraDense;
+			set => singletonSettings.ImplementationSettings.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		}
+
+		/// <summary>
+		/// Which sparse tensor algebra implementation to use
+		/// </summary>
+		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
+		public static Type SparseTensorAlgebraImplementation {
+			get => singletonSettings.ImplementationSettings.TensorAlgebraSparse;
+			set => singletonSettings.ImplementationSettings.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
@@ -267,17 +305,19 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Set all back-end implementations at once
 		/// </summary>
-		/// <param name="backend">The <see cref="Backend.ISetBackend"/> used to set all back-ends</param>
+		/// <param name="backend">The <see cref="ISetBackend"/> used to set all back-ends</param>
 		/// <return>Success or not. Some implementation may still be changed even if this returns false.</return>
-		public static bool SetBackend(Backend.ISetBackend backend)
+		public static bool SetBackend(ISetBackend backend)
 		{
 			if (!backend.Available)
 				return false;
 			try
 			{
 				StorageImplementation = backend.StorageImplementation;
-				LinearAlgebraImplementation = backend.LinearAlgebraImplementation;
-				TensorAlgebraImplementation = backend.TensorAlgebraImplementation;
+				DenseLinearAlgebraImplementation = backend.DenseLinearAlgebraImplementation;
+				SparseLinearAlgebraImplementation = backend.SparseLinearAlgebraImplementation;
+				DenseTensorAlgebraImplementation = backend.DenseTensorAlgebraImplementation;
+				SparseTensorAlgebraImplementation = backend.SparseTensorAlgebraImplementation;
 				StatisticsImplementation = backend.StatisticsImplementation;
 				SolverImplementation = backend.SolverImplementation;
 				return true;
@@ -312,8 +352,10 @@ namespace Althea.Helpers
 				// set default back-end
 				SetBackend(new Backend.CSharp.CSharpImplementations());
 				Storage.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Storage);
-				LinearAlgebra.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebra);
-				TensorAlgebra.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebra);
+				LinearAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraDense);
+				LinearAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraSparse);
+				TensorAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraDense);
+				TensorAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraSparse);
 				Statistics.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Statistics);
 				Solver.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Solver);
 				return true;
@@ -363,6 +405,22 @@ namespace Althea.Helpers
 		{
 			string json = JsonSerializer.Serialize(singletonSettings, options);
 			File.WriteAllText(fileName, json);
+		}
+		#endregion
+
+		#region extension methods
+		/// <summary>
+		/// Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="length">The desired length to allocate</param>
+		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
+		public static T[]? CheckStackLimit<T>(this int length) where T : unmanaged
+		{
+			if (length * Storage<T>.SizeOfT > StackAllocLimit)
+				return new T[length];
+			else
+				return null;
 		}
 		#endregion
 	}

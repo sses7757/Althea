@@ -23,7 +23,7 @@ namespace Althea.Backend.Arrays
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	public class SparseVector<T, TInd> : AbstractSparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
 		where T : unmanaged, IFormattable, IEquatable<T>
-		where TInd : unmanaged
+		where TInd : unmanaged, IEquatable<TInd>
 	{
 		#region basic
 		/// <summary>
@@ -356,8 +356,8 @@ namespace Althea.Backend.Arrays
 
 			// sort first to reduce errors
 			int length = input.Length;
-			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStockLimit<double>() ?? stackalloc double[length];
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
 			for (int i = 0; i < length; i++)
 			{
 				values[i] = input[i];
@@ -404,7 +404,7 @@ namespace Althea.Backend.Arrays
 				return;
 			}
 			// else
-			Span<TInd> temp = indices.Length.CheckStockLimit<TInd>() ?? stackalloc TInd[indices.Length];
+			Span<TInd> temp = indices.Length.CheckStackLimit<TInd>() ?? stackalloc TInd[indices.Length];
 			MEM.ToManaged(this.IndexStorage, temp);
 			temp.CopyTo(indices, static a => a.ReflectionConvert<TInd, long>());
 		}

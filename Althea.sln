@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BlasSupplement", "BlasSuppl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "UnitTest\UnitTest.csproj", "{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Althea.Backend", "Althea.Backend\Althea.Backend.csproj", "{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -26,6 +28,9 @@ Global
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Debug|x64.Build.0 = Debug|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.ActiveCfg = Release|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.Build.0 = Release|x64
+		{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}.Debug|x64.ActiveCfg = Debug|x64
+		{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}.Debug|x64.Build.0 = Debug|x64
+		{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

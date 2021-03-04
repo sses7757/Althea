@@ -301,8 +301,8 @@ namespace Althea.Backend.Arrays
 
 			// sort first to reduce errors
 			int length = input.Length;
-			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStockLimit<double>() ?? stackalloc double[length];
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
 			for (int i = 0; i < length; i++)
 			{
 				values[i] = input[i];
@@ -371,7 +371,7 @@ namespace Althea.Backend.Arrays
 			string detail = ":" + Environment.NewLine;
 			// get managed array
 			int length = (int)Math.Min(settings.ArrayLength, this.Length);
-			Span<T> managed = length.CheckStockLimit<T>() ?? stackalloc T[length];
+			Span<T> managed = length.CheckStackLimit<T>() ?? stackalloc T[length];
 			MEM.ToManaged(this.Storage, managed);
 			// to dense vector string
 			detail += managed.ToVectorString(precision: settings.Precision);

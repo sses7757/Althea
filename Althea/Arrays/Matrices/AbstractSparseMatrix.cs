@@ -306,10 +306,10 @@ namespace Althea.Arrays
 			string detail = ":" + Environment.NewLine;
 			// get managed arrays
 			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
-			Span<T> values = length.CheckStockLimit<T>() ?? stackalloc T[length];
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
 			MEM.ToManaged(this.Storage, values);
-			Span<long> row = length.CheckStockLimit<long>() ?? stackalloc long[length];
-			Span<long> col = length.CheckStockLimit<long>() ?? stackalloc long[length];
+			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
 			// to matrix string
 			detail += values.ToSparseMatrixString(row, col, precision: settings.Precision);
