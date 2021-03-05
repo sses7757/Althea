@@ -16,7 +16,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public abstract class AbstractSparseVector<T, TInd> : VectorBase<T>, ISparseVector<T>, ISparseArray<T, TInd>
+	public abstract class SparseVector<T, TInd> : VectorBase<T>, ISparseVector<T>, ISparseArray<T, TInd>
 		where T : unmanaged, IFormattable, IEquatable<T>
 		where TInd : unmanaged
 	{
@@ -63,7 +63,7 @@ namespace Althea.Arrays
 		}
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		private AbstractSparseVector(long length, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseVectorFormat format, T defaultValue) : base(valueArray, length, stores)
+		private SparseVector(long length, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseVectorFormat format, T defaultValue) : base(valueArray, length, stores)
 		{
 			CheckTypeFormat(format);
 			if (indexArrays.Count != indexRealLengths.Length)
@@ -87,7 +87,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a <see cref="AbstractSparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArray"/>
+		/// Create a <see cref="SparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArray"/>
 		/// </summary>
 		/// <param name="length">The presenting length of this sparse vector</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
@@ -98,11 +98,11 @@ namespace Althea.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or <paramref name="indexArray"/> or larger than the presenting length of this vector</exception>
-		protected AbstractSparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
+		protected SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
 			this(length, valueArray, stores, indexArray, stackalloc long[1].SetValue(stores), format, defaultValue) { }
 
 		/// <summary>
-		/// Create a <see cref="AbstractSparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
+		/// Create a <see cref="SparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
 		/// </summary>
 		/// <param name="length">The presenting length of this sparse vector</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
@@ -115,7 +115,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected AbstractSparseVector(long length, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
+		protected SparseVector(long length, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
 			this(length, valueArray, stores, indexArrays, realIndexArrayLengths, format, defaultValue) { }
 		#endregion
 
@@ -140,7 +140,7 @@ namespace Althea.Arrays
 		public virtual void DisposeExclude(ISparseArray<T> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 
 		/// <summary>
-		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="AbstractSparseVector{T, TInd}"/>.
+		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)
@@ -169,30 +169,23 @@ namespace Althea.Arrays
 
 		#region clone related
 		/// <summary>
-		/// When implemented by a derived class, convert this sparse vector to a dense vector whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
-		/// </summary>
-		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense vector to overwrite</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
-		public abstract void ToDense(Storage<T> denseStorage);
-
-		/// <summary>
 		/// When implemented by a derived class, deep clone the sparse vector, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned sparse vector</returns>
-		public override abstract AbstractSparseVector<T, TInd> Clone();
+		public override abstract SparseVector<T, TInd> Clone();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
-		public override abstract AbstractSparseVector<T, TInd> NewArrayAlike();
+		public override abstract SparseVector<T, TInd> NewArrayAlike();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new sparse vector alike this one</returns>
-		public override abstract AbstractSparseVector<TOut, TInd> NewArrayAlike<TOut>();
+		public override abstract SparseVector<TOut, TInd> NewArrayAlike<TOut>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
@@ -201,17 +194,17 @@ namespace Althea.Arrays
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
 		/// <returns>The new sparse vector of type (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
-		public abstract AbstractSparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+		public abstract SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged;
+			where TIndOut : unmanaged, IEquatable<TIndOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, cast this sparse vector into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
-		/// <returns>The new <see cref="AbstractSparseVector{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
-		public virtual AbstractSparseVector<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
+		/// <returns>The new <see cref="SparseVector{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
+		public virtual SparseVector<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
 			where TOut : unmanaged, IFormattable, IEquatable<TOut>
 			where TIndOut : unmanaged, IEquatable<TIndOut>
 		{
@@ -230,6 +223,22 @@ namespace Althea.Arrays
 		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.NewArrayAlike<TOut, TIndexOut>() => this.NewArrayAlike<TOut, TIndexOut>();
 
 		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.DataTypeCast<TOut, TIndexOut>() => this.DataTypeCast<TOut, TIndexOut>();
+		#endregion
+
+		#region conversion
+		/// <summary>
+		/// When implemented by a derived class, convert this sparse vector to a dense vector whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense vector to overwrite</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
+		public abstract void ToDense(Storage<T> denseStorage);
+
+		/// <summary>
+		/// When implemented by a derived class, convert this sparse vector to another sparse vector with <see cref="Format"/> fitting <paramref name="format"/>
+		/// </summary>
+		/// <param name="format">The target format, can be anatomic</param>
+		/// <returns>The converted <see cref="SparseVector{T, TInd}"/> whose <see cref="Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
+		public abstract SparseVector<T, TInd> ToFormat(SparseVectorFormat format);
 		#endregion
 
 		#region equality

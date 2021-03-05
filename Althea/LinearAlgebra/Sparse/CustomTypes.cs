@@ -23,6 +23,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// <summary>
 	/// The <see cref="SparseMatrixFormat"/> enum indicates the format specification of a sparse matrix. Each bit flag indicates an atomic format.
 	/// </summary>
+	/// <remarks>All the internally defined formats are 3-array variations rather than 4-array ones.</remarks>
 	[Flags]
 	public enum SparseMatrixFormat : int
 	{
@@ -81,6 +82,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		public const SparseMatrixFormat ColumnMajor = SparseMatrixFormat.COOC | SparseMatrixFormat.CSC | SparseMatrixFormat.BSC;
 
+		/// <summary>
+		/// The internally defined formats for sparse matrices.
+		/// </summary>
+		public const SparseMatrixFormat PreDefined = RowMajor | ColumnMajor;
+
 
 		/// <summary>
 		/// All of the possible <see cref="SparseVectorFormat"/>s. Value = 111...111
@@ -88,6 +94,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
 		/// If some custom formats are defined afterwards, this trick should still be used.</remarks>
 		public const SparseVectorFormat VectorAny = (SparseVectorFormat)~0;
+
 		/// <summary>
 		/// All of the possible <see cref="SparseMatrixFormat"/>s. Value = 111...111
 		/// </summary>
@@ -112,79 +119,11 @@ namespace Althea.LinearAlgebra.Sparse
 		public static bool IsAtomic(this SparseMatrixFormat format) => ((int)format).IsPowerOfTwo();
 
 		/// <summary>
-		/// Encapsulates a method that receives the input of lengths of value, row index and column index arrays and check whether they obey the underlying regulation of underlying format.
+		/// Check whether the given <see cref="SparseMatrixFormat"/> is a row major format or not
 		/// </summary>
-		/// <param name="rows">The number of rows of given sparse matrix</param>
-		/// <param name="columns">The number of columns of given sparse matrix</param>
-		/// <param name="valueLength">The length of the value array in <see cref="long"/></param>
-		/// <param name="rowLength">The length of the row index array in <see cref="long"/></param>
-		/// <param name="columnLength">The length of the column index array in <see cref="long"/></param>
-		/// <returns>True if <paramref name="valueLength"/>, <paramref name="rowLength"/> and <paramref name="columnLength"/> obey the underlying regulation of underlying format, false otherwise.</returns>
-		public delegate bool CheckLengthRegulationDelegate(long rows, long columns, long valueLength, long rowLength, long columnLength);
-
-		private static readonly Dictionary<SparseMatrixFormat, CheckLengthRegulationDelegate> cache_regulations = new();
-
-		/// <summary>
-		/// Set the length regulation of given <paramref name="format"/> by indicating length-regulation-check function.
-		/// </summary>
-		/// <param name="format">The <b>atomic</b> <see cref="SparseMatrixFormat"/> to indicate the length regulation</param>
-		/// <param name="checkFunc">The <see cref="CheckLengthRegulationDelegate"/> used to check the lengths. It is highly recommended that static method is used to create this parameter.</param>
-		/// <returns>True if the length regulation is set successfully, false otherwise.</returns>
-		public static bool SetLengthRegulation(this SparseMatrixFormat format, CheckLengthRegulationDelegate checkFunc)
-		{
-			if (!format.IsAtomic())
-				return false;
-			if (format <= SparseMatrixFormat.CSC)
-				return false;
-			if (checkFunc is null)
-				return false;
-			cache_regulations[format] = checkFunc;
-			return true;
-		}
-
-		/// <summary>
-		/// Check whether the lengths of value, row index and column index arrays obey the underlying regulation of the given <paramref name="format"/>.
-		/// </summary>
-		/// <param name="format">The <b>atomic</b> <see cref="SparseMatrixFormat"/> to indicate which length regulation to use</param>
-		/// <param name="rows">The number of rows of given sparse matrix</param>
-		/// <param name="columns">The number of columns of given sparse matrix</param>
-		/// <param name="valueLength">The length of the value array in <see cref="long"/></param>
-		/// <param name="rowLength">The length of the row index array in <see cref="long"/></param>
-		/// <param name="columnLength">The length of the column index array in <see cref="long"/></param>
-		/// <returns>True if <paramref name="valueLength"/>, <paramref name="rowLength"/> and <paramref name="columnLength"/> obey the underlying regulation of underlying format, false otherwise.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is atomic; or <paramref name="rows"/> or <paramref name="columns"/> or <paramref name="valueLength"/> or <paramref name="rowLength"/> or <paramref name="columnLength"/> is not positive</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="format"/>'s regulation is neither internally known nor indicated by <see cref="SetLengthRegulation"/></exception>
-		public static bool CheckLengthRegulation(this SparseMatrixFormat format, long rows, long columns, long valueLength, long rowLength, long columnLength)
-		{
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-			if (rows <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.Parameter.MustPositive);
-			if (columns <= 0)
-				throw new ArgumentOutOfRangeException(nameof(columns), columns, Resources.Parameter.MustPositive);
-			if (valueLength <= 0)
-				throw new ArgumentOutOfRangeException(nameof(valueLength), valueLength, Resources.Parameter.MustPositive);
-			if (rowLength <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rowLength), rowLength, Resources.Parameter.MustPositive);
-			if (columnLength <= 0)
-				throw new ArgumentOutOfRangeException(nameof(columnLength), columnLength, Resources.Parameter.MustPositive);
-
-			switch (format)
-			{
-				case SparseMatrixFormat.COOR:
-				case SparseMatrixFormat.COOC:
-					return valueLength <= rows * columns && valueLength == rowLength && valueLength == columnLength;
-				case SparseMatrixFormat.CSR:
-					return valueLength <= rows * columns && rowLength == rows + 1 && valueLength == columnLength;
-				case SparseMatrixFormat.CSC:
-					return valueLength <= rows * columns && columnLength == columns + 1 && valueLength == rowLength;
-				default:
-					if (cache_regulations.ContainsKey(format))
-						return cache_regulations[format].Invoke(rows, columns, valueLength, rowLength, columnLength);
-					else
-						throw new InvalidOperationException();
-			}
-		}
+		/// <param name="format">The given <see cref="SparseMatrixFormat"/> to check</param>
+		/// <returns>True if <paramref name="format"/> is a row major format, i.e. <c>log2(<paramref name="format"/>) % 2 == 0</c> ; false otherwise.</returns>
+		public static bool IsRowMajor(this SparseMatrixFormat format) => ((int)format).Log2() % 2 == 0;
 		#endregion
 	}
 	#endregion

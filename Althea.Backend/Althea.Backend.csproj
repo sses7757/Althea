@@ -8,6 +8,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>D:\Works\git\ALTHEA\Althea\Althea.Backend.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -19,10 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Backend\Cuda\BlasSupplementCUDA.dll">
+    <None Update="Cuda\BlasSupplementCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Backend\Mkl\BlasSupplementOMP.dll">
+    <None Update="Mkl\BlasSupplementOMP.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -75,10 +75,11 @@ namespace Althea.NativeTypes
 
 	#region example case
 	/// <summary>
-	/// This struct servers as an example of creating a new native type which will be supported by this framework such as <see cref="Complex{T}"/> and methods in <see cref="NativeTypeExtension"/>.
+	/// This struct servers as an example of creating a new native type which will be supported by this framework such as <see cref="Complex{T}"/> and methods in <see cref="NativeTypeExtension"/>.<br/>
+	/// This struct shall implement <see cref="ICustomNativeType{T}"/> of itself, <see cref="IFormattable"/>, <see cref="IEquatable{T}"/> of itself and possibly the <see cref="IComparable{T}"/> of itself. It shall also override the <see cref="ValueType.GetHashCode"/> and the arithmetic operators.
 	/// </summary>
 	/// <remarks><b>DO NOT</b> use this struct</remarks>
-	[StructLayout(LayoutKind.Sequential, Size = 12)]
+	[StructLayout(LayoutKind.Sequential)]
 	struct CustomTypeTest : ICustomNativeType<CustomTypeTest>, IFormattable, IEquatable<CustomTypeTest>, IComparable<CustomTypeTest>
 	{
 		private readonly double low;

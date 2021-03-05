@@ -66,7 +66,7 @@ namespace Althea.Helpers
 			internal ImplementationSettings(bool _)
 			{
 				DisposeNotCurrentImplementation = true;
-				ISetBackend impls = new Backend.CSharp.CSharpImplementations();
+				ISetBackend impls = GetInternalBackend("CSharp");
 				Storage = impls.StorageImplementation;
 				LinearAlgebraDense = impls.DenseLinearAlgebraImplementation;
 				LinearAlgebraSparse = impls.SparseLinearAlgebraImplementation;
@@ -80,7 +80,7 @@ namespace Althea.Helpers
 			internal ImplementationSettings(bool disposeNotCurrentImplementation, string storage, string linearAlgebra, string tensorAlgebra, string statistics, string solver)
 			{
 				DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
-				ISetBackend impls = new Backend.CSharp.CSharpImplementations();
+				ISetBackend impls = GetInternalBackend("CSharp");
 				try
 				{
 					Storage = Type.GetType(storage) ?? impls.StorageImplementation;
@@ -350,7 +350,7 @@ namespace Althea.Helpers
 			{
 				singletonSettings = JsonSerializer.Deserialize<JsonSettings>(File.ReadAllText(fileName), options);
 				// set default back-end
-				SetBackend(new Backend.CSharp.CSharpImplementations());
+				SetBackend(GetInternalBackend("CSharp"));
 				Storage.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Storage);
 				LinearAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraDense);
 				LinearAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraSparse);
@@ -389,11 +389,11 @@ namespace Althea.Helpers
 		{
 			// set default implementations
 			// C# implementations
-			SetBackend(new Backend.CSharp.CSharpImplementations());
+			SetBackend(GetInternalBackend(@"CSharp"));
 			// CUDA implementations
-			SetBackend(new Backend.Cuda.CudaImplementations());
+			SetBackend(GetInternalBackend(@"Cuda"));
 			// MKL implementations, the real default implementation
-			SetBackend(new Backend.Mkl.MklImplementations());
+			SetBackend(GetInternalBackend(@"Mkl"));
 			// import at last
 			Import(logError: true);
 		}
@@ -409,6 +409,13 @@ namespace Althea.Helpers
 		#endregion
 
 		#region extension methods
+		internal static ISetBackend GetInternalBackend(string name)
+		{
+			if (Type.GetType($"Althea.Backend.{name}.{name}Implementations")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not ISetBackend res)
+				throw new InvalidOperationException();
+			return res;
+		}
+
 		/// <summary>
 		/// Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
 		/// </summary>

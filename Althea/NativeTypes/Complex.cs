@@ -602,7 +602,7 @@ namespace Althea.NativeTypes
 
 namespace Althea.Linq
 {
-	// complex type array LINQ
+	#region complex type array LINQ
 	public static partial class ArrayLinq
 	{
 		/// <summary>
@@ -718,4 +718,5 @@ namespace Althea.Linq
 			return sum;
 		}
 	}
+	#endregion
 }

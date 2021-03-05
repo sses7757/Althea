@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>x64</Platforms>
     <DebugType>portable</DebugType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <StartupObject>CudaCSharp.PrerequisiteCompiler.PrerequisiteCompiler</StartupObject>
+    <StartupObject></StartupObject>
     <ApplicationIcon />
   </PropertyGroup>
 
@@ -15,11 +15,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
-    <DefineConstants>$(DefineConstants);_X64</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">

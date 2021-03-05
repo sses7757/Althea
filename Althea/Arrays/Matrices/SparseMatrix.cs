@@ -18,7 +18,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public abstract class AbstractSparseMatrix<T, TInd> : MatrixBase<T>, ISparseMatrix<T>, ISparseArray<T, TInd>
+	public abstract class SparseMatrix<T, TInd> : MatrixBase<T>, ISparseMatrix<T>, ISparseArray<T, TInd>
 		where T : unmanaged, IFormattable, IEquatable<T>
 		where TInd : unmanaged, IEquatable<TInd>
 	{
@@ -65,7 +65,7 @@ namespace Althea.Arrays
 		}
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		private AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseMatrixFormat format, T defaultValue) : base(valueArray, rows, cols, stores)
+		private SparseMatrix(long rows, long cols, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseMatrixFormat format, T defaultValue) : base(valueArray, rows, cols, stores)
 		{
 			CheckTypeFormat(format);
 			if (indexArrays.Count != indexRealLengths.Length)
@@ -91,7 +91,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a <see cref="AbstractSparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/>, <paramref name="rowIndexArray"/> and <paramref name="colIndexArray"/>
+		/// Create a <see cref="SparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/>, <paramref name="rowIndexArray"/> and <paramref name="colIndexArray"/>
 		/// </summary>
 		/// <param name="rows">The presenting number of rows of this sparse matrix</param>
 		/// <param name="cols">The presenting number of columns of this sparse matrix</param>
@@ -106,14 +106,14 @@ namespace Althea.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="rowIndexArray"/> or <paramref name="colIndexArray"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
-		protected AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0, long rowLength = 0, long colLength = 0) :
+		protected SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0, long rowLength = 0, long colLength = 0) :
 			this(rows, cols, valueArray, stores, (rowIndexArray, colIndexArray),
 				stackalloc long[2].SetValue(rowLength == 0 ? long.MaxValue : rowLength, colLength == 0 ? long.MaxValue : colLength),
 				format, defaultValue)
 		{ }
 
 		/// <summary>
-		/// Create a <see cref="AbstractSparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
+		/// Create a <see cref="SparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
 		/// </summary>
 		/// <param name="rows">The presenting number of rows of this sparse matrix</param>
 		/// <param name="cols">The presenting number of columns of this sparse matrix</param>
@@ -127,7 +127,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected AbstractSparseMatrix(long rows, long cols, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
+		protected SparseMatrix(long rows, long cols, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
 			this(rows, cols, valueArray, stores, indexArrays, realIndexArrayLengths, format, defaultValue)
 		{ }
 		#endregion
@@ -153,7 +153,7 @@ namespace Althea.Arrays
 		public virtual void DisposeExclude(ISparseArray<T> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 
 		/// <summary>
-		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="AbstractSparseVector{T, TInd}"/>.
+		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)
@@ -184,6 +184,64 @@ namespace Althea.Arrays
 
 		#region clone related
 		/// <summary>
+		/// When implemented by a derived class, deep clone the sparse matrix, the mutable status will not be copied.
+		/// </summary>
+		/// <returns>The cloned sparse matrix</returns>
+		public override abstract SparseMatrix<T, TInd> Clone();
+
+		/// <summary>
+		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled.
+		/// </summary>
+		/// <returns>The new sparse matrix alike this one</returns>
+		public override abstract SparseMatrix<T, TInd> NewArrayAlike();
+
+		/// <summary>
+		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <returns>The new sparse matrix alike this one</returns>
+		public override SparseMatrix<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
+
+		/// <summary>
+		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new sparse matrix alike this one</returns>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
+		public abstract SparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+			where TOut : unmanaged, IFormattable, IEquatable<TOut>
+			where TIndOut : unmanaged, IEquatable<TIndOut>;
+
+		/// <summary>
+		/// When implemented by a derived class, cast this sparse matrix into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new <see cref="SparseMatrix{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
+		public virtual SparseMatrix<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
+			where TOut : unmanaged, IFormattable, IEquatable<TOut>
+			where TIndOut : unmanaged, IEquatable<TIndOut>
+		{
+			var matrix = this.NewArrayAlike<TOut, TIndOut>();
+			try
+			{
+				((ISparseArray<T, TInd>)this).TypeCast(matrix);
+				return matrix;
+			}
+			catch (Exception)
+			{
+				matrix?.Dispose();
+				throw;
+			}
+		}
+		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.NewArrayAlike<TOut, TIndexOut>() => this.NewArrayAlike<TOut, TIndexOut>();
+
+		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.DataTypeCast<TOut, TIndexOut>() => this.DataTypeCast<TOut, TIndexOut>();
+		#endregion
+
+		#region conversion
+		/// <summary>
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="matrix"/>. The default implementation utilizes <see cref="ToDense(Storage{T}, long)"/> and works if <see cref="AbstractArray{T}.Length"/> == <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
 		/// <param name="matrix">The <see cref="MatrixBase{T}"/> as the dense matrix to overwrite</param>
@@ -211,60 +269,11 @@ namespace Althea.Arrays
 		public abstract void ToDense(Storage<T> denseStorage, long leadDim = 0);
 
 		/// <summary>
-		/// When implemented by a derived class, deep clone the sparse matrix, the mutable status will not be copied.
+		/// When implemented by a derived class, convert this sparse matrix to another sparse matrix with <see cref="Format"/> fitting <paramref name="format"/>
 		/// </summary>
-		/// <returns>The cloned sparse matrix</returns>
-		public override abstract AbstractSparseMatrix<T, TInd> Clone();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled.
-		/// </summary>
-		/// <returns>The new sparse matrix alike this one</returns>
-		public override abstract AbstractSparseMatrix<T, TInd> NewArrayAlike();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <returns>The new sparse matrix alike this one</returns>
-		public override AbstractSparseMatrix<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
-		/// <returns>The new sparse matrix alike this one</returns>
-		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
-		public abstract AbstractSparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
-			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged, IEquatable<TIndOut>;
-
-		/// <summary>
-		/// When implemented by a derived class, cast this sparse matrix into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
-		/// <returns>The new <see cref="AbstractSparseMatrix{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
-		public virtual AbstractSparseMatrix<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
-			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged, IEquatable<TIndOut>
-		{
-			var matrix = this.NewArrayAlike<TOut, TIndOut>();
-			try
-			{
-				((ISparseArray<T, TInd>)this).TypeCast(matrix);
-				return matrix;
-			}
-			catch (Exception)
-			{
-				matrix?.Dispose();
-				throw;
-			}
-		}
-		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.NewArrayAlike<TOut, TIndexOut>() => this.NewArrayAlike<TOut, TIndexOut>();
-
-		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.DataTypeCast<TOut, TIndexOut>() => this.DataTypeCast<TOut, TIndexOut>();
+		/// <param name="format">The target format, can be anatomic</param>
+		/// <returns>The converted <see cref="SparseMatrix{T, TInd}"/> whose <see cref="Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
+		public abstract SparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format);
 		#endregion
 
 		#region equality

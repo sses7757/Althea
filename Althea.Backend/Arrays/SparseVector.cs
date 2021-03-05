@@ -21,7 +21,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public class SparseVector<T, TInd> : AbstractSparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
+	public class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
 		where T : unmanaged, IFormattable, IEquatable<T>
 		where TInd : unmanaged, IEquatable<TInd>
 	{
@@ -78,7 +78,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="index">The position of the element to get / set</param>
 		/// <returns>The element at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		/// <exception cref="InvalidOperationException">If this[<paramref name="index"/>] returns the <see cref="AbstractSparseVector{T, TInd}.DefaultValue"/> which cannot be set individually</exception>
+		/// <exception cref="InvalidOperationException">If this[<paramref name="index"/>] returns the <see cref="Althea.Arrays.SparseVector{T, TInd}.DefaultValue"/> which cannot be set individually</exception>
 		public override T this[long index] {
 			get {
 				this.CheckIndex(index);
@@ -135,7 +135,17 @@ namespace Althea.Backend.Arrays
 			LAS.VectorSparseToDense(this, denseStorage);
 		}
 
-		public override ValueArray<T> ToMatrix(long leadDim = 0) => throw new NotImplementedException();
+		/// <summary>
+		/// Convert the sparse vector to a matrix with leading dimension = <paramref name="rows"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <returns>The reshaped matrix (a newly created one)</returns>
+		public override SparseMatrix<T, TInd> ToMatrix(long rows = 0)
+		{
+			Span<long> size = stackalloc long[2].SetValue(rows);
+			CheckSize(this, size);
+			return LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC) as SparseMatrix<T, TInd>;
+		}
 
 		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) => throw new NotImplementedException();
 		#endregion
@@ -268,16 +278,6 @@ namespace Althea.Backend.Arrays
 
 		#region clone related
 		/// <summary>
-		/// Deep clone the sparse vector, the mutable status will not be copied.
-		/// </summary>
-		/// <returns>The cloned array</returns>
-		public override SparseVector<T, TInd> Clone()
-		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: true);
-			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
-		}
-
-		/// <summary>
 		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
@@ -309,6 +309,31 @@ namespace Althea.Backend.Arrays
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyContent: true);
 			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
+		}
+		#endregion
+
+		#region conversion
+		/// <summary>
+		/// Deep clone the sparse vector, the mutable status will not be copied.
+		/// </summary>
+		/// <returns>The cloned array</returns>
+		public override SparseVector<T, TInd> Clone()
+		{
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: true);
+			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
+		}
+
+		/// <summary>
+		/// Convert this sparse vector to another sparse vector with <see cref="Althea.Arrays.SparseVector{T, TInd}.Format"/> fitting <paramref name="format"/>
+		/// </summary>
+		/// <param name="format">The target format, can be anatomic</param>
+		/// <returns>Since no format other than <see cref="SparseVectorFormat.Coordinated"/> is supported internally, simply returns this vector or throw exception</returns>
+		/// <exception cref="NotSupportedException">If <paramref name="format"/> does not contains flag <see cref="SparseVectorFormat.Coordinated"/></exception>
+		public override SparseVector<T, TInd> ToFormat(SparseVectorFormat format)
+		{
+			if ((format & SparseVectorFormat.Coordinated) == 0)
+				throw new NotSupportedException(Resources.Support.Format);
+			return this;
 		}
 		#endregion
 
@@ -393,7 +418,7 @@ namespace Althea.Backend.Arrays
 
 		#region protected overrides
 		/// <summary>
-		/// The helper method used in <see cref="AbstractSparseVector{T, TInd}.Print(PrintSettings?)"/> to get the first several indices of this sparse vector
+		/// The helper method used in <see cref="Althea.Arrays.SparseVector{T, TInd}.Print(PrintSettings?)"/> to get the first several indices of this sparse vector
 		/// </summary>
 		/// <param name="indices">The <see cref="Span{T}"/> of <see cref="long"/> used to store the indices</param>
 		protected override void GetIndices(Span<long> indices)
@@ -410,7 +435,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// The helper method used by <see cref="AbstractSparseVector{T, TInd}.GetPointers"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
+		/// The helper method used by <see cref="Althea.Arrays.SparseVector{T, TInd}.GetPointers"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
 		/// </summary>
 		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse vector</param>
 		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>

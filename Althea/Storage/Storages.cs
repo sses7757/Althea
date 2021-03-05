@@ -139,46 +139,6 @@ namespace Althea.Storage
 
 		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string> { ["length"] = this.LengthInBytes.ToString() };
 		#endregion
-
-		#region default implementations
-		/// <summary>
-		/// Get the unmanaged pointer of this <see cref="IMemoryPointer"/> with given offset as a <typeparamref name="T"/>*
-		/// </summary>
-		/// <typeparam name="T">any unmanaged data type</typeparam>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="NativePointer"/> of this <see cref="IMemoryPointer"/></param>
-		/// <returns>The unmanaged pointer with given offset as a <typeparamref name="T"/>*</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged => (T*)this.Pointer.ToPointer() + offset;
-
-		/// <summary>
-		/// Get the native pointer of this <see cref="IMemoryPointer"/> with a given offset as a <see cref="void"/>*
-		/// </summary>
-		/// <param name="offset">The offset in bytes to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/></param>
-		/// <returns>The native pointer with given offset as a <see cref="void"/>*</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
-
-		/// <summary>
-		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
-		/// </summary>
-		/// <typeparam name="T">any unmanaged data type</typeparam>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the <see cref="Pointer"/> of this <see cref="IMemoryPointer"/> before converting to <see cref="Span{T}"/></param>
-		/// <param name="length">The presenting length in <typeparamref name="T"/> of this <see cref="IMemoryPointer"/> before converting to <see cref="Span{T}"/></param>
-		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
-		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged => new(this.UnmangedPointer<T>(offset), length <= 0 ? checked((int)(this.LengthInBytes / sizeof(T))) : length);
-
-		/// <summary>
-		/// Get the <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/> with given offset and length
-		/// </summary>
-		/// <typeparam name="T">any unmanaged data type</typeparam>
-		/// <param name="pointerSegment">Use the given <see cref="PointerSegment"/> to obtain offset and length</param>
-		/// <returns>The <see cref="Span{T}"/> representation of this <see cref="IMemoryPointer"/></returns>
-		/// <remarks>If the underlying memory of this <see cref="IMemoryPointer"/> is not on managed or unmanaged heap of current program, any operation to the return of this method may throw error or give unexpected results. Therefore, this method is set to be protected internal.</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal Span<T> AsSpan<T>(PointerSegment pointerSegment) where T : unmanaged => this.AsSpan<T>(checked(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
-		#endregion
 	}
 
 	/// <summary>

@@ -68,14 +68,15 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentException">If the parameters do not fit any mode</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If the parameters do not fit any mode; or both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="C"/> is null or invalid</exception>
 		public static void GeneralMatricesAdd<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
 		{
-			if (A is null && B is null)
-				throw new ArgumentNullException($"{nameof(A)}, {nameof(B)}");
+			if ((A is null || !A.IsValid()) && (B is null || !B.IsValid()))
+				throw new ArgumentException(Resources.Parameter.CannotAllNull);
 			if (C is null)
 				throw new ArgumentNullException(nameof(C));
+
 			Predicate<AbstractApi> predicate;
 			if (A is null && B is not null)
 			{

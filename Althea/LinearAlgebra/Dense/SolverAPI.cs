@@ -3,6 +3,7 @@ using System.Dynamic;
 using System.Collections.Generic;
 
 using Althea.Linq;
+using Althea.Helpers;
 using Althea.NativeTypes;
 
 

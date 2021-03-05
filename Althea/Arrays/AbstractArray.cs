@@ -14,7 +14,7 @@ namespace Althea.Arrays
 	/// Since the <see cref="AbstractArray{T}"/> may be reference created quite frequently, storing the size as a C# <see cref="Array"/> is rather expensive.<br/>
 	/// Thus the C++ equivalent "<c>struct { int rank, long size[16] }</c>" of <see cref="SizedFixedBuffer_128{T}"/> is used instead to reduce the GC pressure.<br/>
 	/// Also, the <see cref="AbstractArray{T}"/> has no finalizer and if it is composed of <see cref="ReferenceStorage{T}"/> which still has no finalizer, the instance stays in GC generation 0 which is quite fast in deallocation.<br/>
-	/// Therefore, the derived class shall follow the same strategy, such as <see cref="AbstractSparseVector{T, TInd}"/> and <see cref="AbstractSparseMatrix{T, TInd}"/>.
+	/// Therefore, the derived class shall follow the same strategy, such as <see cref="SparseVector{T, TInd}"/> and <see cref="SparseMatrix{T, TInd}"/>.
 	/// </remarks>
 	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged, IFormattable, IEquatable<T>
 	{

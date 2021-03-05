@@ -61,6 +61,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given parameters cannot be null at the same time. 的本地化字符串。
+        /// </summary>
+        public static string CannotAllNull {
+            get {
+                return ResourceManager.GetString("CannotAllNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given parameter cannot be less than zero. 的本地化字符串。
         /// </summary>
         public static string CannotNegative {

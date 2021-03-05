@@ -361,7 +361,7 @@ namespace Althea.Helpers
 		/// <param name="msg">message to write</param>
 		/// <param name="category">if <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
 		/// <param name="level">message log level</param>
-		public static async void Write(string msg, [CallerMemberName] string category = null, LogLevel level = LogLevel.Information)
+		public static async void Write(string msg, [CallerMemberName] string? category = null, LogLevel level = LogLevel.Information)
 		{
 			await logger.Write(msg, category, level);
 		}

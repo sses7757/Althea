@@ -383,7 +383,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The data type to convert</typeparam>
 		/// <returns>the corresponding <see cref="DataType"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();\
+		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();
 		#endregion
 	}
 	#endregion
