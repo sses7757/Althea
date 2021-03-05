@@ -189,14 +189,16 @@ namespace Althea.Backend.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void GetRangeCoordinated(TInd start, TInd end, TInd y1, TInd y2, bool allColumns, ref Storage<TInd> sortedRow, ref Storage<TInd> column, ref Storage<T> values)
+		private static void GetRangeCoordinated(TInd x1, TInd x2, TInd y1, TInd y2, bool allColumns, ref Storage<TInd> sortedRow, ref Storage<TInd> column, ref Storage<T> values)
 		{
-			long rows = end.ToLong() - start.ToLong() + 1;
+			long rows = x2.ToLong() - x1.ToLong() + 1;
 			long[] rowStarts = new long[rows];
 			using (var temp = sortedRow.MakeReference(newLength: rows).CreateAlike<long>())
 			{
-				LAS.IndexGetAllBounds(sortedRow, temp, start, end, lowerBound: true);
+				LAS.IndexGetAllBounds(sortedRow, temp, x1, x2, lowerBound: true);
 				MEM.ToManaged(temp, rowStarts);
+				if (rowStarts[^1] < 0)
+					rowStarts[^1] = sortedRow.Length;
 			}
 			rows--;
 			// get column and value
@@ -277,64 +279,163 @@ namespace Althea.Backend.Arrays
 
 		#region sub matrix set
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRange(long rows, TInd y1, TInd y2, long[] rowStarts, Storage<TInd> column, Storage<T> values, Storage<TInd> setColumn, Storage<T> setValues)
+		private static void SetRange(long rows, TInd y1, TInd y2, long[] rowStarts, Storage<TInd> column, Storage<T> values, Storage<TInd> srcColumn, Storage<T> srcValues)
 		{
+			// combine all consecutive copies
+			int estimateLen = (int)(rows / 2);
+			List<long> dstOffsets = new(estimateLen), cpyLengths = new(estimateLen), srcOffsets = new(estimateLen);
 			for (long i = 0; i < rows; i++)
 			{
-				long off = rowStarts[i], len = rowStarts[i + 1] - off, offOut = off - rowStarts[0];
-				Storage<T> value = values.MakeReference(off, len);
-				Storage<TInd> index = column.MakeReference(off, len);
+				long offset = rowStarts[i], length = rowStarts[i + 1] - offset;
+				Storage<T> value = values.MakeReference(offset, length);
+				Storage<TInd> index = column.MakeReference(offset, length);
 				SparseVector<T, TInd>.Slice(y1, y2, ref value, ref index);
-				MEM.MemoryCopy(setValues + offOut, value);
-				MEM.MemoryCopy(setColumn + offOut, index);
-				LAD.PointWiseAddScalar(index, 1, y1);
+				long realOffset = value - values, relativeOffset = realOffset - offset;
+				if (value.Length == length)
+				{	// both align
+					cpyLengths[^1] += length;
+				}
+				else if (realOffset == offset)
+				{	// left align
+					cpyLengths[^1] += value.Length;
+					// create next
+					dstOffsets.Add(rowStarts[i + 1]);
+					srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
+					cpyLengths.Add(0);
+				}
+				else if (value.Length + relativeOffset == length)
+				{   // right align
+					if (cpyLengths[^1] == 0)
+					{
+						cpyLengths[^1] = value.Length;
+						dstOffsets[^1] += relativeOffset;
+					}
+					else
+					{	// create this
+						dstOffsets.Add(rowStarts[i + 1] + relativeOffset);
+						srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
+						cpyLengths.Add(value.Length);
+					}
+				}
+				else
+				{	// no align
+					if (cpyLengths[^1] == 0)
+					{
+						cpyLengths[^1] = value.Length;
+						dstOffsets[^1] += realOffset;
+					}
+					// create next
+					dstOffsets.Add(rowStarts[i + 1]);
+					srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
+					cpyLengths.Add(0);
+				}
+			}
+			// actual copy
+			for (int i = 0; i < cpyLengths.Count; i++)
+			{
+				if (cpyLengths[i] <= 0)
+					continue;
+				var tempVal = values.MakeReference(dstOffsets[i], cpyLengths[i]);
+				var tempCol = column.MakeReference(dstOffsets[i], cpyLengths[i]);
+				MEM.MemoryCopy(srcValues + srcOffsets[i], tempVal);
+				MEM.MemoryCopy(srcColumn + srcOffsets[i], tempCol);
+				LAD.PointWiseAddScalar(tempCol, 1, y1);
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRangeCoordinated(TInd start, TInd end, TInd y1, TInd y2, bool allColumns, Storage<TInd> sortedRow, Storage<TInd> column, Storage<T> values, bool setCompressed, Storage<TInd> setRow, Storage<TInd> setColumn, Storage<T> setValues)
+		private static void SetRangeCoordinated(TInd x1, TInd x2, TInd y1, TInd y2, SparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
 		{
-			long rows = end.ToLong() - start.ToLong() + 1;
+			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols;
+			// get storages
+			bool setCompressed = src.Format != org.Format;
+			var values = org.Storage; var srcValues = src.Storage;
+			if (!org.Format.IsRowMajor())
+				(x1, x2, y1, y2) = (y1, y2, x1, x2);
+			var (sortedRow, column) = org.Format.IsRowMajor() ? (org.RowIndexStorage, org.ColIndexStorage) : (org.ColIndexStorage, org.RowIndexStorage);
+			var (srcRow, srcColumn) = org.Format.IsRowMajor() ? (src.RowIndexStorage, src.ColIndexStorage) : (src.ColIndexStorage, src.RowIndexStorage);
+			// check row
+			long offset = LAS.IndexBound(sortedRow, x1, lowerBound: true);
+			long length = LAS.IndexBound(sortedRow, x2, lowerBound: false);
+			if (length < 0)
+				length = sortedRow.Length;
+			length -= offset;
+			if (!setCompressed)
+			{
+				if (srcRow.Length != length)
+					throw new ArgumentException(Resources.Parameter.InvalidValue);
+				using var temp = srcRow.Clone();
+				LAD.PointWiseAddScalar(temp, 1, x1);
+				// TODO: this is not correct
+				if (!LAD.PointWiseEquals(temp, 1, sortedRow.MakeReference(offset, length), 1))
+					throw new ArgumentException(Resources.Parameter.InvalidValue);
+			}
+			// get row starts
+			long rows = x2.ToLong() - x1.ToLong() + 1;
 			long[] rowStarts = new long[rows];
 			using (var temp = sortedRow.MakeReference(newLength: rows).CreateAlike<long>())
 			{
-				LAS.IndexGetAllBounds(sortedRow, temp, start, end, lowerBound: true);
+				LAS.IndexGetAllBounds(sortedRow, temp, x1, x2, lowerBound: true);
+				var tempLast = temp + (rows - 1);
+				if (MEM.ToManaged(tempLast) < 0)
+					MEM.FromManaged(tempLast, sortedRow.Length);
+				if (setCompressed)
+				{ // check row
+					bool check;
+					if (temp is Storage<TInd> tt)
+					{
+						check = LAD.PointWiseEquals(tt, 1, srcRow, 1);
+					}
+					else
+					{
+						using var temp2 = temp.CreateAlike<TInd>();
+						LAD.PointWiseCast(temp, 1, temp2, 1);
+						check = LAD.PointWiseEquals(temp2, 1, srcRow, 1);
+					}
+					if (!check)
+						throw new ArgumentException(Resources.Parameter.InvalidValue);
+				}
 				MEM.ToManaged(temp, rowStarts);
 			}
-			rows--;
-			// check row
-			long length = rowStarts[^1] - rowStarts[0];
-			if (setRow.Length != length)
-				throw new ArgumentException(Resources.Parameter.InvalidValue);
-			using (var temp = setRow.Clone())
-			{
-				LAD.PointWiseAddScalar(temp, 1, start);
-				if (!LAD.PointWiseEquals(temp, 1, sortedRow.MakeReference(rowStarts[0], length), 1))
-					throw new ArgumentException(Resources.Parameter.InvalidValue);
-			}
 			// set
-			if (allColumns)
+			rows--;
+			if (allRows && allCols)
 			{
-				if (setColumn.Length == length && setValues.Length == length)
+				if (srcColumn.Length == length && srcValues.Length == length)
 				{
-					MEM.MemoryCopy(setValues, values + rowStarts[0]);
-					MEM.MemoryCopy(setColumn, column + rowStarts[0]);
+					MEM.MemoryCopy(srcValues, values + rowStarts[0]);
+					MEM.MemoryCopy(srcColumn, column + rowStarts[0]);
 				}
 				else
 					throw new ArgumentException(Resources.Parameter.InvalidValue);
 			}
-			else
+			else if (allRows && !allCols)
 			{
-				SetRange(rows, y1, y2, rowStarts, column, values, setColumn, setValues);
+				SetRange(rows, y1, y2, rowStarts, column, values, srcColumn, srcValues);
 			}
-			MEM.MemoryCopy(setRow, sortedRow + rowStarts[0]);
-			if (!start.IsZero())
-				LAD.PointWiseAddScalar(sortedRow.MakeReference(rowStarts[0], length), 1, start);
+			MEM.MemoryCopy(srcRow, sortedRow + rowStarts[0]);
+			if (!x1.IsZero())
+				LAD.PointWiseAddScalar(sortedRow.MakeReference(rowStarts[0], length), 1, x1);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRangeCompressed(long start, long count, TInd y1, TInd y2, bool allColumns, Storage<TInd> compressed, Storage<TInd> column, Storage<T> values, Storage<TInd> setRow, Storage<TInd> setColumn, Storage<T> setValues)
+		private static void SetRangeCompressed(TInd x1, TInd x2, TInd y1, TInd y2, SparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
 		{
+			long start = x1.ToLong(), count = x2.ToLong() - start;
+			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols;
+			// get storages
+			bool setCoordinated = src.Format != org.Format;
+			var values = org.Storage; var srcValues = src.Storage;
+			if (!org.Format.IsRowMajor())
+				(x1, x2, y1, y2) = (y1, y2, x1, x2);
+			var (sortedRow, column) = org.Format.IsRowMajor() ? (org.RowIndexStorage, org.ColIndexStorage) : (org.ColIndexStorage, org.RowIndexStorage);
+			var (srcRow, srcColumn) = org.Format.IsRowMajor() ? (src.RowIndexStorage, src.ColIndexStorage) : (src.ColIndexStorage, src.RowIndexStorage);
 			// check row
+			if (!setCoordinated)
+			{
+				using var temp = srcRow.Clone();
+				LAD.PointWiseAddScalar(temp, 1, x1.GenericNegate());
+				if (!LAD.PointWiseEquals(temp, 1, sortedRow.MakeReference(start, count), 1))
 
+			}
 			// get row starts
 			long[] rowStarts = new long[count + 1];
 			using (var temp = compressed.MakeReference(newLength: count + 1).CreateAlike<long>())
@@ -507,7 +608,7 @@ namespace Althea.Backend.Arrays
 
 			TInd x1 = rowStart.FromLong<TInd>(), x2 = (rowStart + value.NRows).FromLong<TInd>();
 			TInd y1 = colStart.FromLong<TInd>(), y2 = (colStart + value.NCols).FromLong<TInd>();
-			bool allRows = rowStart == this.NRows, allCols = colStart == this.NCols;
+			bool allRows = value.NRows == this.NRows, allCols = value.NCols == this.NCols;
 			// shortcut
 			if (allRows && allCols)
 			{
@@ -519,20 +620,15 @@ namespace Althea.Backend.Arrays
 				return;
 			}
 			// else
-			var values = this.Storage; var rowInd = this.RowIndexStorage; var colInd = this.ColIndexStorage;
 			switch (this.Format)
 			{
 				case SparseMatrixFormat.COOR:
-					SetRangeCoordinated(x1, x2, y1, y2, allCols, rowInd, colInd, values, sp.RowIndexStorage, sp.ColIndexStorage, sp.Storage);
-					break;
 				case SparseMatrixFormat.COOC:
-					SetRangeCoordinated(y1, y2, x1, x2, allRows, colInd, rowInd, values, sp.ColIndexStorage, sp.RowIndexStorage, sp.Storage);
+					SetRangeCoordinated(x1, x2, y1, y2, this, sp);
 					break;
 				case SparseMatrixFormat.CSR:
-					SetRangeCompressed(rowStart, value.NRows, y1, y2, allCols, rowInd, colInd, values, sp.RowIndexStorage, sp.ColIndexStorage, sp.Storage);
-					break;
 				case SparseMatrixFormat.CSC:
-					SetRangeCompressed(colStart, value.NCols, x1, x2, allRows, colInd, rowInd, values, sp.ColIndexStorage, sp.RowIndexStorage, sp.Storage);
+					SetRangeCompressed(x1, x2, y1, y2, this, sp);
 					break;
 				default: // never here
 					throw new NotSupportedException();

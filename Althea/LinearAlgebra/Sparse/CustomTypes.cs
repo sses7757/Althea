@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 
@@ -109,6 +109,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="format">The given <see cref="SparseVectorFormat"/> to check</param>
 		/// <returns>True if <paramref name="format"/> is an atomic format, i.e. a power of two; false otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAtomic(this SparseVectorFormat format) => ((int)format).IsPowerOfTwo();
 
 		/// <summary>
@@ -116,6 +117,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="format">The given <see cref="SparseMatrixFormat"/> to check</param>
 		/// <returns>True if <paramref name="format"/> is an atomic format, i.e. a power of two; false otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAtomic(this SparseMatrixFormat format) => ((int)format).IsPowerOfTwo();
 
 		/// <summary>
@@ -123,6 +125,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="format">The given <see cref="SparseMatrixFormat"/> to check</param>
 		/// <returns>True if <paramref name="format"/> is a row major format, i.e. <c>log2(<paramref name="format"/>) % 2 == 0</c> ; false otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsRowMajor(this SparseMatrixFormat format) => ((int)format).Log2() % 2 == 0;
 		#endregion
 	}

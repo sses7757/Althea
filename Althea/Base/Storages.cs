@@ -1169,6 +1169,45 @@ namespace Althea
 		/// <returns>a <see cref="ReferenceStorage{T}"/> with <paramref name="offset"/> subtracted from the <paramref name="storage"/></returns>
 		public static ReferenceStorage<T> operator -(Storage<T> storage, long offset) => storage.MakeReference(-offset);
 
+		/// <summary>
+		/// Get the pointer difference (in <typeparamref name="T"/> rather than bytes) between <paramref name="left"/> and <paramref name="right"/>. Only works when both storage are <see cref="ActualStorage{T}"/> or <see cref="ReferenceStorage{T}"/>.
+		/// </summary>
+		/// <param name="left">The left <see cref="Storage{T}"/></param>
+		/// <param name="right">The right <see cref="Storage{T}"/></param>
+		/// <returns>The pointer difference (in <typeparamref name="T"/>) between <paramref name="left"/> and <paramref name="right"/> if they share same origin and the difference can be divided by <see cref="SizeOfT"/>; otherwise, returns <see cref="long.MaxValue"/>.</returns>
+		public static long operator -(Storage<T> left, Storage<T> right)
+		{
+			if (!left.IsValid() || !right.IsValid())
+				return long.MaxValue;
+			ActualStorage<T>? actualLeft = left as ActualStorage<T>, actualRight = right as ActualStorage<T>;
+			ReferenceStorage<T>? refLeft = left as ReferenceStorage<T>, refRight = right as ReferenceStorage<T>;
+			// check same origin
+			var originLeft = actualLeft ?? refLeft?.Reference;
+			var originRight = actualRight ?? refRight?.Reference;
+			if (originLeft is null || originRight is null)
+				return long.MaxValue;
+			if (!originLeft.Equals(originRight))
+				return long.MaxValue;
+			// check offset divisible
+			if (actualLeft is not null && refRight is not null)
+			{
+				if (refRight.TotalOffsetInBytes % SizeOfT != 0)
+					return long.MaxValue;
+				else
+					return -refRight.TotalOffsetInBytes / SizeOfT;
+			}
+			else if (refLeft is not null && actualRight is not null)
+			{
+				if (refLeft.TotalOffsetInBytes % SizeOfT != 0)
+					return long.MaxValue;
+				else
+					return refLeft.TotalOffsetInBytes / SizeOfT;
+			}
+			else if (actualLeft is not null && actualRight is not null)
+				return 0;
+			else
+				return long.MaxValue;
+		}
 		#endregion
 	}
 
