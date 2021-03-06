@@ -21,6 +21,12 @@ namespace Althea.Arrays
 		where TInd : unmanaged
 	{
 		#region basic
+		static SparseVector()
+		{
+			if (!default(TInd).IsIntegralType())
+				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
+		}
+
 		// offset = 0
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
 		// offset = 64
@@ -54,18 +60,10 @@ namespace Althea.Arrays
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		private static void CheckTypeFormat(SparseVectorFormat format)
-		{
-			if (!default(TInd).IsIntegralType())
-				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-		}
-
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private SparseVector(long length, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseVectorFormat format, T defaultValue) : base(valueArray, length, stores)
 		{
-			CheckTypeFormat(format);
+			if (!format.IsAtomic())
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 			if (indexArrays.Count != indexRealLengths.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize);
 			if (indexArrays.Any(static a => a is null || !a.IsValid()))

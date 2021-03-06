@@ -15,10 +15,27 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IKrylovVector<TVec, T> : IDisposable
-		where TVec : class, IKrylovVector<TVec, T>, IDisposable, new()
-		where T : unmanaged, IEquatable<T>
+		where TVec : IKrylovVector<TVec, T>, IDisposable, ICheckValid, new()
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region operation
+		/// <summary>
+		/// The total presenting length of this vector
+		/// </summary>
+		long Length { get; }
+
+		/// <summary>
+		/// Create a new vector alike this one
+		/// </summary>
+		/// <returns>The new vector alike this one</returns>
+		TVec NewArrayAlike();
+
+		/// <summary>
+		/// Fill this vector with the given <paramref name="value"/>
+		/// </summary>
+		/// <param name="value">The value to fill</param>
+		void FillWith(T value);
+
 		/// <summary>
 		/// When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
 		/// </summary>
@@ -70,7 +87,48 @@ namespace Althea.Arrays
 		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
 		/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input);
+		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input)
+		{
+			if (unjoinedVectors is null || unjoinedVectors.Count == 0)
+				throw new ArgumentNullException(nameof(unjoinedVectors));
+			if (input.IsEmpty)
+				throw new ArgumentNullException(nameof(input));
+			if (unjoinedVectors.Count != input.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize);
+
+			// sort first to reduce errors
+			int length = input.Length;
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
+			for (int i = 0; i < length; i++)
+			{
+				values[i] = input[i];
+				keys[i] = input[i].GenericAbsolute();
+			}
+			keys.Sort(values);
+
+			var vec = this.NewArrayAlike();
+			try
+			{
+				vec.FillWith(default);
+				for (int i = 0; i < length; i++)
+				{
+					var dnvec = unjoinedVectors[i];
+					if (dnvec is null || !dnvec.IsValid())
+						throw new ArgumentNullException(nameof(unjoinedVectors));
+					if (dnvec.Length != this.Length)
+						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(unjoinedVectors));
+					if (!values[i].IsZero())
+						vec.AddBy(dnvec, values[i]);
+				}
+				return vec;
+			}
+			catch (Exception)
+			{
+				vec.Dispose();
+				throw;
+			}
+		}
 		#endregion
 	}
 
@@ -104,6 +162,7 @@ namespace Althea.Arrays
 	/// Simple interface for sparse arrays, inherits <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>. The index type is not indicated
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <remarks>The <see cref="ISparseArray{T}.Storage"/> and the <see cref="IReadOnlyList{T}.this[int]"/> shall all returns <b>referenced</b> storages.</remarks>
 	public interface ISparseArray<T> : IReadOnlyList<IStorage>, ICheckValid where T : unmanaged
 	{
 		#region property
@@ -234,10 +293,10 @@ namespace Althea.Arrays
 		/// <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
 		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the output type</typeparam>
 		/// <param name="valueArray">The cloned output value array</param>
-		/// <param name="copyContent">Copy the contents from original arrays to the new arrays or not</param>
+		/// <param name="copyValues">Copy the value array from original arrays to the new arrays or not</param>
 		/// <returns>The output index arrays as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndexOut"/></returns>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TIndexOut"/> is not an integral type</exception>
-		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> NewArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyContent)
+		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> NewArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyValues)
 			where TOut : unmanaged where TIndexOut : unmanaged
 		{
 			if (!default(TIndexOut).IsIntegralType())
@@ -249,13 +308,12 @@ namespace Althea.Arrays
 			try
 			{
 				value = this.Storage.CreateAlike<TOut>();
-				if (copyContent)
+				if (copyValues)
 					LinearAlgebra.Dense.AbstractApi.PointWiseCast(this.Storage, 1, value, 1);
 				for (int i = 0; i < list.Count; i++)
 				{
 					indices[i] = list[i].CreateAlike<TIndexOut>();
-					if (copyContent)
-						LinearAlgebra.Dense.AbstractApi.PointWiseCast(list[i], 1, indices[i], 1);
+					LinearAlgebra.Dense.AbstractApi.PointWiseCast(list[i], 1, indices[i], 1);
 				}
 				valueArray = value;
 				return indices;

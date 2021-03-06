@@ -161,7 +161,7 @@ namespace Althea.Backend.Arrays
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException();
 			if (Math.Abs(k) >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(k), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(k), k, Resources.Parameter.InvalidValue);
 
 			Storage<T>? storage = null;
 			try
@@ -191,7 +191,7 @@ namespace Althea.Backend.Arrays
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException();
 			if (Math.Abs(k) >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(k), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(k), k, Resources.Parameter.InvalidValue);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
 			if (overwrite is not DenseVector<T> dense)
@@ -216,7 +216,7 @@ namespace Althea.Backend.Arrays
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException();
 			if (Math.Abs(k) >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(k), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(k), k, Resources.Parameter.InvalidValue);
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
 
@@ -363,6 +363,8 @@ namespace Althea.Backend.Arrays
 			// shortcut
 			if (operation == MatrixOperation.None)
 				return this.Clone();
+			if (operation == MatrixOperation.Conjugate)
+				return this.ApplyToClone(static c => LAD.PointWiseConjugate(c.Storage, 1));
 			// otherwise
 			var (m, n) = (this.NCols, this.NRows);
 			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
@@ -396,11 +398,11 @@ namespace Althea.Backend.Arrays
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
 			if (scalarThis.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarThis), Resources.Parameter.CannotZero);
+				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
 			if (scalarOther.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarOther), Resources.Parameter.CannotZero);
-			var (m, n) = opThis == MatrixOperation.None ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther == MatrixOperation.None ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
+				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
+			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
+			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
 			if (m != p || n != q)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
@@ -444,9 +446,9 @@ namespace Althea.Backend.Arrays
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
 			if (scalar.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalar), Resources.Parameter.CannotZero);
-			var (m, n) = opThis == MatrixOperation.None ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther == MatrixOperation.None ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
+			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
 			if (n != p)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
@@ -495,19 +497,19 @@ namespace Althea.Backend.Arrays
 			if (B is null || !B.IsValid())
 				throw new ArgumentNullException(nameof(B));
 			if (ReferenceEquals(this, A) && opA != MatrixOperation.None)
-				throw new ArgumentOutOfRangeException(nameof(opA), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(opA), opA, Resources.Parameter.InvalidValue);
 			if (ReferenceEquals(this, B) && opB != MatrixOperation.None)
-				throw new ArgumentOutOfRangeException(nameof(opB), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(opB), opB, Resources.Parameter.InvalidValue);
 			var (m, n) = (this.NRows, this.NCols);
 			if (A is not null)
 			{
-				var (p, q) = opA == MatrixOperation.None ? (A.NRows, A.NCols) : (A.NCols, A.NRows);
+				var (p, q) = opA.CanInPlace() ? (A.NRows, A.NCols) : (A.NCols, A.NRows);
 				if (m != p || n != q)
 					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(A));
 			}
 			if (B is not null)
 			{
-				var (p, q) = opB == MatrixOperation.None ? (B.NRows, B.NCols) : (B.NCols, B.NRows);
+				var (p, q) = opB.CanInPlace() ? (B.NRows, B.NCols) : (B.NCols, B.NRows);
 				if (m != p || n != q)
 					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(B));
 			}
@@ -874,9 +876,9 @@ namespace Althea.Backend.Arrays
 		public virtual void AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Scalars<T>.One, scalar);
 
 		/// <summary>
-		/// When implemented by a derived class, replace this matrix's content with the <paramref name="other"/> vector in-place.
+		/// Replace this matrix's content with the <paramref name="other"/> vector in-place.
 		/// </summary>
-		/// <param name="other">The other dense vector to replace from</param>
+		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to replace from</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
 		public void ReplaceBy(DenseMatrix<T> other)
@@ -887,58 +889,6 @@ namespace Althea.Backend.Arrays
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 
 			MEM.MemoryCopy2D(other.Storage, other.LeadDim, this.Storage, this.LeadDim, this.NRows, this.NCols);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="DenseMatrix{T}"/>.
-		/// </summary>
-		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <see cref="DenseMatrix{T}"/></returns>
-		/// <remarks>The method shall be basically static, the information of this matrix shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="unjoinedVectors"/> or any of its element is null or invalid, or <paramref name="input"/> is empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this matrix</exception>
-		public DenseMatrix<T> OperateOn(IReadOnlyList<DenseMatrix<T>> unjoinedVectors, ReadOnlySpan<T> input)
-		{
-			if (unjoinedVectors is null || unjoinedVectors.Count == 0)
-				throw new ArgumentNullException(nameof(unjoinedVectors));
-			if (input.IsEmpty)
-				throw new ArgumentNullException(nameof(input));
-			if (unjoinedVectors.Count != input.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-
-			// sort first to reduce errors
-			int length = input.Length;
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
-			for (int i = 0; i < length; i++)
-			{
-				values[i] = input[i];
-				keys[i] = input[i].GenericAbsolute();
-			}
-			keys.Sort(values);
-
-			var vec = this.NewArrayAlike();
-			try
-			{
-				vec.FillWith(default);
-				for (int i = 0; i < length; i++)
-				{
-					var dnvec = unjoinedVectors[i];
-					if (dnvec is null || !dnvec.IsValid())
-						throw new ArgumentNullException(nameof(unjoinedVectors));
-					if (dnvec.Length != this.Length)
-						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(unjoinedVectors));
-					if (!values[i].IsZero())
-						vec.AddBy(dnvec, values[i]);
-				}
-				return vec;
-			}
-			catch (Exception)
-			{
-				vec.Dispose();
-				throw;
-			}
 		}
 		#endregion
 

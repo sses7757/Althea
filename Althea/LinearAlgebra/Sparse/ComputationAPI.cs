@@ -115,20 +115,19 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
 		/// <returns>The result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static ISparseVector<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.Storage.LocationDescription;
-			ISparseVector<T> result = GetEmptySparseVector<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
-				success = node.Value.VectorSparseAddSparse_(x, y, out result, format, createFunc);
+				success = node.Value.VectorSparseAddSparse_(x, y, out result, format);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -243,20 +242,19 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <returns>A new sparse matrix as the outer product with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static ISparseMatrix<T> VectorSparseOuter<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> VectorSparseOuter<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
 		{
 			CombinationOfLocations vector1 = x.Storage.LocationDescription, vector2 = y.Storage.LocationDescription;
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(vector1, vector2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
-				success = node.Value.VectorSparseOuter_(conjY, x, y, out result, format, createFunc);
+				success = node.Value.VectorSparseOuter_(conjY, x, y, out result, format);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -306,13 +304,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply to <paramref name="B"/></param>
 		/// <param name="B">The second input sparse matrix</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <returns>A new sparse matrix as the summation with format fitting <paramref name="format"/></returns>
 		/// <remarks>If <paramref name="A"/> is null or <paramref name="α"/> is 0, the simple matrix operation <paramref name="opB"/> will be applied to <paramref name="B"/> and the returned sparse matrix may overlap with <paramref name="B"/>. The same for <paramref name="A"/>. However, they cannot be both null or 0.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		public static ISparseMatrix<T> MatrixSparseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged, IEquatable<T>
+		public static SparseArrayWrapper<T> MatrixSparseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, IEquatable<T>
 		{
 			if ((A is null || !A.IsValid()) && (B is null || !B.IsValid()))
 				throw new ArgumentException(Resources.Parameter.CannotAllNull);
@@ -328,13 +325,13 @@ namespace Althea.LinearAlgebra.Sparse
 				else
 					return api.IsSupportedMatrixBinary(matrix1.Value, matrix2.Value);
 			}
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, Local_Supported, node);
-				success = node.Value.MatrixSparseAddSparse_(opA, opB, α, A, β, B, out result, format, createFunc);
+				success = node.Value.MatrixSparseAddSparse_(opA, opB, α, A, β, B, out result, format);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -353,11 +350,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply to <paramref name="C"/></param>
 		/// <param name="C">The third input sparse matrix, can be null. If this is null or <paramref name="β"/> is 0, no addition will be performed</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <returns>A new sparse matrix as the product (and sum) with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static ISparseMatrix<T> MatrixSparseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged, IEquatable<T>
+		public static SparseArrayWrapper<T> MatrixSparseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, IEquatable<T>
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.Storage.LocationDescription;
 			CombinationOfLocations? matrix3 = C?.Storage.LocationDescription;
@@ -366,13 +362,13 @@ namespace Althea.LinearAlgebra.Sparse
 				bool supportMatrix = api.IsSupportedSparseMatrix(A) && api.IsSupportedSparseMatrix(B) && (C is null || api.IsSupportedSparseMatrix(C));
 				return supportMatrix && (matrix3.HasValue ? api.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3.Value) : api.IsSupportedMatrixBinary(matrix1, matrix2));
 			}
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, Local_Supported, node);
-				success = node.Value.MatrixSparseAddSparse_(opA, opB, α, A, β, B, out result, format, createFunc);
+				success = node.Value.MatrixSparseAddSparse_(opA, opB, α, A, β, B, out result, format);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -446,20 +442,19 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="A">The first input sparse matrix</param>
 		/// <param name="B">The second input sparse matrix</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <returns>A new sparse matrix as the Kronecker product with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		public static ISparseMatrix<T> MatrixSparseKronecker<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparseKronecker<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.Storage.LocationDescription;
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2) && a.IsSupportedSparseMatrix(A) && a.IsSupportedSparseMatrix(B), node);
-				success = node.Value.MatrixSparseKronecker_(A, B, out result, format, createFunc);
+				success = node.Value.MatrixSparseKronecker_(A, B, out result, format);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -553,6 +548,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="value">The target value to find</param>
 		/// <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
 		/// <returns>The zero-based index of the target bound in <paramref name="array"/></returns>
+		/// <remarks>If not found, returns -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
@@ -582,7 +578,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="start">The inclusive start value to find</param>
 		/// <param name="end">The inclusive end value to find</param>
 		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <remarks>If some value is not found, the corresponding index in <paramref name="target"/> is -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
@@ -650,11 +646,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
 		/// <param name="target">Output the result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseAddSparse_<T>(ISparseVector<T> x, ISparseVector<T> y, out ISparseVector<T> target, SparseVectorFormat format = FormatExtension.VectorAny, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool VectorSparseAddSparse_<T>(ISparseVector<T> x, ISparseVector<T> y, out SparseArrayWrapper<T> target, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
@@ -716,11 +711,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output a new sparse matrix as the outer product with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseOuter_<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, out ISparseMatrix<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool VectorSparseOuter_<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
 		#endregion
 
 		#region matrix
@@ -753,13 +747,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply to <paramref name="B"/></param>
 		/// <param name="B">The second input sparse matrix</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output a new sparse matrix as the summation with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>If <paramref name="A"/> is null or <paramref name="α"/> is 0, the simple matrix operation <paramref name="opB"/> will be applied to <paramref name="B"/> and the returned sparse matrix may overlap with <paramref name="B"/>. The same for <paramref name="A"/>. However, they cannot be both null or 0.</remarks>
 		/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixSparseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, out ISparseMatrix<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged, IEquatable<T>;
+		protected abstract bool MatrixSparseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the sparse matrices multiplication: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -773,12 +766,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply to <paramref name="C"/></param>
 		/// <param name="C">The third input sparse matrix, can be null. If this is null or <paramref name="β"/> is 0, no addition will be performed</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output a new sparse matrix as the product (and sum) with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixSparseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, out ISparseMatrix<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged, IEquatable<T>;
+		protected abstract bool MatrixSparseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -825,11 +817,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="A">The first input sparse matrix</param>
 		/// <param name="B">The second input sparse matrix</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output a new sparse matrix as the Kronecker product with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseKronecker_<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, out ISparseMatrix<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool MatrixSparseKronecker_<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
 		#endregion
 
 		#region index only
@@ -877,6 +868,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
 		/// <param name="index">Output the zero-based index of the target bound in <paramref name="array"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
 		protected abstract bool IndexBound_<TInd>(Storage<TInd> array, TInd value, bool lowerBound, out long index) where TInd : unmanaged;
@@ -892,6 +884,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="end">The inclusive end value to find</param>
 		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>

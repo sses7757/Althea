@@ -134,6 +134,7 @@ namespace Althea.LinearAlgebra
 	}
 	#endregion
 
+
 	#region enum
 	/// <summary>
 	/// The <see cref="SolveMethodKind"/> enum indicates the classification of a matrix-solving method
@@ -268,26 +269,39 @@ namespace Althea.LinearAlgebra
 	}
 
 	/// <summary>
-	/// The <see cref="MatrixOperation"/> enum indicates which simple operation shall be performed to the matrix before the required complicated operation being executed. This may help reduce time or space complexity.
+	/// The <see cref="MatrixOperation"/> enum indicates which simple operation shall be performed to the matrix before some complicated operation being executed to reduce time or space complexity.
 	/// </summary>
 	public enum MatrixOperation
 	{
 		/// <summary>
-		/// the non-transpose operation
+		/// No operation
 		/// </summary>
 		None = 0,
 		/// <summary>
-		/// the transpose operation
+		/// The transpose only operation
 		/// </summary>
 		Transpose = 1,
 		/// <summary>
-		/// the conjugate transpose operation
+		/// The conjugate transpose operation
 		/// </summary>
 		ConjugateTranspose = 2,
 		/// <summary>
-		/// the conjugate only operation
+		/// The conjugate only operation
 		/// </summary>
 		Conjugate = 3,
+	}
+
+	/// <summary>
+	/// Static class of extension methods of <see cref="MatrixOperation"/>
+	/// </summary>
+	public static class MatrixOperationExtension
+	{
+		/// <summary>
+		/// Check whether the given <paramref name="operation"/> can be performed in-place, i.e., no transposition involved
+		/// </summary>
+		/// <param name="operation">The <see cref="MatrixOperation"/> to check</param>
+		/// <returns>Whether <paramref name="operation"/> can be performed in-place</returns>
+		public static bool CanInPlace(this MatrixOperation operation) => operation == MatrixOperation.None || operation == MatrixOperation.Conjugate;
 	}
 	#endregion
 

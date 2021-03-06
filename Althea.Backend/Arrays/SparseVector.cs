@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.Arrays;
@@ -46,28 +47,47 @@ namespace Althea.Backend.Arrays
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray,T defaultValue = default, long stores = 0) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue, stores) { }
+		#endregion
 
-		private SparseVector<T, TInd> CreateFunction(long length, long nonDefaults, SparseVectorFormat format, T defaultValue)
+		#region helper
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static SparseVector<T, TInd> CheckWrapper(long length, T def, SparseArrayWrapper<T> wrapper)
 		{
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.MustPositive);
-			if (nonDefaults <= 0)
-				throw new ArgumentOutOfRangeException(nameof(nonDefaults), nonDefaults, Resources.Parameter.MustPositive);
-			if (format != SparseVectorFormat.Coordinated)
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages is null || wrapper.IndexStorages.Count <= 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages?.Count, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages.Count != 1)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Count, Resources.Parameter.WrongSize);
+			if (wrapper.IndexStorages[0] is not Storage<TInd> indices)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
+			if (wrapper.ValueStorage.Length > length)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
+			if (wrapper.VectorFormat != SparseVectorFormat.Coordinated)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
 
-			Storage<T>? value = null; Storage<TInd>? index = null;
-			try
-			{
-				value = Storage<T>.Create(this.Storage[0].Location, nonDefaults);
-				index = Storage<TInd>.Create(this.IndexStorage[0].Location, nonDefaults);
-				return new SparseVector<T, TInd>(length, value, index, defaultValue);
-			}
-			catch (Exception)
-			{
-				value?.Dispose(); index?.Dispose();
-				throw;
-			}
+			return new SparseVector<T, TInd>(length, wrapper.ValueStorage, indices, def);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static SparseMatrix<T, TInd> CheckWrapper(long rows, long cols, T def, SparseArrayWrapper<T> wrapper)
+		{
+			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages is null || wrapper.IndexStorages.Count <= 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages?.Count, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages.Count != 2)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Count, Resources.Parameter.WrongSize);
+			if (wrapper.IndexStorages[0] is not Storage<TInd> rowIndex)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
+			if (wrapper.IndexStorages[1] is not Storage<TInd> colIndex)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[1], Resources.Parameter.UnexpectedType);
+			if (wrapper.ValueStorage.Length > rows * cols)
+				throw new ArgumentException(Resources.Parameter.WrongSize);
+			if ((wrapper.MatrixFormat & FormatExtension.NonBlocked) != wrapper.MatrixFormat)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
+
+			return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
 		}
 		#endregion
 
@@ -144,7 +164,16 @@ namespace Althea.Backend.Arrays
 		{
 			Span<long> size = stackalloc long[2].SetValue(rows);
 			CheckSize(this, size);
-			return LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC) as SparseMatrix<T, TInd>;
+			var wrapper = LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC);
+			try
+			{
+				return CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) => throw new NotImplementedException();
@@ -155,9 +184,12 @@ namespace Althea.Backend.Arrays
 		/// Check the sparsity of this sparse vector and the <paramref name="other"/> one
 		/// </summary>
 		/// <param name="other">The other sparse vector to check sparsity</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <paramref name="other"/> vector has different sparsity from this one</exception>
 		protected void CheckSparsity(SparseVector<T, TInd> other)
 		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
 			if (this.Length != other.Length || this.NStored != other.NStored)
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 			// check same indices
@@ -206,7 +238,18 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
 			if (other is SparseVector<T, TInd> sparse)
-				return (SparseVector<T, TInd>)LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated, createFunc: this.CreateFunction);
+			{
+				var wrapper = LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated);
+				try
+				{
+					return CheckWrapper(this.Length, this.DefaultValue, wrapper);
+				}
+				catch (Exception)
+				{
+					wrapper.Dispose();
+					throw;
+				}
+			}
 			else if (other is DenseVector<T>)
 				return other.ApplyToClone(d => LAS.VectorSparseAddToDense(Scalars<T>.One, this, d.Storage));
 			else
@@ -264,14 +307,10 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="InvalidOperationException">If this and <paramref name="other"/> have different sparsities thus this operation cannot be done in-place</exception>
 		public void AddByVector(VectorBase<T> other, T scalar)
 		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (other.Length != this.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 			if (other is not SparseVector<T, TInd> sparse)
 				throw new NotSupportedException();
-
 			this.CheckSparsity(sparse);
+
 			LAD.VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
 		}
 		#endregion
@@ -283,7 +322,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<T, TInd> NewArrayAlike()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: false);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: false);
 			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
 		}
 
@@ -294,7 +333,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse vector alike this one</returns>
 		public override SparseVector<TOut, TInd> NewArrayAlike<TOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TInd>(out ActualStorage<TOut> value, copyContent: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TInd>(out ActualStorage<TOut> value, copyValues: true);
 			return new SparseVector<TOut, TInd>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
 		}
 
@@ -307,7 +346,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyContent: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: true);
 			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
 		}
 		#endregion
@@ -319,7 +358,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned array</returns>
 		public override SparseVector<T, TInd> Clone()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
 			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
 		}
 
@@ -351,68 +390,12 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Replace this vector's content with the <paramref name="other"/> vector in-place. The default implementation only works when this and <paramref name="other"/> have same sparsity.
 		/// </summary>
-		/// <param name="other">The other dense vector to replace from</param>
+		/// <param name="other">The other <see cref="SparseVector{T, TInd}"/> to replace from</param>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
 		public virtual void ReplaceBy(SparseVector<T, TInd> other)
 		{
 			this.CheckSparsity(other);
 			MEM.MemoryCopy(other.Storage, this.Storage);
-		}
-
-		/// <summary>
-		/// Multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a sparse vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="SparseVector{T, TInd}"/>. The default implementation only works when this and all vectors in <paramref name="unjoinedVectors"/> have same sparsity.
-		/// </summary>
-		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <see cref="SparseVector{T, TInd}"/></returns>
-		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="unjoinedVectors"/> or any of its element is null or invalid, or <paramref name="input"/> is empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-		/// <exception cref="ObjectDisposedException">If any element of <paramref name="unjoinedVectors"/> is disposed</exception>
-		/// <exception cref="InvalidOperationException">If the operation cannot be done due to different sparsities between this and <paramref name="unjoinedVectors"/></exception>
-		public SparseVector<T, TInd> OperateOn(IReadOnlyList<SparseVector<T, TInd>> unjoinedVectors, ReadOnlySpan<T> input)
-		{
-			if (unjoinedVectors is null || unjoinedVectors.Count == 0)
-				throw new ArgumentNullException(nameof(unjoinedVectors));
-			if (input.IsEmpty)
-				throw new ArgumentNullException(nameof(input));
-			if (unjoinedVectors.Count != input.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-
-			// sort first to reduce errors
-			int length = input.Length;
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
-			for (int i = 0; i < length; i++)
-			{
-				values[i] = input[i];
-				keys[i] = input[i].GenericAbsolute();
-			}
-			keys.Sort(values);
-
-			var vec = this.NewArrayAlike();
-			try
-			{
-				vec.FillWith(default);
-				for (int i = 0; i < length; i++)
-				{
-					var dnvec = unjoinedVectors[i];
-					if (dnvec is null || !dnvec.IsValid())
-						throw new ArgumentNullException(nameof(unjoinedVectors));
-					if (dnvec.Length != this.Length)
-						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(unjoinedVectors));
-					if (dnvec.Disposed)
-						throw new ObjectDisposedException(nameof(unjoinedVectors));
-					if (!values[i].IsZero())
-						vec.AddByVector(dnvec, values[i]);
-				}
-				return vec;
-			}
-			catch (Exception)
-			{
-				vec.Dispose();
-				throw;
-			}
 		}
 		#endregion
 

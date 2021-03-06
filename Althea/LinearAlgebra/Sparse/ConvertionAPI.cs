@@ -52,45 +52,6 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 
 
-		#region get empty sparse arrays
-		private static readonly Dictionary<(DataType type, bool vector), object> cache_emptySparseArray = new();
-
-		private static ISparseVector<T> GetEmptySparseVector<T>() where T : unmanaged
-		{
-			DataType type = default(T).ToDataType();
-			var key = (type, vector: true);
-			if (!cache_emptySparseArray.ContainsKey(key))
-			{
-				var value = typeof(Backend.Arrays.SparseVector<float, int>)
-									.MakeGenericType(typeof(T), typeof(int))
-									.GetConstructor(Type.EmptyTypes)?
-									.Invoke(null);
-				if (value is null)
-					throw new NotSupportedException(Resources.Support.DataType);
-				cache_emptySparseArray.Add(key, value);
-			}
-			return (ISparseVector<T>)cache_emptySparseArray[key];
-		}
-
-		private static ISparseMatrix<T> GetEmptySparseMatrix<T>() where T : unmanaged
-		{
-			DataType type = default(T).ToDataType();
-			var key = (type, vector: false);
-			if (!cache_emptySparseArray.ContainsKey(key))
-			{
-				var value = typeof(Backend.Arrays.SparseMatrix<float, int>)
-									.MakeGenericType(typeof(T), typeof(int))
-									.GetConstructor(Type.EmptyTypes)?
-									.Invoke(null);
-				if (value is null)
-					throw new NotSupportedException(Resources.Support.DataType);
-				cache_emptySparseArray.Add(key, value);
-			}
-			return (ISparseMatrix<T>)cache_emptySparseArray[key];
-		}
-		#endregion
-
-
 		#region support information
 		/// <summary>
 		/// When implemented by a derived class, check if the given <paramref name="indexType"/> is supported by vector alone operations of this implementation or not.
@@ -195,40 +156,6 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 
 
-		#region delegate
-		/// <summary>
-		/// Encapsulates a method that receive the total <paramref name="length"/> in <typeparamref name="T"/> and the <paramref name="format"/> as the parameters and return an <b>allocated</b> new <see cref="ISparseVector{T}"/> of the given length (non-zeros).
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="length">The desired total length in <typeparamref name="T"/></param>
-		/// <param name="nonDefaults">The desired total number of non-default values</param>
-		/// <param name="format">The desired <see cref="SparseVectorFormat"/></param>
-		/// <param name="defaultValue">The desired default value as a <typeparamref name="T"/></param>
-		/// <returns>An <b>allocated</b> new <see cref="ISparseVector{T}"/> of <paramref name="length"/> and <paramref name="format"/></returns>
-		/// <remarks>
-		/// This delegate is usually used as a nullable parameter of methods in <see cref="AbstractApi"/>.<br/>
-		/// The default implementation typically shall utilize <c><see cref="Storage.StorageFactory{T}"/>.<see cref="Storage.StorageFactory{T}.CreateAlike">CreateAlike</see>(input_storage.<see cref="Storage{T}.MakeReference">MakeReference</see>(0, <paramref name="length"/>))</c>
-		/// </remarks>
-		public delegate ISparseVector<T> DelegateCreateVectorNew<T>(long length, long nonDefaults, SparseVectorFormat format, T defaultValue) where T : unmanaged;
-
-		/// <summary>
-		/// Encapsulates a method that receive the presenting number of rows <paramref name="rows"/> and number of columns <paramref name="cols"/> in <typeparamref name="T"/> and the <paramref name="format"/> as the parameters and return an <b>allocated</b> new <see cref="ISparseMatrix{T}"/> of the given size.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="rows">The desired presenting number of rows in <typeparamref name="T"/></param>
-		/// <param name="cols">The desired presenting number of columns in <typeparamref name="T"/></param>
-		/// <param name="nonDefaults">The desired total number of non-default values</param>
-		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, must be atomic</param>
-		/// <param name="defaultValue">The desired default value as a <typeparamref name="T"/></param>
-		/// <returns>An <b>allocated</b> new <see cref="ISparseMatrix{T}"/> of the given size</returns>
-		/// <remarks>
-		/// This delegate is usually used as a nullable parameter of methods in <see cref="AbstractApi"/>.<br/>
-		/// The default implementation typically shall utilize (multiple) <c><see cref="Storage.StorageFactory{T}"/>.<see cref="Storage.StorageFactory{T}.CreateAlike">CreateAlike</see>(input_storage.<see cref="Storage{T}.MakeReference">MakeReference</see>(0, internal_length))</c>
-		/// </remarks>
-		public delegate ISparseMatrix<T> DelegateCreateMatrixNew<T>(long rows, long cols, long nonDefaults, SparseMatrixFormat format, T defaultValue) where T : unmanaged;
-		#endregion
-
-
 		#region static methods as dispatchers
 		#region vector
 		/// <summary>
@@ -308,21 +235,20 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/></param>
 		/// <param name="threshold">Any element in <paramref name="x"/> whose absolute value is less than or equals to <paramref name="threshold"/> will be regarded as zero</param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
-		/// <returns>The created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/></returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		public static ISparseVector<T> VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, float threshold = 0) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription;
-			ISparseVector<T> result = GetEmptySparseVector<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
-				success = node.Value.VectorDenseToSparse_(x, format, out result, threshold, createFunc);
+				success = node.Value.VectorDenseToSparse_(x, format, out result, threshold);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -338,20 +264,19 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="vector">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="rows">The desired number of rows of the target sparse matrix (the number of columns is calculated from this)</param>
 		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
-		/// <returns>The created new <see cref="ISparseMatrix{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="vector"/> is null or invalid</exception>
-		public static ISparseMatrix<T> SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format) where T : unmanaged
 		{
 			CombinationOfLocations location1 = vector.Storage.LocationDescription;
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1) && a.IsSupportedSparseVector(vector), node);
-				success = node.Value.SparseVectorToMatrix_(vector, rows, format, out result, createFunc);
+				success = node.Value.SparseVectorToMatrix_(vector, rows, format, out result);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -364,20 +289,19 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
-		/// <returns>The created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="matrix"/> is null or invalid</exception>
-		public static ISparseVector<T> SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format) where T : unmanaged
 		{
 			CombinationOfLocations location1 = matrix.Storage.LocationDescription;
-			ISparseVector<T> result = GetEmptySparseVector<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(matrix), node);
-				success = node.Value.SparseMatrixToVector_(matrix, format, out result, createFunc);
+				success = node.Value.SparseMatrixToVector_(matrix, format, out result);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -417,21 +341,20 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ld">The leading dimension of <paramref name="source"/></param>
 		/// <param name="format">The destination <see cref="SparseMatrixFormat"/> of the target sparse matrix, must be atomic</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
-		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of the given properties</returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of the given properties</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
-		public static ISparseMatrix<T> MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, float threshold = 0) where T : unmanaged
 		{
 			CombinationOfLocations location1 = source.LocationDescription;
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1), node);
-				success = node.Value.MatrixDenseToSparse_(m, n, source, ld, format, out result, threshold, createFunc);
+				success = node.Value.MatrixDenseToSparse_(m, n, source, ld, format, out result, threshold);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -443,14 +366,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
-		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> itself if the no prune is necessary</returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> itself if the no prune is necessary</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		public static ISparseMatrix<T> MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold) where T : unmanaged
 		{
 			CombinationOfLocations location1 = source.Storage.LocationDescription;
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
@@ -468,13 +391,13 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
-		/// <returns>The created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
-		public static ISparseMatrix<T> MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format) where T : unmanaged
 		{
 			CombinationOfLocations location1 = source.Storage.LocationDescription;
-			ISparseMatrix<T> result = GetEmptySparseMatrix<T>();
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
@@ -553,12 +476,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/></param>
 		/// <param name="threshold">Any element in <paramref name="x"/> whose absolute value is less than or equals to <paramref name="threshold"/> will be regarded as zero</param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		protected abstract bool VectorDenseToSparse_<T>(Storage<T> x, SparseVectorFormat format, out ISparseVector<T> target, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool VectorDenseToSparse_<T>(Storage<T> x, SparseVectorFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged;
 		#endregion
 
 		#region vector and matrix
@@ -569,11 +491,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="vector">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="rows">The desired number of rows of the target sparse matrix (the number of columns is calculated from this)</param>
 		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output the created new <see cref="ISparseMatrix{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="vector"/> is null or invalid</exception>
-		protected abstract bool SparseVectorToMatrix_<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out ISparseMatrix<T> target, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool SparseVectorToMatrix_<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out SparseArrayWrapper<T> target) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
@@ -581,11 +502,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateVectorNew{T}"/></param>
 		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
-		protected abstract bool SparseMatrixToVector_<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out ISparseVector<T> target, DelegateCreateVectorNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool SparseMatrixToVector_<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out SparseArrayWrapper<T> target) where T : unmanaged;
 		#endregion
 
 		#region matrix
@@ -608,12 +528,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ld">The leading dimension of <paramref name="source"/></param>
 		/// <param name="format">The destination <see cref="SparseMatrixFormat"/> of the target sparse matrix, must be atomic</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
-		/// <param name="createFunc">See <see cref="DelegateCreateMatrixNew{T}"/></param>
 		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of the given properties</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
-		protected abstract bool MatrixDenseToSparse_<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out ISparseMatrix<T> target, float threshold = 0, DelegateCreateMatrixNew<T>? createFunc = null) where T : unmanaged;
+		protected abstract bool MatrixDenseToSparse_<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
@@ -624,7 +543,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		protected abstract bool MatrixSparsePrune_<T>(ISparseMatrix<T> source, float threshold, out ISparseMatrix<T> target) where T : unmanaged;
+		protected abstract bool MatrixSparsePrune_<T>(ISparseMatrix<T> source, float threshold, out SparseArrayWrapper<T> target) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
@@ -634,7 +553,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseFormatConvert_<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out ISparseMatrix<T> target) where T : unmanaged;
+		protected abstract bool MatrixSparseFormatConvert_<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.

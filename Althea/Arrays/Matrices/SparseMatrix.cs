@@ -8,7 +8,6 @@ using Althea.NativeTypes;
 using Althea.LinearAlgebra.Sparse;
 
 using MEM = Althea.Storage.AbstractApi;
-using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 
 
 namespace Althea.Arrays
@@ -23,6 +22,12 @@ namespace Althea.Arrays
 		where TInd : unmanaged, IEquatable<TInd>
 	{
 		#region basic
+		static SparseMatrix()
+		{
+			if (!default(TInd).IsIntegralType())
+				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
+		}
+
 		// offset = 0
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
 		// offset = 64
@@ -56,18 +61,10 @@ namespace Althea.Arrays
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		private static void CheckTypeFormat(SparseMatrixFormat format)
-		{
-			if (!default(TInd).IsIntegralType())
-				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-		}
-
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		private SparseMatrix(long rows, long cols, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseMatrixFormat format, T defaultValue) : base(valueArray, rows, cols, stores)
 		{
-			CheckTypeFormat(format);
+			if (!format.IsAtomic())
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
 			if (indexArrays.Count != indexRealLengths.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize);
 			if (indexArrays.Any(static a => a is null || !a.IsValid()))

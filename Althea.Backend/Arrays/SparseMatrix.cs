@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 using Althea.Linq;
@@ -50,18 +51,21 @@ namespace Althea.Backend.Arrays
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
 		/// <param name="rowIndexArray">The row index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="colIndexArray">The column index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="format">The atomic <see cref="SparseMatrixFormat"/> of a pre-defined value</param>
+		/// <param name="format">The atomic <see cref="SparseMatrixFormat"/> of a <see cref="FormatExtension.NonBlocked"/> value</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentNullException"></exception>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="ArgumentNullException">If the size is not 0 while any of the storages is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic or not of allowed format</exception>
 		/// <exception cref="ArgumentException">If the lengths of storages does not fit the underlying regulations indicated by <paramref name="format"/></exception>
 		public SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
 			base(rows, cols, valueArray, rowIndexArray, colIndexArray, format, defaultValue, stores,
 				rowLength: GetRowLength(rows, valueArray, stores, format),
 				colLength: GetColLength(cols, valueArray, stores, format))
-		{ }
+		{
+			if ((format & FormatExtension.NonBlocked) != format)
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+		}
 
 		private SparseMatrix(SparseMatrix<T, TInd> reference) : base(reference.NRows, reference.NCols, reference.Storage.MakeReference(), reference.RowIndexStorage.MakeReference(), reference.ColIndexStorage.MakeReference(), reference.Format, reference.DefaultValue) { }
 
@@ -98,7 +102,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned sparse matrix</returns>
 		public override SparseMatrix<T, TInd> Clone()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
 			return new SparseMatrix<T, TInd>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
 		}
 
@@ -108,7 +112,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new sparse matrix alike this one</returns>
 		public override SparseMatrix<T, TInd> NewArrayAlike()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyContent: false);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: false);
 			return new SparseMatrix<T, TInd>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
 		}
 
@@ -121,12 +125,67 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override SparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyContent: false);
+			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: false);
 			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.GenericConvert<TOut, T>());
 		}
 		#endregion
 
 		#region indexer helpers
+		#region common
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long ToLong(TInd i) => i.ReflectionConvert<TInd, long>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static TInd ToInd(long i) => i.ReflectionConvert<long, TInd>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long[] ToManaged(Storage<TInd> storage)
+		{
+			long[] result = new long[storage.Length];
+			if (storage is Storage<long> ss)
+			{
+				MEM.ToManaged(ss, result);
+			}
+			else
+			{
+				using var temp = storage.CreateAlike<long>();
+				LAD.PointWiseCast(storage, 1, temp, 1);
+				MEM.ToManaged(temp, result);
+			}
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ToManaged(Storage<TInd> storage, Span<long> managed)
+		{
+			if (storage is Storage<long> ss)
+			{
+				MEM.ToManaged(ss, managed);
+			}
+			else
+			{
+				using var temp = storage.CreateAlike<long>();
+				LAD.PointWiseCast(storage, 1, temp, 1);
+				MEM.ToManaged(temp, managed);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void FromManaged(Storage<TInd> storage, Span<long> managed)
+		{
+			if (storage is Storage<long> ss)
+			{
+				MEM.FromManaged(ss, managed);
+			}
+			else
+			{
+				using var temp = storage.CreateAlike<long>();
+				MEM.FromManaged(temp, managed);
+				LAD.PointWiseCast(temp, 1, storage, 1);
+			}
+		}
+		#endregion
+
 		#region sub matrix get
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void RefColumValue(long[] rowStarts, ref Storage<TInd> column, ref Storage<T> values, TInd y1 = default)
@@ -189,17 +248,32 @@ namespace Althea.Backend.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long[] CoordinatedToRowStarts(TInd x1, TInd x2, long rows, Storage<TInd> sortedRow)
+		{
+			long[] rowStarts = new long[rows];
+			using var temp = sortedRow.MakeReference(newLength: rows).CreateAlike<long>();
+			LAS.IndexGetAllBounds(sortedRow, temp, x1, x2, lowerBound: true);
+			MEM.ToManaged(temp, rowStarts);
+			// check and set upper bound values
+			int find = Array.BinarySearch(rowStarts, -1);
+			if (find >= 0)
+			{
+				new Span<long>(rowStarts, find, rowStarts.Length - find).Fill(sortedRow.Length);
+			}
+			return rowStarts;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long[] CompressedToRowStarts(long start, long count, Storage<TInd> sortedRow)
+		{
+			return ToManaged(sortedRow.MakeReference(start, count));
+		}
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void GetRangeCoordinated(TInd x1, TInd x2, TInd y1, TInd y2, bool allColumns, ref Storage<TInd> sortedRow, ref Storage<TInd> column, ref Storage<T> values)
 		{
-			long rows = x2.ToLong() - x1.ToLong() + 1;
-			long[] rowStarts = new long[rows];
-			using (var temp = sortedRow.MakeReference(newLength: rows).CreateAlike<long>())
-			{
-				LAS.IndexGetAllBounds(sortedRow, temp, x1, x2, lowerBound: true);
-				MEM.ToManaged(temp, rowStarts);
-				if (rowStarts[^1] < 0)
-					rowStarts[^1] = sortedRow.Length;
-			}
+			long rows = ToLong(x2) - ToLong(x1) + 1;
+			long[] rowStarts = CoordinatedToRowStarts(x1, x2, rows, sortedRow);
 			rows--;
 			// get column and value
 			if (allColumns)
@@ -214,16 +288,7 @@ namespace Althea.Backend.Arrays
 			var compressed = Storage<TInd>.Create(sortedRow[0].Location, rowStarts.LongLength);
 			try
 			{
-				if (compressed is Storage<long> ss)
-				{
-					MEM.FromManaged(ss, rowStarts);
-				}
-				else
-				{
-					using var temp = Storage<long>.Create(sortedRow[0].Location, rowStarts.LongLength);
-					MEM.FromManaged(temp, rowStarts);
-					LAD.PointWiseCast(temp, 1, compressed, 1);
-				}
+				FromManaged(compressed, rowStarts);
 			}
 			catch (Exception)
 			{
@@ -235,17 +300,7 @@ namespace Althea.Backend.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void GetRangeCompressed(long start, long count, TInd y1, TInd y2, bool allColumns, ref Storage<TInd> compressed, ref Storage<TInd> column, ref Storage<T> values)
 		{
-			long[] rowStarts = new long[count + 1];
-			if (compressed is Storage<long> ss)
-			{
-				MEM.ToManaged(ss.MakeReference(start, count + 1), rowStarts);
-			}
-			else
-			{
-				using var temp = compressed.MakeReference(newLength: count + 1).CreateAlike<long>();
-				LAD.PointWiseCast(compressed.MakeReference(start, count + 1), 1, temp, 1);
-				MEM.ToManaged(temp, rowStarts);
-			}
+			long[] rowStarts = CompressedToRowStarts(start, count + 1, compressed);
 			// return
 			if (allColumns)
 			{
@@ -265,7 +320,7 @@ namespace Althea.Backend.Arrays
 				ActualStorage<TInd> outCompressed = compressed.MakeReference(newLength: count + 1).Clone();
 				try
 				{
-					LAD.PointWiseAddScalar(outCompressed, 1, (-rowStarts[0]).FromLong<TInd>());
+					LAD.PointWiseAddScalar(outCompressed, 1, ToInd(-rowStarts[0]));
 					compressed = outCompressed;
 				}
 				catch (Exception)
@@ -279,49 +334,54 @@ namespace Althea.Backend.Arrays
 
 		#region sub matrix set
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRange(long rows, TInd y1, TInd y2, long[] rowStarts, Storage<TInd> column, Storage<T> values, Storage<TInd> srcColumn, Storage<T> srcValues)
+		private static void SetRange(long rows, TInd y1, TInd y2, long[] rowStarts, Storage<TInd> column, Storage<T> values, long[] srcRowStarts, Storage<TInd> srcColumn, Storage<T> srcValues)
 		{
 			// combine all consecutive copies
 			int estimateLen = (int)(rows / 2);
-			List<long> dstOffsets = new(estimateLen), cpyLengths = new(estimateLen), srcOffsets = new(estimateLen);
+			List<long> dstOffsets = new(estimateLen) { rowStarts[0] }, cpyLengths = new(estimateLen) { 0 }, srcOffsets = new(estimateLen) { 0 };
 			for (long i = 0; i < rows; i++)
 			{
 				long offset = rowStarts[i], length = rowStarts[i + 1] - offset;
 				Storage<T> value = values.MakeReference(offset, length);
 				Storage<TInd> index = column.MakeReference(offset, length);
 				SparseVector<T, TInd>.Slice(y1, y2, ref value, ref index);
+				// check
+				long realLength = value.Length;
+				if (realLength != srcRowStarts[i])
+					throw new ArgumentException(Resources.Parameter.InvalidValue);
+				// combine consecutive copies
 				long realOffset = value - values, relativeOffset = realOffset - offset;
-				if (value.Length == length)
+				if (realLength == length)
 				{	// both align
 					cpyLengths[^1] += length;
 				}
 				else if (realOffset == offset)
 				{	// left align
-					cpyLengths[^1] += value.Length;
+					cpyLengths[^1] += realLength;
 					// create next
 					dstOffsets.Add(rowStarts[i + 1]);
 					srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
 					cpyLengths.Add(0);
 				}
-				else if (value.Length + relativeOffset == length)
+				else if (realLength + relativeOffset == length)
 				{   // right align
 					if (cpyLengths[^1] == 0)
 					{
-						cpyLengths[^1] = value.Length;
+						cpyLengths[^1] = realLength;
 						dstOffsets[^1] += relativeOffset;
 					}
 					else
 					{	// create this
 						dstOffsets.Add(rowStarts[i + 1] + relativeOffset);
 						srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
-						cpyLengths.Add(value.Length);
+						cpyLengths.Add(realLength);
 					}
 				}
 				else
 				{	// no align
 					if (cpyLengths[^1] == 0)
 					{
-						cpyLengths[^1] = value.Length;
+						cpyLengths[^1] = realLength;
 						dstOffsets[^1] += realOffset;
 					}
 					// create next
@@ -343,107 +403,29 @@ namespace Althea.Backend.Arrays
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRangeCoordinated(TInd x1, TInd x2, TInd y1, TInd y2, SparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
+		private static void SetRange(TInd x1, TInd x2, TInd y1, TInd y2, SparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
 		{
-			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols;
+			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols, rowMajor = org.Format.IsRowMajor();
 			// get storages
-			bool setCompressed = src.Format != org.Format;
 			var values = org.Storage; var srcValues = src.Storage;
-			if (!org.Format.IsRowMajor())
+			if (rowMajor)
 				(x1, x2, y1, y2) = (y1, y2, x1, x2);
-			var (sortedRow, column) = org.Format.IsRowMajor() ? (org.RowIndexStorage, org.ColIndexStorage) : (org.ColIndexStorage, org.RowIndexStorage);
-			var (srcRow, srcColumn) = org.Format.IsRowMajor() ? (src.RowIndexStorage, src.ColIndexStorage) : (src.ColIndexStorage, src.RowIndexStorage);
-			// check row
-			long offset = LAS.IndexBound(sortedRow, x1, lowerBound: true);
-			long length = LAS.IndexBound(sortedRow, x2, lowerBound: false);
-			if (length < 0)
-				length = sortedRow.Length;
-			length -= offset;
-			if (!setCompressed)
-			{
-				if (srcRow.Length != length)
-					throw new ArgumentException(Resources.Parameter.InvalidValue);
-				using var temp = srcRow.Clone();
-				LAD.PointWiseAddScalar(temp, 1, x1);
-				// TODO: this is not correct
-				if (!LAD.PointWiseEquals(temp, 1, sortedRow.MakeReference(offset, length), 1))
-					throw new ArgumentException(Resources.Parameter.InvalidValue);
-			}
+			var (sortedRow, column) = rowMajor ? (org.RowIndexStorage, org.ColIndexStorage) : (org.ColIndexStorage, org.RowIndexStorage);
+			var (srcRow, srcColumn) = rowMajor ? (src.RowIndexStorage, src.ColIndexStorage) : (src.ColIndexStorage, src.RowIndexStorage);
 			// get row starts
-			long rows = x2.ToLong() - x1.ToLong() + 1;
-			long[] rowStarts = new long[rows];
-			using (var temp = sortedRow.MakeReference(newLength: rows).CreateAlike<long>())
+			long startRow = ToLong(x1), rows = ToLong(x2) - startRow + 1; TInd rowsInd = ToInd(rows);
+			long[] rowStarts = org.Format.IsCompressed() ? CompressedToRowStarts(startRow, rows, sortedRow) : CoordinatedToRowStarts(x1, x2, rows, sortedRow);
+			long[] srcRowStarts = src.Format.IsCompressed() ? CompressedToRowStarts(0, rows, srcRow) : CoordinatedToRowStarts(default, rowsInd, rows, srcRow);
+			// set columns and values, rows are not necessary
+			if (allRows && !allCols)
 			{
-				LAS.IndexGetAllBounds(sortedRow, temp, x1, x2, lowerBound: true);
-				var tempLast = temp + (rows - 1);
-				if (MEM.ToManaged(tempLast) < 0)
-					MEM.FromManaged(tempLast, sortedRow.Length);
-				if (setCompressed)
-				{ // check row
-					bool check;
-					if (temp is Storage<TInd> tt)
-					{
-						check = LAD.PointWiseEquals(tt, 1, srcRow, 1);
-					}
-					else
-					{
-						using var temp2 = temp.CreateAlike<TInd>();
-						LAD.PointWiseCast(temp, 1, temp2, 1);
-						check = LAD.PointWiseEquals(temp2, 1, srcRow, 1);
-					}
-					if (!check)
-						throw new ArgumentException(Resources.Parameter.InvalidValue);
-				}
-				MEM.ToManaged(temp, rowStarts);
+				SetRange(rows - 1, y1, y2, rowStarts, column, values, srcRowStarts, srcColumn, srcValues);
 			}
-			// set
-			rows--;
-			if (allRows && allCols)
+			else if (!allRows && allCols)
 			{
-				if (srcColumn.Length == length && srcValues.Length == length)
-				{
-					MEM.MemoryCopy(srcValues, values + rowStarts[0]);
-					MEM.MemoryCopy(srcColumn, column + rowStarts[0]);
-				}
-				else
-					throw new ArgumentException(Resources.Parameter.InvalidValue);
+				MEM.MemoryCopy(srcColumn, column + rowStarts[0]);
+				MEM.MemoryCopy(srcValues, values + rowStarts[0]);
 			}
-			else if (allRows && !allCols)
-			{
-				SetRange(rows, y1, y2, rowStarts, column, values, srcColumn, srcValues);
-			}
-			MEM.MemoryCopy(srcRow, sortedRow + rowStarts[0]);
-			if (!x1.IsZero())
-				LAD.PointWiseAddScalar(sortedRow.MakeReference(rowStarts[0], length), 1, x1);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRangeCompressed(TInd x1, TInd x2, TInd y1, TInd y2, SparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
-		{
-			long start = x1.ToLong(), count = x2.ToLong() - start;
-			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols;
-			// get storages
-			bool setCoordinated = src.Format != org.Format;
-			var values = org.Storage; var srcValues = src.Storage;
-			if (!org.Format.IsRowMajor())
-				(x1, x2, y1, y2) = (y1, y2, x1, x2);
-			var (sortedRow, column) = org.Format.IsRowMajor() ? (org.RowIndexStorage, org.ColIndexStorage) : (org.ColIndexStorage, org.RowIndexStorage);
-			var (srcRow, srcColumn) = org.Format.IsRowMajor() ? (src.RowIndexStorage, src.ColIndexStorage) : (src.ColIndexStorage, src.RowIndexStorage);
-			// check row
-			if (!setCoordinated)
-			{
-				using var temp = srcRow.Clone();
-				LAD.PointWiseAddScalar(temp, 1, x1.GenericNegate());
-				if (!LAD.PointWiseEquals(temp, 1, sortedRow.MakeReference(start, count), 1))
-
-			}
-			// get row starts
-			long[] rowStarts = new long[count + 1];
-			using (var temp = compressed.MakeReference(newLength: count + 1).CreateAlike<long>())
-			{
-				LAD.PointWiseCast(compressed.MakeReference(start, count + 1), 1, temp, 1);
-				MEM.ToManaged(temp, rowStarts);
-			}
-			// set
 		}
 		#endregion
 
@@ -479,8 +461,8 @@ namespace Althea.Backend.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private T IndexCompressed(long x, TInd y, Storage<TInd> sorted, Storage<TInd> other, T value, bool get)
 		{
-			long start = MEM.ToManaged(sorted + x).ToLong();
-			long count = MEM.ToManaged(sorted + (x + 1)).ToLong() - start;
+			long start = ToLong(MEM.ToManaged(sorted + x));
+			long count = ToLong(MEM.ToManaged(sorted + (x + 1))) - start;
 			if (count > 0)
 			{
 				long find = LAS.IndexFind(sorted: true, other.MakeReference(start, count), y);
@@ -501,6 +483,84 @@ namespace Althea.Backend.Arrays
 				throw new InvalidOperationException();
 		}
 		#endregion
+
+		#region diagonal get
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static SparseVector<T, TInd> GetDiag(long k, long rows, bool compressed, Storage<T> values, Storage<TInd> sortedRow, Storage<TInd> column)
+		{
+			long absK = Math.Abs(k), actualRows = rows - absK;
+			TInd rowsInd = ToInd(rows), absKInd = ToInd(absK), actualRowsInd = ToInd(actualRows);
+			long[] rowStarts = compressed ? CompressedToRowStarts(k >= 0 ? 0: absK, actualRows, sortedRow) :
+											CoordinatedToRowStarts(k >= 0 ? default : absKInd, k >= 0 ? actualRowsInd : rowsInd, rows - absK, sortedRow);
+			// get indices
+			List<long> indices = new((int)(actualRows / 2));
+			for (long i = 0; i < actualRows; i++)
+			{
+				long offset = rowStarts[i], length = rowStarts[i + 1] - rowStarts[i];
+				if (length > 0)
+				{
+					long find = LAS.IndexFind(sorted: true, column.MakeReference(offset, length), k >= 0 ? ToInd(i + k) : ToInd(i));
+					if (find >= 0)
+					{
+						indices.Add(find + offset);
+					}
+				}
+			}
+			// to storage
+			ActualStorage<TInd>? vectorIndices = null;
+			ActualStorage<T>? vectorValues = null;
+			try
+			{
+				vectorIndices = column.MakeReference(newLength: indices.Count).CreateAlike();
+				Span<long> managedIndices = CollectionsMarshal.AsSpan(indices);
+				FromManaged(vectorIndices, managedIndices);
+				vectorValues = values.MakeReference(newLength: indices.Count).CreateAlike();
+				var vector = new SparseVector<T, TInd>(actualRows, vectorValues, vectorIndices);
+				LAS.VectorGatherValuesAt(values, vector);
+				LAD.PointWiseAddScalar(vectorIndices, 1, ToInd(-rowStarts[0]));
+				return vector;
+			}
+			catch (Exception)
+			{
+				vectorIndices?.Dispose(); vectorValues?.Dispose();
+				throw;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void SetDiag(long k, long rows, bool compressed, Storage<T> values, Storage<TInd> sortedRow, Storage<TInd> column, SparseVector<T, TInd> vector)
+		{
+			long absK = Math.Abs(k), actualRows = rows - absK;
+			TInd rowsInd = ToInd(rows), absKInd = ToInd(absK), actualRowsInd = ToInd(actualRows);
+			long[] rowStarts = compressed ? CompressedToRowStarts(k >= 0 ? 0 : absK, actualRows, sortedRow) :
+											CoordinatedToRowStarts(k >= 0 ? default : absKInd, k >= 0 ? actualRowsInd : rowsInd, rows - absK, sortedRow);
+			// check indices
+			long[] indices = ToManaged(vector.IndexStorage); long c = 0;
+			for (long i = 0; i < actualRows; i++)
+			{
+				long offset = rowStarts[i], length = rowStarts[i + 1] - rowStarts[i];
+				if (length <= 0)
+					continue;
+				long find = LAS.IndexFind(sorted: true, column.MakeReference(offset, length), k >= 0 ? ToInd(i + k) : ToInd(i));
+				if (find < 0)
+					continue;
+				if (indices[c++] != find + rowStarts[0])
+					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(vector));
+			}
+			if (c != indices.LongLength)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(vector));
+			// set
+			LAD.PointWiseAddScalar(vector.IndexStorage, 1, ToInd(rowStarts[0]));
+			try
+			{
+				LAS.VectorSparseToDense(vector, values);
+			}
+			finally
+			{
+				LAD.PointWiseAddScalar(vector.IndexStorage, 1, ToInd(-rowStarts[0]));
+			}
+		}
+		#endregion
 		#endregion
 
 		#region basic indexers
@@ -517,8 +577,8 @@ namespace Althea.Backend.Arrays
 		{
 			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 
-			TInd x1 = offsetRow.FromLong<TInd>(), x2 = (offsetRow + countRow).FromLong<TInd>();
-			TInd y1 = offsetCol.FromLong<TInd>(), y2 = (offsetCol + countCol).FromLong<TInd>();
+			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
+			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
 			bool allRows = countRow == this.NRows, allCols = countCol == this.NCols;
 			// shortcut
 			if (allRows && allCols)
@@ -587,6 +647,8 @@ namespace Althea.Backend.Arrays
 				MEM.MemoryCopy(sub.RowIndexStorage, sparse.RowIndexStorage);
 				MEM.MemoryCopy(sub.ColIndexStorage, sparse.ColIndexStorage);
 			}
+			else
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
 		}
 
 		/// <summary>
@@ -606,8 +668,8 @@ namespace Althea.Backend.Arrays
 			if (value is not SparseMatrix<T, TInd> sp || sp.Format.IsRowMajor() != this.Format.IsRowMajor())
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
 
-			TInd x1 = rowStart.FromLong<TInd>(), x2 = (rowStart + value.NRows).FromLong<TInd>();
-			TInd y1 = colStart.FromLong<TInd>(), y2 = (colStart + value.NCols).FromLong<TInd>();
+			TInd x1 = ToInd(rowStart), x2 = ToInd(rowStart + value.NRows);
+			TInd y1 = ToInd(colStart), y2 = ToInd(colStart + value.NCols);
 			bool allRows = value.NRows == this.NRows, allCols = value.NCols == this.NCols;
 			// shortcut
 			if (allRows && allCols)
@@ -620,19 +682,7 @@ namespace Althea.Backend.Arrays
 				return;
 			}
 			// else
-			switch (this.Format)
-			{
-				case SparseMatrixFormat.COOR:
-				case SparseMatrixFormat.COOC:
-					SetRangeCoordinated(x1, x2, y1, y2, this, sp);
-					break;
-				case SparseMatrixFormat.CSR:
-				case SparseMatrixFormat.CSC:
-					SetRangeCompressed(x1, x2, y1, y2, this, sp);
-					break;
-				default: // never here
-					throw new NotSupportedException();
-			}
+			SetRange(x1, x2, y1, y2, this, sp);
 		}
 
 		/// <summary>
@@ -645,7 +695,7 @@ namespace Althea.Backend.Arrays
 		public override T this[long x, long y] {
 			get {
 				this.CheckIndex(x, y);
-				TInd xx = x.FromLong<TInd>(), yy = y.FromLong<TInd>();
+				TInd xx = ToInd(x), yy = ToInd(y);
 				return this.Format switch
 				{
 					SparseMatrixFormat.COOR => this.IndexCoordinated(xx, yy, this.RowIndexStorage, this.ColIndexStorage, this.DefaultValue, get: true),
@@ -657,7 +707,7 @@ namespace Althea.Backend.Arrays
 			}
 			set {
 				this.CheckIndex(x, y);
-				TInd xx = x.FromLong<TInd>(), yy = y.FromLong<TInd>();
+				TInd xx = ToInd(x), yy = ToInd(y);
 				switch (this.Format)
 				{
 					case SparseMatrixFormat.COOR:
@@ -684,28 +734,24 @@ namespace Althea.Backend.Arrays
 		/// Get the <paramref name="k"/>-th diagonal elements.
 		/// </summary>
 		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <returns>A new <see cref="DenseVector{T}"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
+		/// <returns>A new <see cref="SparseVector{T, TInd}"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
 		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
-		public override DenseVector<T> GetDiag(long k)
+		public override SparseVector<T, TInd> GetDiag(long k)
 		{
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException();
 			if (Math.Abs(k) >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(k), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(k), k, Resources.Parameter.InvalidValue);
 
-			Storage<T>? storage = null;
-			try
+			return this.Format switch
 			{
-				storage = this.Storage.MakeReference(newLength: this.NRows - k).CreateAlike();
-				MEM.StridedCopy(this.GetDiagStorage(k), this.GetDiagStride(), storage, 1);
-				return new DenseVector<T>(storage);
-			}
-			catch (Exception)
-			{
-				storage?.Dispose();
-				throw;
-			}
+				SparseMatrixFormat.COOR => GetDiag(k, this.NRows, false, this.Storage, this.RowIndexStorage, this.ColIndexStorage),
+				SparseMatrixFormat.COOC => GetDiag(k, this.NRows, false, this.Storage, this.ColIndexStorage, this.RowIndexStorage),
+				SparseMatrixFormat.CSR => GetDiag(k, this.NRows, true, this.Storage, this.RowIndexStorage, this.ColIndexStorage),
+				SparseMatrixFormat.CSC => GetDiag(k, this.NRows, true, this.Storage, this.ColIndexStorage, this.RowIndexStorage),
+				_ => throw new NotSupportedException(),
+			};
 		}
 
 		/// <summary>
@@ -719,18 +765,25 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
 		public override void GetDiag(long k, VectorBase<T> overwrite)
 		{
-			if (this.NRows != this.NCols)
-				throw new InvalidOperationException();
-			if (Math.Abs(k) >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(k), Resources.Parameter.InvalidValue);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not DenseVector<T> dense)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (dense.Length < this.NRows - k)
+			if (overwrite is DenseVector<T> dn && dn.Length < this.NRows - k)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 
-			MEM.StridedCopy(this.GetDiagStorage(k), this.GetDiagStride(), dense.Storage, 1);
+			using var vec = this.GetDiag(k);
+			if (overwrite is DenseVector<T> dense)
+			{
+				vec.ToDense(dense.Storage);
+			}
+			else if (overwrite is SparseVector<T, TInd> sparse)
+			{
+				if (sparse.NStored != vec.NStored)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
+				MEM.MemoryCopy(vec.Storage, sparse.Storage);
+				MEM.MemoryCopy(vec.IndexStorage, sparse.IndexStorage);
+			}
+			else
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
 		}
 
 		/// <summary>
@@ -741,28 +794,35 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="NotSupportedException">If <paramref name="value"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="ISparseVector{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="value"/> is not a <see cref="SparseVector{T, TInd}"/></exception>
 		public override void SetDiag(long k, VectorBase<T> value)
 		{
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException();
 			if (Math.Abs(k) >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(k), Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(k), k, Resources.Parameter.InvalidValue);
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
-
-			if (value is DenseVector<T> dense)
-			{
-				MEM.StridedCopy(dense.Storage, 1, this.GetDiagStorage(k), this.GetDiagStride());
-			}
-			else if (value is ISparseVector<T> sparse)
-			{
-				using var dn = this.Storage.MakeReference(newLength: this.NRows - k).CreateAlike();
-				sparse.ToDense(dn);
-				MEM.StridedCopy(dn, 1, this.GetDiagStorage(k), this.GetDiagStride());
-			}
-			else
+			if (value is not SparseVector<T, TInd> sparse)
 				throw new NotSupportedException();
+
+			switch (this.Format)
+			{
+				case SparseMatrixFormat.COOR:
+					SetDiag(k, this.NRows, false, this.Storage, this.RowIndexStorage, this.ColIndexStorage, sparse);
+					break;
+				case SparseMatrixFormat.COOC:
+					SetDiag(k, this.NRows, false, this.Storage, this.ColIndexStorage, this.RowIndexStorage, sparse);
+					break;
+				case SparseMatrixFormat.CSR:
+					SetDiag(k, this.NRows, true, this.Storage, this.RowIndexStorage, this.ColIndexStorage, sparse);
+					break;
+				case SparseMatrixFormat.CSC:
+					SetDiag(k, this.NRows, true, this.Storage, this.ColIndexStorage, this.RowIndexStorage, sparse);
+					break;
+				default:
+					break;
+			}
 		}
 		#endregion
 
@@ -802,7 +862,16 @@ namespace Althea.Backend.Arrays
 			if ((format & FormatExtension.PreDefined) == 0)
 				throw new NotSupportedException(Resources.Support.Format);
 
-			return LAS.MatrixSparseFormatConvert(this, format) as Althea.Arrays.SparseMatrix<T, TInd>;
+			var wrapper = LAS.MatrixSparseFormatConvert(this, format);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(this.NRows, this.NCols, this.DefaultValue, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 		#endregion
 
@@ -813,7 +882,16 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new vector reshaped from this matrix</returns>
 		public override SparseVector<T, TInd> ToVector()
 		{
-			return LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated) as SparseVector<T, TInd>;
+			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, this.DefaultValue, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -821,13 +899,14 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix, may be this matrix itself</returns>
-		public override Althea.Arrays.SparseMatrix<T, TInd> ToMatrix(long rows = 0)
+		public override SparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
 			Span<long> size = stackalloc long[2].SetValue(rows);
 			CheckSize(this, size);
 			if (size[0] == this.NRows)
 				return this;
-
+			using var vector = this.ToVector();
+			return vector.ToMatrix(rows);
 		}
 
 		/// <summary>
@@ -853,17 +932,17 @@ namespace Althea.Backend.Arrays
 			// shortcut
 			if (operation == MatrixOperation.None)
 				return this.Clone();
+			if (operation == MatrixOperation.Conjugate)
+				return this.ApplyToClone(static c => LAD.PointWiseConjugate(c.Storage, 1));
 			// otherwise
-			var (m, n) = (this.NCols, this.NRows);
-			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
+			var wrapper = LAS.MatrixSparseAddSparse(operation, MatrixOperation.None, Scalars<T>.One, this, default, null);
 			try
 			{
-				LAD.GeneralMatricesAdd(operation, MatrixOperation.None, m, n, Scalars<T>.One, this.Storage, this.LeadDim, Scalars<T>.Zero, null, 0, storageOut, m);
-				return new SparseMatrix<T, TInd>(storageOut, m, n);
+				return SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, this.DefaultValue, wrapper);
 			}
 			catch (Exception)
 			{
-				storageOut?.Dispose();
+				wrapper.Dispose();
 				throw;
 			}
 		}
@@ -881,40 +960,48 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
-		public override SparseMatrix<T, TInd> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		public override MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
 			if (scalarThis.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarThis), Resources.Parameter.CannotZero);
+				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
 			if (scalarOther.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarOther), Resources.Parameter.CannotZero);
-			var (m, n) = opThis == MatrixOperation.None ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther == MatrixOperation.None ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
+				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
+			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
+			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
 			if (m != p || n != q)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
-			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
-			try
+			if (other is DenseMatrix<T> dense)
 			{
-				if (other is DenseMatrix<T> dense)
+				var clone = dense.NewArrayAlike();
+				try
 				{
-					LAD.GeneralMatricesAdd(opThis, opOther, m, n, scalarThis, this.Storage, this.LeadDim, scalarOther, dense.Storage, dense.LeadDim, storageOut, m);
+					LAS.MatrixDenseAddSparse(opOther, opThis, scalarOther, dense.Storage, dense.LeadDim, scalarThis, this, clone.Storage, clone.LeadDim);
+					return clone;
 				}
-				else if (other is ISparseMatrix<T> sparse)
+				catch (Exception)
 				{
-					LAS.MatrixDenseAddSparse(opThis, opOther, scalarThis, this.Storage, this.LeadDim, scalarOther, sparse, storageOut, m);
+					clone?.Dispose();
+					throw;
 				}
-				else
-					throw new NotSupportedException();
-
-				return new DenseMatrix<T>(storageOut, m, n);
 			}
-			catch (Exception)
+			else if (other is ISparseMatrix<T> sparse)
 			{
-				storageOut?.Dispose();
-				throw;
+				var wrapper = LAS.MatrixSparseAddSparse(opThis, opOther, scalarThis, this, scalarOther, sparse);
+				try
+				{
+					return SparseVector<T, TInd>.CheckWrapper(m, n, this.DefaultValue.GenericAdd(sparse.DefaultValue), wrapper);
+				}
+				catch (Exception)
+				{
+					wrapper.Dispose();
+					throw;
+				}
 			}
+			else
+				throw new NotSupportedException();
 		}
 
 		/// <summary>
@@ -929,42 +1016,72 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
-		public override SparseMatrix<T, TInd> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
 			if (scalar.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalar), Resources.Parameter.CannotZero);
-			var (m, n) = opThis == MatrixOperation.None ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther == MatrixOperation.None ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
+			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
 			if (n != p)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
-			var storageOut = this.Storage.MakeReference(newLength: m * q).CreateAlike();
-			try
+			if (other is DenseMatrix<T> dense)
 			{
-				if (other is DenseMatrix<T> dense)
+				var output = Storage<T>.Create(dense.Storage[0].Location, m * q);
+				try
 				{
-					LAD.GeneralMatricesMultiply(opThis, opOther, m, q, n, scalar, this.Storage, this.LeadDim, dense.Storage, dense.LeadDim, Scalars<T>.Zero, storageOut, m);
+					LAS.MatrixSparseMultiplyDense(opThis, opOther, q, scalar, this, dense.Storage, dense.LeadDim, default, output, m);
+					return new DenseMatrix<T>(output, m, q);
 				}
-				else if (other is ISparseMatrix<T> sparse)
+				catch (Exception)
 				{
-					LAS.MatrixDenseMultiplySparse(opThis, opOther, m, scalar, this.Storage, this.LeadDim, sparse, Scalars<T>.Zero, storageOut, m);
+					output?.Dispose();
+					throw;
 				}
-				else
-					throw new NotSupportedException();
-
-				return new DenseMatrix<T>(storageOut, m, q);
 			}
-			catch (Exception)
+			else if (other is ISparseMatrix<T> sparse)
 			{
-				storageOut?.Dispose();
-				throw;
+				var wrapper = LAS.MatrixSparseMultiplySparse(opThis, opOther, scalar, this, sparse, default, null); ;
+				try
+				{
+					T defThis = this.DefaultValue, defOther = sparse.DefaultValue;
+					T defNew = (dynamic)defThis * defOther * n;
+					return SparseVector<T, TInd>.CheckWrapper(m, q, defNew, wrapper);
+				}
+				catch (Exception)
+				{
+					wrapper.Dispose();
+					throw;
+				}
 			}
+			else
+				throw new NotSupportedException();
 		}
 		#endregion
 
 		#region IKrylovVector
+		/// <summary>
+		/// Check the sparsity of this sparse matrix and the <paramref name="other"/> one
+		/// </summary>
+		/// <param name="other">The other sparse matrix to check sparsity</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="InvalidOperationException">If the <paramref name="other"/> matrix has different sparsity from this one</exception>
+		protected void CheckSparsity(SparseMatrix<T, TInd> other)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (this.NRows != other.NRows || this.NCols != other.NCols || this.Format != other.Format || this.NStored != other.NStored)
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+			// check same indices
+			if (this.RowIndexStorage == other.RowIndexStorage && this.ColIndexStorage == other.ColIndexStorage)
+				return;
+			if (!LAD.PointWiseEquals(this.RowIndexStorage, 1, other.RowIndexStorage, 1) ||
+				!LAD.PointWiseEquals(this.ColIndexStorage, 1, other.ColIndexStorage, 1))
+				throw new InvalidOperationException(Resources.Other.DifferentSparsity);
+		}
+
 		void IKrylovVector<SparseMatrix<T, TInd>, T>.Scale(T value) => this.Scale(value);
 
 		double IKrylovVector<SparseMatrix<T, TInd>, T>.Norm() => this.Norm();
@@ -973,119 +1090,37 @@ namespace Althea.Backend.Arrays
 
 		T IKrylovVector<SparseMatrix<T, TInd>, T>.Dot(SparseMatrix<T, TInd> other)
 		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (this.NRows != other.NRows || this.NCols != other.NCols)
-				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
-
-			if (this.NRows == this.LeadDim)
-			{
-				if (other.NRows == other.LeadDim)
-				{
-					return LAD.Dot(true, this.Storage, 1, other.Storage, 1);
-				}
-				else if (other.NRows == 1)
-				{
-					return LAD.Dot(true, this.Storage, 1, other.Storage, checked((int)other.LeadDim));
-				}
-			}
-			else if (this.NRows == 1)
-			{
-				if (other.NRows == other.LeadDim)
-				{
-					return LAD.Dot(true, this.Storage, checked((int)this.LeadDim), other.Storage, 1);
-				}
-				else if (other.NRows == 1)
-				{
-					return LAD.Dot(true, this.Storage, checked((int)this.LeadDim), other.Storage, checked((int)other.LeadDim));
-				}
-			}
-			// else
-			dynamic dotSquare = default(T);
-			long rows = this.NRows, cols = this.NCols, ldA = this.LeadDim, ldB = other.LeadDim;
-			for (long i = 0; i < cols; i++)
-			{
-				var columnA = this.Storage.MakeReference(i * ldA, newLength: rows);
-				var columnB = other.Storage.MakeReference(i * ldB, newLength: rows);
-				T dot = LAD.Dot(true, columnA, 1, columnB, 1);
-				dotSquare += (dynamic)dot * dot;
-			}
-			return ((T)dotSquare).GenericSqrt();
+			this.CheckSparsity(other);
+			return LAD.Dot(true, this.Storage, 1, other.Storage, 1);
 		}
 
 		/// <summary>
 		/// Add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) matrix to this matrix in-place.
 		/// </summary>
-		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to add</param>
+		/// <param name="other">The other <see cref="SparseMatrix{T, TInd}"/> to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		public virtual void AddBy(SparseMatrix<T, TInd> other, T scalar) => this.OverwriteByMatricesSum(this, other, Scalars<T>.One, scalar);
+		public virtual void AddBy(SparseMatrix<T, TInd> other, T scalar)
+		{
+			this.CheckSparsity(other);
+			LAD.VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, replace this matrix's content with the <paramref name="other"/> vector in-place.
+		/// Replace this matrix's content with the <paramref name="other"/> vector in-place.
 		/// </summary>
-		/// <param name="other">The other dense vector to replace from</param>
+		/// <param name="other">The other <see cref="SparseMatrix{T, TInd}"/> to replace from</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
 		public void ReplaceBy(SparseMatrix<T, TInd> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
-			if (this.NRows != other.NRows || this.NCols != other.NCols)
+			if (this.NRows != other.NRows || this.NCols != other.NCols || this.Format != other.Format || this.NStored != other.NStored)
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 
-			MEM.MemoryCopy2D(other.Storage, other.LeadDim, this.Storage, this.LeadDim, this.NRows, this.NCols);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <see cref="SparseMatrix{T, TInd}"/>.
-		/// </summary>
-		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <see cref="SparseMatrix{T, TInd}"/></returns>
-		/// <remarks>The method shall be basically static, the information of this matrix shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="unjoinedVectors"/> or any of its element is null or invalid, or <paramref name="input"/> is empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this matrix</exception>
-		public SparseMatrix<T, TInd> OperateOn(IReadOnlyList<SparseMatrix<T, TInd>> unjoinedVectors, ReadOnlySpan<T> input)
-		{
-			if (unjoinedVectors is null || unjoinedVectors.Count == 0)
-				throw new ArgumentNullException(nameof(unjoinedVectors));
-			if (input.IsEmpty)
-				throw new ArgumentNullException(nameof(input));
-			if (unjoinedVectors.Count != input.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-
-			// sort first to reduce errors
-			int length = input.Length;
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
-			for (int i = 0; i < length; i++)
-			{
-				values[i] = input[i];
-				keys[i] = input[i].GenericAbsolute();
-			}
-			keys.Sort(values);
-
-			var vec = this.NewArrayAlike();
-			try
-			{
-				vec.FillWith(default);
-				for (int i = 0; i < length; i++)
-				{
-					var dnvec = unjoinedVectors[i];
-					if (dnvec is null || !dnvec.IsValid())
-						throw new ArgumentNullException(nameof(unjoinedVectors));
-					if (dnvec.Length != this.Length)
-						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(unjoinedVectors));
-					if (!values[i].IsZero())
-						vec.AddBy(dnvec, values[i]);
-				}
-				return vec;
-			}
-			catch (Exception)
-			{
-				vec.Dispose();
-				throw;
-			}
+			MEM.MemoryCopy(other.Storage, this.Storage);
+			MEM.MemoryCopy(other.RowIndexStorage, this.RowIndexStorage);
+			MEM.MemoryCopy(other.ColIndexStorage, this.ColIndexStorage);
 		}
 		#endregion
 
@@ -1097,8 +1132,22 @@ namespace Althea.Backend.Arrays
 		/// <param name="colIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the column indices</param>
 		protected override void GetIndices(Span<long> rowIndices, Span<long> colIndices)
 		{
-			int length = rowIndices.Length;
-			// TODO
+			int rows = rowIndices.Length, cols = colIndices.Length;
+			switch (this.Format)
+			{
+				case SparseMatrixFormat.COOR:
+				case SparseMatrixFormat.COOC:
+					ToManaged(this.RowIndexStorage.MakeReference(newLength: rows), rowIndices);
+					ToManaged(this.ColIndexStorage.MakeReference(newLength: cols), colIndices);
+					break;
+				case SparseMatrixFormat.CSR:
+
+					break;
+				case SparseMatrixFormat.CSC:
+					break;
+				default:
+					break;
+			}
 		}
 
 		/// <summary>

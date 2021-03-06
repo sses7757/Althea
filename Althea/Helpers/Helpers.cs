@@ -638,6 +638,7 @@ namespace Althea.Helpers
 		/// <param name="array">The array to be acted by <paramref name="action"/></param>
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T ApplyToClone<T>(this T array, Action<T> action) where T : IDisposable, ICloneable
 		{
 			var clone = array.Clone();
@@ -662,6 +663,7 @@ namespace Althea.Helpers
 		/// <param name="array">The array to be acted by <paramref name="action"/></param>
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The new array alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static TArr ApplyToAlike<TArr, T>(this TArr array, Action<TArr> action)
 			where TArr : Arrays.ValueArray<T>
 			where T : unmanaged, IFormattable, IEquatable<T>
