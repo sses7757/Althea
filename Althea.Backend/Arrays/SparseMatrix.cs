@@ -914,10 +914,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size)
-		{
-
-		}
+		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) { }
 		#endregion
 
 		#region linear algebra
@@ -938,7 +935,10 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseAddSparse(operation, MatrixOperation.None, Scalars<T>.One, this, default, null);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, this.DefaultValue, wrapper);
+				var res = SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, this.DefaultValue, wrapper);
+				if (res is not SparseMatrix<T, TInd> ss)
+					throw new InvalidOperationException(Resources.Support.Format);
+				return ss;
 			}
 			catch (Exception)
 			{
@@ -1133,6 +1133,7 @@ namespace Althea.Backend.Arrays
 		protected override void GetIndices(Span<long> rowIndices, Span<long> colIndices)
 		{
 			int rows = rowIndices.Length, cols = colIndices.Length;
+			long find;
 			switch (this.Format)
 			{
 				case SparseMatrixFormat.COOR:
@@ -1141,9 +1142,22 @@ namespace Althea.Backend.Arrays
 					ToManaged(this.ColIndexStorage.MakeReference(newLength: cols), colIndices);
 					break;
 				case SparseMatrixFormat.CSR:
-
+					find = LAS.IndexBound(this.RowIndexStorage, ToInd(rows - 1), lowerBound: false);
+					{
+						using var temp = this.ColIndexStorage.MakeReference(newLength: rows).CreateAlike<long>();
+						LAS.IndexGenerateFromBounds(this.RowIndexStorage.MakeReference(newLength: find), temp, lowerBound: true, start: default);
+						MEM.ToManaged(temp, rowIndices);
+					}
+					ToManaged(this.ColIndexStorage.MakeReference(newLength: cols), colIndices);
 					break;
 				case SparseMatrixFormat.CSC:
+					find = LAS.IndexBound(this.ColIndexStorage, ToInd(cols - 1), lowerBound: false);
+					{
+						using var temp = this.RowIndexStorage.MakeReference(newLength: cols).CreateAlike<long>();
+						LAS.IndexGenerateFromBounds(this.ColIndexStorage.MakeReference(newLength: find), temp, lowerBound: true, start: default);
+						MEM.ToManaged(temp, colIndices);
+					}
+					ToManaged(this.RowIndexStorage.MakeReference(newLength: rows), rowIndices);
 					break;
 				default:
 					break;

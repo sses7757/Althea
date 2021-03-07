@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Collections.Generic;
 
 using Althea.Arrays;
@@ -12,21 +13,42 @@ namespace Althea.LinearAlgebra.Sparse
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
-		#region support information
+		#region basic
 		/// <summary>
-		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by index vector unary operations of this implementation or not.
+		/// Get the current using <see cref="AbstractApi"/>.
 		/// </summary>
-		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether index vector unary operation on <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
-		protected abstract bool IsSupportedIndexVectorUnary(CombinationOfLocations location);
+		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+		public static AbstractApi? Current => RecentAPIs.First?.Value;
 
+		private static readonly LinkedList<AbstractApi> RecentAPIs = new();
+
+		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
+		#endregion
+
+
+		#region dynamic invocation
 		/// <summary>
-		/// When implemented by a derived class, check if the given <paramref name="location1"/> and <paramref name="location2"/> are supported by index vector binary operations of this implementation or not.
+		/// Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
 		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether index vector binary operation on <paramref name="location1"/> and <paramref name="location2"/> is supported by this <see cref="AbstractApi"/>.</returns>
-		protected abstract bool IsSupportedIndexVectorBinary(CombinationOfLocations location1, CombinationOfLocations location2);
+		/// <remarks>
+		/// Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
+		/// Since there are internal caching for <see cref="DynamicObject.TryInvokeMember(InvokeMemberBinder, object[], out object)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
+		/// </remarks>
+		/// <example><code>
+		/// long n = AbstractApi.Dynamic.SparseMatrixGetNonEmptyRows(...);
+		/// </code></example>
+		public static dynamic Dynamic => singletonDynamic;
+
+		private static readonly DynamicInvocations singletonDynamic = new();
+
+		private sealed class DynamicInvocations : DynamicInvocation
+		{
+			public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+			{
+				result = DynamicInvokeExtraMethod(RecentAPIs, binder.Name, args);
+				return true;
+			}
+		}
 		#endregion
 
 
@@ -461,143 +483,6 @@ namespace Althea.LinearAlgebra.Sparse
 			return result;
 		}
 		#endregion
-
-		#region index only
-		/// <summary>
-		/// Find the maximum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <returns>The maximum value of <paramref name="array"/></returns>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		public static TInd IndexMax<TInd>(Storage<TInd> array) where TInd : unmanaged
-		{
-			CombinationOfLocations location = array.LocationDescription;
-			TInd result = default;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedIndexVectorUnary(location), node);
-				success = node.Value.IndexMax_(array, out result);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-			return result;
-		}
-
-		/// <summary>
-		/// Find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <returns>The minimum value of <paramref name="array"/></returns>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		public static TInd IndexMin<TInd>(Storage<TInd> array) where TInd : unmanaged
-		{
-			CombinationOfLocations location = array.LocationDescription;
-			TInd result = default;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedIndexVectorUnary(location), node);
-				success = node.Value.IndexMin_(array, out result);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-			return result;
-		}
-
-		/// <summary>
-		/// Find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="value">The target value to find</param>
-		/// <returns>The zero-based index of the target <paramref name="value"/> in <paramref name="array"/></returns>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		public static long IndexFind<TInd>(bool sorted, Storage<TInd> array, TInd value) where TInd : unmanaged
-		{
-			CombinationOfLocations location = array.LocationDescription;
-			long result = default;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedIndexVectorUnary(location), node);
-				success = node.Value.IndexFind_(sorted, array, value, out result);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-			return result;
-		}
-
-		/// <summary>
-		/// Find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-		/// <param name="value">The target value to find</param>
-		/// <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
-		/// <returns>The zero-based index of the target bound in <paramref name="array"/></returns>
-		/// <remarks>If not found, returns -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		public static long IndexBound<TInd>(Storage<TInd> array, TInd value, bool lowerBound) where TInd : unmanaged
-		{
-			CombinationOfLocations location = array.LocationDescription;
-			long result = default;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedIndexVectorUnary(location), node);
-				success = node.Value.IndexBound_(array, value, lowerBound, out result);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-			return result;
-		}
-
-		/// <summary>
-		/// Find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the output index type</typeparam>
-		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-		/// <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
-		/// <param name="start">The inclusive start value to find</param>
-		/// <param name="end">The inclusive end value to find</param>
-		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
-		/// <remarks>If some value is not found, the corresponding index in <paramref name="target"/> is -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
-		public static void IndexGetAllBounds<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
-			where TInd : unmanaged, IEquatable<TInd>
-			where TIndOut : unmanaged
-		{
-			CombinationOfLocations location1 = array.LocationDescription, location2 = target.LocationDescription;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedIndexVectorBinary(location1, location2), node);
-				success = node.Value.IndexGetAllBounds_(array, target, start, end, lowerBound);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-		}
-		#endregion
 		#endregion
 
 
@@ -821,76 +706,6 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		protected abstract bool MatrixSparseKronecker_<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
-		#endregion
-
-		#region index only
-		/// <summary>
-		/// When implemented by a derived class, find the maximum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="max">Output the maximum value</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexMax_<TInd>(Storage<TInd> array, out TInd max) where TInd : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="min">Output the minimum value</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexMin_<TInd>(Storage<TInd> array, out TInd min) where TInd : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="value">The target value to find</param>
-		/// <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexFind_<TInd>(bool sorted, Storage<TInd> array, TInd value, out long find) where TInd : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-		/// <param name="value">The target value to find</param>
-		/// <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
-		/// <param name="index">Output the zero-based index of the target bound in <paramref name="array"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexBound_<TInd>(Storage<TInd> array, TInd value, bool lowerBound, out long index) where TInd : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
-		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged struct as the index type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the output index type</typeparam>
-		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-		/// <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
-		/// <param name="start">The inclusive start value to find</param>
-		/// <param name="end">The inclusive end value to find</param>
-		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
-		protected abstract bool IndexGetAllBounds_<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
-			where TInd : unmanaged, IEquatable<TInd>
-			where TIndOut : unmanaged;
 		#endregion
 		#endregion
 	}

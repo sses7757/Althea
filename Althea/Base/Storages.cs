@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 using Althea.Linq;
 using Althea.Helpers;
@@ -155,7 +154,7 @@ namespace Althea
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="detail"/> is too large to fit with <see cref="LocationType"/></exception>
 		public StorageLocation(LocationType location, int detail)
 		{
-			if (detail < 0 || detail >= 0xffffff)
+			if (detail < 0 || (uint)detail >= 0xffffff)
 				throw new ArgumentOutOfRangeException(nameof(detail), detail, Parameter.InvalidValue);
 			this._data = (byte)location + (detail << 8);
 		}
@@ -268,6 +267,10 @@ namespace Althea
 			}
 			return str;
 		}
+
+		internal int AsInt() => this._data;
+
+		internal StorageLocation(int data) => this._data = data;
 		#endregion
 	}
 
@@ -345,7 +348,16 @@ namespace Althea
 		/// <returns>this == <paramref name="other"/></returns>
 		public bool Equals(CombinationOfLocations other)
 		{
-			return this.type == other.type && this.data == other.data;
+			if (this.type != other.type)
+				return false;
+			if (this.count != other.count)
+				return false;
+			if (this.count == 0)
+				return true;
+			if (this.type.IsOrdered())
+				return this.data.Equals(other.data);
+			else
+				return this.data.SetEquals(other.data);
 		}
 
 		/// <summary>
@@ -413,8 +425,7 @@ namespace Althea
 			if (length <= 0 || length + start > this.Count)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 
-			Span<StorageLocation> locations = stackalloc StorageLocation[this.count];
-			this.CopyLocationsToSpan(locations);
+			var locations = this.CopyLocationsToSpan(stackalloc StorageLocation[this.count]);
 			return new CombinationOfLocations(this.type, locations.Slice(start, length));
 		}
 
@@ -448,13 +459,15 @@ namespace Althea
 		/// Copy the <see cref="StorageLocation"/>s of this combination to a given <paramref name="span"/>
 		/// </summary>
 		/// <param name="span">The given <see cref="Span{T}"/> of <see cref="StorageLocation"/> to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="span"/>'s length is not the same as <see cref="Count"/></exception>
+		/// <returns><paramref name="span"/>.<see cref="Span{T}.Slice(int, int)">Slice</see>(0, <see cref="Count">Count</see>)</returns>
+		/// <exception cref="ArgumentException">If <paramref name="span"/>'s length is less than <see cref="Count"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CopyLocationsToSpan(Span<StorageLocation> span)
+		public Span<StorageLocation> CopyLocationsToSpan(Span<StorageLocation> span)
 		{
-			if (span.Length != this.count)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(span));
+			if (span.Length < this.count)
+				throw new ArgumentException(Parameter.WrongSize, nameof(span));
 			this.data.CopyToSpan(span);
+			return span[..this.count];
 		}
 		#endregion
 
@@ -727,22 +740,6 @@ namespace Althea
 		bool IsOffsetValid(long offset, long newLength = 0);
 
 		/// <summary>
-		/// Check the given storage and throw exception if check failed.
-		/// </summary>
-		/// <param name="offset">The offset to move in bytes</param>
-		/// <param name="length">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
-		/// <exception cref="ArgumentException">if this <see cref="Storage{T}"/> has invalid value</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if offset and length breach the boundary of this <see cref="Storage{T}"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Check(long offset = 0, long length = 0)
-		{
-			if (!this.IsValid())
-				throw new ArgumentException(Parameter.InvalidValue);
-			if ((offset != 0 || length != 0) && !this.IsOffsetValid(offset, length))
-				throw new ArgumentOutOfRangeException($"{nameof(offset)}, {nameof(length)}");
-		}
-
-		/// <summary>
 		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin as the <paramref name="other"/> <see cref="IStorage"/>.
 		/// </summary>
 		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
@@ -755,6 +752,12 @@ namespace Althea
 		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		bool OverlapWith(IStorage other);
+
+		/// <summary>
+		/// When implemented by a derived class, create a referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage
+		/// </summary>
+		/// <returns>A referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage</returns>
+		Storage<byte> AsByteStorage();
 	}
 
 	/// <summary>
@@ -849,48 +852,7 @@ namespace Althea
 		protected abstract void Dispose(bool disposeManaged);
 		#endregion
 
-		#region other methods
-		/// <summary>
-		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin as the <paramref name="other"/> <see cref="IStorage"/>. The default implementation only works when both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="IReferenceStorage"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
-		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
-		/// <exception cref="NotImplementedException">If either of this and <paramref name="other"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/></exception>
-		public virtual bool SameOriginAs(IStorage other)
-		{
-			if (!this.IsValid() || !other.IsValid())
-				return false;
-
-			var originThis = this as ActualStorage<T> ?? (this as IReferenceStorage)?.Reference;
-			var originOther = other as ActualStorage<T> ?? (other as IReferenceStorage)?.Reference;
-			if (originThis is null || originOther is null)
-				throw new NotImplementedException();
-			return originThis.Equals(originOther);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="IStorage"/>. The default implementation is direct if both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="IReferenceStorage"/>; otherwise, it assumes that only <see cref="PointerSegment"/>s visible from <see cref="this[int]"/> can be referenced.
-		/// </summary>
-		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		public virtual bool OverlapWith(IStorage other)
-		{
-			if (!this.IsValid() || !other.IsValid())
-				return false;
-			if (this.SameOriginAs(other))
-				return true;
-			// else
-			for (int i = 0; i < this.Count; i++)
-			{
-				for (int j = 0; j < other.Count; j++)
-				{
-					if (this[i].OverlapWith(other[j]))
-						return true;
-				}
-			}
-			return false;
-		}
-
+		#region create
 		Storage<T> ICloneable<Storage<T>>.Clone() => this.Clone();
 
 		/// <summary>
@@ -976,6 +938,49 @@ namespace Althea
 			lengths.SetValue(length);
 			return Storage.StorageFactory<T>.Create(CombinationType.PureOrMixed, locations, lengths);
 		}
+		#endregion
+
+		#region other methods
+		/// <summary>
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> has same origin as the <paramref name="other"/> <see cref="IStorage"/>. The default implementation only works when both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="IReferenceStorage"/>.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
+		/// <exception cref="NotImplementedException">If either of this and <paramref name="other"/> is neither <see cref="ActualStorage{T}"/> nor <see cref="ReferenceStorage{T}"/></exception>
+		public virtual bool SameOriginAs(IStorage other)
+		{
+			if (!this.IsValid() || !other.IsValid())
+				return false;
+
+			var originThis = this as ActualStorage<T> ?? (this as IReferenceStorage)?.Reference;
+			var originOther = other as ActualStorage<T> ?? (other as IReferenceStorage)?.Reference;
+			if (originThis is null || originOther is null)
+				throw new NotImplementedException();
+			return originThis.Equals(originOther);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> overlaps with the <paramref name="other"/> <see cref="IStorage"/>. The default implementation is direct if both this and <paramref name="other"/> are <see cref="ActualStorage{T}"/> or <see cref="IReferenceStorage"/>; otherwise, it assumes that only <see cref="PointerSegment"/>s visible from <see cref="this[int]"/> can be referenced.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		public virtual bool OverlapWith(IStorage other)
+		{
+			if (!this.IsValid() || !other.IsValid())
+				return false;
+			if (this.SameOriginAs(other))
+				return true;
+			// else
+			for (int i = 0; i < this.Count; i++)
+			{
+				for (int j = 0; j < other.Count; j++)
+				{
+					if (this[i].OverlapWith(other[j]))
+						return true;
+				}
+			}
+			return false;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
@@ -1016,6 +1021,12 @@ namespace Althea
 		/// <returns>A <see cref="ReferenceStorage{TOut}"/> of type <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
 		public abstract ReferenceStorage<TOut> As<TOut>() where TOut : unmanaged;
+
+		/// <summary>
+		/// Create a referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage
+		/// </summary>
+		/// <returns>A referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage</returns>
+		public Storage<byte> AsByteStorage() => this.As<byte>();
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not. The default implementation checks the <see cref="Disposed"/>, <see cref="Count"/> and the <see cref="ICheckValid.IsValid"/> of each pointer.

@@ -665,7 +665,7 @@ namespace Althea.Storage
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		protected internal static PointerSegment Allocate(StorageLocation location, long length)
+		public static PointerSegment Allocate(StorageLocation location, long length)
 		{
 			PointerSegment result = default;
 			bool success = false;
@@ -689,7 +689,7 @@ namespace Althea.Storage
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		protected internal static PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged
+		public static PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged
 		{
 			return Allocate(location, length * Storage<T>.SizeOfT);
 		}
@@ -701,7 +701,7 @@ namespace Althea.Storage
 		/// <param name="disposeManaged">Whether to dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
 		/// <returns>True if <paramref name="pointer"/> is valid the free succeeded; false otherwise.</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		protected internal static bool Free(PointerSegment pointer, bool disposeManaged = true)
+		public static bool Free(PointerSegment pointer, bool disposeManaged = true)
 		{
 			StorageLocation location = pointer.Location;
 			bool result = default;
@@ -2019,6 +2019,36 @@ namespace Althea.Storage
 			return true;
 		}
 		#endregion
+		#endregion
+
+
+		#region internal file manipulation
+		internal static AbstractApi? GetFirstImplCanFileTransfer(CombinationOfLocations locations)
+		{
+			var fileLocation = new StorageLocation(LocationType.Uri, (int)UriScheme.File);
+			CombinationOfLocations fileLocations = fileLocation;
+			bool CheckLocation(AbstractApi api) => api.IsSupportedLocation(fileLocation) && api.IsSupportedBinary(fileLocations, locations);
+
+			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
+			while (node is not null)
+			{
+				if (CheckLocation(node.Value))
+					return node.Value;
+				node = SelectImplementation(RecentAPIs, CheckLocation, node);
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, create a local file at <paramref name="path"/> with <paramref name="lengthInBytes"/>
+		/// </summary>
+		/// <param name="path">The file path and name of the file to create</param>
+		/// <param name="lengthInBytes">The length which is going to be written into</param>
+		/// <returns>The created <see cref="PointerSegment"/> as the handle of the local file</returns>
+		/// <remarks>It is not necessary to pre-allocate <paramref name="lengthInBytes"/> bytes, this parameter only indicates the bytes which is going to be written into.<br/>
+		/// This method will only be invoked internally.</remarks>
+		/// <exception cref="ArgumentException">If <paramref name="path"/> is invalid or the file cannot be crated</exception>
+		protected internal abstract PointerSegment AllocateFileAt(string path, long lengthInBytes);
 		#endregion
 	}
 }

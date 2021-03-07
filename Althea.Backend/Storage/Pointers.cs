@@ -11,9 +11,6 @@ using Althea.Storage;
 using Althea.Resources;
 
 
-[assembly: CLSCompliant(true)]
-
-
 namespace Althea.Backend.Storage
 {
 	/// <summary>
@@ -21,6 +18,7 @@ namespace Althea.Backend.Storage
 	/// </summary>
 	public class MemoryPointer : IMemoryPointer
 	{
+		#region basic
 		/// <summary>
 		/// The native pointer of this <see cref="MemoryPointer"/> as a <see cref="IntPtr"/>
 		/// </summary>
@@ -68,6 +66,7 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer, this.Location);
+		#endregion
 	}
 
 	/// <summary>
@@ -75,10 +74,11 @@ namespace Althea.Backend.Storage
 	/// </summary>
 	public class StreamPointer : IStreamPointer
 	{
+		#region basic
 		/// <summary>
-		/// Get the native stream this <see cref="StreamPointer"/> as a <see cref="Althea.Storage.Stream"/>.
+		/// Get the native stream this <see cref="StreamPointer"/> as a <see cref="Stream"/>.
 		/// </summary>
-		public Althea.Storage.Stream NativeStream { get; }
+		public Stream NativeStream { get; }
 
 		/// <summary>
 		/// The storage location of this <see cref="MemoryPointer"/> as a <see cref="StorageLocation"/>
@@ -86,12 +86,12 @@ namespace Althea.Backend.Storage
 		public StorageLocation Location { get; }
 
 		/// <summary>
-		/// Create this <see cref="StreamPointer"/> by given <see cref="Althea.Storage.Stream"/>
+		/// Create this <see cref="StreamPointer"/> by given <see cref="Stream"/>
 		/// </summary>
-		/// <param name="stream">The given <see cref="Althea.Storage.Stream"/></param>
+		/// <param name="stream">The given <see cref="Stream"/></param>
 		/// <param name="location">The <see cref="StorageLocation"/> of this <see cref="StreamPointer"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="location"/>'s <see cref="LocationType"/> is not a stream type</exception>
-		public StreamPointer(Althea.Storage.Stream stream, StorageLocation location)
+		public StreamPointer(Stream stream, StorageLocation location)
 		{
 			if (location.Type.GetClassification() != LocationTypeExtension.ClassStream)
 				throw new ArgumentOutOfRangeException(nameof(location), location, Parameter.UnexpectedValue);
@@ -127,13 +127,14 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
 		public override int GetHashCode() => HashCode.Combine(this.NativeStream, this.Location);
+		#endregion
 	}
 
 
 	/// <summary>
-	/// An implementation of <see cref="Althea.Storage.Stream"/> for files.
+	/// An implementation of <see cref="Stream"/> for files.
 	/// </summary>
-	public sealed class FileStream : Althea.Storage.Stream
+	public sealed class FileStream : Stream
 	{
 		#region basic
 		private readonly System.IO.FileStream stream;
@@ -141,7 +142,7 @@ namespace Althea.Backend.Storage
 		/// <summary>
 		/// Get or set the position (offset) in bytes of this <see cref="FileStream"/>
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Althea.Storage.Stream.Length"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Stream.Length"/></exception>
 		public override long Position {
 			get => this.stream.Position;
 			set => this.stream.Seek(value, SeekOrigin.Begin);
@@ -464,9 +465,9 @@ namespace Althea.Backend.Storage
 	}
 
 	/// <summary>
-	/// An implementation of <see cref="Althea.Storage.Stream"/> for TCP links.
+	/// An implementation of <see cref="Stream"/> for TCP links.
 	/// </summary>
-	public sealed class TcpStream : Althea.Storage.Stream
+	public sealed class TcpStream : Stream
 	{
 		#region basic
 		private readonly NetworkStream stream;
@@ -482,7 +483,7 @@ namespace Althea.Backend.Storage
 		/// <summary>
 		/// Get or set the position (offset) in bytes of this <see cref="TcpStream"/>
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Althea.Storage.Stream.Length"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Stream.Length"/></exception>
 		public override long Position { get; set; } = 0;
 
 		/// <summary>

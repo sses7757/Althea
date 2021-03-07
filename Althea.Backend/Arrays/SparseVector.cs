@@ -70,7 +70,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static SparseMatrix<T, TInd> CheckWrapper(long rows, long cols, T def, SparseArrayWrapper<T> wrapper)
+		internal static Althea.Arrays.SparseMatrix<T, TInd> CheckWrapper(long rows, long cols, T def, SparseArrayWrapper<T> wrapper)
 		{
 			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
@@ -84,10 +84,17 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[1], Resources.Parameter.UnexpectedType);
 			if (wrapper.ValueStorage.Length > rows * cols)
 				throw new ArgumentException(Resources.Parameter.WrongSize);
-			if ((wrapper.MatrixFormat & FormatExtension.NonBlocked) != wrapper.MatrixFormat)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
 
-			return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
+			if ((wrapper.MatrixFormat & FormatExtension.NonBlocked) == wrapper.MatrixFormat)
+				return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
+			else if ((wrapper.MatrixFormat & FormatExtension.Blocked) == wrapper.MatrixFormat)
+			{
+				if (wrapper.OtherInfo is not )
+					throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.OtherInfo, Resources.Parameter.UnexpectedType);
+
+			}
+			else
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
 		}
 		#endregion
 
@@ -167,7 +174,10 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC);
 			try
 			{
-				return CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				var res = CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				if (res is not SparseMatrix<T, TInd> ss)
+					throw new InvalidOperationException(Resources.Support.Format);
+				return ss;
 			}
 			catch (Exception)
 			{
@@ -176,7 +186,12 @@ namespace Althea.Backend.Arrays
 			}
 		}
 
-		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) => throw new NotImplementedException();
+		/// <summary>
+		/// Reshape the array to a tensor with dimensionality = <paramref name="size"/>.
+		/// </summary>
+		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
+		/// <returns>The reshaped tensor</returns>
+		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) { }
 		#endregion
 
 		#region linear algebra

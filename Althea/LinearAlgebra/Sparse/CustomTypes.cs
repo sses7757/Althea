@@ -75,11 +75,18 @@ namespace Althea.LinearAlgebra.Sparse
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public readonly struct SparseArrayWrapper<T> : IDisposable where T : unmanaged
 	{
+		/// <summary>
+		/// The interface to store the other information used by <see cref="SparseArrayWrapper{T}"/>
+		/// </summary>
+		public interface IOtherInfo : IReadOnlyList<object> { }
+
 		private readonly Storage<T> values;
 
 		private readonly SizedFixedClassBuffer_8<IStorage> indices;
 
 		private readonly int format;
+
+		private readonly IOtherInfo? info;
 
 		/// <summary>
 		/// Dispose this wrapper.
@@ -116,29 +123,37 @@ namespace Althea.LinearAlgebra.Sparse
 		public SparseMatrixFormat MatrixFormat => (SparseMatrixFormat)this.format;
 
 		/// <summary>
+		/// Get the <see cref="IOtherInfo"/> of this sparse array
+		/// </summary>
+		public IOtherInfo? OtherInfo => this.info;
+
+		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{T}"/> with given <paramref name="values"/>, <paramref name="indices"/> and <paramref name="format"/>
 		/// </summary>
 		/// <param name="values">The value array storage</param>
 		/// <param name="indices">The storages of index arrays</param>
 		/// <param name="format">The format as a <see cref="int"/></param>
-		public SparseArrayWrapper(Storage<T> values, IReadOnlyList<IStorage> indices, int format)
+		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
+		public SparseArrayWrapper(Storage<T> values, IReadOnlyList<IStorage> indices, int format, IOtherInfo? info = null)
 		{
-			this.values = values; this.indices = new SizedFixedClassBuffer_8<IStorage>(indices); this.format = format;
+			this.values = values; this.indices = new SizedFixedClassBuffer_8<IStorage>(indices); this.format = format; this.info = info;
 		}
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{T}"/> with the given sparse <paramref name="vector"/>
 		/// </summary>
 		/// <param name="vector">The given <see cref="ISparseVector{T}"/> used to create</param>
+		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
 		/// <returns>The <see cref="SparseArrayWrapper{T}"/> created from <paramref name="vector"/></returns>
-		public static SparseArrayWrapper<T> Create(ISparseVector<T> vector) => new(vector.Storage, vector, (int)vector.Format);
+		public static SparseArrayWrapper<T> Create(ISparseVector<T> vector, IOtherInfo? info = null) => new(vector.Storage, vector, (int)vector.Format, info);
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{T}"/> with the given sparse <paramref name="matrix"/>
 		/// </summary>
 		/// <param name="matrix">The given <see cref="ISparseMatrix{T}"/> used to create</param>
+		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
 		/// <returns>The <see cref="SparseArrayWrapper{T}"/> created from <paramref name="matrix"/></returns>
-		public static SparseArrayWrapper<T> Create(ISparseMatrix<T> matrix) => new(matrix.Storage, matrix, (int)matrix.Format);
+		public static SparseArrayWrapper<T> Create(ISparseMatrix<T> matrix, IOtherInfo? info = null) => new(matrix.Storage, matrix, (int)matrix.Format, info);
 	}
 	#endregion
 

@@ -1983,8 +1983,8 @@ namespace Althea.Linq
 		/// Check whether <paramref name="list1"/> and <paramref name="list2"/> contains same elements
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="list1">The set to check</param>
-		/// <param name="list2">The list to check</param>
+		/// <param name="list1">The first list to check</param>
+		/// <param name="list2">The second list to check</param>
 		/// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to use, default null means <see cref="EqualityComparer{T}.Default"/></param>
 		/// <returns></returns>
 		public static bool SetEquals<T>(this IReadOnlyList<T> list1, IReadOnlyList<T> list2, IEqualityComparer<T>? comparer = null)
