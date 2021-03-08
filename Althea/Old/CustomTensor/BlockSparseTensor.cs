@@ -363,7 +363,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			int partition = ArrayLinq.Range(0, this.Rank).MinBy(p => Math.Abs(this.SizeProd[p] - this.Length / this.SizeProd[p]));
 			using var matrix = this.Reshape(this.SizeProd[partition], this.Length / this.SizeProd[partition]);
 			long leadDim = matrix.Size[0];
-			var tensor = PureArrayFactory.Create<TTen, T>(matrix.Size, this.OnHost);
+			var tensor = ValueArrayFactory.Create<TTen, T>(matrix.Size, this.OnHost);
 			try
 			{
 				if (this.Rank == 2)
@@ -1694,7 +1694,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 			{
 				if (get)
 				{
-					value = PureArrayFactory.Reconstruct<TTen, T>(size.ToArray(),
+					value = ValueArrayFactory.Reconstruct<TTen, T>(size.ToArray(),
 						new Dictionary<string, IPointer>
 						{
 							[PointerName] = this.Pointer + this._blockOffset[find]
@@ -3433,7 +3433,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 		/// Get the pointer in the class-defined order.
 		/// </summary>
 		/// <returns>the pointers</returns>
-		public override IReadOnlyDictionary<string, IPointer> GetPointers()
+		public override IReadOnlyDictionary<string, IPointer> GetStorages()
 		{
 			return new Dictionary<string, IPointer>
 			{
@@ -3445,7 +3445,7 @@ namespace TensorCSharp.OneDimension.CustomTensor
 		/// Get other requisite informations for re-constructing this array, in the class-defined order
 		/// </summary>
 		/// <returns>other requisite informations</returns>
-		public override IReadOnlyDictionary<string, object> GetOtherInfo()
+		public override IReadOnlyDictionary<string, object> GetMetaData()
 		{
 			return new Dictionary<string, object>
 			{

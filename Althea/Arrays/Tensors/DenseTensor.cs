@@ -1117,13 +1117,13 @@ namespace Althea.Arrays
 		/// Get the pointers of this instance.
 		/// </summary>
 		/// <returns>the pointers</returns>
-		public override IReadOnlyDictionary<string, IStorage> GetPointers() => DenseTensorFactory.GetPointers(this);
+		public override IReadOnlyDictionary<string, IStorage> GetStorages() => DenseTensorFactory.GetPointers(this);
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing this array.
 		/// </summary>
 		/// <returns>other requisite informations</returns>
-		public override IReadOnlyDictionary<string, object> GetOtherInfo() => DenseTensorFactory.GetOtherInfo(this);
+		public override IReadOnlyDictionary<string, object> GetMetaData() => DenseTensorFactory.GetOtherInfo(this);
 		#endregion
 	}
 }

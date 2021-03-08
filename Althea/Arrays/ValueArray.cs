@@ -591,7 +591,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		/// <summary>
-		/// The pointer name that <b>shall</b> be used in <see cref="GetPointers"/>.
+		/// The pointer name that <b>shall</b> be used in <see cref="GetStorages"/>.
 		/// </summary>
 		public const string StorageName = nameof(Storage);
 
@@ -599,13 +599,13 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get all the storages of this array. The <see cref="Storage"/> must be associated with key <see cref="StorageName"/>.
 		/// </summary>
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public abstract IReadOnlyDictionary<string, IStorage> GetPointers();
+		public abstract IReadOnlyDictionary<string, IStorage> GetStorages();
 
 		/// <summary>
 		/// When implemented by a derived class, get other requisite informations for re-constructing the array of that derived class type.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
-		public abstract IReadOnlyDictionary<string, object> GetOtherInfo();
+		public abstract IReadOnlyDictionary<string, object> GetMetaData();
 		#endregion
 	}
 }

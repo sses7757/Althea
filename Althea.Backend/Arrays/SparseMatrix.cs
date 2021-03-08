@@ -1165,7 +1165,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// The helper method used by <see cref="Althea.Arrays.SparseMatrix{T, TInd}.GetPointers"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
+		/// The helper method used by <see cref="Althea.Arrays.SparseMatrix{T, TInd}.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
 		/// </summary>
 		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse matrix</param>
 		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>

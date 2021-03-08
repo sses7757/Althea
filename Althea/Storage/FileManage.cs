@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Collections;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -52,14 +53,14 @@ namespace Althea.Storage
 				StorageLocation[]? locations = null;
 				while (reader.Read())
 				{
-					if (reader.TokenType != JsonTokenType.PropertyName)
-						throw new JsonException();
 					if (reader.TokenType == JsonTokenType.EndObject)
 					{
 						if (type == default || locations is null || locations.Length == 0)
 							throw new JsonException(Resources.Parameter.WrongSize);
 						return new CombinationOfLocations(type, locations);
 					}
+					if (reader.TokenType != JsonTokenType.PropertyName)
+						throw new JsonException();
 					switch (reader.GetString())
 					{
 						case Type:
@@ -134,14 +135,14 @@ namespace Althea.Storage
 				long lengthInBytes = 0;
 				while (reader.Read())
 				{
-					if (reader.TokenType != JsonTokenType.PropertyName)
-						throw new JsonException();
 					if (reader.TokenType == JsonTokenType.EndObject)
 					{
 						if (lengthInBytes == 0 || location == default)
 							throw new JsonException(Resources.Parameter.WrongSize);
 						return new PointerSegment(new TempPointer { LengthInBytes = lengthInBytes, Location = location });
 					}
+					if (reader.TokenType != JsonTokenType.PropertyName)
+						throw new JsonException();
 					switch (reader.GetString())
 					{
 						case Location:
@@ -203,13 +204,13 @@ namespace Althea.Storage
 				bool success = false;
 				while (reader.Read())
 				{
-					if (reader.TokenType != JsonTokenType.PropertyName)
-						throw new JsonException();
 					if (reader.TokenType == JsonTokenType.EndObject)
 					{
 						success = true;
 						break;
 					}
+					if (reader.TokenType != JsonTokenType.PropertyName)
+						throw new JsonException();
 					switch (reader.GetString())
 					{
 						case DataType:
@@ -317,10 +318,10 @@ namespace Althea.Storage
 	#endregion
 
 	#region array head
-	internal record ArrayInfo
+	internal record ArrayInfo : IDisposable
 	{
 		[JsonConstructor]
-		public ArrayInfo(Type type, long[] size, Dictionary<string, object> metaData, Dictionary<string, IStorage> storages, Dictionary<string, byte[]>? checkSums)
+		public ArrayInfo(Type type, long[] size, IReadOnlyDictionary<string, object>? metaData, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, byte[]>? checkSums)
 		{
 			try
 			{
@@ -328,8 +329,6 @@ namespace Althea.Storage
 					throw new ArgumentNullException(nameof(type));
 				if (size is null || size.Length == 0)
 					throw new ArgumentNullException(nameof(size));
-				if (metaData is null)
-					throw new ArgumentNullException(nameof(metaData));
 				if (storages is null || storages.Count == 0)
 					throw new ArgumentNullException(nameof(storages));
 				if (checkSums is not null && checkSums.Count != storages.Count)
@@ -355,12 +354,56 @@ namespace Althea.Storage
 
 		// string-keyed dictionary can be automatically serialized and deserialized by System.Text.Json
 		// the objects must has [JsonConverter(...)] or can be converted by internal converters
-		public Dictionary<string, object> MetaData { get; }
+		public IReadOnlyDictionary<string, object>? MetaData { get; }
 
 		// string-keyed dictionary can be automatically serialized and deserialized by System.Text.Json
-		public Dictionary<string, IStorage> Storages { get; }
+		public IReadOnlyDictionary<string, IStorage> Storages { get; }
 
-		public Dictionary<string, byte[]>? CheckSums { get; }
+		public IReadOnlyDictionary<string, byte[]>? CheckSums { get; }
+
+		public void Dispose()
+		{
+			if (this.Storages is null)
+				return;
+			foreach (var kv in this.Storages)
+			{
+				kv.Value?.Dispose();
+			}
+		}
+	}
+	#endregion
+
+	#region storage stream
+	internal sealed class StorageStream : Stream
+	{
+		private readonly Storage<byte> storage;
+
+		private long offset = 0;
+
+		public StorageStream(IStorage storage) => this.storage = storage.AsByteStorage();
+
+		public override bool CanRead => this.storage.IsOffsetValid(offset);
+
+		public override bool CanSeek => true;
+
+		public override bool CanWrite => this.storage.IsOffsetValid(offset);
+
+		public override long Length => this.storage.Length;
+
+		public override long Position {
+			get => this.offset;
+			set => this.offset = Math.Min(value, this.storage.Length);
+		}
+
+		public override long Seek(long offset, SeekOrigin origin) => this.Position = offset;
+
+		public override void SetLength(long value) => throw new InvalidOperationException();
+
+		public override void Flush() { }
+
+		public override int Read(byte[] buffer, int offset, int count) => (int)MEM.ToManaged(this.storage + offset, new Span<byte>(buffer, offset, count));
+
+		public override void Write(byte[] buffer, int offset, int count) => MEM.FromManaged(this.storage + offset, new Span<byte>(buffer, offset, count));
 	}
 	#endregion
 
@@ -371,6 +414,7 @@ namespace Althea.Storage
 	{
 		private const string PointerExtension = ".ptr", HeadFileName = "head.json";
 
+		#region write to file
 		private static void WriteFile(string folder, string name, IStorage storage)
 		{
 			long length = storage.LengthInBytes;
@@ -380,15 +424,9 @@ namespace Althea.Storage
 			if (storageAPI is null)
 			{
 				Directory.CreateDirectory(folder);
-				using var file = File.Create(path, 1 << 16);
-				byte[] buffer = new byte[1 << 16];
-				long offset = 0;
-				while (offset < length)
-				{
-					long copied = MEM.ToManaged(byteStorage + offset, buffer);
-					file.Write(buffer, 0, (int)copied);
-					offset += copied;
-				}
+				using var file = File.Create(path);
+				using var storageStream = new StorageStream(storage);
+				storageStream.CopyTo(file);
 			}
 			else
 			{
@@ -405,15 +443,15 @@ namespace Althea.Storage
 			}
 		}
 
-		private unsafe static IReadOnlyList<KeyValuePair<string, byte[]>> CheckCode(IReadOnlyDictionary<string, IStorage> pointers)
+		private unsafe static IReadOnlyDictionary<string, byte[]> CheckCode(IReadOnlyDictionary<string, IStorage> pointers)
 		{
-			var hash = new List<KeyValuePair<string, byte[]>>();
+			var hash = new Dictionary<string, byte[]>(pointers.Count);
 			using var sha = System.Security.Cryptography.SHA512.Create();
 			//sha.Initialize();
 			foreach (var item in pointers)
 			{
-				using var stream = new UnmanagedMemoryStream((byte*)item.Value.Ptr, item.Value.LengthInBytes);
-				hash.Add(new KeyValuePair<string, byte[]>(item.Key, sha.ComputeHash(stream)));
+				using var stream = new StorageStream(item.Value);
+				hash.Add(item.Key, sha.ComputeHash(stream));
 			}
 			return hash;
 		}
@@ -430,7 +468,7 @@ namespace Althea.Storage
 		/// <exception cref="IOException">if the target folder already contains file(s)</exception>
 		public static string ToFile<T>(this ValueArray<T> array, string? folder = null, bool check = false, bool compress = false) where T : unmanaged, IFormattable, IEquatable<T>
 		{
-			return ToFileAsync(array, folder, check, compress).GetAwaiter().GetResult();
+			return ToFileAsync(array, folder, check, compress).Result;
 		}
 
 		/// <summary>
@@ -468,6 +506,18 @@ namespace Althea.Storage
 			}
 		}
 
+		private static readonly JsonSerializerOptions Options = new()
+		{
+			WriteIndented = true,
+			Converters =
+			{
+				new TypeConverter(),
+				new LocationDescriptionConverter(),
+				new PointerSegmentConverter(),
+				new IStorageConverter()
+			}
+		};
+
 		/// <summary>
 		/// Save the target <paramref name="array"/> to file with relative or absolute folder path <paramref name="folder"/> asynchronously.
 		/// </summary>
@@ -478,7 +528,7 @@ namespace Althea.Storage
 		/// <param name="compress">Whether to compress the result folder as a .zip file or remains it a folder</param>
 		/// <returns>the folder / file name</returns>
 		/// <exception cref="IOException">if the target folder already contains file(s)</exception>
-		public static string ToFileAsync<T>(this ValueArray<T> array, string? folder = null, bool check = false, bool compress = false) where T : unmanaged, IFormattable, IEquatable<T>
+		public static async Task<string> ToFileAsync<T>(this ValueArray<T> array, string? folder = null, bool check = false, bool compress = false) where T : unmanaged, IFormattable, IEquatable<T>
 		{
 			if (array is null || array.Length == 0)
 				throw new ArgumentNullException(nameof(array));
@@ -486,73 +536,65 @@ namespace Althea.Storage
 				folder = Path.GetRandomFileName();
 			CheckSaveFolder(folder);
 
-			// need on host for the following
-			var host = array.OnHost ? array : array.ToTheOtherMemory();
-			try
+			// calculate checksum
+			Dictionary<string, byte[]>? checksums = null;
+			if (check)
 			{
-				// calculate check code
-				IReadOnlyDictionary<string, byte[]> check = null;
-				if (overrideCheck.Value)
-				{
-					var checkList = await Task.Run(() => CheckCode(host.GetPointers()));
-					check = new Dictionary<string, byte[]>(checkList);
-				}
-				// create head info
-				var info = new ArrayHeadInfo(array.GetType(), array.Size, array.GetOtherInfo(), array.OnHost, check);
-				// write head as JSON
-				var head = Newtonsoft.Json.JsonConvert.SerializeObject(info, Newtonsoft.Json.Formatting.Indented);
-				File.WriteAllText(Path.Join(folder, HeadFileName), head);
-				// write pointers
-				foreach (var item in host.GetPointers())
-				{
-					await Task.Run(() => WriteFile(folder, item.Key, item.Value));
-				}
-				// compress if needed
-				if (compress)
-				{
-					var file = Path.TrimEndingDirectorySeparator(folder) + ".zip";
-					await Task.Run(() => ZipFile.CreateFromDirectory(folder, file, CompressionLevel.Optimal, false));
-					Directory.Delete(folder, true);
-					return file;
-				}
-				// return
-				return folder;
+				var checkList = await Task.Run(() => CheckCode(array.GetStorages()));
+				checksums = new Dictionary<string, byte[]>(checkList);
 			}
-			finally
+			// create head info
+			var info = new ArrayInfo(array.GetType(), array.Size.ToArray(), array.GetMetaData(), array.GetStorages(), checksums);
+			// write head as JSON
+			var head = JsonSerializer.Serialize(info, Options);
+			File.WriteAllText(Path.Join(folder, HeadFileName), head);
+			// write pointers
+			foreach (var item in info.Storages)
 			{
-				if (!array.OnHost) host.Dispose();
+				await Task.Run(() => WriteFile(folder, item.Key, item.Value));
 			}
+			// compress if needed
+			if (compress)
+			{
+				var file = Path.TrimEndingDirectorySeparator(folder) + ".zip";
+				await Task.Run(() => ZipFile.CreateFromDirectory(folder, file, CompressionLevel.Optimal, false));
+				Directory.Delete(folder, true);
+				return file;
+			}
+			// return
+			return folder;
 		}
+		#endregion
 
 
+		#region read from file
 		/// <summary>
-		/// Read the saved folder / file back to a <see cref="PureArray{T}"/>
+		/// Read the saved folder / file back to a <see cref="ValueArray{T}"/> synchronously
 		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="folder">The folder or file name saved</param>
-		/// <param name="forceOnHost">default null means using the header file to identify the storage location (on host / on device); if a <see cref="bool"/> value is indicated, it will override the header file's info</param>
-		/// <returns>the <see cref="PureArray{T}"/> read from disk</returns>
+		/// <typeparam name="T">An unmanaged struct as data type</typeparam>
+		/// <param name="folder">The folder or file name previously saved</param>
+		/// <returns>The <see cref="ValueArray{T}"/> read from the file(s) in <paramref name="folder"/></returns>
 		/// <exception cref="IOException">if the check code and the file do not match</exception>
-		public static PureArray<T> FromFile<T>(this string folder, bool? forceOnHost = null) where T : struct, IComparable<T>
+		public static ValueArray<T> FromFile<T>(this string folder) where T : unmanaged, IFormattable, IEquatable<T>
 		{
-			return FromFileAsync<T>(folder, forceOnHost).GetAwaiter().GetResult();
+			return FromFileAsync<T>(folder).Result;
 		}
 
 		/// <summary>
-		/// Read the saved folder / file back to a <see cref="PureArray{T}"/>
+		/// Read the saved folder / file back to a <see cref="ValueArray{T}"/> asynchronously
 		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="folder">The folder or file name saved</param>
-		/// <param name="forceOnHost">default null means using the header file to identify the storage location (on host / on device); if a <see cref="bool"/> value is indicated, it will override the header file's info</param>
-		/// <returns>the <see cref="PureArray{T}"/> read from disk</returns>
+		/// <typeparam name="T">An unmanaged struct as data type</typeparam>
+		/// <param name="folder">The folder or file name previously saved</param>
+		/// <returns>The <see cref="ValueArray{T}"/> read from the file(s) in <paramref name="folder"/></returns>
 		/// <exception cref="IOException">if the check code and the file do not match</exception>
-		public async static Task<PureArray<T>> FromFileAsync<T>(this string folder, bool? forceOnHost = null) where T : struct, IComparable<T>
+		public async static Task<ValueArray<T>> FromFileAsync<T>(this string folder) where T : unmanaged, IFormattable, IEquatable<T>
 		{
 			if (string.IsNullOrWhiteSpace(folder))
 				throw new ArgumentNullException(nameof(folder));
 			CheckLoadFolder(folder);
 
 			string orgFolder = folder;
+			ArrayInfo? head = null;
 			try
 			{
 				// decompress if needed
@@ -564,31 +606,34 @@ namespace Althea.Storage
 				}
 				// read head info
 				string json = File.ReadAllText(Path.Join(folder, HeadFileName));
-				var head = Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ArrayHeadInfo)) as ArrayHeadInfo;
+				head = JsonSerializer.Deserialize<ArrayInfo>(json, Options);
+				if (head is null)
+					throw new IOException(Resources.Other.CannotDeserialize);
 				// read pointers
-				var dict = new Dictionary<string, IStorage>();
-				foreach (var ptr in Directory.GetFiles(folder, "*" + PointerExtension))
+				foreach (var kv in head.Storages)
 				{
-					var key = Path.GetFileNameWithoutExtension(ptr);
-					var pointer = await Task.Run(() => ReadFile(ptr));
-					dict.Add(key, pointer);
+					string fileName = Path.Combine(folder, kv.Key + PointerExtension);
+					if (!File.Exists(fileName))
+						throw new FileNotFoundException(fileName);
+					await ReadFile(fileName, kv.Value);
 				}
 				// check pointers
-				if (!(head.check is null))
+				if (head.CheckSums is not null)
 				{
-					var check = CheckCode(dict);
-					var fileCheck = new List<KeyValuePair<string, byte[]>>(head.check);
-					if (check.Count != head.check.Count || check.Except(fileCheck, new StringBytesComparer()).Count != 0)
-						throw new IOException("Corrupted");
+					var check = CheckCode(head.Storages);
+					if (check.Count != head.CheckSums.Count)
+						throw new IOException(Resources.Exception.FileCorrupted);
+					var temp = System.Linq.Enumerable.Except(check, head.CheckSums, new StringBytesComparer());
+					if (System.Linq.Enumerable.Any(temp))
+						throw new IOException(Resources.Exception.FileCorrupted);
 				}
-				// to host array first
-				var hostArray = Array.PureArrayFactory.Reconstruct<T>(head.type, head.size, dict, otherInfo: head.otherInfo);
-				forceOnHost ??= head.onHost;
-				if (forceOnHost.Value)
-					return hostArray;
-				// else to device
-				using (hostArray)
-					return await Task.Run(() => hostArray.ToTheOtherMemory());
+				// to array
+				return ValueArrayFactory<T>.Create(head.Type, head.Size, head.Storages, head.MetaData);
+			}
+			catch (Exception)
+			{
+				head?.Dispose();
+				throw;
 			}
 			finally
 			{
@@ -598,17 +643,27 @@ namespace Althea.Storage
 			}
 		}
 
+		private static async Task ReadFile(string file, IStorage storage)
+		{
+			using var fileStream = File.OpenRead(file);
+			using var storageStream = new StorageStream(storage);
+			if (fileStream.Length != storageStream.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(file));
+			await fileStream.CopyToAsync(storageStream);
+		}
+
 		internal struct StringBytesComparer : IEqualityComparer<KeyValuePair<string, byte[]>>
 		{
 			public bool Equals([AllowNull] KeyValuePair<string, byte[]> x, [AllowNull] KeyValuePair<string, byte[]> y)
 			{
-				return x.Key == y.Key && x.Value.Length == y.Value.Length && x.Value.SequenceEqual(y.Value);
+				return x.Key == y.Key && x.Value.Length == y.Value.Length && new ReadOnlySpan<byte>(x.Value).SequenceEqual(y.Value);
 			}
 
 			public int GetHashCode([DisallowNull] KeyValuePair<string, byte[]> obj)
 			{
-				return HashCode.Combine(obj.Key, Encoding.ASCII.GetString(obj.Value).GetHashCode(CudaCSharpConverters.StrCmp));
+				return HashCode.Combine(obj.Key, Encoding.ASCII.GetString(obj.Value).GetHashCode());
 			}
 		}
+		#endregion
 	}
 }

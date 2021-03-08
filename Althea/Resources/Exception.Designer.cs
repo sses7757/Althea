@@ -61,6 +61,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given file&apos;s checksum mismatchaes with the known one, it may be corrupted. 的本地化字符串。
+        /// </summary>
+        internal static string FileCorrupted {
+            get {
+                return ResourceManager.GetString("FileCorrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Bunch-Kaufman factorization failed since matrix A (D) is singular, D({0}, {0}) = 0. 的本地化字符串。
         /// </summary>
         internal static string MatrixSolveBunchKaufman {

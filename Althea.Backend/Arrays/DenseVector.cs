@@ -331,13 +331,13 @@ namespace Althea.Backend.Arrays
 		/// Get all the storages of this array. Only returns the <see cref="ValueArray{T}.Storage"/>.
 		/// </summary>
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetPointers() => new Dictionary<string, IStorage> { [StorageName] = this.Storage };
+		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage> { [StorageName] = this.Storage };
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing the array of that derived class type.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array, an empty dictionary.</returns>
-		public override IReadOnlyDictionary<string, object> GetOtherInfo() => new Dictionary<string, object>(0);
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(0);
 		#endregion
 	}
 }

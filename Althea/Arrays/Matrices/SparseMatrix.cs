@@ -327,7 +327,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		/// <summary>
-		/// The helper method used by <see cref="GetPointers"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
+		/// The helper method used by <see cref="GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
 		/// </summary>
 		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse matrix</param>
 		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
@@ -346,7 +346,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get all the storages of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.Storage"/> and the index array(s) (whose names are from <see cref="IndexStorageNameOf(int)"/>) used to construct this sparse matrix. If there are exactly 2 index arrays, the default implementation only works correctly when they are (general) row and column index arrays respectively.
 		/// </summary>
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetPointers()
+		public override IReadOnlyDictionary<string, IStorage> GetStorages()
 		{
 			if (this.m_indexArrays.Count == 2)
 			{
@@ -364,7 +364,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="DefaultValue"/> and <see cref="Format"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this sparse matrix</returns>
-		public override IReadOnlyDictionary<string, object> GetOtherInfo() => new Dictionary<string, object>(2)
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)
 		{
 			[nameof(DefaultValue)] = this.m_defaultValue,
 			[nameof(Format)] = this.m_format,
