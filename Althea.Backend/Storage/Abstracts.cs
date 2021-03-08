@@ -191,7 +191,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
-		public virtual void SetValues<T>(T value, long length) where T : unmanaged
+		public virtual void SetValues<T>(T value, long length) where T : unmanaged, IEquatable<T>
 		{
 			if (length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
@@ -228,21 +228,15 @@ namespace Althea.Backend.Storage
 				}
 				// copy
 				long len = Math.Min(bufferSize, length);
-				var pointer = MEM.Allocate(location, len);
-				try
+				using var pointer = Storage<T>.Create(location, len);
+				MEM.FillWithValue(pointer, value);
+				while (len > 0)
 				{
-					MEM.FillWithValue(pointer, value);
-					while (len > 0)
-					{
-						if (len < pointer.LengthInBytes)
-							pointer = pointer.AsLength(len);
-						this.FromMemory(pointer);
-						len -= pointer.LengthInBytes;
-					}
-				}
-				finally
-				{
-					MEM.Free(pointer);
+					Storage<T> temp = pointer;
+					if (len < pointer.Length)
+						temp = pointer.MakeReference(newLength: len);
+					this.FromMemory(temp[0]);
+					len -= pointer.Length;
 				}
 			}
 			// flush at the end
@@ -303,21 +297,15 @@ namespace Althea.Backend.Storage
 				}
 				// copy
 				long len = Math.Min(bufferSize, length);
-				var pointer = MEM.Allocate(value, len);
-				try
+				using var pointer = Storage<byte>.Create(value, len);
+				while (len > 0)
 				{
-					while (len > 0)
-					{
-						if (len < pointer.LengthInBytes)
-							pointer = pointer.AsLength(len);
-						this.ToMemory(pointer);
-						other.FromMemory(pointer);
-						len -= pointer.LengthInBytes;
-					}
-				}
-				finally
-				{
-					MEM.Free(pointer);
+					Storage<byte> temp = pointer;
+					if (len < pointer.Length)
+						temp = pointer.MakeReference(newLength: len);
+					this.ToMemory(temp[0]);
+					other.FromMemory(temp[0]);
+					len -= pointer.Length;
 				}
 			}
 			// flush at the end

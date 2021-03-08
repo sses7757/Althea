@@ -300,7 +300,17 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The name of the index storage to be used when the sparse array only contains one index storage
 		/// </summary>
-		protected const string IndexStorageName = @"IndexStorage";
+		public const string IndexStorageName = @"IndexStorage";
+
+		/// <summary>
+		/// The presenting name of the <see cref="DefaultValue"/>.
+		/// </summary>
+		public const string DefaultValueName = nameof(DefaultValue);
+
+		/// <summary>
+		/// The presenting name of the <see cref="Format"/>.
+		/// </summary>
+		public const string FormatName = nameof(Format);
 
 		/// <summary>
 		/// When implemented by a derived class, get all the storages of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.Storage"/> and the index array(s) (whose names are from <see cref="IndexStorageNameOf(int)"/>) used to construct this sparse vector.
@@ -326,8 +336,8 @@ namespace Althea.Arrays
 		/// <returns>Other requisite informations used to re-construct this sparse vector.</returns>
 		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)
 		{
-			[nameof(DefaultValue)] = this.m_defaultValue,
-			[nameof(Format)] = this.m_format,
+			[DefaultValueName] = this.m_defaultValue,
+			[FormatName] = this.m_format,
 		};
 		#endregion
 	}

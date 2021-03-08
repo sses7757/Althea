@@ -114,6 +114,38 @@ namespace Althea.Helpers
 			}
 			return name;
 		}
+
+		internal static Type? GetTypeWithPostfix(this Type type, string postfix, int skipGeneric = 0)
+		{
+			Type[] generics = type.GenericTypeArguments;
+			string fullName = type.AssemblyQualifiedName ?? throw new ArgumentException(Parameter.UnexpectedValue, nameof(type));
+			int genericStart = fullName.IndexOf('`');
+			string postfixedName;
+			if (genericStart >= 0)
+			{
+				int genericEnd = fullName.IndexOf("]]");
+				if (genericEnd < 0)
+					throw new ArgumentException(Parameter.UnexpectedValue, nameof(type));
+				genericEnd += 2;
+				if (generics.Length > skipGeneric)
+				{
+					generics = generics[skipGeneric..];
+					var genericNames = generics.Select(static g => g.AssemblyQualifiedName).ToArray();
+					postfixedName = fullName[..genericStart] + $"`{generics.Length}[[{string.Join("],[", genericNames)}]]" + fullName[genericEnd..];
+				}
+				else
+				{
+					postfixedName = fullName[..genericStart] + fullName[genericEnd..];
+				}
+			}
+			else
+			{
+				postfixedName = fullName;
+			}
+			postfixedName += postfix;
+			// return
+			return Type.GetType(postfixedName) ?? throw new TypeAccessException();
+		}
 	}
 	#endregion
 

@@ -665,7 +665,7 @@ namespace Althea.Storage
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		public static PointerSegment Allocate(StorageLocation location, long length)
+		protected internal static PointerSegment Allocate(StorageLocation location, long length)
 		{
 			PointerSegment result = default;
 			bool success = false;
@@ -689,7 +689,7 @@ namespace Althea.Storage
 		/// <returns>The allocated pointer as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
-		public static PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged
+		protected internal static PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged
 		{
 			return Allocate(location, length * Storage<T>.SizeOfT);
 		}
@@ -701,7 +701,7 @@ namespace Althea.Storage
 		/// <param name="disposeManaged">Whether to dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
 		/// <returns>True if <paramref name="pointer"/> is valid the free succeeded; false otherwise.</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		public static bool Free(PointerSegment pointer, bool disposeManaged = true)
+		protected internal static bool Free(PointerSegment pointer, bool disposeManaged = true)
 		{
 			StorageLocation location = pointer.Location;
 			bool result = default;
@@ -724,7 +724,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="pointer"/> is invalid</exception>
-		public static void FillWithValue(PointerSegment pointer, byte value)
+		protected internal static void FillWithValue(PointerSegment pointer, byte value)
 		{
 			StorageLocation location = pointer.Location;
 			bool success = false;
@@ -746,7 +746,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="pointer"/> is invalid</exception>
-		public static void FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged
+		protected internal static void FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged
 		{
 			StorageLocation location = pointer.Location;
 			bool success = false;
@@ -769,7 +769,7 @@ namespace Althea.Storage
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		public static long MemoryCopy(PointerSegment source, PointerSegment destination)
+		protected internal static long MemoryCopy(PointerSegment source, PointerSegment destination)
 		{
 			CombinationOfLocations src = source.Location, dst = destination.Location;
 			long result = default;
@@ -804,7 +804,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="sourceLD"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		public static void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
+		protected internal static void MemoryCopy2D(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
 		{
 			CombinationOfLocations src = source.Location, dst = destination.Location;
 			bool success = false;
@@ -832,7 +832,7 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
-		public static long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged
+		protected internal static long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged
 		{
 			CombinationOfLocations src = source.Location, dst = destination.Location;
 			long result = default;
@@ -858,7 +858,7 @@ namespace Althea.Storage
 		/// <returns>The first element in <paramref name="source"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> is invalid</exception>
-		public static T ToManaged<T>(PointerSegment source) where T : unmanaged
+		protected internal static T ToManaged<T>(PointerSegment source) where T : unmanaged
 		{
 			CombinationOfLocations location = source.Location;
 			T result = default;
@@ -882,7 +882,7 @@ namespace Althea.Storage
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
-		public static void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged
+		protected internal static void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.Location;
 			bool success = false;
@@ -905,7 +905,7 @@ namespace Althea.Storage
 		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> is invalid</exception>
-		public static long ToManaged<T>(PointerSegment source, Span<T> destination) where T : unmanaged
+		protected internal static long ToManaged<T>(PointerSegment source, Span<T> destination) where T : unmanaged
 		{
 			CombinationOfLocations location = source.Location;
 			long result = default;
@@ -930,7 +930,7 @@ namespace Althea.Storage
 		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
-		public static long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values) where T : unmanaged
+		protected internal static long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.Location;
 			long result = default;
@@ -964,7 +964,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public static void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
+		protected internal static void ToManaged2D<T>(PointerSegment source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged
 		{
 			CombinationOfLocations location = source.Location;
 			bool success = false;
@@ -995,7 +995,7 @@ namespace Althea.Storage
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="Array.Length">Length</see>
 		/// </exception>
-		public static void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
+		protected internal static void FromManaged2D<T>(PointerSegment destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.Location;
 			bool success = false;

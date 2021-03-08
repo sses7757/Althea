@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Althea.Linq;
 using Althea.Arrays;
 using Althea.Helpers;
 using Althea.NativeTypes;
@@ -258,7 +257,7 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Create a new matrix with same properties as this one while the underlying storages are not filled. This implementation utilizes <see cref="Althea.Storage.StorageFactory{T}"/>.
 		/// </summary>
-		/// <returns>The new vector alike this one</returns>
+		/// <returns>The new matrix alike this one</returns>
 		public override DenseMatrix<T> NewArrayAlike()
 		{
 			var c = this.Storage.MakeReference(newLength: this.NRows * this.NCols).CreateAlike();
@@ -881,7 +880,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to replace from</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-		public void ReplaceBy(DenseMatrix<T> other)
+		public virtual void ReplaceBy(DenseMatrix<T> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -894,13 +893,13 @@ namespace Althea.Backend.Arrays
 
 		#region equality
 		/// <summary>
-		/// When implemented by a derived class, get the hash code this dense vector. The default implementation only takes <see cref="ValueArray{T}.Storage"/>'s hash code.
+		/// Get the hash code this dense matrix. The default implementation only takes the hash codes of <see cref="ValueArray{T}.Storage"/>, <see cref="LeadDim"/> and size.
 		/// </summary>
-		/// <returns>The hash code of <see cref="ValueArray{T}.Storage"/></returns>
+		/// <returns>The hash code of <see cref="ValueArray{T}.Storage"/>, <see cref="LeadDim"/> and size</returns>
 		public override int GetHashCode() => HashCode.Combine(this.Storage, this.LeadDim, this.NRows, this.NCols);
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/>.
+		/// Check whether this object is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/>.
 		/// </summary>
 		/// <param name="obj">The other object to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>
@@ -912,7 +911,7 @@ namespace Althea.Backend.Arrays
 
 		#region print
 		/// <summary>
-		/// Print out the vector.
+		/// Print out this dense matrix.
 		/// </summary>
 		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
 		/// <returns>The detailed string representation</returns>
@@ -947,7 +946,7 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// The print name of the <see cref="LeadDim"/>
 		/// </summary>
-		protected const string LeadDimName = @"LeadingDimension";
+		protected internal const string LeadDimName = @"LeadingDimension";
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing the array of that derived class type.

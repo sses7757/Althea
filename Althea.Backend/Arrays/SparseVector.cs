@@ -438,6 +438,15 @@ namespace Althea.Backend.Arrays
 		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse vector</param>
 		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
 		protected override string IndexStorageNameOf(int orderOfIndexStorage) => IndexStorageName;
+
+		/// <summary>
+		/// Get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="Althea.Arrays.SparseVector{T, TInd}.DefaultValue"/>.
+		/// </summary>
+		/// <returns>Other requisite informations used to re-construct this sparse vector.</returns>
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
+		{
+			[DefaultValueName] = this.DefaultValue,
+		};
 		#endregion
 	}
 }

@@ -398,13 +398,13 @@ namespace Althea.Arrays
 		protected enum StringTerms
 		{
 			/// <summary>
-			/// Add the term for the string representation of the current data type
+			/// Add the term for the string representation of the current data type(s)
 			/// </summary>
 			DataType,
 			/// <summary>
-			/// Add the term for the string representation of the current <see cref="Storage"/>
+			/// Add the term for the string representation of the all storages obtained from <see cref="GetStorages"/>
 			/// </summary>
-			Stroage,
+			Storages,
 			/// <summary>
 			/// Add the term for the string representation of the current presenting size
 			/// </summary>
@@ -414,49 +414,62 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the string representation of this array with new terms and existed ones (existed ones are shown at first).
 		/// </summary>
-		/// <param name="terms">The additional terms</param>
+		/// <param name="terms">The additional terms, null means all pairs in <see cref="GetMetaData"/></param>
 		/// <param name="include">The include terms, default null means all</param>
-		/// <returns>the string representation</returns>
+		/// <returns>The string representation</returns>
 		protected string ToString(IReadOnlyDictionary<string, object>? terms, params StringTerms[] include)
 		{
 			// default values
 			if (include is null || include.Length == 0)
-				include = new[] { StringTerms.DataType, StringTerms.Stroage, StringTerms.Size };
-			if (terms is null)
-				terms = new Dictionary<string, object>(0);
+				include = new[] { StringTerms.DataType, StringTerms.Size, StringTerms.Storages };
+			terms ??= this.GetMetaData();
 			// get type name of this array
 			var type = this.GetType();
 			string? name;
 			if (include.Contains(StringTerms.DataType))
 			{
-				name = type.GetGenericString();
+				name = type.GetGenericString(full: true);
 			}
 			else
 			{
-				name = type.Name;
+				name = type.FullName;
 				if (type.IsGenericType)
 				{
-					name = name.Replace($"`{type.GenericTypeArguments.Length}", "");
+					name = name?.Replace($"`{type.GenericTypeArguments.Length}", "");
 				}
 			}
 			// output include terms and other terms
 			StringBuilder output = new(name);
-			output.Append(this.Disposed ? " (disposed) " : " ").Append('[');
+			output.Append(this.Disposed ? " (disposed) " : " ");
+			// start
+			output.Append('[');
 			foreach (var item in include)
 			{
-				output.Append(item switch
+				if (item == StringTerms.Size)
 				{
-					StringTerms.Stroage => $"value_storage={{{this.Storage}}}",
-					StringTerms.Size => $"size={string.Join('x', this.m_size)}",
-					_ => "",
-				});
+					output.Append($"Size={string.Join('x', this.m_size)}");
+				}
+				else if (item == StringTerms.Storages)
+				{
+					output.Append('{');
+					foreach (var s in this.GetStorages())
+					{
+						output.Append(s.Key).Append("={").Append(s.Value).Append("}, ");
+					}
+					output.Remove(output.Length - 2, 2).Append('}');
+				}
+				else
+					continue;
 				output.Append(", ");
 			}
+			// other terms
 			foreach (var item in terms)
 			{
 				output.Append(item.Key).Append('=').Append(item.Value).Append(", ");
 			}
-			output.Remove(output.Length - 2, 2).Append(']');
+			output.Remove(output.Length - 2, 2);
+			// end
+			output.Append(']');
 			return output.ToString();
 		}
 

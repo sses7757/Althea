@@ -283,13 +283,13 @@ namespace Althea.Backend.Arrays
 
 		#region equality
 		/// <summary>
-		/// When implemented by a derived class, get the hash code this dense vector. The default implementation only takes <see cref="ValueArray{T}.Storage"/>'s hash code.
+		/// Get the hash code this dense vector. The default implementation only takes <see cref="ValueArray{T}.Storage"/>'s hash code.
 		/// </summary>
 		/// <returns>The hash code of <see cref="ValueArray{T}.Storage"/></returns>
 		public override int GetHashCode() => this.Storage.GetHashCode();
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/>.
+		/// Check whether this object is equal to another one. The default implementation only compares <see cref="ValueArray{T}.Storage"/>.
 		/// </summary>
 		/// <param name="obj">The other object to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>

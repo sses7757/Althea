@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+using Althea.Helpers;
+
 
 namespace Althea.Arrays
 {
@@ -28,7 +30,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">An unmanaged struct as the data type</typeparam>
 	public static class ValueArrayFactory<T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
-		#region private helper
+		#region caching
 		internal delegate ValueArray<T> DelegateCreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null);
 
 		private static readonly Dictionary<RuntimeTypeHandle, DelegateCreateArray> static_cache = new();
@@ -50,12 +52,7 @@ namespace Althea.Arrays
 			// else, cache miss
 			if (!type.IsAssignableTo(typeof(ValueArray<T>)) || type.IsAbstract)
 				throw new TypeAccessException();
-			string fullName = type.AssemblyQualifiedName ?? throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(type));
-			int find = fullName.IndexOf('`');
-			if (find >= 0)
-				fullName = fullName.Substring(0, find);
-			fullName += "Factory"; // the factory name
-			var factoryType = Type.GetType(fullName);
+			var factoryType = type.GetTypeWithPostfix(postfix: "Factory", skipGeneric: 1);
 			if (!typeof(IArrayFactory).IsAssignableFrom(factoryType))
 				throw new TypeAccessException();
 			var factoryInstance = Activator.CreateInstance(factoryType) ?? throw new TypeInitializationException(factoryType.FullName, null);
@@ -77,7 +74,7 @@ namespace Althea.Arrays
 		/// <param name="storages">All the storage(s) of the array(s) of the <see cref="ValueArray{T}"/> about to create, one of which must be <see cref="ValueArray{T}.StorageName"/></param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetMetaData"/></param>
 		/// <returns>The reconstructed <see cref="ValueArray{T}"/> of the type <typeparamref name="TArray"/></returns>
-		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" in the same naming space.</remarks>
+		/// <remarks>If <typeparamref name="TArray"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" in the same naming space while the second and more generic type arguments are preserved.</remarks>
 		/// <exception cref="TypeAccessException">If <typeparamref name="TArray"/>'s factory is not a sub-class of <see cref="IArrayFactory"/></exception>
 		/// <exception cref="TypeLoadException">If <typeparamref name="TArray"/>'s factory cannot be loaded</exception>
 		/// <exception cref="TypeInitializationException">If <typeparamref name="TArray"/>'s factory cannot be created with parameterless constructor</exception>
@@ -98,7 +95,7 @@ namespace Althea.Arrays
 		/// <param name="storages">All the storage(s) of the array(s) of the <see cref="ValueArray{T}"/> about to create, one of which must be <see cref="ValueArray{T}.StorageName"/></param>
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetMetaData"/></param>
 		/// <returns>The reconstructed <see cref="ValueArray{T}"/> of <paramref name="type"/></returns>
-		/// <remarks>If <paramref name="type"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" in the same naming space.</remarks>
+		/// <remarks>If <paramref name="type"/> is a user-defined class that inherits <see cref="ValueArray{T}"/>, its factory must also be created with the same class name and a postfix "Factory" in the same naming space while the second and more generic type arguments are preserved.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="type"/> is null</exception>
 		/// <exception cref="TypeAccessException">If <paramref name="type"/>'s factory is not a sub-class of <see cref="IArrayFactory"/></exception>
 		/// <exception cref="TypeLoadException">If <paramref name="type"/>'s factory cannot be loaded</exception>
