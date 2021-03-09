@@ -51,8 +51,143 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region basic indexers
+		#region normal dense matrix conversions
+		/// <summary>
+		/// Copy the stored upper or the lower part to the other part according to <see cref="StoredUpper"/> in-place to make this matrix a normal one, just like <see cref="DenseMatrix{T}"/>
+		/// </summary>
+		public void ToNormal()
+		{
+			LAD.MatrixCopyUpperLowerParts(this.StoredUpper, this.Hermitian, this.NRows, this.Storage, this.LeadDim);
+		}
 
+		/// <summary>
+		/// Overwrite this symmetric dense matrix using a given <paramref name="normal"/> dense matrix
+		/// </summary>
+		/// <param name="normal">The normal <see cref="DenseMatrix{T}"/> used to get </param>
+		/// <param name="positiveDefinite">Whether this matrix shall be a positive definite one after exit or simply symmetric / hermitian</param>
+		/// <param name="op">The simple operation to apply to <paramref name="normal"/> before the calculation as a <see cref="MatrixOperation"/></param>
+		/// <remarks><list type="table">
+		///  <listheader><term>(<paramref name="positiveDefinite"/>, <see cref="Hermitian"/>)</term>  <description>Actual Operation</description></listheader>
+		/// <item><term>(false, false)</term>  <description>0.5 * (<paramref name="normal"/> + <paramref name="normal"/>^T)</description></item>
+		/// <item><term>(false, true)</term>  <description>0.5 * (<paramref name="normal"/> + <paramref name="normal"/>^H)</description></item>
+		/// <item><term>(true, false)</term>  <description>(<paramref name="normal"/> * <paramref name="normal"/>^T)</description></item>
+		/// <item><term>(true, true)</term>  <description>(<paramref name="normal"/> * <paramref name="normal"/>^H)</description></item>
+		/// </list></remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="normal"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="normal"/> is not a square matrix when <paramref name="positiveDefinite"/> is false; or <paramref name="normal"/> has incompatible size</exception>
+		public void FromNormal(DenseMatrix<T> normal, bool positiveDefinite = false, MatrixOperation op = MatrixOperation.None)
+		{
+			if (normal is null || !normal.IsValid())
+				throw new ArgumentNullException(nameof(normal));
+			if (!positiveDefinite && normal.NRows != normal.NCols)
+				throw new ArgumentException(Resources.Other.MatrixSquare, nameof(normal));
+			if ((op.CanInPlace() ? normal.NRows : normal.NCols) != this.NRows)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(normal));
+
+			if (normal is SymmetricDenseMatrix<T> symm)
+			{
+				if (this.Hermitian == symm.Hermitian && this.StoredUpper == symm.StoredUpper && !positiveDefinite)
+				{
+					MEM.MemoryCopy2D(symm.Storage, symm.LeadDim, this.Storage, this.LeadDim, this.NRows, this.NRows);
+					return;
+				}
+				// else
+				symm.ToNormal();
+			}
+			if (positiveDefinite)
+			{
+				LAD.RankKUpdate(this.StoredUpper, op, this.Hermitian, this.NRows, op.CanInPlace() ? normal.NCols : normal.NRows,
+								Scalars<T>.One, normal.Storage, normal.LeadDim,
+								Scalars<T>.Zero, this.Storage, this.LeadDim);
+			}
+			else
+			{
+				LAD.GeneralMatricesAdd(op, op.Transpose(), this.NRows, this.NRows,
+									   Scalars<T>.Half, normal.Storage, normal.LeadDim,
+									   Scalars<T>.Half, normal.Storage, normal.LeadDim,
+									   this.Storage, this.LeadDim);
+			}
+		}
+		#endregion
+
+		#region basic indexers
+		/// <summary>
+		/// Get a sub-matrix by the row and column index ranges.
+		/// </summary>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <returns>The sub-matrix (may be a referenced one) in the region indicated by the ranges</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		public override DenseMatrix<T> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
+		{
+			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			if (offsetRow == offsetCol && countRow == countCol)
+			{
+				return new SymmetricDenseMatrix<T>(this.Storage + ((offsetRow + 1) * this.LeadDim), countRow, this.LeadDim, this.Hermitian, this.StoredUpper);
+			}
+			else
+			{
+				this.ToNormal();
+				return base.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
+			}
+		}
+
+		/// <summary>
+		/// Get a sub-matrix by the row and column index ranges and copy it to <paramref name="overwrite"/>.
+		/// </summary>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to be overwritten</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
+		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
+		{
+			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			if (overwrite is null || !overwrite.IsValid())
+				throw new ArgumentNullException(nameof(overwrite));
+			if (overwrite is not DenseMatrix<T> dense)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
+			if (dense.NRows < countRow || dense.NCols < countCol)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
+
+			if (offsetRow == offsetCol && countRow == countCol &&
+				overwrite is SymmetricDenseMatrix<T> symm && this.Hermitian == symm.Hermitian && this.StoredUpper == symm.StoredUpper)
+			{
+				MEM.MemoryCopy2D(this.Storage + ((offsetRow + 1) * this.LeadDim), this.LeadDim, symm.Storage, symm.LeadDim, countRow, countRow);
+			}
+			else
+			{
+				this.ToNormal();
+				base.GetSubmatrix(offsetRow, countRow, offsetCol, countCol, overwrite);
+			}
+		}
+
+		/// <summary>
+		/// Set a sub-matrix by the row and column starting index (inclusive).
+		/// </summary>
+		/// <param name="rowStart">The <see cref="long"/> to indicate the starting row index to set</param>
+		/// <param name="columnStart">The <see cref="long"/> to indicate the starting column index to set</param>
+		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="rowStart"/>, <paramref name="columnStart"/>)</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowStart"/> or <paramref name="columnStart"/> and <paramref name="value"/>'s <see cref="MatrixBase{T}.NRows"/> or <see cref="MatrixBase{T}.NCols"/> are out of range</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="rowStart"/> != <paramref name="columnStart"/> or <paramref name="value"/> is not a <see cref="SymmetricDenseMatrix{T}"/></exception>
+		public override void SetSubmatrix(long rowStart, long columnStart, MatrixBase<T> value)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			this.CheckRange(rowStart, columnStart, value.NRows, value.NCols);
+
+			if (rowStart == columnStart && value is SymmetricDenseMatrix<T> symm && this.Hermitian == symm.Hermitian && this.StoredUpper == symm.StoredUpper)
+			{
+				MEM.MemoryCopy2D(symm.Storage, symm.LeadDim, this.Storage + ((rowStart + 1) * this.LeadDim), this.LeadDim, symm.NRows, symm.NRows);
+			}
+			else
+				throw new InvalidOperationException();
+		}
 
 		/// <summary>
 		/// Get or set the element at the given position (<paramref name="x"/>, <paramref name="y"/>)
@@ -193,6 +328,257 @@ namespace Althea.Backend.Arrays
 		{
 			var c = this.Storage.MakeReference(newLength: this.NRows * this.NCols).CreateAlike<TOut>();
 			return new SymmetricDenseMatrix<TOut>(c, this.NRows, this.NRows, this.Hermitian, this.StoredUpper);
+		}
+		#endregion
+
+		#region reshape
+		/// <summary>
+		/// Reshape this array to a vector
+		/// </summary>
+		/// <returns>The vector reshaped from this array</returns>
+		public override DenseVector<T> ToVector()
+		{
+			this.ToNormal();
+			return base.ToVector();
+		}
+
+		/// <summary>
+		/// Reshape this matrix to a matrix with leading dimension = <paramref name="rows"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <returns>The reshaped matrix, may be this matrix itself</returns>
+		/// <exception cref="InvalidOperationException">If the computed new number of rows or columns is 1</exception>
+		public override DenseMatrix<T> ToMatrix(long rows = 0)
+		{
+			Span<long> newSize = stackalloc long[2];
+			newSize[0] = rows;
+			CheckSize(this, newSize);
+			if (newSize[0] == this.NRows)
+				return this;
+			// else
+			this.ToNormal();
+			return base.ToMatrix(newSize[0]);
+		}
+
+		/// <summary>
+		/// Reshape the array to a tensor with dimensionality = <paramref name="size"/>.
+		/// </summary>
+		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
+		/// <returns>The reshaped tensor</returns>
+		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size)
+		{
+			this.ToNormal();
+			return base.ToTensor(size);
+		}
+		#endregion
+
+		#region linear algebra
+		/// <summary>
+		/// Create a new <see cref="SymmetricDenseMatrix{T}"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
+		/// </summary>
+		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the simple operation to be applied</param>
+		/// <returns>A new <see cref="SymmetricDenseMatrix{T}"/> as the result of <paramref name="operation"/>(this)</returns>
+		/// <exception cref="NotSupportedException">If the given <paramref name="operation"/> is not supported</exception>
+		public override SymmetricDenseMatrix<T> ApplyOperation(MatrixOperation operation)
+		{
+			operation = operation.Simplify<T>(this.Hermitian);
+			// shortcut
+			if (operation == MatrixOperation.None)
+				return this.Clone();
+			else // MatrixOperation.Conjugate || MatrixOperation.Transpose
+				return this.ApplyToClone(static c => LAD.PointWiseConjugate(c.Storage, 1));
+		}
+
+		/// <summary>
+		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
+		/// </summary>
+		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
+		/// <param name="other">The input right <see cref="MatrixBase{T}"/> to be added</param>
+		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
+		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
+		/// <returns>A new <see cref="DenseMatrix{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
+		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		public override DenseMatrix<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		{
+			var (m, n) = this.CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
+			opThis = opThis.Simplify<T>(this.Hermitian);
+			if (other is SymmetricDenseMatrix<T> symm)
+			{
+				opOther = opOther.Simplify<T>(symm.Hermitian);
+				bool upperThis = this.StoredUpper ^ !opThis.CanInPlace(), upperOther = symm.StoredUpper ^ !opOther.CanInPlace();
+				if (upperThis == upperOther && this.Hermitian == symm.Hermitian && (!this.Hermitian ||
+					(this.Hermitian && opThis == MatrixOperation.None && opOther == MatrixOperation.None)))
+				{
+					var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
+					try
+					{
+						LAD.GeneralMatricesAdd(opThis, opOther, m, n,
+											   scalarThis, this.Storage, this.LeadDim,
+											   scalarOther, symm.Storage, symm.LeadDim,
+											   storageOut, m);
+						return new SymmetricDenseMatrix<T>(storageOut, m, m, this.Hermitian, upperThis);
+					}
+					catch (Exception)
+					{
+						storageOut?.Dispose();
+						throw;
+					}
+				}
+				symm.ToNormal();
+			}	
+			// otherwise
+			this.ToNormal();
+			return base.AddMatrix(scalarThis, scalarOther, other, opThis, opOther);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="MatrixBase{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
+		/// </summary>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="other">The input right <see cref="MatrixBase{T}"/> to be multiplied</param>
+		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
+		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
+		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		{
+			var (m, n, k) = this.CheckMultiply(scalar, other, ref opThis, ref opOther);
+			opThis = opThis.Simplify<T>(this.Hermitian);
+			if (other is SymmetricDenseMatrix<T> symm)
+				symm.ToNormal();
+			LAD.SymmHermMatrixMultiplyGeneral()
+			this.ToNormal();
+			return base.MultiplyMatrix(scalar, other, opThis, opOther);
+		}
+
+		/// <summary>
+		/// Overwrite this matrix with the sum of given matrices: <c>this = <paramref name="scalarA"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="scalarB"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// </summary>
+		/// <param name="scalarA">The scalar to multiply to <paramref name="A"/>, can be zero</param>
+		/// <param name="scalarB">The scalar to multiply to <paramref name="B"/>, can be zero</param>
+		/// <param name="A">The left input dense matrix, can be null or this</param>
+		/// <param name="B">The right input dense matrix, can be null or this</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to the <paramref name="A"/> matrix before addition</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to the <paramref name="B"/> matrix before addition</param>
+		/// <exception cref="ArgumentException">If both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the sizes are incompatible; or both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="A"/> is this matrix while <paramref name="opA"/> is not <see cref="MatrixOperation.None"/> or <paramref name="B"/> is this matrix while <paramref name="opB"/> is not <see cref="MatrixOperation.None"/></exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opA"/> or <paramref name="opB"/> is not supported</exception>
+		public override void OverwriteByMatricesSum(DenseMatrix<T>? A, DenseMatrix<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		{
+			var (m, n) = CheckOverwriteBySum(A, B, scalarA, scalarB, opA, opB);
+
+		}
+
+
+		/// <summary>
+		/// Overwrite this matrix with the multiplication of given matrices: <c>this = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * this</c>.
+		/// </summary>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/>, cannot be zero</param>
+		/// <param name="β">The scalar to multiply to this matrix, can be zero</param>
+		/// <param name="A">The left input dense matrix</param>
+		/// <param name="B">The right input dense matrix</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to the <paramref name="A"/> matrix before multiplication</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to the <paramref name="B"/> matrix before multiplication</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		public virtual void OverwriteByMatricesProduct(T α, DenseMatrix<T> A, DenseMatrix<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		{
+			var (m, n, k) = CheckOverwriteByProduct(α, A, B, β, opA, opB);
+
+		}
+		#endregion
+
+		#region point-wise operations
+		/// <summary>
+		/// Aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.AggregateSum{T}"/>.
+		/// </summary>
+		/// <returns>The aggregate sum of this array</returns>
+		public override T Sum()
+		{
+			this.ToNormal();
+			return base.Sum();
+		}
+
+		/// <summary>
+		/// Aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
+		/// </summary>
+		/// <returns>The aggregate sum of absolute values of this array</returns>
+		public override double AbsSum()
+		{
+			this.ToNormal();
+			return base.AbsSum();
+		}
+
+		/// <summary>
+		/// Compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.Norm{T}"/>.
+		/// </summary>
+		/// <returns>The 2-norm of this array</returns>
+		public override double Norm()
+		{
+			this.ToNormal();
+			return base.Norm();
+		}
+
+		/// <summary>
+		/// Get the maximum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMax{T}"/>.
+		/// </summary>
+		/// <returns>The maximum one of all absolute values of the elements in this array</returns>
+		public override double AbsMax()
+		{
+			this.ToNormal();
+			return base.AbsMax();
+		}
+
+		/// <summary>
+		/// Get the minimum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/> and utilizes <see cref="LAD.AbsoluteValueArgMin{T}"/>.
+		/// </summary>
+		/// <returns>The minimum one of all absolute values of the elements in this array</returns>
+		public override double AbsMin()
+		{
+			this.ToNormal();
+			return base.AbsMin();
+		}
+		#endregion
+
+		#region IKrylovVector
+		/// <summary>
+		/// Calculate the dot product between this and <paramref name="other"/> as if they are all vectors
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to dot</param>
+		/// <returns>The dot result as a <typeparamref name="T"/></returns>
+		protected override T Dot(DenseMatrix<T> other)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (this.NRows != other.NRows || this.NCols != other.NCols)
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+
+			this.ToNormal();
+			return base.Dot(other);
+		}
+
+		/// <summary>
+		/// Replace this matrix's content with the <paramref name="other"/> vector in-place.
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to replace from</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
+		public override void ReplaceBy(DenseMatrix<T> other)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (this.NRows != other.NRows || this.NCols != other.NCols)
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+
+			MEM.MemoryCopy2D(other.Storage, other.LeadDim, this.Storage, this.LeadDim, this.NRows, this.NCols);
 		}
 		#endregion
 

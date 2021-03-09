@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 
-using Althea.Helpers;
 using Althea.NativeTypes;
 
 
@@ -271,7 +269,11 @@ namespace Althea.LinearAlgebra
 	/// <summary>
 	/// The <see cref="MatrixOperation"/> enum indicates which simple operation shall be performed to the matrix before some complicated operation being executed to reduce time or space complexity.
 	/// </summary>
-	public enum MatrixOperation
+	/// <remarks>There are two independent (orthogonal) cyclic unary operations:<br/>
+	/// add <see cref="Transpose"/>: <c>unchecked(<see cref="None"/> + <see cref="Transpose"/> + <see cref="Transpose"/>) == <see cref="None"/></c><br/>
+	/// bit-wise not: <c>~<see cref="None"/> == <see cref="Conjugate"/>, ~(~<see cref="None"/>) == <see cref="None"/></c><br/>
+	/// As a result, the <see cref="MatrixOperation"/> enum and the unchecked 32-bit integer addition forms an (algebraic) group.</remarks>
+	public enum MatrixOperation : int
 	{
 		/// <summary>
 		/// No operation
@@ -280,15 +282,18 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// The transpose only operation
 		/// </summary>
-		Transpose = 1,
-		/// <summary>
-		/// The conjugate transpose operation
-		/// </summary>
-		ConjugateTranspose = 2,
+		/// <remarks><c>unchecked(<see cref="Transpose"/> + <see cref="Transpose"/>) == <see cref="None"/></c></remarks>
+		Transpose = int.MinValue,
 		/// <summary>
 		/// The conjugate only operation
 		/// </summary>
-		Conjugate = 3,
+		/// <remarks><c>~<see cref="Conjugate"/> == <see cref="None"/></c></remarks>
+		Conjugate = -1,
+		/// <summary>
+		/// The conjugate transpose operation
+		/// </summary>
+		/// <remarks><c><see cref="ConjugateTranspose"/> == unchecked(<see cref="Conjugate"/> + <see cref="Transpose"/>) == ~<see cref="Transpose"/></c></remarks>
+		ConjugateTranspose = int.MaxValue,
 	}
 
 	/// <summary>
@@ -302,14 +307,31 @@ namespace Althea.LinearAlgebra
 		/// <param name="operation">The <see cref="MatrixOperation"/> to check</param>
 		/// <returns>Whether <paramref name="operation"/> can be performed in-place</returns>
 		public static bool CanInPlace(this MatrixOperation operation) => operation == MatrixOperation.None || operation == MatrixOperation.Conjugate;
+
+		/// <summary>
+		/// Transpose the given <paramref name="operation"/>
+		/// </summary>
+		/// <param name="operation">The <see cref="MatrixOperation"/> to be transposed</param>
+		/// <returns>The result <see cref="MatrixOperation"/></returns>
+		public static MatrixOperation Transpose(this MatrixOperation operation) => unchecked(operation + (int)MatrixOperation.Transpose);
+
+		/// <summary>
+		/// Conjugate the given <paramref name="operation"/>
+		/// </summary>
+		/// <param name="operation">The <see cref="MatrixOperation"/> to be conjugated</param>
+		/// <returns>The result <see cref="MatrixOperation"/></returns>
+		public static MatrixOperation Conjugate(this MatrixOperation operation) => ~operation;
 	}
 	#endregion
 
 
 	#region converters
-	// TODO: move to Backend.Cuda.Blas
-	internal static class TypeConverters
+	/// <summary>
+	/// Static class of extension methods used to convert the custom types
+	/// </summary>
+	public static class TypeConverters
 	{
+		// TODO: move to Backend.Cuda.Blas
 		internal static sbyte ToChar(this SVDStore store)
 		{
 			return store switch
@@ -322,21 +344,29 @@ namespace Althea.LinearAlgebra
 			};
 		}
 
-		internal static MatrixOperation CheckOP<T>(this MatrixOperation input, Arrays.IMatrix<T> mat) where T : unmanaged, IFormattable, IEquatable<T>
+		/// <summary>
+		/// Simplify the given <paramref name="input"/> <see cref="MatrixOperation"/> with type <typeparamref name="T"/> and <paramref name="hermitian"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="input">The input <see cref="MatrixOperation"/> to be simplified</param>
+		/// <param name="hermitian">Whether the target matrix is hermitian or not (simply symmetric is not hermitian)</param>
+		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/></returns>
+		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged
 		{
-			if (mat is null)
-				return default;
 			bool isComplex = default(T).IsComplex();
+			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
 			switch (input)
 			{
 				case MatrixOperation.Transpose:
-					if (mat.Hermitian && !isComplex)
+					if (symm)
 						return MatrixOperation.None;
 					else
 						return MatrixOperation.Transpose;
 				case MatrixOperation.ConjugateTranspose:
-					if (mat.Hermitian)
+					if (herm)
 						return MatrixOperation.None;
+					else if (symm)
+						return MatrixOperation.Conjugate;
 					else if (!isComplex)
 						return MatrixOperation.Transpose;
 					else
@@ -344,12 +374,12 @@ namespace Althea.LinearAlgebra
 				case MatrixOperation.Conjugate:
 					if (!isComplex)
 						return MatrixOperation.None;
-					else if (mat.Hermitian)
-						return MatrixOperation.Transpose;
+					else if (herm)
+						return MatrixOperation.Conjugate;
 					else
 						return MatrixOperation.Conjugate;
 				default:
-					return default;
+					return MatrixOperation.None;
 			}
 		}
 	}

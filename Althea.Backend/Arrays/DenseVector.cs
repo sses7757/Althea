@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Althea.Helpers;
 using Althea.Arrays;
+using Althea.Helpers;
 using Althea.NativeTypes;
+using Althea.LinearAlgebra;
 
 using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
@@ -207,7 +208,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.SparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
-		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None)
+		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));
@@ -224,6 +225,25 @@ namespace Althea.Backend.Arrays
 			var spVec = vector as ISparseVector<T>;
 			if (dnMat is not null && dnVec is not null)
 			{
+				if (dnMat is SymmetricDenseMatrix<T> symm)
+				{
+					operation = operation.Simplify<T>(symm.Hermitian);
+					SymmetricDenseMatrix<T> s = symm;
+					if (operation == MatrixOperation.Conjugate)
+						s = symm.Clone();
+					try
+					{
+						LAD.SymmHermMatrixMultiplyVector(s.StoredUpper, s.Hermitian, s.NRows,
+														 α, s.Storage, s.LeadDim,
+														 dnVec.Storage, 1, β, this.Storage, 1);
+						return;
+					}
+					finally
+					{
+						if (!ReferenceEquals(s, symm))
+							s?.Dispose();
+					}
+				}
 				LAD.GeneralMatrixMultiplyVector(operation, dnMat.NRows, dnMat.NCols, α, dnMat.Storage, dnMat.LeadDim, dnVec.Storage, 1, β, this.Storage, 1);
 			}
 			else if (spMat is not null && dnVec is not null)
@@ -232,6 +252,8 @@ namespace Althea.Backend.Arrays
 			}
 			else if (dnMat is not null && spVec is not null)
 			{
+				if (dnMat is SymmetricDenseMatrix<T> symm)
+					symm.ToNormal();
 				LAS.MatrixDenseMultiplyVectorSparse(operation, α, operation == LinearAlgebra.MatrixOperation.None ? dnMat.NRows : dnMat.NCols, dnMat.Storage, dnMat.LeadDim, spVec, β, this.Storage);
 			}
 			else if (spMat is not null && spVec is not null)

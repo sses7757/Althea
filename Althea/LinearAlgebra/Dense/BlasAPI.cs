@@ -348,7 +348,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="A"/>*<paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
-		/// <param name="fillLower">The indicates whether <paramref name="A"/>'s lower or upper part is stored</param>
+		/// <param name="fillUpper">The indicates whether <paramref name="A"/>'s upper or lower part is stored</param>
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
@@ -362,7 +362,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void SymmHermMatrixMultiplyVector<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>
+		public static void SymmHermMatrixMultiplyVector<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -370,7 +370,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(location1, location2, locationMat), node);
-				success = node.Value.SymmHermMatrixMultiplyVector_(fillLower, hermA, n, α, A, lda, x, strideX, β, y, strideY);
+				success = node.Value.SymmHermMatrixMultiplyVector_(fillUpper, hermA, n, α, A, lda, x, strideX, β, y, strideY);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -414,7 +414,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
-		/// <param name="fillLower">The <see cref="bool"/> of result matrix <paramref name="A"/></param>
+		/// <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
 		/// <param name="conjX">Conjugate the second <paramref name="x"/> or not</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
@@ -426,7 +426,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void SymmHermRankOneUpdate<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>
+		public static void SymmHermRankOneUpdate<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>
 		{
 			CombinationOfLocations locationVec = x.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -434,7 +434,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixUnary(locationVec, locationMat), node);
-				success = node.Value.SymmHermRankOneUpdate_(fillLower, conjX, n, α, x, strideX, β, A, lda);
+				success = node.Value.SymmHermRankOneUpdate_(fillUpper, conjX, n, α, x, strideX, β, A, lda);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -481,7 +481,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// If <paramref name="leftA"/> is true, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>; otherwise, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="B"/> * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></c>.<br/>
 		/// Where <paramref name="A"/> is a symmetric/hermitian matrix stored in lower or upper mode, <paramref name="B"/> and <paramref name="C"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.
 		/// </summary>
-		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> lower or upper part is stored</param>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> upper or lower part is stored</param>
 		/// <param name="leftA">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> is on the left or right of <paramref name="B"/></param>
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or symmetric matrix</param>
 		/// <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
@@ -496,7 +496,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -504,7 +504,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
-				success = node.Value.SymmHermMatrixMultiplyGeneral_(fillLower, leftA, hermA, m, n, α, A, lda, B, ldb, β, C, ldc);
+				success = node.Value.SymmHermMatrixMultiplyGeneral_(fillUpper, leftA, hermA, m, n, α, A, lda, B, ldb, β, C, ldc);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -515,7 +515,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
 		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
 		/// </summary>
-		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s lower or upper part is stored</param>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
 		/// <param name="conjA">Conjugate transpose <paramref name="A"/> or just transpose <paramref name="A"/></param>
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
@@ -528,7 +528,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void RankKUpdate<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		public static void RankKUpdate<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = C.LocationDescription;
 			bool success = false;
@@ -536,7 +536,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
-				success = node.Value.RankKUpdate_(fillLower, op, conjA, n, k, α, A, lda, β, C, ldc);
+				success = node.Value.RankKUpdate_(fillUpper, op, conjA, n, k, α, A, lda, β, C, ldc);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -663,7 +663,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="A"/>*<paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
-		/// <param name="fillLower">The indicates whether <paramref name="A"/>'s lower or upper part is stored</param>
+		/// <param name="fillUpper">The indicates whether <paramref name="A"/>'s upper or lower part is stored</param>
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
@@ -677,7 +677,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool SymmHermMatrixMultiplyVector_<T>(bool fillLower, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
+		protected abstract bool SymmHermMatrixMultiplyVector_<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -705,7 +705,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
-		/// <param name="fillLower">The <see cref="bool"/> of result matrix <paramref name="A"/></param>
+		/// <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
 		/// <param name="conjX">Conjugate the second <paramref name="x"/> or not</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
@@ -717,7 +717,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool SymmHermRankOneUpdate_<T>(bool fillLower, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
+		protected abstract bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, IEquatable<T>;
 		#endregion
 
 		#region BLAS level 3
@@ -748,7 +748,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// If <paramref name="leftA"/> is true, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>; otherwise, <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="B"/> * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></c>.<br/>
 		/// Where <paramref name="A"/> is a symmetric/hermitian matrix stored in lower or upper mode, <paramref name="B"/> and <paramref name="C"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.
 		/// </summary>
-		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> lower or upper part is stored</param>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> upper or lower part is stored</param>
 		/// <param name="leftA">The <see cref="bool"/> indicates whether matrix <paramref name="A"/> is on the left or right of <paramref name="B"/></param>
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or symmetric matrix</param>
 		/// <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
@@ -763,14 +763,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool SymmHermMatrixMultiplyGeneral_<T>(bool fillLower, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
 		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
 		/// </summary>
-		/// <param name="fillLower">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s lower or upper part is stored</param>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
 		/// <param name="conjA">Conjugate transpose <paramref name="A"/> or just transpose <paramref name="A"/></param>
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
@@ -783,7 +783,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool RankKUpdate_<T>(bool fillLower, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
 		#endregion
 		#endregion
 	}

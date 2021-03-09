@@ -1032,6 +1032,8 @@ namespace Althea.Backend.Arrays
 				var output = Storage<T>.Create(dense.Storage[0].Location, m * q);
 				try
 				{
+					if (dense is SymmetricDenseMatrix<T> symm)
+						symm.ToNormal();
 					LAS.MatrixSparseMultiplyDense(opThis, opOther, q, scalar, this, dense.Storage, dense.LeadDim, default, output, m);
 					return new DenseMatrix<T>(output, m, q);
 				}
