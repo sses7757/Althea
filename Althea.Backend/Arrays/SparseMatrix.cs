@@ -23,7 +23,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>
+	public sealed class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>
 		where T : unmanaged, IFormattable, IEquatable<T>
 		where TInd : unmanaged, IEquatable<TInd>
 	{
@@ -62,10 +62,7 @@ namespace Althea.Backend.Arrays
 			base(rows, cols, valueArray, rowIndexArray, colIndexArray, format, defaultValue, stores,
 				rowLength: GetRowLength(rows, valueArray, stores, format),
 				colLength: GetColLength(cols, valueArray, stores, format))
-		{
-			if ((format & FormatExtension.NonBlocked) != format)
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-		}
+		{ }
 
 		private SparseMatrix(SparseMatrix<T, TInd> reference) : base(reference.NRows, reference.NCols, reference.Storage.MakeReference(), reference.RowIndexStorage.MakeReference(), reference.ColIndexStorage.MakeReference(), reference.Format, reference.DefaultValue) { }
 
@@ -90,7 +87,7 @@ namespace Althea.Backend.Arrays
 			{
 				SparseMatrixFormat.COOR or SparseMatrixFormat.COOC or SparseMatrixFormat.CSR => stores,
 				SparseMatrixFormat.CSC => cols + 1,
-				_ => -1,
+				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
 			};
 		}
 		#endregion
@@ -623,17 +620,17 @@ namespace Althea.Backend.Arrays
 			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not (IDenseMatrix or SparseMatrix<T, TInd>))
+			if (overwrite is not (DenseMatrix<T> or SparseMatrix<T, TInd>))
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (overwrite is IDenseMatrix dn && (dn.NRows < countRow || dn.NCols < countCol))
+			if (overwrite is DenseMatrix<T> dn && (dn.NRows < countRow || dn.NCols < countCol))
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 			if (overwrite is SparseMatrix<T, TInd> sp && (sp.NRows != countRow || sp.NCols != countCol))
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 
-			if (overwrite is IDenseMatrix)
+			if (overwrite is DenseMatrix<T> dense)
 			{
 				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
-				sub.ToDense(overwrite);
+				sub.ToDense(dense.Storage, dense.LeadDim);
 			}
 			else if (overwrite is SparseMatrix<T, TInd> sparse)
 			{
@@ -1070,7 +1067,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other sparse matrix to check sparsity</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <paramref name="other"/> matrix has different sparsity from this one</exception>
-		protected void CheckSparsity(SparseMatrix<T, TInd> other)
+		public void CheckSparsity(SparseMatrix<T, TInd> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -1101,7 +1098,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="other">The other <see cref="SparseMatrix{T, TInd}"/> to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		public virtual void AddBy(SparseMatrix<T, TInd> other, T scalar)
+		public void AddBy(SparseMatrix<T, TInd> other, T scalar)
 		{
 			this.CheckSparsity(other);
 			LAD.VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);

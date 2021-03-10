@@ -13,10 +13,28 @@ using Althea.LinearAlgebra.Sparse;
 using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
-
+using System.Collections;
 
 namespace Althea.Backend.Arrays
 {
+	#region other info
+	internal sealed record BlockedSparseMatrixOtherInfo(long BlockRows, long BlockCols) : IOtherInfo
+	{
+		public object this[int index] => index == 0 ? this.BlockRows : index == 1 ? this.BlockCols : throw new ArgumentOutOfRangeException(nameof(index)); 
+
+		public int Count => 2;
+
+		public IEnumerator<object> GetEnumerator()
+		{
+			yield return this.BlockRows;
+			yield return this.BlockCols;
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+	}
+	#endregion
+
+
 	/// <summary>
 	/// The concrete (blocked) sparse matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="BlockedSparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="BlockedSparseMatrix{T, TInd}.ColIndexStorage"/> that refer to the <b>sorted</b> row and column index arrays' (of block sub-matrices) storages.
 	/// </summary>
@@ -56,51 +74,62 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Create a <see cref="SparseMatrix{T, TInd}"/> (of <see cref="SparseMatrixFormat.COOR"/>, <see cref="SparseMatrixFormat.COOC"/>, <see cref="SparseMatrixFormat.CSR"/> or <see cref="SparseMatrixFormat.CSC"/> format) with given size, <paramref name="valueArray"/> and index arrays.
 		/// </summary>
+		/// <param name="blockRows">The number of rows of (any) block sub-matrix of this matrix</param>
+		/// <param name="blockCols">The number of column of (any) block sub-matrix of this matrix</param>
 		/// <param name="rows">The presenting number of rows of this matrix</param>
 		/// <param name="cols">The presenting number of columns of this matrix</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="rowIndexArray">The row index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="colIndexArray">The column index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="format">The atomic <see cref="SparseMatrixFormat"/> of a <see cref="FormatExtension.NonBlocked"/> value</param>
+		/// <param name="rowIndexArray">The row index (of block matrices) array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="colIndexArray">The column index (of block matrices) array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="format">The atomic <see cref="SparseMatrixFormat"/> of a <see cref="FormatExtension.Blocked"/> value</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentNullException">If the size is not 0 while any of the storages is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic or not of allowed format</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic or not of allowed format; or <paramref name="blockRows"/> or <paramref name="blockCols"/> is non-positive</exception>
 		/// <exception cref="ArgumentException">If the lengths of storages does not fit the underlying regulations indicated by <paramref name="format"/></exception>
-		public SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
+		public BlockedSparseMatrix(long rows, long cols, long blockRows, long blockCols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
 			base(rows, cols, valueArray, rowIndexArray, colIndexArray, format, defaultValue, stores,
-				rowLength: GetRowLength(rows, valueArray, stores, format),
-				colLength: GetColLength(cols, valueArray, stores, format))
+				rowLength: GetRowLength(rows, blockRows, blockCols, valueArray, stores, format),
+				colLength: GetColLength(cols, blockRows, blockCols, valueArray, stores, format))
 		{
-			if ((format & FormatExtension.NonBlocked) != format)
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			this.BlockNRows = blockRows; this.BlockNCols = blockCols;
 		}
 
-		private SparseMatrix(SparseMatrix<T, TInd> reference) : base(reference.NRows, reference.NCols, reference.Storage.MakeReference(), reference.RowIndexStorage.MakeReference(), reference.ColIndexStorage.MakeReference(), reference.Format, reference.DefaultValue) { }
+		private BlockedSparseMatrix(BlockedSparseMatrix<T, TInd> reference) : base(reference.NRows, reference.NCols, reference.Storage.MakeReference(), reference.RowIndexStorage.MakeReference(), reference.ColIndexStorage.MakeReference(), reference.Format, reference.DefaultValue) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long GetRowLength(long rows, Storage<T> valueArray, long stores, SparseMatrixFormat format)
+		private static long GetRowLength(long rows, long blockRows, long blockCols, Storage<T> valueArray, long stores, SparseMatrixFormat format)
 		{
+			if (blockRows <= 0)
+				throw new ArgumentOutOfRangeException(nameof(blockRows), blockRows, Resources.Parameter.MustPositive);
+			if (blockCols <= 0)
+				throw new ArgumentOutOfRangeException(nameof(blockCols), blockCols, Resources.Parameter.MustPositive);
+			if (rows % blockRows != 0)
+				throw new ArgumentException(Resources.Other.CannotDivide, nameof(rows));
 			if (stores <= 0)
 				stores = valueArray.Length;
+			if (stores % (blockRows * blockCols) != 0)
+				throw new ArgumentException(Resources.Other.CannotDivide, nameof(stores));
 			return format switch
 			{
-				SparseMatrixFormat.COOR or SparseMatrixFormat.COOC or SparseMatrixFormat.CSC => stores,
-				SparseMatrixFormat.CSR => rows + 1,
+				SparseMatrixFormat.BCOR or SparseMatrixFormat.BCOC or SparseMatrixFormat.BSC => stores / (blockRows * blockCols),
+				SparseMatrixFormat.BSR => rows / blockRows + 1,
 				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
 			};
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long GetColLength(long cols, Storage<T> valueArray, long stores, SparseMatrixFormat format)
+		private static long GetColLength(long cols, long blockRows, long blockCols, Storage<T> valueArray, long stores, SparseMatrixFormat format)
 		{
+			if (cols % blockCols != 0)
+				throw new ArgumentException(Resources.Other.CannotDivide, nameof(cols));
 			if (stores <= 0)
 				stores = valueArray.Length;
 			return format switch
 			{
-				SparseMatrixFormat.COOR or SparseMatrixFormat.COOC or SparseMatrixFormat.CSR => stores,
-				SparseMatrixFormat.CSC => cols + 1,
-				_ => -1,
+				SparseMatrixFormat.BCOR or SparseMatrixFormat.BCOC or SparseMatrixFormat.BSR => stores / (blockRows * blockCols),
+				SparseMatrixFormat.BSC => cols / blockCols + 1,
+				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
 			};
 		}
 		#endregion
@@ -633,14 +662,14 @@ namespace Althea.Backend.Arrays
 			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not (IDenseMatrix or SparseMatrix<T, TInd>))
+			if (overwrite is not (DenseMatrix<T> or SparseMatrix<T, TInd>))
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (overwrite is IDenseMatrix dn && (dn.NRows < countRow || dn.NCols < countCol))
+			if (overwrite is DenseMatrix<T> dn && (dn.NRows < countRow || dn.NCols < countCol))
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 			if (overwrite is SparseMatrix<T, TInd> sp && (sp.NRows != countRow || sp.NCols != countCol))
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 
-			if (overwrite is IDenseMatrix)
+			if (overwrite is DenseMatrix<T>)
 			{
 				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
 				sub.ToDense(overwrite);

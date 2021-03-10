@@ -14,11 +14,140 @@ using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
 
 namespace Althea.Backend.Arrays
 {
+	#region interface
+	internal interface IMatrix<T> where T : unmanaged, IFormattable, IEquatable<T>
+	{
+		long NRows { get; }
+
+		long NCols { get; }
+
+		long LeadDim { get; }
+
+		MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
+
+		MatrixBase<T> ApplyOperation(MatrixOperation operation);
+
+		MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
+
+		void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+
+		void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+
+		/// <summary>
+		/// Check the parameters used by <see cref="AddMatrix"/>
+		/// </summary>
+		/// <returns>The number of rows of the output matrix, the number of columns of the output matrix</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		(long m, long n) CheckAdd(T scalarThis, T scalarOther, MatrixBase<T> other, ref MatrixOperation opThis, ref MatrixOperation opOther)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (scalarThis.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
+			if (scalarOther.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
+			opThis = opThis.Simplify<T>((this as SymmetricDenseMatrix<T>)?.Hermitian);
+			opOther = opOther.Simplify<T>((other as SymmetricDenseMatrix<T>)?.Hermitian);
+			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
+			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
+			if (m != p || n != q)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+			return (m, n);
+		}
+
+		/// <summary>
+		/// Check the parameters used by <see cref="MultiplyMatrix"/>
+		/// </summary>
+		/// <returns>The number of rows of the output matrix, the number of columns of the output matrix, the number of columns of <paramref name="opThis"/>(this)</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		(long m, long n, long k) CheckMultiply(T scalar, MatrixBase<T> other, ref MatrixOperation opThis, ref MatrixOperation opOther)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			opThis = opThis.Simplify<T>((this as SymmetricDenseMatrix<T>)?.Hermitian);
+			opOther = opOther.Simplify<T>((other as SymmetricDenseMatrix<T>)?.Hermitian);
+			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
+			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
+			if (n != p)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+			return (m, q, n);
+		}
+
+		/// <summary>
+		/// Check the parameters used by <see cref="OverwriteByMatricesSum"/>
+		/// </summary>
+		/// <returns>The number of rows of the output matrix and the number of columns of the output matrix</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		(long m, long n, bool nullA, bool nullB) CheckOverwriteBySum(ref MatrixBase<T>? A, ref MatrixBase<T>? B, T scalarA, T scalarB, ref MatrixOperation opA, ref MatrixOperation opB)
+		{
+			if (scalarA.IsZero() && scalarB.IsZero())
+				throw new ArgumentException(Resources.Parameter.CannotZero);
+			if ((A is null || !A.IsValid() || scalarA.IsZero()) && (B is null || !B.IsValid() || scalarB.IsZero()))
+				throw new ArgumentException(Resources.Parameter.CannotAllNull);
+			bool nullA = false, nullB = false;
+			if (A is null || A.IsValid() || scalarA.IsZero())
+			{
+				A = null; nullA = true;
+			}
+			if (B is null || B.IsValid() || scalarB.IsZero())
+			{
+				B = null; nullB = true;
+			}
+			opA = opA.Simplify<T>((A as SymmetricDenseMatrix<T>)?.Hermitian);
+			opB = opB.Simplify<T>((B as SymmetricDenseMatrix<T>)?.Hermitian);
+			if (ReferenceEquals(this, A) && opA != MatrixOperation.None)
+				throw new ArgumentOutOfRangeException(nameof(opA), opA, Resources.Parameter.InvalidValue);
+			if (ReferenceEquals(this, B) && opB != MatrixOperation.None)
+				throw new ArgumentOutOfRangeException(nameof(opB), opB, Resources.Parameter.InvalidValue);
+			var (m, n) = (this.NRows, this.NCols);
+			if (A is not null)
+			{
+				var (p, q) = opA.CanInPlace() ? (A.NRows, A.NCols) : (A.NCols, A.NRows);
+				if (m != p || n != q)
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(A));
+			}
+			if (B is not null)
+			{
+				var (p, q) = opB.CanInPlace() ? (B.NRows, B.NCols) : (B.NCols, B.NRows);
+				if (m != p || n != q)
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(B));
+			}
+			return (m, n, nullA, nullB);
+		}
+
+		/// <summary>
+		/// Check the parameters used by <see cref="OverwriteByMatricesProduct"/>
+		/// </summary>
+		/// <returns>The number of rows of the output matrix and the number of columns of the output matrix and the number of columns of <paramref name="opA"/>(<paramref name="A"/>)</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		(long m, long n, long k) CheckOverwriteByProduct(T α, MatrixBase<T> A, MatrixBase<T> B, ref MatrixOperation opA, ref MatrixOperation opB)
+		{
+			if (α.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.Parameter.CannotZero);
+			if (A is null || !A.IsValid())
+				throw new ArgumentNullException(nameof(A));
+			if (B is null || !B.IsValid())
+				throw new ArgumentNullException(nameof(B));
+			opA = opA.Simplify<T>((A as SymmetricDenseMatrix<T>)?.Hermitian);
+			opB = opB.Simplify<T>((B as SymmetricDenseMatrix<T>)?.Hermitian);
+			var (m, k1) = opA.CanInPlace() ? (A.NRows, A.NCols) : (A.NCols, A.NRows);
+			var (k2, n) = opB.CanInPlace() ? (B.NRows, B.NCols) : (B.NCols, B.NRows);
+			if (k1 != k2 || m != this.NRows || n != this.NCols)
+				throw new ArgumentException(Resources.Parameter.NotSameSize);
+			return (m, n, k1);
+		}
+	}
+	#endregion
+
+
 	/// <summary>
 	/// The concrete dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public class DenseMatrix<T> : MatrixBase<T>, IDenseMatrix, IKrylovVector<DenseMatrix<T>, T> where T : unmanaged, IFormattable, IEquatable<T>
+	public sealed class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IMatrix<T>
+		where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region basic
 		/// <summary>
@@ -339,16 +468,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
 		/// <exception cref="InvalidOperationException">If the <see cref="LeadDim"/> != <see cref="MatrixBase{T}.NRows"/></exception>
-		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size)
-		{
-			if (this.NRows != this.LeadDim)
-				throw new InvalidOperationException();
-
-			Span<long> newSize = stackalloc long[size.Length];
-			size.CopyTo(newSize);
-			CheckSize(this, newSize);
-			return new DenseTensor<T>(pointer: this.Storage, newSize);
-		}
+		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size) { }
 		#endregion
 
 		#region linear algebra
@@ -382,27 +502,6 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Check the parameters used by <see cref="AddMatrix"/>
-		/// </summary>
-		/// <returns>The number of rows of the output matrix, the number of columns of the output matrix</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long m, long n) CheckAdd(T scalarThis, T scalarOther, MatrixBase<T> other, ref MatrixOperation opThis, ref MatrixOperation opOther)
-		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (scalarThis.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
-			if (scalarOther.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
-			opThis = opThis.Simplify<T>(); opOther = opOther.Simplify<T>();
-			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
-			if (m != p || n != q)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
-			return (m, n);
-		}
-
-		/// <summary>
 		/// Create a new <see cref="DenseMatrix{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
@@ -412,12 +511,12 @@ namespace Althea.Backend.Arrays
 		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
 		/// <returns>A new <see cref="DenseMatrix{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
-		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override DenseMatrix<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n) = this.CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
+			var (m, n) = ((IMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
 			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
 			try
 			{
@@ -444,25 +543,6 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Check the parameters used by <see cref="MultiplyMatrix"/>
-		/// </summary>
-		/// <returns>The number of rows of the output matrix, the number of columns of the output matrix, the number of columns of <paramref name="opThis"/>(this)</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long m, long n, long k) CheckMultiply(T scalar, MatrixBase<T> other, ref MatrixOperation opThis, ref MatrixOperation opOther)
-		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (scalar.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
-			opThis = opThis.Simplify<T>(); opOther = opOther.Simplify<T>();
-			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
-			if (n != p)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
-			return (m, q, n);
-		}
-
-		/// <summary>
 		/// Create a new <see cref="MatrixBase{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalar">The scalar to multiply to the result</param>
@@ -471,21 +551,24 @@ namespace Althea.Backend.Arrays
 		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
 		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n, k) = this.CheckMultiply(scalar, other, ref opThis, ref opOther);
-			if (other is SymmetricDenseMatrix<T> symm)
-				return symm.MultiplyMatrix(scalar, this, opOther.Transpose(), opThis.Transpose());
+			var (m, n, k) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
 			// else
-			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
+			var storageOut = Storage<T>.Create(this.Storage[0].Location, m * n);
 			try
 			{
 				if (other is DenseMatrix<T> dense)
 				{
 					LAD.GeneralMatricesMultiply(opThis, opOther, m, n, k, scalar, this.Storage, this.LeadDim, dense.Storage, dense.LeadDim, Scalars<T>.Zero, storageOut, m);
+				}
+				if (other is SymmetricDenseMatrix<T> symm)
+				{
+					// TODO: op
+					LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: false, symm.Hermitian, m, n, scalar, symm.Storage, symm.LeadDim, this.Storage, this.LeadDim, Scalars<T>.Zero, storageOut, m);
 				}
 				else if (other is ISparseMatrix<T> sparse)
 				{
@@ -504,38 +587,6 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Check the parameters used by <see cref="OverwriteByMatricesSum"/>
-		/// </summary>
-		/// <returns>The number of rows of the output matrix and the number of columns of the output matrix</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long m, long n) CheckOverwriteBySum(DenseMatrix<T>? A, DenseMatrix<T>? B, T scalarA, T scalarB, ref MatrixOperation opA, ref MatrixOperation opB)
-		{
-			if (scalarA.IsZero() && scalarB.IsZero())
-				throw new ArgumentException(Resources.Parameter.CannotZero);
-			if ((A is null || !A.IsValid()) && (B is null || !B.IsValid()))
-				throw new ArgumentException(Resources.Parameter.CannotAllNull);
-			opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-			if (ReferenceEquals(this, A) && opA != MatrixOperation.None)
-				throw new ArgumentOutOfRangeException(nameof(opA), opA, Resources.Parameter.InvalidValue);
-			if (ReferenceEquals(this, B) && opB != MatrixOperation.None)
-				throw new ArgumentOutOfRangeException(nameof(opB), opB, Resources.Parameter.InvalidValue);
-			var (m, n) = (this.NRows, this.NCols);
-			if (A is not null)
-			{
-				var (p, q) = opA.CanInPlace() ? (A.NRows, A.NCols) : (A.NCols, A.NRows);
-				if (m != p || n != q)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(A));
-			}
-			if (B is not null)
-			{
-				var (p, q) = opB.CanInPlace() ? (B.NRows, B.NCols) : (B.NCols, B.NRows);
-				if (m != p || n != q)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(B));
-			}
-			return (m, n);
-		}
-
-		/// <summary>
 		/// Overwrite this matrix with the sum of given matrices: <c>this = <paramref name="scalarA"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="scalarB"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <param name="scalarA">The scalar to multiply to <paramref name="A"/>, can be zero</param>
@@ -546,31 +597,57 @@ namespace Althea.Backend.Arrays
 		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to the <paramref name="B"/> matrix before addition</param>
 		/// <exception cref="ArgumentException">If both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the sizes are incompatible; or both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="A"/> is this matrix while <paramref name="opA"/> is not <see cref="MatrixOperation.None"/> or <paramref name="B"/> is this matrix while <paramref name="opB"/> is not <see cref="MatrixOperation.None"/></exception>
-		public virtual void OverwriteByMatricesSum(DenseMatrix<T>? A, DenseMatrix<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		/// <exception cref="NotSupportedException">If <paramref name="A"/> or <paramref name="B"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
+		public void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n) = CheckOverwriteBySum(A, B, scalarA, scalarB, ref opA, ref opB);
-			LAD.GeneralMatricesAdd(opA, opB, m, n, scalarA, A?.Storage, A?.LeadDim ?? 0, scalarB, B?.Storage, B?.LeadDim ?? 0, this.Storage, this.LeadDim);
-		}
+			var (m, n, nullA, nullB) = ((IMatrix<T>)this).CheckOverwriteBySum(ref A, ref B, scalarA, scalarB, ref opA, ref opB);
+			var dnA = A as IMatrix<T>;
+			var dnB = B as IMatrix<T>;
+			var spA = A as ISparseMatrix<T>;
+			var spB = B as ISparseMatrix<T>;
 
-		/// <summary>
-		/// Check the parameters used by <see cref="OverwriteByMatricesProduct"/>
-		/// </summary>
-		/// <returns>The number of rows of the output matrix and the number of columns of the output matrix and the number of columns of <paramref name="opA"/>(<paramref name="A"/>)</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long m, long n, long k) CheckOverwriteByProduct(T α, DenseMatrix<T> A, DenseMatrix<T> B, ref MatrixOperation opA, ref MatrixOperation opB)
-		{
-			if (α.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.Parameter.CannotZero);
-			if (A is null || !A.IsValid())
-				throw new ArgumentNullException(nameof(A));
-			if (B is null || !B.IsValid())
-				throw new ArgumentNullException(nameof(B));
-			opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-			var (m, k1) = opA.CanInPlace() ? (A.NRows, A.NCols) : (A.NCols, A.NRows);
-			var (k2, n) = opB.CanInPlace() ? (B.NRows, B.NCols) : (B.NCols, B.NRows);
-			if (k1 != k2 || m != this.NRows || n != this.NCols)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-			return (m, n, k1);
+			if ((nullA || dnA is not null) && (nullB || dnB is not null))
+			{
+				if (A is SymmetricDenseMatrix<T> symm)
+					symm.ToNormal();
+				LAD.GeneralMatricesAdd(opA, opB, m, n, scalarA, A?.Storage, dnA?.LeadDim ?? 0, scalarB, B?.Storage, dnB?.LeadDim ?? 0, this.Storage, this.LeadDim);
+			}
+			else if ((nullA || dnA is not null) && spB is not null)
+			{
+				if (A is not null && dnA is not null)
+				{
+					if (A is SymmetricDenseMatrix<T> symm)
+						symm.ToNormal();
+					LAS.MatrixDenseAddSparse(opA, opB, scalarA, A.Storage, dnA.LeadDim, scalarB, spB, this.Storage, this.LeadDim);
+				}
+				else
+				{
+					LAS.MatrixSparseToDense(spB, this.Storage, this.LeadDim);
+					this.Scale(scalarB);
+				}
+			}
+			else if (spA is not null && (nullB || dnB is not null))
+			{
+				if (B is not null && dnB is not null)
+				{
+					if (B is SymmetricDenseMatrix<T> symm)
+						symm.ToNormal();
+					LAS.MatrixDenseAddSparse(opB, opA, scalarB, B.Storage, dnB.LeadDim, scalarA, spA, this.Storage, this.LeadDim);
+				}
+				else
+				{
+					LAS.MatrixSparseToDense(spA, this.Storage, this.LeadDim);
+					this.Scale(scalarA);
+				}
+			}
+			else if (spA is not null && spB is not null)
+			{
+				using var denseStorage = this.Storage.MakeReference(newLength: spA.NRows * spA.NCols).CreateAlike();
+				spA.ToDense(denseStorage);
+				LAS.MatrixDenseAddSparse(opA, opB, scalarA, denseStorage, spA.NRows, scalarB, spB, this.Storage, this.LeadDim);
+			}
+			else
+				throw new NotSupportedException();
 		}
 
 		/// <summary>
@@ -585,20 +662,79 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		public virtual void OverwriteByMatricesProduct(T α, DenseMatrix<T> A, DenseMatrix<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		/// <exception cref="NotSupportedException">If <paramref name="A"/> or <paramref name="B"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
+		public void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
-			LAD.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, this.Storage, this.LeadDim);
+			var (m, n, k) = ((IMatrix<T>)this).CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
+			var dnA = A as DenseMatrix<T>;
+			var dnB = B as DenseMatrix<T>;
+			var syA = A as SymmetricDenseMatrix<T>;
+			var syB = B as SymmetricDenseMatrix<T>;
+			var spA = A as ISparseMatrix<T>;
+			var spB = B as ISparseMatrix<T>;
+
+			if (dnA is not null && dnB is not null)
+			{
+				LAD.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.Storage, dnA.LeadDim, B.Storage, dnB.LeadDim, β, this.Storage, this.LeadDim);
+			}
+			else if (dnA is not null && syB is not null)
+			{
+				// TODO: op
+				LAD.SymmHermMatrixMultiplyGeneral(syB.StoredUpper, leftA: false, syB.Hermitian, m, n,
+												  α, syB.Storage, syB.LeadDim, dnA.Storage, dnA.LeadDim,
+												  β, this.Storage, this.LeadDim);
+			}
+			else if (dnA is not null && spB is not null)
+			{
+				LAS.MatrixDenseMultiplySparse(opA, opB, m, α, dnA.Storage, dnA.LeadDim, spB, β, this.Storage, this.LeadDim);
+			}
+
+			else if (syA is not null && dnB is not null)
+			{
+				// TODO: op
+				LAD.SymmHermMatrixMultiplyGeneral(syA.StoredUpper, leftA: true, syA.Hermitian, m, n,
+												  α, syA.Storage, syA.LeadDim, dnB.Storage, dnB.LeadDim,
+												  β, this.Storage, this.LeadDim);
+			}
+			else if (syA is not null && syB is not null)
+			{
+				syB.ToNormal();
+				// TODO: op
+				LAD.SymmHermMatrixMultiplyGeneral(syA.StoredUpper, leftA: true, syA.Hermitian, m, n,
+												  α, syA.Storage, syA.LeadDim, syB.Storage, syB.LeadDim,
+												  β, this.Storage, this.LeadDim);
+			}
+			else if (syA is not null && spB is not null)
+			{
+				syA.ToNormal();
+				LAS.MatrixDenseMultiplySparse(opA, opB, m, α, syA.Storage, syA.LeadDim, spB, β, this.Storage, this.LeadDim);
+			}
+
+			else if (spA is not null && dnB is not null)
+			{
+				LAS.MatrixSparseMultiplyDense(opA, opB, n, α, spA, dnB.Storage, dnB.LeadDim, β, this.Storage, this.LeadDim);
+			}
+			else if (spA is not null && syB is not null)
+			{
+				syB.ToNormal();
+				LAS.MatrixSparseMultiplyDense(opA, opB, n, α, spA, syB.Storage, syB.LeadDim, β, this.Storage, this.LeadDim);
+			}
+			else if (spA is not null && spB is not null)
+			{
+				using var denseStorage = this.Storage.MakeReference(newLength: spB.NRows * spB.NCols).CreateAlike();
+				spB.ToDense(denseStorage);
+				LAS.MatrixSparseMultiplyDense(opA, opB, n, α, spA, denseStorage, spB.NRows, β, this.Storage, this.LeadDim);
+			}
+
+			else
+				throw new NotSupportedException();
+
 		}
 		#endregion
 
 		#region point-wise operations
-		/// <summary>
-		/// Apply the given <paramref name="action"/> to each column of this matrix
-		/// </summary>
-		/// <param name="action">The <see cref="Action{T}"/> whose first parameter is the <see cref="Storage{T}"/> representing a column</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void ApplyToColumns(Action<Storage<T>> action)
+		private void ApplyToColumns(Action<Storage<T>> action)
 		{
 			long rows = this.NRows, cols = this.NCols, ld = this.LeadDim;
 			var storage = this.Storage;
@@ -608,13 +744,8 @@ namespace Althea.Backend.Arrays
 				action.Invoke(column);
 			}
 		}
-		/// <summary>
-		/// Apply the given <paramref name="action"/> to each column of this matrix
-		/// </summary>
-		/// <param name="action">The <see cref="Action{T1, T2}"/> whose first parameter is the <see cref="Storage{T}"/> representing a column</param>
-		/// <param name="value">The <typeparamref name="TVal"/> used as the second parameter of <paramref name="action"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void ApplyToColumns<TVal>(Action<Storage<T>, TVal> action, TVal value)
+		private void ApplyToColumns<TVal>(Action<Storage<T>, TVal> action, TVal value)
 		{
 			long rows = this.NRows, cols = this.NCols, ld = this.LeadDim;
 			var storage = this.Storage;
@@ -624,15 +755,8 @@ namespace Althea.Backend.Arrays
 				action.Invoke(column, value);
 			}
 		}
-		/// <summary>
-		/// Apply the given <paramref name="function"/> to each column of this matrix and aggregate the results by <paramref name="returnAggregate"/>
-		/// </summary>
-		/// <param name="function">The <see cref="Action{T1, T2}"/> whose first parameter is the <see cref="Storage{T}"/> representing a column and the second parameter be the result of <paramref name="returnAggregate"/></param>
-		/// <param name="returnAggregate">The <see cref="Func{T1, T2, TResult}"/> which takes the previous aggregated results in <typeparamref name="TRet"/> and the current result in <typeparamref name="TRet"/> and gives the aggregation as a <typeparamref name="TRet"/></param>
-		/// <param name="init">The initial value used in the aggregations as a <typeparamref name="TRet"/></param>
-		/// <returns>The final aggregation result as a <typeparamref name="TRet"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected TRet ApplyToColumns<TRet>(Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> returnAggregate, TRet init)
+		private TRet ApplyToColumns<TRet>(Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> returnAggregate, TRet init)
 		{
 			long rows = this.NRows, cols = this.NCols, ld = this.LeadDim;
 			var storage = this.Storage;
@@ -649,7 +773,7 @@ namespace Althea.Backend.Arrays
 		/// Fill this dense matrix's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>.
 		/// </summary>
 		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
-		public unsafe override void FillWith(T value)
+		public override void FillWith(T value)
 		{
 			if (this.NRows == this.LeadDim)
 			{
@@ -665,8 +789,10 @@ namespace Althea.Backend.Arrays
 		/// Point-wisely in-place add this dense matrix's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
-		public unsafe override void AddScalar(T value)
+		public override void AddScalar(T value)
 		{
+			if (value.IsZero())
+				return;
 			if (this.NRows == this.LeadDim)
 			{
 				LAD.PointWiseAddScalar(this.Storage, 1, value);
@@ -687,6 +813,8 @@ namespace Althea.Backend.Arrays
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		public override void Scale(T value)
 		{
+			if (value.IsOne())
+				return;
 			if (this.NRows == this.LeadDim)
 			{
 				LAD.Scale(value, this.Storage, 1);
@@ -706,6 +834,8 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		public override void Conjugate()
 		{
+			if (!default(T).IsComplex())
+				return;
 			if (this.NRows == this.LeadDim)
 			{
 				LAD.PointWiseConjugate(this.Storage, 1);
@@ -726,6 +856,8 @@ namespace Althea.Backend.Arrays
 		/// <param name="power">The power as a <see cref="double"/></param>
 		public override void Power(double power)
 		{
+			if (power == 1)
+				return;
 			if (this.NRows == this.LeadDim)
 			{
 				LAD.PointWisePower(this.Storage, 1, power);
@@ -746,6 +878,8 @@ namespace Althea.Backend.Arrays
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
 		public override void Power(T power)
 		{
+			if (power.IsOne())
+				return;
 			if (this.NRows == this.LeadDim)
 			{
 				LAD.PointWisePower(this.Storage, 1, power);
@@ -766,6 +900,8 @@ namespace Althea.Backend.Arrays
 		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
 		public override void Truncate(double threshold)
 		{
+			if (threshold <= 0)
+				return;
 			if (this.NRows == this.LeadDim)
 			{
 				LAD.TruncateArray(this.Storage, threshold);
@@ -775,7 +911,9 @@ namespace Althea.Backend.Arrays
 				this.ApplyToColumns(static (s, v) => LAD.TruncateArray(s, v), threshold);
 			}
 		}
+		#endregion
 
+		#region aggregate operations
 		/// <summary>
 		/// Aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.AggregateSum{T}"/>.
 		/// </summary>
@@ -897,20 +1035,9 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
-		void IKrylovVector<DenseMatrix<T>, T>.Scale(T value) => this.Scale(value);
-
-		double IKrylovVector<DenseMatrix<T>, T>.Norm() => this.Norm();
-
-		void IKrylovVector<DenseMatrix<T>, T>.Normalize() => this.Normalize();
-
 		T IKrylovVector<DenseMatrix<T>, T>.Dot(DenseMatrix<T> other) => this.Dot(other);
 
-		/// <summary>
-		/// Calculate the dot product between this and <paramref name="other"/> as if they are all vectors
-		/// </summary>
-		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to dot</param>
-		/// <returns>The dot result as a <typeparamref name="T"/></returns>
-		protected virtual T Dot(DenseMatrix<T> other)
+		internal T Dot(DenseMatrix<T> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -952,12 +1079,7 @@ namespace Althea.Backend.Arrays
 			return ((T)dotSquare).GenericSqrt();
 		}
 
-		/// <summary>
-		/// Add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) matrix to this matrix in-place.
-		/// </summary>
-		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to add</param>
-		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		public virtual void AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Scalars<T>.One, scalar);
+		void IKrylovVector<DenseMatrix<T>, T>.AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Scalars<T>.One, scalar);
 
 		/// <summary>
 		/// Replace this matrix's content with the <paramref name="other"/> vector in-place.
@@ -965,7 +1087,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other <see cref="DenseMatrix{T}"/> to replace from</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-		public virtual void ReplaceBy(DenseMatrix<T> other)
+		public void ReplaceBy(DenseMatrix<T> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -1028,10 +1150,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
 		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage>(1) { [StorageName] = this.Storage };
 
-		/// <summary>
-		/// The print name of the <see cref="LeadDim"/>
-		/// </summary>
-		protected internal const string LeadDimName = @"LeadingDimension";
+		internal const string LeadDimName = @"LeadingDimension";
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing the array of that derived class type.

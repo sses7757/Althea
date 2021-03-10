@@ -22,7 +22,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
+	public sealed class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
 		where T : unmanaged, IFormattable, IEquatable<T>
 		where TInd : unmanaged, IEquatable<TInd>
 	{
@@ -89,9 +89,9 @@ namespace Althea.Backend.Arrays
 				return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
 			else if ((wrapper.MatrixFormat & FormatExtension.Blocked) == wrapper.MatrixFormat)
 			{
-				if (wrapper.OtherInfo is not )
+				if (wrapper.OtherInfo is not BlockedSparseMatrixOtherInfo info)
 					throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.OtherInfo, Resources.Parameter.UnexpectedType);
-
+				return new BlockedSparseMatrix<T, TInd>(rows, cols, info.BlockRows, info.BlockCols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
 			}
 			else
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
@@ -201,7 +201,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other sparse vector to check sparsity</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <paramref name="other"/> vector has different sparsity from this one</exception>
-		protected void CheckSparsity(SparseVector<T, TInd> other)
+		public void CheckSparsity(SparseVector<T, TInd> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -392,12 +392,6 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
-		void IKrylovVector<SparseVector<T, TInd>, T>.Scale(T value) => this.Scale(value);
-
-		double IKrylovVector<SparseVector<T, TInd>, T>.Norm() => this.Norm();
-
-		void IKrylovVector<SparseVector<T, TInd>, T>.Normalize() => this.Normalize();
-
 		T IKrylovVector<SparseVector<T, TInd>, T>.Dot(SparseVector<T, TInd> other) => this.Dot(other);
 
 		void IKrylovVector<SparseVector<T, TInd>, T>.AddBy(SparseVector<T, TInd> other, T scalar) => this.AddByVector(other, scalar);
@@ -407,7 +401,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="other">The other <see cref="SparseVector{T, TInd}"/> to replace from</param>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-		public virtual void ReplaceBy(SparseVector<T, TInd> other)
+		public void ReplaceBy(SparseVector<T, TInd> other)
 		{
 			this.CheckSparsity(other);
 			MEM.MemoryCopy(other.Storage, this.Storage);

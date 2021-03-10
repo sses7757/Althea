@@ -17,7 +17,7 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T> where T : unmanaged, IFormattable, IEquatable<T>
+	public sealed class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T> where T : unmanaged, IFormattable, IEquatable<T>
 	{
 		#region create and dispose
 		/// <summary>
@@ -128,13 +128,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size)
-		{
-			Span<long> newSize = stackalloc long[size.Length];
-			size.CopyTo(newSize);
-			CheckSize(this, newSize);
-			return new DenseTensor<T>(pointer: this.Storage, newSize);
-		}
+		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size) { }
 		#endregion
 
 		#region linear algebra methods
@@ -214,12 +208,12 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentNullException(nameof(matrix));
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
-			if (vector.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NCols : matrix.NRows))
+			if (vector.Length != (operation == MatrixOperation.None ? matrix.NCols : matrix.NRows))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
-			if (this.Length != (operation == LinearAlgebra.MatrixOperation.None ? matrix.NRows : matrix.NCols))
+			if (this.Length != (operation == MatrixOperation.None ? matrix.NRows : matrix.NCols))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
 
-			var dnMat = matrix as DenseMatrix<T>;
+			var dnMat = matrix as IMatrix<T>;
 			var spMat = matrix as ISparseMatrix<T>;
 			var dnVec = vector as DenseVector<T>;
 			var spVec = vector as ISparseVector<T>;
@@ -244,7 +238,7 @@ namespace Althea.Backend.Arrays
 							s?.Dispose();
 					}
 				}
-				LAD.GeneralMatrixMultiplyVector(operation, dnMat.NRows, dnMat.NCols, α, dnMat.Storage, dnMat.LeadDim, dnVec.Storage, 1, β, this.Storage, 1);
+				LAD.GeneralMatrixMultiplyVector(operation, dnMat.NRows, dnMat.NCols, α, matrix.Storage, dnMat.LeadDim, dnVec.Storage, 1, β, this.Storage, 1);
 			}
 			else if (spMat is not null && dnVec is not null)
 			{
@@ -254,7 +248,7 @@ namespace Althea.Backend.Arrays
 			{
 				if (dnMat is SymmetricDenseMatrix<T> symm)
 					symm.ToNormal();
-				LAS.MatrixDenseMultiplyVectorSparse(operation, α, operation == LinearAlgebra.MatrixOperation.None ? dnMat.NRows : dnMat.NCols, dnMat.Storage, dnMat.LeadDim, spVec, β, this.Storage);
+				LAS.MatrixDenseMultiplyVectorSparse(operation, α, operation == MatrixOperation.None ? dnMat.NRows : dnMat.NCols, matrix.Storage, dnMat.LeadDim, spVec, β, this.Storage);
 			}
 			else if (spMat is not null && spVec is not null)
 			{
@@ -275,16 +269,10 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		public override DenseVector<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
+		public override DenseVector<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
 		#endregion
 
 		#region IKrylovVector
-		void IKrylovVector<DenseVector<T>, T>.Scale(T value) => this.Scale(value);
-
-		double IKrylovVector<DenseVector<T>, T>.Norm() => this.Norm();
-
-		void IKrylovVector<DenseVector<T>, T>.Normalize() => this.Normalize();
-
 		T IKrylovVector<DenseVector<T>, T>.Dot(DenseVector<T> other) => this.Dot(other);
 
 		void IKrylovVector<DenseVector<T>, T>.AddBy(DenseVector<T> other, T scalar) => this.AddByVector(other, scalar);

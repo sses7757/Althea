@@ -239,23 +239,6 @@ namespace Althea.Arrays
 
 		#region conversion
 		/// <summary>
-		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="matrix"/>. The default implementation utilizes <see cref="ToDense(Storage{T}, long)"/> and works if <see cref="AbstractArray{T}.Length"/> == <see cref="ValueArray{T}.ActualLength"/>.
-		/// </summary>
-		/// <param name="matrix">The <see cref="MatrixBase{T}"/> as the dense matrix to overwrite</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
-		/// <exception cref="ArgumentException">If <paramref name="matrix"/> is not a dense matrix</exception>
-		public virtual void ToDense(MatrixBase<T> matrix)
-		{
-			if (matrix is null || !matrix.IsValid())
-				throw new ArgumentNullException(nameof(matrix));
-			long length = matrix.Storage.Length;
-			if (matrix is not IDenseMatrix && matrix.Length != length)
-				throw new ArgumentException(Resources.Parameter.UnexpectedValue, nameof(matrix));
-
-			this.ToDense(matrix.Storage, length / matrix.NCols);
-		}
-
-		/// <summary>
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>

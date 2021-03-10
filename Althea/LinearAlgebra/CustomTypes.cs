@@ -349,8 +349,8 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="input">The input <see cref="MatrixOperation"/> to be simplified</param>
-		/// <param name="hermitian">Whether the target matrix is hermitian or not (simply symmetric is not hermitian)</param>
-		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/></returns>
+		/// <param name="hermitian">Whether the target matrix is neither symmetric nor hermitian (null) or simply symmetric (false) or hermitian (true)</param>
+		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="MatrixOperation.None"/> and <see cref="MatrixOperation.Conjugate"/> are possible outputs.</returns>
 		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged
 		{
 			bool isComplex = default(T).IsComplex();
@@ -360,6 +360,8 @@ namespace Althea.LinearAlgebra
 				case MatrixOperation.Transpose:
 					if (symm)
 						return MatrixOperation.None;
+					else if (herm)
+						return MatrixOperation.Conjugate;
 					else
 						return MatrixOperation.Transpose;
 				case MatrixOperation.ConjugateTranspose:

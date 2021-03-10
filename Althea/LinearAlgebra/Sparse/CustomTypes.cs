@@ -70,16 +70,16 @@ namespace Althea.LinearAlgebra.Sparse
 
 	#region wrapper
 	/// <summary>
+	/// The interface to store the other information used by <see cref="SparseArrayWrapper{T}"/>
+	/// </summary>
+	public interface IOtherInfo : IReadOnlyList<object> { }
+
+	/// <summary>
 	/// The simple wrapper structure for any sparse array (usually <see cref="SparseVector{T, TInd}"/> and <see cref="SparseMatrix{T, TInd}"/>) which is typically used as outputs of methods in <see cref="AbstractApi"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public readonly struct SparseArrayWrapper<T> : IDisposable where T : unmanaged
 	{
-		/// <summary>
-		/// The interface to store the other information used by <see cref="SparseArrayWrapper{T}"/>
-		/// </summary>
-		public interface IOtherInfo : IReadOnlyList<object> { }
-
 		private readonly Storage<T> values;
 
 		private readonly SizedFixedClassBuffer_8<IStorage> indices;

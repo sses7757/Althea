@@ -8,7 +8,7 @@ using Althea.NativeTypes;
 
 namespace Althea.Arrays
 {
-	#region vector and matrix
+	#region vector
 	/// <summary>
 	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
 	/// </summary>
@@ -129,29 +129,6 @@ namespace Althea.Arrays
 				throw;
 			}
 		}
-		#endregion
-	}
-
-	/// <summary>
-	/// Simple interface for dense matrices
-	/// </summary>
-	public interface IDenseMatrix
-	{
-		#region properties
-		/// <summary>
-		/// When implemented by a derived class, get the length of the leading dimension of this dense matrix
-		/// </summary>
-		long LeadDim { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the number of rows of this dense matrix
-		/// </summary>
-		long NRows { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the number of columns of this dense matrix
-		/// </summary>
-		long NCols { get; }
 		#endregion
 	}
 	#endregion
