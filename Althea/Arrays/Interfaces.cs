@@ -15,8 +15,8 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IKrylovVector<TVec, T> : IDisposable
-		where TVec : IKrylovVector<TVec, T>, IDisposable, ICheckValid, new()
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where TVec : class, IKrylovVector<TVec, T>, IDisposable, ICheckValid, new()
+		where T : unmanaged
 	{
 		#region operation
 		/// <summary>
@@ -213,12 +213,7 @@ namespace Althea.Arrays
 		where TIndex : unmanaged
 	{
 		#region properties
-		/// <summary>
-		/// The <see cref="DataType"/> of the type parameter <typeparamref name="TIndex"/>
-		/// </summary>
-		protected static readonly DataType indexDataType = default(TIndex).ToDataType();
-
-		DataType ISparseArray<T>.IndexType => indexDataType;
+		DataType ISparseArray<T>.IndexType => Const<TIndex>.DataType;
 		#endregion
 
 		#region helpers
@@ -276,7 +271,7 @@ namespace Althea.Arrays
 		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> NewArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyValues)
 			where TOut : unmanaged where TIndexOut : unmanaged
 		{
-			if (!default(TIndexOut).IsIntegralType())
+			if (!Const<TIndexOut>.IsIntegralType)
 				throw new TypeMismatchException(typeof(TIndexOut), TypeMismatchException.MismatchReason.NotInteger);
 
 			IReadOnlyList<Storage<TIndex>> list = this;

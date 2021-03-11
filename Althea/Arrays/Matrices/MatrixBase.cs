@@ -12,8 +12,8 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="MatrixBase{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public abstract class MatrixBase<T> : ValueArray<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public abstract class MatrixBase<T> : ValueArray<T> where T : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -255,7 +255,7 @@ namespace Althea.Arrays
 		/// <param name="matrix">The input <see cref="MatrixBase{T}"/> whose elements will be used</param>
 		/// <returns>A new <see cref="MatrixBase{T}"/> as the negation of <paramref name="matrix"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public static MatrixBase<T> operator -(MatrixBase<T> matrix) => matrix * Scalars<T>.MinusOne;
+		public static MatrixBase<T> operator -(MatrixBase<T> matrix) => matrix * Const<T>.MinusOne;
 
 		/// <summary>
 		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
@@ -319,7 +319,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.AddMatrix(Scalars<T>.One, Scalars<T>.One, right);
+			return left.AddMatrix(Const<T>.One, Const<T>.One, right);
 		}
 
 		/// <summary>
@@ -337,7 +337,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.AddMatrix(Scalars<T>.One, Scalars<T>.MinusOne, right);
+			return left.AddMatrix(Const<T>.One, Const<T>.MinusOne, right);
 		}
 
 		/// <summary>
@@ -355,7 +355,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.MultiplyMatrix(Scalars<T>.One, right);
+			return left.MultiplyMatrix(Const<T>.One, right);
 		}
 		#endregion
 
@@ -410,7 +410,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The wrapper structure used to access diagonal elements of a <see cref="MatrixBase{T}"/>
 	/// </summary>
-	public readonly struct MatrixDiagonalAccessor<T> : IEquatable<MatrixDiagonalAccessor<T>> where T : unmanaged, IFormattable, IEquatable<T>
+	public readonly struct MatrixDiagonalAccessor<T> : IEquatable<MatrixDiagonalAccessor<T>> where T : unmanaged
 	{
 		#region basic
 		private readonly MatrixBase<T> _owner;

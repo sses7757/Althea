@@ -21,14 +21,14 @@ namespace Althea.Arrays
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetMetaData"/></param>
 		/// <returns>The reconstructed <see cref="ValueArray{T}"/> of the derived factory's corresponding array type</returns>
 		/// <exception cref="ArgumentException">If the any of the arguments is invalid (such as <paramref name="storages"/> not containing <see cref="ValueArray{T}.StorageName"/>)</exception>
-		ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>;
+		ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged;
 	}
 
 	/// <summary>
 	/// The <see cref="ValueArray{T}"/> factory used to create instances
 	/// </summary>
 	/// <typeparam name="T">An unmanaged struct as the data type</typeparam>
-	public static class ValueArrayFactory<T> where T : unmanaged, IFormattable, IEquatable<T>
+	public static class ValueArrayFactory<T> where T : unmanaged
 	{
 		#region caching
 		internal delegate ValueArray<T> DelegateCreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null);

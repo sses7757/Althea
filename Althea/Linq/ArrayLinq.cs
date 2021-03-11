@@ -962,20 +962,18 @@ namespace Althea.Linq
 		#endregion
 
 		#region basic SQL statements
-#nullable disable
 		/// <summary>
 		/// Get the first element of <paramref name="list"/> is available or default otherwise
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
 		/// <param name="list">The list to take</param>
 		/// <returns>the first element or default</returns>
-		public static T FirstOrDefault<T>(this IReadOnlyList<T> list)
+		public static T? FirstOrDefault<T>(this IReadOnlyList<T> list) where T : class
 		{
 			if (list is null || list.Count == 0)
 				return default;
 			return list[0];
 		}
-#nullable restore
 
 		/// <summary>
 		/// Append an <paramref name="element"/> to the end of <paramref name="list"/>

@@ -9,7 +9,7 @@ namespace Althea.Backend.Arrays
 {
 	internal sealed class DenseVectorFactory : IArrayFactory
 	{
-		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
 		{
 			if (size.Length != 1 || size[0] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(size));
@@ -23,9 +23,9 @@ namespace Althea.Backend.Arrays
 		}
 	}
 
-	internal sealed class SparseVectorFactory<TInd> : IArrayFactory where TInd : unmanaged, IEquatable<TInd>
+	internal sealed class SparseVectorFactory<TInd> : IArrayFactory where TInd : unmanaged
 	{
-		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
 		{
 			if (size.Length != 1 || size[0] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(size));
@@ -44,7 +44,7 @@ namespace Althea.Backend.Arrays
 
 	internal sealed class DenseMatrixFactory : IArrayFactory
 	{
-		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
 		{
 			if (size.Length != 2 || size[0] <= 0 || size[1] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(size));
@@ -62,7 +62,7 @@ namespace Althea.Backend.Arrays
 
 	internal sealed class SymmetricDenseMatrixFactory : IArrayFactory
 	{
-		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
 		{
 			if (size.Length != 2 || size[0] <= 0 || size[1] != size[0])
 				throw new ArgumentOutOfRangeException(nameof(size));
@@ -82,7 +82,7 @@ namespace Althea.Backend.Arrays
 
 	internal sealed class SparseMatrixFactory<TInd> : IArrayFactory where TInd : unmanaged, IEquatable<TInd>
 	{
-		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
 		{
 			if (size.Length != 1 || size[0] <= 0 || size[1] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(size));
@@ -116,7 +116,7 @@ namespace Althea.Backend.Arrays
 
 	internal sealed class BlockedSparseMatrixFactory<TInd> : IArrayFactory where TInd : unmanaged, IEquatable<TInd>
 	{
-		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, IFormattable, IEquatable<T>
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
 		{
 			if (size.Length != 1 || size[0] <= 0 || size[1] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(size));

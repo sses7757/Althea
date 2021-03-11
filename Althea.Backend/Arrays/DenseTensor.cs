@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using Althea.Arrays;
 using Althea.Linq;
-using Althea.Storage;
-
-using RT = Althea.Runtime.API;
-using BLAS = Althea.Blas.API;
-using TENSOR = Althea.Tensor.API;
 
 
-namespace Althea.Arrays
+namespace Althea.Backend.Arrays
 {
 	/// <summary>
-	/// The general dense tensor class that inherit the <see cref="ValueArray{T}"/> and implements <see cref="IDenseArray{T}"/>.
+	/// The general dense tensor class that inherit the <see cref="ValueArray{T}"/>.
 	/// </summary>
-	/// <typeparam name="T">The supported data types are <see cref="float"/>, <see cref="double"/>, <see cref="FloatComplex"/>, <see cref="DoubleComplex"/>; other types of data causes <see cref="NotSupportedException"/></typeparam>
-	public sealed class DenseTensor<T> : ValueArray<T>, ITensor<DenseTensor<T>, T>, ITensorAsMatrix<DenseTensor<T>, T>, IDenseArray<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public sealed class DenseTensor<T> : TensorBase<T>, ITensor where T : unmanaged
 		where T : struct, IComparable<T>
 	{
 		#region new members

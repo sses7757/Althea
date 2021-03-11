@@ -18,13 +18,13 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	public abstract class SparseMatrix<T, TInd> : MatrixBase<T>, ISparseMatrix<T>, ISparseArray<T, TInd>
-		where T : unmanaged, IFormattable, IEquatable<T>
-		where TInd : unmanaged, IEquatable<TInd>
+		where T : unmanaged
+		where TInd : unmanaged
 	{
 		#region basic
 		static SparseMatrix()
 		{
-			if (!default(TInd).IsIntegralType())
+			if (!Const<TInd>.IsIntegralType)
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 
@@ -207,8 +207,8 @@ namespace Althea.Arrays
 		/// <returns>The new sparse matrix alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public abstract SparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
-			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged, IEquatable<TIndOut>;
+			where TOut : unmanaged
+			where TIndOut : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, cast this sparse matrix into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
@@ -217,8 +217,8 @@ namespace Althea.Arrays
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
 		/// <returns>The new <see cref="SparseMatrix{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
 		public virtual SparseMatrix<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
-			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged, IEquatable<TIndOut>
+			where TOut : unmanaged
+			where TIndOut : unmanaged
 		{
 			var matrix = this.NewArrayAlike<TOut, TIndOut>();
 			try

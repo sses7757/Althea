@@ -15,7 +15,7 @@ using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
 namespace Althea.Backend.Arrays
 {
 	#region interface
-	internal interface IMatrix<T> where T : unmanaged, IFormattable, IEquatable<T>
+	internal interface IMatrix<T> where T : unmanaged
 	{
 		long NRows { get; }
 
@@ -145,9 +145,9 @@ namespace Althea.Backend.Arrays
 	/// <summary>
 	/// The concrete dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public sealed class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IMatrix<T>
-		where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IMatrix<T>
+		where T : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -491,7 +491,7 @@ namespace Althea.Backend.Arrays
 			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
 			try
 			{
-				LAD.GeneralMatricesAdd(operation, MatrixOperation.None, m, n, Scalars<T>.One, this.Storage, this.LeadDim, Scalars<T>.Zero, null, 0, storageOut, m);
+				LAD.GeneralMatricesAdd(operation, MatrixOperation.None, m, n, Const<T>.One, this.Storage, this.LeadDim, Const<T>.Zero, null, 0, storageOut, m);
 				return new DenseMatrix<T>(storageOut, m, n);
 			}
 			catch (Exception)
@@ -563,16 +563,16 @@ namespace Althea.Backend.Arrays
 			{
 				if (other is DenseMatrix<T> dense)
 				{
-					LAD.GeneralMatricesMultiply(opThis, opOther, m, n, k, scalar, this.Storage, this.LeadDim, dense.Storage, dense.LeadDim, Scalars<T>.Zero, storageOut, m);
+					LAD.GeneralMatricesMultiply(opThis, opOther, m, n, k, scalar, this.Storage, this.LeadDim, dense.Storage, dense.LeadDim, Const<T>.Zero, storageOut, m);
 				}
 				if (other is SymmetricDenseMatrix<T> symm)
 				{
 					// TODO: op
-					LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: false, symm.Hermitian, m, n, scalar, symm.Storage, symm.LeadDim, this.Storage, this.LeadDim, Scalars<T>.Zero, storageOut, m);
+					LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: false, symm.Hermitian, m, n, scalar, symm.Storage, symm.LeadDim, this.Storage, this.LeadDim, Const<T>.Zero, storageOut, m);
 				}
 				else if (other is ISparseMatrix<T> sparse)
 				{
-					LAS.MatrixDenseMultiplySparse(opThis, opOther, m, scalar, this.Storage, this.LeadDim, sparse, Scalars<T>.Zero, storageOut, m);
+					LAS.MatrixDenseMultiplySparse(opThis, opOther, m, scalar, this.Storage, this.LeadDim, sparse, Const<T>.Zero, storageOut, m);
 				}
 				else
 					throw new NotSupportedException();
@@ -834,7 +834,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		public override void Conjugate()
 		{
-			if (!default(T).IsComplex())
+			if (!Const<T>.IsComplex)
 				return;
 			if (this.NRows == this.LeadDim)
 			{
@@ -1079,7 +1079,7 @@ namespace Althea.Backend.Arrays
 			return ((T)dotSquare).GenericSqrt();
 		}
 
-		void IKrylovVector<DenseMatrix<T>, T>.AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Scalars<T>.One, scalar);
+		void IKrylovVector<DenseMatrix<T>, T>.AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Const<T>.One, scalar);
 
 		/// <summary>
 		/// Replace this matrix's content with the <paramref name="other"/> vector in-place.

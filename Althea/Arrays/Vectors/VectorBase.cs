@@ -12,8 +12,8 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public abstract class VectorBase<T> : ValueArray<T>, IReadOnlyList<T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public abstract class VectorBase<T> : ValueArray<T>, IReadOnlyList<T> where T : unmanaged
 	{
 		#region initialize
 		/// <summary>
@@ -181,7 +181,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.AddVector(right, Scalars<T>.One);
+			return left.AddVector(right, Const<T>.One);
 		}
 
 		/// <summary>
@@ -197,7 +197,7 @@ namespace Althea.Arrays
 			if (right is null || !right.IsValid())
 				throw new ArgumentNullException(nameof(right));
 
-			return left.AddVector(right, Scalars<T>.MinusOne);
+			return left.AddVector(right, Const<T>.MinusOne);
 		}
 
 		/// <summary>
@@ -219,7 +219,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="vector">The original vector to negate</param>
 		/// <returns>A new <see cref="VectorBase{T}"/> which is the negation result of the given <paramref name="vector"/></returns>
-		public static VectorBase<T> operator -(VectorBase<T> vector) => vector * Scalars<T>.MinusOne;
+		public static VectorBase<T> operator -(VectorBase<T> vector) => vector * Const<T>.MinusOne;
 
 		/// <summary>
 		/// Create a new <see cref="VectorBase{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
@@ -250,7 +250,7 @@ namespace Althea.Arrays
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
 
-			return vector.AddMatrixMultiplyVector(matrix, vector, Scalars<T>.One);
+			return vector.AddMatrixMultiplyVector(matrix, vector, Const<T>.One);
 		}
 
 		/// <summary>
@@ -266,7 +266,7 @@ namespace Althea.Arrays
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
 
-			return vector.AddMatrixMultiplyVector(matrix, vector, Scalars<T>.One, operation: LinearAlgebra.MatrixOperation.Transpose);
+			return vector.AddMatrixMultiplyVector(matrix, vector, Const<T>.One, operation: LinearAlgebra.MatrixOperation.Transpose);
 		}
 		#endregion
 	}

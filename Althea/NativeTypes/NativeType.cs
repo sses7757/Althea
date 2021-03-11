@@ -113,28 +113,6 @@ namespace Althea.NativeTypes
 	#endregion
 
 	#region extension methods
-
-	#region static scalars
-	/// <summary>
-	/// Generic type scalars
-	/// </summary>
-	/// <typeparam name="T">The data type</typeparam>
-	public static class Scalars<T> where T : unmanaged
-	{
-		/// <summary>
-		/// Generic type scalar
-		/// </summary>
-		public static readonly T	Zero = default,
-									One = 1.0.FromDouble<T>(),
-									Two = 2.0.FromDouble<T>(),
-									MinusOne = (-1.0).FromDouble<T>(),
-									Half = (0.5).FromDouble<T>(),
-									MinusHalf = (-0.5).FromDouble<T>(),
-									E = Math.E.FromDouble<T>(),
-									Pi = Math.PI.FromDouble<T>();
-	}
-	#endregion
-
 	/// <summary>
 	/// A static class containing some extension methods for native types
 	/// </summary>
@@ -159,367 +137,42 @@ namespace Althea.NativeTypes
 
 		#region predicator
 		/// <summary>
-		/// Generic type zero value checker
+		/// Check whether the two given generic-typed numbers are bit-wise equal
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
-		/// <param name="a">input number</param>
+		/// <param name="a">The first input number</param>
+		/// <param name="b">The second input number</param>
+		/// <returns><c><paramref name="a"/> == <paramref name="b"/></c> or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe static bool IsEqual<T>(this T a, T b) where T : unmanaged
+		{
+			byte* aa = (byte*)&a, bb = (byte*)&b;
+			int n = sizeof(T);
+			for (int i = 0; i < n; i++)
+			{
+				if (aa[i] != bb[i])
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Check whether the given generic-typed number bit-wisely equals to 0
+		/// </summary>
+		/// <typeparam name="T">The supported data type</typeparam>
+		/// <param name="a">The input number to check</param>
 		/// <returns><c><paramref name="a"/> == 0</c> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsZero<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			return a.Equals(default);
-		}
+		public static bool IsZero<T>(this T a) where T : unmanaged => IsEqual(a, default);
 
 		/// <summary>
-		/// Generic type one value checker
+		/// Check whether the given generic-typed number bit-wisely equals to 1 (of type <typeparamref name="T"/>)
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
-		/// <param name="a">input number</param>
+		/// <param name="a">The input number to check</param>
 		/// <returns><c><paramref name="a"/> == 1</c> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsOne<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			return a.Equals(Scalars<T>.One);
-		}
-		#endregion
-
-		#region generic type arithmetics
-		/// <summary>
-		/// Generic type number reciprocal.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The reciprocal of the <paramref name="a"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericReciprocal<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			if (a.IsZero())
-				throw new DivideByZeroException();
-			if (a.IsOne())
-				return a;
-			return (T)(1 / (dynamic)a);
-		}
-
-		/// <summary>
-		/// Generic type number negation.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The negation of the <paramref name="a"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericNegate<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			if (a.IsZero())
-				return default;
-			return (T)(-(dynamic)a);
-		}
-
-		/// <summary>
-		/// Generic type numbers addition.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input left number</param>
-		/// <param name="b">The input right number</param>
-		/// <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericAdd<T>(this T a, T b) where T : unmanaged, IEquatable<T>
-		{
-			if (a.IsZero())
-				return b;
-			if (b.IsZero())
-				return a;
-			return (T)((dynamic)a + b);
-		}
-
-		/// <summary>
-		/// Generic type numbers multiplication.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input left number</param>
-		/// <param name="b">The input right number</param>
-		/// <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericMultiply<T>(this T a, T b) where T : unmanaged, IEquatable<T>
-		{
-			if (a.IsZero() || b.IsZero())
-				return default;
-			if (a.IsOne())
-				return b;
-			if (b.IsOne())
-				return a;
-			return (T)((dynamic)a * b);
-		}
-
-		/// <summary>
-		/// Generic type number square root.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The square root of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericSqrt<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			T? result = a switch
-			{
-				sbyte or short or int or long => (T)Math.Sqrt((dynamic)a),
-				byte or ushort or uint or ulong => (T)Math.Sqrt((dynamic)a),
-				float or double => (T)Math.Sqrt((dynamic)a),
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Sqrt(),
-				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Sqrt(),
-				Complex<float> or Complex<double> => (T)((dynamic)a).Sqrt(),
-				_ => null,
-			};
-			if (result.HasValue)
-			{
-				return result.Value;
-			}
-			if (!typeof(T).IsSupportedDirect())
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (typeof(T).IsComplexDirect())
-			{
-				try
-				{
-					return (T)((dynamic)a).Sqrt();
-				}
-				catch (Exception)
-				{
-					double r = (double)((dynamic)a).Real, i = (double)((dynamic)a).Imag;
-					var sqrt = new Complex<double>(r, i).Sqrt();
-					return (T)(dynamic)sqrt;
-				}
-			}
-			else
-				return (T)Math.Sqrt((dynamic)a);
-		}
-
-		/// <summary>
-		/// Generic type number conjugation.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The complex conjugate of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericConjugate<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			T? result = a switch
-			{
-				sbyte or short or int or long => a,
-				byte or ushort or uint or ulong => a,
-				float or double => a,
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Conjugate(),
-				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Conjugate(),
-				Complex<float> or Complex<double> => (T)((dynamic)a).Conjugate(),
-				_ => null,
-			};
-			if (result.HasValue)
-			{
-				return result.Value;
-			}
-			if (!typeof(T).IsSupportedDirect())
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (typeof(T).IsComplexDirect())
-				return (T)((dynamic)a).Conjugate();
-			else
-				return a;
-		}
-
-		/// <summary>
-		/// Generic type number power.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <param name="power">The power as a <see cref="double"/></param>
-		/// <returns>The complex conjugate of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericPower<T>(this T a, double power) where T : unmanaged, IEquatable<T>
-		{
-			T? result = a switch
-			{
-				sbyte or short or int or long => Math.Pow((dynamic)a, power),
-				byte or ushort or uint or ulong => Math.Pow((dynamic)a, power),
-				float or double => Math.Pow((dynamic)a, power),
-				Complex<sbyte> a_sbyte => (T)(dynamic)a_sbyte.Pow((sbyte)power),
-				Complex<short> a_short => (T)(dynamic)a_short.Pow((short)power),
-				Complex<int> a_int => (T)(dynamic)a_int.Pow((int)power),
-				Complex<long> a_long => (T)(dynamic)a_long.Pow((long)power),
-				Complex<byte> a_byte => (T)(dynamic)a_byte.Pow((byte)power),
-				Complex<ushort> a_ushort => (T)(dynamic)a_ushort.Pow((ushort)power),
-				Complex<uint> a_int => (T)(dynamic)a_int.Pow((uint)power),
-				Complex<ulong> a_long => (T)(dynamic)a_long.Pow((ulong)power),
-				Complex<float> a_float => (T)(dynamic)a_float.Pow((float)power),
-				Complex<double> a_double => (T)(dynamic)a_double.Pow(power),
-				_ => null,
-			};
-			if (result.HasValue)
-			{
-				return result.Value;
-			}
-			if (!typeof(T).IsSupportedDirect())
-				throw new NotSupportedException(Resources.Support.DataType);
-			return (T)((dynamic)a).Pow((T)(dynamic)power);
-		}
-
-
-		/// <summary>
-		/// Generic type number power.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <param name="power">The power as a <typeparamref name="T"/></param>
-		/// <returns>The complex conjugate of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericPower<T>(this T a, T power) where T : unmanaged, IEquatable<T>
-		{
-			T? result = a switch
-			{
-				sbyte or short or int or long => Math.Pow((dynamic)a, (dynamic)power),
-				byte or ushort or uint or ulong => Math.Pow((dynamic)a, (dynamic)power),
-				float or double => Math.Pow((dynamic)a, (dynamic)power),
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => (T)((dynamic)a).Pow(power),
-				Complex<byte> or Complex<ushort> or Complex<uint> or Complex<ulong> => (T)((dynamic)a).Pow(power),
-				Complex<float> or Complex<double> => (T)((dynamic)a).Pow(power),
-				_ => null,
-			};
-			if (result.HasValue)
-			{
-				return result.Value;
-			}
-			if (!typeof(T).IsSupportedDirect())
-				throw new NotSupportedException(Resources.Support.DataType);
-			return (T)((dynamic)a).Pow(power);
-		}
-
-		/// <summary>
-		/// Generic type number absolute value.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The absolute value of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double GenericAbsolute<T>(this T a) where T : unmanaged, IEquatable<T>
-		{
-			double? result = a switch
-			{
-				sbyte or short or int or long => Math.Abs((dynamic)a),
-				byte or ushort or uint or ulong => a,
-				float or double => Math.Abs((dynamic)a),
-				Complex<sbyte> a_sbyte => a_sbyte.Abs(),
-				Complex<short> a_short => a_short.Abs(),
-				Complex<int> a_int => a_int.Abs(),
-				Complex<long> a_long => a_long.Abs(),
-				Complex<byte> a_byte => a_byte.Abs(),
-				Complex<ushort> a_ushort => a_ushort.Abs(),
-				Complex<uint> a_int => a_int.Abs(),
-				Complex<ulong> a_long => a_long.Abs(),
-				Complex<float> a_float => a_float.Abs(),
-				Complex<double> a_double => a_double.Abs(),
-				_ => null,
-			};
-			if (result.HasValue)
-			{
-				return result.Value;
-			}
-			if (!typeof(T).IsSupportedDirect())
-				throw new NotSupportedException(Resources.Support.DataType);
-			if (typeof(T).IsComplexDirect())
-				return (double)((dynamic)a).Abs();
-			else
-				return (double)(dynamic)a;
-		}
-		#endregion
-
-		#region generic type conversions
-		/// <summary>
-		/// Generic numeric value converter from any type to <see cref="double"/>.
-		/// </summary>
-		/// <typeparam name="T">The convert source type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as a <see cref="double"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double ToDouble<T>(this T a) where T : unmanaged
-		{
-			return a switch
-			{
-				double aa => aa,
-				_ => (double)(dynamic)a,
-			};
-		}
-
-		/// <summary>
-		/// Generic numeric value converter from <see cref="double"/> to any type.
-		/// </summary>
-		/// <typeparam name="T">The convert target type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as <typeparamref name="T"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T FromDouble<T>(this double a) where T : unmanaged
-		{
-			return a switch
-			{
-				T aa => aa,
-				_ => (T)(dynamic)a,
-			};
-		}
-
-		/// <summary>
-		/// Generic numeric value converter from any integral type to <see cref="long"/>.
-		/// </summary>
-		/// <typeparam name="T">The convert source type, must be an integral type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as a <see cref="long"/></returns>
-		/// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long ToLong<T>(this T a) where T : unmanaged
-		{
-			////if (a.ToDataType().IsFloat())
-			////	throw new Helpers.TypeMismatchException(typeof(T), Helpers.TypeMismatchException.MismatchReason.NotInteger);
-			return a switch
-			{
-				long aa => aa,
-				_ => (long)(dynamic)a,
-			};
-		}
-
-		/// <summary>
-		/// Generic numeric value converter from <see cref="long"/> to any integral type.
-		/// </summary>
-		/// <typeparam name="T">The convert target type, must be an integral type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as <typeparamref name="T"/></returns>
-		/// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T FromLong<T>(this long a) where T : unmanaged
-		{
-			////if (default(T).ToDataType().IsFloat())
-			////	throw new Helpers.TypeMismatchException(typeof(T), Helpers.TypeMismatchException.MismatchReason.NotInteger);
-			return a switch
-			{
-				T aa => aa,
-				_ => (T)(dynamic)a,
-			};
-		}
-
-		/// <summary>
-		/// Generic numeric value converter.
-		/// </summary>
-		/// <typeparam name="TOut">The convert target type</typeparam>
-		/// <typeparam name="TIn">The convert source type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TOut GenericConvert<TOut, TIn>(this TIn a) where TOut : unmanaged where TIn : unmanaged
-		{
-			return a switch
-			{
-				TOut aa => aa,
-				_ => (TOut)(dynamic)a,
-			};
-		}
+		public unsafe static bool IsOne<T>(this T a) where T : unmanaged => IsEqual(a, Const<T>.One);
 		#endregion
 
 		#region parse native type values
@@ -585,25 +238,16 @@ namespace Althea.NativeTypes
 
 		#region check whether native types are integer types
 		/// <summary>
-		/// Check whether the given type <typeparamref name="T"/> is an integral type or not
+		/// Check whether the given type <typeparamref name="T"/> is a real integral type or not
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged type to check</typeparam>
-		/// <param name="a">An instance of <typeparamref name="T"/></param>
 		/// <returns>Whether <typeparamref name="T"/> is an integral type or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsIntegralType<T>(this T a) where T : unmanaged
+		internal static bool IsIntegralType<T>() where T : unmanaged
 		{
-			var type = a.ToDataType().GetClassification();
-			return !type.IsComplex() && (type == DataTypeClassification.SignedInteger || type == DataTypeClassification.UnsignedInteger);
+			var type = Const<T>.DataTypeClass;
+			return !Const<T>.IsComplex && (type == DataTypeClassification.SignedInteger || type == DataTypeClassification.UnsignedInteger);
 		}
-
-		/// <summary>
-		/// Check whether the given type <typeparamref name="T"/> is an integral type or not
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged type to check</typeparam>
-		/// <returns>Whether <typeparamref name="T"/> is an integral type or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsIntegralType<T>() where T : unmanaged => default(T).IsIntegralType();
 		#endregion
 
 		#region check whether native types are complex types
@@ -772,87 +416,6 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The type to check</typeparam>
 		/// <returns>true for supported type</returns>
 		public static bool IsSupported<T>() where T : unmanaged => IsSupported(default(T));
-		#endregion
-
-		#region get floating point or integral of native types
-		private static readonly Dictionary<Type, DataTypeClassification> _classificationCache = new();
-
-		internal static DataTypeClassification GetClassificationDirect(this Type type)
-		{
-			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
-			{
-				return DataTypeClassification.NotSupported;
-			}
-			// cache
-			if (!_classificationCache.ContainsKey(type))
-			{
-				Type? custom = MakeCustomNativeType(type);
-				var result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
-				_classificationCache.Add(type, result ?? DataTypeClassification.NotSupported);
-			}
-			return _classificationCache[type];
-		}
-
-		/// <summary>
-		/// Check whether <paramref name="type"/> is a floating point type or a integral type.
-		/// </summary>
-		/// <param name="type">The type</param>
-		/// <returns>0 for not supported data type</returns>
-		public static DataTypeClassification GetClassification(this Type type)
-		{
-			if (!type.IsValueType)
-				return DataTypeClassification.NotSupported;
-			// built-in float types
-			if (type == typeof(double) || type == typeof(float))
-				return DataTypeClassification.FloatPoint_IEEE754;
-			// built-in integer types
-			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
-				return DataTypeClassification.SignedInteger;
-			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(int) || type == typeof(long))
-				return DataTypeClassification.UnsignedInteger;
-			// complex float types
-			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
-				return DataTypeClassification.FloatPoint_IEEE754;
-			// complex integer types
-			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return DataTypeClassification.SignedInteger;
-			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return DataTypeClassification.UnsignedInteger;
-			// other primitive types are null
-			return GetClassificationDirect(type);
-		}
-
-		/// <summary>
-		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
-		/// </summary>
-		/// <typeparam name="T">The type to check</typeparam>
-		/// <param name="value">an instance of <typeparamref name="T"/></param>
-		/// <returns>0 for not supported data type</returns>
-		public static DataTypeClassification GetClassification<T>(this T value) where T : unmanaged
-		{
-			return value switch
-			{
-				// built-in float types
-				float or double => DataTypeClassification.FloatPoint_IEEE754,
-				// built-in integer types
-				sbyte or short or int or long => DataTypeClassification.SignedInteger,
-				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
-				// built-in complex float types
-				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint_IEEE754,
-				// built-in complex integer types
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => DataTypeClassification.SignedInteger,
-				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => DataTypeClassification.FloatPoint_IEEE754,
-				// otherwise
-				_ => GetClassificationDirect(typeof(T)),
-			};
-		}
-
-		/// <summary>
-		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
-		/// </summary>
-		/// <typeparam name="T">The type to check</typeparam>
-		/// <returns>0 for not supported data type</returns>
-		public static DataTypeClassification GetClassification<T>() where T : unmanaged => GetClassification(default(T));
 		#endregion
 	}
 	#endregion

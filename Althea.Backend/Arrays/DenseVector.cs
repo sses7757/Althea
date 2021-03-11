@@ -16,8 +16,8 @@ namespace Althea.Backend.Arrays
 	/// <summary>
 	/// The concrete dense vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
-	public sealed class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T> where T : unmanaged, IFormattable, IEquatable<T>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public sealed class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T> where T : unmanaged
 	{
 		#region create and dispose
 		/// <summary>

@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 using Althea.Linq;
 using Althea.NativeTypes;
@@ -61,46 +63,105 @@ namespace Althea.Helpers
 	{
 		private static readonly Dictionary<(RuntimeTypeHandle t1, RuntimeTypeHandle t2), Delegate?> _conversionCache = new();
 
-		/// <summary>
-		/// Generic convert <paramref name="obj"/> of <typeparamref name="T1"/> to <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators.
-		/// </summary>
-		/// <typeparam name="T1">input type</typeparam>
-		/// <typeparam name="T2">output type</typeparam>
-		/// <param name="obj">input object</param>
-		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
-		/// <remarks>Since this method has internal caching, this is better for repetitive usage and worse for simple usage than <see cref="NativeTypeExtension.GenericConvert{TOut, TIn}(TIn)"/> which utilizes dynamic conversion.</remarks>
-		public static T2 ReflectionConvert<T1, T2>(this T1 obj) where T1 : notnull where T2 : notnull
+		private static Converter<T1, T2>? InternalConvert<T1, T2>() where T1 : notnull where T2 : notnull, new()
 		{
-			static bool predicator(System.Reflection.MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
-																		m.ReturnType == typeof(T2) && m.GetParameters().Length == 1 &&
-																		m.GetParameters()[0].ParameterType.IsAssignableFrom(typeof(T1));
+			if (!typeof(T1).IsPrimitive || !typeof(T2).IsPrimitive)
+				return null;
+			DynamicMethod method = new(nameof(InternalConvert), typeof(T2), new[] { typeof(T1) });
+			var IL = method.GetILGenerator();
+			IL.Emit(OpCodes.Ldarg_0);
+			switch (Type.GetTypeCode(typeof(T2)))
+			{
+				case TypeCode.SByte:
+					IL.Emit(OpCodes.Conv_I1);
+					break;
+				case TypeCode.Byte:
+					IL.Emit(OpCodes.Conv_U1);
+					break;
+				case TypeCode.Int16:
+					IL.Emit(OpCodes.Conv_I2);
+					break;
+				case TypeCode.Char:
+				case TypeCode.UInt16:
+					IL.Emit(OpCodes.Conv_U2);
+					break;
+				case TypeCode.Int32:
+					IL.Emit(OpCodes.Conv_I4);
+					break;
+				case TypeCode.UInt32:
+					IL.Emit(OpCodes.Conv_U4);
+					break;
+				case TypeCode.Int64:
+					IL.Emit(OpCodes.Conv_I8);
+					break;
+				case TypeCode.UInt64:
+					IL.Emit(OpCodes.Conv_U8);
+					break;
+				case TypeCode.Single:
+					IL.Emit(OpCodes.Conv_R4);
+					break;
+				case TypeCode.Double:
+					IL.Emit(OpCodes.Conv_R8);
+					break;
+				default:
+					return null;
+			}
+			IL.Emit(OpCodes.Ret);
+			return method.CreateDelegate<Converter<T1, T2>>();
+		}
 
-			if (obj is T2 a)
-				return a;
-			Type t1 = typeof(T1), t2 = typeof(T2);
-			var key = (t1.TypeHandle, t2.TypeHandle);
+		internal static Converter<T1, T2> GetReflectionConverter<T1, T2>() where T1 : notnull where T2 : notnull, new()
+		{
+			if (typeof(T1) == typeof(T2))
+				return static v => v is T2 vv ? vv : new();
+			var key = (typeof(T1).TypeHandle, typeof(T2).TypeHandle);
 			if (!_conversionCache.ContainsKey(key))
 			{
-				var conversionOperator = t1.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
-												 .Where(predicator).FirstOrDefault();
-				conversionOperator ??= t2.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
-												 .Where(predicator).FirstOrDefault();
-				if (conversionOperator is null)
-					_conversionCache.Add(key, null);
+				static bool predicator(MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
+														m.ReturnType == typeof(T2) && m.GetParameters().Length == 1 &&
+														m.GetParameters()[0].ParameterType == typeof(T1);
+
+				Type t1 = typeof(T1), t2 = typeof(T2);
+				var convert = t1.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+								.Where(predicator)
+								.FirstOrDefault();
+				convert ??=   t2.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+								.Where(predicator)
+								.FirstOrDefault();
+				if (convert is null)
+				{
+					var c = InternalConvert<T1, T2>() ?? (static v => (T2)(dynamic)v);
+					_conversionCache.Add(key, c);
+				}
 				else
-					_conversionCache.Add(key, conversionOperator.CreateDelegate<Converter<T1, T2>>());
+					_conversionCache.Add(key, convert.CreateDelegate<Converter<T1, T2>>());
 			}
 			if (_conversionCache[key] is not Converter<T1, T2> converter)
-				return (T2)(dynamic)obj; // default dynamic converter
+				return static v => (T2)(dynamic)v; // default dynamic converter
 			else
-				return converter.Invoke(obj);
+				return converter;
+		}
+
+		/// <summary>
+		/// Generically convert <paramref name="obj"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators or by utilizing default primitive type converters.
+		/// </summary>
+		/// <typeparam name="T1">The input type</typeparam>
+		/// <typeparam name="T2">The output type</typeparam>
+		/// <param name="obj">The input object to be converted</param>
+		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
+		public static T2 GenericConvert<T1, T2>(this T1 obj) where T1 : notnull where T2 : notnull, new()
+		{
+			if (obj is T2 a)
+				return a;
+			else
+				return GetReflectionConverter<T1, T2>().Invoke(obj);
 		}
 
 		/// <summary>
 		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
 		/// </summary>
 		/// <param name="type">The given <see cref="Type"/> to get name</param>
-		/// <param name="full">Whether to use <see cref="Type.FullName"/> or only <see cref="System.Reflection.MemberInfo.Name"/></param>
+		/// <param name="full">Whether to use <see cref="Type.FullName"/> or only <see cref="MemberInfo.Name"/></param>
 		/// <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
 		public static string? GetGenericString(this Type type, bool full = false)
 		{
@@ -475,7 +536,7 @@ namespace Althea.Helpers
 
 		#region print related
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static string GetNumberString<T>(this T input, string format, IFormatProvider formatProvider, int precision) where T : unmanaged, IEquatable<T>, IFormattable
+		private static string GetNumberString<T>(this T input, string format, IFormatProvider formatProvider, int precision) where T : unmanaged, IFormattable
 		{
 			string normal = input.ToString(format, formatProvider);
 			bool neg = normal.StartsWith('-'), zero = input.IsZero();
@@ -494,43 +555,74 @@ namespace Althea.Helpers
 			return normal;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static string GetNumberStringReal<T>(this T input, string format, int precision) where T : unmanaged, IEquatable<T>, IFormattable
+		private static string GetNumberStringReal<T>(this T input, string format, int precision) where T : unmanaged, IFormattable
 		{
 			return input.GetNumberString(format, Resource.Culture, precision);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static string GetNumberStringComplex<T>(this Complex<T> input, string format, int precision) where T : unmanaged, IEquatable<T>, IComparable<T>, IFormattable
+		private static string GetNumberStringComplex<T>(this Complex<T> input, string format, int precision) where T : unmanaged, IFormattable
 		{
 			string r = input.Real.GetNumberString(format, Resource.Culture, precision);
 			string i = input.Imag.GetNumberString(format, Resource.Culture, precision);
 			return $"({r},{i})";
 		}
 
-		private delegate string getNumberStringDelegate<T>(T input, string format, int precision) where T : unmanaged, IEquatable<T>, IFormattable;
-
-		private static readonly Dictionary<Type, Delegate> cache_getNumberString = new();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static getNumberStringDelegate<T> GetDelegateOfGetNumberString<T>() where T : unmanaged, IEquatable<T>, IFormattable
+		private static string GetNumberStringNoFormat<T>(this T input, string format, IFormatProvider formatProvider, int precision) where T : unmanaged
 		{
-			Type t = typeof(T);
+			string normal = string.Format(formatProvider, $"{{0:{format}}}", input);
+			bool neg = normal.StartsWith('-'), zero = input.IsZero();
+			if (neg && zero)
+				normal = normal[1..];
+			int totalLength = precision + 2;
+			normal = normal.PadLeft(totalLength);
+			if (normal.Length > totalLength)
+			{
+				int newPre = 2 * precision - normal.Length + 2;
+				normal = string.Format(formatProvider, $"{{0:G{newPre}}}", input);
+				while (normal.Length > totalLength)
+					normal = string.Format(formatProvider, $"{{0:G{--newPre}}}", input);
+				normal = normal.PadLeft(totalLength);
+			}
+			return normal;
+		}
+
+		private static string GetNumberStringRealNoFormat<T>(this T input, string format, int precision) where T : unmanaged
+		{
+			return input.GetNumberStringNoFormat(format, Resource.Culture, precision);
+		}
+
+		private static string GetNumberStringComplexNoFormat<T>(this Complex<T> input, string format, int precision) where T : unmanaged
+		{
+			string r = input.Real.GetNumberStringNoFormat(format, Resource.Culture, precision);
+			string i = input.Imag.GetNumberStringNoFormat(format, Resource.Culture, precision);
+			return $"({r},{i})";
+		}
+
+
+		private delegate string getNumberStringDelegate<T>(T input, string format, int precision) where T : unmanaged;
+
+		private static readonly Dictionary<RuntimeTypeHandle, Delegate> cache_getNumberString = new();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static getNumberStringDelegate<T> GetDelegateOfGetNumberString<T>() where T : unmanaged
+		{
+			RuntimeTypeHandle t = typeof(T).TypeHandle;
 			if (!cache_getNumberString.ContainsKey(t))
 			{
-				bool isTComplex = default(T).IsComplex();
-				getNumberStringDelegate<T> result;
-				if (isTComplex)
-				{
-					var temp = typeof(ExtensionHelper).GetMethod(nameof(GetNumberStringComplex), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.MakeGenericMethod(t.GenericTypeArguments)?.CreateDelegate<getNumberStringDelegate<T>>();
-					if (temp is null)
-						throw new InvalidOperationException();
-					result = temp;
-				}
+				string methodName;
+				if (typeof(T).IsAssignableTo(typeof(IFormattable)))
+					methodName = Const<T>.IsComplex ? nameof(GetNumberStringComplex) : nameof(GetNumberStringReal);
 				else
-				{
-					result = new getNumberStringDelegate<T>(GetNumberStringReal);
-				}
+					methodName = Const<T>.IsComplex ? nameof(GetNumberStringComplexNoFormat) : nameof(GetNumberStringRealNoFormat);
+				Type[] types = Const<T>.IsComplex ? typeof(T).GenericTypeArguments : new[] { typeof(T) };
+				var temp = typeof(ExtensionHelper).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)?
+												  .MakeGenericMethod(types)?
+												  .CreateDelegate<getNumberStringDelegate<T>>();
+				if (temp is null)
+					throw new InvalidOperationException();
+				getNumberStringDelegate<T> result = temp;
 				cache_getNumberString.Add(t, result);
 			}
 			return (getNumberStringDelegate<T>)cache_getNumberString[t];
@@ -551,7 +643,7 @@ namespace Althea.Helpers
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToVectorString<T>(this Span<T> input, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToVectorString<T>(this Span<T> input, int precision = -1) where T : unmanaged
 		{
 			if (input.IsEmpty)
 				return string.Empty;
@@ -575,7 +667,7 @@ namespace Althea.Helpers
 		/// <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseVectorString<T>(this Span<T> values, Span<long> indices, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToSparseVectorString<T>(this Span<T> values, Span<long> indices, int precision = -1) where T : unmanaged
 		{
 			if (values.Length != indices.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
@@ -604,7 +696,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1) where T : unmanaged
 		{
 			if (matrix.IsEmpty)
 				return string.Empty;
@@ -642,7 +734,7 @@ namespace Althea.Helpers
 		/// <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseMatrixString<T>(this Span<T> values, Span<long> indx, Span<long> indy, int precision = -1) where T : unmanaged, IEquatable<T>, IFormattable
+		public static string ToSparseMatrixString<T>(this Span<T> values, Span<long> indx, Span<long> indy, int precision = -1) where T : unmanaged
 		{
 			if (values.Length != indx.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
@@ -986,7 +1078,7 @@ namespace Althea.Helpers
 			if (rows != cols)
 				return false;
 
-			if (default(T).IsComplex())
+			if (Const<T>.IsComplex)
 			{
 				for (long i = 0; i < rows; i++)
 					for (long j = 0; j < i; j++)

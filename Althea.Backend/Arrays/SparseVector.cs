@@ -19,12 +19,12 @@ namespace Althea.Backend.Arrays
 	/// <summary>
 	/// The concrete sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="SparseVector{T, TInd}.IndexStorage"/> that refers to the <b>sorted</b> index array storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	public sealed class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
-		where TInd : unmanaged, IEquatable<TInd>
+		where T : unmanaged
+		where TInd : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -266,7 +266,7 @@ namespace Althea.Backend.Arrays
 				}
 			}
 			else if (other is DenseVector<T>)
-				return other.ApplyToClone(d => LAS.VectorSparseAddToDense(Scalars<T>.One, this, d.Storage));
+				return other.ApplyToClone(d => LAS.VectorSparseAddToDense(Const<T>.One, this, d.Storage));
 			else
 				throw new NotSupportedException();
 		}
@@ -349,7 +349,7 @@ namespace Althea.Backend.Arrays
 		public override SparseVector<TOut, TInd> NewArrayAlike<TOut>()
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TInd>(out ActualStorage<TOut> value, copyValues: true);
-			return new SparseVector<TOut, TInd>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
+			return new SparseVector<TOut, TInd>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<T, TOut>());
 		}
 
 		/// <summary>
@@ -362,7 +362,7 @@ namespace Althea.Backend.Arrays
 		public override SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: true);
-			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<TOut, T>());
+			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
 
@@ -423,7 +423,7 @@ namespace Althea.Backend.Arrays
 			// else
 			Span<TInd> temp = indices.Length.CheckStackLimit<TInd>() ?? stackalloc TInd[indices.Length];
 			MEM.ToManaged(this.IndexStorage, temp);
-			temp.CopyTo(indices, static a => a.ReflectionConvert<TInd, long>());
+			temp.CopyTo(indices, static a => a.GenericConvert<TInd, long>());
 		}
 
 		/// <summary>

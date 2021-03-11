@@ -38,12 +38,12 @@ namespace Althea.Backend.Arrays
 	/// <summary>
 	/// The concrete (blocked) sparse matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="BlockedSparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="BlockedSparseMatrix{T, TInd}.ColIndexStorage"/> that refer to the <b>sorted</b> row and column index arrays' (of block sub-matrices) storages.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The <see cref="BlockedSparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="BlockedSparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	public class BlockedSparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<BlockedSparseMatrix<T, TInd>, T>
-		where T : unmanaged, IFormattable, IEquatable<T>
-		where TInd : unmanaged, IEquatable<TInd>
+		where T : unmanaged
+		where TInd : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -165,17 +165,17 @@ namespace Althea.Backend.Arrays
 		public override SparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: false);
-			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.GenericConvert<TOut, T>());
+			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.Convert<TOut, T>());
 		}
 		#endregion
 
 		#region indexer helpers
 		#region common
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long ToLong(TInd i) => i.ReflectionConvert<TInd, long>();
+		private static long ToLong(TInd i) => i.GenericConvert<TInd, long>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static TInd ToInd(long i) => i.ReflectionConvert<long, TInd>();
+		private static TInd ToInd(long i) => i.GenericConvert<long, TInd>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long[] ToManaged(Storage<TInd> storage)
@@ -971,7 +971,7 @@ namespace Althea.Backend.Arrays
 			if (operation == MatrixOperation.Conjugate)
 				return this.ApplyToClone(static c => LAD.PointWiseConjugate(c.Storage, 1));
 			// otherwise
-			var wrapper = LAS.MatrixSparseAddSparse(operation, MatrixOperation.None, Scalars<T>.One, this, default, null);
+			var wrapper = LAS.MatrixSparseAddSparse(operation, MatrixOperation.None, Const<T>.One, this, default, null);
 			try
 			{
 				var res = SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, this.DefaultValue, wrapper);

@@ -147,12 +147,11 @@ namespace Althea.LinearAlgebra.Sparse
 		public static void VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged where TInd : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = positions.LocationDescription;
-			DataType indexType = default(TInd).ToDataType();
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorIndexType(indexType) && a.IsSupportedVectorUnary(location1) && a.IsSupportedIndexVectorUnary(location2), node);
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorIndexType(Const<T>.DataType) && a.IsSupportedVectorUnary(location1) && a.IsSupportedIndexVectorUnary(location2), node);
 				success = node.Value.VectorSetValuesAt_(x, value, positions);
 			}
 			if (success && node is not null)
@@ -529,7 +528,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public static void IndexGetAllBounds<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
-			where TInd : unmanaged, IEquatable<TInd>
+			where TInd : unmanaged
 			where TIndOut : unmanaged
 		{
 			CombinationOfLocations location1 = array.LocationDescription, location2 = target.LocationDescription;
@@ -557,7 +556,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public static void IndexGenerateFromBounds<TInd, TIndOut>(Storage<TInd> bounds, Storage<TIndOut> target, bool lowerBound, TIndOut start = default)
-			where TInd : unmanaged, IEquatable<TInd>
+			where TInd : unmanaged
 			where TIndOut : unmanaged
 		{
 			CombinationOfLocations location1 = bounds.LocationDescription, location2 = target.LocationDescription;
@@ -772,7 +771,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
 		protected abstract bool IndexGetAllBounds_<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
-			where TInd : unmanaged, IEquatable<TInd>
+			where TInd : unmanaged
 			where TIndOut : unmanaged;
 
 		/// <summary>
@@ -789,7 +788,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
 		protected abstract bool IndexGenerateFromBounds_<TInd, TIndOut>(Storage<TInd> bounds, Storage<TIndOut> target, bool lowerBound, TIndOut start = default)
-			where TInd : unmanaged, IEquatable<TInd>
+			where TInd : unmanaged
 			where TIndOut : unmanaged;
 		#endregion
 		#endregion

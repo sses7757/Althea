@@ -18,7 +18,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
-		/// <item><see cref="MatrixCopyUpperToLowerPart{T}(long, Storage{T}, long)"/></item>
+		/// <item><see cref="MatrixCopyUpperLowerParts{T}(bool, bool, long, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -70,7 +70,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If the parameters do not fit any mode; or both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="C"/> is null or invalid</exception>
-		public static void GeneralMatricesAdd<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		public static void GeneralMatricesAdd<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) where T : unmanaged
 		{
 			if ((A is null || !A.IsValid()) && (B is null || !B.IsValid()))
 				throw new ArgumentException(Resources.Parameter.CannotAllNull);
@@ -129,7 +129,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
-		public static void DiagonalMatrixMultiplyGeneral<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		public static void DiagonalMatrixMultiplyGeneral<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) where T : unmanaged
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = C.LocationDescription, locationVec = x.LocationDescription;
 			bool success = false;
@@ -179,7 +179,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		public static void PointWisePower<T>(Storage<T> x, int stride, T p) where T : unmanaged, IEquatable<T>
+		public static void PointWisePower<T>(Storage<T> x, int stride, T p) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription;
 			bool success = false;
@@ -300,7 +300,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		public static void PointWiseAddScalar<T>(Storage<T> x, int stride, T scalar) where T : unmanaged, IEquatable<T>
+		public static void PointWiseAddScalar<T>(Storage<T> x, int stride, T scalar) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription;
 			bool success = false;
@@ -519,7 +519,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void MatrixKronecker<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>
+		public static void MatrixKronecker<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -564,7 +564,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If the parameters do not fit any mode</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the matrix-matrix multiplication:
@@ -589,7 +589,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
-		protected abstract bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) where T : unmanaged;
 		#endregion
 
 		#region custom BLAS level 1
@@ -655,7 +655,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		protected abstract bool PointWisePower_<T>(Storage<T> x, int stride, T p) where T : unmanaged, IEquatable<T>;
+		protected abstract bool PointWisePower_<T>(Storage<T> x, int stride, T p) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="x"/> = conj(<paramref name="x"/>)</c> (point-wise conjugate).
@@ -752,7 +752,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
-		protected abstract bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr) where T : unmanaged, IEquatable<T>;
+		protected abstract bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr) where T : unmanaged;
 		#endregion
 
 		#region custom BLAS level 3
@@ -787,7 +787,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, IEquatable<T>;
+		protected abstract bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
 		#endregion
 		#endregion
 	}

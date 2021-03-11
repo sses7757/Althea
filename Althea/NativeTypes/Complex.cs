@@ -47,7 +47,7 @@ namespace Althea.NativeTypes
 	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
 	/// I do not recommend one to use any data type conversions or arithmetic operations in heavy load like loop over a <c><see cref="Complex{T}"/>[]</c> even though the dynamic functions will be optimized by the JIT to have performance way better than boxing and unboxing <typeparamref name="T"/>, they may still perform a lot worse than operations with compile-time-known <typeparamref name="T"/>.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> : IComplex<T>, ICustomNativeType<Complex<T>>, IEquatable<Complex<T>> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+	public struct Complex<T> : IComplex<T>, ICustomNativeType<Complex<T>>, IEquatable<Complex<T>> where T : unmanaged
 	{
 		#region basic
 		private readonly T real, imag;
@@ -88,7 +88,7 @@ namespace Althea.NativeTypes
 			if (typeof(T).IsGenericType)
 				throw new InvalidOperationException(Support.DataType);
 			// native type check
-			_Classification = default(T).GetClassification();
+			_Classification = Const<T>.DataTypeClass;
 			if (_Classification == DataTypeClassification.NotSupported)
 				throw new InvalidOperationException(Support.DataType);
 		}
@@ -305,7 +305,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Equal operator
 		/// </summary>
-		public static bool operator ==(Complex<T> a, Complex<T> b) => a.real.Equals(b.real) && a.imag.Equals(b.imag);
+		public static bool operator ==(Complex<T> a, Complex<T> b) => a.Equals(b);
 
 		/// <summary>
 		/// Not-equal operator
@@ -315,11 +315,11 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		/// <param name="another">another <see cref="Complex{T}"/></param>
-		/// <returns>this == <paramref name="another"/></returns>
-		public bool Equals(Complex<T> another)
+		/// <param name="other">The other <see cref="Complex{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		public bool Equals(Complex<T> other)
 		{
-			return this == another;
+			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
 		}
 
 		/// <summary>
@@ -344,7 +344,7 @@ namespace Althea.NativeTypes
 				a = complex;
 			else
 				return false;
-			return this == a;
+			return this.Equals(a);
 		}
 		#endregion
 
@@ -480,7 +480,9 @@ namespace Althea.NativeTypes
 		/// <param name="p">The power of real type <typeparamref name="T"/></param>
 		public Complex<T> Pow(T p)
 		{
-			if (this.imag.Equals(default))
+			if (this.real.IsZero() && this.imag.IsZero())
+				return this;
+			if (this.imag.IsEqual(default))
 			{
 				return new Complex<T>(Math.Pow((dynamic)this.real, (dynamic)p));
 			}
@@ -500,12 +502,15 @@ namespace Althea.NativeTypes
 		/// <param name="p">The power of complex type <see cref="Complex{T}"/></param>
 		public Complex<T> Pow(Complex<T> p)
 		{
-			if (p.imag.Equals(default))
+			if (this.real.IsZero() && this.imag.IsZero())
+				return this;
+			if (p.imag.IsZero())
 			{
 				return this.Pow(p.real);
 			}
 			Complex<double> result;
-			if (this.imag.Equals(default) && this.real.CompareTo(default) > 0)
+			double r = (double)(dynamic)this.real;
+			if (this.imag.IsZero() && r > 0)
 			{
 				result = Math.Log((double)(dynamic)this.real) * (Complex<double>)p;
 			}
@@ -582,16 +587,27 @@ namespace Althea.NativeTypes
 			return this.ToString(format, Resource.Culture);
 		}
 
+
+
 		/// <summary>
-		/// Realization of <see cref="IFormattable.ToString(string, IFormatProvider)"/>
+		/// Implementation of <see cref="IFormattable.ToString(string, IFormatProvider)"/> that formats the value of the current instance using the specified format.
 		/// </summary>
-		/// <param name="format">format of output</param>
-		/// <param name="formatProvider">The provider to use to format the value.</param>
+		/// <param name="format">The format to use</param>
+		/// <param name="formatProvider">The provider to use to format the value</param>
 		public string ToString(string? format, IFormatProvider? formatProvider = null)
 		{
 			formatProvider ??= Resource.Culture;
-			string r = this.real.ToString(format, formatProvider);
-			string i = this.imag.ToString(format, formatProvider);
+			string r, i;
+			if (this.real is IFormattable f && this.imag is IFormattable g)
+			{
+				r = f.ToString(format, formatProvider);
+				i = g.ToString(format, formatProvider);
+			}
+			else
+			{
+				r = string.Format(formatProvider, $"{{0:{format}}}", this.real);
+				i = string.Format(formatProvider, $"{{0:{format}}}", this.imag);
+			}
 			return $"({r},{i})";
 		}
 		#endregion
@@ -612,7 +628,7 @@ namespace Althea.Linq
 		/// <param name="input">input array of type <typeparamref name="T"/></param>
 		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
 		/// <remarks>extend method of <paramref name="input"/></remarks>
-		public static Complex<T>[] FormComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		public static Complex<T>[] FormComplexArray<T>(this T[] input) where T : unmanaged
 		{
 			long length = input.LongLength / 2;
 			var complexArray = new Complex<T>[length];
@@ -630,7 +646,7 @@ namespace Althea.Linq
 		/// <param name="input">input array of type <typeparamref name="T"/></param>
 		/// <returns>a new <see cref="Complex{T}"/> array made out of <paramref name="input"/></returns>
 		/// <remarks>extend method of <paramref name="input"/></remarks>
-		public static Complex<T>[] ToComplexArray<T>(this T[] input) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		public static Complex<T>[] ToComplexArray<T>(this T[] input) where T : unmanaged
 		{
 			var complexArray = new Complex<T>[input.LongLength];
 			for (long i = 0; i < input.LongLength; i++)
@@ -646,7 +662,7 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Prod<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		public static Complex<T> Prod<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
 				return 1;
@@ -664,7 +680,7 @@ namespace Althea.Linq
 		/// <param name="list"></param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Sum<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		public static Complex<T> Sum<T>(this IReadOnlyList<Complex<T>> list) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
 				return default;
@@ -685,7 +701,7 @@ namespace Althea.Linq
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Sum<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		public static Complex<T> Sum<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
 				return default;
@@ -706,7 +722,7 @@ namespace Althea.Linq
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
 		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static Complex<T> Prod<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+		public static Complex<T> Prod<T, TFrom>(this IReadOnlyList<TFrom> list, Converter<TFrom, Complex<T>> selector) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
 				return default;

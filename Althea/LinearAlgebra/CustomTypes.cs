@@ -353,7 +353,7 @@ namespace Althea.LinearAlgebra
 		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="MatrixOperation.None"/> and <see cref="MatrixOperation.Conjugate"/> are possible outputs.</returns>
 		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged
 		{
-			bool isComplex = default(T).IsComplex();
+			bool isComplex = Const<T>.IsComplex;
 			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
 			switch (input)
 			{

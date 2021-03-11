@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 
@@ -340,50 +341,114 @@ namespace Althea.NativeTypes
 		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
 		/// </summary>
 		/// <typeparam name="T">The generic type to get its <see cref="DataType"/></typeparam>
-		/// <param name="value">An instance value of type <typeparamref name="T"/></param>
 		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataType ToDataType<T>(this T value) where T : unmanaged
+		internal static DataType ToDataType<T>() where T : unmanaged
 		{
-			return value switch
+			return default(T) switch
 			{
 				// built-in float types
-				float _ => DataType.RealSingle,
-				double _ => DataType.RealDouble,
+				float => DataType.RealSingle,
+				double => DataType.RealDouble,
 				// built-in integer types
-				int _ => DataType.RealInt32,
-				long _ => DataType.RealInt64,
-				sbyte _ => DataType.RealInt8,
-				short _ => DataType.RealInt16,
-				uint _ => DataType.RealUInt32,
-				ulong _ => DataType.RealUInt64,
-				byte _ => DataType.RealUInt8,
-				ushort _ => DataType.RealUInt16,
+				int => DataType.RealInt32,
+				long => DataType.RealInt64,
+				sbyte => DataType.RealInt8,
+				short => DataType.RealInt16,
+				uint => DataType.RealUInt32,
+				ulong => DataType.RealUInt64,
+				byte => DataType.RealUInt8,
+				ushort => DataType.RealUInt16,
 				// complex types
-				Complex<float> _ => DataType.ComplexSingle,
-				Complex<double> _ => DataType.ComplexDouble,
-				Complex<sbyte> _ => DataType.ComplexInt8,
-				Complex<short> _ => DataType.ComplexInt16,
-				Complex<int> _ => DataType.ComplexInt32,
-				Complex<long> _ => DataType.ComplexInt64,
-				Complex<byte> _ => DataType.ComplexUInt8,
-				Complex<ushort> _ => DataType.ComplexUInt16,
-				Complex<uint> _ => DataType.ComplexUInt32,
-				Complex<ulong> _ => DataType.ComplexUInt64,
+				Complex<float> => DataType.ComplexSingle,
+				Complex<double> => DataType.ComplexDouble,
+				Complex<sbyte> => DataType.ComplexInt8,
+				Complex<short> => DataType.ComplexInt16,
+				Complex<int> => DataType.ComplexInt32,
+				Complex<long> => DataType.ComplexInt64,
+				Complex<byte> => DataType.ComplexUInt8,
+				Complex<ushort> => DataType.ComplexUInt16,
+				Complex<uint> => DataType.ComplexUInt32,
+				Complex<ulong> => DataType.ComplexUInt64,
 				// otherwise
 				_ => !typeof(T).IsSupportedDirect() ? throw new NotSupportedException(Resources.Support.DataType)
 						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), Storage<T>.SizeOfT),
 			};
 		}
+		#endregion
+
+		#region get classification native types
+		private static readonly Dictionary<Type, DataTypeClassification> _classificationCache = new();
+
+		internal static DataTypeClassification GetClassificationDirect(this Type type)
+		{
+			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
+			{
+				return DataTypeClassification.NotSupported;
+			}
+			// cache
+			if (!_classificationCache.ContainsKey(type))
+			{
+				Type? custom = NativeTypeExtension.MakeCustomNativeType(type);
+				var result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
+				_classificationCache.Add(type, result ?? DataTypeClassification.NotSupported);
+			}
+			return _classificationCache[type];
+		}
 
 		/// <summary>
-		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
+		/// Check whether <paramref name="type"/> is a floating point type or a integral type.
 		/// </summary>
-		/// <typeparam name="T">The data type to convert</typeparam>
-		/// <returns>the corresponding <see cref="DataType"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataType ToDataType<T>() where T : unmanaged => default(T).ToDataType();
+		/// <param name="type">The type</param>
+		/// <returns>0 for not supported data type</returns>
+		public static DataTypeClassification GetClassification(this Type type)
+		{
+			if (!type.IsValueType)
+				return DataTypeClassification.NotSupported;
+			// built-in float types
+			if (type == typeof(double) || type == typeof(float))
+				return DataTypeClassification.FloatPoint_IEEE754;
+			// built-in integer types
+			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
+				return DataTypeClassification.SignedInteger;
+			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(int) || type == typeof(long))
+				return DataTypeClassification.UnsignedInteger;
+			// complex float types
+			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
+				return DataTypeClassification.FloatPoint_IEEE754;
+			// complex integer types
+			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
+				return DataTypeClassification.SignedInteger;
+			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
+				return DataTypeClassification.UnsignedInteger;
+			// other primitive types are null
+			return GetClassificationDirect(type);
+		}
+
+		/// <summary>
+		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
+		/// </summary>
+		/// <typeparam name="T">The type to check</typeparam>
+		/// <returns>0 for not supported data type</returns>
+		internal static DataTypeClassification GetClassification<T>() where T : unmanaged
+		{
+			return default(T) switch
+			{
+				// built-in float types
+				float or double => DataTypeClassification.FloatPoint_IEEE754,
+				// built-in integer types
+				sbyte or short or int or long => DataTypeClassification.SignedInteger,
+				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
+				// built-in complex float types
+				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint_IEEE754,
+				// built-in complex integer types
+				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => DataTypeClassification.SignedInteger,
+				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => DataTypeClassification.FloatPoint_IEEE754,
+				// otherwise
+				_ => GetClassificationDirect(typeof(T)),
+			};
+		}
 		#endregion
 	}
 	#endregion

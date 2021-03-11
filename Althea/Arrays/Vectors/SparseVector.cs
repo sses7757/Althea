@@ -14,16 +14,16 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	public abstract class SparseVector<T, TInd> : VectorBase<T>, ISparseVector<T>, ISparseArray<T, TInd>
-		where T : unmanaged, IFormattable, IEquatable<T>
+		where T : unmanaged
 		where TInd : unmanaged
 	{
 		#region basic
 		static SparseVector()
 		{
-			if (!default(TInd).IsIntegralType())
+			if (!Const<TInd>.IsIntegralType)
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 

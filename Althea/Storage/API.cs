@@ -1041,7 +1041,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="storage"/> is null or invalid</exception>
-		public static void FillWithValue<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
+		public static void FillWithValue<T>(Storage<T> storage, T value) where T : unmanaged
 		{
 			CombinationOfLocations location = storage.LocationDescription;
 			bool success = false;
@@ -1529,7 +1529,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-		protected virtual bool FillWithValue_<T>(Storage<T> storage, T value) where T : unmanaged, IEquatable<T>
+		protected virtual bool FillWithValue_<T>(Storage<T> storage, T value) where T : unmanaged
 		{
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (!this.IsSupportedUnary(storage.LocationDescription))
