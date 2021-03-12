@@ -117,18 +117,20 @@ namespace Althea.Arrays
 		/// <param name="left">The left operand</param>
 		/// <param name="right">The right operand</param>
 		/// <returns><paramref name="left"/> == <paramref name="right"/></returns>
-		public static bool operator ==(AbstractArray<T> left, AbstractArray<T> right)
+		public static bool operator ==(AbstractArray<T>? left, AbstractArray<T>? right)
 		{
+			if (ReferenceEquals(left, right))
+				return true;
 			if (left is null && right is null)
 				return true;
-			else if (left is null || right is null)
+			if (left is null || right is null)
 				return false;
-			else if (left.Length == 0 && right.Length == 0)
+			if (left.Length == 0 && right.Length == 0)
 				return true; // zero length arrays are regarded as the same
-			else if (left.Length == 0 || right.Length == 0)
+			if (left.Length == 0 || right.Length == 0)
 				return false;
-			else
-				return left.Equals(right);
+			// else
+			return left.Equals(right);
 		}
 
 		/// <summary>
@@ -137,7 +139,7 @@ namespace Althea.Arrays
 		/// <param name="left">The left operand</param>
 		/// <param name="right">The right operand</param>
 		/// <returns><paramref name="left"/> != <paramref name="right"/></returns>
-		public static bool operator !=(AbstractArray<T> left, AbstractArray<T> right) => !(left == right);
+		public static bool operator !=(AbstractArray<T>? left, AbstractArray<T>? right) => !(left == right);
 		#endregion
 
 		#region abstracts

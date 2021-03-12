@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-using Althea.Linq;
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
+using Althea.Linq;
+using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
@@ -23,7 +23,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public sealed class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>
+	public sealed class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMatrix<T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -959,24 +959,16 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
 		public override MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (scalarThis.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
-			if (scalarOther.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
-			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
-			if (m != p || n != q)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
-
-			if (other is DenseMatrix<T> dense)
+			var (m, n) = ((IMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
+			if (other is IDenseMatrix<T> dense)
 			{
-				var clone = dense.NewArrayAlike();
+				if (other is SymmetricDenseMatrix<T> symm)
+					symm.ToNormal();
+				var clone = other.Storage.CreateAlike();
 				try
 				{
-					LAS.MatrixDenseAddSparse(opOther, opThis, scalarOther, dense.Storage, dense.LeadDim, scalarThis, this, clone.Storage, clone.LeadDim);
-					return clone;
+					LAS.MatrixDenseAddSparse(opOther, opThis, scalarOther, other.Storage, dense.LeadDim, scalarThis, this, clone, m);
+					return new DenseMatrix<T>(clone, m, n);
 				}
 				catch (Exception)
 				{
@@ -1015,24 +1007,16 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
 		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (scalar.IsZero())
-				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
-			var (m, n) = opThis.CanInPlace() ? (this.NRows, this.NCols) : (this.NCols, this.NRows);
-			var (p, q) = opOther.CanInPlace() ? (other.NRows, other.NCols) : (other.NCols, other.NRows);
-			if (n != p)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
-
-			if (other is DenseMatrix<T> dense)
+			var (m, n, _) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
+			if (other is IDenseMatrix<T> dense)
 			{
-				var output = Storage<T>.Create(dense.Storage[0].Location, m * q);
+				var output = Storage<T>.Create(other.Storage[0].Location, m * n);
 				try
 				{
 					if (dense is SymmetricDenseMatrix<T> symm)
 						symm.ToNormal();
-					LAS.MatrixSparseMultiplyDense(opThis, opOther, q, scalar, this, dense.Storage, dense.LeadDim, default, output, m);
-					return new DenseMatrix<T>(output, m, q);
+					LAS.MatrixSparseMultiplyDense(opThis, opOther, n, scalar, this, other.Storage, dense.LeadDim, default, output, m);
+					return new DenseMatrix<T>(output, m, n);
 				}
 				catch (Exception)
 				{
@@ -1047,7 +1031,7 @@ namespace Althea.Backend.Arrays
 				{
 					T defThis = this.DefaultValue, defOther = sparse.DefaultValue;
 					T defNew = (dynamic)defThis * defOther * n;
-					return SparseVector<T, TInd>.CheckWrapper(m, q, defNew, wrapper);
+					return SparseVector<T, TInd>.CheckWrapper(m, n, defNew, wrapper);
 				}
 				catch (Exception)
 				{

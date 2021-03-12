@@ -4,12 +4,12 @@ using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
+using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
@@ -21,17 +21,11 @@ namespace Althea.Backend.Arrays
 
 		long NCols { get; }
 
-		long LeadDim { get; }
-
 		MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
 
 		MatrixBase<T> ApplyOperation(MatrixOperation operation);
 
 		MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None);
-
-		void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
-
-		void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 
 		/// <summary>
 		/// Check the parameters used by <see cref="AddMatrix"/>
@@ -74,6 +68,15 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 			return (m, q, n);
 		}
+	}
+
+	internal interface IDenseMatrix<T> : IMatrix<T> where T : unmanaged
+	{
+		long LeadDim { get; }
+
+		void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+
+		void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 
 		/// <summary>
 		/// Check the parameters used by <see cref="OverwriteByMatricesSum"/>
@@ -146,14 +149,18 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IMatrix<T>
+	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T>
 		where T : unmanaged
 	{
 		#region basic
+		private readonly FixedBuffer_16<long> m_outerSize;
+
 		/// <summary>
 		/// Get the leading dimension (the length in <typeparamref name="T"/> between to consecutive column starting elements) of this dense matrix
 		/// </summary>
-		public long LeadDim { get; }
+		public long LeadDim => this.m_outerSize[0];
+
+		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => this.m_outerSize.AsSpan();
 
 		/// <summary>
 		/// Construct a <see cref="DenseMatrix{T}"/> with value array <paramref name="values"/> and size <paramref name="rows"/>, <paramref name="cols"/>
@@ -173,7 +180,8 @@ namespace Althea.Backend.Arrays
 			if (leadDim < rows)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(leadDim));
 
-			this.LeadDim = leadDim;
+			this.m_outerSize = default;
+			this.m_outerSize[0] = leadDim; this.m_outerSize[1] = cols;
 		}
 
 		/// <summary>
@@ -181,7 +189,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		public DenseMatrix() : base(Storage<T>.Empty, 0, 0)
 		{
-			this.LeadDim = 0;
+			this.m_outerSize = default;
 		}
 		#endregion
 
@@ -516,7 +524,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override DenseMatrix<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n) = ((IMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
+			var (m, n) = ((IDenseMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
 			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
 			try
 			{
@@ -542,6 +550,25 @@ namespace Althea.Backend.Arrays
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void TransposeOfSymmMulDense(long m, long n, T scalar, SymmetricDenseMatrix<T> symm, DenseMatrix<T> dense, Storage<T> output, bool conjDense, bool conjResult)
+		{
+			DenseMatrix<T> tempDense = conjDense ? dense.ApplyToClone(static c => c.Conjugate()) : dense;
+			try
+			{
+				using var temp = Storage<T>.Create(dense.Storage[0].Location, n * m);
+				LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: true, hermA: symm.Hermitian, n, m, scalar, symm.Storage, symm.LeadDim, dense.Storage, dense.LeadDim, Const<T>.Zero, temp, n);
+				// transpose temp to output
+				LAD.GeneralMatricesAdd(conjResult ? MatrixOperation.ConjugateTranspose : MatrixOperation.Transpose, MatrixOperation.None, m, n, Const<T>.One, temp, n, Const<T>.Zero, null, 0, output, m);
+			}
+			catch (Exception)
+			{
+				if (tempDense != dense)
+					tempDense?.Dispose();
+				throw;
+			}
+		}
+
 		/// <summary>
 		/// Create a new <see cref="MatrixBase{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
 		/// </summary>
@@ -556,7 +583,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n, k) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
+			var (m, n, k) = ((IDenseMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
 			// else
 			var storageOut = Storage<T>.Create(this.Storage[0].Location, m * n);
 			try
@@ -567,8 +594,38 @@ namespace Althea.Backend.Arrays
 				}
 				if (other is SymmetricDenseMatrix<T> symm)
 				{
-					// TODO: op
-					LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: false, symm.Hermitian, m, n, scalar, symm.Storage, symm.LeadDim, this.Storage, this.LeadDim, Const<T>.Zero, storageOut, m);
+					if (opOther == MatrixOperation.Conjugate && Const<T>.IsComplex)
+					{   // op(other) is not symmetric or hermitian
+						symm.ToNormal();
+						LAD.GeneralMatricesMultiply(opThis, opOther, m, n, k, scalar, this.Storage, this.LeadDim, symm.Storage, symm.LeadDim, Const<T>.Zero, storageOut, m);
+					}
+					else if (opThis == MatrixOperation.None && opOther == MatrixOperation.None)
+					{	// no op case
+						LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: false, symm.Hermitian, m, n, scalar, symm.Storage, symm.LeadDim, this.Storage, this.LeadDim, Const<T>.Zero, storageOut, m);
+					}
+					else if (opThis == MatrixOperation.None && opOther == MatrixOperation.Conjugate)
+					{
+						using var temp = symm.ApplyOperation(opOther);
+						LAD.SymmHermMatrixMultiplyGeneral(temp.StoredUpper, leftA: false, temp.Hermitian, m, n, scalar, temp.Storage, temp.LeadDim, this.Storage, this.LeadDim, Const<T>.Zero, storageOut, m);
+					}
+					else if (opThis == MatrixOperation.Conjugate && opOther == MatrixOperation.None)
+					{
+						using var temp = this.ApplyOperation(opThis);
+						LAD.SymmHermMatrixMultiplyGeneral(symm.StoredUpper, leftA: false, symm.Hermitian, m, n, scalar, symm.Storage, symm.LeadDim, temp.Storage, temp.LeadDim, Const<T>.Zero, storageOut, m);
+					}
+					else if (opThis == MatrixOperation.Conjugate && opOther == MatrixOperation.Conjugate)
+					{
+						using var tempSymm = symm.ApplyOperation(opOther);
+						using var tempDense = this.ApplyOperation(opThis);
+						LAD.SymmHermMatrixMultiplyGeneral(tempSymm.StoredUpper, leftA: false, tempSymm.Hermitian, m, n, scalar, tempSymm.Storage, tempSymm.LeadDim, tempDense.Storage, tempDense.LeadDim, Const<T>.Zero, storageOut, m);
+					}
+					else
+					{   // opThis.CanInPlace() == false
+						int otherOp = symm.Hermitian ? 3 : opOther == MatrixOperation.Conjugate ? 2 : 1;
+						bool conjResult = opOther != MatrixOperation.None || otherOp == 3;
+						bool conjA = (opThis == MatrixOperation.None && (otherOp == 2 || otherOp == 3)) || (opThis != MatrixOperation.None && otherOp == 1);
+						TransposeOfSymmMulDense(m, n, scalar, symm, this, storageOut, conjA, conjResult);
+					}
 				}
 				else if (other is ISparseMatrix<T> sparse)
 				{
@@ -600,9 +657,9 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="A"/> or <paramref name="B"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, nullA, nullB) = ((IMatrix<T>)this).CheckOverwriteBySum(ref A, ref B, scalarA, scalarB, ref opA, ref opB);
-			var dnA = A as IMatrix<T>;
-			var dnB = B as IMatrix<T>;
+			var (m, n, nullA, nullB) = ((IDenseMatrix<T>)this).CheckOverwriteBySum(ref A, ref B, scalarA, scalarB, ref opA, ref opB);
+			var dnA = A as IDenseMatrix<T>;
+			var dnB = B as IDenseMatrix<T>;
 			var spA = A as ISparseMatrix<T>;
 			var spB = B as ISparseMatrix<T>;
 
@@ -665,7 +722,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="A"/> or <paramref name="B"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = ((IMatrix<T>)this).CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
+			var (m, n, k) = ((IDenseMatrix<T>)this).CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
 			var dnA = A as DenseMatrix<T>;
 			var dnB = B as DenseMatrix<T>;
 			var syA = A as SymmetricDenseMatrix<T>;

@@ -107,7 +107,6 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check the row and column ranges
 		/// </summary>
-		/// <returns>The row and column offsets and lengths</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol)

@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-using Althea.Linq;
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
+using Althea.Linq;
+using Althea.NativeTypes;
+using Althea.SparseBlas;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
-using System.Collections;
+using MEM = Althea.Storage.AbstractApi;
+
 
 namespace Althea.Backend.Arrays
 {
@@ -139,20 +141,20 @@ namespace Althea.Backend.Arrays
 		/// Deep clone the sparse matrix, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned sparse matrix</returns>
-		public override SparseMatrix<T, TInd> Clone()
+		public override BlockedSparseMatrix<T, TInd> Clone()
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
-			return new SparseMatrix<T, TInd>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
+			return new BlockedSparseMatrix<T, TInd>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
 		}
 
 		/// <summary>
 		/// Create a new sparse matrix with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse matrix alike this one</returns>
-		public override SparseMatrix<T, TInd> NewArrayAlike()
+		public override BlockedSparseMatrix<T, TInd> NewArrayAlike()
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: false);
-			return new SparseMatrix<T, TInd>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
+			return new BlockedSparseMatrix<T, TInd>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
 		}
 
 		/// <summary>
@@ -162,15 +164,36 @@ namespace Althea.Backend.Arrays
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
 		/// <returns>The new sparse matrix alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
-		public override SparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+		public override BlockedSparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
 			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: false);
-			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.Convert<TOut, T>());
+			return new BlockedSparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
 
 		#region indexer helpers
 		#region common
+		/// <summary>
+		/// Check the row and column ranges
+		/// </summary>
+		/// <returns>The row and column offsets and lengths, divided by <see cref="BlockNRows"/> and <see cref="BlockNCols"/> respectively</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> cannot divide <see cref="BlockNRows"/>; or <paramref name="offsetCol"/> or <paramref name="countCol"/> cannot divide <see cref="BlockNCols"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected (long offsetRow, long countRow, long offsetCol, long countCol) CheckRangeAndBlock(long offsetRow, long countRow, long offsetCol, long countCol)
+		{
+			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			if (offsetRow % this.BlockNRows != 0)
+				throw new InvalidOperationException(Resources.Other.CannotDivide);
+			if (countRow % this.BlockNRows != 0)
+				throw new InvalidOperationException(Resources.Other.CannotDivide);
+			if (offsetCol % this.BlockNCols != 0)
+				throw new InvalidOperationException(Resources.Other.CannotDivide);
+			if (countCol % this.BlockNCols != 0)
+				throw new InvalidOperationException(Resources.Other.CannotDivide);
+			return (offsetRow / this.BlockNRows, countRow / this.BlockNRows, offsetCol / this.BlockNCols, countCol / this.BlockNCols);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long ToLong(TInd i) => i.GenericConvert<TInd, long>();
 
@@ -442,7 +465,7 @@ namespace Althea.Backend.Arrays
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRange(TInd x1, TInd x2, TInd y1, TInd y2, SparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
+		private static void SetRange(TInd x1, TInd x2, TInd y1, TInd y2, BlockedSparseMatrix<T, TInd> org, SparseMatrix<T, TInd> src)
 		{
 			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols, rowMajor = org.Format.IsRowMajor();
 			// get storages
@@ -612,16 +635,17 @@ namespace Althea.Backend.Arrays
 		/// <param name="countCol">The number of the columns to take</param>
 		/// <returns>The sub-matrix (may be a referenced one) in the region indicated by the ranges</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-		public override SparseMatrix<T, TInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
+		/// <exception cref="InvalidOperationException">If the ranges cuts through the block sub-matrices of this matrix</exception>
+		public override BlockedSparseMatrix<T, TInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			(offsetRow, countRow, offsetCol, countCol) = this.CheckRangeAndBlock(offsetRow, countRow, offsetCol, countCol);
 
 			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
 			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
 			bool allRows = countRow == this.NRows, allCols = countCol == this.NCols;
 			// shortcut
 			if (allRows && allCols)
-				return new SparseMatrix<T, TInd>(this);
+				return new BlockedSparseMatrix<T, TInd>(this);
 			// else
 			SparseMatrixFormat format = this.Format;
 			var values = this.Storage; var rowInd = this.RowIndexStorage; var colInd = this.ColIndexStorage;
@@ -644,7 +668,7 @@ namespace Althea.Backend.Arrays
 				default: // never here
 					throw new NotSupportedException();
 			}
-			return new SparseMatrix<T, TInd>(countRow, countCol, values, rowInd, colInd, format, this.DefaultValue);
+			return new BlockedSparseMatrix<T, TInd>(countRow, countCol, this.BlockNRows, this.BlockNCols, values, rowInd, colInd, format, this.DefaultValue);
 		}
 
 		/// <summary>
@@ -657,25 +681,24 @@ namespace Althea.Backend.Arrays
 		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to be overwritten</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
+		/// <exception cref="InvalidOperationException">If the ranges cuts through the block sub-matrices of this matrix</exception>
 		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
 		{
 			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not (DenseMatrix<T> or SparseMatrix<T, TInd>))
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (overwrite is DenseMatrix<T> dn && (dn.NRows < countRow || dn.NCols < countCol))
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
-			if (overwrite is SparseMatrix<T, TInd> sp && (sp.NRows != countRow || sp.NCols != countCol))
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 
-			if (overwrite is DenseMatrix<T>)
+			if (overwrite is DenseMatrix<T> dense)
 			{
+				if (dense.NRows < countRow || dense.NCols < countCol)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
-				sub.ToDense(overwrite);
+				sub.ToDense(dense.Storage, dense.LeadDim);
 			}
-			else if (overwrite is SparseMatrix<T, TInd> sparse)
-			{
+			else if (overwrite is BlockedSparseMatrix<T, TInd> sparse)
+{
+				if (sparse.NRows != countRow || sparse.NCols != countCol || sparse.BlockNRows != this.BlockNRows || sparse.BlockNCols != this.BlockNCols)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
 				if (this.Format != sparse.Format)
 					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
 				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
@@ -1121,11 +1144,11 @@ namespace Althea.Backend.Arrays
 				throw new InvalidOperationException(Resources.Other.DifferentSparsity);
 		}
 
-		void IKrylovVector<SparseMatrix<T, TInd>, T>.Scale(T value) => this.Scale(value);
+		void IKrylovVector<BlockedSparseMatrix<T, TInd>, T>.Scale(T value) => this.Scale(value);
 
-		double IKrylovVector<SparseMatrix<T, TInd>, T>.Norm() => this.Norm();
+		double IKrylovVector<BlockedSparseMatrix<T, TInd>, T>.Norm() => this.Norm();
 
-		void IKrylovVector<SparseMatrix<T, TInd>, T>.Normalize() => this.Normalize();
+		void IKrylovVector<BlockedSparseMatrix<T, TInd>, T>.Normalize() => this.Normalize();
 
 		T IKrylovVector<SparseMatrix<T, TInd>, T>.Dot(SparseMatrix<T, TInd> other)
 		{
@@ -1150,7 +1173,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other <see cref="SparseMatrix{T, TInd}"/> to replace from</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-		public void ReplaceBy(SparseMatrix<T, TInd> other)
+		public void ReplaceBy(BlockedSparseMatrix<T, TInd> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));

@@ -110,6 +110,7 @@ namespace Althea.Helpers
 			return method.CreateDelegate<Converter<T1, T2>>();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static Converter<T1, T2> GetReflectionConverter<T1, T2>() where T1 : notnull where T2 : notnull, new()
 		{
 			if (typeof(T1) == typeof(T2))
@@ -149,6 +150,7 @@ namespace Althea.Helpers
 		/// <typeparam name="T2">The output type</typeparam>
 		/// <param name="obj">The input object to be converted</param>
 		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T2 GenericConvert<T1, T2>(this T1 obj) where T1 : notnull where T2 : notnull, new()
 		{
 			if (obj is T2 a)
@@ -171,7 +173,7 @@ namespace Althea.Helpers
 			if (type.IsGenericType)
 			{
 				var args = type.GenericTypeArguments;
-				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString()).ToArray())}>";
+				name += $"<{string.Join(", ", args.Select(static a => a.GetGenericString()).ToArray())}>";
 			}
 			return name;
 		}

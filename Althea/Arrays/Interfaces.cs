@@ -134,6 +134,49 @@ namespace Althea.Arrays
 	#endregion
 
 
+	#region pitched (strided) array
+	/// <summary>
+	/// The interface of dense array that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IPitchedArray<T> where T : unmanaged
+	{
+		#region properties
+		/// <summary>
+		/// When implemented by a derived class, get the (referenced) storage of this dense pitched/strided array.
+		/// </summary>
+		Storage<T> Storage { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this array (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
+		/// </summary>
+		ReadOnlySpan<long> Size { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the pitch (in <typeparamref name="T"/>) of this array (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. It must has length equals to <see cref="Size"/> and consists numbers larger than or equals to <see cref="Size"/> respectively.
+		/// </summary>
+		ReadOnlySpan<long> OuterSize { get; }
+		#endregion
+
+		#region method
+		/// <summary>
+		/// Get the strides of this array at each dimension and fill the result in the <paramref name="output"/>
+		/// </summary>
+		/// <param name="output">The <see cref="Span{T}"/> of length equals to <see cref="Size"/></param>
+		/// <returns>The <paramref name="output"/></returns>
+		/// <remarks>At exit, <paramref name="output"/>[i] denotes the displacement (stride) between two consecutive elements in the i<sup>th</sup>-mode.</remarks>
+		Span<long> GetStrides(Span<long> output)
+		{
+			if (output.Length != this.Size.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(output));
+			this.OuterSize.AccumulateProd(output, inclusive: true);
+			return output;
+		}
+		#endregion
+	}
+	#endregion
+
+
 	#region sparse arrays related
 	/// <summary>
 	/// Simple interface for sparse arrays, inherits <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>. The index type is not indicated

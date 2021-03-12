@@ -17,13 +17,19 @@ namespace Althea.Backend.Arrays
 	/// The concrete symmetric or hermitian dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class SymmetricDenseMatrix<T> : MatrixBase<T>, IKrylovVector<SymmetricDenseMatrix<T>, T>, IMatrix<T> where T : unmanaged
+	public class SymmetricDenseMatrix<T> : MatrixBase<T>, IKrylovVector<SymmetricDenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T> where T : unmanaged
 	{
 		#region basic
+		private readonly FixedBuffer_16<long> m_outerSize = default;
+
+		private readonly DenseMatrix<T> m_dense;
+
 		/// <summary>
 		/// Get the leading dimension (the length in <typeparamref name="T"/> between to consecutive column starting elements) of this dense matrix
 		/// </summary>
-		public long LeadDim { get; } = 0;
+		public long LeadDim => this.m_outerSize[0];
+
+		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => this.m_outerSize.AsSpan();
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this symmetric matrix is hermitian or simply symmetric. For real-typed <typeparamref name="T"/>, this is always false.
@@ -34,8 +40,6 @@ namespace Althea.Backend.Arrays
 		/// Get a <see cref="bool"/> indicating whether this symmetric matrix stores the data at upper triangle or lower triangle
 		/// </summary>
 		public bool StoredUpper { get; } = true;
-
-		private readonly DenseMatrix<T> m_dense;
 
 		/// <summary>
 		/// Create an empty <see cref="SymmetricDenseMatrix{T}"/>
@@ -62,7 +66,8 @@ namespace Althea.Backend.Arrays
 			if (leadDim < n)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(leadDim));
 
-			this.LeadDim = leadDim;
+			this.m_outerSize = default;
+			this.m_outerSize[0] = leadDim; this.m_outerSize[1] = n;
 			this.Hermitian = hermitian && Const<T>.IsComplex; this.StoredUpper = storedUpper;
 			this.m_dense = new DenseMatrix<T>(this.Storage, this.NRows, this.NCols, this.LeadDim);
 		}
@@ -103,7 +108,7 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Other.MatrixSquare, nameof(normal));
 			if ((op.CanInPlace() ? normal.NRows : normal.NCols) != this.NRows)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(normal));
-			if (normal is not IMatrix<T> mat)
+			if (normal is not IDenseMatrix<T> mat)
 				throw new NotSupportedException();
 
 			if (normal is SymmetricDenseMatrix<T> symm)
@@ -385,11 +390,11 @@ namespace Althea.Backend.Arrays
 
 		#region linear algebra
 		/// <summary>
-		/// Create a new <see cref="MatrixBase{T}"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
+		/// Create a new <see cref="SymmetricDenseMatrix{T}"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
 		/// </summary>
 		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the simple operation to be applied</param>
-		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <paramref name="operation"/>(this)</returns>
-		public override MatrixBase<T> ApplyOperation(MatrixOperation operation)
+		/// <returns>A new <see cref="SymmetricDenseMatrix{T}"/> as the result of <paramref name="operation"/>(this)</returns>
+		public override SymmetricDenseMatrix<T> ApplyOperation(MatrixOperation operation)
 		{
 			operation = operation.Simplify<T>(this.Hermitian);
 			// shortcut
@@ -414,7 +419,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n) = ((IMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
+			var (m, n) = ((IDenseMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
 			opThis = opThis.Simplify<T>(this.Hermitian);
 			if (other is SymmetricDenseMatrix<T> symm)
 			{
@@ -438,9 +443,9 @@ namespace Althea.Backend.Arrays
 						throw;
 					}
 				}
+				// otherwise
 				symm.ToNormal();
-			}	
-			// otherwise
+			}
 			return this.ToNormal().AddMatrix(scalarThis, scalarOther, other, opThis, opOther);
 		}
 
@@ -458,34 +463,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n, k) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
-			var storageOut = Storage<T>.Create(this.Storage[0].Location, m * n);
-			try
-			{
-				if (other is SymmetricDenseMatrix<T> symm)
-				{
-					symm.ToNormal();
-					// TODO: op
-					LAD.SymmHermMatrixMultiplyGeneral(this.StoredUpper, leftA: true, this.Hermitian, m, n, scalar, this.Storage, this.LeadDim, symm.Storage, symm.LeadDim, Const<T>.Zero, storageOut, m);
-				}
-				else if (other is DenseMatrix<T> dense)
-				{
-					// TODO: op
-					LAD.SymmHermMatrixMultiplyGeneral(this.StoredUpper, leftA: false, this.Hermitian, m, n, scalar, this.Storage, this.LeadDim, dense.Storage, dense.LeadDim, Const<T>.Zero, storageOut, m);
-				}
-				else if (other is ISparseMatrix<T> sparse)
-				{
-					this.ToNormal();
-					LAS.MatrixDenseMultiplySparse(opThis, opOther, m, scalar, this.Storage, this.LeadDim, sparse, Const<T>.Zero, storageOut, m);
-				}
-				else
-					throw new NotSupportedException();
-			}
-			catch (Exception)
-			{
-				storageOut?.Dispose();
-				throw;
-			}
+			return this.ToNormal().MultiplyMatrix(scalar, other, opThis, opOther);
 		}
 
 		/// <summary>
@@ -499,11 +477,62 @@ namespace Althea.Backend.Arrays
 		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to the <paramref name="B"/> matrix before addition</param>
 		/// <exception cref="ArgumentException">If both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the sizes are incompatible; or both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="A"/> is this matrix while <paramref name="opA"/> is not <see cref="MatrixOperation.None"/> or <paramref name="B"/> is this matrix while <paramref name="opB"/> is not <see cref="MatrixOperation.None"/></exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="A"/> and <paramref name="B"/> are not <see cref="SymmetricDenseMatrix{T}"/>s whose sum is also symmetric</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="A"/> and <paramref name="B"/> are not matrices whose sum is symmetric matrix with the same <see cref="Hermitian"/> value as this matrix</exception>
 		public virtual void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, nullA, nullB) = ((IMatrix<T>)this).CheckOverwriteBySum(ref A, ref B, scalarA, scalarB, ref opA, ref opB);
-
+			var (m, n, nullA, nullB) = ((IDenseMatrix<T>)this).CheckOverwriteBySum(ref A, ref B, scalarA, scalarB, ref opA, ref opB);
+			if (nullA || nullB)
+			{
+				if (A is null)
+				{
+					A = B; scalarA = scalarB; opA = opB;
+				}
+				if (A is not SymmetricDenseMatrix<T> symm || opA != MatrixOperation.None)
+					throw new InvalidOperationException();
+				this.ReplaceBy(symm);
+				this.Scale(scalarA);
+			}
+			else if (A == B)
+			{
+				if (A is SymmetricDenseMatrix<T> symmA)
+				{
+					if (symmA.StoredUpper == this.StoredUpper && symmA.Hermitian == this.Hermitian && opA == opB)
+					{   // direct sum is enough
+						LAD.GeneralMatricesAdd(opA, opA, m, n, scalarA, A.Storage, symmA.LeadDim, scalarB, A.Storage, symmA.LeadDim, this.Storage, this.LeadDim);
+					}
+					// else, use dense
+					A = symmA.ToNormal();
+					this.OverwriteByMatricesSum(A, A, scalarA, scalarB, opA, opB);
+					return;
+				}
+				// dense and sparse check
+				if (!scalarA.IsEqual(scalarB) ||
+					(this.Hermitian ? opA.Conjugate() : opA).Transpose().Simplify<T>((A as SymmetricDenseMatrix<T>)?.Hermitian) != opB)
+					throw new InvalidOperationException();
+				if (A is DenseMatrix<T> denseA)
+				{
+					LAD.GeneralMatricesAdd(opA, opB, m, n, scalarA, A.Storage, denseA.LeadDim, scalarA, A.Storage, denseA.LeadDim, this.Storage, this.LeadDim);
+				}
+				else if (A is ISparseMatrix<T> sparseA)
+				{
+					using var dense = this.Storage.MakeReference(newLength: m * n).CreateAlike();
+					sparseA.ToDense(dense);
+					LAD.GeneralMatricesAdd(opA, opB, m, n, scalarA, dense, sparseA.NRows, scalarA, dense, sparseA.NRows, this.Storage, this.LeadDim);
+				}
+				else
+					throw new InvalidOperationException();
+			}
+			else if (A is SymmetricDenseMatrix<T> symmA && B is SymmetricDenseMatrix<T> symmB)
+			{
+				if ((this.Hermitian && (opA != MatrixOperation.None || opB != MatrixOperation.None)) || (!this.Hermitian && opA != opB))
+					throw new InvalidOperationException();
+				if (symmA.StoredUpper != this.StoredUpper || symmB.StoredUpper != this.StoredUpper ||
+					symmA.Hermitian != this.Hermitian || symmB.Hermitian != this.Hermitian)
+					throw new InvalidOperationException();
+				LAD.GeneralMatricesAdd(opA, opB, m, n, scalarA, A.Storage, symmA.LeadDim, scalarB, B.Storage, symmB.LeadDim, this.Storage, this.LeadDim);
+			}
+			else
+				throw new InvalidOperationException();
 		}
 
 		/// <summary>
@@ -519,24 +548,27 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="A"/> or <paramref name="B"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="A"/> != <paramref name="B"/> or <paramref name="opA"/> != <paramref name="opB"/>^H such that the result cannot be a symmetric matrix with the same <see cref="Hermitian"/> value of this matrix</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="A"/> != <paramref name="B"/> or <paramref name="opA"/> != <paramref name="opB"/>^H such that the result cannot be a symmetric matrix with the same <see cref="Hermitian"/> value as this matrix</exception>
 		public virtual void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = ((IMatrix<T>)this).CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
+			var (_, n, k) = ((IDenseMatrix<T>)this).CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
 			if (A != B)
 				throw new InvalidOperationException();
 			if (A is SymmetricDenseMatrix<T> symm)
 			{
-				if (opA.Conjugate().Transpose().Simplify<T>(symm.Hermitian) != opB)
+				if ((this.Hermitian ? opA.Conjugate() : opA).Transpose().Simplify<T>(symm.Hermitian) != opB)
 					throw new InvalidOperationException();
-
+				symm.ToNormal();
+				LAD.RankKUpdate(this.StoredUpper, opB, this.Hermitian, n, k, α, symm.Storage, symm.LeadDim, β, this.Storage, this.LeadDim);
 			}
 			else if (A is DenseMatrix<T> dense)
 			{
-				if (opA.Conjugate().Transpose().Simplify<T>() != opB)
+				if ((this.Hermitian ? opA.Conjugate() : opA).Transpose().Simplify<T>() != opB)
 					throw new InvalidOperationException();
-
+				LAD.RankKUpdate(this.StoredUpper, opB, this.Hermitian, n, k, α, dense.Storage, dense.LeadDim, β, this.Storage, this.LeadDim);
 			}
+			else
+				throw new NotSupportedException();
 		}
 		#endregion
 

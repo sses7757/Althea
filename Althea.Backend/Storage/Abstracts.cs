@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
@@ -191,7 +191,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
-		public virtual void SetValues<T>(T value, long length) where T : unmanaged, IEquatable<T>
+		public virtual void SetValues<T>(T value, long length) where T : unmanaged
 		{
 			if (length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);

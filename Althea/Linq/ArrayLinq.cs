@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Althea.NativeTypes;
 using Althea.Resources;
 
 
@@ -195,169 +196,95 @@ namespace Althea.Linq
 			return output;
 		}
 
-		#region concrete accumulate sum
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
 		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<int> AccumulateSum(this IReadOnlyList<int> list, int init = 0)
+		/// <param name="init">The initial value</param>
+		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false) or both (null)</param>
+		/// <returns>The output accumulated result</returns>
+		public static IReadOnlyList<T> AccumulateSum<T>(this IReadOnlyList<T> list, T init = default, bool? inclusive = true) where T : unmanaged
 		{
-			if (list is null)
+			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
-			var output = new int[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i + 1] = list[i] + output[i];
-			}
-			return output;
-		}
 
-		/// <summary>
-		/// List accumulate summation.
-		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<long> AccumulateSum(this IReadOnlyList<long> list, long init = 0)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			var output = new long[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
+			int len = list.Count;
+			if (inclusive is null)
 			{
-				output[i + 1] = list[i] + output[i];
+				T[] res = new T[len + 1];
+				res[0] = init;
+				for (int i = 0; i < len; i++)
+				{
+					res[i + 1] = Const<T>.AddDelegate.Invoke(list[i], res[i]);
+				}
+				return res;
 			}
-			return output;
-		}
 
-		/// <summary>
-		/// List accumulate summation.
-		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<float> AccumulateSum(this IReadOnlyList<float> list, float init = 0)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			var output = new float[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
+			T[] result = new T[len];
+			if (inclusive.Value)
 			{
-				output[i + 1] = list[i] + output[i];
+				result[0] = init; len--;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+				}
 			}
-			return output;
-		}
-
-		/// <summary>
-		/// List accumulate summation.
-		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<double> AccumulateSum(this IReadOnlyList<double> list, double init = 0)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			var output = new double[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
+			else
 			{
-				output[i + 1] = list[i] + output[i];
+				result[0] = Const<T>.AddDelegate.Invoke(init, list[0]);
+				for (int i = 1; i < len; i++)
+				{
+					result[i] = Const<T>.AddDelegate.Invoke(list[i], result[i - 1]);
+				}
 			}
-			return output;
-		}
-		#endregion
-
-		#region concrete accumulate prod
-		/// <summary>
-		/// List accumulate product.
-		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<int> AccumulateProd(this IReadOnlyList<int> list, int init = 1)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			var output = new int[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i + 1] = list[i] * output[i];
-			}
-			return output;
+			return result;
 		}
 
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
 		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<long> AccumulateProd(this IReadOnlyList<long> list, long init = 1)
+		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
+		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false) or both (null)</param>
+		/// <returns>The output accumulated result</returns>
+		public static IReadOnlyList<T> AccumulateProd<T>(this IReadOnlyList<T> list, T init = default, bool? inclusive = true) where T : unmanaged
 		{
-			if (list is null)
+			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
-			var output = new long[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i + 1] = list[i] * output[i];
-			}
-			return output;
-		}
+			if (init.IsZero())
+				init = Const<T>.One;
 
-		/// <summary>
-		/// List accumulate product.
-		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<float> AccumulateProd(this IReadOnlyList<float> list, float init = 1)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			var output = new float[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
+			int len = list.Count;
+			if (inclusive is null)
 			{
-				output[i + 1] = list[i] * output[i];
+				T[] res = new T[len + 1];
+				res[0] = init;
+				for (int i = 0; i < len; i++)
+				{
+					res[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], res[i]);
+				}
+				return res;
 			}
-			return output;
-		}
 
-		/// <summary>
-		/// List accumulate product.
-		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="init">initial output value</param>
-		/// <returns>Accumulated result <see cref="IReadOnlyList{TOut}"/> which contains the <paramref name="init"/> as the first element</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<double> AccumulateProd(this IReadOnlyList<double> list, double init = 1)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			var output = new double[list.Count + 1];
-			output[0] = init;
-			for (int i = 0; i < list.Count; i++)
+			T[] result = new T[len];
+			if (inclusive.Value)
 			{
-				output[i + 1] = list[i] * output[i];
+				result[0] = init; len--;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+				}
 			}
-			return output;
+			else
+			{
+				result[0] = Const<T>.MultiplyDelegate.Invoke(init, list[0]);
+				for (int i = 1; i < len; i++)
+				{
+					result[i] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i - 1]);
+				}
+			}
+			return result;
 		}
-		#endregion
 
 		/// <summary>
 		/// General list accumulation without the <paramref name="init"/> as an output element.
@@ -384,310 +311,83 @@ namespace Althea.Linq
 			return output;
 		}
 
-		#region concrete prod
 		/// <summary>
-		/// List product
+		/// List summation.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Prod(this IReadOnlyList<int> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <returns>The summation result</returns>
+		public static T Sum<T>(this IReadOnlyList<T> list) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
-				return 1;
-			int prod = 1;
-			for (int i = 0; i < list.Count; i++)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Count;
+			T result = list[0];
+			for (int i = 1; i < len; i++)
 			{
-				prod *= list[i];
+				result = Const<T>.AddDelegate.Invoke(list[i], result);
 			}
-			return prod;
+			return result;
 		}
 
 		/// <summary>
-		/// List product
+		/// List product.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Prod(this IReadOnlyList<long> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <returns>The product result</returns>
+		public static T Prod<T>(this IReadOnlyList<T> list) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
-				return 1;
-			long prod = 1;
-			for (int i = 0; i < list.Count; i++)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Count;
+			T result = list[0];
+			for (int i = 1; i < len; i++)
 			{
-				prod *= list[i];
+				result = Const<T>.MultiplyDelegate.Invoke(list[i], result);
 			}
-			return prod;
+			return result;
 		}
 
 		/// <summary>
-		/// List product
+		/// List summation by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Prod(this IReadOnlyList<float> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="selector">The selector to apply to each element</param>
+		/// <returns>The summation result</returns>
+		public static T Sum<TOrg, T>(this IReadOnlyList<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
-				return 1;
-			float prod = 1;
-			for (int i = 0; i < list.Count; i++)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Count;
+			T result = selector.Invoke(list[0]);
+			for (int i = 1; i < len; i++)
 			{
-				prod *= list[i];
+				result = Const<T>.AddDelegate.Invoke(selector.Invoke(list[i]), result);
 			}
-			return prod;
+			return result;
 		}
 
 		/// <summary>
-		/// List product
+		/// List product by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Prod(this IReadOnlyList<double> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="selector">The selector to apply to each element</param>
+		/// <returns>The product result</returns>
+		public static T Prod<TOrg, T>(this IReadOnlyList<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
 			if (list is null || list.Count == 0)
-				return 1;
-			double prod = 1;
-			for (int i = 0; i < list.Count; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-		#endregion
-
-		#region concrete sum
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Sum(this IReadOnlyList<int> list)
-		{
-			if (list is null || list.Count == 0)
-				return 0;
-			int sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Sum(this IReadOnlyList<long> list)
-		{
-			if (list is null || list.Count == 0)
-				return 0;
-			long sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Sum(this IReadOnlyList<float> list)
-		{
-			if (list is null || list.Count == 0)
-				return 0;
-			float sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Sum(this IReadOnlyList<double> list)
-		{
-			if (list is null || list.Count == 0)
-				return 0;
-			double sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-		#endregion
-
-		#region concrete selector sum
-		/// <summary>
-		/// List summation by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Sum<T>(this IReadOnlyList<T> list, Converter<T, int> selector)
-		{
-			if (list is null)
 				throw new ArgumentNullException(nameof(list));
-			int sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
 
-		/// <summary>
-		/// List summation by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Sum<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			long sum = 0;
-			for (int i = 0; i < list.Count; i++)
+			int len = list.Count;
+			T result = selector.Invoke(list[0]);
+			for (int i = 1; i < len; i++)
 			{
-				sum += selector(list[i]);
+				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(list[i]), result);
 			}
-			return sum;
+			return result;
 		}
-
-		/// <summary>
-		/// List summation by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Sum<T>(this IReadOnlyList<T> list, Converter<T, float> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			float sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Sum<T>(this IReadOnlyList<T> list, Converter<T, double> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			double sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-		#endregion
-
-		#region concrete selector prod
-		/// <summary>
-		/// List product by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Prod<T>(this IReadOnlyList<T> list, Converter<T, int> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			int sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List product by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Prod<T>(this IReadOnlyList<T> list, Converter<T, long> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			long sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List product by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Prod<T>(this IReadOnlyList<T> list, Converter<T, float> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			float sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List product by <paramref name="selector"/>
-		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="selector">The selector to apply to each element</param>
-		/// <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Prod<T>(this IReadOnlyList<T> list, Converter<T, double> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			double sum = 0;
-			for (int i = 0; i < list.Count; i++)
-			{
-				sum += selector(list[i]);
-			}
-			return sum;
-		}
-		#endregion
-
 		#endregion
 
 		#region predicate
@@ -704,6 +404,8 @@ namespace Althea.Linq
 				return true;
 			if (list.Count != other.Count)
 				return false;
+			if (list is T[] a1 && other is T[] a2)
+				return ((ReadOnlySpan<T>)a1).SequenceEqual(a2);
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (!list[i].Equals(other[i]))
@@ -760,92 +462,6 @@ namespace Althea.Linq
 			}
 			return true;
 		}
-
-		#region concrete type SequenceEqual
-		/// <summary>
-		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
-		/// </summary>
-		/// <param name="list">The list to compare</param>
-		/// <param name="other">The other list to compare</param>
-		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual(this IReadOnlyList<byte> list, IReadOnlyList<byte> other)
-		{
-			if (ReferenceEquals(list, other))
-				return true;
-			if (list.Count != other.Count)
-				return false;
-
-			for (int i = 0; i < list.Count; i++)
-			{
-				if (list[i] != other[i])
-					return false;
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
-		/// </summary>
-		/// <param name="list">The list to compare</param>
-		/// <param name="other">The other list to compare</param>
-		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual(this IReadOnlyList<char> list, IReadOnlyList<char> other)
-		{
-			if (ReferenceEquals(list, other))
-				return true;
-			if (list.Count != other.Count)
-				return false;
-
-			for (int i = 0; i < list.Count; i++)
-			{
-				if (list[i] != other[i])
-					return false;
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
-		/// </summary>
-		/// <param name="list">The list to compare</param>
-		/// <param name="other">The other list to compare</param>
-		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual(this IReadOnlyList<int> list, IReadOnlyList<int> other)
-		{
-			if (ReferenceEquals(list, other))
-				return true;
-			if (list.Count != other.Count)
-				return false;
-
-			for (int i = 0; i < list.Count; i++)
-			{
-				if (list[i] != other[i])
-					return false;
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Check if <paramref name="list"/>'s all elements are Sequentially equal to <paramref name="other"/>'s
-		/// </summary>
-		/// <param name="list">The list to compare</param>
-		/// <param name="other">The other list to compare</param>
-		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual(this IReadOnlyList<long> list, IReadOnlyList<long> other)
-		{
-			if (ReferenceEquals(list, other))
-				return true;
-			if (list.Count != other.Count)
-				return false;
-
-			for (int i = 0; i < list.Count; i++)
-			{
-				if (list[i] != other[i])
-					return false;
-			}
-			return true;
-		}
-		#endregion
 
 		/// <summary>
 		/// Check if all elements of <paramref name="list"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
@@ -1023,132 +639,6 @@ namespace Althea.Linq
 			}
 			return output;
 		}
-
-		#region concrete type Select
-		/// <summary>
-		/// General list converter.
-		/// </summary>
-		/// <typeparam name="T">input list type</typeparam>
-		/// <param name="list">The list to convert</param>
-		/// <param name="selector">selector function used to convert</param>
-		/// <returns>Result after conversion</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<Index> Select<T>(this IReadOnlyList<T> list, Converter<T, Index> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			if (selector is null)
-				throw new ArgumentNullException(nameof(selector));
-
-			if (list is T[] a)
-			{
-				return Array.ConvertAll(a, selector);
-			}
-			else if (list is List<T> l)
-			{
-				return l.ConvertAll(selector);
-			}
-			var output = new Index[list.Count];
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i] = selector(list[i]);
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// General list converter.
-		/// </summary>
-		/// <typeparam name="T">input list type</typeparam>
-		/// <param name="list">The list to convert</param>
-		/// <param name="selector">selector function used to convert</param>
-		/// <returns>Result after conversion</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<char> Select<T>(this IReadOnlyList<T> list, Converter<T, char> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			if (selector is null)
-				throw new ArgumentNullException(nameof(selector));
-
-			if (list is T[] a)
-			{
-				return Array.ConvertAll(a, selector);
-			}
-			else if (list is List<T> l)
-			{
-				return l.ConvertAll(selector);
-			}
-			var output = new char[list.Count];
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i] = selector(list[i]);
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// General list converter.
-		/// </summary>
-		/// <typeparam name="TIn">input list type</typeparam>
-		/// <param name="list">The list to convert</param>
-		/// <param name="selector">selector function used to convert</param>
-		/// <returns>Result after conversion</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<int> Select<TIn>(this IReadOnlyList<TIn> list, Converter<TIn, int> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			if (selector is null)
-				throw new ArgumentNullException(nameof(selector));
-
-			if (list is TIn[] a)
-			{
-				return Array.ConvertAll(a, selector);
-			}
-			else if (list is List<TIn> l)
-			{
-				return l.ConvertAll(selector);
-			}
-			var output = new int[list.Count];
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i] = selector(list[i]);
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// General list converter.
-		/// </summary>
-		/// <typeparam name="TIn">input list type</typeparam>
-		/// <param name="list">The list to convert</param>
-		/// <param name="selector">selector function used to convert</param>
-		/// <returns>Result after conversion</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static IReadOnlyList<long> Select<TIn>(this IReadOnlyList<TIn> list, Converter<TIn, long> selector)
-		{
-			if (list is null)
-				throw new ArgumentNullException(nameof(list));
-			if (selector is null)
-				throw new ArgumentNullException(nameof(selector));
-
-			if (list is TIn[] a)
-			{
-				return Array.ConvertAll(a, selector);
-			}
-			else if (list is List<TIn> l)
-			{
-				return l.ConvertAll(selector);
-			}
-			var output = new long[list.Count];
-			for (int i = 0; i < list.Count; i++)
-			{
-				output[i] = selector(list[i]);
-			}
-			return output;
-		}
-		#endregion
 
 		/// <summary>
 		/// General list converter with index as second input of <paramref name="selector"/>.

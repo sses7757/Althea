@@ -1,10 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Runtime.InteropServices;
 
 using Althea.Arrays;
+using Althea.Helpers;
+using Althea.LinearAlgebra;
+using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
+using Althea.NativeTypes;
+
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
@@ -13,8 +20,7 @@ namespace Althea.Backend.Arrays
 	/// The general dense tensor class that inherit the <see cref="ValueArray{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public sealed class DenseTensor<T> : TensorBase<T>, ITensor where T : unmanaged
-		where T : struct, IComparable<T>
+	public sealed class DenseTensor<T> : TensorBase<T>, ITensor, IPitchedArray<T> where T : unmanaged
 	{
 		#region new members
 		/// <summary>

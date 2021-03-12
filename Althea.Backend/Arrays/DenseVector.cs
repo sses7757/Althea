@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
+using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
@@ -213,7 +213,7 @@ namespace Althea.Backend.Arrays
 			if (this.Length != (operation == MatrixOperation.None ? matrix.NRows : matrix.NCols))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrix));
 
-			var dnMat = matrix as IMatrix<T>;
+			var dnMat = matrix as IDenseMatrix<T>;
 			var spMat = matrix as ISparseMatrix<T>;
 			var dnVec = vector as DenseVector<T>;
 			var spVec = vector as ISparseVector<T>;

@@ -3,10 +3,12 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Linq;
-using Althea.Storage;
-using Althea.Resources;
 using Althea.Backend.Storage;
+using Althea.Linq;
+using Althea.NativeTypes;
+using Althea.Resources;
+using Althea.Storage;
+
 
 using static Althea.Backend.Storage.ConcretePointersExtension;
 
@@ -90,7 +92,7 @@ namespace Althea.Backend.CSharp.Storage
 				result = default; return false;
 			}
 
-			IPointer pointer; // box struct to interface
+			IPointer pointer;
 			if (location == CpuAlone)
 			{
 				var ptr = Marshal.AllocHGlobal(checked((int)length));
@@ -165,6 +167,8 @@ namespace Althea.Backend.CSharp.Storage
 			if (offset == NOT_SUPPORT)
 				return false;
 
+			if (value.IsZero())
+				return this.FillWithValue_(pointer, (byte)0);
 			if (mp is not null)
 			{
 				mp.AsSpan<T>(pointer).Fill(value);
@@ -172,7 +176,7 @@ namespace Althea.Backend.CSharp.Storage
 			else if (sp is not null)
 			{
 				sp.NativeStream.Position = offset;
-				sp.NativeStream.SetValues<T>(value, pointer.LengthInBytes / Storage<T>.SizeOfT);
+				sp.NativeStream.SetValues(value, pointer.LengthInBytes / Storage<T>.SizeOfT);
 			}
 			return true;
 		}
@@ -532,6 +536,15 @@ namespace Althea.Backend.CSharp.Storage
 				FromManaged(mp, sp, dstOffset, values, srcOffset, h);
 			}
 			return true;
+		}
+		#endregion
+
+		#region file
+		protected override PointerSegment AllocateFileAt(string path, long lengthInBytes)
+		{
+			Uri uri = new(Uri.UriSchemeFile + Uri.SchemeDelimiter + path);
+			var pointer = new StreamPointer(new Backend.Storage.FileStream(uri, lengthInBytes), new StorageLocation(LocationType.Uri, (int)UriScheme.File));
+			return new PointerSegment(pointer);
 		}
 		#endregion
 	}

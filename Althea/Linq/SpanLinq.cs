@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
+using Althea.NativeTypes;
 using Althea.Resources;
+using Althea.Helpers;
 
 
 namespace Althea.Linq
@@ -523,301 +525,175 @@ namespace Althea.Linq
 		#endregion
 
 		#region aggregate
-		#region concrete prod of Span
 		/// <summary>
-		/// List product
+		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Prod(this Span<int> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="init">The initial value</param>
+		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
+		public static Span<T> AccumulateSum<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			if (list.Length == 0)
-				return 1;
-			int prod = 1;
-			for (int i = 0; i < list.Length; i++)
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+			if (result.Length < list.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(result));
+
+			int len = list.Length;
+			if (result.Length > len)
 			{
-				prod *= list[i];
+				result[0] = init;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+				}
+				return result;
 			}
-			return prod;
+			// else
+			if (inclusive)
+			{
+				result[0] = init; len--;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+				}
+			}
+			else
+			{
+				result[0] = Const<T>.AddDelegate.Invoke(init, list[0]);
+				for (int i = 1; i < len; i++)
+				{
+					result[i] = Const<T>.AddDelegate.Invoke(list[i], result[i - 1]);
+				}
+			}
+			return result[..list.Length];
 		}
 
 		/// <summary>
-		/// List product
+		/// List accumulate product.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Prod(this Span<long> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
+		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
+		public static Span<T> AccumulateProd<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			if (list.Length == 0)
-				return 1;
-			long prod = 1;
-			for (int i = 0; i < list.Length; i++)
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+			if (result.Length < list.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(result));
+			if (init.IsZero())
+				init = Const<T>.One;
+
+			int len = list.Length;
+			if (result.Length > len)
 			{
-				prod *= list[i];
+				result[0] = init;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+				}
+				return result;
 			}
-			return prod;
+			// else
+			if (inclusive)
+			{
+				result[0] = init; len--;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+				}
+			}
+			else
+			{
+				result[0] = Const<T>.MultiplyDelegate.Invoke(init, list[0]);
+				for (int i = 1; i < len; i++)
+				{
+					result[i] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i - 1]);
+				}
+			}
+			return result[..list.Length];
 		}
 
 		/// <summary>
-		/// List product
+		/// List summation.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Prod(this Span<float> list)
+		/// <param name="list">The span to accumulate</param>
+		/// <returns>The summation result</returns>
+		public static T Sum<T>(this Span<T> list) where T : unmanaged
 		{
-			if (list.Length == 0)
-				return 1;
-			float prod = 1;
-			for (int i = 0; i < list.Length; i++)
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Length;
+			T result = list[0];
+			for (int i = 1; i < len; i++)
 			{
-				prod *= list[i];
+				result = Const<T>.AddDelegate.Invoke(list[i], result);
 			}
-			return prod;
+			return result;
 		}
 
 		/// <summary>
-		/// List product
+		/// List product.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Prod(this Span<double> list)
+		/// <param name="list">The span to accumulate</param>
+		/// <returns>The product result</returns>
+		public static T Prod<T>(this Span<T> list) where T : unmanaged
 		{
-			if (list.Length == 0)
-				return 1;
-			double prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-		#endregion
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
 
-		#region concrete sum of Span
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Sum(this Span<int> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			int sum = 0;
-			for (int i = 0; i < list.Length; i++)
+			int len = list.Length;
+			T result = list[0];
+			for (int i = 1; i < len; i++)
 			{
-				sum += list[i];
+				result = Const<T>.MultiplyDelegate.Invoke(list[i], result);
 			}
-			return sum;
+			return result;
 		}
 
 		/// <summary>
-		/// List summation
+		/// List summation by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Sum(this Span<long> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="selector">The selector to apply to each element</param>
+		/// <returns>The summation result</returns>
+		public static T Sum<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			if (list.Length == 0)
-				return 0;
-			long sum = 0;
-			for (int i = 0; i < list.Length; i++)
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Length;
+			T result = selector.Invoke(list[0]);
+			for (int i = 1; i < len; i++)
 			{
-				sum += list[i];
+				result = Const<T>.AddDelegate.Invoke(selector.Invoke(list[i]), result);
 			}
-			return sum;
+			return result;
 		}
 
 		/// <summary>
-		/// List summation
+		/// List product by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Sum(this Span<float> list)
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="selector">The selector to apply to each element</param>
+		/// <returns>The product result</returns>
+		public static T Prod<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			if (list.Length == 0)
-				return 0;
-			float sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
 
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Sum(this Span<double> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			double sum = 0;
-			for (int i = 0; i < list.Length; i++)
+			int len = list.Length;
+			T result = selector.Invoke(list[0]);
+			for (int i = 1; i < len; i++)
 			{
-				sum += list[i];
+				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(list[i]), result);
 			}
-			return sum;
+			return result;
 		}
-		#endregion
-
-		#region concrete prod of ReadOnlySpan
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Prod(this ReadOnlySpan<int> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			int prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Prod(this ReadOnlySpan<long> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			long prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Prod(this ReadOnlySpan<float> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			float prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-
-		/// <summary>
-		/// List product
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Product result, 1 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Prod(this ReadOnlySpan<double> list)
-		{
-			if (list.Length == 0)
-				return 1;
-			double prod = 1;
-			for (int i = 0; i < list.Length; i++)
-			{
-				prod *= list[i];
-			}
-			return prod;
-		}
-		#endregion
-
-		#region concrete sum of ReadOnlySpan
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static int Sum(this ReadOnlySpan<int> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			int sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static long Sum(this ReadOnlySpan<long> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			long sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static float Sum(this ReadOnlySpan<float> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			float sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-
-		/// <summary>
-		/// List summation
-		/// </summary>
-		/// <param name="list"></param>
-		/// <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-		/// <remarks>extend method of <paramref name="list"/></remarks>
-		public static double Sum(this ReadOnlySpan<double> list)
-		{
-			if (list.Length == 0)
-				return 0;
-			double sum = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				sum += list[i];
-			}
-			return sum;
-		}
-		#endregion
 		#endregion
 
 		#region indexing
@@ -1291,53 +1167,23 @@ namespace Althea.Linq
 
 		#region range
 		/// <summary>
-		/// Generate range of type <see cref="char"/> <see cref="Span{T}"/>.
+		/// Generate range of type <typeparamref name="T"/> to the target <paramref name="span"/>
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged type as the data type</typeparam>
 		/// <param name="span">The span to fill</param>
-		/// <param name="start">start value of the range</param>
-		/// <param name="step">step of the range</param>
-		public static void FillWithRange(this Span<char> span, char start, int step = 1)
+		/// <param name="start">The start value of the range</param>
+		/// <param name="step">The step of the range, default 0 will be replaced by 1</param>
+		public static void FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged
 		{
-			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+			if (step.IsZero())
+				step = Const<T>.One;
 
-			for (int i = 0; i < span.Length; i++)
+			span[0] = start;
+			for (int i = 1; i < span.Length; i++)
 			{
-				span[i] = (char)(i * step + start);
-			}
-		}
-
-		/// <summary>
-		/// Generate range of type <see cref="int"/> <see cref="Span{T}"/>.
-		/// </summary>
-		/// <param name="span">The span to fill</param>
-		/// <param name="start">start value of the range</param>
-		/// <param name="step">step of the range</param>
-		public static void FillWithRange(this Span<int> span, int start, int step = 1)
-		{
-			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
-
-			for (int i = 0; i < span.Length; i++)
-			{
-				span[i] = i * step + start;
-			}
-		}
-
-		/// <summary>
-		/// Generate range of type <see cref="long"/> <see cref="Span{T}"/>.
-		/// </summary>
-		/// <param name="span">The span to fill</param>
-		/// <param name="start">start value of the range</param>
-		/// <param name="step">step of the range</param>
-		public static void FillWithRange(this Span<long> span, long start, long step = 1)
-		{
-			if (step == 0)
-				throw new ArgumentOutOfRangeException(nameof(step), step, Parameter.CannotZero);
-
-			for (int i = 0; i < span.Length; i++)
-			{
-				span[i] = i * step + start;
+				span[i] = Const<T>.AddDelegate(span[i - 1], step);
 			}
 		}
 		#endregion

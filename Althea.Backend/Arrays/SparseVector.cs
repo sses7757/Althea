@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-using Althea.Linq;
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
+using Althea.Linq;
+using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
