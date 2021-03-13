@@ -54,9 +54,9 @@ namespace Althea.Arrays
 		public SparseMatrixFormat Format => this.m_format;
 
 		/// <summary>
-		/// Get or set the default value (the value not specified) of this sparse matrix
+		/// Get or set the default value (the values which are not specified) of this sparse matrix
 		/// </summary>
-		public T DefaultValue { get => this.m_defaultValue; protected internal set => this.m_defaultValue = value; }
+		public T DefaultValue { get => this.m_defaultValue; set => this.m_defaultValue = value; }
 
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
 
@@ -252,8 +252,9 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, convert this sparse matrix to another sparse matrix with <see cref="Format"/> fitting <paramref name="format"/>
 		/// </summary>
 		/// <param name="format">The target format, can be anatomic</param>
+		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
 		/// <returns>The converted <see cref="SparseMatrix{T, TInd}"/> whose <see cref="Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
-		public abstract SparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format);
+		public abstract SparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format, IOtherInfo? otherInfo = null);
 		#endregion
 
 		#region equality
@@ -302,7 +303,7 @@ namespace Althea.Arrays
 			this.GetIndices(row, col);
 			// to matrix string
 			detail += values.ToSparseMatrixString(row, col, precision: settings.Precision);
-			if (this.Length > values.Length)
+			if (this.NStored > values.Length)
 				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
 			return description + detail;
 		}

@@ -125,11 +125,11 @@ namespace Althea.Backend.Arrays
 		}
 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		internal static void Slice(TInd start, TInd end, ref Storage<T> value, ref Storage<TInd> index)
+		internal static void Slice(TInd start, TInd end, ref Storage<T> value, ref Storage<TInd> index, long pack = 1)
 		{
 			long offset = LAS.IndexBound(index, start, lowerBound: true);
 			long length = LAS.IndexBound(index, end, lowerBound: false) - offset;
-			value = value.MakeReference(offset, length);
+			value = value.MakeReference(offset * pack, length * pack);
 			index = index.MakeReference(offset, length);
 		}
 

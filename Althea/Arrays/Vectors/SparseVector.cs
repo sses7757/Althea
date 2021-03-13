@@ -53,9 +53,9 @@ namespace Althea.Arrays
 		public SparseVectorFormat Format => this.m_format;
 
 		/// <summary>
-		/// Get or set the default value (the value not specified) of this sparse vector
+		/// Get or set the default value (the values which are not specified) of this sparse vector
 		/// </summary>
-		public T DefaultValue { get => this.m_defaultValue; protected internal set => this.m_defaultValue = value; }
+		public T DefaultValue { get => this.m_defaultValue; set => this.m_defaultValue = value; }
 
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
 

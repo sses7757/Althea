@@ -366,10 +366,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
+		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
-		public static SparseArrayWrapper<T> MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format, IOtherInfo? otherInfo = null) where T : unmanaged
 		{
 			CombinationOfLocations location1 = source.Storage.LocationDescription;
 			SparseArrayWrapper<T> result = default;
@@ -378,7 +379,7 @@ namespace Althea.LinearAlgebra.Sparse
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(source), node);
-				success = node.Value.MatrixSparseFormatConvert_(source, format, out result);
+				success = node.Value.MatrixSparseFormatConvert_(source, format, out result, otherInfo);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -691,9 +692,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
 		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</param>
+		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseFormatConvert_<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target) where T : unmanaged;
+		protected abstract bool MatrixSparseFormatConvert_<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target, IOtherInfo? otherInfo = null) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.
