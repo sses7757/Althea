@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Althea.Linq;
 using Althea.Helpers;
 using Althea.NativeTypes;
-
+using System.Runtime.CompilerServices;
 
 namespace Althea.Arrays
 {
-	/// <summary>
-	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+/// <summary>
+/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
+/// </summary>
+/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public abstract class VectorBase<T> : ValueArray<T>, IReadOnlyList<T> where T : unmanaged
 	{
 		#region initialize
@@ -30,7 +30,7 @@ namespace Althea.Arrays
 		/// Reshape this array to a vector. Returns this vector directly.
 		/// </summary>
 		/// <returns> Returns this vector directly.</returns>
-		public override ValueArray<T> ToVector() => this;
+		public override VectorBase<T> ToVector() => this;
 		#endregion
 
 		#region indexing
@@ -44,6 +44,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="index">The index to be checked</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected void CheckIndex(long index)
 		{
 			if (index < 0)
@@ -58,6 +59,7 @@ namespace Althea.Arrays
 		/// <param name="offset">The starting offset index to be checked</param>
 		/// <param name="length">The length to be checked</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and/or <paramref name="length"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected void CheckRange(long offset, long length)
 		{
 			if (offset < 0)

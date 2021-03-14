@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 
 using Althea.Arrays;
@@ -12,7 +10,6 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.SparseBlas;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
@@ -72,6 +69,8 @@ namespace Althea.Backend.Arrays
 		/// Get the number of column of (any) block sub-matrix
 		/// </summary>
 		public long BlockNCols { get; }
+
+		private long Pack => this.BlockNRows * this.BlockNCols;
 
 		/// <summary>
 		/// Create an empty <see cref="BlockedSparseMatrix{T, TInd}"/>
@@ -211,12 +210,11 @@ namespace Althea.Backend.Arrays
 		{
 			long xx = Math.DivRem(x, this.BlockNRows, out long remX);
 			long yy = Math.DivRem(y, this.BlockNCols, out long remY);
-			long pack = this.BlockNRows * this.BlockNCols;
 			long find = compressed ? SparseMatrix<T, TInd>.IndexCompressed(xx, yy, sorted, other) :
-									SparseMatrix<T, TInd>.IndexCoordinated(xx, yy, sorted, other, this.ActualLength / pack);
+									SparseMatrix<T, TInd>.IndexCoordinated(xx, yy, sorted, other, this.NStored / this.Pack);
 			if (find >= 0)
 			{
-				find = find * pack + remY * this.BlockNRows + remX;
+				find = find * this.Pack + remY * this.BlockNRows + remX;
 				if (get)
 					return MEM.ToManaged(this.Storage + find);
 				// else
@@ -247,7 +245,6 @@ namespace Althea.Backend.Arrays
 		public override BlockedSparseMatrix<T, TInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
 			(offsetRow, countRow, offsetCol, countCol) = this.CheckRangeAndBlock(offsetRow, countRow, offsetCol, countCol);
-			long pack = this.BlockNRows * this.BlockNCols;
 			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
 			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
 			bool allRows = countRow == this.NRows, allCols = countCol == this.NCols;
@@ -260,18 +257,18 @@ namespace Althea.Backend.Arrays
 			switch (this.Format)
 			{
 				case SparseMatrixFormat.BCOR:
-					SparseMatrix<T, TInd>.GetRangeCoordinated(x1, x2, y1, y2, allCols, ref rowInd, ref colInd, ref values, pack);
+					SparseMatrix<T, TInd>.GetRangeCoordinated(x1, x2, y1, y2, allCols, ref rowInd, ref colInd, ref values, this.Pack);
 					format = SparseMatrixFormat.BSR;
 					break;
 				case SparseMatrixFormat.BCOC:
-					SparseMatrix<T, TInd>.GetRangeCoordinated(y1, y2, x1, x2, allRows, ref colInd, ref rowInd, ref values, pack);
+					SparseMatrix<T, TInd>.GetRangeCoordinated(y1, y2, x1, x2, allRows, ref colInd, ref rowInd, ref values, this.Pack);
 					format = SparseMatrixFormat.BSC;
 					break;
 				case SparseMatrixFormat.BSR:
-					SparseMatrix<T, TInd>.GetRangeCompressed(offsetRow, countRow, y1, y2, allCols, ref rowInd, ref colInd, ref values, pack);
+					SparseMatrix<T, TInd>.GetRangeCompressed(offsetRow, countRow, y1, y2, allCols, ref rowInd, ref colInd, ref values, this.Pack);
 					break;
 				case SparseMatrixFormat.BSC:
-					SparseMatrix<T, TInd>.GetRangeCompressed(offsetCol, countCol, x1, x2, allRows, ref colInd, ref rowInd, ref values, pack);
+					SparseMatrix<T, TInd>.GetRangeCompressed(offsetCol, countCol, x1, x2, allRows, ref colInd, ref rowInd, ref values, this.Pack);
 					break;
 				default: // never here
 					throw new NotSupportedException();
@@ -337,7 +334,6 @@ namespace Althea.Backend.Arrays
 			if (value is not BlockedSparseMatrix<T, TInd> sp || sp.Format.IsRowMajor() != this.Format.IsRowMajor())
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
 			var (offsetRow, countRow, offsetCol, countCol) = this.CheckRangeAndBlock(rowStart, sp.NRows, colStart, sp.NCols);
-			long pack = this.BlockNRows * this.BlockNCols;
 
 			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
 			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
@@ -353,7 +349,7 @@ namespace Althea.Backend.Arrays
 				return;
 			}
 			// else
-			SparseMatrix<T, TInd>.SetRange(x1, x2, y1, y2, this, sp, pack);
+			SparseMatrix<T, TInd>.SetRange(x1, x2, y1, y2, this, sp, this.Pack);
 		}
 
 		/// <summary>
@@ -382,61 +378,19 @@ namespace Althea.Backend.Arrays
 		/// Get the <paramref name="k"/>-th diagonal elements.
 		/// </summary>
 		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <returns>A new <see cref="SparseVector{T, TInd}"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
+		/// <returns>A new <see cref="DenseVector{T}"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
 		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
-		public override SparseVector<T, TInd> GetDiag(long k)
+		public override DenseVector<T> GetDiag(long k)
 		{
 			if (this.NRows != this.NCols)
 				throw new InvalidOperationException();
 			if (Math.Abs(k) >= this.NRows)
 				throw new ArgumentOutOfRangeException(nameof(k), k, Resources.Parameter.InvalidValue);
 
-			// get row starts
-			bool compressed = this.Format.IsCompressed();
-			var (sortedRow, column) = (this.RowIndexStorage, this.ColIndexStorage);
-			if (this.Format.IsRowMajor())
-			{
-				k = -k;
-				(sortedRow, column) = (column, sortedRow);
-			}
-			long absK = Math.Abs(k), rows = this.NRows / this.BlockNRows;
-			TInd rowsInd = ToInd(rows);
-			long[] rowStarts = compressed ? SparseMatrix<T, TInd>.CompressedToRowStarts(0, rows, sortedRow) :
-											SparseMatrix<T, TInd>.CoordinatedToRowStarts(default, rowsInd, rows, sortedRow);
-			// get indices
-			List<(long subIndex, long subK)> indices = new((int)(rows / 2));
-			for (long i = 0; i < rows; i++)
-			{
-				long offset = rowStarts[i], length = rowStarts[i + 1] - rowStarts[i];
-				long 
-				if (length <= 0)
-					continue;
-				long find = LAS.IndexFind(sorted: true, column.MakeReference(offset, length), k >= 0 ? ToInd(i + k) : ToInd(i));
-				if (find >= 0)
-				{
-					indices.Add(find + offset);
-				}
-			}
-			// to storage
-			ActualStorage<TInd>? vectorIndices = null;
-			ActualStorage<T>? vectorValues = null;
-			try
-			{
-				vectorIndices = column.MakeReference(newLength: indices.Count).CreateAlike();
-				Span<long> managedIndices = CollectionsMarshal.AsSpan(indices);
-				FromManaged(vectorIndices, managedIndices);
-				vectorValues = this.Storage.MakeReference(newLength: indices.Count).CreateAlike();
-				var vector = new SparseVector<T, TInd>(actualRows, vectorValues, vectorIndices, this.DefaultValue);
-				LAS.VectorGatherValuesAt(this.Storage, vector);
-				LAD.PointWiseAddScalar(vectorIndices, 1, ToInd(-rowStarts[0]));
-				return vector;
-			}
-			catch (Exception)
-			{
-				vectorIndices?.Dispose(); vectorValues?.Dispose();
-				throw;
-			}
+			using var dense = Storage<T>.Create(this.Storage[0].Location, this.NRows * this.NCols);
+			this.ToDense(dense, this.NRows);
+			return new DenseMatrix<T>(dense, this.NRows, this.NCols).GetDiag(k);
 		}
 
 		/// <summary>
@@ -458,15 +412,7 @@ namespace Althea.Backend.Arrays
 			using var vec = this.GetDiag(k);
 			if (overwrite is DenseVector<T> dense)
 			{
-				vec.ToDense(dense.Storage);
-			}
-			else if (overwrite is SparseVector<T, TInd> sparse)
-			{
-				if (sparse.NStored != vec.NStored)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
-				sparse.DefaultValue = this.DefaultValue;
-				MEM.MemoryCopy(vec.Storage, sparse.Storage);
-				MEM.MemoryCopy(vec.IndexStorage, sparse.IndexStorage);
+				dense.ReplaceBy(vec);
 			}
 			else
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
@@ -492,43 +438,7 @@ namespace Althea.Backend.Arrays
 			if (value is not SparseVector<T, TInd> sparse || !sparse.DefaultValue.IsEqual(this.DefaultValue))
 				throw new NotSupportedException();
 
-			// get row starts
-			bool compressed = this.Format.IsCompressed();
-			var (sortedRow, column) = (this.RowIndexStorage, this.ColIndexStorage);
-			if (this.Format.IsRowMajor())
-			{
-				k = -k;
-				(sortedRow, column) = (column, sortedRow);
-			}
-			long absK = Math.Abs(k), rows = this.NRows / this.BlockNRows;
-			TInd rowsInd = ToInd(rows);
-			long[] rowStarts = compressed ? SparseMatrix<T, TInd>.CompressedToRowStarts(0, rows, sortedRow) :
-											SparseMatrix<T, TInd>.CoordinatedToRowStarts(default, rowsInd, rows, sortedRow);
-			// check indices
-			long[] indices = ToManaged(sparse.IndexStorage); long c = 0;
-			for (long i = 0; i < actualRows; i++)
-			{
-				long offset = rowStarts[i], length = rowStarts[i + 1] - rowStarts[i];
-				if (length <= 0)
-					continue;
-				long find = LAS.IndexFind(sorted: true, column.MakeReference(offset, length), k >= 0 ? ToInd(i + k) : ToInd(i));
-				if (find < 0)
-					continue;
-				if (indices[c++] != find + rowStarts[0])
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
-			}
-			if (c != indices.LongLength)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(value));
-			// set
-			LAD.PointWiseAddScalar(sparse.IndexStorage, 1, ToInd(rowStarts[0]));
-			try
-			{
-				LAS.VectorSparseToDense(sparse, this.Storage);
-			}
-			finally
-			{
-				LAD.PointWiseAddScalar(sparse.IndexStorage, 1, ToInd(-rowStarts[0]));
-			}
+			throw new NotImplementedException();
 		}
 		#endregion
 
@@ -873,8 +783,7 @@ namespace Althea.Backend.Arrays
 			StringBuilder detail = new(description);
 			detail.AppendLine(":");
 			// get managed arrays
-			long pack = this.BlockNRows * this.BlockNCols;
-			int length = (int)Math.Min(settings.ArrayLength, this.NStored / pack);
+			int length = (int)Math.Min(settings.ArrayLength, this.NStored / this.Pack);
 			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
@@ -884,7 +793,7 @@ namespace Althea.Backend.Arrays
 				string indexPair = $"({row[i]}, {col[i]}) -> ";
 				detail.Append(indexPair);
 				string pad = new(' ', indexPair.Length);
-				string matrixRepr = new DenseMatrix<T>(this.Storage + pack * i, this.BlockNRows, this.BlockNCols).Print(overrideSetting);
+				string matrixRepr = new DenseMatrix<T>(this.Storage + this.Pack * i, this.BlockNRows, this.BlockNCols).Print(overrideSetting);
 				string[] reprs = matrixRepr.Split(Environment.NewLine);
 				for (int j = 0; j < reprs.Length - 1; j++)
 				{
@@ -892,8 +801,8 @@ namespace Althea.Backend.Arrays
 				}
 				detail.Append(reprs[^1]);
 			}
-			if (this.NStored / pack > length)
-				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / pack - length));
+			if (this.NStored / this.Pack > length)
+				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / this.Pack - length));
 			return detail.ToString();
 		}
 

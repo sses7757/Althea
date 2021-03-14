@@ -941,7 +941,7 @@ namespace Althea.Helpers
 			{
 				val = index.Value;
 			}
-			if (check && (val < 0 || val > length))
+			if (check && (val < 0 || val >= length))
 				throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 			return val;
 		}
@@ -960,7 +960,7 @@ namespace Althea.Helpers
 		{
 			if (check && length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			long start = range.Start.GetPosition(length), end = range.End.GetPosition(length);
+			long start = range.Start.GetPosition(length, check: false), end = range.End.GetPosition(length, check: false);
 			if (check && (end <= start || start >= length || end < 0 || end > length))
 				throw new ArgumentOutOfRangeException(nameof(range), range, Parameter.InvalidValue);
 			return (start, end - start);

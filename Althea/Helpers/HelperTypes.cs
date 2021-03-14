@@ -27,7 +27,7 @@ namespace Althea.Helpers
 		/// <param name="index">The index as a <see cref="int"/></param>
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		new T this[int index] { get; set; }
+		new T this[int index] { get; }
 
 		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
@@ -43,15 +43,6 @@ namespace Althea.Helpers
 		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		IFixedBuffer<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>;
-
-		/// <summary>
-		/// Copy the data from the given <paramref name="span"/> to this fixed buffer
-		/// </summary>
-		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy from</param>
-		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-		void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0);
 
 		/// <summary>
 		/// Copy the data from this fixed buffer to the given <paramref name="span"/>
@@ -72,15 +63,6 @@ namespace Althea.Helpers
 		TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct;
 
 		/// <summary>
-		/// Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-		/// </summary>
-		/// <typeparam name="TStruct">The input struct type</typeparam>
-		/// <param name="struct">The structure to copy</param>
-		/// <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-		void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct;
-
-		/// <summary>
 		/// Check whether the this fixed buffer contains the given <paramref name="value"/> 
 		/// </summary>
 		/// <param name="value">The value to find</param>
@@ -90,7 +72,8 @@ namespace Althea.Helpers
 	#endregion
 
 
-
+	//// 16 32 56 60 64 128
+	
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 16
 	/// </summary>
@@ -100,6 +83,8 @@ namespace Althea.Helpers
 	public unsafe struct FixedBuffer_16<T> : IEquatable<FixedBuffer_16<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
+		private static readonly int _count = 16 / sizeof(T);
+
 		private T field;
 
 		/// <summary>
@@ -109,7 +94,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T[] ToArray()
 		{
-			T[] array = new T[this.Count];
+			T[] array = new T[_count];
 			fixed (void* t = &this.field)
 			fixed (T* a = array)
 			{
@@ -147,14 +132,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new Span<T>(t, size);
+				var temp = new Span<T>((T*)t + offset, size);
 				span.CopyTo(temp);
 			}
 		}
@@ -169,14 +155,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, size);
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
 				temp.CopyTo(span);
 			}
 		}
@@ -197,7 +184,7 @@ namespace Althea.Helpers
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
-				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
 			}
 			return s;
 		}
@@ -227,7 +214,7 @@ namespace Althea.Helpers
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
 		public Span<T> AsSpan()
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, this.Count);
+			return MemoryMarshal.CreateSpan(ref this.field, _count);
 		}
 		#endregion
 
@@ -241,7 +228,7 @@ namespace Althea.Helpers
 				{
 					T* ptr = (T*)t;
 					int result = 0;
-					for (int i = 0; i < this.Count; i++)
+					for (int i = 0; i < _count; i++)
 					{
 						if (!ptr[i].Equals(default))
 							result++;
@@ -264,7 +251,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
 			get {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -272,7 +259,7 @@ namespace Althea.Helpers
 				}
 			}
 			set {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -288,7 +275,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < _count; i++)
 			{
 				yield return this[i];
 			}
@@ -307,13 +294,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptr = (T*)t;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (value.Equals(ptr[i]))
-						return true;
-				}
-				return false;
+				return new ReadOnlySpan<T>(t, _count).Contains(value);
 			}
 		}
 		#endregion
@@ -329,14 +310,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptrThis = (T*)t;
-				T* ptrOther = &other.field;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (!ptrThis[i].Equals(ptrOther[i]))
-						return false;
-				}
-				return true;
+				return new ReadOnlySpan<T>(t, _count).SequenceEqual(new ReadOnlySpan<T>(&other.field, _count));
 			}
 		}
 
@@ -360,7 +334,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, this.Count);
+				var temp = new ReadOnlySpan<T>(t, _count);
 				return temp.HashCodeOfSpan();
 			}
 		}
@@ -392,7 +366,305 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Fixed Buffer";
+			return $"Fixed Buffer [Size = {_count}, Type = {typeof(T).GetGenericString()}]";
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 32
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	[StructLayout(LayoutKind.Sequential, Size = 32)]
+	[UnsafeValueType]
+	public unsafe struct FixedBuffer_32<T> : IEquatable<FixedBuffer_32<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
+	{
+		#region basic
+		private static readonly int _count = 32 / sizeof(T);
+
+		private T field;
+
+		/// <summary>
+		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+		/// </summary>
+		/// <returns>The array containing the elements of this fixed buffer</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T[] ToArray()
+		{
+			T[] array = new T[_count];
+			fixed (void* t = &this.field)
+			fixed (T* a = array)
+			{
+				Unsafe.CopyBlock(a, t, 32);
+			}
+			return array;
+		}
+
+		/// <summary>
+		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public FixedBuffer_32<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
+		{
+			var newBuffer = new FixedBuffer_32<TOut>();
+			fixed (void* t = &this.field)
+			{
+				Unsafe.CopyBlock(&newBuffer, t, 32);
+			}
+			return newBuffer;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IFixedBuffer<TOut> IFixedBuffer<T>.As<TOut>() => this.As<TOut>();
+
+		/// <summary>
+		/// Copy the data from the given <paramref name="span"/> to this fixed buffer
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= _count)
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+			if (span.Length + offset > _count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+
+			int size = Math.Min(span.Length, _count - offset);
+			fixed (void* t = &this.field)
+			{
+				var temp = new Span<T>((T*)t + offset, size);
+				span.CopyTo(temp);
+			}
+		}
+
+		/// <summary>
+		/// Copy the data from this fixed buffer to the given <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy to</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void CopyToSpan(Span<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= _count)
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+			if (span.Length + offset > _count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+
+			int size = Math.Min(span.Length, _count - offset);
+			fixed (void* t = &this.field)
+			{
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
+				temp.CopyTo(span);
+			}
+		}
+
+		/// <summary>
+		/// Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+		/// </summary>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="copyStart">The start position to copy in bytes</param>
+		/// <returns>The created <typeparamref name="TStruct"/></returns>
+		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
+		{
+			int size = Marshal.SizeOf<TStruct>();
+			if (size + copyStart > 32)
+				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+			var s = new TStruct();
+			fixed (void* t = &this.field)
+			{
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
+			}
+			return s;
+		}
+
+		/// <summary>
+		/// Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+		/// </summary>
+		/// <typeparam name="TStruct">The input struct type</typeparam>
+		/// <param name="struct">The structure to copy</param>
+		/// <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
+		{
+			int size = Marshal.SizeOf<TStruct>();
+			if (size + copyStart > 32)
+				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+			fixed (void* t = &this.field)
+			{
+				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
+			}
+		}
+
+		/// <summary>
+		/// Create a <see cref="Span{T}"/> from this fixed buffer
+		/// </summary>
+		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
+		public Span<T> AsSpan()
+		{
+			return MemoryMarshal.CreateSpan(ref this.field, _count);
+		}
+		#endregion
+
+		#region indexer
+		/// <summary>
+		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
+		/// </summary>
+		public int NonDefaults {
+			get {
+				fixed (void* t = &this.field)
+				{
+					T* ptr = (T*)t;
+					int result = 0;
+					for (int i = 0; i < _count; i++)
+					{
+						if (!ptr[i].Equals(default))
+							result++;
+					}
+					return result;
+				}
+			}
+		}
+
+		/// <summary>
+		/// The number of elements in this fixed buffer
+		/// </summary>
+		public int Count => 32 / sizeof(T);
+
+		/// <summary>
+		/// Basic indexer of this fixed buffer
+		/// </summary>
+		/// <param name="index">The index</param>
+		/// <returns>The value at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+		public T this[int index] {
+			get {
+				if (index < 0 || index >= _count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				fixed (void* t = &this.field)
+				{
+					return ((T*)t)[index];
+				}
+			}
+			set {
+				if (index < 0 || index >= _count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				fixed (void* t = &this.field)
+				{
+					((T*)t)[index] = value;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns an enumerator that iterates through the collection.
+		/// </summary>
+		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerator<T> GetEnumerator()
+		{
+			for (int i = 0; i < _count; i++)
+			{
+				yield return this[i];
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+		/// <summary>
+		/// Check whether the this fixed buffer contains the given <paramref name="value"/> 
+		/// </summary>
+		/// <param name="value">The value to find</param>
+		/// <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Contains(T value)
+		{
+			fixed (void* t = &this.field)
+			{
+				return new ReadOnlySpan<T>(t, _count).Contains(value);
+			}
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="FixedBuffer_32{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(FixedBuffer_32<T> other)
+		{
+			fixed (void* t = &this.field)
+			{
+				return new ReadOnlySpan<T>(t, _count).SequenceEqual(new ReadOnlySpan<T>(&other.field, _count));
+			}
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object? obj)
+		{
+			return obj is FixedBuffer_32<T> buffer && this.Equals(buffer);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="FixedBuffer_32{T}"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			fixed (void* t = &this.field)
+			{
+				var temp = new ReadOnlySpan<T>(t, _count);
+				return temp.HashCodeOfSpan();
+			}
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(FixedBuffer_32<T> left, FixedBuffer_32<T> right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(FixedBuffer_32<T> left, FixedBuffer_32<T> right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		/// <summary>
+		/// Return the string representation of this <see cref="FixedBuffer_32{T}"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="FixedBuffer_32{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override string ToString()
+		{
+			return $"Fixed Buffer [Size = {_count}, Type = {typeof(T).GetGenericString()}]";
 		}
 		#endregion
 	}
@@ -407,6 +679,8 @@ namespace Althea.Helpers
 	public unsafe struct FixedBuffer_56<T> : IEquatable<FixedBuffer_56<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
+		private static readonly int _count = 56 / sizeof(T);
+
 		private T field;
 
 		/// <summary>
@@ -416,7 +690,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T[] ToArray()
 		{
-			T[] array = new T[this.Count];
+			T[] array = new T[_count];
 			fixed (void* t = &this.field)
 			fixed (T* a = array)
 			{
@@ -454,14 +728,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new Span<T>(t, size);
+				var temp = new Span<T>((T*)t + offset, size);
 				span.CopyTo(temp);
 			}
 		}
@@ -476,14 +751,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, size);
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
 				temp.CopyTo(span);
 			}
 		}
@@ -504,7 +780,7 @@ namespace Althea.Helpers
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
-				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
 			}
 			return s;
 		}
@@ -534,7 +810,7 @@ namespace Althea.Helpers
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
 		public Span<T> AsSpan()
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, this.Count);
+			return MemoryMarshal.CreateSpan(ref this.field, _count);
 		}
 		#endregion
 
@@ -548,7 +824,7 @@ namespace Althea.Helpers
 				{
 					T* ptr = (T*)t;
 					int result = 0;
-					for (int i = 0; i < this.Count; i++)
+					for (int i = 0; i < _count; i++)
 					{
 						if (!ptr[i].Equals(default))
 							result++;
@@ -571,7 +847,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
 			get {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -579,7 +855,7 @@ namespace Althea.Helpers
 				}
 			}
 			set {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -595,7 +871,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < _count; i++)
 			{
 				yield return this[i];
 			}
@@ -614,13 +890,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptr = (T*)t;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (value.Equals(ptr[i]))
-						return true;
-				}
-				return false;
+				return new ReadOnlySpan<T>(t, _count).Contains(value);
 			}
 		}
 		#endregion
@@ -636,14 +906,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptrThis = (T*)t;
-				T* ptrOther = &other.field;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (!ptrThis[i].Equals(ptrOther[i]))
-						return false;
-				}
-				return true;
+				return new ReadOnlySpan<T>(t, _count).SequenceEqual(new ReadOnlySpan<T>(&other.field, _count));
 			}
 		}
 
@@ -667,7 +930,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, this.Count);
+				var temp = new ReadOnlySpan<T>(t, _count);
 				return temp.HashCodeOfSpan();
 			}
 		}
@@ -699,7 +962,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Fixed Buffer";
+			return $"Fixed Buffer [Size = {_count}, Type = {typeof(T).GetGenericString()}]";
 		}
 		#endregion
 	}
@@ -714,6 +977,8 @@ namespace Althea.Helpers
 	public unsafe struct FixedBuffer_60<T> : IEquatable<FixedBuffer_60<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
+		private static readonly int _count = 60 / sizeof(T);
+
 		private T field;
 
 		/// <summary>
@@ -723,7 +988,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T[] ToArray()
 		{
-			T[] array = new T[this.Count];
+			T[] array = new T[_count];
 			fixed (void* t = &this.field)
 			fixed (T* a = array)
 			{
@@ -761,14 +1026,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new Span<T>(t, size);
+				var temp = new Span<T>((T*)t + offset, size);
 				span.CopyTo(temp);
 			}
 		}
@@ -783,14 +1049,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, size);
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
 				temp.CopyTo(span);
 			}
 		}
@@ -811,7 +1078,7 @@ namespace Althea.Helpers
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
-				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
 			}
 			return s;
 		}
@@ -841,7 +1108,7 @@ namespace Althea.Helpers
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
 		public Span<T> AsSpan()
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, this.Count);
+			return MemoryMarshal.CreateSpan(ref this.field, _count);
 		}
 		#endregion
 
@@ -855,7 +1122,7 @@ namespace Althea.Helpers
 				{
 					T* ptr = (T*)t;
 					int result = 0;
-					for (int i = 0; i < this.Count; i++)
+					for (int i = 0; i < _count; i++)
 					{
 						if (!ptr[i].Equals(default))
 							result++;
@@ -878,7 +1145,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
 			get {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -886,7 +1153,7 @@ namespace Althea.Helpers
 				}
 			}
 			set {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -902,7 +1169,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < _count; i++)
 			{
 				yield return this[i];
 			}
@@ -916,17 +1183,12 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="value">The value to find</param>
 		/// <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Contains(T value)
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptr = (T*)t;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (value.Equals(ptr[i]))
-						return true;
-				}
-				return false;
+				return new ReadOnlySpan<T>(t, _count).Contains(value);
 			}
 		}
 		#endregion
@@ -942,14 +1204,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptrThis = (T*)t;
-				T* ptrOther = &other.field;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (!ptrThis[i].Equals(ptrOther[i]))
-						return false;
-				}
-				return true;
+				return new ReadOnlySpan<T>(t, _count).SequenceEqual(new ReadOnlySpan<T>(&other.field, _count));
 			}
 		}
 
@@ -973,7 +1228,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, this.Count);
+				var temp = new ReadOnlySpan<T>(t, _count);
 				return temp.HashCodeOfSpan();
 			}
 		}
@@ -1005,7 +1260,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Fixed Buffer";
+			return $"Fixed Buffer [Size = {_count}, Type = {typeof(T).GetGenericString()}]";
 		}
 		#endregion
 	}
@@ -1020,6 +1275,8 @@ namespace Althea.Helpers
 	public unsafe struct FixedBuffer_64<T> : IEquatable<FixedBuffer_64<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
+		private static readonly int _count = 64 / sizeof(T);
+
 		private T field;
 
 		/// <summary>
@@ -1029,7 +1286,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T[] ToArray()
 		{
-			T[] array = new T[this.Count];
+			T[] array = new T[_count];
 			fixed (void* t = &this.field)
 			fixed (T* a = array)
 			{
@@ -1067,14 +1324,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new Span<T>(t, size);
+				var temp = new Span<T>((T*)t + offset, size);
 				span.CopyTo(temp);
 			}
 		}
@@ -1089,14 +1347,15 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
-			if (offset < 0 || offset >= this.Count)
+			if (offset < 0 || offset >= _count)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.Count)
+			if (span.Length + offset > _count)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.Count);
+
+			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, size);
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
 				temp.CopyTo(span);
 			}
 		}
@@ -1117,7 +1376,7 @@ namespace Althea.Helpers
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
-				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
 			}
 			return s;
 		}
@@ -1147,7 +1406,7 @@ namespace Althea.Helpers
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
 		public Span<T> AsSpan()
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, this.Count);
+			return MemoryMarshal.CreateSpan(ref this.field, _count);
 		}
 		#endregion
 
@@ -1161,7 +1420,7 @@ namespace Althea.Helpers
 				{
 					T* ptr = (T*)t;
 					int result = 0;
-					for (int i = 0; i < this.Count; i++)
+					for (int i = 0; i < _count; i++)
 					{
 						if (!ptr[i].Equals(default))
 							result++;
@@ -1184,7 +1443,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
 			get {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -1192,7 +1451,7 @@ namespace Althea.Helpers
 				}
 			}
 			set {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 				fixed (void* t = &this.field)
 				{
@@ -1208,7 +1467,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < _count; i++)
 			{
 				yield return this[i];
 			}
@@ -1227,13 +1486,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptr = (T*)t;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (value.Equals(ptr[i]))
-						return true;
-				}
-				return false;
+				return new ReadOnlySpan<T>(t, _count).Contains(value);
 			}
 		}
 		#endregion
@@ -1249,14 +1502,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptrThis = (T*)t;
-				T* ptrOther = &other.field;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (!ptrThis[i].Equals(ptrOther[i]))
-						return false;
-				}
-				return true;
+				return new ReadOnlySpan<T>(t, _count).SequenceEqual(new ReadOnlySpan<T>(&other.field, _count));
 			}
 		}
 
@@ -1280,7 +1526,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, this.Count);
+				var temp = new ReadOnlySpan<T>(t, _count);
 				return temp.HashCodeOfSpan();
 			}
 		}
@@ -1312,7 +1558,305 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Fixed Buffer";
+			return $"Fixed Buffer [Size = {_count}, Type = {typeof(T).GetGenericString()}]";
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	[StructLayout(LayoutKind.Sequential, Size = 128)]
+	[UnsafeValueType]
+	public unsafe struct FixedBuffer_128<T> : IEquatable<FixedBuffer_128<T>>, IFixedBuffer<T> where T : unmanaged, IEquatable<T>
+	{
+		#region basic
+		private static readonly int _count = 128 / sizeof(T);
+
+		private T field;
+
+		/// <summary>
+		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+		/// </summary>
+		/// <returns>The array containing the elements of this fixed buffer</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T[] ToArray()
+		{
+			T[] array = new T[_count];
+			fixed (void* t = &this.field)
+			fixed (T* a = array)
+			{
+				Unsafe.CopyBlock(a, t, 128);
+			}
+			return array;
+		}
+
+		/// <summary>
+		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public FixedBuffer_128<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
+		{
+			var newBuffer = new FixedBuffer_128<TOut>();
+			fixed (void* t = &this.field)
+			{
+				Unsafe.CopyBlock(&newBuffer, t, 128);
+			}
+			return newBuffer;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IFixedBuffer<TOut> IFixedBuffer<T>.As<TOut>() => this.As<TOut>();
+
+		/// <summary>
+		/// Copy the data from the given <paramref name="span"/> to this fixed buffer
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= _count)
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+			if (span.Length + offset > _count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+
+			int size = Math.Min(span.Length, _count - offset);
+			fixed (void* t = &this.field)
+			{
+				var temp = new Span<T>((T*)t + offset, size);
+				span.CopyTo(temp);
+			}
+		}
+
+		/// <summary>
+		/// Copy the data from this fixed buffer to the given <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to copy to</param>
+		/// <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void CopyToSpan(Span<T> span, int offset = 0)
+		{
+			if (offset < 0 || offset >= _count)
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+			if (span.Length + offset > _count)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+
+			int size = Math.Min(span.Length, _count - offset);
+			fixed (void* t = &this.field)
+			{
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
+				temp.CopyTo(span);
+			}
+		}
+
+		/// <summary>
+		/// Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+		/// </summary>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="copyStart">The start position to copy in bytes</param>
+		/// <returns>The created <typeparamref name="TStruct"/></returns>
+		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
+		{
+			int size = Marshal.SizeOf<TStruct>();
+			if (size + copyStart > 128)
+				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+			var s = new TStruct();
+			fixed (void* t = &this.field)
+			{
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
+			}
+			return s;
+		}
+
+		/// <summary>
+		/// Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+		/// </summary>
+		/// <typeparam name="TStruct">The input struct type</typeparam>
+		/// <param name="struct">The structure to copy</param>
+		/// <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
+		{
+			int size = Marshal.SizeOf<TStruct>();
+			if (size + copyStart > 128)
+				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+			fixed (void* t = &this.field)
+			{
+				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
+			}
+		}
+
+		/// <summary>
+		/// Create a <see cref="Span{T}"/> from this fixed buffer
+		/// </summary>
+		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
+		public Span<T> AsSpan()
+		{
+			return MemoryMarshal.CreateSpan(ref this.field, _count);
+		}
+		#endregion
+
+		#region indexer
+		/// <summary>
+		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
+		/// </summary>
+		public int NonDefaults {
+			get {
+				fixed (void* t = &this.field)
+				{
+					T* ptr = (T*)t;
+					int result = 0;
+					for (int i = 0; i < _count; i++)
+					{
+						if (!ptr[i].Equals(default))
+							result++;
+					}
+					return result;
+				}
+			}
+		}
+
+		/// <summary>
+		/// The number of elements in this fixed buffer
+		/// </summary>
+		public int Count => 128 / sizeof(T);
+
+		/// <summary>
+		/// Basic indexer of this fixed buffer
+		/// </summary>
+		/// <param name="index">The index</param>
+		/// <returns>The value at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+		public T this[int index] {
+			get {
+				if (index < 0 || index >= _count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				fixed (void* t = &this.field)
+				{
+					return ((T*)t)[index];
+				}
+			}
+			set {
+				if (index < 0 || index >= _count)
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				fixed (void* t = &this.field)
+				{
+					((T*)t)[index] = value;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns an enumerator that iterates through the collection.
+		/// </summary>
+		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerator<T> GetEnumerator()
+		{
+			for (int i = 0; i < _count; i++)
+			{
+				yield return this[i];
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+		/// <summary>
+		/// Check whether the this fixed buffer contains the given <paramref name="value"/> 
+		/// </summary>
+		/// <param name="value">The value to find</param>
+		/// <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Contains(T value)
+		{
+			fixed (void* t = &this.field)
+			{
+				return new ReadOnlySpan<T>(t, _count).Contains(value);
+			}
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="FixedBuffer_128{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(FixedBuffer_128<T> other)
+		{
+			fixed (void* t = &this.field)
+			{
+				return new ReadOnlySpan<T>(t, _count).SequenceEqual(new ReadOnlySpan<T>(&other.field, _count));
+			}
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object? obj)
+		{
+			return obj is FixedBuffer_128<T> buffer && this.Equals(buffer);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="FixedBuffer_128{T}"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			fixed (void* t = &this.field)
+			{
+				var temp = new ReadOnlySpan<T>(t, _count);
+				return temp.HashCodeOfSpan();
+			}
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(FixedBuffer_128<T> left, FixedBuffer_128<T> right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(FixedBuffer_128<T> left, FixedBuffer_128<T> right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		/// <summary>
+		/// Return the string representation of this <see cref="FixedBuffer_128{T}"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="FixedBuffer_128{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override string ToString()
+		{
+			return $"Fixed Buffer [Size = {_count}, Type = {typeof(T).GetGenericString()}]";
 		}
 		#endregion
 	}
@@ -1330,22 +1874,6 @@ namespace Althea.Helpers
 		private readonly int size;
 
 		private T field;
-
-		/// <summary>
-		/// The number of elements in this fixed buffer
-		/// </summary>
-		public int Count => this.size;
-
-		/// <summary>
-		/// Create a new <see cref="SizedFixedBuffer_128{T}"/> with given <paramref name="data"/>
-		/// </summary>
-		/// <param name="data">The data as a <see cref="ReadOnlySpan{T}"/></param>
-		public SizedFixedBuffer_128(ReadOnlySpan<T> data)
-		{
-			this.size = data.Length;
-			this.field = default;
-			this.CopyFromSpan(data);
-		}
 
 		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
@@ -1374,7 +1902,7 @@ namespace Althea.Helpers
 			var newBuffer = new SizedFixedBuffer_128<TOut>();
 			fixed (void* t = &this.field)
 			{
-				Unsafe.CopyBlock(&newBuffer, t, unchecked((uint)(this.size * sizeof(T))));
+				Unsafe.CopyBlock(&newBuffer, t, 128);
 			}
 			return newBuffer;
 		}
@@ -1390,16 +1918,17 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentException">If the length of <paramref name="span"/> is too large</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
+		private void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= this.size)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.size)
+			if (span.Length + offset > this.size)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.size);
+
+			int size = Math.Min(span.Length, this.size - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new Span<T>(t, size);
+				var temp = new Span<T>((T*)t + offset, size);
 				span.CopyTo(temp);
 			}
 		}
@@ -1416,12 +1945,13 @@ namespace Althea.Helpers
 		{
 			if (offset < 0 || offset >= this.size)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
-			if (span.Length > this.size)
+			if (span.Length + offset > this.size)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
-			int size = Math.Min(span.Length, this.size);
+
+			int size = Math.Min(span.Length, this.size - offset);
 			fixed (void* t = &this.field)
 			{
-				var temp = new ReadOnlySpan<T>(t, size);
+				var temp = new ReadOnlySpan<T>((T*)t + offset, size);
 				temp.CopyTo(span);
 			}
 		}
@@ -1437,39 +1967,20 @@ namespace Althea.Helpers
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
 			int size = Marshal.SizeOf<TStruct>();
-			if (size + copyStart > this.size * sizeof(T))
+			if (size + copyStart > 128)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
-				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), t, (uint)size);
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref s), (byte*)t + copyStart, (uint)size);
 			}
 			return s;
 		}
 
 		/// <summary>
-		/// Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
-		/// <typeparam name="TStruct">The input struct type</typeparam>
-		/// <param name="struct">The structure to copy</param>
-		/// <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-		/// <exception cref="InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
-		{
-			int size = Marshal.SizeOf<TStruct>();
-			if (size + copyStart > this.size * sizeof(T))
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
-			fixed (void* t = &this.field)
-			{
-				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
-			}
-		}
-
-		/// <summary>
-		/// Create a <see cref="ReadOnlySpan{T}"/> from this sized fixed buffer
-		/// </summary>
-		/// <returns>The <see cref="ReadOnlySpan{T}"/> referring to this sized fixed buffer</returns>
+		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
 		public ReadOnlySpan<T> AsSpan()
 		{
 			return MemoryMarshal.CreateReadOnlySpan(ref this.field, this.size);
@@ -1497,6 +2008,11 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
+		/// The number of elements in this fixed buffer
+		/// </summary>
+		public int Count => this.size;
+
+		/// <summary>
 		/// Basic indexer of this fixed buffer
 		/// </summary>
 		/// <param name="index">The index</param>
@@ -1509,14 +2025,6 @@ namespace Althea.Helpers
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
-				}
-			}
-			set {
-				if (index < 0 || index >= this.size)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
-				fixed (void* t = &this.field)
-				{
-					((T*)t)[index] = value;
 				}
 			}
 		}
@@ -1547,13 +2055,7 @@ namespace Althea.Helpers
 		{
 			fixed (void* t = &this.field)
 			{
-				T* ptr = (T*)t;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (value.Equals(ptr[i]))
-						return true;
-				}
-				return false;
+				return new ReadOnlySpan<T>(t, this.size).Contains(value);
 			}
 		}
 		#endregion
@@ -1567,16 +2069,11 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(SizedFixedBuffer_128<T> other)
 		{
+			if (this.size != other.size)
+				return false;
 			fixed (void* t = &this.field)
 			{
-				T* ptrThis = (T*)t;
-				T* ptrOther = &other.field;
-				for (int i = 0; i < this.size; i++)
-				{
-					if (!ptrThis[i].Equals(ptrOther[i]))
-						return false;
-				}
-				return true;
+				return new ReadOnlySpan<T>(t, this.size).SequenceEqual(new ReadOnlySpan<T>(&other.field, this.size));
 			}
 		}
 
@@ -1632,16 +2129,8 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
-			return $"Read-only Fixed Buffer";
+			return $"Read-only Fixed Buffer [Size = {this.size}, Type = {typeof(T).GetGenericString()}]";
 		}
-		#endregion
-
-		#region converter
-		/// <summary>
-		/// Implicitly convert the given <paramref name="span"/> to a <see cref="SizedFixedBuffer_128{T}"/>
-		/// </summary>
-		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> to be converted</param>
-		public static implicit operator SizedFixedBuffer_128<T>(ReadOnlySpan<T> span) => new(span);
 		#endregion
 	}
 
@@ -1652,7 +2141,7 @@ namespace Althea.Helpers
 	/// </summary>
 	/// <typeparam name="T">Any class</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct FixedClassBuffer_8<T> : IReadOnlyList<T> where T : class
+	public struct FixedClassBuffer_8<T> : IEquatable<FixedClassBuffer_8<T>>, IReadOnlyList<T> where T : class
 	{
 		#region basic
 		private T? a0, a1, a2, a3, a4, a5, a6, a7;
@@ -1778,6 +2267,73 @@ namespace Althea.Helpers
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
 
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="FixedClassBuffer_8{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(FixedClassBuffer_8<T> other)
+		{
+			return ReferenceEquals(this.a0, other.a0) && ReferenceEquals(this.a1, other.a1) &&
+				   ReferenceEquals(this.a2, other.a2) && ReferenceEquals(this.a3, other.a3) &&
+				   ReferenceEquals(this.a4, other.a4) && ReferenceEquals(this.a5, other.a5) &&
+				   ReferenceEquals(this.a6, other.a6) && ReferenceEquals(this.a7, other.a7);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object? obj)
+		{
+			return obj is FixedClassBuffer_8<T> buffer && this.Equals(buffer);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="SizedFixedBuffer_128{T}"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(this.a0, this.a1, this.a2, this.a3, this.a4, this.a5, this.a6, this.a7);
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(FixedClassBuffer_8<T> left, FixedClassBuffer_8<T> right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(FixedClassBuffer_8<T> left, FixedClassBuffer_8<T> right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		/// <summary>
+		/// Return the string representation of this <see cref="FixedClassBuffer_8{T}"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="FixedClassBuffer_8{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override string ToString()
+		{
+			return $"Fixed Class-type Buffer [Size = 8, Type = {typeof(T).GetGenericString()}]";
+		}
+		#endregion
+
 		#region converter
 		/// <summary>
 		/// Implicitly convert a <see cref="SizedFixedClassBuffer_8{T}"/> to a <see cref="FixedClassBuffer_8{T}"/>
@@ -1793,7 +2349,7 @@ namespace Althea.Helpers
 	/// </summary>
 	/// <typeparam name="T">Any class</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SizedFixedClassBuffer_8<T> : IReadOnlyList<T> where T : class
+	public struct SizedFixedClassBuffer_8<T> : IEquatable<SizedFixedClassBuffer_8<T>>, IReadOnlyList<T> where T : class
 	{
 		#region basic
 		private T? a0, a1, a2, a3, a4, a5, a6, a7;
@@ -1938,6 +2494,132 @@ namespace Althea.Helpers
 		public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
 
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Whether this == <paramref name="other"/>
+		/// </summary>
+		/// <param name="other">another <see cref="SizedFixedClassBuffer_8{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(SizedFixedClassBuffer_8<T> other)
+		{
+			if (this.size != other.size)
+				return false;
+			bool equals = true;
+			switch (this.size)
+			{
+				case 8:
+					equals = equals && this.a7 == other.a7;
+					goto case 7;
+				case 7:
+					equals = equals && this.a6 == other.a6;
+					goto case 6;
+				case 6:
+					equals = equals && this.a5 == other.a5;
+					goto case 6;
+				case 5:
+					equals = equals && this.a4 == other.a4;
+					goto case 4;
+				case 4:
+					equals = equals && this.a3 == other.a3;
+					goto case 3;
+				case 3:
+					equals = equals && this.a2 == other.a2;
+					goto case 2;
+				case 2:
+					equals = equals && this.a1 == other.a1;
+					goto case 1;
+				case 1:
+					equals = equals && this.a0 == other.a0;
+					break;
+				default:
+					break;
+			}
+			return equals;
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
+		/// </summary>
+		/// <param name="obj">another object to compare</param>
+		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object? obj)
+		{
+			return obj is SizedFixedClassBuffer_8<T> buffer && this.Equals(buffer);
+		}
+
+		/// <summary>
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="SizedFixedBuffer_128{T}"/>.
+		/// </summary>
+		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			int hash = 0;
+			switch (this.size)
+			{
+				case 8:
+					hash = HashCode.Combine(hash, this.a7);
+					goto case 7;
+				case 7:
+					hash = HashCode.Combine(hash, this.a6);
+					goto case 6;
+				case 6:
+					hash = HashCode.Combine(hash, this.a5);
+					goto case 6;
+				case 5:
+					hash = HashCode.Combine(hash, this.a4);
+					goto case 4;
+				case 4:
+					hash = HashCode.Combine(hash, this.a3);
+					goto case 3;
+				case 3:
+					hash = HashCode.Combine(hash, this.a2);
+					goto case 2;
+				case 2:
+					hash = HashCode.Combine(hash, this.a1);
+					goto case 1;
+				case 1:
+					hash = HashCode.Combine(hash, this.a0);
+					break;
+				default:
+					break;
+			}
+			return hash;
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(SizedFixedClassBuffer_8<T> left, SizedFixedClassBuffer_8<T> right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(SizedFixedClassBuffer_8<T> left, SizedFixedClassBuffer_8<T> right)
+		{
+			return !(left == right);
+		}
+		#endregion
+
+		#region string related
+		/// <summary>
+		/// Return the string representation of this <see cref="SizedFixedClassBuffer_8{T}"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="SizedFixedClassBuffer_8{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override string ToString()
+		{
+			return $"Read-only Fixed Class-type Buffer [Size = {this.size}, Type = {typeof(T).GetGenericString()}]";
+		}
 		#endregion
 
 		#region converter

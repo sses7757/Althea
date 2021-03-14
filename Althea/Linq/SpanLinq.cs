@@ -524,7 +524,7 @@ namespace Althea.Linq
 		}
 		#endregion
 
-		#region aggregate
+		#region aggregate of Span
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
@@ -682,6 +682,178 @@ namespace Althea.Linq
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The product result</returns>
 		public static T Prod<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		{
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Length;
+			T result = selector.Invoke(list[0]);
+			for (int i = 1; i < len; i++)
+			{
+				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(list[i]), result);
+			}
+			return result;
+		}
+		#endregion
+
+		#region aggregate of ReadOnlySpan
+		/// <summary>
+		/// List accumulate summation.
+		/// </summary>
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="init">The initial value</param>
+		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
+		public static ReadOnlySpan<T> AccumulateSum<T>(this ReadOnlySpan<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		{
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+			if (result.Length < list.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(result));
+
+			int len = list.Length;
+			if (result.Length > len)
+			{
+				result[0] = init;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+				}
+				return result;
+			}
+			// else
+			if (inclusive)
+			{
+				result[0] = init; len--;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+				}
+			}
+			else
+			{
+				result[0] = Const<T>.AddDelegate.Invoke(init, list[0]);
+				for (int i = 1; i < len; i++)
+				{
+					result[i] = Const<T>.AddDelegate.Invoke(list[i], result[i - 1]);
+				}
+			}
+			return result[..list.Length];
+		}
+
+		/// <summary>
+		/// List accumulate product.
+		/// </summary>
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
+		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> + 1)]</returns>
+		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		{
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+			if (result.Length < list.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(result));
+			if (init.IsZero())
+				init = Const<T>.One;
+
+			int len = list.Length;
+			if (result.Length > len)
+			{
+				result[0] = init;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+				}
+				return result;
+			}
+			// else
+			if (inclusive)
+			{
+				result[0] = init; len--;
+				for (int i = 0; i < len; i++)
+				{
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+				}
+			}
+			else
+			{
+				result[0] = Const<T>.MultiplyDelegate.Invoke(init, list[0]);
+				for (int i = 1; i < len; i++)
+				{
+					result[i] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i - 1]);
+				}
+			}
+			return result[..list.Length];
+		}
+
+		/// <summary>
+		/// List summation.
+		/// </summary>
+		/// <param name="list">The span to accumulate</param>
+		/// <returns>The summation result</returns>
+		public static T Sum<T>(this ReadOnlySpan<T> list) where T : unmanaged
+		{
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Length;
+			T result = list[0];
+			for (int i = 1; i < len; i++)
+			{
+				result = Const<T>.AddDelegate.Invoke(list[i], result);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// List product.
+		/// </summary>
+		/// <param name="list">The span to accumulate</param>
+		/// <returns>The product result</returns>
+		public static T Prod<T>(this ReadOnlySpan<T> list) where T : unmanaged
+		{
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Length;
+			T result = list[0];
+			for (int i = 1; i < len; i++)
+			{
+				result = Const<T>.MultiplyDelegate.Invoke(list[i], result);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// List summation by <paramref name="selector"/>.
+		/// </summary>
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="selector">The selector to apply to each element</param>
+		/// <returns>The summation result</returns>
+		public static T Sum<TOrg, T>(this ReadOnlySpan<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		{
+			if (list.IsEmpty)
+				throw new ArgumentNullException(nameof(list));
+
+			int len = list.Length;
+			T result = selector.Invoke(list[0]);
+			for (int i = 1; i < len; i++)
+			{
+				result = Const<T>.AddDelegate.Invoke(selector.Invoke(list[i]), result);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// List product by <paramref name="selector"/>.
+		/// </summary>
+		/// <param name="list">The list to accumulate</param>
+		/// <param name="selector">The selector to apply to each element</param>
+		/// <returns>The product result</returns>
+		public static T Prod<TOrg, T>(this ReadOnlySpan<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
 			if (list.IsEmpty)
 				throw new ArgumentNullException(nameof(list));
