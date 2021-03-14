@@ -789,7 +789,7 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region point-wise operations
+		#region helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void ApplyToColumns(Action<Storage<T>> action)
 		{
@@ -825,7 +825,9 @@ namespace Althea.Backend.Arrays
 			}
 			return init;
 		}
+		#endregion
 
+		#region point-wise operations
 		/// <summary>
 		/// Fill this dense matrix's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>.
 		/// </summary>
@@ -1030,18 +1032,6 @@ namespace Althea.Backend.Arrays
 				double normSquare = this.ApplyToColumns(static s => LAD.Norm(s, 1), static (a, b) => a + b * b, 0.0);
 				return Math.Sqrt(normSquare);
 			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place scale this dense matrix's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1 and utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
-		/// </summary>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		public override void Normalize()
-		{
-			double norm = this.Norm();
-			if (norm == 0)
-				throw new DivideByZeroException();
-			this.Scale((1 / norm).FromDouble<T>());
 		}
 
 		/// <summary>

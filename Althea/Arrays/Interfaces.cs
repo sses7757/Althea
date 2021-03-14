@@ -4,16 +4,14 @@ using System.Collections.Generic;
 using Althea.Linq;
 using Althea.Helpers;
 using Althea.NativeTypes;
-
-
 namespace Althea.Arrays
 {
-	#region vector
-	/// <summary>
-	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type</typeparam>
+#region vector
+/// <summary>
+/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
+/// </summary>
+/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IKrylovVector<TVec, T> : IDisposable
 		where TVec : class, IKrylovVector<TVec, T>, IDisposable, ICheckValid, new()
 		where T : unmanaged
@@ -136,7 +134,7 @@ namespace Althea.Arrays
 
 	#region pitched (strided) array
 	/// <summary>
-	/// The interface of dense array that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
+	/// The interface of (column-major) dense array that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public interface IPitchedArray<T> where T : unmanaged
@@ -156,22 +154,11 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the pitch (in <typeparamref name="T"/>) of this array (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. It must has length equals to <see cref="Size"/> and consists numbers larger than or equals to <see cref="Size"/> respectively.
 		/// </summary>
 		ReadOnlySpan<long> OuterSize { get; }
-		#endregion
 
-		#region method
 		/// <summary>
-		/// Get the strides of this array at each dimension and fill the result in the <paramref name="output"/>
+		/// When implemented by a derived class, get the strides (the inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		/// <param name="output">The <see cref="Span{T}"/> of length equals to <see cref="Size"/></param>
-		/// <returns>The <paramref name="output"/></returns>
-		/// <remarks>At exit, <paramref name="output"/>[i] denotes the displacement (stride) between two consecutive elements in the i<sup>th</sup>-mode.</remarks>
-		Span<long> GetStrides(Span<long> output)
-		{
-			if (output.Length != this.Size.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(output));
-			this.OuterSize.AccumulateProd(output, inclusive: true);
-			return output;
-		}
+		ReadOnlySpan<long> Strides { get; }
 		#endregion
 	}
 	#endregion

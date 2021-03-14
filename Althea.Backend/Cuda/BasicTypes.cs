@@ -197,7 +197,7 @@ namespace Althea.Backend.Cuda
 		ErrorInvalidChannelDescriptor = 20,
 
 		/// <summary>
-		/// This indicates that the direction of the <see cref="Runtime.Cuda.NativeMethods.cudaMemcpy"/> passed to the API call is not one of the types specified by <see cref="MemoryCopyKind"/>.
+		/// This indicates that the direction of the "cudaMemcpy" passed to the API call is not one of the types specified by <see cref="MemoryCopyKind"/>.
 		/// </summary>
 		ErrorInvalidMemcpyDirection = 21,
 
@@ -351,12 +351,12 @@ namespace Althea.Backend.Cuda
 		ErrorLaunchFileScopedSurf = 67,
 
 		/// <summary>
-		/// This error indicates that a call to <see cref="Runtime.Cuda.NativeMethods.cudaDeviceSynchronize"/> made from
+		/// This error indicates that a call to "cudaDeviceSynchronize" made from
 		/// the device runtime failed because the call was made at grid depth greater
 		/// than either the default (2 levels of grids) or user specified device 
 		/// limit 'cudaLimitDevRuntimeSyncDepth'. To be able to synchronize on 
 		/// launched grids at a greater depth successfully, the maximum nested 
-		/// depth at which :<see cref="Runtime.Cuda.NativeMethods.cudaDeviceSynchronize"/> will be called must be specified 
+		/// depth at which :"cudaDeviceSynchronize" will be called must be specified 
 		/// with the 'cudaLimitDevRuntimeSyncDepth' limit to the 'cudaDeviceSetLimit'
 		/// API before the host-side launch of a kernel using the device runtime. 
 		/// Keep in mind that additional levels of sync depth require the runtime 
@@ -846,7 +846,6 @@ namespace Althea.Backend.Cuda.TensorAlgebra
 	/// <summary>
 	/// Binary operations supported by tensor point-wise operations
 	/// </summary>
-	// TODO: move to Althea.TensorAlgebra, and modify
 	public enum BinaryOperation
 	{
 		/// <summary>
@@ -870,7 +869,6 @@ namespace Althea.Backend.Cuda.TensorAlgebra
 	/// <summary>
 	/// Unitary operations supported by tensor point-wise operations
 	/// </summary>
-	// TODO: move to Althea.TensorAlgebra, and modify
 	public enum UnitaryOperation
 	{
 		/// <summary>

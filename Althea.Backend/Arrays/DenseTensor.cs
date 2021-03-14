@@ -1,521 +1,218 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 using Althea.Arrays;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
-
-using MEM = Althea.Storage.AbstractApi;
+using Althea.TensorAlgebra;
 
 
 namespace Althea.Backend.Arrays
 {
 	/// <summary>
-	/// The general dense tensor class that inherit the <see cref="ValueArray{T}"/>.
+	/// The concrete dense tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual (pitched) data storage without any index storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public sealed class DenseTensor<T> : TensorBase<T>, ITensor, IPitchedArray<T> where T : unmanaged
+	public class DenseTensor<T> : TensorBase<T>, IPitchedArray<T>, IKrylovVector<DenseTensor<T>, T> where T : unmanaged
 	{
-		#region new members
-		/// <summary>
-		/// Rank of the multidimensional array
-		/// </summary>
-		public int Rank => Size.Count;
+		#region basic
+		private readonly FixedBuffer_128<long> m_outerSize = default;
+
+		private readonly FixedBuffer_128<long> m_outerSizeProd = default;
 
 		/// <summary>
-		/// The actual length of <see cref="DenseTensor{T}"/> is its <see cref="AbstractArray{T}.Length"/>
+		/// Get the pitch (in <typeparamref name="T"/>) of this array (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		public override long ActualLength => this.Length;
-
-		private IReadOnlyList<char> _label;
+		public ReadOnlySpan<long> OuterSize => this.m_outerSize.AsSpan(this.Rank);
 
 		/// <summary>
-		/// The label to mark each index of this tensor
+		/// Get the strides (the inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		public IReadOnlyList<char> Label {
-			get {
-				if (this._label is null)
-				{   // lazy initialization
-					this._label = ArrayLinq.Range('a', this.Rank).ToArray();
-				}
-				return this._label;
+		public ReadOnlySpan<long> Strides => this.m_outerSizeProd.AsSpan(this.Rank);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long GetActualLength(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize)
+		{
+			if (outerSize.IsEmpty)
+				return 0;
+			if (outerSize.Length != size.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(outerSize));
+			long prodOuter = outerSize.Prod(), prod = 1;
+			int r = size.Length - 1;
+			for (int i = 0; i < r; i++)
+			{
+				prodOuter -= prod * (outerSize[i] - outerSize[i]);
+				prod *= outerSize[i];
 			}
-			set {
-				if (value is null)
-					throw new ArgumentNullException(nameof(value));
-				if (value.Count != this.Rank)
-					throw new ArgumentException(Resource.TensorWrongSize, nameof(value));
-				if (value.Distinct().Count != value.Count)
-					throw new ArgumentException(Resource.DuplicateLabels, nameof(value));
-				this._label = value;
-			}
+			return prodOuter;
 		}
 
 		/// <summary>
-		/// The last index of this tensor as a vector
+		/// Create a <see cref="DenseTensor{T}"/> with given <paramref name="values"/>, presenting <paramref name="size"/>, actual <paramref name="outerSize"/> and <paramref name="labels"/>
 		/// </summary>
-		public long LastIndex => this.Length - 1;
+		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
+		/// <param name="size">The presenting size of the tensor</param>
+		/// <param name="outerSize">The outer size (actual lengths at all dimensions) of this tensor, empty mean the same as <paramref name="size"/></param>
+		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
+		/// <exception cref="ArgumentException">If <paramref name="labels"/> or <paramref name="outerSize"/>'s length is neither 0 nor the same as the rank</exception>
+		public DenseTensor(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<char> labels) :
+			base(values, size, labels, GetActualLength(size, outerSize))
+		{
+			if (outerSize.IsEmpty)
+				outerSize = size;
+			this.m_outerSize.CopyFromSpan(outerSize);
+			var prod = this.m_outerSizeProd.AsSpan(this.Rank);
+			this.OuterSize.AccumulateProd(result: prod, inclusive: true);
+		}
 
 		/// <summary>
-		/// Set the label to mark each index of this tensor
+		/// Create an empty
 		/// </summary>
-		/// <param name="label">label to set</param>
-		public void SetLabel(params char[] label) => this.Label = label;
+		public DenseTensor() : base(Storage<T>.Empty, stackalloc long[1], ReadOnlySpan<char>.Empty) { }
 		#endregion
 
-
-		#region initialize and destroy
+		#region clone related
 		/// <summary>
-		/// Empty tensor constructor
-		/// </summary>
-		public DenseTensor() : this(new[] { 0L }, onHost: false) { }
-
-		/// <summary>
-		/// Create a new tensor
-		/// </summary>
-		/// <param name="size">size array</param>
-		/// <param name="onHost">allocate on host or device memory</param>
-		public DenseTensor(int[] size, bool onHost = false) : this(Array.ConvertAll(size, s => (long)s), label: null, onHost: onHost) { }
-
-		private static long[] ToLongSize(ITuple size)
-		{
-			if (size is null || size.Length == 0)
-				throw new ArgumentNullException(nameof(size));
-			long[] output = new long[size.Length];
-			for (int i = 0; i < size.Length; i++)
-			{
-				if (size[i] is int si && si > 0)
-					output[i] = si;
-				else if (size[i] is long sl && sl > 0)
-					output[i] = sl;
-				else
-					throw new ArgumentException(Resource.TensorWrongSize);
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// Create a new tensor
-		/// </summary>
-		/// <param name="size">size tuple</param>
-		/// <param name="onHost">allocate on host or device memory</param>
-		public DenseTensor(ITuple size, bool onHost = false) : this(ToLongSize(size), label: null, onHost: onHost) { }
-
-		/// <summary>
-		/// Create a new tensor
-		/// </summary>
-		/// <param name="size">size array</param>
-		/// <param name="label">The label</param>
-		/// <param name="onHost">allocate on host or device memory</param>
-		public DenseTensor(IReadOnlyList<long> size, IReadOnlyList<char> label = null, bool onHost = false) : base(size.Prod(), size, onHost)
-		{
-			if (size is null || size.Count == 0)
-				throw new ArgumentNullException(nameof(size));
-			if (!(label is null || label.Count != size.Count))
-				this.Label = label;
-		}
-
-		/// <summary>
-		/// Create a new tensor with pre-allocated pointer
-		/// </summary>
-		/// <param name="size">size array</param>
-		/// <param name="pointer">The pre-allocated data pointer</param>
-		public DenseTensor(Storage<T> pointer, IReadOnlyList<long> size) : base(pointer, size)
-		{
-			if (size is null || size.Count == 0)
-				throw new ArgumentNullException(nameof(size));
-		}
-
-		/// <summary>
-		/// Reference initializer
-		/// </summary>
-		/// <param name="refArray">The reference array</param>
-		/// <param name="newSize">new size of this tensor</param>
-		/// <param name="offset">offset to <paramref name="refArray"/>'s <see cref="ValueArray{T}.Storage"/></param>
-		public DenseTensor(ValueArray<T> refArray, long[] newSize, long offset = 0) : base(refArray, newSize.Prod(), newSize, offset)
-		{
-			if (newSize is null || newSize.Length == 0)
-				throw new ArgumentNullException(nameof(newSize));
-		}
-
-		/// <summary>
-		/// Clone initializer
-		/// </summary>
-		/// <param name="tensor"></param>
-		public DenseTensor(DenseTensor<T> tensor) : base(tensor is null ? throw new ArgumentNullException(nameof(tensor)) : tensor.Length, tensor.Size, tensor.OnHost)
-		{
-			try
-			{
-				RT.CopyTo(source: tensor, dest: this, length: tensor.Length);
-			}
-			catch (Exception)
-			{
-				this.Dispose();
-				throw;
-			}
-		}
-		#endregion
-
-
-		#region dense array interface
-		/// <summary>
-		/// Convert the values of this tensor to a C# array.
-		/// </summary>
-		/// <param name="ranges">The range with max value = length of this vector, default is all</param>
-		/// <returns>C# array of type <typeparamref name="T"/> containing the values of this vector</returns>
-		/// <remarks>currently, only a all <see cref="Range.All"/> <paramref name="ranges"/> is supported</remarks>
-		public T[] ToFortranOrderArray(params Range[] ranges)
-		{
-			if (ranges is null || ranges.Length == 0)
-				ranges = ArrayLinq.Repeat(Range.All, this.Rank).ToArray();
-			if (ranges.Length != this.Rank)
-				throw new ArgumentException(Resource.VectorWrongSize, nameof(ranges));
-			if (!ranges.All(r => r.Equals(Range.All)))
-				throw new NotSupportedException();
-
-			return RT.CopyOutArray(this, length: this.Length, offset: 0);
-		}
-
-		/// <summary>
-		/// Copy the <paramref name="values"/> into this dense tensor.
-		/// </summary>
-		/// <param name="values">The value array of element type <typeparamref name="T"/></param>
-		/// <param name="ranges">The ranges of each dimension, default is all</param>
-		/// <remarks>currently, only a all <see cref="Range.All"/> <paramref name="ranges"/> is supported</remarks>
-		public void FromFortranOrderArray(T[] values, params Range[] ranges)
-		{
-			if (values is null)
-				throw new ArgumentNullException(nameof(values));
-			if (ranges is null || ranges.Length == 0)
-				ranges = ArrayLinq.Repeat(Range.All, this.Rank).ToArray();
-			if (ranges.Length != this.Rank)
-				throw new ArgumentException(Resource.VectorWrongSize, nameof(ranges));
-			if (!ranges.All(r => r.Equals(Range.All)))
-				throw new NotSupportedException();
-
-			RT.CopyIntoArray(this, values, length: this.Length, offset: 0);
-		}
-		#endregion
-
-
-		#region Lanczos interface
-		/// <summary>
-		/// Replace this tensor's content with <paramref name="another"/> <b>in-place</b>.
-		/// </summary>
-		/// <param name="another">another <see cref="DenseTensor{T}"/> to replace from</param>
-		public void ReplaceBy(DenseTensor<T> another)
-		{
-			if (another is null || another == EmptyDnTen)
-				throw new ArgumentNullException(nameof(another), Resource.ArrayCannotNull);
-			if (!this.Size.SequenceEqual(another.Size))
-				throw new ArgumentException(Resource.TensorWrongSize, nameof(another));
-			RT.CopyTo(source: another, dest: this);
-		}
-
-		/// <summary>
-		/// Vector inner product, compute $\vec{v}_{\text{this}} \cdot \vec{v}_{\text{other}} \equiv \vec{v}_{\text{this}}^H (\text{or }\vec{v}_{\text{this}}^H) \vec{v}_{\text{other}}$.
-		/// </summary>
-		/// <param name="other">The other tensor</param>
-		/// <param name="conjugateThis">perform non- or conjugate transpose to this vector</param>
-		/// <returns>The inner product result</returns>
-		public T Dot(DenseTensor<T> other, bool? conjugateThis = null)
-		{
-			if (other is null || other == EmptyDnTen)
-				throw new ArgumentNullException(nameof(other), Resource.ArrayCannotNull);
-			if (!this.Size.SequenceEqual(other.Size))
-				throw new ArgumentException(Resource.TensorWrongSize, nameof(other));
-			return BLAS.VectorDot(this, other, conjugateThis);
-		}
-
-		/// <summary>
-		/// Compute $\vec{v}_{\text{this}} = \vec{v}_{\text{this}} + \alpha \vec{x}$.
-		/// </summary>
-		/// <param name="x">vector</param>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		public void AddByVector(DenseTensor<T> x, T α)
-		{
-			if (x is null || x == EmptyDnTen)
-				throw new ArgumentNullException(nameof(x), Resource.ArrayCannotNull);
-			if (!this.Size.SequenceEqual(x.Size))
-				throw new ArgumentException(Resource.TensorWrongSize, nameof(x));
-			BLAS.VectorAddBy(this, x, α);
-		}
-
-		/// <summary>
-		/// Operate the matrix whose columns are <paramref name="notJoinedVecs"/> onto a C# array to get a result tensor.
-		/// </summary>
-		/// <param name="notJoinedVecs">The columns of the matrix to operate</param>
-		/// <param name="input">The input C# array to be operated</param>
-		/// <returns><c>[<paramref name="notJoinedVecs"/>] * <paramref name="input"/></c> as tensor.</returns>
-		/// <remarks>this method is actually static</remarks>
-		public DenseTensor<T> OperateOn(IReadOnlyList<DenseTensor<T>> notJoinedVecs, T[] input)
-		{
-			if (input is null || input.Length == 0)
-				throw new ArgumentNullException(nameof(input));
-			if (notJoinedVecs is null || notJoinedVecs.Count != input.Length)
-				throw new ArgumentNullException(nameof(notJoinedVecs), Resource.ArrayCannotNull);
-			if (notJoinedVecs.Any(v => !v.Size.SequenceEqual(this.Size)))
-				throw new ArgumentException(Resource.TensorWrongSize, nameof(notJoinedVecs));
-
-			// sort first to reduce errors
-			var sort = input.Select((x, i) => new KeyValuePair<int, T>(i, x)).OrderBy(x => x.Value).Select(x => x.Key);
-
-			var tensor = this.NewArrayAlike() as DenseTensor<T>;
-			try
-			{
-				tensor.FillWithZeros();
-				foreach (var i in sort)
-				{
-					var dnten = notJoinedVecs[i];
-					if (dnten is null || !dnten.Size.SequenceEqual(this.Size))
-						throw new ArgumentException(Resource.VectorWrongSize, nameof(notJoinedVecs));
-					if (dnten.OnHost != this.OnHost || dnten.Disposed)
-						throw new ArgumentException(Resource.VectorWrongValue, nameof(notJoinedVecs));
-					if (!input[i].IsZero())
-						tensor.AddByVector(dnten, input[i]);
-				}
-				return tensor;
-			}
-			catch (Exception)
-			{
-				tensor.Dispose();
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Scale this vector in-place, i.e. $\vec{v}_{\text{this}} = \alpha \vec{v}_{\text{this}}$ <b>in-place</b>.
-		/// </summary>
-		/// <param name="α">scalar of type <typeparamref name="T"/></param>
-		public void Scale(T α)
-		{
-			BLAS.VectorScale(this, α);
-		}
-
-		/// <summary>
-		/// 2-norm of this vector, i.e. $\|\vec{v}\| = \sqrt{\sum_i{\vec{v}_i^2}}$.
-		/// </summary>
-		/// <returns>The 2-norm of this vector.</returns>
-		public double Norm()
-		{
-			return BLAS.VectorNorm(this);
-		}
-
-		/// <summary>
-		/// Normalize this vector <b>in-place</b> to make it norm-one, i.e. $\vec{v} = \vec{v} / \|\vec{v}\|$.
-		/// </summary>
-		public void Normalize()
-		{
-			double norm = BLAS.VectorNorm(this);
-			T scalar = (1 / norm).FromDouble<T>();
-			BLAS.VectorScale(this, scalar);
-		}
-		#endregion
-
-
-		#region implement converters
-		private static DenseTensor<T> FromDense(ValueArray<T> m, long[] size)
-		{
-			if (m is null || m == EmptyDnTen)
-				return null;
-			var tensor = new DenseTensor<T>(m.Storage, size ?? m.Size);
-			m.Disposed = true;
-			GC.SuppressFinalize(m); // for performance
-			return tensor;
-		}
-
-		/// <summary>
-		/// Take out the data array as a new <see cref="DenseVector{T}"/>.
-		/// </summary>
-		/// <returns>A new <see cref="DenseVector{T}"/> containing the referenced data array of this one.</returns>
-		public override DenseVector<T> AsDenseVector() => new DenseVector<T>(this, this.Length);
-
-		/// <summary>
-		/// Deep clone the array, the mutable status such as <see cref="Label"/> will also be copied.
+		/// Deep clone the array, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned array</returns>
-		public override object Clone()
+		public override DenseTensor<T> Clone();
+
+		/// <summary>
+		/// Create a new array with same properties as this one while the underlying storages are not filled.
+		/// </summary>
+		/// <returns>The new array alike this one</returns>
+		public override DenseTensor<T> NewArrayAlike();
+
+		/// <summary>
+		/// Create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <returns>The new array alike this one</returns>
+		public override DenseTensor<TOut> NewArrayAlike<TOut>();
+		#endregion
+
+		#region reshape
+		/// <summary>
+		/// Reshape this array to a vector
+		/// </summary>
+		/// <returns>The referenced vector reshaped from this array</returns>
+		public override ValueArray<T> ToVector();
+
+		/// <summary>
+		/// Reshape this array to a matrix with leading dimension = <paramref name="rows"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <returns>The reshaped matrix</returns>
+		public override ValueArray<T> ToMatrix(long rows = 0);
+
+		/// <summary>
+		/// Reshape this tensor to another tensor with the given <paramref name="newSize"/> 
+		/// </summary>
+		/// <param name="newSize">The new size of the tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
+		/// <returns>The reshaped tensor, may be a referenced one of this tensor</returns>
+		public override DenseTensor<T> TensorReshape(ReadOnlySpan<long> newSize)
 		{
-			var ten = new DenseTensor<T>(this)
-			{
-				Label = this.Label
-			};
-			return ten;
-		}
+			Span<long> size = stackalloc long[newSize.Length];
+			newSize.CopyTo(size);
+			CheckSize(this, size);
+			if (size.SequenceEqual(this.Size))
+				return this;
 
-		/// <summary>
-		/// Create a new array like this one (with same type and other info) while the data type is <typeparamref name="TOut"/>
-		/// </summary>
-		/// <typeparam name="TOut">The new data type</typeparam>
-		/// <returns>the new array</returns>
-		public override ValueArray<TOut> NewArrayAlike<TOut>() => new DenseTensor<TOut>(this.Size, label: this.Label, onHost: this.OnHost);
-
-		/// <summary>
-		/// Create a new array with same properties as this one
-		/// </summary>
-		/// <returns>The array alike this one.</returns>
-		public override AbstractArray<T> NewArrayAlike() => new DenseTensor<T>(this.Size, label: this.Label, onHost: this.OnHost);
-
-		/// <summary>
-		/// Convert this array to another memory.
-		/// </summary>
-		/// <returns>a new <see cref="ValueArray{T}"/> with same value as this one if this array is on host memory</returns>
-		public override ValueArray<T> ToTheOtherMemory()
-		{
-			var newTensor = new DenseTensor<T>(this.Size, label: this.Label, onHost: !this.OnHost);
-			try
-			{
-				RT.CopyTo(source: this, dest: newTensor);
-				return newTensor;
-			}
-			catch (Exception)
-			{
-				newTensor.Dispose();
-				throw;
-			}
 		}
 		#endregion
 
-
-		#region define operators
+		#region indexing
 		/// <summary>
-		/// Addition operator for two tensors.
+		/// Provide the basic indexed getter and setter of this tensor
 		/// </summary>
-		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <param name="right">right operand</param>
-		/// <returns>the addition result</returns>
-		/// <remarks>the <see cref="Label"/> of operands will be ignored</remarks>
-		public static DenseTensor<T> operator +(DenseTensor<T> left, DenseTensor<T> right)
-		{
-			if (left is null || left == EmptyDnTen)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (right is null || right == EmptyDnTen)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (left.OnHost != right.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resource.TensorWrongSize);
-
-			return left.ApplyToClone(l =>
-			{
-				l.AddBy_αx(right, Scalars<T>.One);
-				////l.PointwiseOperation(BinaryOperation.Add, Scalars<T>.One, UnitaryOperation.Identity, right, TensorOrder.Identity, Scalars<T>.One, C: left, orderC: TensorOrder.Identity);
-			});
-		}
+		/// <param name="indices">The position indicated by a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
+		/// <returns>The element at <paramref name="indices"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
+		public override T this[ReadOnlySpan<long> indices] { get; set; }
 
 		/// <summary>
-		/// Subtraction operator for two tensors.
+		/// Get a sub-tensor indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
 		/// </summary>
-		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <param name="right">right operand</param>
-		/// <returns>the subtraction result</returns>
-		/// <remarks>the <see cref="Label"/> of operands will be ignored</remarks>
-		public static DenseTensor<T> operator -(DenseTensor<T> left, DenseTensor<T> right)
-		{
-			if (left is null || left == EmptyDnTen)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (right is null || right == EmptyDnTen)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-			if (left.OnHost != right.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resource.TensorWrongSize);
-
-			return left.ApplyToClone(l =>
-			{
-				l.AddBy_αx(right, Scalars<T>.MinusOne);
-				////l.PointwiseOperation(BinaryOperation.Add, Scalars<T>.One, UnitaryOperation.Identity, right, TensorOrder.Identity, Scalars<T>.One, UnitaryOperation.Negate, left, TensorOrder.Identity);
-			});
-		}
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <returns>The sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/>. Shall be a referenced tensor if possible.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
+		public override TensorBase<T> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
 
 		/// <summary>
-		/// Negation operator for a tensor.
+		/// Get the sub-tensor indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
 		/// </summary>
-		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <returns>the negation result</returns>
-		/// <remarks>the <see cref="Label"/> of operand will be ignored</remarks>
-		public static DenseTensor<T> operator -(DenseTensor<T> left)
-		{
-			if (left is null || left == EmptyDnTen)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-
-			return left.ApplyToClone(result => result.Scale(Scalars<T>.MinusOne));
-		}
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="overwrite">The tensor to be overwritten by the sub-tensor</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
+		public override void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite);
 
 		/// <summary>
-		/// Scaling operator for a tensor.
+		/// Set the sub-tensor indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
 		/// </summary>
-		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <param name="α">The scalar to multiply</param>
-		/// <returns>the scaling result</returns>
-		/// <remarks>the <see cref="Label"/> of operand will be ignored</remarks>
-		public static DenseTensor<T> operator *(DenseTensor<T> left, T α)
-		{
-			if (left is null || left == EmptyDnTen)
-				throw new ArgumentNullException(nameof(left), Resource.ArrayCannotNull);
-
-			return left.ApplyToClone(result => result.Scale(α));
-		}
-
-		/// <summary>
-		/// Scaling operator for a tensor.
-		/// </summary>
-		/// <param name="left">left operand, if <paramref name="left"/> is in-place, it will be overwritten</param>
-		/// <param name="α">The scalar to multiply</param>
-		/// <returns>the scaling result</returns>
-		/// <remarks>the <see cref="Label"/> of operand will be ignored</remarks>
-		public static DenseTensor<T> operator *(T α, DenseTensor<T> left) => left * α;
-
-
-		
-
-		/// <summary>
-		/// Contraction operator for two tensors, <b>out-of-place</b>.
-		/// </summary>
-		/// <param name="left">left operand</param>
-		/// <param name="right">right operand</param>
-		/// <returns>the contraction result</returns>
-		/// <remarks>the <see cref="Label"/> of operands will utilized</remarks>
-		public static DenseTensor<T> operator *(DenseTensor<T> left, DenseTensor<T> right)
-		{
-			var (newLabel, newSize) = TENSOR.OutOfPlaceContractCheck(Scalars<T>.One, left, right, out _);
-
-			// calculate
-			var result = new DenseTensor<T>(newSize, label: newLabel, onHost: left.OnHost);
-			try
-			{
-				result.Contract(Scalars<T>.One, left, right);
-				return result;
-			}
-			catch (Exception)
-			{
-				result.Dispose();
-				throw;
-			}
-		}
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="value">The tensor to set whose size is the lengths of the sub-tensor's size</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
+		public override void SetSlice(ReadOnlySpan<long> offsets, TensorBase<T> value);
 		#endregion
 
-		#region interface operators
-		#region explicit method
-		DenseTensor<T> ITensor<DenseTensor<T>, T>.ConjugateOutOfPlace() => base.ConjugateOutOfPlace() as DenseTensor<T>;
+		#region tensor algebra methods
+		/// <summary>
+		/// Compute the tensor reduction (self partial summation) of this tensor under the given <paramref name="order"/>.
+		/// </summary>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) to sum, its order will be ignored</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <returns>The reduction result as a new <see cref="DenseTensor{T}"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public override DenseTensor<T> Reduce(TensorOrder order, T scalar);
 
-		DenseTensor<T> ITensor<DenseTensor<T>, T>.Reshape(params long[] size)
-		{
-			if (size is null || size.Length == 0)
-				throw new ArgumentNullException(nameof(size));
-			if (size.Prod() != this.Length)
-				throw new ArgumentOutOfRangeException(nameof(size), size);
+		/// <summary>
+		/// Compute the tensor permutation of this tensor under the given <paramref name="order"/>.
+		/// </summary>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate the permutation order</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <returns>The permutation result as a new <see cref="DenseTensor{T}"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public override DenseTensor<T> Permute(TensorOrder order, T scalar);
 
-			return new DenseTensor<T>(this, size);
-		}
+		/// <summary>
+		/// Compute the tensor contraction of this tensor and the <paramref name="other"/> tensor using their .
+		/// </summary>
+		/// <param name="other">The other tensor to perform the contraction with</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <returns>The contraction result as a new <see cref="DenseTensor{T}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public override DenseTensor<T> Contract(TensorBase<T> other, T scalar);
+
+		/// <summary>
+		/// Compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.
+		/// </summary>
+		/// <param name="scalarThis">The scalar to multiply to this tensor</param>
+		/// <param name="other">The other tensor to perform the contraction with</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> tensor</param>
+		/// <returns>The addition result as a new <see cref="DenseTensor{T}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="other"/> has different size than this one</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
+		public override DenseTensor<T> AddTensor(T scalarThis, TensorBase<T> other, T scalarOther);
 		#endregion
 
+		#region in-place tensor operations
 		/// <summary>
 		/// Permute <paramref name="tensor"/> by <paramref name="order"/> and replace to this tensor
 		/// </summary>
@@ -523,146 +220,23 @@ namespace Althea.Backend.Arrays
 		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
 		public void Permute(DenseTensor<T> tensor, TensorOrder order)
 		{
-			tensor.Permute(Scalars<T>.One, UnitaryOperation.Identity, order, overwrite: this);
+			
 		}
 
-		/// <summary>
-		/// Permute (general transpose) and this tensor to form a <b>new</b> one.
-		/// </summary>
-		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
-		/// <returns>the result tensor, a new <see cref="DenseTensor{T}"/></returns>
-		public DenseTensor<T> OperatorPermute(TensorOrder order)
-		{
-			return this.Permute(Scalars<T>.One, UnitaryOperation.Identity, order);
-		}
-
-		/// <summary>
-		/// Contraction operator for two tensors: this as left and <paramref name="right"/>.
-		/// </summary>
-		/// <param name="right">right operand</param>
-		/// <returns>the contraction result, out-of-place</returns>
-		/// <param name="order">The order of the result tensor, default is the alphabetic order</param>
-		/// <remarks>the <see cref="ITensor.Label"/> of operands will be utilized</remarks>
-		public DenseTensor<T> OperatorContract(DenseTensor<T> right, params char[] order)
-		{
-			var (newLabel, newSize) = TENSOR.OutOfPlaceContractCheck(Scalars<T>.One, this, right, out _);
-			if (order is null || order.Length == 0)
-				order = newLabel;
-			if (order.Length != newLabel.Length)
-				throw new ArgumentException(Resource.TensorWrongIndex, nameof(order));
-
-			// calculate the new size
-			if (!order.SequenceEqual(newLabel))
-			{
-				Span<int> permute = stackalloc int[order.Length];
-				bool success = newLabel.FindPermutationTo(order, permute);
-				if (!success)
-					throw new ArgumentException(Resource.TensorWrongIndex, nameof(order));
-				newSize = newSize.ReOrder(permute);
-			}
-			// calculate
-			var result = new DenseTensor<T>(newSize, label: order, onHost: this.OnHost);
-			try
-			{
-				result.Contract(Scalars<T>.One, this, right);
-				return result;
-			}
-			catch (Exception)
-			{
-				result.Dispose();
-				throw;
-			}
-		}
-		#endregion
-
-
-		#region operations
-		/// <summary>
-		/// Return a reference <see cref="DenseTensor{T}"/> of this one with same properties
-		/// </summary>
-		/// <returns>A reference <see cref="DenseTensor{T}"/> of this one</returns>
-		public DenseTensor<T> MakeReference() => new(this, this.Size.ToArray());
-
-		void ITensor<T>.DualInPlace() { /*do nothing*/ }
-
-		/// <summary>
-		/// Tensor product between this tensor and <paramref name="other"/> tensor to form a <b>new</b> tensor.
-		/// </summary>
-		/// <param name="other">The other <see cref="DenseTensor{T}"/> to product</param>
-		/// <param name="α">The scalar to multiply</param>
-		/// <param name="conjugateOther">perform conjugate to <paramref name="other"/> or not, default is true for complex and false otherwise</param>
-		/// <param name="overwrite">The overwrite result <see cref="DenseTensor{T}"/></param>
-		/// <returns>the result tensor, a new <see cref="DenseTensor{T}"/> if <paramref name="overwrite"/> does not meet conditions</returns>
-		public DenseTensor<T> TensorProduct(DenseTensor<T> other, T α, bool? conjugateOther = null, DenseTensor<T> overwrite = null)
-		{
-			if (other is null || other == EmptyDnTen)
-				throw new ArgumentNullException(nameof(other), Resource.ArrayCannotNull);
-			if (this.OnHost != other.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos);
-			DenseTensor<T> output = null;
-			try
-			{
-				if (overwrite is null || !this.Size.Concat(other.Size).SequenceEqual(overwrite.Size))
-					output = new DenseTensor<T>(this.Size.Concat(other.Size).ToArray(), label: null, onHost: this.OnHost);
-				else if (overwrite != null && this.OnHost != overwrite.OnHost)
-					throw new ArgumentException(Resource.RequireSamePos, nameof(overwrite));
-				else
-					output = overwrite;
-				BLAS.VectorOuterProduct(this, other, overwrite.ToMatrix(this.Length) as DenseMatrix<T>, α, conjugateOther);
-				return output;
-			}
-			catch (Exception)
-			{
-				if (output != overwrite) output?.Dispose();
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Permute (general transpose) and scale this tensor to form a <b>new</b> tensor: $A_{i_0,i_1,...,i_n} = \alpha \Psi(A_{\Pi(i_0,i_1,...,i_n)})$.
-		/// </summary>
-		/// <param name="newOrder">The new permutation <see cref="TensorOrder"/>, zero-based</param>
-		/// <param name="α">The scalar to multiply</param>
-		/// <param name="op">The <see cref="UnitaryOperation"/> <c>Ψ</c> to apply on each element before scaling</param>
-		/// <param name="overwrite">The overwrite result <see cref="DenseTensor{T}"/></param>
-		/// <returns>the result tensor, a new <see cref="DenseTensor{T}"/> if <paramref name="overwrite"/> does not meet conditions</returns>
-		public DenseTensor<T> Permute(T α, UnitaryOperation op, TensorOrder newOrder, DenseTensor<T> overwrite = null)
-		{
-			DenseTensor<T> output = null;
-			try
-			{
-				var order = newOrder.GetIntArrayOrder(this);
-				var reorderSize = this.Size.ReOrder(order).ToArray();
-				if (overwrite is null || !reorderSize.SequenceEqual(overwrite.Size))
-					output = new DenseTensor<T>(reorderSize, label: newOrder.GetCharArrayOrder(this), onHost: this.OnHost);
-				else if (overwrite != null && this.OnHost != overwrite.OnHost)
-					throw new ArgumentException(Resource.RequireSamePos, nameof(overwrite));
-				else
-					output = overwrite;
-				TENSOR.Permute(this, α, op, newOrder, output);
-				return output;
-			}
-			catch (Exception)
-			{
-				if (output != overwrite) output?.Dispose();
-				throw;
-			}
-		}
-		
 		/// <summary>
 		/// Partial reduction of tensor <paramref name="A"/>: $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$. The missing indices of <paramref name="A"/> compared to <paramref name="C"/> will be aggregated according to <paramref name="reduction"/>.
 		/// </summary>
 		/// <param name="reduction">The reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
 		/// <param name="α">scalar α</param>
-		/// <param name="opA"><see cref="UnitaryOperation"/> <c>Ψ<sub>A</sub></c></param>
+		/// <param name="opA"><see cref="UnaryOperation"/> <c>Ψ<sub>A</sub></c></param>
 		/// <param name="A"><see cref="DenseTensor{T}"/> A</param>
 		/// <param name="β">scalar β, default 0</param>
-		/// <param name="opC"><see cref="UnitaryOperation"/> <c>Ψ<sub>C</sub></c>, default identity</param>
+		/// <param name="opC"><see cref="UnaryOperation"/> <c>Ψ<sub>C</sub></c>, default identity</param>
 		/// <param name="C"><see cref="DenseTensor{T}"/> C, default null</param>
 		/// <remarks>If <paramref name="C"/> is null, or <paramref name="β"/> is zero, this tensor itself will be used instead of <paramref name="C"/>.</remarks>
-		public void Reduce(BinaryOperation reduction, T α, UnitaryOperation opA, DenseTensor<T> A, T β = default, UnitaryOperation opC = UnitaryOperation.Identity, DenseTensor<T> C = null)
+		public void Reduce(BinaryOperation reduction, T α, UnaryOperation opA, DenseTensor<T> A, T β = default, UnaryOperation opC = UnaryOperation.Identity, DenseTensor<T> C = null)
 		{
-			TENSOR.Reduce(reduction, α, opA, A, β, opC, C, this);
+			
 		}
 
 		/// <summary>
@@ -679,7 +253,6 @@ namespace Althea.Backend.Arrays
 			TENSOR.Contract(α, A, B, β, C, this);
 		}
 		#endregion
-
 
 		#region matrix operation and decompositions
 		/// <summary>
@@ -891,241 +464,41 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-
-		#region indexers
-		/// <summary>
-		/// Get or set an element in of this tensor like a vector.
-		/// </summary>
-		/// <param name="i">The index in memory</param>
-		/// <returns>the value at index <paramref name="i"/></returns>
-		public T this[Index i] {
-			get {
-				long ind = i.GetPosition(this.Length);
-				return RT.CopyOut(this, offset: ind);
-			}
-			set {
-				long ind = i.GetPosition(this.Length);
-				RT.CopyInto(this, value, offset: ind);
-			}
-		}
-
-		private long CheckIndexer(Index[] pos, int startRank = 0)
-		{
-			if (pos is null)
-				throw new ArgumentNullException(nameof(pos));
-			if (pos.Length != this.Rank - startRank)
-				throw new ArgumentOutOfRangeException(nameof(pos), pos);
-
-			long offset = 0;
-			for (int i = startRank, j = 0; i < this.Rank; i++, j++)
-			{
-				var off = pos[j].GetPosition(this.Size[i]);
-				if (off >= this.Size[i])
-					throw new ArgumentOutOfRangeException(nameof(pos), pos);
-				else
-					offset += this.SizeProd[i] * off;
-			}
-			return offset;
-		}
-
-		private long[] GetPos(long offset, int atRank = 0)
-		{
-			long[] pos = new long[this.Rank - atRank];
-			for (int i = this.Rank - 1, j = pos.Length - 1; i >= atRank; i--, j--)
-			{
-				pos[j] = offset / this.SizeProd[i];
-				offset %= this.SizeProd[i];
-			}
-			return pos;
-		}
-
-		/// <summary>
-		/// Get or set an element in of this tensor.
-		/// </summary>
-		/// <param name="pos">The indices of each rank</param>
-		/// <returns>the value at <paramref name="pos"/></returns>
-		public T this[params Index[] pos] {
-			get {
-				var offset = this.CheckIndexer(pos);
-				return RT.CopyOut(this, offset);
-			}
-			set {
-				var offset = this.CheckIndexer(pos);
-				RT.CopyInto(this, value, offset);
-			}
-		}
-
-		/// <summary>
-		/// Get the sub tensor formed by the first N rank of this tensor.
-		/// </summary>
-		/// <param name="firstNRank">first N ranks to set or get</param>
-		/// <param name="restPos">rest of the tensor's rank's position <see cref="Index"/></param>
-		/// <returns>the sub <see cref="DenseTensor{T}"/> of the <paramref name="firstNRank"/> at <paramref name="restPos"/></returns>
-		public DenseTensor<T> GetSpan(int firstNRank, params Index[] restPos)
-		{
-			var offset = this.CheckIndexer(restPos, firstNRank);
-			return new DenseTensor<T>(this, this.Size.Take(firstNRank).ToArray(), offset);
-		}
-
-		/// <summary>
-		/// Set the sub tensor formed by the first N rank of this tensor.
-		/// </summary>
-		/// <param name="value">The value to set</param>
-		/// <param name="firstNRank">first N ranks to set or get</param>
-		/// <param name="restPos">rest of the tensor's rank's position <see cref="Index"/></param>
-		/// <returns>the sub <see cref="DenseTensor{T}"/> of the <paramref name="firstNRank"/> at <paramref name="restPos"/></returns>
-		public void SetSpan(DenseTensor<T> value, int firstNRank, params Index[] restPos)
-		{
-			if (value is null || value == EmptyDnTen)
-				throw new ArgumentNullException(nameof(value), Resource.ArrayCannotNull);
-			if (!this.Size.Take(firstNRank).SequenceEqual(value.Size))
-				throw new ArgumentException(Resource.TensorWrongSize, nameof(value));
-			var offset = this.CheckIndexer(restPos, firstNRank);
-			RT.CopyTo(source: value, dest: this, length: value.Length, offsetDest: offset);
-		}
-		#endregion
-
-
 		#region print
 		/// <summary>
-		/// Override <see cref="ValueArray{T}.ToString()"/> to get the string representation of this array.
+		/// Print out this tensor.
 		/// </summary>
-		/// <returns>String representation of this array</returns>
-		public override string ToString()
+		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
+		/// <returns>The detailed string representation</returns>
+		public override string Print(PrintSettings? overrideSetting = null)
 		{
-			return base.ToString(new Dictionary<string, object> { ["label"] = "{" + string.Join(',', this.Label) + "}" });
-		}
 
-		/// <summary>
-		/// Print out the tensor as well as its elements.
-		/// </summary>
-		/// <param name="overrideSetting"><see cref="AbstractArray{T}.Print(IReadOnlyDictionary{PrintSetting, int})"/></param>
-		/// <returns>String representation of this tensor</returns>
-		public override string Print(IReadOnlyDictionary<PrintSetting, int> overrideSetting = null)
-		{
-			string description = this.ToString();
-			if (this.Disposed)
-				return description;
-			description += ":" + Environment.NewLine;
-
-			if (this.Rank == 1)
-			{
-				var vec = (this.ToVector() as DenseVector<T>).Print(overrideSetting);
-				var vecStrs = vec.Split(Environment.NewLine, 2);
-				return description + vecStrs[1];
-			}
-			else if (this.Rank == 2)
-			{
-				var mat = (this.ToMatrix(this.Size[0]) as DenseMatrix<T>).Print(overrideSetting);
-				var matStrs = mat.Split(Environment.NewLine, 2);
-				return description + matStrs[1];
-			}
-			// else
-			int maxCount = (!(overrideSetting is null) && overrideSetting.ContainsKey(PrintSetting.ArrayLength)) ? overrideSetting[PrintSetting.ArrayLength] : GlobalSettings.PrintConfig[PrintSetting.ArrayLength];
-			int count = 0;
-			StringBuilder sb = new(description);
-			for (long offset = 0; offset < this.Length; offset += this.SizeProd[2])
-			{
-				if (count >= maxCount)
-				{
-					sb.AppendLine($"... {this.Length / this.SizeProd[2] - count} more sub-tensors");
-					break;
-				}
-				sb.AppendLine($"Tensor[.., .., {string.Join(", ", this.GetPos(offset, 2))}] =");
-				var mat = new DenseMatrix<T>(this, this.Size[0], this.Size[1], offset: offset).Print(overrideSetting);
-				var matStrs = mat.Split(Environment.NewLine, 2);
-				matStrs[1] = matStrs[1].TrimEnd();
-				sb.Append(matStrs[1]);
-				if (!matStrs[1].EndsWith(Environment.NewLine))
-					sb.AppendLine();
-				count++;
-			}
-			return sb.ToString();
 		}
 		#endregion
 
-
-		#region host converter
+		#region serialization
 		/// <summary>
-		/// Convert C# array, size and on-host to <see cref="DenseTensor{T}"/>.
+		/// Get all the storages of this array. Only returns <see cref="ValueArray{T}.Storage"/>.
 		/// </summary>
-		/// <param name="input">C# array of <typeparamref name="T"/> as value, <see cref="ITuple"/> as size and <see cref="bool"/> as on-host</param>
-		public static explicit operator DenseTensor<T>((T[] value, ITuple size, bool onHost) input)
+		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
+		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage>(1)
 		{
-			var (value, size, onHost) = input;
-			var tensor = new DenseTensor<T>(size, onHost);
-			try
-			{
-				if (tensor.Length != value.LongLength)
-					throw new ArgumentException(Resource.TensorWrongSize, nameof(size));
-				RT.CopyIntoArray(tensor, value);
-				return tensor;
-			}
-			catch (Exception)
-			{
-				tensor.Dispose();
-				throw;
-			}
-		}
+			[StorageName] = this.Storage
+		};
 
 		/// <summary>
-		/// Convert C# array, size and on-host to <see cref="DenseTensor{T}"/>.
+		/// The presenting name of <see cref="OuterSize"/>
 		/// </summary>
-		/// <param name="input">C# array of <typeparamref name="T"/> as value, <see cref="int"/> array as size and <see cref="bool"/> as on-host</param>
-		public static explicit operator DenseTensor<T>((T[] value, int[] size, bool onHost) input)
+		protected internal const string OuterSizeName = nameof(OuterSize);
+
+		/// <summary>
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="OuterSize"/>.
+		/// </summary>
+		/// <returns>Other requisite informations used to re-construct this array</returns>
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
 		{
-			var (value, size, onHost) = input;
-			var tensor = new DenseTensor<T>(size, onHost);
-			try
-			{
-				if (tensor.Length != value.LongLength)
-					throw new ArgumentException(Resource.TensorWrongSize, nameof(size));
-				RT.CopyIntoArray(tensor, value);
-				return tensor;
-			}
-			catch (Exception)
-			{
-				tensor.Dispose();
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Convert C# array, size and on-host to <see cref="DenseTensor{T}"/>.
-		/// </summary>
-		/// <param name="input">C# array of <typeparamref name="T"/> as value, <see cref="IReadOnlyList{Int64}"/> as size and <see cref="bool"/> as on-host</param>
-		public static explicit operator DenseTensor<T>((T[] value, IReadOnlyList<long> size, bool onHost) input)
-		{
-			var (value, size, onHost) = input;
-			var tensor = new DenseTensor<T>(size, null, onHost);
-			try
-			{
-				if (tensor.Length != value.LongLength)
-					throw new ArgumentException(Resource.TensorWrongSize, nameof(size));
-				RT.CopyIntoArray(tensor, value);
-				return tensor;
-			}
-			catch (Exception)
-			{
-				tensor.Dispose();
-				throw;
-			}
-		}
-		#endregion
-
-
-		#region serialize
-		/// <summary>
-		/// Get the pointers of this instance.
-		/// </summary>
-		/// <returns>the pointers</returns>
-		public override IReadOnlyDictionary<string, IStorage> GetStorages() => DenseTensorFactory.GetPointers(this);
-
-		/// <summary>
-		/// Get other requisite informations for re-constructing this array.
-		/// </summary>
-		/// <returns>other requisite informations</returns>
-		public override IReadOnlyDictionary<string, object> GetMetaData() => DenseTensorFactory.GetOtherInfo(this);
+			[OuterSizeName] = this.OuterSize.ToArray()
+		};
 		#endregion
 	}
 }

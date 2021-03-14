@@ -212,9 +212,14 @@ namespace Althea.Helpers
 		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
-		public Span<T> AsSpan()
+		/// <param name="size">The size of the span, default 0 means all</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> AsSpan(int size = 0)
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, _count);
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
 
@@ -223,6 +228,7 @@ namespace Althea.Helpers
 		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
 		/// </summary>
 		public int NonDefaults {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				fixed (void* t = &this.field)
 				{
@@ -241,7 +247,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 16 / sizeof(T);
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 16 / sizeof(T);
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -250,6 +259,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -258,6 +268,7 @@ namespace Althea.Helpers
 					return ((T*)t)[index];
 				}
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -509,10 +520,15 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
+		/// <param name="size">The size of the span, default 0 means all</param>
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
-		public Span<T> AsSpan()
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> AsSpan(int size = 0)
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, _count);
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
 
@@ -521,6 +537,7 @@ namespace Althea.Helpers
 		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
 		/// </summary>
 		public int NonDefaults {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				fixed (void* t = &this.field)
 				{
@@ -539,7 +556,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 32 / sizeof(T);
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 32 / sizeof(T);
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -548,6 +568,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -556,6 +577,7 @@ namespace Althea.Helpers
 					return ((T*)t)[index];
 				}
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -807,10 +829,15 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
+		/// <param name="size">The size of the span, default 0 means all</param>
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
-		public Span<T> AsSpan()
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> AsSpan(int size = 0)
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, _count);
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
 
@@ -819,6 +846,7 @@ namespace Althea.Helpers
 		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
 		/// </summary>
 		public int NonDefaults {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				fixed (void* t = &this.field)
 				{
@@ -837,7 +865,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 56 / sizeof(T);
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 56 / sizeof(T);
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -846,6 +877,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -854,6 +886,7 @@ namespace Althea.Helpers
 					return ((T*)t)[index];
 				}
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1105,10 +1138,15 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
+		/// <param name="size">The size of the span, default 0 means all</param>
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
-		public Span<T> AsSpan()
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> AsSpan(int size = 0)
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, _count);
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
 
@@ -1117,6 +1155,7 @@ namespace Althea.Helpers
 		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
 		/// </summary>
 		public int NonDefaults {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				fixed (void* t = &this.field)
 				{
@@ -1135,7 +1174,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 60 / sizeof(T);
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 60 / sizeof(T);
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -1144,6 +1186,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1152,6 +1195,7 @@ namespace Althea.Helpers
 					return ((T*)t)[index];
 				}
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1403,10 +1447,15 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
+		/// <param name="size">The size of the span, default 0 means all</param>
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
-		public Span<T> AsSpan()
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> AsSpan(int size = 0)
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, _count);
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
 
@@ -1433,7 +1482,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 64 / sizeof(T);
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 64 / sizeof(T);
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -1442,6 +1494,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1450,6 +1503,7 @@ namespace Althea.Helpers
 					return ((T*)t)[index];
 				}
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1701,10 +1755,15 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Create a <see cref="Span{T}"/> from this fixed buffer
 		/// </summary>
+		/// <param name="size">The size of the span, default 0 means all</param>
 		/// <returns>The <see cref="Span{T}"/> referring to this fixed buffer</returns>
-		public Span<T> AsSpan()
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> AsSpan(int size = 0)
 		{
-			return MemoryMarshal.CreateSpan(ref this.field, _count);
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
 
@@ -1731,7 +1790,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 128 / sizeof(T);
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 128 / sizeof(T);
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -1740,6 +1802,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1748,6 +1811,7 @@ namespace Althea.Helpers
 					return ((T*)t)[index];
 				}
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -1876,6 +1940,19 @@ namespace Althea.Helpers
 		private T field;
 
 		/// <summary>
+		/// Create a new <see cref="SizedFixedBuffer_128{T}"/> with the given <paramref name="span"/>
+		/// </summary>
+		/// <param name="span">The given <see cref="ReadOnlySpan{T}"/> used to create this fixed buffer</param>
+		/// <exception cref="ArgumentException">If <paramref name="span"/> is too long</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SizedFixedBuffer_128(ReadOnlySpan<T> span)
+		{
+			this.size = span.Length;
+			this.field = default;
+			this.CopyFromSpan(span);
+		}
+
+		/// <summary>
 		/// Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
 		/// </summary>
 		/// <returns>The array containing the elements of this fixed buffer</returns>
@@ -1992,6 +2069,7 @@ namespace Althea.Helpers
 		/// Get the number of values whose value is not default(<typeparamref name="T"/>)
 		/// </summary>
 		public int NonDefaults {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				fixed (void* t = &this.field)
 				{
@@ -2010,7 +2088,10 @@ namespace Althea.Helpers
 		/// <summary>
 		/// The number of elements in this fixed buffer
 		/// </summary>
-		public int Count => this.size;
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.size;
+		}
 
 		/// <summary>
 		/// Basic indexer of this fixed buffer
@@ -2019,6 +2100,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= this.size)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -2152,6 +2234,7 @@ namespace Althea.Helpers
 		/// <param name="array">The given array of <typeparamref name="T"/> used to create</param>
 		/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedClassBuffer_8(params T[] array) : this((IReadOnlyList<T>)array) { }
 
 		/// <summary>
@@ -2160,6 +2243,7 @@ namespace Althea.Helpers
 		/// <param name="list">The given <see cref="IReadOnlyList{T}"/> of <typeparamref name="T"/> used to create</param>
 		/// <exception cref="ArgumentException">If the size of <paramref name="list"/> is larger than 8</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="list"/> is null</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedClassBuffer_8(IReadOnlyList<T> list)
 		{
 			if (list is null)
@@ -2205,6 +2289,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				T? res = index switch
 				{
@@ -2220,6 +2305,7 @@ namespace Althea.Helpers
 				};
 				return res ?? throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				switch (index)
 				{
@@ -2256,14 +2342,19 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Get the number of elements in this fixed buffer
 		/// </summary>
-		public int Count => 8;
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 8;
+		}
 
 		/// <summary>
 		/// Returns an enumerator that iterates through the collection.
 		/// </summary>
 		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
 
@@ -2339,6 +2430,7 @@ namespace Althea.Helpers
 		/// Implicitly convert a <see cref="SizedFixedClassBuffer_8{T}"/> to a <see cref="FixedClassBuffer_8{T}"/>
 		/// </summary>
 		/// <param name="sized">The input <see cref="SizedFixedClassBuffer_8{T}"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator FixedClassBuffer_8<T>(SizedFixedClassBuffer_8<T> sized) => new(sized);
 		#endregion
 	}
@@ -2361,6 +2453,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="size">The size</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SizedFixedClassBuffer_8(int size)
 		{
 			if (size <= 0 || size > 8)
@@ -2375,6 +2468,7 @@ namespace Althea.Helpers
 		/// <param name="array">The given array of <typeparamref name="T"/> used to create</param>
 		/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SizedFixedClassBuffer_8(params T[] array) : this((IReadOnlyList<T>)array) { }
 
 		/// <summary>
@@ -2383,6 +2477,7 @@ namespace Althea.Helpers
 		/// <param name="list">The given <see cref="IReadOnlyList{T}"/> of <typeparamref name="T"/> used to create</param>
 		/// <exception cref="ArgumentException">If the size of <paramref name="list"/> is larger than 8</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="list"/> is null</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SizedFixedClassBuffer_8(IReadOnlyList<T> list)
 		{
 			if (list is null)
@@ -2429,6 +2524,7 @@ namespace Althea.Helpers
 		/// <returns>The value at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
 		public T this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -2447,6 +2543,7 @@ namespace Althea.Helpers
 				};
 #pragma warning restore CS8603
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
@@ -2485,14 +2582,19 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Get the number of elements in this fixed buffer
 		/// </summary>
-		public int Count => this.size;
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.size;
+		}
 
 		/// <summary>
 		/// Returns an enumerator that iterates through the collection.
 		/// </summary>
 		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
 
@@ -2627,12 +2729,14 @@ namespace Althea.Helpers
 		/// Implicitly convert a <typeparamref name="T"/> to a <see cref="SizedFixedClassBuffer_8{T}"/>
 		/// </summary>
 		/// <param name="value">The value of type <typeparamref name="T"/> to be converted</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator SizedFixedClassBuffer_8<T>(T value) => new(1) { a0 = value };
 
 		/// <summary>
 		/// Implicitly convert a tuple of <typeparamref name="T"/> to a <see cref="SizedFixedClassBuffer_8{T}"/>
 		/// </summary>
 		/// <param name="value">The value tuple of type <typeparamref name="T"/> to be converted</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator SizedFixedClassBuffer_8<T>(ValueTuple<T, T> value) => new(1) { a0 = value.Item1, a1 = value.Item2 };
 		#endregion
 	}

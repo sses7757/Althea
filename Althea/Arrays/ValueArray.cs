@@ -89,13 +89,20 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.OuterSize"/> != <see cref="IPitchedArray{T}.Size"/>, this method loops over the first few contiguous dimensions which may lead to performance loss.</remarks>
 		public virtual void FillWith(T value)
 		{
-			MEM.FillWithValue(this.Storage, value);
-			if (this is ISparseArray<T> sparse)
+			if (this is not IPitchedArray<T> pitched || pitched.OuterSize.SequenceEqual(this.Size))
 			{
-				sparse.DefaultValue = value;
+				MEM.FillWithValue(this.Storage, value);
+				if (this is ISparseArray<T> sparse)
+				{
+					sparse.DefaultValue = value;
+				}
+				return;
 			}
+			// else
+
 		}
 
 		/// <summary>
@@ -176,7 +183,9 @@ namespace Althea.Arrays
 					sparse.DefaultValue = default;
 			}
 		}
+		#endregion
 
+		#region simple aggregation operations
 		/// <summary>
 		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AggregateSum{T}"/>.
 		/// </summary>
@@ -520,7 +529,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new array alike this one</returns>
-		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : unmanaged, IFormattable, IEquatable<TOut>;
+		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.

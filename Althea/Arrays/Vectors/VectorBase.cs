@@ -213,7 +213,7 @@ namespace Althea.Arrays
 			if (vector is null || !vector.IsValid())
 				throw new ArgumentNullException(nameof(vector));
 
-			return vector.ApplyToClone(v => v.AddScalar(scalar));
+			return vector.ApplyToClone(v => v.Scale(scalar));
 		}
 
 		/// <summary>
