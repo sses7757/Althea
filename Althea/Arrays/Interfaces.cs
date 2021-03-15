@@ -141,11 +141,6 @@ namespace Althea.Arrays
 	{
 		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get the (referenced) storage of this dense pitched/strided array.
-		/// </summary>
-		Storage<T> Storage { get; }
-
-		/// <summary>
 		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this array (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
 		/// </summary>
 		ReadOnlySpan<long> Size { get; }
@@ -443,13 +438,18 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for tensor that contains basic members (size and label).
 	/// </summary>
-	public interface ITensor
+	public interface ITensor : ICheckValid
 	{
 		#region properties
 		/// <summary>
 		/// When implemented by a derived class, get the rank of this tensor
 		/// </summary>
-		int Rank { get; }
+		int Rank => this.Size.Length;
+
+		/// <summary>
+		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		ReadOnlySpan<long> Size { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor

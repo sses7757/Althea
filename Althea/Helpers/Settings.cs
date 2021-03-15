@@ -365,7 +365,7 @@ namespace Althea.Helpers
 				singletonSettings = new JsonSettings(false);
 				if (logError)
 				{
-					Log.Write(Resources.Other.ErrorOccur + e.Message, "Initialization of Settings", LogLevel.Error);
+					Log.Write(Resources.Other.ErrorOccur + e.Message, level: LogLevel.Error);
 					Log.Write(Resources.Other.UseDefault);
 				}
 				return false;

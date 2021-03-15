@@ -1,6 +1,7 @@
 // self defined macro
 #include "blasSupp.h"
 
+////#include "C:\Program Files\NVIDIA GPU Computing Toolkit\cuTENSOR\v1.2\include\cutensor.h"
 
 #pragma region get GPU properties
 #ifndef CPU

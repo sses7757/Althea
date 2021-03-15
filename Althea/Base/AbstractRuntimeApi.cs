@@ -19,6 +19,7 @@ namespace Althea
 	public abstract class AbstractRuntimeApi : IDisposable
 	{
 		#region static methods used for creating API class instances
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static T Create<T>(Type type) where T : AbstractRuntimeApi
 		{
 			if (type.IsGenericType || type.IsAbstract || !type.IsAssignableTo(typeof(T)))
@@ -43,6 +44,7 @@ namespace Althea
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
 		{
 			if (node is null)
@@ -55,6 +57,7 @@ namespace Althea
 			node.Value = Create<T>(type);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void PromoteImplementation<T>(LinkedList<T> recents, T impl) where T : AbstractRuntimeApi
 		{
 			if (recents is null || impl is null)
@@ -77,6 +80,7 @@ namespace Althea
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
 		/// <param name="implementation">The implementation indicated by a <see cref="Type"/></param>
 		/// <returns>Success or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static bool SetImplementation<T>(LinkedList<T> recents, Type implementation) where T : AbstractRuntimeApi
 		{
 			if (implementation.IsGenericType || implementation.IsAbstract || !implementation.IsAssignableTo(typeof(T)))
@@ -109,6 +113,7 @@ namespace Althea
 		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
 		/// <param name="implementation">The implementation indicated by a <typeparamref name="T"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static void SetImplementation<T>(LinkedList<T> recents, T implementation) where T : AbstractRuntimeApi
 		{
 			if (recents.Contains(implementation))
@@ -258,6 +263,7 @@ namespace Althea
 		/// <param name="from">The starting <see cref="LinkedListNode{T}"/> to begin searching, default null means search from the first of <paramref name="recents"/></param>
 		/// <returns>The suitable most recent implementation as a <see cref="LinkedListNode{T}"/> or error if not found.</returns>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static LinkedListNode<T> SelectImplementation<T>(LinkedList<T> recents, Predicate<T> validApi, LinkedListNode<T>? from = null) where T : AbstractRuntimeApi
 		{
 			if (validApi is null)
