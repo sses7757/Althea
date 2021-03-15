@@ -75,11 +75,15 @@ namespace Althea.NativeTypes
 			Division
 		}
 
+		private const MethodAttributes ATTR = MethodAttributes.Public | MethodAttributes.Static;
+		private const CallingConventions CALL = CallingConventions.Standard;
+		private static readonly Module THIS = typeof(Const<T>).Module;
+
 		private static Func<T, T, T> GetBinary(BinaryOp op)
 		{
 			if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new(op.ToString(), typeof(T), new[] { typeof(T), typeof(T) });
+				DynamicMethod method = new(op.ToString(), ATTR, CALL, typeof(T), new[] { typeof(T), typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Ldarg_1);
@@ -130,7 +134,7 @@ namespace Althea.NativeTypes
 		{
 			if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Power", typeof(T), new[] { typeof(T), typeof(T) });
+				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				if (typeof(T) == typeof(double))
 				{
@@ -165,7 +169,7 @@ namespace Althea.NativeTypes
 				if (func.IsStatic)
 					return func.CreateDelegate<Func<T, T, T>>();
 				// object call
-				DynamicMethod method = new("Power", typeof(T), new[] { typeof(T), typeof(T) });
+				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Ldarg_1); // parameter
@@ -179,7 +183,7 @@ namespace Althea.NativeTypes
 		{
 			if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Power", typeof(T), new[] { typeof(T), typeof(T) });
+				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				if (typeof(T) == typeof(double))
 				{
@@ -213,7 +217,7 @@ namespace Althea.NativeTypes
 				if (func.IsStatic)
 					return func.CreateDelegate<Func<T, double, T>>();
 				// object call
-				DynamicMethod method = new("Power", typeof(T), new[] { typeof(T), typeof(double) });
+				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(double) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Ldarg_1); // parameter
@@ -227,7 +231,7 @@ namespace Althea.NativeTypes
 		{
 			if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Negation", typeof(T), new[] { typeof(T) });
+				DynamicMethod method = new("Negation", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Neg);
@@ -253,7 +257,7 @@ namespace Althea.NativeTypes
 		{
 			if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Sqrt", typeof(T), new[] { typeof(T) });
+				DynamicMethod method = new("Sqrt", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0);
 				if (typeof(T) != typeof(double))
@@ -277,7 +281,7 @@ namespace Althea.NativeTypes
 				if (func.IsStatic)
 					return func.CreateDelegate<Func<T, T>>();
 				// object call
-				DynamicMethod method = new("Sqrt", typeof(T), new[] { typeof(T) });
+				DynamicMethod method = new("Sqrt", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Callvirt, func);
@@ -307,7 +311,7 @@ namespace Althea.NativeTypes
 				if (func.IsStatic)
 					return func.CreateDelegate<Func<T, T>>();
 				// object call
-				DynamicMethod method = new("Conjugate", typeof(T), new[] { typeof(T) });
+				DynamicMethod method = new("Conjugate", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Callvirt, func);
@@ -324,7 +328,7 @@ namespace Althea.NativeTypes
 			}
 			else if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Absolute", typeof(T), new[] { typeof(T) });
+				DynamicMethod method = new("Absolute", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Call, typeof(Math).GetMethod(nameof(Math.Abs), new[] { typeof(T) }) ?? throw new NotSupportedException());
@@ -347,7 +351,7 @@ namespace Althea.NativeTypes
 				if (func.IsStatic)
 					return func.CreateDelegate<Func<T, double>>();
 				// object call
-				DynamicMethod method = new("Absolute", typeof(double), new[] { typeof(T) });
+				DynamicMethod method = new("Absolute", ATTR, CALL, typeof(double), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Callvirt, func);

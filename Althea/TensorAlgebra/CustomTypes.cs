@@ -148,6 +148,7 @@ namespace Althea.TensorAlgebra
 			this.m_leftFreeInOut = leftFree; this.m_rightFreeInOut = rightFree;
 		}
 
+		// Ignore Spelling: stackalloc
 		/// <summary>
 		/// Create a <see cref="TensorContractInfo"/> with the given <paramref name="left"/>, <paramref name="right"/> and <paramref name="output"/> tensors
 		/// </summary>
@@ -161,6 +162,15 @@ namespace Althea.TensorAlgebra
 		/// <remarks>The contraction rank can be obtained by <see cref="GetContractRank"/> which assumes that all tensors' labels are valid ones.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="output"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="left"/> and <paramref name="right"/> cannot contract and overwrite <paramref name="output"/></exception>
+		/// <example><code>
+		/// int rank = <see cref="TensorContractInfo"/>.<see cref="GetContractRank(ITensor, ITensor)"/>;
+		/// <see cref="Span{T}"/> leftConc = stackalloc int[rank];
+		/// <see cref="Span{T}"/> rightConc = stackalloc int[rank];
+		/// <see cref="Span{T}"/> leftFree = stackalloc int[left.Rank - rank];
+		/// <see cref="Span{T}"/> rightFree = stackalloc int[right.Rank - rank];
+		/// <see cref="TensorContractInfo"/> info = new(left, right, output, leftConc, rightConc, leftFree, rightFree);
+		/// <see cref="Dense.AbstractApi.Contract{T}(Dense.DenseTensorWrapper{T}, Dense.DenseTensorWrapper{T}, Dense.DenseTensorWrapper{T}, TensorContractInfo)"/>;
+		/// </code></example>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TensorContractInfo(ITensor left, ITensor right, ITensor output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree)
 		{

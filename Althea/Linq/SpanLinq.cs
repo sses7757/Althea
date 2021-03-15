@@ -1345,7 +1345,8 @@ namespace Althea.Linq
 		/// <param name="span">The span to fill</param>
 		/// <param name="start">The start value of the range</param>
 		/// <param name="step">The step of the range, default 0 will be replaced by 1</param>
-		public static void FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged
+		/// <returns>The input <paramref name="span"/></returns>
+		public static Span<T> FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -1357,6 +1358,7 @@ namespace Althea.Linq
 			{
 				span[i] = Const<T>.AddDelegate(span[i - 1], step);
 			}
+			return span;
 		}
 		#endregion
 	}

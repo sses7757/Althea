@@ -5,9 +5,12 @@ using System.Collections.Generic;
 using Althea.Linq;
 using Althea.Helpers;
 using Althea.NativeTypes;
+using Althea.TensorAlgebra;
+using Althea.TensorAlgebra.Dense;
 
 using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
+using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
 
 
 namespace Althea.Arrays
@@ -89,10 +92,10 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.OuterSize"/> != <see cref="IPitchedArray{T}.Size"/>, this method loops over the first few contiguous dimensions which may lead to performance loss.</remarks>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void FillWith(T value)
 		{
-			if (this is not IPitchedArray<T> pitched || pitched.OuterSize.SequenceEqual(this.Size))
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
 				MEM.FillWithValue(this.Storage, value);
 				if (this is ISparseArray<T> sparse)
@@ -102,7 +105,69 @@ namespace Althea.Arrays
 				return;
 			}
 			// else
+			int orgRank = this.Rank;
+			var orgSize = pitched.Size; var orgOuterSize = pitched.OuterSize;
+			Span<long> jaggedSize = stackalloc long[orgRank].SetValue(1);
+			Span<long> jaggedOuterSize = stackalloc long[orgRank].SetValue(1);
+			int rank = 0;
+			for (int i = 0; i < orgRank; i++)
+			{
+				if (orgSize[i] == orgOuterSize[i])
+				{
+					jaggedSize[rank] *= orgSize[i];
+					jaggedOuterSize[rank] *= orgSize[i];
+				}
+				else
+				{
+					jaggedSize[rank] *= orgSize[i];
+					jaggedOuterSize[rank] *= orgOuterSize[i];
+					rank++;
+					if (rank == orgRank)
+						break;
+					jaggedSize[rank] = jaggedOuterSize[rank] = 1;
+				}
+			}
+			jaggedSize = jaggedSize[..rank]; jaggedOuterSize = jaggedOuterSize[..rank];
 
+			////if (jaggedSize[0] == 1 && rank == 2)
+			////{   // linear algebra API with given vector stride
+			////	LAD.PointWiseAddScalar(this.Storage, jaggedOuterSize[0], value);
+			////}
+			if (jaggedSize[1..].Prod() <= 1000)
+			{   // The estimate overhead of one API call is around 1 microsecond
+				// Typically, we do not want a total overhead larger than 1 millisecond
+				Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+				int maxPosRankInd = rank - 2; Span<long> position = stackalloc long[maxPosRankInd + 1];
+				long offset = 0;
+				while (true)
+				{
+					// fill
+					MEM.FillWithValue(this.Storage.MakeReference(offset, jaggedSize[0]), value);
+					// increase position and offset
+					offset = 0;
+					position[0]++;
+					for (int i = 0; i < maxPosRankInd; i++)
+					{
+						if (position[i] == jaggedSize[i + 1])
+						{
+							position[i] = 0;
+							position[i + 1]++;
+						}
+						offset += position[i] * sizeProd[i];
+					}
+					offset += position[maxPosRankInd] * sizeProd[maxPosRankInd];
+					if (offset >= this.Storage.Length)
+						break;
+				}
+			}
+			else
+			{   // tensor algebra API fill and copy
+				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
+				MEM.FillWithValue(temp, value);
+				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
+									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				TAD.Permute(tempWrapper, thisWrapper, stackalloc int[rank].FillWithRange(0));
+			}
 		}
 
 		/// <summary>

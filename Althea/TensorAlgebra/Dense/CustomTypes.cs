@@ -79,14 +79,14 @@ namespace Althea.TensorAlgebra.Dense
 		public bool IsInputInvalid() => this.m_scalar.IsZero() || this.IsInvalid();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, UnaryOperation operation, T scalar)
+		internal DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
 		{
 			this.m_values = value; this.m_size = size;
 			if (outerSize.SequenceEqual(size))
 				outerSize = size;
 			this.m_outerSize = outerSize;
 			this.m_op = operation;
-			this.m_scalar = scalar;
+			this.m_scalar = scalar.IsZero() ? Const<T>.One : scalar;
 		}
 
 		/// <summary>

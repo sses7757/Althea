@@ -151,6 +151,11 @@ namespace Althea.Arrays
 		ReadOnlySpan<long> OuterSize { get; }
 
 		/// <summary>
+		/// When implemented by a derived class, check whether this array is actually pitched. The default implementation simply checks the point-wise eqaulity of <see cref="Size"/> and <see cref="OuterSize"/>.
+		/// </summary>
+		bool HasPitch => !this.OuterSize.SequenceEqual(this.Size);
+	
+		/// <summary>
 		/// When implemented by a derived class, get the strides (the inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
 		ReadOnlySpan<long> Strides { get; }
