@@ -128,7 +128,13 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size) { }
+		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size)
+		{
+			Span<long> newSize = stackalloc long[size.Length];
+			size.CopyTo(newSize);
+			CheckSize(this, newSize);
+			return new(this.Storage, newSize, newSize);
+		}
 		#endregion
 
 		#region linear algebra methods

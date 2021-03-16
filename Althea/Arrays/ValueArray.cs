@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
+using MEM = Althea.Storage.AbstractApi;
 using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
 
 
@@ -32,7 +32,10 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. The default implementation simply returns <see cref="Storage"/>.<see cref="Storage{T}.Length">Length</see>.
 		/// </summary>
-		public virtual long ActualLength => this.Storage.Length;
+		public virtual long ActualLength {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Storage.Length;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this array is a valid one or not. The default implementation only checks <see cref="AbstractArray{T}.Length"/> and <see cref="Storage"/>.
@@ -87,28 +90,156 @@ namespace Althea.Arrays
 		}
 		#endregion
 
-		#region point-wise concrete operations
-		/// <summary>
-		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
-		/// </summary>
-		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void FillWith(T value)
+		#region concrete operation helpers
+		#region matrix case
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void ApplyToColumns<TVal>(long rows, long cols, long ld, Action<Storage<T>, TVal> action, TVal value)
 		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
+			var storage = this.Storage;
+			for (long i = 0; i < cols; i++)
 			{
-				MEM.FillWithValue(this.Storage, value);
-				if (this is ISparseArray<T> sparse)
-				{
-					sparse.DefaultValue = value;
-				}
-				return;
+				var column = storage.MakeReference(i * ld, newLength: rows);
+				action.Invoke(column, value);
 			}
-			// else
-			int orgRank = this.Rank;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private TRet ApplyToColumns<TRet>(long rows, long cols, long ld, Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> aggregator, TRet init)
+		{
+			var storage = this.Storage;
+			for (long i = 0; i < cols; i++)
+			{
+				var column = storage.MakeReference(i * ld, newLength: rows);
+				TRet here = function.Invoke(column);
+				init = aggregator.Invoke(init, here);
+			}
+			return init;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void ApplyToColumns<TVal>(long rows, long cols, long ld, Action<Storage<T>, int, TVal> stridedAction, TVal value)
+		{
+			var storage = this.Storage;
+			for (long i = 0; i < cols; i++)
+			{
+				var column = storage.MakeReference(i * ld, newLength: rows);
+				stridedAction.Invoke(column, 1, value);
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private TRet ApplyToColumns<TRet>(long rows, long cols, long ld, Func<Storage<T>, int, TRet> stridedFunction, Func<TRet, TRet, TRet> aggregator, TRet init)
+		{
+			var storage = this.Storage;
+			for (long i = 0; i < cols; i++)
+			{
+				var column = storage.MakeReference(i * ld, newLength: rows);
+				TRet here = stridedFunction.Invoke(column, 1);
+				init = aggregator.Invoke(init, here);
+			}
+			return init;
+		}
+		#endregion
+
+		#region general case
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long IncreasePos(Span<long> jaggedSize, Span<long> sizeProd, Span<long> position, int maxPosRankInd)
+		{
+			long offset = 0;
+			position[0]++;
+			for (int i = 0; i < maxPosRankInd; i++)
+			{
+				if (position[i] == jaggedSize[i + 1])
+				{
+					position[i] = 0;
+					position[i + 1]++;
+				}
+				offset += position[i] * sizeProd[i];
+			}
+			offset += position[maxPosRankInd] * sizeProd[maxPosRankInd];
+			return offset;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void ApplyToFirstDims<TVal>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Action<Storage<T>, TVal> action, TVal value)
+		{
+			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
+			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
+			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			Span<long> position = stackalloc long[maxPosRankInd + 1];
+			long offset = 0;
+			while (true)
+			{
+				// action
+				action.Invoke(storage.MakeReference(offset, firstDimSize), value);
+				// increase position and offset
+				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
+				if (offset >= maxLength)
+					break;
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private TRet ApplyToFirstDims<TRet>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> aggregator, TRet init)
+		{
+			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
+			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
+			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			Span<long> position = stackalloc long[maxPosRankInd + 1];
+			long offset = 0;
+			while (true)
+			{
+				// function
+				TRet now = function.Invoke(storage.MakeReference(offset, firstDimSize));
+				init = aggregator(init, now);
+				// increase position and offset
+				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
+				if (offset >= maxLength)
+					break;
+			}
+			return init;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void ApplyToFirstDims<TVal>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Action<Storage<T>, int, TVal> stridedAction, TVal value)
+		{
+			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
+			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
+			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			Span<long> position = stackalloc long[maxPosRankInd + 1];
+			long offset = 0;
+			while (true)
+			{
+				// action
+				stridedAction.Invoke(storage.MakeReference(offset, firstDimSize), 1, value);
+				// increase position and offset
+				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
+				if (offset >= maxLength)
+					break;
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private TRet ApplyToFirstDims<TRet>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Func<Storage<T>, int, TRet> stridedFunction, Func<TRet, TRet, TRet> aggregator, TRet init)
+		{
+			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
+			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
+			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			Span<long> position = stackalloc long[maxPosRankInd + 1];
+			long offset = 0;
+			while (true)
+			{
+				// function
+				TRet now = stridedFunction.Invoke(storage.MakeReference(offset, firstDimSize), 1);
+				init = aggregator(init, now);
+				// increase position and offset
+				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
+				if (offset >= maxLength)
+					break;
+			}
+			return init;
+		}
+		#endregion
+
+		#region judge
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int GetJagged(IPitchedArray<T> pitched, int orgRank, ref Span<long> jaggedSize, ref Span<long> jaggedOuterSize)
+		{
 			var orgSize = pitched.Size; var orgOuterSize = pitched.OuterSize;
-			Span<long> jaggedSize = stackalloc long[orgRank].SetValue(1);
-			Span<long> jaggedOuterSize = stackalloc long[orgRank].SetValue(1);
+			jaggedSize[0] = jaggedOuterSize[0] = 1;
 			int rank = 0;
 			for (int i = 0; i < orgRank; i++)
 			{
@@ -128,45 +259,124 @@ namespace Althea.Arrays
 				}
 			}
 			jaggedSize = jaggedSize[..rank]; jaggedOuterSize = jaggedOuterSize[..rank];
+			return rank;
+		}
 
-			////if (jaggedSize[0] == 1 && rank == 2)
-			////{   // linear algebra API with given vector stride
-			////	LAD.PointWiseAddScalar(this.Storage, jaggedOuterSize[0], value);
-			////}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, TVal> action, TVal value)
+		{
+			// get jagged size
+			int orgRank = this.Rank;
+			Span<long> jaggedSize = stackalloc long[orgRank];
+			Span<long> jaggedOuterSize = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			// switch different cases
 			if (jaggedSize[1..].Prod() <= 1000)
 			{   // The estimate overhead of one API call is around 1 microsecond
 				// Typically, we do not want a total overhead larger than 1 millisecond
-				Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
-				int maxPosRankInd = rank - 2; Span<long> position = stackalloc long[maxPosRankInd + 1];
-				long offset = 0;
-				while (true)
-				{
-					// fill
-					MEM.FillWithValue(this.Storage.MakeReference(offset, jaggedSize[0]), value);
-					// increase position and offset
-					offset = 0;
-					position[0]++;
-					for (int i = 0; i < maxPosRankInd; i++)
-					{
-						if (position[i] == jaggedSize[i + 1])
-						{
-							position[i] = 0;
-							position[i + 1]++;
-						}
-						offset += position[i] * sizeProd[i];
-					}
-					offset += position[maxPosRankInd] * sizeProd[maxPosRankInd];
-					if (offset >= this.Storage.Length)
-						break;
-				}
+				if (rank == 2)
+					this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], action, value);
+				else
+					this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, action, value);
 			}
 			else
 			{   // tensor algebra API fill and copy
 				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				MEM.FillWithValue(temp, value);
+				// edit the temp array
+				action.Invoke(temp, value);
 				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
 									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				// copy to this pitched array
 				TAD.Permute(tempWrapper, thisWrapper, stackalloc int[rank].FillWithRange(0));
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, int, TVal> stridedAction, TVal value)
+		{
+			// get jagged size
+			int orgRank = this.Rank;
+			Span<long> jaggedSize = stackalloc long[orgRank];
+			Span<long> jaggedOuterSize = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			// switch different cases
+			if (jaggedSize[0] == 1 && rank == 2)
+			{   // linear algebra API with given vector stride
+				stridedAction.Invoke(this.Storage, checked((int)jaggedOuterSize[0]), value);
+			}
+			else if (jaggedSize[1..].Prod() <= 1000)
+			{   // The estimate overhead of one API call is around 1 microsecond
+				// Typically, we do not want a total overhead larger than 1 millisecond
+				if (rank == 2)
+					this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], stridedAction, value);
+				else
+					this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, stridedAction, value);
+			}
+			else
+			{   // tensor algebra API fill and copy
+				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
+				// edit the temp array
+				stridedAction.Invoke(temp, 1, value);
+				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
+									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				// copy to this pitched array
+				TAD.Permute(tempWrapper, thisWrapper, stackalloc int[rank].FillWithRange(0));
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private TRet AggregatePitched<TRet>(IPitchedArray<T> pitched, Func<Storage<T>, int, TRet> stridedFunction, Func<TRet, TRet, TRet> aggregator, TRet init)
+		{
+			// get jagged size
+			int orgRank = this.Rank;
+			Span<long> jaggedSize = stackalloc long[orgRank];
+			Span<long> jaggedOuterSize = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			// switch different cases
+			if (jaggedSize[0] == 1 && rank == 2)
+			{   // linear algebra API with given vector stride
+				return aggregator.Invoke(init, stridedFunction.Invoke(this.Storage, checked((int)jaggedOuterSize[0])));
+			}
+			else if (jaggedSize[1..].Prod() <= 1000)
+			{   // The estimate overhead of one API call is around 1 microsecond
+				// Typically, we do not want a total overhead larger than 1 millisecond
+				if (rank == 2)
+					return this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], stridedFunction, aggregator, init);
+				else
+					return this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, stridedFunction, aggregator, init);
+			}
+			else
+			{   // tensor algebra API fill and copy
+				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
+				// copy the temp array
+				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
+									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				TAD.Permute(thisWrapper, tempWrapper, stackalloc int[rank].FillWithRange(0));
+				// aggregate on temp array
+				return aggregator.Invoke(init, stridedFunction.Invoke(temp, 1));
+			}
+		}
+		#endregion
+		#endregion
+
+		#region point-wise concrete operations
+		/// <summary>
+		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// </summary>
+		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
+		public virtual void FillWith(T value)
+		{
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
+			{
+				MEM.FillWithValue(this.Storage, value);
+				if (this is ISparseArray<T> sparse)
+				{
+					sparse.DefaultValue = value;
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, MEM.FillWithValue, value);
 			}
 		}
 
@@ -174,12 +384,20 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void AddScalar(T value)
 		{
-			LAD.PointWiseAddScalar(this.Storage, 1, value);
-			if (this is ISparseArray<T> sparse && !value.IsZero())
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				sparse.DefaultValue = sparse.DefaultValue.GenericAdd(value);
+				LAD.PointWiseAddScalar(this.Storage, 1, value);
+				if (this is ISparseArray<T> sparse && !value.IsZero())
+				{
+					sparse.DefaultValue = sparse.DefaultValue.GenericAdd(value);
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, LAD.PointWiseAddScalar, value);
 			}
 		}
 
@@ -187,24 +405,40 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void Scale(T value)
 		{
-			LAD.Scale(value, this.Storage, 1);
-			if (this is ISparseArray<T> sparse && !value.IsOne())
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				sparse.DefaultValue = sparse.DefaultValue.GenericMultiply(value);
+				LAD.Scale(this.Storage, 1, value);
+				if (this is ISparseArray<T> sparse && !value.IsOne())
+				{
+					sparse.DefaultValue = sparse.DefaultValue.GenericMultiply(value);
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, LAD.Scale, value);
 			}
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void Conjugate()
 		{
-			LAD.PointWiseConjugate(this.Storage, 1);
-			if (this is ISparseArray<T> sparse)
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				sparse.DefaultValue = sparse.DefaultValue.GenericConjugate();
+				LAD.PointWiseConjugate(this.Storage, 1);
+				if (this is ISparseArray<T> sparse)
+				{
+					sparse.DefaultValue = sparse.DefaultValue.GenericConjugate();
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, static (s, i, _) => LAD.PointWiseConjugate(s, i), 0);
 			}
 		}
 
@@ -212,12 +446,20 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, double)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="power">The power as a <see cref="double"/></param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void Power(double power)
 		{
-			LAD.PointWisePower(this.Storage, 1, power);
-			if (this is ISparseArray<T> sparse && power != 1)
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+				LAD.PointWisePower(this.Storage, 1, power);
+				if (this is ISparseArray<T> sparse && power != 1)
+				{
+					sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, LAD.PointWisePower, power);
 			}
 		}
 
@@ -225,12 +467,20 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void Power(T power)
 		{
-			LAD.PointWisePower(this.Storage, 1, power);
-			if (this is ISparseArray<T> sparse && !power.IsOne())
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+				LAD.PointWisePower(this.Storage, 1, power);
+				if (this is ISparseArray<T> sparse && !power.IsOne())
+				{
+					sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, LAD.PointWisePower, power);
 			}
 		}
 
@@ -238,14 +488,22 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual void Truncate(double threshold)
 		{
-			LAD.TruncateArray(this.Storage, threshold);
-			if (this is ISparseArray<T> sparse && !sparse.DefaultValue.IsZero())
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				double abs = sparse.DefaultValue.GenericAbsolute();
-				if (abs <= threshold)
-					sparse.DefaultValue = default;
+				LAD.TruncateArray(this.Storage, threshold);
+				if (this is ISparseArray<T> sparse && !sparse.DefaultValue.IsZero())
+				{
+					double abs = Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue);
+					if (abs <= threshold)
+						sparse.DefaultValue = default;
+				}
+			}
+			else
+			{
+				this.EditPitchedInPlace(pitched, LAD.TruncateArray, threshold);
 			}
 		}
 		#endregion
@@ -255,52 +513,79 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AggregateSum{T}"/>.
 		/// </summary>
 		/// <returns>The aggregate sum of this array</returns>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual T Sum()
 		{
-			T sum = LAD.AggregateSum(this.Storage, 1);
-			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
-				return sum;
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
+			{
+				T sum = LAD.AggregateSum(this.Storage, 1);
+				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
+					return sum;
+				// else
+				T len = Const<T>.FromLongDelegate.Invoke(this.Length - this.ActualLength);
+				T defMulLen = Const<T>.MultiplyDelegate.Invoke(len, sparse.DefaultValue);
+				return Const<T>.AddDelegate.Invoke(defMulLen, sum);
+			}
 			else
-				return (this.Length - this.ActualLength) * (dynamic)sparse.DefaultValue + sum;
+			{
+				return this.AggregatePitched(pitched, LAD.AggregateSum, Const<T>.AddDelegate, Const<T>.Zero);
+			}
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
 		/// </summary>
 		/// <returns>The aggregate sum of absolute values of this array</returns>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual double AbsSum()
 		{
-			double sum = LAD.AbsoluteValueSum(this.Storage, 1);
-			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
-				return sum;
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
+			{
+				double sum = LAD.AbsoluteValueSum(this.Storage, 1);
+				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
+					return sum;
+				else
+					return (this.Length - this.ActualLength) * Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue) + sum;
+			}
 			else
-				return (this.Length - this.ActualLength) * sparse.DefaultValue.GenericAbsolute() + sum;
+			{
+				return this.AggregatePitched(pitched, LAD.AbsoluteValueSum, Const<double>.AddDelegate, 0.0);
+			}
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.Norm{T}"/>.
 		/// </summary>
 		/// <returns>The 2-norm of this array</returns>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual double Norm()
 		{
-			double norm = LAD.Norm(this.Storage, 1);
-			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				return norm;
+				double norm = LAD.Norm(this.Storage, 1);
+				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
+				{
+					return norm;
+				}
+				else
+				{
+					norm *= norm;
+					double abs = Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue);
+					norm += abs * abs * (this.Length - this.ActualLength);
+					return Math.Sqrt(norm);
+				}
 			}
 			else
 			{
-				norm *= norm;
-				double abs = sparse.DefaultValue.GenericAbsolute();
-				norm += abs * abs * (this.Length - this.ActualLength);
-				return Math.Sqrt(norm);
+				double normSquare = this.AggregatePitched(pitched, LAD.Norm, static (pre, now) => pre + now * now, 0.0);
+				return Math.Sqrt(normSquare);
 			}
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale this array's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">If the default values indicated by <see cref="ISparseArray{T}.DefaultValue"/> alone contribute 2-norm exceeding 1.</exception>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
 		public virtual void Normalize()
 		{
@@ -309,23 +594,20 @@ namespace Althea.Arrays
 				double norm = this.Norm();
 				if (norm == 0)
 					throw new DivideByZeroException();
-				this.Scale((1 / norm).FromDouble<T>());
+				this.Scale(Const<T>.FromDoubleDelegate.Invoke(1 / norm));
 			}
 			else
 			{
-				T d = sparse.DefaultValue;
-				T defaultNormSquare = (this.Length - this.ActualLength) * (d * (dynamic)d);
-				double defaultNormDouble = defaultNormSquare.ToDouble();
-				if (defaultNormDouble > 1)
-					throw new InvalidOperationException(Resources.Parameter.InvalidValue);
-				if (defaultNormDouble == 1)
-				{
-					this.FillWith(default);
-				}
-				double norm = this.Norm();
+				T def = sparse.DefaultValue;
+				double d = Const<T>.AbsoluteDelegate.Invoke(def);
+				double defaultNormDouble = (this.Length - this.ActualLength) * d * d;
+				double norm = this.Norm() + defaultNormDouble;
 				if (norm == 0)
 					throw new DivideByZeroException();
-				this.Scale((Math.Sqrt(1 - defaultNormDouble) / norm).FromDouble<T>());
+				T normInv = Const<T>.FromDoubleDelegate.Invoke(1 / norm);
+				// scale both stored and not stored
+				this.Scale(normInv);
+				sparse.DefaultValue = Const<T>.MultiplyDelegate.Invoke(def, normInv);
 			}
 		}
 
@@ -333,26 +615,48 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the maximum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMax{T}"/>.
 		/// </summary>
 		/// <returns>The maximum one of all absolute values of the elements in this array</returns>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual double AbsMax()
 		{
-			double max = MEM.ToManaged(this.Storage + LAD.AbsoluteValueArgMax(this.Storage, 1)).GenericAbsolute();
-			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
-				return max;
+			static double GetAbsMax(Storage<T> storage, int stride)
+				=> Const<T>.AbsoluteDelegate.Invoke(MEM.ToManaged(storage + LAD.AbsoluteValueArgMax(storage, stride)));
+
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
+			{
+				double max = GetAbsMax(this.Storage, 1);
+				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
+					return max;
+				else
+					return Math.Max(Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue), max);
+			}
 			else
-				return Math.Max(sparse.DefaultValue.GenericAbsolute(), max);
+			{
+				return this.AggregatePitched(pitched, GetAbsMax, static (pre, now) => Math.Max(pre, now), 0.0);
+			}
 		}
 
 		/// <summary>
 		/// When implemented by a derived class, get the minimum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMin{T}"/>.
 		/// </summary>
 		/// <returns>The minimum one of all absolute values of the elements in this array</returns>
+		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
 		public virtual double AbsMin()
 		{
-			double min = MEM.ToManaged(this.Storage + LAD.AbsoluteValueArgMin(this.Storage, 1)).GenericAbsolute();
-			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
-				return min;
+			static double GetAbsMin(Storage<T> storage, int stride)
+				=> Const<T>.AbsoluteDelegate.Invoke(MEM.ToManaged(storage + LAD.AbsoluteValueArgMin(storage, stride)));
+
+			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
+			{
+				double min = GetAbsMin(this.Storage, 1);
+				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
+					return min;
+				else
+					return Math.Min(Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue), min);
+			}
 			else
-				return Math.Min(sparse.DefaultValue.GenericAbsolute(), min);
+			{
+				return this.AggregatePitched(pitched, GetAbsMin, static (pre, now) => Math.Min(pre, now), double.MaxValue);
+			}
 		}
 		#endregion
 
@@ -369,8 +673,12 @@ namespace Althea.Arrays
 		{
 			if (newSize.Length == 0)
 				throw new ArgumentNullException(nameof(newSize));
-			if (newSize.Length == 2 && newSize[0] <= 0 && newSize[1] <= 0) // try to convert to a square matrix
-			{
+			// shortcut
+			if (newSize.SequenceEqual(array.Size))
+				return;
+
+			if (newSize.Length == 2 && newSize[0] <= 0 && newSize[1] <= 0)
+			{	// try to convert to a square matrix
 				if (!array.Length.IsPerfectSquare())
 				{
 					throw new ArgumentException(Resources.Other.PerfectSquare, nameof(array));
@@ -380,16 +688,14 @@ namespace Althea.Arrays
 			}
 			int firstFind = newSize.IndexOf(static r => r <= 0);
 			if (firstFind < 0)
-			{
-				// no uncertain index
+			{	// no uncertain index
 				if (newSize.Prod() != array.Length)
 					throw new ArgumentOutOfRangeException(nameof(newSize), newSize.Prod(), Resources.Parameter.InvalidValue);
 				return;
 			}
 			int lastFind = newSize.LastIndexOf(static r => r <= 0);
 			if (lastFind == firstFind)
-			{
-				// only one uncertainty
+			{	// only one uncertainty
 				newSize[firstFind] = 1;
 				var prod = newSize.Prod();
 				var remain = array.Length % prod;
@@ -399,8 +705,7 @@ namespace Althea.Arrays
 					newSize[firstFind] = array.Length / prod;
 			}
 			else
-			{
-				// more than one uncertain indices
+			{	// more than one uncertain indices
 				throw new ArgumentException(Resources.Parameter.UnexpectedValue, nameof(newSize));
 			}
 		}
@@ -645,8 +950,7 @@ namespace Althea.Arrays
 			{
 				index = LAD.AbsoluteValueArgMax(array.Storage, 1);
 			}
-			double val = MEM.ToManaged(array.Storage + index)
-							.GenericAbsolute()
+			double val = Const<T>.AbsoluteDelegate.Invoke(MEM.ToManaged(array.Storage + index))
 							.ToDouble();
 			return val <= 1E-6;
 		}

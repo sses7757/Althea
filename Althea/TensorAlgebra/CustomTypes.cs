@@ -182,7 +182,7 @@ namespace Althea.TensorAlgebra
 				throw new ArgumentNullException(nameof(output));
 
 			// create spans
-			ContractCheck(left.Size, left.Label, right.Size, right.Label, output.Size, output.Label, leftConc, rightConc, leftFree, rightFree);
+			ContractCheck(left.Size, left.Labels, right.Size, right.Labels, output.Size, output.Labels, leftConc, rightConc, leftFree, rightFree);
 			// create
 			this = new(leftConc, rightConc, leftFree, rightFree);
 		}
@@ -198,7 +198,7 @@ namespace Althea.TensorAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetContractRank(ITensor left, ITensor right)
 		{
-			ReadOnlySpan<char> labelA = left.Label, labelB = right.Label;
+			ReadOnlySpan<char> labelA = left.Labels, labelB = right.Labels;
 			int commonRank = 0, rankA = left.Rank;
 			for (int i = 0; i < rankA; i++)
 			{

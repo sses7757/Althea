@@ -31,7 +31,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <remarks>
 		/// The operations:
 		/// <list type="bullet">
-		/// <item><see cref="Scale{T}(T, Storage{T}, int)"/></item>
+		/// <item><see cref="Scale{T}(Storage{T}, int, T)"/></item>
 		/// <item><see cref="PointWisePower{T}(Storage{T}, int, T)"/></item>
 		/// <item>etc.</item>
 		/// </list>
@@ -230,16 +230,16 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// In-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
+		/// In-place scale the vector <paramref name="x"/> by <paramref name="scalar"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="scalar">The scalar used for multiplication</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void Scale<T>(T α, Storage<T> x, int strideX) where T : unmanaged
+		public static void Scale<T>(Storage<T> x, int strideX, T scalar) where T : unmanaged
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			bool success = false;
@@ -247,7 +247,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location), node);
-				success = node.Value.Scale_(α, x, strideX);
+				success = node.Value.Scale_(x, strideX, scalar);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -624,16 +624,16 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool Norm_<T>(Storage<T> x, int strideX, out double norm) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, in-place scale the vector <paramref name="x"/> by scalar <paramref name="α"/>.
+		/// When implemented by a derived class, in-place scale the vector <paramref name="x"/> by <paramref name="scalar"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="scalar">The scalar used for multiplication</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool Scale_<T>(T α, Storage<T> x, int strideX) where T : unmanaged;
+		protected abstract bool Scale_<T>(Storage<T> x, int strideX, T scalar) where T : unmanaged;
 		#endregion
 
 		#region BLAS level 2

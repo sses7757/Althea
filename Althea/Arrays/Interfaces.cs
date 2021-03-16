@@ -151,12 +151,12 @@ namespace Althea.Arrays
 		ReadOnlySpan<long> OuterSize { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this array is actually pitched. The default implementation simply checks the point-wise eqaulity of <see cref="Size"/> and <see cref="OuterSize"/>.
+		/// When implemented by a derived class, check whether this array is actually pitched. The default implementation simply checks the point-wise equality of <see cref="Size"/> and <see cref="OuterSize"/>.
 		/// </summary>
-		bool HasPitch => !this.OuterSize.SequenceEqual(this.Size);
-	
+		bool HasPitch => this.Size.Length != 1 && !this.OuterSize.SequenceEqual(this.Size);
+
 		/// <summary>
-		/// When implemented by a derived class, get the strides (the inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
+		/// When implemented by a derived class, get the strides of this tensor's all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. Must be the inclusive accumulated product of <see cref="OuterSize"/>.
 		/// </summary>
 		ReadOnlySpan<long> Strides { get; }
 		#endregion
@@ -189,9 +189,9 @@ namespace Althea.Arrays
 		DataType IndexType { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the default value of this sparse array
+		/// When implemented by a derived class, get or set the default value of this sparse array
 		/// </summary>
-		T DefaultValue { get; protected internal set; }
+		T DefaultValue { get; set; }
 		#endregion
 
 		#region dispose
@@ -460,7 +460,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor
 		/// </summary>
 		/// <exception cref="ArgumentException">If the setting value's length is not the same as the <see cref="Rank"/></exception>
-		ReadOnlySpan<char> Label { get; set; }
+		ReadOnlySpan<char> Labels { get; set; }
 		#endregion
 
 		#region method

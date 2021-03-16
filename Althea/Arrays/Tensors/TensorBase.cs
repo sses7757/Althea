@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
@@ -59,8 +60,10 @@ namespace Althea.Arrays
 		/// Get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor
 		/// </summary>
 		/// <exception cref="ArgumentException">If the setting value's length is not the same as the <see cref="AbstractArray{T}.Rank"/></exception>
-		public ReadOnlySpan<char> Label {
+		public ReadOnlySpan<char> Labels {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_labels.AsSpan(this.Rank);
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (value.Length != this.Rank)
 					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(value));
@@ -74,6 +77,7 @@ namespace Althea.Arrays
 		/// <param name="index">The index of the rank whose label will be obtained</param>
 		/// <returns>The <see cref="char"/> label at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="AbstractArray{T}.Rank"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public char GetLabel(int index)
 		{
 			if (index < 0 || index >= this.Rank)
@@ -87,6 +91,7 @@ namespace Althea.Arrays
 		/// <param name="index">The index of the rank whose label will be set</param>
 		/// <param name="value">The <see cref="char"/> label at <paramref name="index"/> to set</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="AbstractArray{T}.Rank"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetLabel(int index, char value)
 		{
 			if (index < 0 || index >= this.Rank)
@@ -100,6 +105,7 @@ namespace Althea.Arrays
 		/// <param name="labels">The label(s) to set as an array of <see cref="char"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="labels"/> is not the same as the <see cref="AbstractArray{T}.Rank"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetLabels(params char[] labels)
 		{
 			if (labels.Length != this.Rank)
@@ -201,8 +207,8 @@ namespace Althea.Arrays
 			{
 				if (offsets[i] < 0 || offsets[i] >= size[i])
 					throw new ArgumentOutOfRangeException(nameof(offsets), offsets[i], Resources.Parameter.InvalidValue);
-				if (lengths[i] < 0 || offsets[i] + lengths[i] >= size[i])
-					throw new ArgumentOutOfRangeException(nameof(offsets), offsets[i], Resources.Parameter.InvalidValue);
+				if (lengths[i] <= 0 || offsets[i] + lengths[i] >= size[i])
+					throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.Parameter.InvalidValue);
 				offset += outerSizeProd[i] * offsets[i];
 			}
 			return offset;
@@ -255,7 +261,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get or set a sub-tensor indicated by the given <paramref name="ranges"/>
+		/// Get or set a sub-tensor (of same rank) indicated by the given <paramref name="ranges"/>
 		/// </summary>
 		/// <param name="ranges">The array of <see cref="Range"/> to indicate the target sub-tensor location and size compared to this tensor at each dimension</param>
 		/// <exception cref="ArgumentNullException">If the input value is null or empty</exception>
@@ -290,7 +296,7 @@ namespace Althea.Arrays
 		public abstract T this[ReadOnlySpan<long> indices] { get; set; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the sub-tensor indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
+		/// When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
@@ -300,7 +306,7 @@ namespace Althea.Arrays
 		public abstract TensorBase<T> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
 
 		/// <summary>
-		/// When implemented by a derived class, get the sub-tensor indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
+		/// When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
@@ -311,7 +317,7 @@ namespace Althea.Arrays
 		public abstract void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite);
 
 		/// <summary>
-		/// When implemented by a derived class, set the sub-tensor indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
+		/// When implemented by a derived class, set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="value">The tensor to set whose size is the lengths of the sub-tensor's size</param>
@@ -465,6 +471,22 @@ namespace Althea.Arrays
 		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
 		/// <returns>A new <see cref="TensorBase{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
 		public static TensorBase<T> operator /(TensorBase<T> tensor, T scalar) => tensor * scalar.GenericReciprocal();
+		#endregion
+
+		#region serialization
+		/// <summary>
+		/// The presenting name of the <see cref="Labels"/>
+		/// </summary>
+		public const string LabelsName = nameof(Labels);
+
+		/// <summary>
+		/// When implemented by a derived class, get other requisite informations for re-constructing the array of that derived class type. The default implementation simply returns the <see cref="Labels"/>.
+		/// </summary>
+		/// <returns>Other requisite informations used to re-construct this array</returns>
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
+		{
+			[LabelsName] = this.Labels.ToArray()
+		};
 		#endregion
 	}
 }

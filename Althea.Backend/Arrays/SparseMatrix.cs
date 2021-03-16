@@ -31,12 +31,18 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get the storage of the row index array of this sparse matrix as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public Storage<TInd> RowIndexStorage => this.m_indexArrays[0];
+		public Storage<TInd> RowIndexStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays[0];
+		}
 
 		/// <summary>
 		/// Get the storage of the column index array of this sparse matrix as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public Storage<TInd> ColIndexStorage => this.m_indexArrays[1];
+		public Storage<TInd> ColIndexStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays[1];
+		}
 
 		/// <summary>
 		/// Create an empty <see cref="SparseMatrix{T, TInd}"/>

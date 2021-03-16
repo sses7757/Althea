@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using Althea.Arrays;
+using Althea.Linq;
 using Althea.LinearAlgebra.Sparse;
 
 
@@ -147,6 +148,44 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Other.CannotParse, nameof(otherInfo));
 
 			return new BlockedSparseMatrix<T, TInd>(blockNRows, blockNCols, size[0], size[1], values, row, column, format, defaultValue);
+		}
+	}
+
+	internal sealed class DenseTensorFactory : IArrayFactory
+	{
+		public ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged
+		{
+			if (size.Any(static s => s <= 0))
+				throw new ArgumentOutOfRangeException(nameof(size));
+			if (storages is null || storages.Count != 1)
+				throw new ArgumentNullException(nameof(storages));
+			if (otherInfo is null || otherInfo.Count != 2)
+				throw new ArgumentNullException(nameof(otherInfo));
+
+			// get outer size
+			long[] outerSize;
+			var outer = otherInfo[DenseTensor<T>.OuterSizeName];
+			if (outer is long[] outerLong)
+				outerSize = outerLong;
+			else if (outer is int[] outerInt)
+				outerSize = Array.ConvertAll(outerInt, static i => (long)i);
+			else
+				throw new ArgumentException(string.Format(Resources.Other.CannotParse, outer.GetType(), typeof(long[])), nameof(otherInfo));
+			// get labels
+			char[] labels;
+			var label = otherInfo[DenseTensor<T>.LabelsName];
+			if (label is char[] c)
+				labels = c;
+			else if (label is string s)
+				labels = s.ToCharArray();
+			else if (label is int[] ii)
+				labels = Array.ConvertAll(ii, static i => (char)i);
+			else
+				throw new ArgumentException(string.Format(Resources.Other.CannotParse, outer.GetType(), typeof(char[])), nameof(otherInfo));
+			// get values
+			var values = ValueArrayFactory<T>.CheckValueStorage(storages, DenseTensor<T>.GetActualLength(size, outerSize));
+			// return
+			return new DenseTensor<T>(values, size, outerSize, labels);
 		}
 	}
 }

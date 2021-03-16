@@ -77,6 +77,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
 		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
+		/// <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method simply performs (pitched) tensor copy</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
@@ -187,16 +188,17 @@ namespace Althea.TensorAlgebra.Dense
 
 		#region abstract methods that actually do computations
 		/// <summary>
-		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>.
+		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="permutationOrder"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/>, its <see cref="DenseTensorWrapper{T}.Operation"/> and <see cref="DenseTensorWrapper{T}.Scalar"/> are ignored.</param>
-		/// <param name="reduceDimensions">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
+		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a full permutation order or the sizes mismatches</exception>
-		protected abstract bool Permute_<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged;
+		/// <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method shall simply perform (pitched) tensor copy</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
+		protected abstract bool Permute_<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="left"/> and <paramref name="right"/> tensors and stored the result to the <paramref name="destination"/> tensor

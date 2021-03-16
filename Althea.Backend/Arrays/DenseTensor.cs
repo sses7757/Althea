@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
@@ -8,6 +9,9 @@ using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.TensorAlgebra;
+
+using MEM = Althea.Storage.AbstractApi;
+using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
@@ -33,15 +37,39 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		public ReadOnlySpan<long> Strides => this.m_outerSizeProd.AsSpan(this.Rank);
 
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this tensor is actually pitched.
+		/// </summary>
+		public bool HasPitch {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => !this.Size.SequenceEqual(this.OuterSize);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long GetActualLength(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize)
+		internal static long GetActualLength(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize)
 		{
 			if (outerSize.IsEmpty)
 				return 0;
 			if (outerSize.Length != size.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(outerSize));
-			long prodOuter = outerSize.Prod(), prod = 1;
 			int r = size.Length - 1;
+			if (outerSize.Length != r + 1 || outerSize[r] < size[r])
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(outerSize));
+
+			long prodOuter = 1; bool allOnes = true;
+			for (int i = r; i >= 0; i--)
+			{
+				if (allOnes && size[i] != 1)
+				{
+					prodOuter *= outerSize[i];
+					allOnes = false;
+				}
+				else if (!allOnes)
+				{
+					prodOuter *= outerSize[i];
+				}
+			}
+			long prod = 1;
 			for (int i = 0; i < r; i++)
 			{
 				prodOuter -= prod * (outerSize[i] - outerSize[i]);
@@ -50,20 +78,47 @@ namespace Althea.Backend.Arrays
 			return prodOuter;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ModifySize(ReadOnlySpan<long> size, Span<long> outerSize)
+		{
+			int r = size.Length - 1;
+			outerSize[r] = size[r];
+			bool allOnes = true;
+			for (int i = r; i >= 0; i--)
+			{
+				if (allOnes && size[i] != 1)
+				{
+					allOnes = false;
+				}
+				else if (allOnes)
+				{
+					outerSize[i] = size[i];
+				}
+			}
+		}
+
 		/// <summary>
 		/// Create a <see cref="DenseTensor{T}"/> with given <paramref name="values"/>, presenting <paramref name="size"/>, actual <paramref name="outerSize"/> and <paramref name="labels"/>
 		/// </summary>
 		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
 		/// <param name="size">The presenting size of the tensor</param>
-		/// <param name="outerSize">The outer size (actual lengths at all dimensions) of this tensor, empty mean the same as <paramref name="size"/></param>
-		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
-		/// <exception cref="ArgumentException">If <paramref name="labels"/> or <paramref name="outerSize"/>'s length is neither 0 nor the same as the rank</exception>
-		public DenseTensor(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<char> labels) :
+		/// <param name="outerSize">The outer size (actual lengths at all dimensions) of this tensor, default (an empty one) mean the same as <paramref name="size"/>. The last element will be replaced by the last element of <paramref name="size"/>.</param>
+		/// <param name="labels">The presenting labels of each dimension of this tensor, default (an empty one) means auto generate as <c>{'a', 'b', ...}</c></param>
+		/// <exception cref="ArgumentException">If <paramref name="labels"/> or <paramref name="outerSize"/>'s length is neither 0 nor the same as the rank; or the last of <paramref name="outerSize"/> is smaller than the last of <paramref name="size"/></exception>
+		public DenseTensor(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize = default, ReadOnlySpan<char> labels = default) :
 			base(values, size, labels, GetActualLength(size, outerSize))
 		{
 			if (outerSize.IsEmpty)
-				outerSize = size;
-			this.m_outerSize.CopyFromSpan(outerSize);
+			{
+				this.m_outerSize.CopyFromSpan(size);
+			}
+			else
+			{
+				Span<long> newOuterSize = stackalloc long[this.Rank];
+				outerSize.CopyTo(newOuterSize);
+				ModifySize(size, newOuterSize);
+				this.m_outerSize.CopyFromSpan(newOuterSize);
+			}
 			var prod = this.m_outerSizeProd.AsSpan(this.Rank);
 			this.OuterSize.AccumulateProd(result: prod, inclusive: true);
 		}
@@ -75,24 +130,55 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region clone related
+		private ActualStorage<T> CopyToStorage()
+		{
+			var size = this.Size;
+			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
+			try
+			{
+				TAD.Permute<T>(new(this), new(storage, size, size), stackalloc int[this.Rank].FillWithRange(0));
+				return storage;
+			}
+			catch (Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
+		}
+
 		/// <summary>
 		/// Deep clone the array, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned array</returns>
-		public override DenseTensor<T> Clone();
+		public override DenseTensor<T> Clone()
+		{
+			var size = this.Size;
+			var storage = this.CopyToStorage();
+			return new(storage, size, size, this.Labels);
+		}
 
 		/// <summary>
 		/// Create a new array with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new array alike this one</returns>
-		public override DenseTensor<T> NewArrayAlike();
+		public override DenseTensor<T> NewArrayAlike()
+		{
+			var size = this.Size;
+			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
+			return new(storage, size, size, this.Labels);
+		}
 
 		/// <summary>
 		/// Create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new array alike this one</returns>
-		public override DenseTensor<TOut> NewArrayAlike<TOut>();
+		public override DenseTensor<TOut> NewArrayAlike<TOut>()
+		{
+			var size = this.Size;
+			var storage = Storage<TOut>.Create(this.Storage[0].Location, this.Length);
+			return new(storage, size, size, this.Labels);
+		}
 		#endregion
 
 		#region reshape
@@ -100,14 +186,31 @@ namespace Althea.Backend.Arrays
 		/// Reshape this array to a vector
 		/// </summary>
 		/// <returns>The referenced vector reshaped from this array</returns>
-		public override ValueArray<T> ToVector();
+		public override DenseVector<T> ToVector()
+		{
+			if (!this.HasPitch)
+				return new(this.Storage);
+			// else
+			var storage = this.CopyToStorage();
+			return new(storage);
+		}
 
 		/// <summary>
 		/// Reshape this array to a matrix with leading dimension = <paramref name="rows"/>
 		/// </summary>
 		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public override ValueArray<T> ToMatrix(long rows = 0);
+		public override DenseMatrix<T> ToMatrix(long rows = 0)
+		{
+			Span<long> size = stackalloc long[2];
+			size[0] = rows;
+			CheckSize(this, size);
+			if (size.SequenceEqual(this.Size))
+				return new(this.Storage, size[0], size[1], this.m_outerSize[0]);
+			// else
+			var storage = this.CopyToStorage();
+			return new(storage, size[0], size[1]);
+		}
 
 		/// <summary>
 		/// Reshape this tensor to another tensor with the given <paramref name="newSize"/> 
@@ -121,32 +224,47 @@ namespace Althea.Backend.Arrays
 			CheckSize(this, size);
 			if (size.SequenceEqual(this.Size))
 				return this;
-
+			// else
+			var storage = this.CopyToStorage();
+			return new(storage, size, size);
 		}
 		#endregion
 
 		#region indexing
 		/// <summary>
-		/// Provide the basic indexed getter and setter of this tensor
+		/// The basic indexed getter and setter of this tensor
 		/// </summary>
 		/// <param name="indices">The position indicated by a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
 		/// <returns>The element at <paramref name="indices"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
-		public override T this[ReadOnlySpan<long> indices] { get; set; }
+		public override T this[ReadOnlySpan<long> indices] {
+			get {
+				long offset = this.CheckIndex(indices, this.OuterSize);
+				return MEM.ToManaged(this.Storage + offset);
+			}
+			set {
+				long offset = this.CheckIndex(indices, this.OuterSize);
+				MEM.FromManaged(this.Storage + offset, value);
+			}
+		}
 
 		/// <summary>
-		/// Get a sub-tensor indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
+		/// Get a sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
-		/// <returns>The sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/>. Shall be a referenced tensor if possible.</returns>
+		/// <returns>The <b>referenced</b> sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/>. Shall be a referenced tensor if possible.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		public override TensorBase<T> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
+		public override DenseTensor<T> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		{
+			long offset = this.CheckRange(offsets, lengths, this.OuterSize);
+			return new(this.Storage + offset, lengths, this.OuterSize);
+		}
 
 		/// <summary>
-		/// Get the sub-tensor indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
+		/// Get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
@@ -154,17 +272,140 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		public override void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite);
+		public override void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite)
+		{
+			if (overwrite is null || !overwrite.IsValid())
+				throw new ArgumentNullException(nameof(overwrite));
+			if (overwrite is not DenseTensor<T> dense)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
+			var refSub = this.GetSlice(offsets, lengths);
+			if (!dense.Size.SequenceEqual(refSub.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(overwrite));
+
+			TAD.Permute<T>(new(refSub), new(dense), stackalloc int[this.Rank].FillWithRange(0));
+		}
 
 		/// <summary>
-		/// Set the sub-tensor indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
+		/// Set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="value">The tensor to set whose size is the lengths of the sub-tensor's size</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
-		public override void SetSlice(ReadOnlySpan<long> offsets, TensorBase<T> value);
+		public override void SetSlice(ReadOnlySpan<long> offsets, TensorBase<T> value)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			if (value is not DenseTensor<T> dense)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
+
+			var refSub = this.GetSlice(offsets, dense.Size);
+			TAD.Permute<T>(new(dense), new(refSub), stackalloc int[this.Rank].FillWithRange(0));
+		}
+
+		/// <summary>
+		/// Get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c>.
+		/// </summary>
+		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+		/// <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
+		public DenseTensor<T> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		{
+			int rank = this.Rank;
+			if (n <= 0 || n >= rank - 1)
+				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
+			if (restIndices.Length + n != rank)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
+			// get equivalent ranges
+			Span<long> allOffsets = stackalloc long[rank];
+			Span<long> allLengths = stackalloc long[rank];
+			restIndices.CopyTo(allOffsets[n..]);
+			allLengths[n..].Fill(1);
+			if (!offsets.IsEmpty)
+			{
+				if (offsets.Length != n)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(offsets));
+				offsets.CopyTo(allOffsets[..n]);
+			}
+			if (!lengths.IsEmpty)
+			{
+				if (lengths.Length != n)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(lengths));
+				lengths.CopyTo(allLengths[..n]);
+			}
+			else
+			{
+				var size = this.Size;
+				for (int i = 0; i < n; i++)
+				{
+					allLengths[i] = size[i] - allOffsets[i];
+				}
+			}
+			// check ranges and return
+			long offset = CheckRange(allOffsets, allLengths);
+			return new(this.Storage + offset, allLengths[..n], this.OuterSize[..n], this.Labels[..n]);
+		}
+
+		/// <summary>
+		/// Set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
+		/// </summary>
+		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="value">The dense tensor to set</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
+		public void SetFirstDims(int n, ReadOnlySpan<long> restIndices, DenseTensor<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			var refSub = this.GetFirstDims(n, restIndices, offsets, lengths);
+			if (!value.Size.SequenceEqual(refSub.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(value));
+
+			TAD.Permute<T>(new(value), new(refSub), stackalloc int[n].FillWithRange(0));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void CheckFirstDims(byte n, Index[] restIndices, Span<long> rest)
+		{
+			int rank = this.Rank, len = restIndices.Length;
+			if (n >= rank - 1)
+				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
+			if (len + n != rank)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
+			var size = this.Size;
+			for (int i = 0; i < len; i++)
+			{
+				rest[i] = restIndices[i].GetPosition(size[n + i]);
+			}
+		}
+
+		/// <summary>
+		/// Get or set the (full) sub-tensor of rank <paramref name="n"/> located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c>.
+		/// </summary>
+		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <returns>The (full) sub-tensor of the first <paramref name="n"/> dimensions</returns>
+		public DenseTensor<T> this[byte n, params Index[] restIndices] {
+			get {
+				Span<long> rest = stackalloc long[restIndices.Length];
+				this.CheckFirstDims(n, restIndices, rest);
+				return this.GetFirstDims(n, rest);
+			}
+			set {
+				Span<long> rest = stackalloc long[restIndices.Length];
+				this.CheckFirstDims(n, restIndices, rest);
+				this.SetFirstDims(n, rest, value);
+			}
+		}
 		#endregion
 
 		#region tensor algebra methods
@@ -250,7 +491,7 @@ namespace Althea.Backend.Arrays
 		/// <remarks>If <paramref name="C"/> is null, or <paramref name="β"/> is zero, this tensor itself will be used instead of <paramref name="C"/>.</remarks>
 		public void Contract(T α, DenseTensor<T> A, DenseTensor<T> B, T β = default, DenseTensor<T> C = null)
 		{
-			TENSOR.Contract(α, A, B, β, C, this);
+			
 		}
 		#endregion
 
@@ -492,11 +733,12 @@ namespace Althea.Backend.Arrays
 		protected internal const string OuterSizeName = nameof(OuterSize);
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="OuterSize"/>.
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="OuterSize"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
-		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)
 		{
+			[LabelsName] = this.Labels.ToArray(),
 			[OuterSizeName] = this.OuterSize.ToArray()
 		};
 		#endregion

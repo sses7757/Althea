@@ -19,12 +19,18 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Number of rows of this matrix
 		/// </summary>
-		public long NRows => this.m_size[0];
+		public long NRows {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size[0];
+		}
 
 		/// <summary>
 		/// Number of columns of this matrix
 		/// </summary>
-		public long NCols => this.m_size[1];
+		public long NCols {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size[1];
+		}
 
 		/// <summary>
 		/// Construct a <see cref="MatrixBase{T}"/> with value array <paramref name="values"/> and presenting size <paramref name="rows"/>, <paramref name="cols"/>

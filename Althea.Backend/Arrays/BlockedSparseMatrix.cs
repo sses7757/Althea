@@ -53,12 +53,18 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get the storage of the row index (of block sub-matrices) array of this sparse matrix as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public Storage<TInd> RowIndexStorage => this.m_indexArrays[0];
+		public Storage<TInd> RowIndexStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays[0];
+		}
 
 		/// <summary>
 		/// Get the storage of the column index (of block sub-matrices) array of this sparse matrix as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public Storage<TInd> ColIndexStorage => this.m_indexArrays[1];
+		public Storage<TInd> ColIndexStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays[1];
+		}
 
 		/// <summary>
 		/// Get the number of rows of (any) block sub-matrix
@@ -70,7 +76,10 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		public long BlockNCols { get; }
 
-		private long Pack => this.BlockNRows * this.BlockNCols;
+		private long Pack {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.BlockNRows * this.BlockNCols;
+		}
 
 		/// <summary>
 		/// Create an empty <see cref="BlockedSparseMatrix{T, TInd}"/>

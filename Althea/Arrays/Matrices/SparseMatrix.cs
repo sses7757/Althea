@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
-using Althea.Linq;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra.Sparse;
+using Althea.Linq;
+using Althea.NativeTypes;
 
 using MEM = Althea.Storage.AbstractApi;
 
@@ -46,21 +47,30 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
-		public virtual long NStored => this.ActualLength;
+		public virtual long NStored {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.ActualLength;
+		}
 
 		/// <summary>
 		/// Get the sparse format of this sparse matrix as a <see cref="SparseMatrixFormat"/>
 		/// </summary>
-		public SparseMatrixFormat Format => this.m_format;
+		public SparseMatrixFormat Format {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_format;
+		}
 
 		/// <summary>
 		/// Get or set the default value (the values which are not specified) of this sparse matrix
 		/// </summary>
-		public T DefaultValue { get => this.m_defaultValue; set => this.m_defaultValue = value; }
+		public T DefaultValue {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_defaultValue;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set => this.m_defaultValue = value;
+		}
 
-		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
-
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private SparseMatrix(long rows, long cols, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseMatrixFormat format, T defaultValue) : base(valueArray, rows, cols, stores)
 		{
 			if (!format.IsAtomic())

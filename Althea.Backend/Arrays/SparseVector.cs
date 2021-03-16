@@ -30,7 +30,10 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get the index array's storage as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public Storage<TInd> IndexStorage => this.m_indexArrays[0];
+		public Storage<TInd> IndexStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays[0];
+		}
 
 		/// <summary>
 		/// Create an empty <see cref="SparseVector{T, TInd}"/>
@@ -124,7 +127,7 @@ namespace Althea.Backend.Arrays
 			}
 		}
 
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void Slice(TInd start, TInd end, ref Storage<T> value, ref Storage<TInd> index, long pack = 1)
 		{
 			long offset = LAS.IndexBound(index, start, lowerBound: true);

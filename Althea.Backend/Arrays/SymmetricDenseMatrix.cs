@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
+using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
-using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
+using MEM = Althea.Storage.AbstractApi;
 
 
 namespace Althea.Backend.Arrays
@@ -22,14 +22,21 @@ namespace Althea.Backend.Arrays
 		#region basic
 		private readonly FixedBuffer_16<long> m_outerSize = default;
 
+		private readonly FixedBuffer_16<long> m_strides = default;
+
 		private readonly DenseMatrix<T> m_dense;
 
 		/// <summary>
 		/// Get the leading dimension (the length in <typeparamref name="T"/> between to consecutive column starting elements) of this dense matrix
 		/// </summary>
-		public long LeadDim => this.m_outerSize[0];
+		public long LeadDim {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size[0];
+		}
 
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => this.m_outerSize.AsSpan();
+
+		ReadOnlySpan<long> IPitchedArray<T>.Strides => this.m_strides.AsSpan();
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this symmetric matrix is hermitian or simply symmetric. For real-typed <typeparamref name="T"/>, this is always false.

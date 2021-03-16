@@ -153,14 +153,21 @@ namespace Althea.Backend.Arrays
 		where T : unmanaged
 	{
 		#region basic
-		private readonly FixedBuffer_16<long> m_outerSize;
+		private readonly FixedBuffer_16<long> m_outerSize = default;
+
+		private readonly FixedBuffer_16<long> m_strides = default;
 
 		/// <summary>
 		/// Get the leading dimension (the length in <typeparamref name="T"/> between to consecutive column starting elements) of this dense matrix
 		/// </summary>
-		public long LeadDim => this.m_outerSize[0];
+		public long LeadDim {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_outerSize[0];
+		}
 
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => this.m_outerSize.AsSpan();
+
+		ReadOnlySpan<long> IPitchedArray<T>.Strides => this.m_strides.AsSpan();
 
 		/// <summary>
 		/// Construct a <see cref="DenseMatrix{T}"/> with value array <paramref name="values"/> and size <paramref name="rows"/>, <paramref name="cols"/>
@@ -180,17 +187,14 @@ namespace Althea.Backend.Arrays
 			if (leadDim < rows)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(leadDim));
 
-			this.m_outerSize = default;
 			this.m_outerSize[0] = leadDim; this.m_outerSize[1] = cols;
+			this.m_strides[0] = 1; this.m_strides[1] = leadDim;
 		}
 
 		/// <summary>
 		/// Create am empty <see cref="DenseMatrix{T}"/>
 		/// </summary>
-		public DenseMatrix() : base(Storage<T>.Empty, 0, 0)
-		{
-			this.m_outerSize = default;
-		}
+		public DenseMatrix() : base(Storage<T>.Empty, 0, 0) { }
 		#endregion
 
 		#region basic indexers
@@ -253,7 +257,7 @@ namespace Althea.Backend.Arrays
 			}
 			else if (value is ISparseMatrix<T> sparse)
 			{
-				using var dn = this.Storage.MakeReference(newLength: sparse.NRows * sparse.NCols).CreateAlike();
+				using var dn = Storage<T>.Create(this.Storage[0].Location, sparse.NRows * sparse.NCols);
 				sparse.ToDense(dn, sparse.NRows);
 				MEM.MemoryCopy2D(dn, sparse.NRows, this.Storage + (rowStart * this.LeadDim + columnStart), this.LeadDim, sparse.NRows, sparse.NCols);
 			}
@@ -379,7 +383,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned vector</returns>
 		public override DenseMatrix<T> Clone()
 		{
-			var c = this.Storage.MakeReference(newLength: this.NRows * this.NCols).CreateAlike();
+			var c = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			try
 			{
 				MEM.MemoryCopy2D(this.Storage, this.LeadDim, c, this.NRows, this.NRows, this.NCols);
@@ -398,7 +402,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The new matrix alike this one</returns>
 		public override DenseMatrix<T> NewArrayAlike()
 		{
-			var c = this.Storage.MakeReference(newLength: this.NRows * this.NCols).CreateAlike();
+			var c = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			return new DenseMatrix<T>(c, this.NRows, this.NCols);
 		}
 
@@ -425,7 +429,7 @@ namespace Althea.Backend.Arrays
 			if (this.NRows == this.LeadDim)
 				return new DenseVector<T>(this.Storage.MakeReference(newLength: this.Length));
 			// else
-			var storageOut = this.Storage.MakeReference(newLength: this.Length).CreateAlike();
+			var storageOut = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			try
 			{
 				MEM.MemoryCopy2D(this.Storage, this.LeadDim, storageOut, this.NRows, this.NRows, this.NCols);
@@ -457,7 +461,7 @@ namespace Althea.Backend.Arrays
 			else if (newSize[0] == 1 || newSize[1] == 1)
 				throw new InvalidOperationException();
 			// else
-			var storageOut = this.Storage.MakeReference(newLength: newSize[0] * newSize[1]).CreateAlike();
+			var storageOut = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			try
 			{
 				MEM.MemoryCopy2D(this.Storage, this.LeadDim, storageOut, newSize[0], newSize[0], newSize[1]);
@@ -476,7 +480,28 @@ namespace Althea.Backend.Arrays
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
 		/// <exception cref="InvalidOperationException">If the <see cref="LeadDim"/> != <see cref="MatrixBase{T}.NRows"/></exception>
-		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size) { }
+		public override DenseTensor<T> ToTensor(ReadOnlySpan<long> size)
+		{
+			Span<long> newSize = stackalloc long[size.Length];
+			size.CopyTo(newSize);
+			CheckSize(this, newSize);
+			if (newSize.SequenceEqual(this.Size))
+				return new(this.Storage, newSize, this.m_outerSize.AsSpan());
+			else if (this.Length == this.NRows)
+				return new(this.Storage, newSize, newSize);
+			// else
+			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
+			try
+			{
+				MEM.MemoryCopy2D(this.Storage, this.LeadDim, storage, this.NRows, this.NRows, this.NCols);
+				return new(storage, newSize, newSize);
+			}
+			catch (Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
+		}
 		#endregion
 
 		#region linear algebra
@@ -496,7 +521,7 @@ namespace Althea.Backend.Arrays
 				return this.ApplyToClone(static c => LAD.PointWiseConjugate(c.Storage, 1));
 			// otherwise
 			var (m, n) = (this.NCols, this.NRows);
-			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
+			var storageOut = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			try
 			{
 				LAD.GeneralMatricesAdd(operation, MatrixOperation.None, m, n, Const<T>.One, this.Storage, this.LeadDim, Const<T>.Zero, null, 0, storageOut, m);
@@ -525,7 +550,7 @@ namespace Althea.Backend.Arrays
 		public override DenseMatrix<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			var (m, n) = ((IDenseMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
-			var storageOut = this.Storage.MakeReference(newLength: m * n).CreateAlike();
+			var storageOut = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			try
 			{
 				if (other is DenseMatrix<T> dense)
@@ -699,7 +724,7 @@ namespace Althea.Backend.Arrays
 			}
 			else if (spA is not null && spB is not null)
 			{
-				using var denseStorage = this.Storage.MakeReference(newLength: spA.NRows * spA.NCols).CreateAlike();
+				using var denseStorage = Storage<T>.Create(this.Storage[0].Location, this.Length);
 				spA.ToDense(denseStorage);
 				LAS.MatrixDenseAddSparse(opA, opB, scalarA, denseStorage, spA.NRows, scalarB, spB, this.Storage, this.LeadDim);
 			}
@@ -778,7 +803,7 @@ namespace Althea.Backend.Arrays
 			}
 			else if (spA is not null && spB is not null)
 			{
-				using var denseStorage = this.Storage.MakeReference(newLength: spB.NRows * spB.NCols).CreateAlike();
+				using var denseStorage = Storage<T>.Create(this.Storage[0].Location, spB.NRows * spB.NCols);
 				spB.ToDense(denseStorage);
 				LAS.MatrixSparseMultiplyDense(opA, opB, n, α, spA, denseStorage, spB.NRows, β, this.Storage, this.LeadDim);
 			}
@@ -786,298 +811,6 @@ namespace Althea.Backend.Arrays
 			else
 				throw new NotSupportedException();
 
-		}
-		#endregion
-
-		#region helpers
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ApplyToColumns(Action<Storage<T>> action)
-		{
-			long rows = this.NRows, cols = this.NCols, ld = this.LeadDim;
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				action.Invoke(column);
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ApplyToColumns<TVal>(Action<Storage<T>, TVal> action, TVal value)
-		{
-			long rows = this.NRows, cols = this.NCols, ld = this.LeadDim;
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				action.Invoke(column, value);
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TRet ApplyToColumns<TRet>(Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> returnAggregate, TRet init)
-		{
-			long rows = this.NRows, cols = this.NCols, ld = this.LeadDim;
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				TRet here = function.Invoke(column);
-				init = returnAggregate.Invoke(init, here);
-			}
-			return init;
-		}
-		#endregion
-
-		#region point-wise operations
-		/// <summary>
-		/// Fill this dense matrix's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>.
-		/// </summary>
-		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
-		public override void FillWith(T value)
-		{
-			if (this.NRows == this.LeadDim)
-			{
-				MEM.FillWithValue(this.Storage, value);
-			}
-			else
-			{
-				this.ApplyToColumns(MEM.FillWithValue, value);
-			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place add this dense matrix's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>.
-		/// </summary>
-		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
-		public override void AddScalar(T value)
-		{
-			if (value.IsZero())
-				return;
-			if (this.NRows == this.LeadDim)
-			{
-				LAD.PointWiseAddScalar(this.Storage, 1, value);
-			}
-			else if (this.NRows == 1)
-			{
-				LAD.PointWiseAddScalar(this.Storage, checked((int)this.LeadDim), value);
-			}
-			else
-			{
-				this.ApplyToColumns(static (s, v) => LAD.PointWiseAddScalar(s, 1, v), value);
-			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place multiply this dense matrix's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>.
-		/// </summary>
-		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-		public override void Scale(T value)
-		{
-			if (value.IsOne())
-				return;
-			if (this.NRows == this.LeadDim)
-			{
-				LAD.Scale(value, this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				LAD.Scale(value, this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				this.ApplyToColumns(static (s, v) => LAD.Scale(v, s, 1), value);
-			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place conjugate this dense matrix's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>.
-		/// </summary>
-		public override void Conjugate()
-		{
-			if (!Const<T>.IsComplex)
-				return;
-			if (this.NRows == this.LeadDim)
-			{
-				LAD.PointWiseConjugate(this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				LAD.PointWiseConjugate(this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				this.ApplyToColumns(static s => LAD.PointWiseConjugate(s, 1));
-			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place exponent this dense matrix's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, double)"/>.
-		/// </summary>
-		/// <param name="power">The power as a <see cref="double"/></param>
-		public override void Power(double power)
-		{
-			if (power == 1)
-				return;
-			if (this.NRows == this.LeadDim)
-			{
-				LAD.PointWisePower(this.Storage, 1, power);
-			}
-			else if (this.NRows == 1)
-			{
-				LAD.PointWisePower(this.Storage, checked((int)this.LeadDim), power);
-			}
-			else
-			{
-				this.ApplyToColumns(static (s, v) => LAD.PointWisePower(s, 1, v), power);
-			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place exponent this dense matrix's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
-		/// </summary>
-		/// <param name="power">The power as a <typeparamref name="T"/></param>
-		public override void Power(T power)
-		{
-			if (power.IsOne())
-				return;
-			if (this.NRows == this.LeadDim)
-			{
-				LAD.PointWisePower(this.Storage, 1, power);
-			}
-			else if (this.NRows == 1)
-			{
-				LAD.PointWisePower(this.Storage, checked((int)this.LeadDim), power);
-			}
-			else
-			{
-				this.ApplyToColumns(static (s, v) => LAD.PointWisePower(s, 1, v), power);
-			}
-		}
-
-		/// <summary>
-		/// Point-wisely in-place truncate this dense matrix's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>.
-		/// </summary>
-		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
-		public override void Truncate(double threshold)
-		{
-			if (threshold <= 0)
-				return;
-			if (this.NRows == this.LeadDim)
-			{
-				LAD.TruncateArray(this.Storage, threshold);
-			}
-			else
-			{
-				this.ApplyToColumns(static (s, v) => LAD.TruncateArray(s, v), threshold);
-			}
-		}
-		#endregion
-
-		#region aggregate operations
-		/// <summary>
-		/// Aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.AggregateSum{T}"/>.
-		/// </summary>
-		/// <returns>The aggregate sum of this array</returns>
-		public override T Sum()
-		{
-			if (this.NRows == this.LeadDim)
-			{
-				return LAD.AggregateSum(this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				return LAD.AggregateSum(this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				return this.ApplyToColumns(static s => LAD.AggregateSum(s, 1), static (a, b) => a.GenericAdd(b), default);
-			}
-		}
-
-		/// <summary>
-		/// Aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
-		/// </summary>
-		/// <returns>The aggregate sum of absolute values of this array</returns>
-		public override double AbsSum()
-		{
-			if (this.NRows == this.LeadDim)
-			{
-				return LAD.AbsoluteValueSum(this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				return LAD.AbsoluteValueSum(this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				return this.ApplyToColumns(static s => LAD.AbsoluteValueSum(s, 1), static (a, b) => a + b, 0.0);
-			}
-		}
-
-		/// <summary>
-		/// Compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/> and utilizes <see cref="LAD.Norm{T}"/>.
-		/// </summary>
-		/// <returns>The 2-norm of this array</returns>
-		public override double Norm()
-		{
-			if (this.NRows == this.LeadDim)
-			{
-				return LAD.Norm(this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				return LAD.Norm(this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				double normSquare = this.ApplyToColumns(static s => LAD.Norm(s, 1), static (a, b) => a + b * b, 0.0);
-				return Math.Sqrt(normSquare);
-			}
-		}
-
-		/// <summary>
-		/// Get the maximum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMax{T}"/>.
-		/// </summary>
-		/// <returns>The maximum one of all absolute values of the elements in this array</returns>
-		public override double AbsMax()
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static double GetMax(Storage<T> storage, int stride) => MEM.ToManaged(storage + LAD.AbsoluteValueArgMax(storage, stride)).GenericAbsolute();
-
-			if (this.NRows == this.LeadDim)
-			{
-				return GetMax(this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				return GetMax(this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				return this.ApplyToColumns(static s => GetMax(s, 1), static (pre, now) => Math.Max(pre, now), 0.0);
-			}
-		}
-
-		/// <summary>
-		/// Get the minimum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/> and utilizes <see cref="LAD.AbsoluteValueArgMin{T}"/>.
-		/// </summary>
-		/// <returns>The minimum one of all absolute values of the elements in this array</returns>
-		public override double AbsMin()
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static double GetMin(Storage<T> storage, int stride) => MEM.ToManaged(storage + LAD.AbsoluteValueArgMax(storage, stride)).GenericAbsolute();
-
-			if (this.NRows == this.LeadDim)
-			{
-				return GetMin(this.Storage, 1);
-			}
-			else if (this.NRows == 1)
-			{
-				return GetMin(this.Storage, checked((int)this.LeadDim));
-			}
-			else
-			{
-				return this.ApplyToColumns(static s => GetMin(s, 1), static (pre, now) => Math.Min(pre, now), double.MaxValue);
-			}
 		}
 		#endregion
 

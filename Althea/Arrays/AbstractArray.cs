@@ -2,7 +2,7 @@
 
 using Althea.Linq;
 using Althea.Helpers;
-
+using System.Runtime.CompilerServices;
 
 namespace Althea.Arrays
 {
@@ -31,17 +31,26 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the rank of this array as a <see cref="int"/>
 		/// </summary>
-		public int Rank => this.m_size.Count;
+		public int Rank {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size.Count;
+		}
 
 		/// <summary>
 		/// Get the size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
-		public ReadOnlySpan<long> Size => this.m_size.AsSpan();
+		public ReadOnlySpan<long> Size {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size.AsSpan();
+		}
 
 		/// <summary>
 		/// Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
-		public long Length => this.m_length;
+		public long Length {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_length;
+		}
 		#endregion
 
 		#region initialize and dispose
