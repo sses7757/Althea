@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Text;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 using Althea.Linq;
+using Althea.NativeTypes;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
@@ -1445,7 +1446,7 @@ namespace Althea.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void GetLocationsAndLengths(Storage<T> storage, Span<StorageLocation> locations, Span<long> lengths)
 		{
-			int sizeT = Storage<T>.SizeOfT;
+			int sizeT = Const<T>.SizeT;
 			var descr = storage.LocationDescription;
 			descr.CopyLocationsToSpan(locations);
 			// get lengths
@@ -1494,7 +1495,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="storage"/>'s <see cref="PointerSegment"/> are not aligned to the size of <typeparamref name="T"/>, meanwhile auto alignment cannot be done with neither <see cref="Storage{T}.this[int]"/> nor <see cref="Storage{T}.GetActualPointerAt(int)"/></exception>
 		public static ActualStorage<T> CreateAlike(Storage<T> storage)
 		{
-			int sizeT = Storage<T>.SizeOfT;
+			int sizeT = Const<T>.SizeT;
 			var descr = storage.LocationDescription;
 			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
 			Span<long> lengths = stackalloc long[descr.Count];
@@ -1514,7 +1515,7 @@ namespace Althea.Storage
 			if (storage is Storage<TOut> s)
 				return s.CreateAlike();
 			// otherwise
-			int sizeT = Storage<T>.SizeOfT;
+			int sizeT = Const<T>.SizeT;
 			var descr = storage.LocationDescription;
 			Span<StorageLocation> locations = stackalloc StorageLocation[descr.Count];
 			Span<long> lengths = stackalloc long[descr.Count];

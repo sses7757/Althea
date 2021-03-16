@@ -373,7 +373,7 @@ namespace Althea.NativeTypes
 				Complex<ulong> => DataType.ComplexUInt64,
 				// otherwise
 				_ => !typeof(T).IsSupportedDirect() ? throw new NotSupportedException(Resources.Support.DataType)
-						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), Storage<T>.SizeOfT),
+						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), Const<T>.SizeT),
 			};
 		}
 		#endregion

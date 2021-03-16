@@ -263,12 +263,25 @@ namespace Althea.Backend.Arrays
 			return new(this.Storage + offset, lengths, this.OuterSize);
 		}
 
+		// Ignore Spelling: stackalloc
 		/// <summary>
 		/// Get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="overwrite">The tensor to be overwritten by the sub-tensor</param>
+		/// <example>If you want to get a sub-tensor of lower rank, there is a way to do so:<br/>
+		/// <code>
+		/// var size = stackalloc long[] { 100, 200 };
+		/// var sub = new <see cref="DenseTensor{T}"/>(storage, size);
+		/// var offsets = stackalloc long[] { 5, 50, 20, 0, 40 };
+		/// var lengths = stackalloc long[] { 1, 100, 1, 200, 1 };
+		/// var referencedSub = sub.<see cref="TensorReshape">Reshape</see>();
+		/// // the size of 'tensor' is { 10, 200, 50, 200, 60 }
+		/// tensor.<see cref="GetSlice(ReadOnlySpan{long}, ReadOnlySpan{long}, TensorBase{T})">GetSlice</see>(offsets, lengths, referencedSub);
+		/// // now the 'sub' contains the 
+		/// </code>
+		/// </example>
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Althea.Resources;
+using Althea.Helpers;
 using Althea.NativeTypes;
-
+using System.Runtime.CompilerServices;
 
 namespace Althea.NativeTypes
 {
@@ -55,18 +56,25 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the real part
 		/// </summary>
-		public T Real => this.real;
+		public T Real {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.real;
+		}
 
 		/// <summary>
 		/// Get the imaginary part
 		/// </summary>
-		public T Imag => this.imag;
+		public T Imag {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.imag;
+		}
 
 		/// <summary>
 		/// Constructor from real and imaginary parts
 		/// </summary>
 		/// <param name="re">real part</param>
 		/// <param name="im">imaginary part, default value is <c>default(<typeparamref name="T"/>)</c></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex(T re, T im = default)
 		{
 			this.real = re;
@@ -93,13 +101,24 @@ namespace Althea.NativeTypes
 				throw new InvalidOperationException(Support.DataType);
 		}
 
-		private static unsafe readonly int _sizeofT = sizeof(T);
+		private static unsafe readonly int _sizeT = sizeof(T);
+
+		private static readonly Converter<T, double> _toDouble = Const<T>.ToDoubleDelegate;
+
+		private static readonly Converter<double, T> _fromDouble = Const<T>.FromDoubleDelegate;
+
+		private static readonly Func<T, T> _negate = Const<T>.NegateDelegate;
+
+		private static readonly Func<T, T, T> _add = Const<T>.AddDelegate;
+
+		private static readonly Func<T, T, T> _sub = Const<T>.SubtractDelegate;
+
+		private static readonly Func<T, T, T> _mul = Const<T>.MultiplyDelegate;
+
+		private static readonly Func<T, T, T> _div = Const<T>.DivideDelegate;
 		#endregion
 
 		#region constant values
-		private static readonly T _oneT = (T)(dynamic)1;
-		private static readonly T _minusOneT = (T)(dynamic)(-1);
-
 		/// <summary>
 		/// <see cref="Complex{T}"/> 0
 		/// </summary>
@@ -107,19 +126,19 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// <see cref="Complex{T}"/> 1
 		/// </summary>
-		public static readonly Complex<T> One = new(_oneT);
+		public static readonly Complex<T> One = new(Const<T>.One);
 		/// <summary>
 		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static readonly Complex<T> MinusOne = new(_minusOneT);
+		public static readonly Complex<T> MinusOne = new(Const<T>.MinusOne);
 		/// <summary>
 		/// <see cref="Complex{T}"/> i
 		/// </summary>
-		public static readonly Complex<T> ImOne = new(default, _oneT);
+		public static readonly Complex<T> ImOne = new(default, Const<T>.One);
 		/// <summary>
 		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static readonly Complex<T> MinusImOne = new(default, _minusOneT);
+		public static readonly Complex<T> MinusImOne = new(default, Const<T>.MinusOne);
 		#endregion
 
 		#region parser
@@ -261,55 +280,67 @@ namespace Althea.NativeTypes
 		/// Convert from int
 		/// </summary>
 		/// <param name="a">a int</param>
-		public static implicit operator Complex<T>(int a) => new((T)(dynamic)a);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator Complex<T>(int a) => new(a.GenericConvert<int, T>());
 		/// <summary>
 		/// Convert from T
 		/// </summary>
 		/// <param name="a">a T</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Complex<T>(T a) => new(a);
 		/// <summary>
 		/// Convert from int tuple
 		/// </summary>
 		/// <param name="a">a int tuple</param>
-		public static implicit operator Complex<T>((int r, int i) a) => new((T)(dynamic)a.r, (T)(dynamic)a.i);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator Complex<T>((int r, int i) a) => new(a.r.GenericConvert<int, T>(), a.i.GenericConvert<int, T>());
 		/// <summary>
 		/// Convert from T tuple
 		/// </summary>
 		/// <param name="a">a T tuple</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Complex<T>((T r, T i) a) => new(a.r, a.i);
 
 		/// <summary>
 		/// Convert to <see cref="double"/> typed complex
 		/// </summary>
-		public static explicit operator Complex<double>(Complex<T> v) => v switch {
-			Complex<double> vv => vv,
-			_ => new Complex<double>((double)(dynamic)v.real, (double)(dynamic)v.imag),
-		};
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static explicit operator Complex<double>(Complex<T> v) =>
+			v switch
+			{
+				Complex<double> vv => vv,
+				_ => new Complex<double>(_toDouble(v.real), _toDouble(v.imag)),
+			};
 
 		/// <summary>
 		/// Convert from <see cref="double"/> typed complex
 		/// </summary>
-		public static explicit operator Complex<T>(Complex<double> v) => v switch
-		{
-			Complex<T> vv => vv,
-			_ => new Complex<T>((T)(dynamic)v.real, (T)(dynamic)v.imag),
-		};
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static explicit operator Complex<T>(Complex<double> v) =>
+			v switch
+			{
+				Complex<T> vv => vv,
+				_ => new Complex<T>(_fromDouble(v.real), _fromDouble(v.imag)),
+			};
 
 		/// <summary>
 		/// Convert to <typeparamref name="T"/>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static explicit operator T(Complex<T> v) => v.Abs();
 		#endregion
 
 		#region equality
 		/// <summary>
-		/// Equal operator
+		/// Equality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Complex<T> a, Complex<T> b) => a.Equals(b);
 
 		/// <summary>
-		/// Not-equal operator
+		/// Inequality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Complex<T> a, Complex<T> b) => !(a == b);
 
 		/// <summary>
@@ -317,6 +348,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="other">The other <see cref="Complex{T}"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Complex<T> other)
 		{
 			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
@@ -325,6 +357,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Override <see cref="object.GetHashCode"/>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(this.real, this.imag);
@@ -333,6 +366,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Override <see cref="object.Equals(object)"/>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			Complex<T> a;
@@ -352,36 +386,43 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex negate
 		/// </summary>
-		public static Complex<T> operator -(Complex<T> a) => new(-(dynamic)a.real, -(dynamic)a.imag);
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Complex<T> operator -(Complex<T> a) => new(_negate(a.real), _negate(a.imag));
 		/// <summary>
 		/// Complex add
 		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real + (dynamic)b.real, a.imag + (dynamic)b.imag);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(_add(a.real, b.real), a.imag + (dynamic)b.imag);
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real - (dynamic)b.real, a.imag - (dynamic)b.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real + (dynamic)b, a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real + (dynamic)b, a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real - (dynamic)b, a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator -(T b, Complex<T> a) => new(b - (dynamic)a.real, -(dynamic)a.imag);
 
 		/// <summary>
 		/// Complex multiply
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator *(Complex<T> a, Complex<T> b)
 		{
 			T real = a.real * (dynamic)b.real - a.imag * (dynamic)b.imag;
@@ -391,6 +432,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex division, guards against intermediate underflow and overflow by scaling
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator /(Complex<T> x, Complex<T> y)
 		{
 			dynamic dyr = (dynamic)y.real, dyi = (dynamic)y.imag;
@@ -402,24 +444,29 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator *(Complex<T> a, T b) => new((dynamic)a.real * b, (dynamic)a.imag * b);
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator *(T b, Complex<T> a) => new((dynamic)a.real * b, (dynamic)a.imag * b);
 		/// <summary>
 		/// Complex divide real number
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator /(Complex<T> a, T b) => new((dynamic)a.real / b, (dynamic)a.imag / b);
 		/// <summary>
 		/// Real number divide complex 
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator /(T b, Complex<T> a) => new Complex<T>(b) / a;
 
 		/// <summary>
 		/// Complex absolute value of this complex
 		/// </summary>
 		/// <returns>The absolute value of this complex</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Abs()
 		{
 			dynamic r = this.real, i = this.imag;
@@ -430,6 +477,7 @@ namespace Althea.NativeTypes
 		/// Compute the argument of this complex
 		/// </summary>
 		/// <returns>The argument of this complex</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Arg()
 		{
 			dynamic r = this.real, i = this.imag;
@@ -439,8 +487,10 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Conjugate() => new(this.real, -(dynamic)this.imag);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Complex<double> Exp(Complex<double> c)
 		{
 			double exp = Math.Exp(c.real);
@@ -452,12 +502,14 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex exponential (of base <c>e</c>)
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Exp()
 		{
 			var doubleResult = Exp((Complex<double>)this);
 			return (Complex<T>)doubleResult;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Complex<double> Log(Complex<double> c)
 		{
 			double real = 0.5 * Math.Log(c.real * c.real + c.imag * c.imag);
@@ -468,6 +520,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex logarithm (of base <c>e</c>)
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Log()
 		{
 			var doubleResult = Log((Complex<double>)this);
@@ -478,6 +531,7 @@ namespace Althea.NativeTypes
 		/// Complex number power
 		/// </summary>
 		/// <param name="p">The power of real type <typeparamref name="T"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Pow(T p)
 		{
 			if (this.real.IsZero() && this.imag.IsZero())
@@ -500,6 +554,7 @@ namespace Althea.NativeTypes
 		/// Complex  number power
 		/// </summary>
 		/// <param name="p">The power of complex type <see cref="Complex{T}"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Pow(Complex<T> p)
 		{
 			if (this.real.IsZero() && this.imag.IsZero())
@@ -522,6 +577,7 @@ namespace Althea.NativeTypes
 			return (Complex<T>)result;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Complex<double> Sqrt(Complex<double> c)
 		{
 			double arg = 0.5 * Math.Atan2(c.imag, c.real);
@@ -535,6 +591,7 @@ namespace Althea.NativeTypes
 		/// Get the complex square root of this complex
 		/// </summary>
 		/// <returns>The complex square root of this complex</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Sqrt()
 		{
 			return (Complex<T>)Sqrt((Complex<double>)this);
@@ -545,6 +602,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="another">another value to be added</param>
 		/// <returns>The addition result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Add(Complex<T> another) => this + another;
 
 		/// <summary>
@@ -552,6 +610,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="another">another value to be subtracted</param>
 		/// <returns>The subtraction result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Subtract(Complex<T> another) => this - another;
 
 		/// <summary>
@@ -559,6 +618,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="another">another value to be multiplied</param>
 		/// <returns>The multiplication result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Multiply(Complex<T> another) => this * another;
 
 		/// <summary>
@@ -566,6 +626,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="another">another value to be divided</param>
 		/// <returns>The division result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Divide(Complex<T> another) => this / another;
 		#endregion
 

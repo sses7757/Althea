@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
+using Althea.NativeTypes;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
@@ -790,11 +791,6 @@ namespace Althea
 	{
 		#region properties
 		/// <summary>
-		/// Get the size of <typeparamref name="T"/> in memory in bytes
-		/// </summary>
-		public static readonly unsafe int SizeOfT = sizeof(T);
-
-		/// <summary>
 		/// Get an empty <see cref="Storage{T}"/>
 		/// </summary>
 		public static readonly Storage<T> Empty = new Storage.PureOrMixedReferenceStorage<T>();
@@ -805,9 +801,9 @@ namespace Althea
 		public abstract long Length { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the total length of the presenting array in bytes. The default implementation returns the multiplication of <see cref="Length"/> and <see cref="SizeOfT"/>.
+		/// When implemented by a derived class, get the total length of the presenting array in bytes. The default implementation returns the multiplication of <see cref="Length"/> and <see cref="Const{T}.SizeT"/>.
 		/// </summary>
-		public virtual long LengthInBytes => this.Length * SizeOfT;
+		public virtual long LengthInBytes => this.Length * Const<T>.SizeT;
 
 		/// <summary>
 		/// When implemented by a derived class, get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
@@ -1007,10 +1003,10 @@ namespace Althea
 		/// <exception cref="InvalidCastException">if <paramref name="size"/>( multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
 		protected static long CheckCast<TOut>(long size, bool sizeInBytes = false) where TOut : unmanaged
 		{
-			long newSize = sizeInBytes ? size : (size * SizeOfT);
-			if (size * SizeOfT % Storage<TOut>.SizeOfT != 0)
+			long newSize = sizeInBytes ? size : (size * Const<T>.SizeT);
+			if (size * Const<T>.SizeT % Const<TOut>.SizeT != 0)
 				throw new InvalidCastException(Other.CannotDivide);
-			newSize /= Storage<TOut>.SizeOfT;
+			newSize /= Const<TOut>.SizeT;
 			return newSize;
 		}
 
@@ -1063,11 +1059,11 @@ namespace Althea
 			{
 				if (reference.Reference is null)
 					return false;
-				offset *= SizeOfT;
+				offset *= Const<T>.SizeT;
 				offset += reference.TotalOffsetInBytes;
 				if (offset < 0 || offset >= reference.Reference.LengthInBytes)
 					return false;
-				if (newLength > 0 && newLength * SizeOfT + offset > reference.Reference.LengthInBytes)
+				if (newLength > 0 && newLength * Const<T>.SizeT + offset > reference.Reference.LengthInBytes)
 					return false;
 				return true;
 			}
@@ -1185,7 +1181,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="left">The left <see cref="Storage{T}"/></param>
 		/// <param name="right">The right <see cref="Storage{T}"/></param>
-		/// <returns>The pointer difference (in <typeparamref name="T"/>) between <paramref name="left"/> and <paramref name="right"/> if they share same origin and the difference can be divided by <see cref="SizeOfT"/>; otherwise, returns <see cref="long.MaxValue"/>.</returns>
+		/// <returns>The pointer difference (in <typeparamref name="T"/>) between <paramref name="left"/> and <paramref name="right"/> if they share same origin and the difference can be divided by <see cref="Const{T}.SizeT"/>; otherwise, returns <see cref="long.MaxValue"/>.</returns>
 		public static long operator -(Storage<T> left, Storage<T> right)
 		{
 			if (!left.IsValid() || !right.IsValid())
@@ -1202,17 +1198,17 @@ namespace Althea
 			// check offset divisible
 			if (actualLeft is not null && refRight is not null)
 			{
-				if (refRight.TotalOffsetInBytes % SizeOfT != 0)
+				if (refRight.TotalOffsetInBytes % Const<T>.SizeT != 0)
 					return long.MaxValue;
 				else
-					return -refRight.TotalOffsetInBytes / SizeOfT;
+					return -refRight.TotalOffsetInBytes / Const<T>.SizeT;
 			}
 			else if (refLeft is not null && actualRight is not null)
 			{
-				if (refLeft.TotalOffsetInBytes % SizeOfT != 0)
+				if (refLeft.TotalOffsetInBytes % Const<T>.SizeT != 0)
 					return long.MaxValue;
 				else
-					return refLeft.TotalOffsetInBytes / SizeOfT;
+					return refLeft.TotalOffsetInBytes / Const<T>.SizeT;
 			}
 			else if (actualLeft is not null && actualRight is not null)
 				return 0;
@@ -1259,12 +1255,12 @@ namespace Althea
 			if (storage is null)
 				return;
 			// get offset and new length in bytes
-			long offsetInBytes = offset * SizeOfT;
+			long offsetInBytes = offset * Const<T>.SizeT;
 			long newLengthInBytes;
 			if (newLength <= 0)
-				newLengthInBytes = storage.LengthInBytes - SizeOfT * offset;
+				newLengthInBytes = storage.LengthInBytes - Const<T>.SizeT * offset;
 			else
-				newLengthInBytes = newLength * SizeOfT;
+				newLengthInBytes = newLength * Const<T>.SizeT;
 			// dereference first
 			while (storage is IReferenceStorage @ref)
 			{
@@ -1282,7 +1278,7 @@ namespace Althea
 				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
 			// set offset and length
 			this.TotalOffsetInBytes = offsetInBytes;
-			this.Length = newLengthInBytes / SizeOfT;
+			this.Length = newLengthInBytes / Const<T>.SizeT;
 		}
 		#endregion
 

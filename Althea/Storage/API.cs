@@ -691,7 +691,7 @@ namespace Althea.Storage
 		/// <exception cref="AggregateException">If this implementation cannot allocate <paramref name="length"/> on <paramref name="location"/> due to other issues such as <see cref="OutOfMemoryException"/></exception>
 		protected internal static PointerSegment Allocate<T>(StorageLocation location, long length) where T : unmanaged
 		{
-			return Allocate(location, length * Storage<T>.SizeOfT);
+			return Allocate(location, length * Const<T>.SizeT);
 		}
 
 		/// <summary>
@@ -1643,7 +1643,7 @@ namespace Althea.Storage
 				return this.StridedCopy_<T>(s, incrementSource, d, incrementDestination, out c);
 			}
 
-			int srcAlign = Storage<T>.SizeOfT * incrementSource, dstAlign = Storage<T>.SizeOfT * incrementDestination;
+			int srcAlign = Const<T>.SizeT * incrementSource, dstAlign = Const<T>.SizeT * incrementDestination;
 			source.Cast(out IPureOrMixedStorage? srcMixed, out ICachedStorage? srcCached);
 			destination.Cast(out IPureOrMixedStorage? dstMixed, out ICachedStorage? dstCached);
 			if (!this.IsSupportedBinary(source.LocationDescription, destination.LocationDescription))
@@ -1762,7 +1762,7 @@ namespace Althea.Storage
 			}
 			else if (cached is not null)
 			{
-				var temp = cached.Retrieve(0, Storage<T>.SizeOfT);
+				var temp = cached.Retrieve(0, Const<T>.SizeT);
 				return this.ToManaged_(temp, out value);
 			}
 			return false;
@@ -1787,7 +1787,7 @@ namespace Althea.Storage
 			}
 			else if (cached is not null)
 			{
-				var temp = cached.Retrieve(0, Storage<T>.SizeOfT);
+				var temp = cached.Retrieve(0, Const<T>.SizeT);
 				return this.FromManaged_(temp, value);
 			}
 			return false;
@@ -1819,12 +1819,12 @@ namespace Althea.Storage
 					this.ToManaged_(mixed[i], destination[offset..], out _);
 					if (offset >= destination.Length)
 						break;
-					offset += (int)(mixed[i].LengthInBytes / Storage<T>.SizeOfT);
+					offset += (int)(mixed[i].LengthInBytes / Const<T>.SizeT);
 				}
 			}
 			else if (cached is not null)
 			{
-				long count = Storage<T>.SizeOfT * (long)destination.Length;
+				long count = Const<T>.SizeT * (long)destination.Length;
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
@@ -1832,7 +1832,7 @@ namespace Althea.Storage
 				}
 				else
 				{
-					int pack = Storage<T>.SizeOfT;
+					int pack = Const<T>.SizeT;
 					long offset = 0;
 					long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 					while (count > 0)
@@ -1876,12 +1876,12 @@ namespace Althea.Storage
 					this.FromManaged_(destination[i], values[offset..], out _);
 					if (offset >= values.Length)
 						break;
-					offset += (int)(destination[i].LengthInBytes / Storage<T>.SizeOfT);
+					offset += (int)(destination[i].LengthInBytes / Const<T>.SizeT);
 				}
 			}
 			else if (cached is not null)
 			{
-				long count = Storage<T>.SizeOfT * (long)values.Length;
+				long count = Const<T>.SizeT * (long)values.Length;
 				if (count >= cached.GetRealLength() / ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
@@ -1889,7 +1889,7 @@ namespace Althea.Storage
 				}
 				else
 				{
-					int pack = Storage<T>.SizeOfT;
+					int pack = Const<T>.SizeT;
 					long offset = 0;
 					long maxCacheSize = cached.TopCacheSizeInBytes / pack * pack;
 					while (count > 0)

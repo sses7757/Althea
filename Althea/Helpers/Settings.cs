@@ -424,7 +424,7 @@ namespace Althea.Helpers
 		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
 		public static T[]? CheckStackLimit<T>(this int length) where T : unmanaged
 		{
-			if (length * Storage<T>.SizeOfT > StackAllocLimit)
+			if (length * Const<T>.SizeT > StackAllocLimit)
 				return new T[length];
 			else
 				return null;

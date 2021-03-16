@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 
 using Althea.Linq;
+using Althea.NativeTypes;
 using Althea.Resources;
 using Althea.Storage;
 
@@ -268,7 +269,7 @@ namespace Althea.Backend.Storage
 			////	throw new NotSupportedException(Support.Location);
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
-			if ((long)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+			if ((long)managed.Length * Const<T>.SizeT + this.Position > this.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
 			this.stream.Read(managed.UncheckAs<T, byte>());
@@ -312,7 +313,7 @@ namespace Althea.Backend.Storage
 			////	throw new NotSupportedException(Support.Location);
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
-			if ((long)managed.Length * Storage<T>.SizeOfT + this.Position > this.Length)
+			if ((long)managed.Length * Const<T>.SizeT + this.Position > this.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
 			this.stream.Write(managed.UncheckAs<T, byte>());
@@ -615,7 +616,7 @@ namespace Althea.Backend.Storage
 			////	throw new NotSupportedException(Support.Location);
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
-			long size = (long)managed.Length * Storage<T>.SizeOfT;
+			long size = (long)managed.Length * Const<T>.SizeT;
 			if (size + this.Position > this.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
@@ -674,7 +675,7 @@ namespace Althea.Backend.Storage
 			////	throw new NotSupportedException(Support.Location);
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
-			long size = (long)managed.Length * Storage<T>.SizeOfT;
+			long size = (long)managed.Length * Const<T>.SizeT;
 			if (size + this.Position > this.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 
@@ -711,7 +712,7 @@ namespace Althea.Backend.Storage
 		internal static unsafe Span<T> AsSpan<T>(this IMemoryPointer p, long offset = 0, int length = 0) where T : unmanaged => new(p.UnmangedPointer<T>(offset), length <= 0 ? checked((int)(p.LengthInBytes / sizeof(T))) : length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Span<T> AsSpan<T>(this IMemoryPointer p, PointerSegment pointerSegment) where T : unmanaged => p.AsSpan<T>(checked(pointerSegment.OffsetInBytes / Storage<T>.SizeOfT), checked((int)(pointerSegment.LengthInBytes / Storage<T>.SizeOfT)));
+		internal static Span<T> AsSpan<T>(this IMemoryPointer p, PointerSegment pointerSegment) where T : unmanaged => p.AsSpan<T>(checked(pointerSegment.OffsetInBytes / Const<T>.SizeT), checked((int)(pointerSegment.LengthInBytes / Const<T>.SizeT)));
 
 
 		public static readonly StorageLocation CpuAlone = new(LocationType.CpuRam, 0);
@@ -725,7 +726,7 @@ namespace Althea.Backend.Storage
 		{
 			memoryPointer = null; streamPointer = null;
 			// check first
-			if (!pointer.IsValid() || pointer.OffsetInBytes % Storage<T>.SizeOfT != 0 || pointer.LengthInBytes % Storage<T>.SizeOfT != 0)
+			if (!pointer.IsValid() || pointer.OffsetInBytes % Const<T>.SizeT != 0 || pointer.LengthInBytes % Const<T>.SizeT != 0)
 			{
 				if (@throw)
 					throw new ArgumentNullException(nameof(pointer));
@@ -748,7 +749,7 @@ namespace Althea.Backend.Storage
 			{
 				return NOT_SUPPORT;
 			}
-			return pointer.OffsetInBytes / Storage<T>.SizeOfT;
+			return pointer.OffsetInBytes / Const<T>.SizeT;
 		}
 
 		public static long GetPointerOffset(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) => GetPointerOffset<byte>(pointer, out memoryPointer, out streamPointer, @throw);

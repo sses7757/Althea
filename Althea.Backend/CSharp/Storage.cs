@@ -176,7 +176,7 @@ namespace Althea.Backend.CSharp.Storage
 			else if (sp is not null)
 			{
 				sp.NativeStream.Position = offset;
-				sp.NativeStream.SetValues(value, pointer.LengthInBytes / Storage<T>.SizeOfT);
+				sp.NativeStream.SetValues(value, pointer.LengthInBytes / Const<T>.SizeT);
 			}
 			return true;
 		}
@@ -292,7 +292,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long copied)
 		{
-			long srcLen = source.LengthInBytes / Storage<T>.SizeOfT, dstLen = destination.LengthInBytes / Storage<T>.SizeOfT;
+			long srcLen = source.LengthInBytes / Const<T>.SizeT, dstLen = destination.LengthInBytes / Const<T>.SizeT;
 			if (incrementSource <= 0 || incrementSource >= srcLen)
 				throw new ArgumentOutOfRangeException(nameof(incrementSource), incrementSource, Parameter.InvalidValue);
 			if (incrementDestination <= 0 || incrementDestination >= dstLen)
@@ -444,7 +444,7 @@ namespace Althea.Backend.CSharp.Storage
 				copied = 0; return false;
 			}
 
-			int copyLength = checked((int)Math.Min(source.LengthInBytes / Storage<T>.SizeOfT, destination.Length));
+			int copyLength = checked((int)Math.Min(source.LengthInBytes / Const<T>.SizeT, destination.Length));
 			copied = ToManaged(mp, sp, offset, destination, 0, copyLength);
 			return true;
 		}
@@ -457,7 +457,7 @@ namespace Althea.Backend.CSharp.Storage
 				copied = 0; return false;
 			}
 
-			int copyLength = checked((int)Math.Min(destination.LengthInBytes / Storage<T>.SizeOfT, values.Length));
+			int copyLength = checked((int)Math.Min(destination.LengthInBytes / Const<T>.SizeT, values.Length));
 			copied = FromManaged(mp, sp, offset, values, 0, copyLength);
 			return true;
 		}
@@ -477,7 +477,7 @@ namespace Althea.Backend.CSharp.Storage
 			if (start == NOT_SUPPORT)
 				return false;
 
-			if (leadDim * width > (source.Pointer.LengthInBytes - source.OffsetInBytes) / Storage<T>.SizeOfT)
+			if (leadDim * width > (source.Pointer.LengthInBytes - source.OffsetInBytes) / Const<T>.SizeT)
 				throw new ArgumentException(Parameter.WrongSize, nameof(source));
 			if (leadDim * width > destination.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
@@ -515,7 +515,7 @@ namespace Althea.Backend.CSharp.Storage
 			if (start == NOT_SUPPORT)
 				return false;
 
-			if (leadDim * width > (destination.Pointer.LengthInBytes - destination.OffsetInBytes) / Storage<T>.SizeOfT)
+			if (leadDim * width > (destination.Pointer.LengthInBytes - destination.OffsetInBytes) / Const<T>.SizeT)
 				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
 			if (leadDim * width > values.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(values));

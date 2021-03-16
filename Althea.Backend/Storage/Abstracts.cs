@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.Linq;
+using Althea.NativeTypes;
 using Althea.Resources;
 
 using MEM = Althea.Storage.AbstractApi;
@@ -178,7 +179,7 @@ namespace Althea.Backend.Storage
 		/// <typeparam name="T">any unmanaged data type</typeparam>
 		/// <returns>The default buffer size in bytes divisible by the size of <typeparamref name="T"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / Storage<T>.SizeOfT * Storage<T>.SizeOfT;
+		protected static int BufferSizeInBytes<T>() where T : unmanaged => (1 << 16) / Const<T>.SizeT * Const<T>.SizeT;
 
 		private static readonly Dictionary<Type, StorageLocation> cache_single_location = new();
 
@@ -198,7 +199,7 @@ namespace Althea.Backend.Storage
 			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
 
-			int bufferSize = BufferSizeInBytes<T>() / Storage<T>.SizeOfT;
+			int bufferSize = BufferSizeInBytes<T>() / Const<T>.SizeT;
 			if (this.CanTransferWithManaged)
 			{
 				int len = checked((int)length);

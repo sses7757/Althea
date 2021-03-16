@@ -37,6 +37,11 @@ namespace Althea.NativeTypes
 		public static readonly bool IsComplex = NativeTypeExtension.IsComplex<T>();
 
 		/// <summary>
+		/// Get the size of <typeparamref name="T"/> in memory in bytes
+		/// </summary>
+		public static readonly unsafe int SizeT = sizeof(T);
+
+		/// <summary>
 		/// Generic type constant
 		/// </summary>
 		public static readonly T
