@@ -178,7 +178,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 16)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
@@ -199,7 +199,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 16)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this.field)
@@ -487,7 +487,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 32)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
@@ -508,7 +508,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 32)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this.field)
@@ -796,7 +796,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 56)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
@@ -817,7 +817,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 56)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this.field)
@@ -1105,7 +1105,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 60)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
@@ -1126,7 +1126,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 60)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this.field)
@@ -1414,7 +1414,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 64)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
@@ -1435,7 +1435,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 64)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this.field)
@@ -1722,7 +1722,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 128)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();
@@ -1743,7 +1743,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void FromStruct<TStruct>(TStruct @struct, int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 128)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			fixed (void* t = &this.field)
@@ -2043,7 +2043,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TStruct ToStruct<TStruct>(int copyStart = 0) where TStruct : struct
 		{
-			int size = Marshal.SizeOf<TStruct>();
+			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 128)
 				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
 			var s = new TStruct();

@@ -140,7 +140,7 @@ namespace Althea.Arrays
 
 		#region general case
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long IncreasePos(Span<long> jaggedSize, Span<long> sizeProd, Span<long> position, int maxPosRankInd)
+		private static long IncreasePos(ReadOnlySpan<long> jaggedSize, ReadOnlySpan<long> sizeProd, Span<long> position, int maxPosRankInd)
 		{
 			long offset = 0;
 			position[0]++;
@@ -161,7 +161,7 @@ namespace Althea.Arrays
 		{
 			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
 			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
 			Span<long> position = stackalloc long[maxPosRankInd + 1];
 			long offset = 0;
 			while (true)
@@ -179,7 +179,7 @@ namespace Althea.Arrays
 		{
 			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
 			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
 			Span<long> position = stackalloc long[maxPosRankInd + 1];
 			long offset = 0;
 			while (true)
@@ -199,7 +199,7 @@ namespace Althea.Arrays
 		{
 			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
 			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
 			Span<long> position = stackalloc long[maxPosRankInd + 1];
 			long offset = 0;
 			while (true)
@@ -217,7 +217,7 @@ namespace Althea.Arrays
 		{
 			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
 			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			Span<long> sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
+			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
 			Span<long> position = stackalloc long[maxPosRankInd + 1];
 			long offset = 0;
 			while (true)
@@ -263,7 +263,7 @@ namespace Althea.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, TVal> action, TVal value)
+		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, TVal> action, TVal value, bool copyFirst = true)
 		{
 			// get jagged size
 			int orgRank = this.Rank;
@@ -281,13 +281,16 @@ namespace Althea.Arrays
 			}
 			else
 			{   // tensor algebra API fill and copy
+				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
 				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				// edit the temp array
-				action.Invoke(temp, value);
 				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
 									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				if (copyFirst)
+					TAD.Permute(thisWrapper, tempWrapper, identityPerm);
+				// edit the temp array
+				action.Invoke(temp, value);
 				// copy to this pitched array
-				TAD.Permute(tempWrapper, thisWrapper, stackalloc int[rank].FillWithRange(0));
+				TAD.Permute(tempWrapper, thisWrapper, identityPerm);
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -313,13 +316,71 @@ namespace Althea.Arrays
 			}
 			else
 			{   // tensor algebra API fill and copy
+				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
 				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				// edit the temp array
-				stridedAction.Invoke(temp, 1, value);
 				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
 									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				TAD.Permute(thisWrapper, tempWrapper, identityPerm);
+				// edit the temp array
+				stridedAction.Invoke(temp, 1, value);
 				// copy to this pitched array
-				TAD.Permute(tempWrapper, thisWrapper, stackalloc int[rank].FillWithRange(0));
+				TAD.Permute(tempWrapper, thisWrapper, identityPerm);
+			}
+		}
+
+		private enum CanUseTensorOp
+		{
+			AddScalar,
+			MultiplyScalar,
+			Conjugate
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, int, TVal> stridedAction, TVal value, CanUseTensorOp op)
+		{
+			// get jagged size
+			int orgRank = this.Rank;
+			Span<long> jaggedSize = stackalloc long[orgRank];
+			Span<long> jaggedOuterSize = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			// switch different cases
+			if (jaggedSize[0] == 1 && rank == 2)
+			{   // linear algebra API with given vector stride
+				stridedAction.Invoke(this.Storage, checked((int)jaggedOuterSize[0]), value);
+			}
+			else if (jaggedSize[1..].Prod() <= 1000)
+			{   // The estimate overhead of one API call is around 1 microsecond
+				// Typically, we do not want a total overhead larger than 1 millisecond
+				if (rank == 2)
+					this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], stridedAction, value);
+				else
+					this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, stridedAction, value);
+			}
+			else
+			{   // tensor algebra API fill and copy
+				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
+				if (op == CanUseTensorOp.AddScalar && value is T v1)
+				{
+					using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
+					// fill with scalar
+					MEM.FillWithValue(temp, v1);
+					// add to this
+					DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
+										  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, tempWrapper, identityPerm, thisWrapper, identityPerm, thisWrapper);
+				}
+				else if (op == CanUseTensorOp.MultiplyScalar && value is T v2)
+				{
+					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, scalar: v2);
+					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, thisWrapper, identityPerm, default, default, thisWrapper);
+				}
+				else if (op == CanUseTensorOp.Conjugate)
+				{
+					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, TensorAlgebra.UnaryOperation.Conjugate);
+					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, thisWrapper, identityPerm, default, default, thisWrapper);
+				}
+				else
+					throw new ArgumentOutOfRangeException(nameof(op), op, Resources.Parameter.InvalidValue);
 			}
 		}
 
@@ -376,7 +437,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				this.EditPitchedInPlace(pitched, MEM.FillWithValue, value);
+				this.EditPitchedInPlace(pitched, MEM.FillWithValue, value, copyFirst: false);
 			}
 		}
 
@@ -397,7 +458,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				this.EditPitchedInPlace(pitched, LAD.PointWiseAddScalar, value);
+				this.EditPitchedInPlace(pitched, LAD.PointWiseAddScalar, value, CanUseTensorOp.AddScalar);
 			}
 		}
 
@@ -418,7 +479,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				this.EditPitchedInPlace(pitched, LAD.Scale, value);
+				this.EditPitchedInPlace(pitched, LAD.Scale, value, CanUseTensorOp.MultiplyScalar);
 			}
 		}
 
@@ -438,7 +499,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				this.EditPitchedInPlace(pitched, static (s, i, _) => LAD.PointWiseConjugate(s, i), 0);
+				this.EditPitchedInPlace(pitched, static (s, i, _) => LAD.PointWiseConjugate(s, i), 0, CanUseTensorOp.Conjugate);
 			}
 		}
 

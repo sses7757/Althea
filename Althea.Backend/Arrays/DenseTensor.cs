@@ -272,14 +272,13 @@ namespace Althea.Backend.Arrays
 		/// <param name="overwrite">The tensor to be overwritten by the sub-tensor</param>
 		/// <example>If you want to get a sub-tensor of lower rank, there is a way to do so:<br/>
 		/// <code>
-		/// var size = stackalloc long[] { 100, 200 };
-		/// var sub = new <see cref="DenseTensor{T}"/>(storage, size);
 		/// var offsets = stackalloc long[] { 5, 50, 20, 0, 40 };
 		/// var lengths = stackalloc long[] { 1, 100, 1, 200, 1 };
-		/// var referencedSub = sub.<see cref="TensorReshape">Reshape</see>();
 		/// // the size of 'tensor' is { 10, 200, 50, 200, 60 }
-		/// tensor.<see cref="GetSlice(ReadOnlySpan{long}, ReadOnlySpan{long}, TensorBase{T})">GetSlice</see>(offsets, lengths, referencedSub);
-		/// // now the 'sub' contains the 
+		/// var sub = tensor.<see cref="GetSlice(ReadOnlySpan{long}, ReadOnlySpan{long})">GetSlice</see>(offsets, lengths);
+		/// var sizeWithoutOnes = stackalloc long[] { 100, 200 };
+		/// var refSub = sub.<see cref="TensorReshape(ReadOnlySpan{long})">Reshape</see>(sizeWithoutOnes);
+		/// // now, the 'refSub' (a <b>non</b>-referenced sub-tensor of 'tensor') contains the desired sub-tensor of lower rank
 		/// </code>
 		/// </example>
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
@@ -430,7 +429,54 @@ namespace Althea.Backend.Arrays
 		/// <returns>The reduction result as a new <see cref="DenseTensor{T}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public override DenseTensor<T> Reduce(TensorOrder order, T scalar);
+		public override DenseTensor<T> Reduce(TensorOrder order, T scalar)
+		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			// get reduction permutation
+			Span<int> reducePerm = stackalloc int[this.Rank];
+			reducePerm = order.GetIntSpanOrder(this, reducePerm, allowPartial: true);
+			// get output permutation
+			int outRank = this.Rank - reducePerm.Length;
+			Span<int> outPerm = stackalloc int[outRank];
+			reducePerm.ComplementSet(stackalloc int[this.Rank].FillWithRange(0), outPerm);
+			// get output members
+			if (outRank == 0)
+			{
+				Span<long> size = stackalloc long[] { 1 };
+				var storage = Storage<T>.Create(this.Storage[0].Location, 1);
+				try
+				{
+					var tensor = new DenseTensor<T>(storage, size, size);
+					TAD.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), new(tensor), reducePerm);
+					return tensor;
+				}
+				catch (Exception)
+				{
+					storage?.Dispose();
+					throw;
+				}
+			}
+			else
+			{
+				Span<long> size = stackalloc long[outRank];
+				Span<char> label = stackalloc char[outRank];
+				this.Size.ReOrderTo(size, outPerm);
+				this.Labels.ReOrderTo(label, outPerm);
+				var storage = Storage<T>.Create(this.Storage[0].Location, size.Prod());
+				try
+				{
+					var tensor = new DenseTensor<T>(storage, size, size, label);
+					TAD.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), new(tensor), reducePerm);
+					return tensor;
+				}
+				catch (Exception)
+				{
+					storage?.Dispose();
+					throw;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Compute the tensor permutation of this tensor under the given <paramref name="order"/>.
@@ -440,7 +486,67 @@ namespace Althea.Backend.Arrays
 		/// <returns>The permutation result as a new <see cref="DenseTensor{T}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public override DenseTensor<T> Permute(TensorOrder order, T scalar);
+		public override DenseTensor<T> Permute(TensorOrder order, T scalar)
+		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			// get permutation
+			int rank = this.Rank;
+			Span<int> perm = stackalloc int[rank];
+			perm = order.GetIntSpanOrder(this, perm, allowPartial: false);
+			// get output members
+			Span<long> size = stackalloc long[rank];
+			Span<char> label = stackalloc char[rank];
+			this.Size.ReOrderTo(size, perm);
+			this.Labels.ReOrderTo(label, perm);
+			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
+			try
+			{
+				var tensor = new DenseTensor<T>(storage, size, size, label);
+				TAD.Permute<T>(new(this, scalar: scalar), new(tensor), perm);
+				return tensor;
+			}
+			catch (Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.
+		/// </summary>
+		/// <param name="scalarThis">The scalar to multiply to this tensor</param>
+		/// <param name="other">The other tensor to perform the addition with</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> tensor</param>
+		/// <returns>The addition result as a new <see cref="DenseTensor{T}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="other"/> has different size than this one</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
+		public override DenseTensor<T> AddTensor(T scalarThis, TensorBase<T> other, T scalarOther)
+		{
+			if (scalarThis.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
+			if (scalarOther.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
+			if (other is not DenseTensor<T> dense)
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+
+			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
+			var alike = this.NewArrayAlike();
+			try
+			{
+				TAD.OperationBinary<T>(BinaryOperation.Addition, new(this, scalar: scalarThis), identityPerm, new(other, scalar: scalarOther), identityPerm, new(alike));
+				return alike;
+			}
+			catch (Exception)
+			{
+				alike?.Dispose();
+				throw;
+			}
+		}
 
 		/// <summary>
 		/// Compute the tensor contraction of this tensor and the <paramref name="other"/> tensor using their .
@@ -451,64 +557,132 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public override DenseTensor<T> Contract(TensorBase<T> other, T scalar);
+		public override DenseTensor<T> Contract(TensorBase<T> other, T scalar)
+		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			if (other is not DenseTensor<T> dense)
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
 
-		/// <summary>
-		/// Compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.
-		/// </summary>
-		/// <param name="scalarThis">The scalar to multiply to this tensor</param>
-		/// <param name="other">The other tensor to perform the contraction with</param>
-		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> tensor</param>
-		/// <returns>The addition result as a new <see cref="DenseTensor{T}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="other"/> has different size than this one</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
-		public override DenseTensor<T> AddTensor(T scalarThis, TensorBase<T> other, T scalarOther);
+		}
 		#endregion
 
 		#region in-place tensor operations
 		/// <summary>
-		/// Permute <paramref name="tensor"/> by <paramref name="order"/> and replace to this tensor
+		/// Permute <paramref name="tensor"/> by <paramref name="order"/> and overwrite the result to this tensor.
 		/// </summary>
-		/// <param name="tensor">The tensor to be permuted</param>
-		/// <param name="order">The new permutation <see cref="TensorOrder"/>, zero-based</param>
-		public void Permute(DenseTensor<T> tensor, TensorOrder order)
+		/// <param name="tensor">The <see cref="DenseTensor{T}"/> to be permuted</param>
+		/// <param name="order">The full permutation order as a <see cref="TensorOrder"/></param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="operation">The <see cref="UnaryOperation"/> to be applied to each element of the result tensor</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order; or the permutation cannot be performed due to incompatible size</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public void PermuteFrom(DenseTensor<T> tensor, TensorOrder order, T scalar, UnaryOperation operation = UnaryOperation.Identity)
 		{
-			
+			Span<int> perm = stackalloc int[this.Rank];
+			order.GetIntSpanOrder(tensor, perm);
+			TAD.Permute<T>(new(tensor, operation, scalar), new(this), perm);
 		}
 
 		/// <summary>
-		/// Partial reduction of tensor <paramref name="A"/>: $D_{\Pi^C(i_0,i_1,...,i_n)} = \alpha \Phi(\Psi_A(A_{\Pi^A(i_0,i_1,...,i_n)})) + \beta \Psi_C(C_{\Pi^C(i_0,i_1,...,i_n)})$. The missing indices of <paramref name="A"/> compared to <paramref name="C"/> will be aggregated according to <paramref name="reduction"/>.
+		/// Compute the tensor reduction of the given <paramref name="tensor"/> of the given <paramref name="order"/> and overwrite the result to this tensor.
 		/// </summary>
-		/// <param name="reduction">The reduce <see cref="BinaryOperation"/> <c>Φ</c></param>
-		/// <param name="α">scalar α</param>
-		/// <param name="opA"><see cref="UnaryOperation"/> <c>Ψ<sub>A</sub></c></param>
-		/// <param name="A"><see cref="DenseTensor{T}"/> A</param>
-		/// <param name="β">scalar β, default 0</param>
-		/// <param name="opC"><see cref="UnaryOperation"/> <c>Ψ<sub>C</sub></c>, default identity</param>
-		/// <param name="C"><see cref="DenseTensor{T}"/> C, default null</param>
-		/// <remarks>If <paramref name="C"/> is null, or <paramref name="β"/> is zero, this tensor itself will be used instead of <paramref name="C"/>.</remarks>
-		public void Reduce(BinaryOperation reduction, T α, UnaryOperation opA, DenseTensor<T> A, T β = default, UnaryOperation opC = UnaryOperation.Identity, DenseTensor<T> C = null)
+		/// <param name="tensor">The <see cref="DenseTensor{T}"/> to be reduced</param>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) of <paramref name="tensor"/> to sum, its order will be ignored</param>
+		/// <param name="unary">The <see cref="UnaryOperation"/> to be applied to each element of the <paramref name="tensor"/> before reduction</param>
+		/// <param name="reduction">The <see cref="BinaryOperation"/> used to indicate which reduction operation to use</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order; or the permutation cannot be performed due to incompatible size</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public void ReduceFrom(DenseTensor<T> tensor, TensorOrder order, T scalar, UnaryOperation unary = UnaryOperation.Identity, BinaryOperation reduction = BinaryOperation.Addition)
 		{
-			
+			Span<int> perm = stackalloc int[this.Rank];
+			perm = order.GetIntSpanOrder(tensor, perm, allowPartial: true);
+			TAD.Reduce<T>(reduction, new(tensor, unary, scalar), new(this), perm);
 		}
 
 		/// <summary>
-		/// Contract two tensors <paramref name="A"/> and <paramref name="B"/>: $\text{this}_{i_0,i_1,...,i_n} = \alpha \sum_{j_a = k_b}{A_{j_0,j_1,...,j_p} \cdot B_{k_0,k_1,...,k_q}} + \beta C_{i_0,i_1,...,i_n}$;
+		/// Compute the tensor contraction of the given tensors <paramref name="A"/> and <paramref name="B"/> and add the result to this tensor (scaled by <paramref name="scalarThis"/>) in-place.
 		/// </summary>
-		/// <param name="α">scalar α</param>
-		/// <param name="A"><see cref="DenseTensor{T}"/> A</param>
-		/// <param name="B"><see cref="DenseTensor{T}"/> B</param>
-		/// <param name="β">scalar β, default 0</param>
-		/// <param name="C"><see cref="DenseTensor{T}"/> C, default null means this</param>
-		/// <remarks>If <paramref name="C"/> is null, or <paramref name="β"/> is zero, this tensor itself will be used instead of <paramref name="C"/>.</remarks>
-		public void Contract(T α, DenseTensor<T> A, DenseTensor<T> B, T β = default, DenseTensor<T> C = null)
+		/// <param name="A">The first input tensor to perform the contraction</param>
+		/// <param name="B">The second input tensor to perform the contraction</param>
+		/// <param name="scalar">The scalar to multiply to the contraction result</param>
+		/// <param name="scalarThis">The scalar to multiply this tensor before addition</param>
+		/// <param name="unaryA">The <see cref="UnaryOperation"/> to be applied to each element of <paramref name="A"/> before contraction</param>
+		/// <param name="unaryB">The <see cref="UnaryOperation"/> to be applied to each element of <paramref name="B"/> before contraction</param>
+		/// <param name="unaryThis">The <see cref="UnaryOperation"/> to be applied to each element of this tensor before addition</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="A"/>'s labels indicate that it cannot contract with <paramref name="B"/>'s</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public void ContractFrom(T scalar, DenseTensor<T> A, DenseTensor<T> B, T scalarThis = default, UnaryOperation unaryA = UnaryOperation.Identity, UnaryOperation unaryB = UnaryOperation.Identity, UnaryOperation unaryThis = UnaryOperation.Identity)
 		{
-			
+			int concRank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> concA = stackalloc int[concRank], concB = stackalloc int[concRank];
+			Span<int> freeCA = stackalloc int[A.Rank - concRank], freeCB = stackalloc int[B.Rank - concRank];
+			TensorContractInfo info = new(A, B, this, concA, concB, freeCA, freeCB);
+			TAD.Contract<T>(new(A, unaryA, scalar), new(B, unaryB), new(this, unaryThis, scalarThis), info);
+		}
+
+		/// <summary>
+		/// Compute the tensor point-wise <paramref name="binary"/> operation of the given tensor <paramref name="orderA"/>(<paramref name="A"/>) and <paramref name="orderB"/>(<paramref name="B"/>) and overwrite the result to this tensor.
+		/// </summary>
+		/// <param name="binary">The <see cref="BinaryOperation"/> used to indicate which point-wise binary operation to use</param>
+		/// <param name="A">The left input tensor to perform the binary operation with, can be null</param>
+		/// <param name="B">The right input tensor to perform the binary operation with, can be null</param>
+		/// <param name="scalarA">The scalar to multiply to <paramref name="A"/> before the binary operation, can be 0</param>
+		/// <param name="scalarB">The scalar to multiply to <paramref name="B"/> before the binary operation, can be 0</param>
+		/// <param name="orderA">The full permutation order of <paramref name="A"/></param>
+		/// <param name="orderB">The full permutation order of <paramref name="B"/></param>
+		/// <param name="unaryA">The <see cref="UnaryOperation"/> to be applied to each element of <paramref name="A"/> before binary operation</param>
+		/// <param name="unaryB">The <see cref="UnaryOperation"/> to be applied to each element of <paramref name="B"/> before binary operation</param>
+		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or one of them has different size than this tensor</exception>
+		public void TensorBinaryOperation(BinaryOperation binary, DenseTensor<T>? A, DenseTensor<T>? B, T scalarA = default, T scalarB = default, TensorOrder orderA = default, TensorOrder orderB = default, UnaryOperation unaryA = UnaryOperation.Identity, UnaryOperation unaryB = UnaryOperation.Identity)
+		{
+			if (scalarA.IsZero())
+				A = null;
+			if (scalarB.IsZero())
+				B = null;
+			if (A is null && B is null)
+				throw new ArgumentException(Resources.Parameter.CannotAllNull);
+
+			Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
+			if (A is not null)
+				orderA.GetIntSpanOrder(A, permA);
+			if (B is not null)
+				orderB.GetIntSpanOrder(B, permB);
+			TAD.OperationBinary<T>(binary, new(A, unaryA, scalarA), permA, new(B, unaryB, scalarB), permB, new(this));
+		}
+		#endregion
+
+		#region IKrylovVector
+		T IKrylovVector<DenseTensor<T>, T>.Dot(DenseTensor<T> other)
+		{
+
+		}
+
+		void IKrylovVector<DenseTensor<T>, T>.AddBy(DenseTensor<T> other, T scalar)
+			=> this.TensorBinaryOperation(BinaryOperation.Addition, other, this, scalar, Const<T>.One);
+
+		/// <summary>
+		/// Replace this tensor's content with the <paramref name="other"/> tensor in-place.
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseTensor{T}"/> to replace from</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="InvalidOperationException">If this and <paramref name="other"/> have different sizes</exception>
+		public void ReplaceBy(DenseTensor<T> other)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+
+			TAD.Permute<T>(new(other), new(this), stackalloc int[this.Rank].FillWithRange(0));
 		}
 		#endregion
 
 		#region matrix operation and decompositions
+		/*
 		/// <summary>
 		/// Multiply this tensor as a matrix with the <paramref name="right"/> tensor as another matrix.
 		/// </summary>
@@ -716,6 +890,7 @@ namespace Althea.Backend.Arrays
 			ones.FillWithOnes();
 			BLAS.VectorAddBy(y: (DenseMatrix<T>)this.ToMatrix(this.Size[0]), x: ones, α: shift, strideY: (int)ones.Length + 1);
 		}
+		*/
 		#endregion
 
 		#region print

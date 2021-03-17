@@ -42,7 +42,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <summary>
 		/// The outer size (actual size of all dimensions) of this tensor as a <see cref="ReadOnlySpan{T}"/> of <typeparamref name="T"/>
 		/// </summary>
-		/// <remarks>If there is not pitch, <see cref="OuterSize"/> == <see cref="Size"/></remarks>
+		/// <remarks>If there is not pitch, <see cref="OuterSize"/> == <see cref="Size"/> (reference equals)</remarks>
 		public ReadOnlySpan<long> OuterSize {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_outerSize;
@@ -69,7 +69,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// </summary>
 		/// <returns>The invalidness of this wrapper</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsInvalid() => this.m_values is null || this.m_size.IsEmpty || this.m_outerSize.IsEmpty || this.m_size.Length != this.m_outerSize.Length || !this.m_values.IsValid();
+		public bool IsInvalid() => this.m_values is null || !this.m_values.IsValid() || this.m_size.IsEmpty || this.m_outerSize.IsEmpty || this.m_size.Length != this.m_outerSize.Length;
 
 		/// <summary>
 		/// Check whether this wrapper is an invalid one or not when it is an input parameter
@@ -105,8 +105,13 @@ namespace Althea.TensorAlgebra.Dense
 		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default 0 will be replaced by 1.</param>
 		/// <exception cref="ArgumentException">If <paramref name="tensor"/> is a <see cref="ISparseArray{T}"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(TensorBase<T> tensor, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
+		public DenseTensorWrapper(TensorBase<T>? tensor, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
 		{
+			if (tensor is null)
+			{
+				this = default; this.m_values = Storage<T>.Empty;
+				return;
+			}
 			if (tensor is ISparseArray<T>)
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(tensor));
 

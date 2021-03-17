@@ -57,46 +57,6 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Copy <paramref name="span"/> to <paramref name="destArray"/>.
-		/// </summary>
-		/// <typeparam name="T">The type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
-		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to be copied</param>
-		/// <param name="destArray">The destination array to be copied into</param>
-		/// <returns>The <paramref name="destArray"/></returns>
-		public static T[] CopyTo<T>(this ReadOnlySpan<T> span, T[] destArray)
-		{
-			if (span.Length != destArray.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
-
-			for (int i = 0; i < span.Length; i++)
-			{
-				destArray[i] = span[i];
-			}
-			return destArray;
-		}
-
-		/// <summary>
-		/// Copy <paramref name="span"/> to <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
-		/// <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> to be copied from</param>
-		/// <param name="array">The destination array to be copied into</param>
-		/// <param name="selector">The converter to each element</param>
-		/// <returns>The <paramref name="array"/></returns>
-		public static TOut[] CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, TOut[] array, Converter<TIn, TOut> selector)
-		{
-			if (span.Length != array.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
-
-			for (int i = 0; i < span.Length; i++)
-			{
-				array[i] = selector(span[i]);
-			}
-			return array;
-		}
-
-		/// <summary>
 		/// Copy <paramref name="span"/> to <paramref name="array"/>.
 		/// </summary>
 		/// <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
@@ -106,13 +66,7 @@ namespace Althea.Linq
 		/// <param name="selector">The converter to each element</param>
 		public static void CopyTo<TIn, TOut>(this Span<TIn> span, Span<TOut> array, Converter<TIn, TOut> selector)
 		{
-			if (span.Length != array.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
-
-			for (int i = 0; i < span.Length; i++)
-			{
-				array[i] = selector(span[i]);
-			}
+			CopyTo((ReadOnlySpan<TIn>)span, array, selector);
 		}
 
 		/// <summary>
@@ -144,14 +98,7 @@ namespace Althea.Linq
 		/// <returns>the maximum item</returns>
 		public static T Max<T>(this Span<T> list) where T : IComparable<T>
 		{
-			T maxVal = list[0];
-			for (int i = 0; i < list.Length; i++)
-			{
-				T val = list[i];
-				if (val.CompareTo(maxVal) > 0)
-					maxVal = val;
-			}
-			return maxVal;
+			return Max((ReadOnlySpan<T>)list);
 		}
 
 		/// <summary>
@@ -180,14 +127,7 @@ namespace Althea.Linq
 		/// <returns>the minimum item</returns>
 		public static T Min<T>(this Span<T> list) where T : IComparable<T>
 		{
-			T minVal = list[0];
-			for (int i = 0; i < list.Length; i++)
-			{
-				T val = list[i];
-				if (val.CompareTo(minVal) > 0)
-					minVal = val;
-			}
-			return minVal;
+			return Min((ReadOnlySpan<T>)list);
 		}
 
 		/// <summary>
@@ -211,103 +151,6 @@ namespace Althea.Linq
 
 		#region permutation
 		/// <summary>
-		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = result</c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
-		public static T[] ReOrder<T>(this IReadOnlyList<T> array, ReadOnlySpan<int> indices)
-		{
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
-			if (indices.Length == 0)
-				return array.ToArray();
-
-			var output = new T[indices.Length];
-			for (int i = 0; i < indices.Length; i++)
-			{
-				output[i] = array[indices[i]];
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
-		public static void ReOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, int[] indices)
-		{
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
-
-			if (indices is null || indices.Length == 0)
-			{
-				array.CopyTo(target);
-			}
-			else
-			{
-				for (int i = 0; i < indices.Length; i++)
-				{
-					target[i] = array[indices[i]];
-				}
-			}
-		}
-
-		/// <summary>
-		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
-		public static void ReOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, Span<int> indices)
-		{
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
-
-			if (indices.Length == 0)
-			{
-				array.CopyTo(target);
-			}
-			else
-			{
-				for (int i = 0; i < indices.Length; i++)
-				{
-					target[i] = array[indices[i]];
-				}
-			}
-		}
-
-		/// <summary>
-		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
-		public static void ReOrderTo<T>(this Span<T> array, Span<T> target, int[] indices)
-		{
-			if (indices is null || indices.Length == 0)
-			{
-				array.CopyTo(target);
-			}
-			else
-			{
-				for (int i = 0; i < indices.Length; i++)
-				{
-					target[i] = array[indices[i]];
-				}
-			}
-		}
-
-		/// <summary>
 		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
@@ -317,17 +160,7 @@ namespace Althea.Linq
 		/// <returns>the re-ordered array</returns>
 		public static void ReOrderTo<T>(this Span<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
-			if (indices.Length == 0)
-			{
-				array.CopyTo(target);
-			}
-			else
-			{
-				for (int i = 0; i < indices.Length; i++)
-				{
-					target[i] = array[indices[i]];
-				}
-			}
+			ReOrderTo((ReadOnlySpan<T>)array, target, indices);
 		}
 
 		/// <summary>
@@ -336,11 +169,11 @@ namespace Althea.Linq
 		/// <typeparam name="T">any type</typeparam>
 		/// <param name="array">The array to order</param>
 		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+		/// <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
 		/// <returns>the re-ordered array</returns>
-		public static void ReOrderTo<T>(this ReadOnlySpan<T> array, Span<T> target, int[] indices)
+		public static void ReOrderTo<T>(this ReadOnlySpan<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
-			if (indices is null || indices.Length == 0)
+			if (indices.IsEmpty)
 			{
 				array.CopyTo(target);
 			}
@@ -350,49 +183,6 @@ namespace Althea.Linq
 				{
 					target[i] = array[indices[i]];
 				}
-			}
-		}
-
-		/// <summary>
-		/// Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
-		public static void ReOrderTo<T>(this Span<T> array, T[] target, ReadOnlySpan<int> indices)
-		{
-			if (indices.Length == 0)
-			{
-				array.CopyTo(target);
-			}
-			else
-			{
-				for (int i = 0; i < indices.Length; i++)
-				{
-					target[i] = array[indices[i]];
-				}
-			}
-		}
-
-		/// <summary>
-		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-		public static void InverseOrderTo<T>(this Span<T> array, Span<T> target, int[] indices)
-		{
-			if (indices is null || indices.Length == 0)
-				throw new ArgumentNullException(nameof(indices));
-			if (indices.Length > array.Length || indices.Length > target.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
-
-			for (int i = 0; i < indices.Length; i++)
-			{
-				target[indices[i]] = array[i];
 			}
 		}
 
@@ -405,7 +195,19 @@ namespace Althea.Linq
 		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
 		public static void InverseOrderTo<T>(this Span<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
-			if (indices.Length == 0)
+			InverseOrderTo((ReadOnlySpan<T>)array, target, indices);
+		}
+
+		/// <summary>
+		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
+		/// </summary>
+		/// <typeparam name="T">any type</typeparam>
+		/// <param name="array">The array to order</param>
+		/// <param name="target">The array to put the reordered result</param>
+		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
+		public static void InverseOrderTo<T>(this ReadOnlySpan<T> array, Span<T> target, ReadOnlySpan<int> indices)
+		{
+			if (indices.IsEmpty)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Length > array.Length || indices.Length > target.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
@@ -417,90 +219,36 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-		public static void InverseOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, IReadOnlyList<int> indices)
-		{
-			if (array is null || array.Count == 0)
-				throw new ArgumentNullException(nameof(array));
-			if (indices is null || indices.Count == 0)
-				throw new ArgumentNullException(nameof(indices));
-			if (indices.Count > array.Count || indices.Count > target.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
-
-			for (int i = 0; i < indices.Count; i++)
-			{
-				target[indices[i]] = array[i];
-			}
-		}
-
-		/// <summary>
-		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-		public static void InverseOrderTo<T>(this IReadOnlyList<T> array, Span<T> target, ReadOnlySpan<int> indices)
-		{
-			if (array is null || array.Count == 0)
-				throw new ArgumentNullException(nameof(array));
-			if (indices.Length == 0)
-				throw new ArgumentNullException(nameof(indices));
-			if (indices.Length > array.Count || indices.Length > target.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
-
-			for (int i = 0; i < indices.Length; i++)
-			{
-				target[indices[i]] = array[i];
-			}
-		}
-
-		/// <summary>
-		/// Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to order</param>
-		/// <param name="target">The array to put the reordered result</param>
-		/// <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-		public static void InverseOrderTo<T>(this Span<T> array, T[] target, ReadOnlySpan<int> indices)
-		{
-			if (array.Length == 0)
-				throw new ArgumentNullException(nameof(array));
-			if (indices.Length == 0)
-				throw new ArgumentNullException(nameof(indices));
-			if (indices.Length > array.Length || indices.Length > target.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
-
-			for (int i = 0; i < indices.Length; i++)
-			{
-				target[indices[i]] = array[i];
-			}
-		}
-
-		/// <summary>
-		/// Find the permutation order such that <c><paramref name="array"/>[result] = <paramref name="target"/></c>
+		/// Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
 		/// </summary>
 		/// <typeparam name="T">any type</typeparam>
 		/// <param name="array">The array before permutation</param>
 		/// <param name="target">The array after the permutation</param>
 		/// <param name="perm">The result permutation order to put in as a <see cref="Span{T}"/>, may be overwritten by undesired values if there is no such permutation</param>
 		/// <returns>success or not</returns>
-		public static bool FindPermutationTo<T>(this IReadOnlyList<T> array, IReadOnlyList<T> target, Span<int> perm)
+		public static bool FindPermutationTo<T>(this Span<T> array, ReadOnlySpan<T> target, Span<int> perm) where T : IEquatable<T>
 		{
-			if (array is null)
+			return FindPermutationTo((ReadOnlySpan<T>)array, target, perm);
+		}
+
+		/// <summary>
+		/// Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
+		/// </summary>
+		/// <typeparam name="T">any type</typeparam>
+		/// <param name="array">The array before permutation</param>
+		/// <param name="target">The array after the permutation</param>
+		/// <param name="perm">The result permutation order to put in as a <see cref="Span{T}"/>, may be overwritten by undesired values if there is no such permutation</param>
+		/// <returns>success or not</returns>
+		public static bool FindPermutationTo<T>(this ReadOnlySpan<T> array, ReadOnlySpan<T> target, Span<int> perm) where T : IEquatable<T>
+		{
+			if (array.IsEmpty)
 				throw new ArgumentNullException(nameof(array));
-			if (target is null || target.Count == 0)
+			if (target.IsEmpty)
 				throw new ArgumentNullException(nameof(target));
 
-			var arr = array.ToArray();
-			for (int i = 0; i < target.Count; i++)
+			for (int i = 0; i < target.Length; i++)
 			{
-				perm[i] = Array.IndexOf(arr, target[i]);
+				perm[i] = array.IndexOf(target[i]);
 				if (perm[i] < 0)
 					return false;
 			}
@@ -508,16 +256,28 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Find the inverse permutation of <paramref name="perm"/> such that <c>perm[result] == result[perm] == identity permutation</c>
+		/// Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
 		/// </summary>
 		/// <param name="perm">The input permutation</param>
-		/// <param name="inv">The inverse permutation to put in</param>
-		public static void InversePermutationTo(this IReadOnlyList<int> perm, Span<int> inv)
+		/// <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
+		public static void InversePermutationTo(this Span<int> perm, Span<int> inv)
 		{
-			if (perm is null || perm.Count > inv.Length)
-				throw new ArgumentNullException(nameof(perm));
+			InversePermutationTo((ReadOnlySpan<int>)perm, inv);
+		}
 
-			for (int i = 0; i < perm.Count; i++)
+		/// <summary>
+		/// Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
+		/// </summary>
+		/// <param name="perm">The input permutation</param>
+		/// <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
+		public static void InversePermutationTo(this ReadOnlySpan<int> perm, Span<int> inv)
+		{
+			if (perm.IsEmpty)
+				throw new ArgumentNullException(nameof(perm));
+			if (perm.Length != inv.Length)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(inv));
+
+			for (int i = 0; i < perm.Length; i++)
 			{
 				inv[perm[i]] = i;
 			}
@@ -533,41 +293,9 @@ namespace Althea.Linq
 		/// <param name="init">The initial value</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static Span<T> AccumulateSum<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		public static ReadOnlySpan<T> AccumulateSum<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-			if (result.Length < list.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(result));
-
-			int len = list.Length;
-			if (result.Length > len)
-			{
-				result[0] = init;
-				for (int i = 0; i < len; i++)
-				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
-				}
-				return result;
-			}
-			// else
-			if (inclusive)
-			{
-				result[0] = init; len--;
-				for (int i = 0; i < len; i++)
-				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
-				}
-			}
-			else
-			{
-				result[0] = Const<T>.AddDelegate.Invoke(init, list[0]);
-				for (int i = 1; i < len; i++)
-				{
-					result[i] = Const<T>.AddDelegate.Invoke(list[i], result[i - 1]);
-				}
-			}
-			return result[..list.Length];
+			return AccumulateSum((ReadOnlySpan<T>)list, result, init, inclusive);
 		}
 
 		/// <summary>
@@ -578,43 +306,9 @@ namespace Althea.Linq
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static Span<T> AccumulateProd<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-			if (result.Length < list.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(result));
-			if (init.IsZero())
-				init = Const<T>.One;
-
-			int len = list.Length;
-			if (result.Length > len)
-			{
-				result[0] = init;
-				for (int i = 0; i < len; i++)
-				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
-				}
-				return result;
-			}
-			// else
-			if (inclusive)
-			{
-				result[0] = init; len--;
-				for (int i = 0; i < len; i++)
-				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
-				}
-			}
-			else
-			{
-				result[0] = Const<T>.MultiplyDelegate.Invoke(init, list[0]);
-				for (int i = 1; i < len; i++)
-				{
-					result[i] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i - 1]);
-				}
-			}
-			return result[..list.Length];
+			return AccumulateProd((ReadOnlySpan<T>)list, result, init, inclusive);
 		}
 
 		/// <summary>
@@ -624,16 +318,7 @@ namespace Althea.Linq
 		/// <returns>The summation result</returns>
 		public static T Sum<T>(this Span<T> list) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-
-			int len = list.Length;
-			T result = list[0];
-			for (int i = 1; i < len; i++)
-			{
-				result = Const<T>.AddDelegate.Invoke(list[i], result);
-			}
-			return result;
+			return Sum((ReadOnlySpan<T>)list);
 		}
 
 		/// <summary>
@@ -643,16 +328,7 @@ namespace Althea.Linq
 		/// <returns>The product result</returns>
 		public static T Prod<T>(this Span<T> list) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-
-			int len = list.Length;
-			T result = list[0];
-			for (int i = 1; i < len; i++)
-			{
-				result = Const<T>.MultiplyDelegate.Invoke(list[i], result);
-			}
-			return result;
+			return Prod((ReadOnlySpan<T>)list);
 		}
 
 		/// <summary>
@@ -663,16 +339,7 @@ namespace Althea.Linq
 		/// <returns>The summation result</returns>
 		public static T Sum<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-
-			int len = list.Length;
-			T result = selector.Invoke(list[0]);
-			for (int i = 1; i < len; i++)
-			{
-				result = Const<T>.AddDelegate.Invoke(selector.Invoke(list[i]), result);
-			}
-			return result;
+			return Sum((ReadOnlySpan<TOrg>)list, selector);
 		}
 
 		/// <summary>
@@ -683,16 +350,7 @@ namespace Althea.Linq
 		/// <returns>The product result</returns>
 		public static T Prod<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-
-			int len = list.Length;
-			T result = selector.Invoke(list[0]);
-			for (int i = 1; i < len; i++)
-			{
-				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(list[i]), result);
-			}
-			return result;
+			return Prod((ReadOnlySpan<TOrg>)list, selector);
 		}
 		#endregion
 
@@ -878,12 +536,7 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static int IndexOf<T>(this Span<T> span, Predicate<T> predicator)
 		{
-			for (int i = 0; i < span.Length; i++)
-			{
-				if (predicator(span[i]))
-					return i;
-			}
-			return -1;
+			return IndexOf((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
@@ -912,12 +565,7 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static int LastIndexOf<T>(this Span<T> span, Predicate<T> predicator)
 		{
-			for (int i = span.Length - 1; i >= 0; i--)
-			{
-				if (predicator(span[i]))
-					return i;
-			}
-			return -1;
+			return LastIndexOf((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
@@ -948,12 +596,7 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this Span<T> span, Predicate<T> predicator)
 		{
-			for (int i = 0; i < span.Length; i++)
-			{
-				if (!predicator(span[i]))
-					return false;
-			}
-			return true;
+			return All((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
@@ -982,12 +625,7 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this Span<T> span, Predicate<T> predicator)
 		{
-			for (int i = 0; i < span.Length; i++)
-			{
-				if (predicator(span[i]))
-					return true;
-			}
-			return false;
+			return Any((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
@@ -1006,30 +644,81 @@ namespace Althea.Linq
 			}
 			return false;
 		}
-
-		/// <summary>
-		/// Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
-		/// </summary>
-		/// <typeparam name="T">data type</typeparam>
-		/// <param name="list">The list to compare</param>
-		/// <param name="other">The other list to compare</param>
-		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual<T>(this Span<T> list, IReadOnlyList<T> other) where T : IEquatable<T>
-		{
-			if (other is null)
-				return true;
-			if (list.Length != other.Count)
-				return false;
-			for (int i = 0; i < list.Length; i++)
-			{
-				if (!list[i].Equals(other[i]))
-					return false;
-			}
-			return true;
-		}
 		#endregion
 
 		#region converter
+		/// <summary>
+		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to copy from</param>
+		/// <returns>The created <typeparamref name="TStruct"/></returns>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TStruct ToStruct<T, TStruct>(this Span<T> span) where T : unmanaged where TStruct : struct
+		{
+			return ToStruct<T, TStruct>((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <returns>The created <typeparamref name="TStruct"/></returns>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TStruct ToStruct<T, TStruct>(this ReadOnlySpan<T> span) where T : unmanaged where TStruct : struct
+		{
+			span.ToStruct(out TStruct s);
+			return s;
+		}
+
+		/// <summary>
+		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="struct">The output <typeparamref name="TStruct"/></param>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void ToStruct<T, TStruct>(this ReadOnlySpan<T> span, out TStruct @struct) where T : unmanaged where TStruct : struct
+		{
+			int size = Unsafe.SizeOf<TStruct>();
+			if (size > span.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+			@struct = default;
+			fixed (void* t = &span.Ref())
+			{
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref @struct), t, (uint)size);
+			}
+		}
+
+		/// <summary>
+		/// Copy the values in <paramref name="struct"/> to <paramref name="span"/> byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The input struct type</typeparam>
+		/// <param name="span">The span to copy to</param>
+		/// <param name="struct">The structure to copy</param>
+		/// <returns>The <paramref name="span"/></returns>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Span<T> FromStruct<T, TStruct>(this Span<T> span, TStruct @struct) where T : unmanaged where TStruct : struct
+		{
+			int size = Unsafe.SizeOf<TStruct>();
+			if (size > span.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+			fixed (void* t = &span[0])
+			{
+				Unsafe.CopyBlock(t, Unsafe.AsPointer(ref @struct), (uint)size);
+			}
+			return span;
+		}
+
 		/// <summary>
 		/// Set the first element of <see cref="Span{T}"/> to the given <paramref name="value"/>
 		/// </summary>
@@ -1055,13 +744,10 @@ namespace Althea.Linq
 		/// <param name="value1">The first value of type <typeparamref name="T"/></param>
 		/// <param name="value2">The second value of type <typeparamref name="T"/></param>
 		/// <returns>The <paramref name="span"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2)
 		{
-			if (span.IsEmpty)
-				throw new ArgumentNullException(nameof(span));
 			if (span.Length < 2)
 				throw new ArgumentException(Parameter.WrongSize, nameof(span));
 			span[0] = value1; span[1] = value2;
@@ -1078,14 +764,11 @@ namespace Althea.Linq
 		/// <param name="value2">The second value of type <typeparamref name="T"/></param>
 		/// <param name="value3">The third value of type <typeparamref name="T"/></param>
 		/// <returns>The <paramref name="span"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="span"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2, T value3)
 		{
-			if (span.IsEmpty)
-				throw new ArgumentNullException(nameof(span));
-			if (span.Length < 2)
+			if (span.Length < 3)
 				throw new ArgumentException(Parameter.WrongSize, nameof(span));
 			span[0] = value1; span[1] = value2; span[2] = value3;
 			return span;
@@ -1184,41 +867,16 @@ namespace Althea.Linq
 			return MemoryMarshal.Cast<TFrom, TTo>(span);
 		}
 
-		// Ignore Spelling: stackalloc
 		/// <summary>
-		/// Cast the given <paramref name="span"/> of <see cref="IntPtr"/> to a <see cref="Span{T}"/> of reference-type <typeparamref name="T"/>
+		/// Get the hash code of an span using CRC method
 		/// </summary>
-		/// <typeparam name="T">The reference type to cast to</typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> of <see cref="IntPtr"/> to cast from</param>
-		/// <returns>The <see cref="Span{T}"/> of reference-type <typeparamref name="T"/> casted from <paramref name="span"/></returns>
-		/// <example>
-		/// <code>
-		/// Span&lt;IntPtr&gt; span = stackalloc IntPtr[5];<br/>
-		/// Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
-		/// </code>
-		/// </example>
+		/// <typeparam name="T">any struct</typeparam>
+		/// <param name="span">span to get hash code</param>
+		/// <returns>the hash code of <paramref name="span"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<T> AsReferenceType<T>(this Span<IntPtr> span) where T : class
+		public static int HashCodeOfSpan<T>(this Span<T> span) where T : struct
 		{
-			return MemoryMarshal.CreateSpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
-		}
-
-		/// <summary>
-		/// Cast the given <paramref name="span"/> of <see cref="IntPtr"/> to a <see cref="Span{T}"/> of reference-type <typeparamref name="T"/>
-		/// </summary>
-		/// <typeparam name="T">The reference type to cast to</typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> of <see cref="IntPtr"/> to cast from</param>
-		/// <returns>The <see cref="Span{T}"/> of reference-type <typeparamref name="T"/> casted from <paramref name="span"/></returns>
-		/// <example>
-		/// <code>
-		/// Span&lt;IntPtr&gt; span = stackalloc IntPtr[5];<br/>
-		/// Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
-		/// </code>
-		/// </example>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<T> AsReferenceType<T>(this ReadOnlySpan<IntPtr> span) where T : class
-		{
-			return MemoryMarshal.CreateSpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
+			return HashCodeOfSpan((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
@@ -1250,15 +908,7 @@ namespace Althea.Linq
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this Span<T> span) where T : IEquatable<T>
 		{
-			var res = new List<T>(span.Length);
-			for (int i = 0; i < span.Length; i++)
-			{
-				if (!res.Contains(span[i]))
-					res.Add(span[i]);
-				else
-					return false;
-			}
-			return true;
+			return ElementsUnique((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
@@ -1286,6 +936,17 @@ namespace Althea.Linq
 		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="set">set to get hash code</param>
 		/// <returns>the hash code of <paramref name="set"/></returns>
+		public static int HashCodeOfSet<T>(this Span<T> set) where T : struct
+		{
+			return HashCodeOfSet((ReadOnlySpan<T>)set);
+		}
+
+		/// <summary>
+		/// Get the hash code of a set (order-independent) using ADD method
+		/// </summary>
+		/// <typeparam name="T">any struct</typeparam>
+		/// <param name="set">set to get hash code</param>
+		/// <returns>the hash code of <paramref name="set"/></returns>
 		public static int HashCodeOfSet<T>(this ReadOnlySpan<T> set) where T : struct
 		{
 			if (set.IsEmpty)
@@ -1303,18 +964,9 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="list">list to pick</param>
 		/// <returns>the number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount(this Span<int> list)
+		public static int DistinctCount<T>(this Span<T> list) where T : unmanaged, IEquatable<T>
 		{
-			if (list.Length <= 1)
-				return list.Length;
-			Span<int> temp = stackalloc int[list.Length];
-			int now = 0;
-			for (int i = 0; i < list.Length; i++)
-			{
-				if (!temp.Slice(0, now).Contains(list[i]))
-					temp[now++] = list[i];
-			}
-			return now;
+			return DistinctCount((ReadOnlySpan<T>)list);
 		}
 
 		/// <summary>
@@ -1322,18 +974,70 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="list">list to pick</param>
 		/// <returns>the number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount(this ReadOnlySpan<int> list)
+		public static int DistinctCount<T>(this ReadOnlySpan<T> list) where T : unmanaged, IEquatable<T>
 		{
 			if (list.Length <= 1)
 				return list.Length;
-			Span<int> temp = stackalloc int[list.Length];
+			Span<T> temp = stackalloc T[list.Length];
+			Span<T> slice = temp.Slice(0, 0);
 			int now = 0;
 			for (int i = 0; i < list.Length; i++)
 			{
-				if (!temp.Slice(0, now).Contains(list[i]))
+				if (!slice.Contains(list[i]))
+				{
 					temp[now++] = list[i];
+					slice = temp.Slice(0, now);
+				}
 			}
 			return now;
+		}
+
+
+		/// <summary>
+		/// Compute the complement set of <paramref name="span"/> compared to <paramref name="fullSet"/> and store the result in <paramref name="complement"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The set whose complement set will be obtained</param>
+		/// <param name="fullSet">The full set</param>
+		/// <param name="complement">The output complement set</param>
+		/// <exception cref="ArgumentException">If <paramref name="span"/> or <paramref name="fullSet"/> is not a set; or the lengths are incompatible</exception>
+		public static void ComplementSet<T>(this Span<T> span, ReadOnlySpan<T> fullSet, Span<T> complement) where T : IEquatable<T>
+		{
+			ComplementSet((ReadOnlySpan<T>)span, fullSet, complement);
+		}
+
+		/// <summary>
+		/// Compute the complement set of <paramref name="span"/> compared to <paramref name="fullSet"/> and store the result in <paramref name="complement"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The set whose complement set will be obtained</param>
+		/// <param name="fullSet">The full set</param>
+		/// <param name="complement">The output complement set</param>
+		/// <exception cref="ArgumentException">If <paramref name="span"/> or <paramref name="fullSet"/> is not a set; or the lengths are incompatible</exception>
+		public static void ComplementSet<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> fullSet, Span<T> complement) where T : IEquatable<T>
+		{
+			if (fullSet.Length < span.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(fullSet));
+			if (fullSet.Length == span.Length)
+				return;
+			if (complement.Length != fullSet.Length - span.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(complement));
+			// shortcut
+			if (span.IsEmpty)
+			{
+				fullSet.CopyTo(complement);
+			}
+			// else
+			int now = 0;
+			for (int i = 0; i < fullSet.Length; i++)
+			{
+				if (!span.Contains(fullSet[i]))
+				{
+					complement[now++] = fullSet[i];
+				}
+			}
+			if (now != complement.Length)
+				throw new ArgumentException(Parameter.DuplicateValue);
 		}
 		#endregion
 

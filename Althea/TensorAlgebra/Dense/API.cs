@@ -96,17 +96,19 @@ namespace Althea.TensorAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Compute the point-wise binary operation for input <paramref name="left"/> and <paramref name="right"/> tensors and stored the result to the <paramref name="destination"/> tensor
+		/// Compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="binary">The <see cref="BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
 		/// <param name="left">The left input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
+		/// <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
+		/// <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/>, its <see cref="DenseTensorWrapper{T}.Operation"/> and <see cref="DenseTensorWrapper{T}.Scalar"/> are ignored.</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentException">If the given tensors have different sizes; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
-		public static void OperationBinary<T>(BinaryOperation binary, DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination) where T : unmanaged
+		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
+		public static void OperationBinary<T>(BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination) where T : unmanaged
 		{
 			bool leftValid = !left.IsInputInvalid(), rightValid = !right.IsInputInvalid();
 			if (!leftValid && !rightValid)
@@ -126,7 +128,7 @@ namespace Althea.TensorAlgebra.Dense
 						 a.IsSupportedTensorBinary(location1 ?? location2 ?? default, location3) :
 						 a.IsSupportedTensorTrinary(location1.Value, location2.Value, location3),
 					node);
-				success = node.Value.OperationBinary_(binary, left, right, destination);
+				success = node.Value.OperationBinary_(binary, left, leftPerm, right, rightPerm, destination);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -201,17 +203,19 @@ namespace Althea.TensorAlgebra.Dense
 		protected abstract bool Permute_<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="left"/> and <paramref name="right"/> tensors and stored the result to the <paramref name="destination"/> tensor
+		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="binary">The <see cref="BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
 		/// <param name="left">The left input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
+		/// <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
+		/// <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/>, its <see cref="DenseTensorWrapper{T}.Operation"/> and <see cref="DenseTensorWrapper{T}.Scalar"/> are ignored.</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentException">If the given tensors have different sizes; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
-		protected abstract bool OperationBinary_<T>(BinaryOperation binary, DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination) where T : unmanaged;
+		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
+		protected abstract bool OperationBinary_<T>(BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>

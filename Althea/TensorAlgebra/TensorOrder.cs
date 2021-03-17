@@ -28,13 +28,23 @@ namespace Althea.TensorAlgebra
 
 		#region static
 		/// <summary>
-		/// The identity permutation
+		/// The identity permutation (in fact this is the default value)
 		/// </summary>
-		public static TensorOrder Identity { get => new(new ValueTuple<Range>(Range.All)); }
+		public static TensorOrder Identity => default;
 
 		private const short MAX_RANK = 64 / (2 + 2);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static short ToShort(Index index) => checked((short)(index.IsFromEnd ? ~index.Value : index.Value));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int FromShort(short s, int rank)
+		{
+			int offset = s < 0 ? rank + s + 1 : s;
+			if (offset >= rank || offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(s), s, Parameter.InvalidValue);
+			return offset;
+		}
 		#endregion
 
 		#region initialize and clone
@@ -112,20 +122,14 @@ namespace Althea.TensorAlgebra
 		/// <exception cref="ArgumentException">If the length of <paramref name="indices"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="indices"/></exception>
 		public TensorOrder(params Index[] indices)
 		{
-			if (indices.Length > 128 / 8)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
-
-			this.order = new FixedBuffer_64<(short, OrderType)>();
-			for (int i = 0; i < indices.Length; i++)
+			Span<int> inds = stackalloc int[indices.Length];
+			for (int i = 0; i < inds.Length; i++)
 			{
-				var id = indices[i];
-				var newOne = (ToShort(id), OrderType.Index);
-				// check
-				if (this.order.Contains(newOne))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(indices));
-				else
-					this.order[i] = newOne;
+				inds[i] = indices[i].Value;
+				if (indices[i].IsFromEnd)
+					inds[i] = ~inds[i];
 			}
+			this = new(inds);
 		}
 
 		/// <summary>
@@ -134,20 +138,51 @@ namespace Althea.TensorAlgebra
 		/// <param name="chars">The permutation order as an array of <see cref="char"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="chars"/></exception>
-		public TensorOrder(params char[] chars)
+		public TensorOrder(params char[] chars) : this((ReadOnlySpan<char>)chars) { }
+
+		/// <summary>
+		/// Create an order from a given (zero-based) permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
+		/// </summary>
+		/// <param name="indices">The zero-based permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="indices"/> is null or of zero length</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="indices"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="indices"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any element in <paramref name="indices"/> is larger than 16</exception>
+		public TensorOrder(ReadOnlySpan<int> indices)
 		{
-			if (chars.Length > 128 / 8)
+			if (indices.Length > MAX_RANK)
+				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
+			if (!indices.ElementsUnique())
+				throw new ArgumentException(Parameter.DuplicateIndices, nameof(indices));
+
+			this.order = new FixedBuffer_64<(short, OrderType)>();
+			for (int i = 0; i < indices.Length; i++)
+			{
+				var id = indices[i];
+				if (id >= MAX_RANK)
+					throw new ArgumentOutOfRangeException(nameof(indices), id, Parameter.InvalidValue);
+				var newOne = ((short)id, OrderType.Index);
+				this.order[i] = newOne;
+			}
+		}
+
+		/// <summary>
+		/// Create an order from a given permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
+		/// </summary>
+		/// <param name="chars">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="chars"/></exception>
+		public TensorOrder(ReadOnlySpan<char> chars)
+		{
+			if (chars.Length > MAX_RANK)
 				throw new ArgumentException(Parameter.WrongSize, nameof(chars));
+			if (!chars.ElementsUnique())
+				throw new ArgumentException(Parameter.DuplicateIndices, nameof(chars));
 
 			this.order = new FixedBuffer_64<(short, OrderType)>();
 			for (int i = 0; i < chars.Length; i++)
 			{
 				var newOne = ((short)chars[i], OrderType.Char);
-				// check
-				if (this.order.Contains(newOne))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(chars));
-				else
-					this.order[i] = newOne;
+				this.order[i] = newOne;
 			}
 		}
 
@@ -169,6 +204,7 @@ namespace Althea.TensorAlgebra
 		/// <param name="allowPartial">Whether to allow the actual permutation order to be a partial order one or not, default false</param>
 		/// <param name="outputPermutation">The preallocated <see cref="Span{T}"/> of <see cref="int"/> used to store the output the permutation order</param>
 		/// <returns>The output the permutation order which is the first actual rank elements of <paramref name="outputPermutation"/></returns>
+		/// <remarks>If this <see cref="TensorOrder"/> is a default value, an identity permutation will be returned</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> or its <see cref="ITensor.Labels"/> is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="tensor"/>.<see cref="ITensor.Rank">Rank</see> is too small or <paramref name="tensor"/>.<see cref="ITensor.Labels">Label</see> does not contain all of the <see cref="char"/> label(s) of this <see cref="TensorOrder"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="tensor"/> leads to duplicated result permutation order</exception>
@@ -186,6 +222,10 @@ namespace Althea.TensorAlgebra
 			if (label.Length != rank)
 				throw new ArgumentNullException(nameof(tensor));
 
+			// shortcut
+			if (length == 0)
+				return outputPermutation.FillWithRange(0);
+
 			// fill the output permutation
 			var orderSpan = this.order.AsSpan();
 			int actualRank = 0;
@@ -196,9 +236,7 @@ namespace Althea.TensorAlgebra
 				switch (item.Item2)
 				{
 					case OrderType.Index:
-						var offset = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
-						if (offset >= rank || offset < 0)
-							throw new ArgumentOutOfRangeException(nameof(tensor), rank, Parameter.InvalidValue);
+						var offset = FromShort(item.Item1, rank);
 						outputPermutation[actualRank++] = offset;
 						break;
 					case OrderType.Char:
@@ -211,10 +249,10 @@ namespace Althea.TensorAlgebra
 						outputPermutation[actualRank++] = int.MaxValue; // a place holder
 						break;
 					case OrderType.RangeStart:
-						rangeStart = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
+						rangeStart = FromShort(item.Item1, rank);
 						break;
 					case OrderType.RangeEnd:
-						int rangeEnd = new Index(item.Item1, item.Item1 < 0).GetOffset(rank);
+						int rangeEnd = FromShort(item.Item1, rank);
 						if (rangeEnd <= rangeStart)
 							throw new ArgumentOutOfRangeException(nameof(tensor), rank, Parameter.InvalidValue);
 						int count = rangeEnd - rangeStart;
@@ -306,46 +344,58 @@ namespace Althea.TensorAlgebra
 		#region converters
 		#region repetitive int tuple converters
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from span. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int> tuple) => new(tuple);
+		/// <param name="span">The general span to indicate the permutation order</param>
+		public static implicit operator TensorOrder(Span<int> span) => new(span);
+
+		/// <summary>
+		/// Implicitly convert from span. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// </summary>
+		/// <param name="span">The general span to indicate the permutation order</param>
+		public static implicit operator TensorOrder(ReadOnlySpan<int> span) => new(span);
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<int, int> tuple) => new(stackalloc int[2].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<int, int, int> tuple) => new(stackalloc int[3].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<int, int, int, int> tuple) => new(stackalloc int[4].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int> tuple) => new(stackalloc int[5].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int> tuple) => new(stackalloc int[6].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int, int> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int> tuple) => new(stackalloc int[7].FromStruct(tuple));
+
+		/// <summary>
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// </summary>
+		/// <param name="tuple">The general tuple to indicate the permutation order</param>
+		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int, int> tuple) => new(stackalloc int[8].FromStruct(tuple));
 		#endregion
 
 		#region repetitive char tuple converters
@@ -353,43 +403,43 @@ namespace Althea.TensorAlgebra
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char> tuple) => new(stackalloc char[2].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char, char> tuple) => new(stackalloc char[3].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char, char, char> tuple) => new(stackalloc char[4].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char> tuple) => new(stackalloc char[5].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char> tuple) => new(stackalloc char[6].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char> tuple) => new(stackalloc char[7].FromStruct(tuple));
 
 		/// <summary>
 		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, char> tuple) => new(tuple);
+		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, char> tuple) => new(stackalloc char[8].FromStruct(tuple));
 		#endregion
 
 		#region repetitive int and range tuple converters
@@ -491,7 +541,7 @@ namespace Althea.TensorAlgebra
 		/// Implicitly convert from <see cref="int"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
 		/// </summary>
 		/// <param name="order">The <see cref="int"/> array to indicate the permutation order</param>
-		public static implicit operator TensorOrder(int[] order) => new(order.Select(static o => (Index)o).ToArray());
+		public static implicit operator TensorOrder(int[] order) => new(order);
 
 		/// <summary>
 		/// Implicitly convert from <see cref="char"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
