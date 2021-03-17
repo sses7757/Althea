@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -23,8 +22,19 @@ namespace Althea.Helpers
 		}
 
 		// TODO: move to native codes?
-		private static readonly double	doublePrecision13 = Math.Pow(General.Common.DoubleMachinePrecision, 1.0 / 3),
-										singlePrecision23 = Math.Pow(General.Common.SingleMachinePrecision, 2.0 / 3);
+
+		/// <summary>
+		/// Double float type machine precision
+		/// </summary>
+		public const double DoubleMachinePrecision = 2.220446049250313E-16D;
+
+		/// <summary>
+		/// Single float type machine precision
+		/// </summary>
+		public const float SingleMachinePrecision = 1.1920928955078125E-07F;
+
+		private static readonly double	doublePrecision13 = Math.Pow(DoubleMachinePrecision, 1.0 / 3),
+										singlePrecision23 = Math.Pow(SingleMachinePrecision, 2.0 / 3);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int ApproxIndexOfSingle(this Complex<double>[] array, Complex<double> value)
@@ -61,104 +71,6 @@ namespace Althea.Helpers
 	/// </summary>
 	public static class ReflectionHelper
 	{
-		private static readonly Dictionary<(RuntimeTypeHandle t1, RuntimeTypeHandle t2), Delegate?> _conversionCache = new();
-
-		private static Converter<T1, T2>? InternalConvert<T1, T2>() where T1 : notnull where T2 : notnull, new()
-		{
-			if (!typeof(T1).IsPrimitive || !typeof(T2).IsPrimitive)
-				return null;
-			DynamicMethod method = new(nameof(InternalConvert), typeof(T2), new[] { typeof(T1) });
-			var IL = method.GetILGenerator();
-			IL.Emit(OpCodes.Ldarg_0);
-			switch (Type.GetTypeCode(typeof(T2)))
-			{
-				case TypeCode.SByte:
-					IL.Emit(OpCodes.Conv_I1);
-					break;
-				case TypeCode.Byte:
-					IL.Emit(OpCodes.Conv_U1);
-					break;
-				case TypeCode.Int16:
-					IL.Emit(OpCodes.Conv_I2);
-					break;
-				case TypeCode.Char:
-				case TypeCode.UInt16:
-					IL.Emit(OpCodes.Conv_U2);
-					break;
-				case TypeCode.Int32:
-					IL.Emit(OpCodes.Conv_I4);
-					break;
-				case TypeCode.UInt32:
-					IL.Emit(OpCodes.Conv_U4);
-					break;
-				case TypeCode.Int64:
-					IL.Emit(OpCodes.Conv_I8);
-					break;
-				case TypeCode.UInt64:
-					IL.Emit(OpCodes.Conv_U8);
-					break;
-				case TypeCode.Single:
-					IL.Emit(OpCodes.Conv_R4);
-					break;
-				case TypeCode.Double:
-					IL.Emit(OpCodes.Conv_R8);
-					break;
-				default:
-					return null;
-			}
-			IL.Emit(OpCodes.Ret);
-			return method.CreateDelegate<Converter<T1, T2>>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Converter<T1, T2> GetReflectionConverter<T1, T2>() where T1 : notnull where T2 : notnull, new()
-		{
-			if (typeof(T1) == typeof(T2))
-				return static v => v is T2 vv ? vv : new();
-			var key = (typeof(T1).TypeHandle, typeof(T2).TypeHandle);
-			if (!_conversionCache.ContainsKey(key))
-			{
-				static bool predicator(MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
-														m.ReturnType == typeof(T2) && m.GetParameters().Length == 1 &&
-														m.GetParameters()[0].ParameterType == typeof(T1);
-
-				Type t1 = typeof(T1), t2 = typeof(T2);
-				var convert = t1.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-								.Where(predicator)
-								.FirstOrDefault();
-				convert ??=   t2.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-								.Where(predicator)
-								.FirstOrDefault();
-				if (convert is null)
-				{
-					var c = InternalConvert<T1, T2>() ?? (static v => (T2)(dynamic)v);
-					_conversionCache.Add(key, c);
-				}
-				else
-					_conversionCache.Add(key, convert.CreateDelegate<Converter<T1, T2>>());
-			}
-			if (_conversionCache[key] is not Converter<T1, T2> converter)
-				return static v => (T2)(dynamic)v; // default dynamic converter
-			else
-				return converter;
-		}
-
-		/// <summary>
-		/// Generically convert <paramref name="obj"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators or by utilizing default primitive type converters.
-		/// </summary>
-		/// <typeparam name="T1">The input type</typeparam>
-		/// <typeparam name="T2">The output type</typeparam>
-		/// <param name="obj">The input object to be converted</param>
-		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T2 GenericConvert<T1, T2>(this T1 obj) where T1 : notnull where T2 : notnull, new()
-		{
-			if (obj is T2 a)
-				return a;
-			else
-				return GetReflectionConverter<T1, T2>().Invoke(obj);
-		}
-
 		/// <summary>
 		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
 		/// </summary>

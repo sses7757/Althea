@@ -181,7 +181,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
 		{
 			long newLength = CheckCast<TOut>(this.Length);
@@ -341,7 +341,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.Reference is null)
@@ -480,7 +480,7 @@ namespace Althea.Storage
 
 		internal PureReferenceStorage() : base(null) { }
 
-		internal PureReferenceStorage(PointerSegment refPointer) : base(null, 0, refPointer.LengthInBytes / SizeOfT) => this.refPointer = refPointer;
+		internal PureReferenceStorage(PointerSegment refPointer) : base(null, 0, refPointer.LengthInBytes / Const<T>.SizeT) => this.refPointer = refPointer;
 
 		/// <summary>
 		/// Create a <see cref="PureReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
@@ -535,7 +535,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="PureReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
 		public override PureReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.Reference is null)
@@ -787,7 +787,7 @@ namespace Althea.Storage
 					Helpers.Log.Write(Other.CacheSizeRatioSmall, level: Helpers.LogLevel.Warning);
 			}
 			this.LocationDescription = new CombinationOfLocations(CombinationType.Cached, locations);
-			this.TopCacheSizeInBytes = maxLengths[0] * SizeOfT;
+			this.TopCacheSizeInBytes = maxLengths[0] * Const<T>.SizeT;
 		}
 		#endregion
 
@@ -886,7 +886,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>A <see cref="CachedReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
 		public override CachedReferenceStorage<TOut> As<TOut>()
 		{
 			long newLength = CheckCast<TOut>(this.Length);
@@ -1023,7 +1023,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="CachedReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Storage{TOut}.SizeOfT"/></exception>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
 		public override CachedReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.Reference is null)

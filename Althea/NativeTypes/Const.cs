@@ -9,6 +9,87 @@ using Althea.Linq;
 
 namespace Althea.NativeTypes
 {
+	#region converter class
+	internal static class ConstConvert<T, U> where T : unmanaged where U : unmanaged
+	{
+		private static Converter<T1, T2>? InternalConvert<T1, T2>() where T1 : notnull where T2 : notnull, new()
+		{
+			if (!typeof(T1).IsPrimitive || !typeof(T2).IsPrimitive)
+				return null;
+			DynamicMethod method = new(nameof(InternalConvert), typeof(T2), new[] { typeof(T1) });
+			var IL = method.GetILGenerator();
+			IL.Emit(OpCodes.Ldarg_0);
+			switch (Type.GetTypeCode(typeof(T2)))
+			{
+				case TypeCode.SByte:
+					IL.Emit(OpCodes.Conv_I1);
+					break;
+				case TypeCode.Byte:
+					IL.Emit(OpCodes.Conv_U1);
+					break;
+				case TypeCode.Int16:
+					IL.Emit(OpCodes.Conv_I2);
+					break;
+				case TypeCode.Char:
+				case TypeCode.UInt16:
+					IL.Emit(OpCodes.Conv_U2);
+					break;
+				case TypeCode.Int32:
+					IL.Emit(OpCodes.Conv_I4);
+					break;
+				case TypeCode.UInt32:
+					IL.Emit(OpCodes.Conv_U4);
+					break;
+				case TypeCode.Int64:
+					IL.Emit(OpCodes.Conv_I8);
+					break;
+				case TypeCode.UInt64:
+					IL.Emit(OpCodes.Conv_U8);
+					break;
+				case TypeCode.Single:
+					IL.Emit(OpCodes.Conv_R4);
+					break;
+				case TypeCode.Double:
+					IL.Emit(OpCodes.Conv_R8);
+					break;
+				default:
+					return null;
+			}
+			IL.Emit(OpCodes.Ret);
+			return method.CreateDelegate<Converter<T1, T2>>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Converter<T, U> GetReflectionConverter()
+		{
+			if (typeof(T) == typeof(U))
+				return static v => v is U vv ? vv : new();
+			static bool predicator(MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
+														m.ReturnType == typeof(U) && m.GetParameters().Length == 1 &&
+														m.GetParameters()[0].ParameterType == typeof(T);
+
+			Type t1 = typeof(T), t2 = typeof(U);
+			var convert = t1.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+							.Where(predicator)
+							.FirstOrDefault();
+			convert ??= t2.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+							.Where(predicator)
+							.FirstOrDefault();
+			if (convert is null)
+				return InternalConvert<T, U>() ?? (static v => (U)(dynamic)v);
+			else
+				return convert.CreateDelegate<Converter<T, U>>();
+		}
+
+		internal static readonly Converter<T, U> ConvertDelegate;
+
+		static ConstConvert()
+		{
+			ConvertDelegate = GetReflectionConverter();
+		}
+	}
+	#endregion
+
 	/// <summary>
 	/// Generic type constants
 	/// </summary>
@@ -22,7 +103,7 @@ namespace Althea.NativeTypes
 		public static readonly DataType DataType = DataTypeExtension.ToDataType<T>();
 
 		/// <summary>
-		/// Get the <see cref="NativeTypes.DataTypeClassification"/> of type <typeparamref name="T"/>
+		/// Get the <see cref="DataTypeClassification"/> of type <typeparamref name="T"/>
 		/// </summary>
 		public static readonly DataTypeClassification DataTypeClass = DataTypeExtension.GetClassification<T>();
 
@@ -329,7 +410,7 @@ namespace Althea.NativeTypes
 		{
 			if (DataTypeClass == DataTypeClassification.UnsignedInteger)
 			{
-				return static v => ReflectionHelper.GenericConvert<T, double>(v);
+				return static v => ConstConvert<T, double>.ConvertDelegate.Invoke(v);
 			}
 			else if (typeof(T).IsPrimitive)
 			{
@@ -371,10 +452,10 @@ namespace Althea.NativeTypes
 			if (!NativeTypeExtension.IsSupported<T>())
 				throw new InvalidOperationException();
 			// conversions
-			ToDoubleDelegate = ReflectionHelper.GetReflectionConverter<T, double>();
-			FromDoubleDelegate = ReflectionHelper.GetReflectionConverter<double, T>();
-			ToLongDelegate = ReflectionHelper.GetReflectionConverter<T, long>();
-			FromLongDelegate = ReflectionHelper.GetReflectionConverter<long, T>();
+			ToDoubleDelegate = ConstConvert<T, double>.ConvertDelegate;
+			FromDoubleDelegate = ConstConvert<double, T>.ConvertDelegate;
+			ToLongDelegate = ConstConvert<T, long>.ConvertDelegate;
+			FromLongDelegate = ConstConvert<long, T>.ConvertDelegate;
 			// binary arithmetics
 			AddDelegate = GetBinary(BinaryOp.Addition);
 			SubtractDelegate = GetBinary(BinaryOp.Subtraction);
@@ -391,6 +472,7 @@ namespace Althea.NativeTypes
 		}
 		#endregion
 	}
+
 
 	/// <summary>
 	/// The static class for extension methods utilizing <see cref="Const{T}"/>
@@ -587,6 +669,22 @@ namespace Althea.NativeTypes
 
 		#region generic type conversions
 		/// <summary>
+		/// Generically convert <paramref name="obj"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators or by utilizing default primitive type converters.
+		/// </summary>
+		/// <typeparam name="T1">The input type</typeparam>
+		/// <typeparam name="T2">The output type</typeparam>
+		/// <param name="obj">The input object to be converted</param>
+		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T2 GenericConvert<T1, T2>(this T1 obj) where T1 : unmanaged where T2 : unmanaged
+		{
+			if (obj is T2 a)
+				return a;
+			else
+				return ConstConvert<T1, T2>.ConvertDelegate.Invoke(obj);
+		}
+
+		/// <summary>
 		/// Generic numeric value converter from any type to <see cref="double"/>.
 		/// </summary>
 		/// <typeparam name="T">The convert source type</typeparam>
@@ -615,7 +713,7 @@ namespace Althea.NativeTypes
 		public static long ToLong<T>(this T a) where T : unmanaged
 		{
 			if (!Const<T>.IsIntegralType)
-				throw new Helpers.TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
 			return Const<T>.ToLongDelegate.Invoke(a);
 		}
 
@@ -630,7 +728,7 @@ namespace Althea.NativeTypes
 		public static T FromLong<T>(this long a) where T : unmanaged
 		{
 			if (!Const<T>.IsIntegralType)
-				throw new Helpers.TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
 			return Const<T>.FromLongDelegate.Invoke(a);
 		}
 		#endregion

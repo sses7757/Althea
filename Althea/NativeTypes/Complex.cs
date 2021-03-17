@@ -382,6 +382,94 @@ namespace Althea.NativeTypes
 		}
 		#endregion
 
+		#region complex double arithmetic
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoubleMul(Complex<double> a, Complex<double> b)
+		{
+			double real = a.real * b.real - a.imag * b.imag;
+			double imag = a.real * b.imag + a.imag * b.real;
+			return new Complex<double>(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoubleDiv(Complex<double> a, Complex<double> b)
+		{
+			double squareAbsY = b.real * b.real + b.imag * b.imag;
+			double acbd = a.real * b.real + a.imag * b.imag;
+			double bcad = a.imag * b.real - a.real * b.imag;
+			return new Complex<double>(acbd /squareAbsY, bcad / squareAbsY);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static double DoubleAbs(Complex<double> a)
+		{
+			double squareAbsY = a.real * a.real + a.imag * a.imag;
+			return Math.Sqrt(squareAbsY);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static double DoubleArg(Complex<double> a)
+		{
+			return Math.Atan2(a.imag, a.real);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoubleExp(Complex<double> c)
+		{
+			double exp = Math.Exp(c.real);
+			double cos = Math.Cos(c.imag);
+			double sin = Math.Sin(c.imag);
+			return new Complex<double>(exp * cos, exp * sin);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoubleLog(Complex<double> c)
+		{
+			double real = 0.5 * Math.Log(c.real * c.real + c.imag * c.imag);
+			double imag = Math.Atan2(c.imag, c.real);
+			return new Complex<double>(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoublePow(Complex<double> c, double p)
+		{
+			if ((c.real == 0 || c.real == 1) && c.imag == 0)
+				return c;
+			if (c.imag == 0)
+			{
+				return new Complex<double>(Math.Pow(c.real, p));
+			}
+			else
+			{
+				var doubleResult = DoubleLog(c) * p;
+				return DoubleExp(doubleResult);
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoublePow(Complex<double> c, Complex<double> p)
+		{
+			if ((c.real == 0 || c.real == 1) && c.imag == 0)
+				return c;
+			if (p.imag == 0)
+			{
+				return DoublePow(c, p.real);
+			}
+			Complex<double> result;
+			if (c.imag == 0 && c.real > 0)
+			{
+				result = Math.Log(c.real) * p;
+			}
+			else
+			{
+				result = DoubleLog(c) * p;
+			}
+			return DoubleExp(result);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoubleSqrt(Complex<double> c)
+		{
+			double arg = 0.5 * DoubleArg(c);
+			double scale = Math.Sqrt(DoubleAbs(c));
+			double real = Math.Cos(arg);
+			double imag = Math.Sin(arg);
+			return new Complex<double>(scale * real, scale * imag);
+		}
+		#endregion
+
 		#region arithmetic operators
 		/// <summary>
 		/// Complex negate
@@ -392,32 +480,32 @@ namespace Althea.NativeTypes
 		/// Complex add
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(_add(a.real, b.real), a.imag + (dynamic)b.imag);
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(_add(a.real, b.real), _add(a.imag, b.imag));
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real - (dynamic)b.real, a.imag - (dynamic)b.imag);
+		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(_sub(a.real, b.real), _sub(a.imag, b.imag));
 		/// <summary>
 		/// Complex add real
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real + (dynamic)b, a.imag);
+		public static Complex<T> operator +(Complex<T> a, T b) => new(_add(a.real, b), a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real + (dynamic)b, a.imag);
+		public static Complex<T> operator +(T b, Complex<T> a) => new(_add(a.real, b), a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real - (dynamic)b, a.imag);
+		public static Complex<T> operator -(Complex<T> a, T b) => new(_sub(a.real, b), a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(T b, Complex<T> a) => new(b - (dynamic)a.real, -(dynamic)a.imag);
+		public static Complex<T> operator -(T b, Complex<T> a) => new(_sub(b, a.real), _negate(a.imag));
 
 		/// <summary>
 		/// Complex multiply
@@ -425,37 +513,31 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Complex<T> operator *(Complex<T> a, Complex<T> b)
 		{
-			T real = a.real * (dynamic)b.real - a.imag * (dynamic)b.imag;
-			T imag = a.real * (dynamic)b.imag + a.imag * (dynamic)b.real;
-			return new Complex<T>(real, imag);
+			return (Complex<T>)DoubleMul((Complex<double>)a, (Complex<double>)b);
 		}
 		/// <summary>
 		/// Complex division, guards against intermediate underflow and overflow by scaling
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator /(Complex<T> x, Complex<T> y)
+		public static Complex<T> operator /(Complex<T> a, Complex<T> b)
 		{
-			dynamic dyr = (dynamic)y.real, dyi = (dynamic)y.imag;
-			dynamic squareAbsY = dyr * dyr + dyi * dyi;
-			dynamic acbd = x.real * dyr + x.imag * dyi;
-			dynamic bcad = x.imag * dyr - x.real * dyi;
-			return new Complex<T>(acbd / squareAbsY, bcad / squareAbsY);
+			return (Complex<T>)DoubleDiv((Complex<double>)a, (Complex<double>)b);
 		}
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(Complex<T> a, T b) => new((dynamic)a.real * b, (dynamic)a.imag * b);
+		public static Complex<T> operator *(Complex<T> a, T b) => new(_mul(a.real, b), _mul(a.imag, b));
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(T b, Complex<T> a) => new((dynamic)a.real * b, (dynamic)a.imag * b);
+		public static Complex<T> operator *(T b, Complex<T> a) => new(_mul(a.real, b), _mul(a.imag, b));
 		/// <summary>
 		/// Complex divide real number
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator /(Complex<T> a, T b) => new((dynamic)a.real / b, (dynamic)a.imag / b);
+		public static Complex<T> operator /(Complex<T> a, T b) => new(_div(a.real, b), _div(a.imag, b));
 		/// <summary>
 		/// Real number divide complex 
 		/// </summary>
@@ -469,8 +551,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Abs()
 		{
-			dynamic r = this.real, i = this.imag;
-			return (T)(dynamic)Math.Sqrt((double)(r * r + i * i));
+			return _fromDouble(DoubleAbs((Complex<double>)this));
 		}
 
 		/// <summary>
@@ -480,24 +561,15 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Arg()
 		{
-			dynamic r = this.real, i = this.imag;
-			return (T)(dynamic)Math.Atan2((double)i, (double)r);
+			return _fromDouble(DoubleArg((Complex<double>)this));
 		}
 
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Conjugate() => new(this.real, -(dynamic)this.imag);
+		public Complex<T> Conjugate() => new(this.real, _negate(this.imag));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Complex<double> Exp(Complex<double> c)
-		{
-			double exp = Math.Exp(c.real);
-			double cos = Math.Cos(c.imag);
-			double sin = Math.Sin(c.imag);
-			return new Complex<double>(exp * cos, exp * sin);
-		}
 
 		/// <summary>
 		/// Complex exponential (of base <c>e</c>)
@@ -505,16 +577,8 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Exp()
 		{
-			var doubleResult = Exp((Complex<double>)this);
+			var doubleResult = DoubleExp((Complex<double>)this);
 			return (Complex<T>)doubleResult;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Complex<double> Log(Complex<double> c)
-		{
-			double real = 0.5 * Math.Log(c.real * c.real + c.imag * c.imag);
-			double imag = Math.Atan2(c.imag, c.real);
-			return new Complex<double>(real, imag);
 		}
 
 		/// <summary>
@@ -523,8 +587,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Log()
 		{
-			var doubleResult = Log((Complex<double>)this);
-			return (Complex<T>)doubleResult;
+			return (Complex<T>)DoubleLog((Complex<double>)this);
 		}
 
 		/// <summary>
@@ -534,20 +597,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Pow(T p)
 		{
-			if (this.real.IsZero() && this.imag.IsZero())
-				return this;
-			if (this.imag.IsEqual(default))
-			{
-				return new Complex<T>(Math.Pow((dynamic)this.real, (dynamic)p));
-			}
-			else
-			{
-				double dp = (double)(dynamic)p;
-				var doubleResult = Log((Complex<double>)this);
-				doubleResult *= dp;
-				doubleResult = Exp(doubleResult);
-				return (Complex<T>)doubleResult;
-			}
+			return (Complex<T>)DoublePow((Complex<double>)this, _toDouble(p));
 		}
 
 		/// <summary>
@@ -557,34 +607,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Pow(Complex<T> p)
 		{
-			if (this.real.IsZero() && this.imag.IsZero())
-				return this;
-			if (p.imag.IsZero())
-			{
-				return this.Pow(p.real);
-			}
-			Complex<double> result;
-			double r = (double)(dynamic)this.real;
-			if (this.imag.IsZero() && r > 0)
-			{
-				result = Math.Log((double)(dynamic)this.real) * (Complex<double>)p;
-			}
-			else
-			{
-				result = Log((Complex<double>)this) * (Complex<double>)p;
-			}
-			result = Exp(result);
-			return (Complex<T>)result;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Complex<double> Sqrt(Complex<double> c)
-		{
-			double arg = 0.5 * Math.Atan2(c.imag, c.real);
-			double scale = Math.Pow(c.real * c.real + c.imag * c.imag, 0.25);
-			double real = Math.Cos(arg);
-			double imag = Math.Sin(arg);
-			return new Complex<double>(scale * real, scale * imag);
+			return (Complex<T>)DoublePow((Complex<double>)this, (Complex<double>)p);
 		}
 
 		/// <summary>
@@ -594,7 +617,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex<T> Sqrt()
 		{
-			return (Complex<T>)Sqrt((Complex<double>)this);
+			return (Complex<T>)DoubleSqrt((Complex<double>)this);
 		}
 
 		/// <summary>

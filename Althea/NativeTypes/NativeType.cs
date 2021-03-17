@@ -42,34 +42,6 @@ namespace Althea.NativeTypes
 		/// The <see cref="DataTypeClassification"/> of <typeparamref name="T"/>
 		/// </summary>
 		public static DataTypeClassification Classification => default(T).Classification_Internal();
-
-		/// <summary>
-		/// Out-of-place add <paramref name="another"/> value of <typeparamref name="T"/>
-		/// </summary>
-		/// <param name="another">another value to be added</param>
-		/// <returns>The addition result</returns>
-		T Add(T another);
-
-		/// <summary>
-		/// Out-of-place subtract <paramref name="another"/> value of <typeparamref name="T"/>
-		/// </summary>
-		/// <param name="another">another value to be subtracted</param>
-		/// <returns>The subtraction result</returns>
-		T Subtract(T another);
-
-		/// <summary>
-		/// Out-of-place multiply <paramref name="another"/> value of <typeparamref name="T"/>
-		/// </summary>
-		/// <param name="another">another value to be multiplied</param>
-		/// <returns>The multiplication result</returns>
-		T Multiply(T another);
-
-		/// <summary>
-		/// Out-of-place divide <paramref name="another"/> value of <typeparamref name="T"/>
-		/// </summary>
-		/// <param name="another">another value to be divided</param>
-		/// <returns>The division result</returns>
-		T Divide(T another);
 	}
 	#endregion
 
@@ -96,11 +68,6 @@ namespace Althea.NativeTypes
 		}
 
 		public override int GetHashCode() => HashCode.Combine(low, high);
-
-		public CustomTypeTest Add(CustomTypeTest another) => throw new NotImplementedException();
-		public CustomTypeTest Subtract(CustomTypeTest another) => throw new NotImplementedException();
-		public CustomTypeTest Multiply(CustomTypeTest another) => throw new NotImplementedException();
-		public CustomTypeTest Divide(CustomTypeTest another) => throw new NotImplementedException();
 
 		public string ToString(string? format, IFormatProvider? formatProvider) => throw new NotImplementedException();
 		public int CompareTo(CustomTypeTest other) => throw new NotImplementedException();
@@ -146,14 +113,15 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static bool IsEqual<T>(this T a, T b) where T : unmanaged
 		{
-			byte* aa = (byte*)&a, bb = (byte*)&b;
-			int n = sizeof(T);
-			for (int i = 0; i < n; i++)
-			{
-				if (aa[i] != bb[i])
-					return false;
-			}
-			return true;
+			return new ReadOnlySpan<byte>(&a, sizeof(T)).SequenceEqual(new ReadOnlySpan<byte>(&b, sizeof(T)));
+			////byte* aa = (byte*)&a, bb = (byte*)&b;
+			////int n = sizeof(T);
+			////for (int i = 0; i < n; i++)
+			////{
+			////	if (aa[i] != bb[i])
+			////		return false;
+			////}
+			////return true;
 		}
 
 		/// <summary>
@@ -194,10 +162,10 @@ namespace Althea.NativeTypes
 				T? res = default(T) switch
 				{
 					// built-in float types
-					float or double => (T)(dynamic)double.Parse(str),
+					float or double => double.Parse(str).FromDouble<T>(),
 					// built-in integer types
-					sbyte or short or int or long => (T)(dynamic)long.Parse(str),
-					byte or ushort or uint or ulong => (T)(dynamic)long.Parse(str),
+					sbyte or short or int or long => long.Parse(str).FromLong<T>(),
+					byte or ushort or uint or ulong => long.Parse(str).FromLong<T>(),
 					// otherwise
 					_ => null,
 				};

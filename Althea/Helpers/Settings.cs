@@ -3,9 +3,12 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Althea.NativeTypes;
+
 
 namespace Althea.Helpers
 {
+	#region print setting
 	/// <summary>
 	/// The structure for print settings
 	/// </summary>
@@ -50,6 +53,7 @@ namespace Althea.Helpers
 			Precision = precision; ArrayLength = arrayLength; MatrixRow = matrixRow; MatrixColumn = matrixColumn;
 		}
 	}
+	#endregion
 
 	/// <summary>
 	/// The static class for global settings
