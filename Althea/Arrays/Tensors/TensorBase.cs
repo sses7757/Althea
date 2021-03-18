@@ -353,11 +353,12 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="other">The other tensor to perform the contraction with</param>
 		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="outputLabels">The desired output tensor's labels as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>. Default (empty) means simple union of the labels of this tensor and the <paramref name="other"/> tensor.</param>
 		/// <returns>The contraction result as a new <see cref="TensorBase{T}"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract TensorBase<T> Contract(TensorBase<T> other, T scalar);
+		public abstract TensorBase<T> Contract(TensorBase<T> other, T scalar, ReadOnlySpan<char> outputLabels = default);
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.

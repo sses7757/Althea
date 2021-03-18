@@ -781,7 +781,7 @@ namespace Althea.Arrays
 			Span<long> size = stackalloc long[newSize.Length];
 			newSize.CopyTo(size);
 			CheckSize(this, size);
-			if (this.Size == newSize)
+			if (this.Size.SequenceEqual(newSize))
 				return this;
 			return newSize.Length switch
 			{
@@ -887,7 +887,7 @@ namespace Althea.Arrays
 			{
 				if (item == StringTerms.Size)
 				{
-					output.Append($"Size={string.Join('x', this.m_size)}");
+					output.Append($"Size={this.Size.SpanJoin('x')}");
 				}
 				else if (item == StringTerms.Storages)
 				{

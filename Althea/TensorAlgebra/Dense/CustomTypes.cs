@@ -79,22 +79,40 @@ namespace Althea.TensorAlgebra.Dense
 		public bool IsInputInvalid() => this.m_scalar.IsZero() || this.IsInvalid();
 
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters
+		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters and scalar set to 1
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size</param>
 		/// <param name="outerSize">The actual outer size</param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
-		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default 0 will be replaced by 1.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
+		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, UnaryOperation operation = UnaryOperation.Identity)
 		{
 			this.m_values = value; this.m_size = size;
 			if (outerSize.SequenceEqual(size))
 				outerSize = size;
 			this.m_outerSize = outerSize;
 			this.m_op = operation;
-			this.m_scalar = scalar.IsZero() ? Const<T>.One : scalar;
+			this.m_scalar = Const<T>.One;
+		}
+
+		/// <summary>
+		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters
+		/// </summary>
+		/// <param name="value">The given dense storage</param>
+		/// <param name="size">The presenting size</param>
+		/// <param name="outerSize">The actual outer size</param>
+		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, T scalar, UnaryOperation operation = UnaryOperation.Identity)
+		{
+			this.m_values = value; this.m_size = size;
+			if (outerSize.SequenceEqual(size))
+				outerSize = size;
+			this.m_outerSize = outerSize;
+			this.m_op = operation;
+			this.m_scalar = scalar;
 		}
 
 		/// <summary>
@@ -118,7 +136,7 @@ namespace Althea.TensorAlgebra.Dense
 			var outerSize = tensor is IPitchedArray<T> p ? p.OuterSize : tensor.Size;
 			if (scalar.IsZero())
 				scalar = Const<T>.One;
-			this = new(tensor.Storage, tensor.Size, outerSize, operation, scalar);
+			this = new(tensor.Storage, tensor.Size, outerSize, scalar, operation);
 		}
 	}
 	#endregion

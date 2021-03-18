@@ -316,6 +316,19 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region print
+		internal static string ActualPrint(Storage<T> storage, long actual, PrintSettings settings)
+		{
+			// get managed array
+			int length = (int)Math.Min(settings.ArrayLength, actual);
+			Span<T> managed = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			MEM.ToManaged(storage, managed);
+			// to dense vector string
+			string str = managed.ToVectorString(precision: settings.Precision);
+			if (actual > managed.Length)
+				str += Environment.NewLine + string.Format(Resources.Print.MoreStored, actual - managed.Length);
+			return str;
+		}
+
 		/// <summary>
 		/// Print out the vector.
 		/// </summary>
@@ -328,17 +341,7 @@ namespace Althea.Backend.Arrays
 				return description;
 
 			var settings = overrideSetting ?? Settings.PrintSetting;
-
-			string detail = ":" + Environment.NewLine;
-			// get managed array
-			int length = (int)Math.Min(settings.ArrayLength, this.Length);
-			Span<T> managed = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			MEM.ToManaged(this.Storage, managed);
-			// to dense vector string
-			detail += managed.ToVectorString(precision: settings.Precision);
-			if (this.Length > managed.Length)
-				detail += Environment.NewLine + $"...{this.Length - managed.Length} more elements";
-			return description + detail;
+			return description + ":" + Environment.NewLine + ActualPrint(this.Storage, this.Length, settings);
 		}
 		#endregion
 

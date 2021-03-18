@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.TensorAlgebra;
@@ -130,6 +130,14 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region clone related
+		private Storage<T> ToContiguous()
+		{
+			if (this.HasPitch)
+				return this.CopyToStorage();
+			else
+				return this.Storage;
+		}
+
 		private ActualStorage<T> CopyToStorage()
 		{
 			var size = this.Size;
@@ -439,7 +447,8 @@ namespace Althea.Backend.Arrays
 			// get output permutation
 			int outRank = this.Rank - reducePerm.Length;
 			Span<int> outPerm = stackalloc int[outRank];
-			reducePerm.ComplementSet(stackalloc int[this.Rank].FillWithRange(0), outPerm);
+			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
+			identityPerm.SetExept(outPerm, outPerm);
 			// get output members
 			if (outRank == 0)
 			{
@@ -553,17 +562,45 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="other">The other tensor to perform the contraction with</param>
 		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="outputLabels">The desired output tensor's labels as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>. Default (empty) means simple union of the labels of this tensor and the <paramref name="other"/> tensor.</param>
 		/// <returns>The contraction result as a new <see cref="DenseTensor{T}"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public override DenseTensor<T> Contract(TensorBase<T> other, T scalar)
+		public override DenseTensor<T> Contract(TensorBase<T> other, T scalar, ReadOnlySpan<char> outputLabels = default)
 		{
 			if (scalar.IsZero())
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
 			if (other is not DenseTensor<T> dense)
 				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
-
+			// stack allocate
+			int commonRank = TensorContractInfo.GetContractRank(this, other);
+			Span<int> concA = stackalloc int[commonRank], concB = stackalloc int[commonRank];
+			Span<int> freeCA = stackalloc int[this.Rank - commonRank], freeCB = stackalloc int[dense.Rank - commonRank];
+			Span<long> sizeC = stackalloc long[this.Rank + dense.Rank - commonRank];
+			Span<char> labelC = stackalloc char[sizeC.Length];
+			// get contraction info
+			var info = TensorContractInfo.GetBinaryContractInfo(this.Size, this.Labels,
+																dense.Size, dense.Labels,
+																concA, concB, freeCA, freeCB,
+																sizeC, labelC, outputLabels);
+			// contract tensor
+			Span<long> sizeOne = stackalloc long[] { 1 };
+			if (sizeC.IsEmpty)
+			{   // contract to a scalar
+				sizeC = sizeOne; labelC = default;
+			}
+			var output = Storage<T>.Create(this.Storage[0].Location, sizeC.Prod());
+			try
+			{
+				TAD.Contract<T>(new(this, scalar: scalar), new(dense), new(output, sizeC, sizeC, scalar: default), info);
+				return new(output, sizeC, sizeC, labelC);
+			}
+			catch (Exception)
+			{
+				output?.Dispose();
+				throw;
+			}
 		}
 		#endregion
 
@@ -590,6 +627,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="tensor">The <see cref="DenseTensor{T}"/> to be reduced</param>
 		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) of <paramref name="tensor"/> to sum, its order will be ignored</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
 		/// <param name="unary">The <see cref="UnaryOperation"/> to be applied to each element of the <paramref name="tensor"/> before reduction</param>
 		/// <param name="reduction">The <see cref="BinaryOperation"/> used to indicate which reduction operation to use</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is null or invalid</exception>
@@ -658,7 +696,29 @@ namespace Althea.Backend.Arrays
 		#region IKrylovVector
 		T IKrylovVector<DenseTensor<T>, T>.Dot(DenseTensor<T> other)
 		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
 
+			// shortcut
+			if (!this.HasPitch && !other.HasPitch)
+				return this.ToVector().Dot(other.ToVector());
+			// else
+			Span<long> sizeC = stackalloc long[] { 1 };
+			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
+			TensorContractInfo info = new(identityPerm, identityPerm, ReadOnlySpan<int>.Empty, ReadOnlySpan<int>.Empty);
+			var output = Storage<T>.Create(this.Storage[0].Location, 1);
+			try
+			{
+				TAD.Contract<T>(new(this, UnaryOperation.Conjugate), new(other), new(output, sizeC, sizeC, scalar: default), info);
+				return MEM.ToManaged(output);
+			}
+			catch (Exception)
+			{
+				output?.Dispose();
+				throw;
+			}
 		}
 
 		void IKrylovVector<DenseTensor<T>, T>.AddBy(DenseTensor<T> other, T scalar)
@@ -901,7 +961,73 @@ namespace Althea.Backend.Arrays
 		/// <returns>The detailed string representation</returns>
 		public override string Print(PrintSettings? overrideSetting = null)
 		{
+			string description = this.ToString();
+			if (this.Disposed)
+				return description;
 
+			var settings = overrideSetting ?? Settings.PrintSetting;
+			int vectorMaxLen = settings.ArrayLength, matrixMaxRows = settings.MatrixRow, matrixMaxCols = settings.MatrixColumn;
+
+			// get actual rank
+			int actualRank = 0;
+			var size = this.Size;
+			for (int i = 0; i < size.Length; i++)
+			{
+				if (size[i] != 1)
+					actualRank++;
+			}
+			Span<long> truncateSize = stackalloc long[this.Rank];
+			size.CopyTo(truncateSize);
+			Span<long> offsets = stackalloc long[this.Rank];
+			// actually a vector
+			if (actualRank == 1)
+			{
+				int dd = truncateSize.IndexOf(static s => s > 1);
+				truncateSize[dd] = Math.Min(vectorMaxLen, truncateSize[dd]);
+				using var temp = this.GetSlice(offsets, truncateSize).ToContiguous();
+				return description + ":" + Environment.NewLine + DenseVector<T>.ActualPrint(temp, this.Length, settings);
+			}
+			int d = truncateSize.IndexOf(static s => s > 1);
+			long rows = truncateSize[d];
+			truncateSize[d] = Math.Min(matrixMaxRows, truncateSize[d]);
+			long ld = truncateSize[d];
+			d = truncateSize[(d + 1)..].IndexOf(static s => s > 1);
+			long cols = truncateSize[d];
+			truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
+			// actually a matrix
+			if (actualRank == 2)
+			{
+				using var temp = this.GetSlice(offsets, truncateSize).ToContiguous();
+				return description + ":" + Environment.NewLine + DenseMatrix<T>.ActualPrint(temp, rows, cols, ld, settings);
+			}
+			// else
+			StringBuilder sb = new(description);
+			sb.AppendLine(":");
+			// get lengths
+			Span<long> matSize = stackalloc long[this.Rank];
+			truncateSize.CopyTo(matSize);
+			int matrixRank = d + 1;
+			matSize[matrixRank..].Fill(1);
+			// prepare loop
+			int restRank = this.Rank - matrixRank;
+			long matrixLength = rows * cols;
+			int maxShow = (int)Math.Min(vectorMaxLen, this.Length / matrixLength);
+			Span<long> sizeProd = stackalloc long[restRank + 1];
+			this.SizeProd[matrixRank..].CopyTo(sizeProd); sizeProd[^1] = this.Length;
+			sizeProd.CopyTo(sizeProd, s => s / matrixLength);
+			// loop
+			for (int i = 0; i < maxShow; i++)
+			{
+				for (int k = 0; k < restRank; k++)
+				{
+					offsets[k + matrixRank] = (i % sizeProd[k + 1]) / sizeProd[k];
+				}
+				using var tempMat = this.GetSlice(offsets, matSize).ToContiguous();
+				sb.Append($"Tensor[.., .., {offsets[matrixRank..].SpanJoin(", ")}]:").AppendLine();
+				sb.AppendLine(DenseMatrix<T>.ActualPrint(tempMat, rows, cols, ld, settings)).AppendLine();
+			}
+			// return
+			return sb.ToString();
 		}
 		#endregion
 

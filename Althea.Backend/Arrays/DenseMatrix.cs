@@ -897,6 +897,19 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region print
+		internal static string ActualPrint(Storage<T> storage, long actualRow, long actualCol, long ld, PrintSettings settings)
+		{
+			// get managed array
+			int rows = (int)Math.Min(settings.MatrixRow, actualRow), cols = (int)Math.Min(settings.MatrixColumn, actualCol);
+			Span<T> managed = (rows * cols).CheckStackLimit<T>() ?? stackalloc T[rows * cols];
+			MEM.ToManaged2D(storage, ld, rows, cols, managed);
+			// to dense vector string
+			string str = managed.ToMatrixString(rows, more: actualCol - cols, precision: settings.Precision);
+			if (actualRow > rows)
+				str += Environment.NewLine + string.Format(Resources.Print.MoreRows, actualRow - rows);
+			return str;
+		}
+
 		/// <summary>
 		/// Print out this dense matrix.
 		/// </summary>
@@ -909,17 +922,7 @@ namespace Althea.Backend.Arrays
 				return description;
 
 			var settings = overrideSetting ?? Settings.PrintSetting;
-
-			string detail = ":" + Environment.NewLine;
-			// get managed array
-			int rows = (int)Math.Min(settings.MatrixRow, this.NRows), cols = (int)Math.Min(settings.MatrixColumn, this.NCols);
-			Span<T> managed = (rows * cols).CheckStackLimit<T>() ?? stackalloc T[rows * cols];
-			MEM.ToManaged2D(this.Storage, this.LeadDim, rows, cols, managed);
-			// to dense vector string
-			detail += managed.ToMatrixString(rows, more: this.NCols - cols, precision: settings.Precision);
-			if (this.NRows > rows)
-				detail += Environment.NewLine + string.Format(Resources.Print.MoreRows, this.NRows - rows);
-			return description + detail;
+			return description + ":" + Environment.NewLine + ActualPrint(this.Storage, this.NRows, this.NCols, this.LeadDim, settings);
 		}
 		#endregion
 

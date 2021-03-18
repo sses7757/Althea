@@ -28,7 +28,8 @@ namespace Althea.Linq
 			if (span.Length != array.Count)
 				throw new ArgumentException(Parameter.NotSameSize);
 
-			for (int i = 0; i < span.Length; i++)
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
 				span[i] = array[i];
 			}
@@ -49,7 +50,8 @@ namespace Althea.Linq
 			if (span.Length != array.Count)
 				throw new ArgumentException(Parameter.NotSameSize);
 
-			for (int i = 0; i < span.Length; i++)
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
 				span[i] = selector(array[i]);
 			}
@@ -82,7 +84,8 @@ namespace Althea.Linq
 			if (span.Length != array.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
 
-			for (int i = 0; i < span.Length; i++)
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
 				array[i] = selector(span[i]);
 			}
@@ -91,28 +94,29 @@ namespace Althea.Linq
 
 		#region min max
 		/// <summary>
-		/// Find the maximum item of <paramref name="list"/>.
+		/// Find the maximum item of <paramref name="span"/>.
 		/// </summary>
 		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="list">list to find maximum</param>
+		/// <param name="span">span to find maximum</param>
 		/// <returns>the maximum item</returns>
-		public static T Max<T>(this Span<T> list) where T : IComparable<T>
+		public static T Max<T>(this Span<T> span) where T : IComparable<T>
 		{
-			return Max((ReadOnlySpan<T>)list);
+			return Max((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
-		/// Find the maximum item of <paramref name="list"/>.
+		/// Find the maximum item of <paramref name="span"/>.
 		/// </summary>
 		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="list">list to find maximum</param>
+		/// <param name="span">span to find maximum</param>
 		/// <returns>the maximum item</returns>
-		public static T Max<T>(this ReadOnlySpan<T> list) where T : IComparable<T>
+		public static T Max<T>(this ReadOnlySpan<T> span) where T : IComparable<T>
 		{
-			T maxVal = list[0];
-			for (int i = 0; i < list.Length; i++)
+			T maxVal = span[0];
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
-				T val = list[i];
+				T val = span[i];
 				if (val.CompareTo(maxVal) > 0)
 					maxVal = val;
 			}
@@ -120,28 +124,29 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Find the minimum item of <paramref name="list"/>.
+		/// Find the minimum item of <paramref name="span"/>.
 		/// </summary>
 		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="list">list to find minimum</param>
+		/// <param name="span">span to find minimum</param>
 		/// <returns>the minimum item</returns>
-		public static T Min<T>(this Span<T> list) where T : IComparable<T>
+		public static T Min<T>(this Span<T> span) where T : IComparable<T>
 		{
-			return Min((ReadOnlySpan<T>)list);
+			return Min((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
-		/// Find the minimum item of <paramref name="list"/>.
+		/// Find the minimum item of <paramref name="span"/>.
 		/// </summary>
 		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="list">list to find minimum</param>
+		/// <param name="span">span to find minimum</param>
 		/// <returns>the minimum item</returns>
-		public static T Min<T>(this ReadOnlySpan<T> list) where T : IComparable<T>
+		public static T Min<T>(this ReadOnlySpan<T> span) where T : IComparable<T>
 		{
-			T minVal = list[0];
-			for (int i = 0; i < list.Length; i++)
+			T minVal = span[0];
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
-				T val = list[i];
+				T val = span[i];
 				if (val.CompareTo(minVal) > 0)
 					minVal = val;
 			}
@@ -179,7 +184,8 @@ namespace Althea.Linq
 			}
 			else
 			{
-				for (int i = 0; i < indices.Length; i++)
+				int len = indices.Length;
+				for (int i = 0; i < len; i++)
 				{
 					target[i] = array[indices[i]];
 				}
@@ -212,7 +218,8 @@ namespace Althea.Linq
 			if (indices.Length > array.Length || indices.Length > target.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
 
-			for (int i = 0; i < indices.Length; i++)
+			int len = indices.Length;
+			for (int i = 0; i < len; i++)
 			{
 				target[indices[i]] = array[i];
 			}
@@ -246,7 +253,8 @@ namespace Althea.Linq
 			if (target.IsEmpty)
 				throw new ArgumentNullException(nameof(target));
 
-			for (int i = 0; i < target.Length; i++)
+			int len = target.Length;
+			for (int i = 0; i < len; i++)
 			{
 				perm[i] = array.IndexOf(target[i]);
 				if (perm[i] < 0)
@@ -277,7 +285,8 @@ namespace Althea.Linq
 			if (perm.Length != inv.Length)
 				throw new ArgumentException(Parameter.NotSameSize, nameof(inv));
 
-			for (int i = 0; i < perm.Length; i++)
+			int len = perm.Length;
+			for (int i = 0; i < len; i++)
 			{
 				inv[perm[i]] = i;
 			}
@@ -288,69 +297,69 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="span">The span to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
 		/// <param name="init">The initial value</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateSum<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
+		public static ReadOnlySpan<T> AccumulateSum<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			return AccumulateSum((ReadOnlySpan<T>)list, result, init, inclusive);
+			return AccumulateSum((ReadOnlySpan<T>)span, result, init, inclusive);
 		}
 
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="span">The span to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
+		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			return AccumulateProd((ReadOnlySpan<T>)list, result, init, inclusive);
+			return AccumulateProd((ReadOnlySpan<T>)span, result, init, inclusive);
 		}
 
 		/// <summary>
 		/// List summation.
 		/// </summary>
-		/// <param name="list">The span to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<T>(this Span<T> list) where T : unmanaged
+		public static T Sum<T>(this Span<T> span) where T : unmanaged
 		{
-			return Sum((ReadOnlySpan<T>)list);
+			return Sum((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
 		/// List product.
 		/// </summary>
-		/// <param name="list">The span to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <returns>The product result</returns>
-		public static T Prod<T>(this Span<T> list) where T : unmanaged
+		public static T Prod<T>(this Span<T> span) where T : unmanaged
 		{
-			return Prod((ReadOnlySpan<T>)list);
+			return Prod((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
 		/// List summation by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Sum<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			return Sum((ReadOnlySpan<TOrg>)list, selector);
+			return Sum((ReadOnlySpan<TOrg>)span, selector);
 		}
 
 		/// <summary>
 		/// List product by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The product result</returns>
-		public static T Prod<TOrg, T>(this Span<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Prod<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			return Prod((ReadOnlySpan<TOrg>)list, selector);
+			return Prod((ReadOnlySpan<TOrg>)span, selector);
 		}
 		#endregion
 
@@ -358,25 +367,25 @@ namespace Althea.Linq
 		/// <summary>
 		/// List accumulate summation.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="span">The span to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
 		/// <param name="init">The initial value</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateSum<T>(this ReadOnlySpan<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
+		public static ReadOnlySpan<T> AccumulateSum<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-			if (result.Length < list.Length)
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+			if (result.Length < span.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(result));
 
-			int len = list.Length;
+			int len = span.Length;
 			if (result.Length > len)
 			{
 				result[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+					result[i + 1] = Const<T>.AddDelegate.Invoke(span[i], result[i]);
 				}
 				return result;
 			}
@@ -386,44 +395,44 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+					result[i + 1] = Const<T>.AddDelegate.Invoke(span[i], result[i]);
 				}
 			}
 			else
 			{
-				result[0] = Const<T>.AddDelegate.Invoke(init, list[0]);
+				result[0] = Const<T>.AddDelegate.Invoke(init, span[0]);
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = Const<T>.AddDelegate.Invoke(list[i], result[i - 1]);
+					result[i] = Const<T>.AddDelegate.Invoke(span[i], result[i - 1]);
 				}
 			}
-			return result[..list.Length];
+			return result[..span.Length];
 		}
 
 		/// <summary>
 		/// List accumulate product.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
-		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+		/// <param name="span">The span to accumulate</param>
+		/// <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-		/// <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> list, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> + 1)]</returns>
+		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
-			if (result.Length < list.Length)
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+			if (result.Length < span.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(result));
 			if (init.IsZero())
 				init = Const<T>.One;
 
-			int len = list.Length;
+			int len = span.Length;
 			if (result.Length > len)
 			{
 				result[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(span[i], result[i]);
 				}
 				return result;
 			}
@@ -433,35 +442,35 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(span[i], result[i]);
 				}
 			}
 			else
 			{
-				result[0] = Const<T>.MultiplyDelegate.Invoke(init, list[0]);
+				result[0] = Const<T>.MultiplyDelegate.Invoke(init, span[0]);
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i - 1]);
+					result[i] = Const<T>.MultiplyDelegate.Invoke(span[i], result[i - 1]);
 				}
 			}
-			return result[..list.Length];
+			return result[..span.Length];
 		}
 
 		/// <summary>
 		/// List summation.
 		/// </summary>
-		/// <param name="list">The span to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<T>(this ReadOnlySpan<T> list) where T : unmanaged
+		public static T Sum<T>(this ReadOnlySpan<T> span) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
 
-			int len = list.Length;
-			T result = list[0];
+			int len = span.Length;
+			T result = span[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.AddDelegate.Invoke(list[i], result);
+				result = Const<T>.AddDelegate.Invoke(span[i], result);
 			}
 			return result;
 		}
@@ -469,18 +478,18 @@ namespace Althea.Linq
 		/// <summary>
 		/// List product.
 		/// </summary>
-		/// <param name="list">The span to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <returns>The product result</returns>
-		public static T Prod<T>(this ReadOnlySpan<T> list) where T : unmanaged
+		public static T Prod<T>(this ReadOnlySpan<T> span) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
 
-			int len = list.Length;
-			T result = list[0];
+			int len = span.Length;
+			T result = span[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.MultiplyDelegate.Invoke(list[i], result);
+				result = Const<T>.MultiplyDelegate.Invoke(span[i], result);
 			}
 			return result;
 		}
@@ -488,19 +497,19 @@ namespace Althea.Linq
 		/// <summary>
 		/// List summation by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<TOrg, T>(this ReadOnlySpan<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Sum<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
 
-			int len = list.Length;
-			T result = selector.Invoke(list[0]);
+			int len = span.Length;
+			T result = selector.Invoke(span[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.AddDelegate.Invoke(selector.Invoke(list[i]), result);
+				result = Const<T>.AddDelegate.Invoke(selector.Invoke(span[i]), result);
 			}
 			return result;
 		}
@@ -508,19 +517,19 @@ namespace Althea.Linq
 		/// <summary>
 		/// List product by <paramref name="selector"/>.
 		/// </summary>
-		/// <param name="list">The list to accumulate</param>
+		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The product result</returns>
-		public static T Prod<TOrg, T>(this ReadOnlySpan<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Prod<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
 		{
-			if (list.IsEmpty)
-				throw new ArgumentNullException(nameof(list));
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
 
-			int len = list.Length;
-			T result = selector.Invoke(list[0]);
+			int len = span.Length;
+			T result = selector.Invoke(span[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(list[i]), result);
+				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(span[i]), result);
 			}
 			return result;
 		}
@@ -548,7 +557,8 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static int IndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
-			for (int i = 0; i < span.Length; i++)
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
 				if (predicator(span[i]))
 					return i;
@@ -608,7 +618,8 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
-			for (int i = 0; i < span.Length; i++)
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
 				if (!predicator(span[i]))
 					return false;
@@ -637,7 +648,8 @@ namespace Althea.Linq
 		/// <remarks>extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
-			for (int i = 0; i < span.Length; i++)
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
 				if (predicator(span[i]))
 					return true;
@@ -906,7 +918,7 @@ namespace Althea.Linq
 		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">span to pick</param>
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
-		public static bool ElementsUnique<T>(this Span<T> span) where T : IEquatable<T>
+		public static bool ElementsUnique<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
 		{
 			return ElementsUnique((ReadOnlySpan<T>)span);
 		}
@@ -917,13 +929,21 @@ namespace Althea.Linq
 		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">span to pick</param>
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
-		public static bool ElementsUnique<T>(this ReadOnlySpan<T> span) where T : IEquatable<T>
+		public static bool ElementsUnique<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
 		{
-			var res = new List<T>(span.Length);
-			for (int i = 0; i < span.Length; i++)
+			if (span.Length <= 1)
+				return true;
+			int len = span.Length;
+			Span<T> temp = len.CheckStackLimit<T>() ?? stackalloc T[len];
+			var slice = temp.Slice(0, 0);
+			int now = 0;
+			for (int i = 0; i < len; i++)
 			{
-				if (!res.Contains(span[i]))
-					res.Add(span[i]);
+				if (!slice.Contains(span[i]))
+				{
+					temp[now++] = span[i];
+					slice = temp.Slice(0, now);
+				}
 				else
 					return false;
 			}
@@ -936,7 +956,7 @@ namespace Althea.Linq
 		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="set">set to get hash code</param>
 		/// <returns>the hash code of <paramref name="set"/></returns>
-		public static int HashCodeOfSet<T>(this Span<T> set) where T : struct
+		public static int HashCodeOfSet<T>(this Span<T> set) where T : notnull
 		{
 			return HashCodeOfSet((ReadOnlySpan<T>)set);
 		}
@@ -947,12 +967,12 @@ namespace Althea.Linq
 		/// <typeparam name="T">any struct</typeparam>
 		/// <param name="set">set to get hash code</param>
 		/// <returns>the hash code of <paramref name="set"/></returns>
-		public static int HashCodeOfSet<T>(this ReadOnlySpan<T> set) where T : struct
+		public static int HashCodeOfSet<T>(this ReadOnlySpan<T> set) where T : notnull
 		{
 			if (set.IsEmpty)
 				return 0; // hash code of null
-			int hc = 0;
-			for (int i = 0; i < set.Length; ++i)
+			int hc = 0, len = set.Length;
+			for (int i = 0; i < len; ++i)
 			{
 				hc = unchecked(hc + set[i].GetHashCode());
 			}
@@ -960,84 +980,300 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Count the distinct element(s) in <paramref name="list"/>
+		/// Count the distinct element(s) in <paramref name="span"/>
 		/// </summary>
-		/// <param name="list">list to pick</param>
+		/// <param name="span">span to pick</param>
 		/// <returns>the number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount<T>(this Span<T> list) where T : unmanaged, IEquatable<T>
+		public static int DistinctCount<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
 		{
-			return DistinctCount((ReadOnlySpan<T>)list);
+			return DistinctCount((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
-		/// Count the distinct element(s) in <paramref name="list"/>
+		/// Count the distinct element(s) in <paramref name="span"/>
 		/// </summary>
-		/// <param name="list">list to pick</param>
+		/// <param name="span">span to pick</param>
 		/// <returns>the number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount<T>(this ReadOnlySpan<T> list) where T : unmanaged, IEquatable<T>
+		public static int DistinctCount<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
 		{
-			if (list.Length <= 1)
-				return list.Length;
-			Span<T> temp = stackalloc T[list.Length];
+			if (span.Length <= 1)
+				return span.Length;
+			Span<T> temp = stackalloc T[span.Length];
 			Span<T> slice = temp.Slice(0, 0);
-			int now = 0;
-			for (int i = 0; i < list.Length; i++)
+			int now = 0, len = span.Length;
+			for (int i = 0; i < len; i++)
 			{
-				if (!slice.Contains(list[i]))
+				if (!slice.Contains(span[i]))
 				{
-					temp[now++] = list[i];
+					temp[now++] = span[i];
 					slice = temp.Slice(0, now);
 				}
 			}
 			return now;
 		}
 
-
 		/// <summary>
-		/// Compute the complement set of <paramref name="span"/> compared to <paramref name="fullSet"/> and store the result in <paramref name="complement"/>
+		/// Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="span">The set whose complement set will be obtained</param>
-		/// <param name="fullSet">The full set</param>
-		/// <param name="complement">The output complement set</param>
-		/// <exception cref="ArgumentException">If <paramref name="span"/> or <paramref name="fullSet"/> is not a set; or the lengths are incompatible</exception>
-		public static void ComplementSet<T>(this Span<T> span, ReadOnlySpan<T> fullSet, Span<T> complement) where T : IEquatable<T>
+		/// <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
+		/// <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
+		/// <param name="output">The output set</param>
+		/// <returns><paramref name="output"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<T> SetExept<T>(this Span<T> set, ReadOnlySpan<T> except, Span<T> output) where T : IEquatable<T>
 		{
-			ComplementSet((ReadOnlySpan<T>)span, fullSet, complement);
+			return SetExept((ReadOnlySpan<T>)set, except, output);
 		}
 
 		/// <summary>
-		/// Compute the complement set of <paramref name="span"/> compared to <paramref name="fullSet"/> and store the result in <paramref name="complement"/>
+		/// Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="span">The set whose complement set will be obtained</param>
-		/// <param name="fullSet">The full set</param>
-		/// <param name="complement">The output complement set</param>
-		/// <exception cref="ArgumentException">If <paramref name="span"/> or <paramref name="fullSet"/> is not a set; or the lengths are incompatible</exception>
-		public static void ComplementSet<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> fullSet, Span<T> complement) where T : IEquatable<T>
+		/// <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
+		/// <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
+		/// <param name="output">The output set</param>
+		/// <returns><paramref name="output"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<T> SetExept<T>(this ReadOnlySpan<T> set, ReadOnlySpan<T> except, Span<T> output) where T : IEquatable<T>
 		{
-			if (fullSet.Length < span.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(fullSet));
-			if (fullSet.Length == span.Length)
-				return;
-			if (complement.Length != fullSet.Length - span.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(complement));
 			// shortcut
-			if (span.IsEmpty)
+			if (except.IsEmpty)
 			{
-				fullSet.CopyTo(complement);
+				set.CopyTo(output);
+				return output[..set.Length];
 			}
 			// else
-			int now = 0;
-			for (int i = 0; i < fullSet.Length; i++)
+			int now = 0, len = set.Length;
+			for (int i = 0; i < len; i++)
 			{
-				if (!span.Contains(fullSet[i]))
+				if (!except.Contains(set[i]))
 				{
-					complement[now++] = fullSet[i];
+					output[now++] = set[i];
 				}
 			}
-			if (now != complement.Length)
-				throw new ArgumentException(Parameter.DuplicateValue);
+			return output[..now];
+		}
+
+		/// <summary>
+		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get intersection set</param>
+		/// <param name="set2">The second set to get intersection set</param>
+		/// <param name="output">The output set</param>
+		/// <returns><paramref name="output"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<T> SetIntersect<T>(this Span<T> set1, ReadOnlySpan<T> set2, Span<T> output) where T : IEquatable<T>
+		{
+			return SetIntersect((ReadOnlySpan<T>)set1, set2, output);
+		}
+
+		/// <summary>
+		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get intersection set</param>
+		/// <param name="set2">The second set to get intersection set</param>
+		/// <param name="output">The output set</param>
+		/// <returns><paramref name="output"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<T> SetIntersect<T>(this ReadOnlySpan<T> set1, ReadOnlySpan<T> set2, Span<T> output) where T : IEquatable<T>
+		{
+			// shortcut
+			if (set2.IsEmpty || set1.IsEmpty)
+			{
+				return Span<T>.Empty;
+			}
+			// else
+			int now = 0, len = set1.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (set2.Contains(set1[i]))
+				{
+					output[now++] = set1[i];
+				}
+			}
+			return output[..now];
+		}
+
+		/// <summary>
+		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get intersection set</param>
+		/// <param name="set2">The second set to get intersection set</param>
+		/// <param name="outpuIndex">The output indices</param>
+		/// <returns><paramref name="outpuIndex"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<int> SetIntersectIndex<T>(this Span<T> set1, ReadOnlySpan<T> set2, Span<int> outpuIndex) where T : IEquatable<T>
+		{
+			return SetIntersectIndex((ReadOnlySpan<T>)set1, set2, outpuIndex);
+		}
+
+		/// <summary>
+		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get intersection set</param>
+		/// <param name="set2">The second set to get intersection set</param>
+		/// <param name="outpuIndex">The output indices</param>
+		/// <returns><paramref name="outpuIndex"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<int> SetIntersectIndex<T>(this ReadOnlySpan<T> set1, ReadOnlySpan<T> set2, Span<int> outpuIndex) where T : IEquatable<T>
+		{
+			// shortcut
+			if (set2.IsEmpty || set1.IsEmpty)
+			{
+				return Span<int>.Empty;
+			}
+			// else
+			int now = 0, len = set1.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (set2.Contains(set1[i]))
+				{
+					outpuIndex[now++] = i;
+				}
+			}
+			outpuIndex = outpuIndex[..now];
+			return outpuIndex[..now];
+		}
+
+		/// <summary>
+		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get intersection set</param>
+		/// <param name="set2">The second set to get intersection set</param>
+		/// <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
+		/// <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
+		/// <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static int SetIntersectWithIndex<T>(this Span<T> set1, ReadOnlySpan<T> set2, ref Span<T> output, ref Span<int> outpuIndex) where T : IEquatable<T>
+		{
+			return SetIntersectWithIndex((ReadOnlySpan<T>)set1, set2, ref output, ref outpuIndex);
+		}
+
+		/// <summary>
+		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get intersection set</param>
+		/// <param name="set2">The second set to get intersection set</param>
+		/// <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
+		/// <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
+		/// <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
+		public static int SetIntersectWithIndex<T>(this ReadOnlySpan<T> set1, ReadOnlySpan<T> set2, ref Span<T> output, ref Span<int> outpuIndex) where T : IEquatable<T>
+		{
+			// shortcut
+			if (set2.IsEmpty || set1.IsEmpty)
+			{
+				return 0;
+			}
+			// else
+			int now = 0, len = set1.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (set2.Contains(set1[i]))
+				{
+					output[now] = set1[i];
+					outpuIndex[now++] = i;
+				}
+			}
+			output = output[..now];
+			outpuIndex = outpuIndex[..now];
+			return now;
+		}
+
+		/// <summary>
+		/// Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get union set</param>
+		/// <param name="set2">The second set to get union set</param>
+		/// <param name="output">The output set</param>
+		/// <returns><paramref name="output"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<T> SetUnion<T>(this Span<T> set1, ReadOnlySpan<T> set2, Span<T> output) where T : IEquatable<T>
+		{
+			return SetUnion((ReadOnlySpan<T>)set1, set2, output);
+		}
+
+		/// <summary>
+		/// Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to get union set</param>
+		/// <param name="set2">The second set to get union set</param>
+		/// <param name="output">The output set</param>
+		/// <returns><paramref name="output"/>[..real_length]</returns>
+		/// <exception cref="ArgumentException">If the lengths are incompatible</exception>
+		public static Span<T> SetUnion<T>(this ReadOnlySpan<T> set1, ReadOnlySpan<T> set2, Span<T> output) where T : IEquatable<T>
+		{
+			// shortcut
+			if (set1.IsEmpty)
+			{
+				set2.CopyTo(output);
+				return output[..set2.Length];
+			}
+			// else
+			set1.CopyTo(output);
+			// shortcut
+			if (set2.IsEmpty)
+			{
+				return output[..set1.Length];
+			}
+			// else
+			int now = set1.Length, len = set2.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (!set1.Contains(set2[i]))
+				{
+					output[now++] = set2[i];
+				}
+			}
+			return output[..now];
+		}
+
+		/// <summary>
+		/// Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to check set equals</param>
+		/// <param name="set2">The second set to check set equals</param>
+		/// <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
+		/// <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
+		public static bool SetEquals<T>(this Span<T> set1, ReadOnlySpan<T> set2) where T : IEquatable<T>
+		{
+			return SetEquals((ReadOnlySpan<T>)set1, set2);
+		}
+
+		/// <summary>
+		/// Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="set1">The first set to check set equals</param>
+		/// <param name="set2">The second set to check set equals</param>
+		/// <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
+		/// <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
+		public static bool SetEquals<T>(this ReadOnlySpan<T> set1, ReadOnlySpan<T> set2) where T : IEquatable<T>
+		{
+			// shortcut
+			if (set1.Length != set2.Length)
+				return false;
+			if (set1.IsEmpty && set2.IsEmpty || set1 == set2)
+				return true;
+			// else
+			int len = set1.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (!set2.Contains(set1[i]))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 		#endregion
 
@@ -1060,7 +1296,7 @@ namespace Althea.Linq
 			span[0] = start;
 			for (int i = 1; i < span.Length; i++)
 			{
-				span[i] = Const<T>.AddDelegate(span[i - 1], step);
+				span[i] = Const<T>.AddDelegate.Invoke(span[i - 1], step);
 			}
 			return span;
 		}

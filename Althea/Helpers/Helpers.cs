@@ -449,6 +449,74 @@ namespace Althea.Helpers
 		#endregion
 
 		#region print related
+		/// <summary>
+		/// Concatenates the members of a span, using the specified separator between each member.
+		/// </summary>
+		/// <typeparam name="T">The type of the members of values.</typeparam>
+		/// <param name="span">A span that contains the objects to concatenate.</param>
+		/// <param name="seperator">The character to use as a separator</param>
+		/// <returns>A string that consists of the members of values delimited by the separator character.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string SpanJoin<T>(this Span<T> span, char seperator) where T : notnull
+		{
+			return SpanJoin((ReadOnlySpan<T>)span, seperator);
+		}
+
+		/// <summary>
+		/// Concatenates the members of a span, using the specified separator between each member.
+		/// </summary>
+		/// <typeparam name="T">The type of the members of values.</typeparam>
+		/// <param name="span">A span that contains the objects to concatenate.</param>
+		/// <param name="seperator">The character to use as a separator</param>
+		/// <returns>A string that consists of the members of values delimited by the separator character.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string SpanJoin<T>(this Span<T> span, string seperator) where T : notnull
+		{
+			return SpanJoin((ReadOnlySpan<T>)span, seperator);
+		}
+
+		/// <summary>
+		/// Concatenates the members of a span, using the specified separator between each member.
+		/// </summary>
+		/// <typeparam name="T">The type of the members of values.</typeparam>
+		/// <param name="span">A span that contains the objects to concatenate.</param>
+		/// <param name="seperator">The character to use as a separator</param>
+		/// <returns>A string that consists of the members of values delimited by the separator character.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string SpanJoin<T>(this ReadOnlySpan<T> span, char seperator) where T : notnull
+		{
+			if (span.IsEmpty)
+				return string.Empty;
+			int len = span.Length - 1;
+			StringBuilder sb = new();
+			for (int i = 0; i < len; i++)
+			{
+				sb.Append(span[i].ToString()).Append(seperator);
+			}
+			return sb.Append(span[len].ToString()).ToString();
+		}
+
+		/// <summary>
+		/// Concatenates the members of a span, using the specified separator between each member.
+		/// </summary>
+		/// <typeparam name="T">The type of the members of values.</typeparam>
+		/// <param name="span">A span that contains the objects to concatenate.</param>
+		/// <param name="seperator">The character to use as a separator</param>
+		/// <returns>A string that consists of the members of values delimited by the separator character.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string SpanJoin<T>(this ReadOnlySpan<T> span, string seperator) where T : notnull
+		{
+			if (span.IsEmpty)
+				return string.Empty;
+			int len = span.Length - 1;
+			StringBuilder sb = new();
+			for (int i = 0; i < len; i++)
+			{
+				sb.Append(span[i].ToString()).Append(seperator);
+			}
+			return sb.Append(span[len].ToString()).ToString();
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static string GetNumberString<T>(this T input, string format, IFormatProvider formatProvider, int precision) where T : unmanaged, IFormattable
 		{

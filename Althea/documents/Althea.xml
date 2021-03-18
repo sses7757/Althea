@@ -1189,12 +1189,13 @@
             <exception cref="T:System.ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.Contract(Althea.Arrays.TensorBase{`0},`0)">
+        <member name="M:Althea.Arrays.TensorBase`1.Contract(Althea.Arrays.TensorBase{`0},`0,System.ReadOnlySpan{System.Char})">
             <summary>
             When implemented by a derived class, compute the tensor contraction of this tensor and the <paramref name="other"/> tensor using their .
             </summary>
             <param name="other">The other tensor to perform the contraction with</param>
             <param name="scalar">The scalar to multiply to the result</param>
+            <param name="outputLabels">The desired output tensor's labels as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/>. Default (empty) means simple union of the labels of this tensor and the <paramref name="other"/> tensor.</param>
             <returns>The contraction result as a new <see cref="T:Althea.Arrays.TensorBase`1"/></returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
@@ -9198,26 +9199,6 @@
             <param name="selector">The converter to each element</param>
             <returns>The <paramref name="span"/></returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.CopyTo``1(System.ReadOnlySpan{``0},``0[])">
-            <summary>
-            Copy <paramref name="span"/> to <paramref name="destArray"/>.
-            </summary>
-            <typeparam name="T">The type of <paramref name="span"/> and <paramref name="destArray"/></typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be copied</param>
-            <param name="destArray">The destination array to be copied into</param>
-            <returns>The <paramref name="destArray"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.CopyTo``2(System.ReadOnlySpan{``0},``1[],System.Converter{``0,``1})">
-            <summary>
-            Copy <paramref name="span"/> to <paramref name="array"/>.
-            </summary>
-            <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
-            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to be copied from</param>
-            <param name="array">The destination array to be copied into</param>
-            <param name="selector">The converter to each element</param>
-            <returns>The <paramref name="array"/></returns>
-        </member>
         <member name="M:Althea.Linq.SpanLinq.CopyTo``2(System.Span{``0},System.Span{``1},System.Converter{``0,``1})">
             <summary>
             Copy <paramref name="span"/> to <paramref name="array"/>.
@@ -9240,74 +9221,35 @@
         </member>
         <member name="M:Althea.Linq.SpanLinq.Max``1(System.Span{``0})">
             <summary>
-            Find the maximum item of <paramref name="list"/>.
+            Find the maximum item of <paramref name="span"/>.
             </summary>
             <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="list">list to find maximum</param>
+            <param name="span">span to find maximum</param>
             <returns>the maximum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Max``1(System.ReadOnlySpan{``0})">
             <summary>
-            Find the maximum item of <paramref name="list"/>.
+            Find the maximum item of <paramref name="span"/>.
             </summary>
             <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="list">list to find maximum</param>
+            <param name="span">span to find maximum</param>
             <returns>the maximum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Min``1(System.Span{``0})">
             <summary>
-            Find the minimum item of <paramref name="list"/>.
+            Find the minimum item of <paramref name="span"/>.
             </summary>
             <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="list">list to find minimum</param>
+            <param name="span">span to find minimum</param>
             <returns>the minimum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Min``1(System.ReadOnlySpan{``0})">
             <summary>
-            Find the minimum item of <paramref name="list"/>.
+            Find the minimum item of <paramref name="span"/>.
             </summary>
             <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="list">list to find minimum</param>
+            <param name="span">span to find minimum</param>
             <returns>the minimum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrder``1(System.Collections.Generic.IReadOnlyList{``0},System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = result</c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Collections.Generic.IReadOnlyList{``0},System.Span{``0},System.Int32[])">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Collections.Generic.IReadOnlyList{``0},System.Span{``0},System.Span{System.Int32})">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Span{``0},System.Span{``0},System.Int32[])">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -9319,34 +9261,15 @@
             <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
             <returns>the re-ordered array</returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.Int32[])">
+        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
             Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
             </summary>
             <typeparam name="T">any type</typeparam>
             <param name="array">The array to order</param>
             <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
+            <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
             <returns>the re-ordered array</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Span{``0},``0[],System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Span{``0},System.Span{``0},System.Int32[])">
-            <summary>
-            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
         </member>
         <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -9357,7 +9280,7 @@
             <param name="target">The array to put the reordered result</param>
             <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Collections.Generic.IReadOnlyList{``0},System.Span{``0},System.Collections.Generic.IReadOnlyList{System.Int32})">
+        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
             Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
             </summary>
@@ -9366,27 +9289,9 @@
             <param name="target">The array to put the reordered result</param>
             <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Collections.Generic.IReadOnlyList{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
+        <member name="M:Althea.Linq.SpanLinq.FindPermutationTo``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
             <summary>
-            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Span{``0},``0[],System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FindPermutationTo``1(System.Collections.Generic.IReadOnlyList{``0},System.Collections.Generic.IReadOnlyList{``0},System.Span{System.Int32})">
-            <summary>
-            Find the permutation order such that <c><paramref name="array"/>[result] = <paramref name="target"/></c>
+            Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
             </summary>
             <typeparam name="T">any type</typeparam>
             <param name="array">The array before permutation</param>
@@ -9394,52 +9299,69 @@
             <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
             <returns>success or not</returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.InversePermutationTo(System.Collections.Generic.IReadOnlyList{System.Int32},System.Span{System.Int32})">
+        <member name="M:Althea.Linq.SpanLinq.FindPermutationTo``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
             <summary>
-            Find the inverse permutation of <paramref name="perm"/> such that <c>perm[result] == result[perm] == identity permutation</c>
+            Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array before permutation</param>
+            <param name="target">The array after the permutation</param>
+            <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
+            <returns>success or not</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.InversePermutationTo(System.Span{System.Int32},System.Span{System.Int32})">
+            <summary>
+            Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
             </summary>
             <param name="perm">The input permutation</param>
-            <param name="inv">The inverse permutation to put in</param>
+            <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.InversePermutationTo(System.ReadOnlySpan{System.Int32},System.Span{System.Int32})">
+            <summary>
+            Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
+            </summary>
+            <param name="perm">The input permutation</param>
+            <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
         </member>
         <member name="M:Althea.Linq.SpanLinq.AccumulateSum``1(System.Span{``0},System.Span{``0},``0,System.Boolean)">
             <summary>
             List accumulate summation.
             </summary>
-            <param name="list">The list to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
             <param name="init">The initial value</param>
             <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.AccumulateProd``1(System.Span{``0},System.Span{``0},``0,System.Boolean)">
             <summary>
             List accumulate product.
             </summary>
-            <param name="list">The list to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
             <param name="init">The initial value, default 0 will be replaced by 1</param>
             <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Sum``1(System.Span{``0})">
             <summary>
             List summation.
             </summary>
-            <param name="list">The span to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <returns>The summation result</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Prod``1(System.Span{``0})">
             <summary>
             List product.
             </summary>
-            <param name="list">The span to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <returns>The product result</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Sum``2(System.Span{``0},System.Converter{``0,``1})">
             <summary>
             List summation by <paramref name="selector"/>.
             </summary>
-            <param name="list">The list to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <param name="selector">The selector to apply to each element</param>
             <returns>The summation result</returns>
         </member>
@@ -9447,7 +9369,7 @@
             <summary>
             List product by <paramref name="selector"/>.
             </summary>
-            <param name="list">The list to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <param name="selector">The selector to apply to each element</param>
             <returns>The product result</returns>
         </member>
@@ -9455,41 +9377,41 @@
             <summary>
             List accumulate summation.
             </summary>
-            <param name="list">The list to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
             <param name="init">The initial value</param>
             <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.AccumulateProd``1(System.ReadOnlySpan{``0},System.Span{``0},``0,System.Boolean)">
             <summary>
             List accumulate product.
             </summary>
-            <param name="list">The list to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="list"/>, both end will be preserved</param>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
             <param name="init">The initial value, default 0 will be replaced by 1</param>
             <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="list"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="list"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> + 1)]</returns>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> + 1)]</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Sum``1(System.ReadOnlySpan{``0})">
             <summary>
             List summation.
             </summary>
-            <param name="list">The span to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <returns>The summation result</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Prod``1(System.ReadOnlySpan{``0})">
             <summary>
             List product.
             </summary>
-            <param name="list">The span to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <returns>The product result</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Sum``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
             <summary>
             List summation by <paramref name="selector"/>.
             </summary>
-            <param name="list">The list to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <param name="selector">The selector to apply to each element</param>
             <returns>The summation result</returns>
         </member>
@@ -9497,7 +9419,7 @@
             <summary>
             List product by <paramref name="selector"/>.
             </summary>
-            <param name="list">The list to accumulate</param>
+            <param name="span">The span to accumulate</param>
             <param name="selector">The selector to apply to each element</param>
             <returns>The product result</returns>
         </member>
@@ -9573,14 +9495,46 @@
             <returns>Predicate result</returns>
             <remarks>extend method of <paramref name="span"/></remarks>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.SequenceEqual``1(System.Span{``0},System.Collections.Generic.IReadOnlyList{``0})">
+        <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.Span{``0})">
             <summary>
-            Check if <paramref name="list"/>'s all elements are sequentially equal to <paramref name="other"/>'s
+            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
             </summary>
-            <typeparam name="T">data type</typeparam>
-            <param name="list">The list to compare</param>
-            <param name="other">The other list to compare</param>
-            <returns>Sequentially equals or not</returns>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to copy from</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.ReadOnlySpan{``0})">
+            <summary>
+            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.ReadOnlySpan{``0},``1@)">
+            <summary>
+            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="struct">The output <typeparamref name="TStruct"/></param>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.FromStruct``2(System.Span{``0},``1)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to <paramref name="span"/> byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="span">The span to copy to</param>
+            <param name="struct">The structure to copy</param>
+            <returns>The <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
         </member>
         <member name="M:Althea.Linq.SpanLinq.SetValue``1(System.Span{``0},``0)">
             <summary>
@@ -9601,7 +9555,6 @@
             <param name="value1">The first value of type <typeparamref name="T"/></param>
             <param name="value2">The second value of type <typeparamref name="T"/></param>
             <returns>The <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
         </member>
         <member name="M:Althea.Linq.SpanLinq.SetValue``1(System.Span{``0},``0,``0,``0)">
@@ -9614,7 +9567,6 @@
             <param name="value2">The second value of type <typeparamref name="T"/></param>
             <param name="value3">The third value of type <typeparamref name="T"/></param>
             <returns>The <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Ref``1(System.Span{``0})">
@@ -9672,33 +9624,13 @@
             <param name="span">The <see cref="T:System.Span`1"/> to be converted</param>
             <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.AsReferenceType``1(System.Span{System.IntPtr})">
+        <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.Span{``0})">
             <summary>
-            Cast the given <paramref name="span"/> of <see cref="T:System.IntPtr"/> to a <see cref="T:System.Span`1"/> of reference-type <typeparamref name="T"/>
+            Get the hash code of an span using CRC method
             </summary>
-            <typeparam name="T">The reference type to cast to</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> of <see cref="T:System.IntPtr"/> to cast from</param>
-            <returns>The <see cref="T:System.Span`1"/> of reference-type <typeparamref name="T"/> casted from <paramref name="span"/></returns>
-            <example>
-            <code>
-            Span&lt;IntPtr&gt; span = stackalloc IntPtr[5];<br/>
-            Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
-            </code>
-            </example>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AsReferenceType``1(System.ReadOnlySpan{System.IntPtr})">
-            <summary>
-            Cast the given <paramref name="span"/> of <see cref="T:System.IntPtr"/> to a <see cref="T:System.Span`1"/> of reference-type <typeparamref name="T"/>
-            </summary>
-            <typeparam name="T">The reference type to cast to</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> of <see cref="T:System.IntPtr"/> to cast from</param>
-            <returns>The <see cref="T:System.Span`1"/> of reference-type <typeparamref name="T"/> casted from <paramref name="span"/></returns>
-            <example>
-            <code>
-            Span&lt;IntPtr&gt; span = stackalloc IntPtr[5];<br/>
-            Span&lt;Some_Class_Type&gt; temp = span.AsReferenceType&lt;Some_Class_Type&gt;();
-            </code>
-            </example>
+            <typeparam name="T">any struct</typeparam>
+            <param name="span">span to get hash code</param>
+            <returns>the hash code of <paramref name="span"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.ReadOnlySpan{``0})">
             <summary>
@@ -9724,6 +9656,14 @@
             <param name="span">span to pick</param>
             <returns><paramref name="span"/>'s elements are unique or not</returns>
         </member>
+        <member name="M:Althea.Linq.SpanLinq.HashCodeOfSet``1(System.Span{``0})">
+            <summary>
+            Get the hash code of a set (order-independent) using ADD method
+            </summary>
+            <typeparam name="T">any struct</typeparam>
+            <param name="set">set to get hash code</param>
+            <returns>the hash code of <paramref name="set"/></returns>
+        </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSet``1(System.ReadOnlySpan{``0})">
             <summary>
             Get the hash code of a set (order-independent) using ADD method
@@ -9732,19 +9672,150 @@
             <param name="set">set to get hash code</param>
             <returns>the hash code of <paramref name="set"/></returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.DistinctCount(System.Span{System.Int32})">
+        <member name="M:Althea.Linq.SpanLinq.DistinctCount``1(System.Span{``0})">
             <summary>
-            Count the distinct element(s) in <paramref name="list"/>
+            Count the distinct element(s) in <paramref name="span"/>
             </summary>
-            <param name="list">list to pick</param>
+            <param name="span">span to pick</param>
             <returns>the number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.DistinctCount(System.ReadOnlySpan{System.Int32})">
+        <member name="M:Althea.Linq.SpanLinq.DistinctCount``1(System.ReadOnlySpan{``0})">
             <summary>
-            Count the distinct element(s) in <paramref name="list"/>
+            Count the distinct element(s) in <paramref name="span"/>
             </summary>
-            <param name="list">list to pick</param>
+            <param name="span">span to pick</param>
             <returns>the number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetExept``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
+            <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetExept``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
+            <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetIntersect``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetIntersect``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetIntersectIndex``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="outpuIndex">The output indices</param>
+            <returns><paramref name="outpuIndex"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetIntersectIndex``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="outpuIndex">The output indices</param>
+            <returns><paramref name="outpuIndex"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetIntersectWithIndex``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0}@,System.Span{System.Int32}@)">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
+            <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
+            <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetIntersectWithIndex``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0}@,System.Span{System.Int32}@)">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
+            <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
+            <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetUnion``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get union set</param>
+            <param name="set2">The second set to get union set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetUnion``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get union set</param>
+            <param name="set2">The second set to get union set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetEquals``1(System.Span{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to check set equals</param>
+            <param name="set2">The second set to check set equals</param>
+            <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
+            <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.SetEquals``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to check set equals</param>
+            <param name="set2">The second set to check set equals</param>
+            <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
+            <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.FillWithRange``1(System.Span{``0},``0,``0)">
             <summary>
@@ -13060,6 +13131,7 @@
             <summary>
             Binary operations used by tensor point-wise binary operations
             </summary>
+            <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
         </member>
         <member name="F:Althea.TensorAlgebra.BinaryOperation.Addition">
             <summary>
@@ -13085,6 +13157,7 @@
             <summary>
             Unitary operations of tensor point-wise unary operations
             </summary>
+            <remarks>All implementations shall support these pre-defined unary operations, but a implementation can add support for more unary operations.</remarks>
         </member>
         <member name="F:Althea.TensorAlgebra.UnaryOperation.Identity">
             <summary>
@@ -13150,6 +13223,16 @@
             </summary>
             <returns>The invalidness of this wrapper</returns>
         </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.#ctor(System.ReadOnlySpan{System.Int32},System.ReadOnlySpan{System.Int32},System.ReadOnlySpan{System.Int32},System.ReadOnlySpan{System.Int32})">
+            <summary>
+            Create a <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> with the given direct information
+            </summary>
+            <param name="leftConc">See <see cref="P:Althea.TensorAlgebra.TensorContractInfo.LeftContract"/></param>
+            <param name="rightConc">See <see cref="P:Althea.TensorAlgebra.TensorContractInfo.RightContract"/></param>
+            <param name="leftFree">See <see cref="P:Althea.TensorAlgebra.TensorContractInfo.LeftFreeInOutput"/></param>
+            <param name="rightFree">See <see cref="P:Althea.TensorAlgebra.TensorContractInfo.RightFreeInOutput"/></param>
+            <remarks>This constructor does not perform any check to the given parameters</remarks>
+        </member>
         <member name="M:Althea.TensorAlgebra.TensorContractInfo.#ctor(Althea.Arrays.ITensor,Althea.Arrays.ITensor,Althea.Arrays.ITensor,System.Span{System.Int32},System.Span{System.Int32},System.Span{System.Int32},System.Span{System.Int32})">
             <summary>
             Create a <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> with the given <paramref name="left"/>, <paramref name="right"/> and <paramref name="output"/> tensors
@@ -13181,6 +13264,24 @@
             <param name="left">The input left <see cref="T:Althea.Arrays.ITensor"/></param>
             <param name="right">The input right <see cref="T:Althea.Arrays.ITensor"/></param>
             <returns>The contraction part's rank</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.GetBinaryContractInfo(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Char},System.Span{System.Int32},System.Span{System.Int32},System.Span{System.Int32},System.Span{System.Int32},System.Span{System.Int64},System.Span{System.Char},System.ReadOnlySpan{System.Char})">
+            <summary>
+            Create a <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> from the given out-of-place binary contraction information
+            </summary>
+            <param name="sizeA">The input size of tensor A</param>
+            <param name="labelA">The input label of tensor A</param>
+            <param name="sizeB">The input size of tensor B</param>
+            <param name="labelB">The input label of tensor B</param>
+            <param name="concA">A <see cref="T:System.Span`1"/> of length equaling to contraction rank, to be filled</param>
+            <param name="concB">A <see cref="T:System.Span`1"/> of length equaling to contraction rank, to be filled</param>
+            <param name="freeCA">A <see cref="T:System.Span`1"/> of length equaling to left free rank minus contraction rank, to be filled</param>
+            <param name="freeCB">A <see cref="T:System.Span`1"/> of length equaling to right free rank minus contraction rank, to be filled</param>
+            <param name="outSize">A <see cref="T:System.Span`1"/> of length equaling to the output rank, to be filled by the output's size</param>
+            <param name="outLabels">A <see cref="T:System.Span`1"/> of length equaling to the output rank, to be filled by the output's labels</param>
+            <param name="outputLabels">The desired output tensor's labels, default empty means simple union of <paramref name="labelA"/> and <paramref name="labelB"/></param>
+            <returns>The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> created from the given parameters</returns>
+            <remarks>This method assumes that all labels are sets</remarks>
         </member>
         <member name="T:Althea.TensorAlgebra.Dense.AbstractApi">
             <summary>
@@ -13235,18 +13336,20 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.OperationBinary``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0})">
+        <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.OperationBinary``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},System.Span{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},System.Span{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0})">
             <summary>
-            Compute the point-wise binary operation for input <paramref name="left"/> and <paramref name="right"/> tensors and stored the result to the <paramref name="destination"/> tensor
+            Compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="binary">The <see cref="T:Althea.TensorAlgebra.BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
             <param name="left">The left input dense tensor as a <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/>, can be invalid</param>
             <param name="right">The right input dense tensor as a <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/>, can be invalid</param>
+            <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
+            <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
             <param name="destination">The destination dense tensor as a <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/>, its <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Operation"/> and <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Scalar"/> are ignored.</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-            <exception cref="T:System.ArgumentException">If the given tensors have different sizes; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
+            <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
         </member>
         <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.Reduce``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -13289,18 +13392,20 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.OperationBinary_``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0})">
+        <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.OperationBinary_``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},System.Span{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},System.Span{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0})">
             <summary>
-            When implemented by a derived class, compute the point-wise binary operation for input <paramref name="left"/> and <paramref name="right"/> tensors and stored the result to the <paramref name="destination"/> tensor
+            When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="binary">The <see cref="T:Althea.TensorAlgebra.BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
             <param name="left">The left input dense tensor as a <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/>, can be invalid</param>
             <param name="right">The right input dense tensor as a <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/>, can be invalid</param>
+            <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
+            <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
             <param name="destination">The destination dense tensor as a <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/>, its <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Operation"/> and <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Scalar"/> are ignored.</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
-            <exception cref="T:System.ArgumentException">If the given tensors have different sizes; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
+            <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
         </member>
         <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.Reduce_``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -13350,7 +13455,7 @@
             <summary>
             The outer size (actual size of all dimensions) of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/>
             </summary>
-            <remarks>If there is not pitch, <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.OuterSize"/> == <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Size"/></remarks>
+            <remarks>If there is not pitch, <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.OuterSize"/> == <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Size"/> (reference equals)</remarks>
         </member>
         <member name="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Operation">
             <summary>
@@ -13374,7 +13479,16 @@
             </summary>
             <returns>The invalidness of this wrapper</returns>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation)">
+            <summary>
+            Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with all given parameters and scalar set to 1
+            </summary>
+            <param name="value">The given dense storage</param>
+            <param name="size">The presenting size</param>
+            <param name="outerSize">The actual outer size</param>
+            <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},`0,Althea.TensorAlgebra.UnaryOperation)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with all given parameters
             </summary>
@@ -13382,7 +13496,7 @@
             <param name="size">The presenting size</param>
             <param name="outerSize">The actual outer size</param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
-            <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default 0 will be replaced by 1.</param>
+            <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
         </member>
         <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Arrays.TensorBase{`0},Althea.TensorAlgebra.UnaryOperation,`0)">
             <summary>
@@ -13440,7 +13554,7 @@
         </member>
         <member name="P:Althea.TensorAlgebra.TensorOrder.Identity">
             <summary>
-            The identity permutation
+            The identity permutation (in fact this is the default value)
             </summary>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)">
@@ -13468,6 +13582,23 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="P:System.Range.All"/> in <paramref name="chars"/></exception>
         </member>
+        <member name="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})">
+            <summary>
+            Create an order from a given (zero-based) permutation order as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/>.
+            </summary>
+            <param name="indices">The zero-based permutation order as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="indices"/> is null or of zero length</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="indices"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="P:System.Range.All"/> in <paramref name="indices"/></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any element in <paramref name="indices"/> is larger than 16</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Create an order from a given permutation order as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/>.
+            </summary>
+            <param name="chars">The permutation order as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="P:System.Range.All"/> in <paramref name="chars"/></exception>
+        </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.Clone">
             <summary>
             Clone this structure
@@ -13482,6 +13613,7 @@
             <param name="allowPartial">Whether to allow the actual permutation order to be a partial order one or not, default false</param>
             <param name="outputPermutation">The preallocated <see cref="T:System.Span`1"/> of <see cref="T:System.Int32"/> used to store the output the permutation order</param>
             <returns>The output the permutation order which is the first actual rank elements of <paramref name="outputPermutation"/></returns>
+            <remarks>If this <see cref="T:Althea.TensorAlgebra.TensorOrder"/> is a default value, an identity permutation will be returned</remarks>
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> or its <see cref="P:Althea.Arrays.ITensor.Labels"/> is null</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="tensor"/>.<see cref="P:Althea.Arrays.ITensor.Rank">Rank</see> is too small or <paramref name="tensor"/>.<see cref="P:Althea.Arrays.ITensor.Labels">Label</see> does not contain all of the <see cref="T:System.Char"/> label(s) of this <see cref="T:Althea.TensorAlgebra.TensorOrder"/></exception>
             <exception cref="T:System.ArgumentException">If <paramref name="tensor"/> leads to duplicated result permutation order</exception>
@@ -13507,6 +13639,18 @@
             <exception cref="T:System.ArgumentNullException">if <paramref name="tensor"/> is null</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="P:Althea.Arrays.ITensor.Rank"/> is too small</exception>
             <exception cref="T:System.ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.Span{System.Int32})~Althea.TensorAlgebra.TensorOrder">
+            <summary>
+            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            </summary>
+            <param name="span">The general span to indicate the permutation order</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ReadOnlySpan{System.Int32})~Althea.TensorAlgebra.TensorOrder">
+            <summary>
+            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            </summary>
+            <param name="span">The general span to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
 using Althea.Linq;
+using Althea.Resources;
 
 
 namespace Althea.TensorAlgebra
@@ -12,6 +12,7 @@ namespace Althea.TensorAlgebra
 	/// <summary>
 	/// Binary operations used by tensor point-wise binary operations
 	/// </summary>
+	/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
 	public enum BinaryOperation : int
 	{
 		/// <summary>
@@ -35,6 +36,7 @@ namespace Althea.TensorAlgebra
 	/// <summary>
 	/// Unitary operations of tensor point-wise unary operations
 	/// </summary>
+	/// <remarks>All implementations shall support these pre-defined unary operations, but a implementation can add support for more unary operations.</remarks>
 	public enum UnaryOperation : int
 	{
 		/// <summary>
@@ -104,7 +106,7 @@ namespace Althea.TensorAlgebra
 			if (freeN == 0)
 				return ReadOnlySpan<int>.Empty;
 			if (output.Length < freeN)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(output));
+				throw new ArgumentException(Parameter.WrongSize, nameof(output));
 			int n = 0;
 			for (int i = 0; i < rank; i++)
 			{
@@ -141,8 +143,16 @@ namespace Althea.TensorAlgebra
 		#endregion
 
 		#region create
+		/// <summary>
+		/// Create a <see cref="TensorContractInfo"/> with the given direct information
+		/// </summary>
+		/// <param name="leftConc">See <see cref="LeftContract"/></param>
+		/// <param name="rightConc">See <see cref="RightContract"/></param>
+		/// <param name="leftFree">See <see cref="LeftFreeInOutput"/></param>
+		/// <param name="rightFree">See <see cref="RightFreeInOutput"/></param>
+		/// <remarks>This constructor does not perform any check to the given parameters</remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TensorContractInfo(ReadOnlySpan<int> leftConc, ReadOnlySpan<int> rightConc, ReadOnlySpan<int> leftFree, ReadOnlySpan<int> rightFree)
+		public TensorContractInfo(ReadOnlySpan<int> leftConc, ReadOnlySpan<int> rightConc, ReadOnlySpan<int> leftFree, ReadOnlySpan<int> rightFree)
 		{
 			this.m_leftConc = leftConc; this.m_rightConc = rightConc;
 			this.m_leftFreeInOut = leftFree; this.m_rightFreeInOut = rightFree;
@@ -208,7 +218,6 @@ namespace Althea.TensorAlgebra
 			return commonRank;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ContractCheck(ReadOnlySpan<long> sizeA, ReadOnlySpan<char> labelA, ReadOnlySpan<long> sizeB, ReadOnlySpan<char> labelB, ReadOnlySpan<long> sizeC, ReadOnlySpan<char> labelC, Span<int> concA, Span<int> concB, Span<int> freeCA, Span<int> freeCB)
 		{
 			// get common mode and size & left and right contraction indices
@@ -223,7 +232,7 @@ namespace Althea.TensorAlgebra
 				if (ind >= 0)
 				{
 					if (sizeB[ind] != sizeA[i])
-						throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sizeA));
+						throw new ArgumentException(Parameter.WrongSize, nameof(sizeA));
 					commonMode[now] = labelA[i]; commonSize[now] = sizeA[i];
 					concA[now] = i; concB[now++] = ind;
 				}
@@ -248,12 +257,12 @@ namespace Althea.TensorAlgebra
 			}
 			// check free mode and size with C
 			if (now != rankC)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(sizeC));
+				throw new ArgumentException(Parameter.NotSameSize, nameof(sizeC));
 			for (int i = 0; i < rankC; i++)
 			{
 				int ind = labelC.IndexOf(freeMode[i]);
 				if (ind < 0 || sizeC[ind] != freeSize[i])
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sizeC));
+					throw new ArgumentException(Parameter.WrongSize, nameof(sizeC));
 			}
 			// get left and right free indices
 			int nowA = 0, nowB = 0;
@@ -267,6 +276,71 @@ namespace Althea.TensorAlgebra
 				var ind = labelC.IndexOf(freeMode[j]);
 				freeCB[nowB++] = ind;
 			}
+		}
+
+		/// <summary>
+		/// Create a <see cref="TensorContractInfo"/> from the given out-of-place binary contraction information
+		/// </summary>
+		/// <param name="sizeA">The input size of tensor A</param>
+		/// <param name="labelA">The input label of tensor A</param>
+		/// <param name="sizeB">The input size of tensor B</param>
+		/// <param name="labelB">The input label of tensor B</param>
+		/// <param name="concA">A <see cref="Span{T}"/> of length equaling to contraction rank, to be filled</param>
+		/// <param name="concB">A <see cref="Span{T}"/> of length equaling to contraction rank, to be filled</param>
+		/// <param name="freeCA">A <see cref="Span{T}"/> of length equaling to left free rank minus contraction rank, to be filled</param>
+		/// <param name="freeCB">A <see cref="Span{T}"/> of length equaling to right free rank minus contraction rank, to be filled</param>
+		/// <param name="outSize">A <see cref="Span{T}"/> of length equaling to the output rank, to be filled by the output's size</param>
+		/// <param name="outLabels">A <see cref="Span{T}"/> of length equaling to the output rank, to be filled by the output's labels</param>
+		/// <param name="outputLabels">The desired output tensor's labels, default empty means simple union of <paramref name="labelA"/> and <paramref name="labelB"/></param>
+		/// <returns>The <see cref="TensorContractInfo"/> created from the given parameters</returns>
+		/// <remarks>This method assumes that all labels are sets</remarks>
+		public static TensorContractInfo GetBinaryContractInfo(ReadOnlySpan<long> sizeA, ReadOnlySpan<char> labelA, ReadOnlySpan<long> sizeB, ReadOnlySpan<char> labelB, Span<int> concA, Span<int> concB, Span<int> freeCA, Span<int> freeCB, Span<long> outSize, Span<char> outLabels, ReadOnlySpan<char> outputLabels = default)
+		{
+			int commonRank = concA.Length, rankA = sizeA.Length, rankB = sizeB.Length, rankC = rankA + rankB - commonRank;
+			int freeARank = rankA - commonRank, freeBRank = rankB - commonRank;
+			// check sizes
+			if (labelA.Length != rankA)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(labelA));
+			if (labelB.Length != rankB)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(labelB));
+			if (concB.Length != commonRank)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(concB));
+			if (freeCA.Length != freeARank)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(freeCA));
+			if (freeCB.Length != freeARank)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(freeCB));
+			if (outSize.Length != rankC)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(outSize));
+			if (outLabels.Length != rankC)
+				throw new ArgumentException(Parameter.NotSameSize, nameof(outLabels));
+			if (!outputLabels.ElementsUnique())
+				throw new ArgumentException(Parameter.DuplicateValue, nameof(outputLabels));
+			// check output label
+			Span<char> simpleLabelC = stackalloc char[rankA + rankB];
+			simpleLabelC = labelA.SetUnion(labelB, simpleLabelC);
+			if (!outputLabels.IsEmpty && !simpleLabelC.SetEquals(outputLabels))
+				throw new ArgumentException(Parameter.InvalidValue, nameof(outputLabels));
+			// check contraction size
+			Span<char> commonLabel = stackalloc char[Math.Min(rankA, rankB)];
+			commonLabel = labelA.SetIntersect(labelB, commonLabel);
+			labelA.SetIntersectIndex(commonLabel, concA); labelB.SetIntersectIndex(commonLabel, concB);
+			Span<long> concSizeA = stackalloc long[commonRank], concSizeB = stackalloc long[commonRank];
+			sizeA.ReOrderTo(concSizeA, concA); sizeB.ReOrderTo(concSizeB, concB);
+			if (!concSizeA.SequenceEqual(concSizeB))
+				throw new ArgumentException(Parameter.WrongSize, nameof(sizeB));
+			// get output permutation
+			ReadOnlySpan<char> outLabel = outputLabels.IsEmpty ? simpleLabelC : outputLabels;
+			outLabel.CopyTo(outLabels);
+			outLabel.SetIntersectIndex(labelA, freeCA); outLabel.SetIntersectIndex(labelB, freeCB);
+			// get output size
+			Span<int> freeA = stackalloc int[freeARank], freeB = stackalloc int[freeBRank];
+			Span<int> identityPerm = stackalloc int[Math.Max(rankA, rankB)].FillWithRange(0);
+			identityPerm[..rankA].SetExept(concA, freeA); identityPerm[..rankB].SetExept(concB, freeB);
+			Span<long> freeSizeA = stackalloc long[freeARank], freeSizeB = stackalloc long[freeBRank];
+			sizeA.ReOrderTo(freeSizeA, freeA); sizeB.ReOrderTo(concSizeB, freeB);
+			freeSizeA.InverseOrderTo(outSize, freeCA); freeSizeB.InverseOrderTo(outSize, freeCB);
+			// get contraction info
+			return new(concA, concB, freeCA, freeCB);
 		}
 		#endregion
 	}
