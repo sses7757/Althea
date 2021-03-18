@@ -18,34 +18,21 @@ namespace Althea.Arrays
 	/// </remarks>
 	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged
 	{
-		#region members
-		/// <summary>
-		/// The member that actually stores the size of this array
-		/// </summary>
-		protected readonly SizedFixedBuffer_128<long> m_size = default;
-
-		private readonly long m_length = 0;
-		#endregion
-
 		#region properties
-		/// <summary>
-		/// Get the rank of this array as a <see cref="int"/>
-		/// </summary>
-		public int Rank {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_size.Count;
-		}
+		private readonly long m_length;
 
 		/// <summary>
-		/// Get the size of this mutable array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// When implemented by a derived class, get the rank of this array as a <see cref="int"/>
 		/// </summary>
-		public ReadOnlySpan<long> Size {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_size.AsSpan();
-		}
+		public abstract int Rank { get; }
 
 		/// <summary>
-		/// Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
+		/// When implemented by a derived class, get the size of this array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		public abstract ReadOnlySpan<long> Size { get; }
+
+		/// <summary>
+		/// Get the total appearance length of the array, in <typeparamref name="T"/> rather than bytes
 		/// </summary>
 		public long Length {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,25 +42,16 @@ namespace Althea.Arrays
 
 		#region initialize and dispose
 		/// <summary>
-		/// Create a new instance of <see cref="AbstractArray{T}"/> by indicating the size of each rank.
+		/// Create a new instance of <see cref="AbstractArray{T}"/> by indicating the total appearance length.
 		/// </summary>
-		/// <param name="size">The size of this abstract array as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="size"/> is of length 0</exception>
-		/// <exception cref="NotSupportedException">If <paramref name="size"/> has length larger than 16</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> contains any non-positive value</exception>
-		protected AbstractArray(ReadOnlySpan<long> size)
+		/// <param name="length">The total appearance length of this array as a <see cref="long"/>, 0 means an empty array</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> is negative</exception>
+		protected AbstractArray(long length)
 		{
-			if (size.Length == 0)
-				throw new ArgumentNullException(nameof(size));
-			if (size.Length > 16)
-				throw new NotSupportedException(Resources.Parameter.WrongSize);
-			if (size.Length == 1 && size[0] == 0)
-				return;
-			if (size.Any(static s => s <= 0))
-				throw new ArgumentOutOfRangeException(nameof(size), size.ToArray(), Resources.Parameter.MustPositive);
+			if (length < 0)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.CannotNegative);
 
-			this.m_size = new SizedFixedBuffer_128<long>(size);
-			this.m_length = size.Prod();
+			this.m_length = length;
 		}
 
 		/// <summary>
@@ -112,11 +90,11 @@ namespace Althea.Arrays
 		public abstract override int GetHashCode();
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation <b>only</b> compares the size.
+		/// When implemented by a derived class, check whether this array equals to another object.
 		/// </summary>
-		/// <param name="obj">The other <see cref="AbstractArray{T}"/> to compare with</param>
+		/// <param name="obj">The other object to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj) => obj is AbstractArray<T> arr && this.m_size == arr.m_size;
+		public abstract override bool Equals(object? obj);
 		#endregion
 
 		#region operators
@@ -126,6 +104,7 @@ namespace Althea.Arrays
 		/// <param name="left">The left operand</param>
 		/// <param name="right">The right operand</param>
 		/// <returns><paramref name="left"/> == <paramref name="right"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(AbstractArray<T>? left, AbstractArray<T>? right)
 		{
 			if (ReferenceEquals(left, right))
@@ -148,6 +127,7 @@ namespace Althea.Arrays
 		/// <param name="left">The left operand</param>
 		/// <param name="right">The right operand</param>
 		/// <returns><paramref name="left"/> != <paramref name="right"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(AbstractArray<T>? left, AbstractArray<T>? right) => !(left == right);
 		#endregion
 

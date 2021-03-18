@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Arrays;
 using Althea.Helpers;
@@ -17,21 +18,31 @@ namespace Althea.Backend.Arrays
 	/// The concrete symmetric or hermitian dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	[StructLayout(LayoutKind.Explicit)]
 	public class SymmetricDenseMatrix<T> : MatrixBase<T>, IKrylovVector<SymmetricDenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T> where T : unmanaged
 	{
 		#region basic
-		private readonly FixedBuffer_16<long> m_outerSize = default;
-
+		[FieldOffset(0)]
 		private readonly FixedBuffer_16<long> m_strides = default;
+		[FieldOffset(sizeof(long))]
+		private readonly FixedBuffer_16<long> m_outerSize = default;
+		[FieldOffset(sizeof(long))]
+		private readonly long m_leadDim = 0;
 
+		[FieldOffset(sizeof(long) * 2)]
 		private readonly DenseMatrix<T> m_dense;
+
+		[FieldOffset(sizeof(long) * 3)]
+		private readonly bool m_hermitian = false;
+		[FieldOffset(sizeof(long) * 3 + sizeof(bool))]
+		private readonly bool m_upper = true;
 
 		/// <summary>
 		/// Get the leading dimension (the length in <typeparamref name="T"/> between to consecutive column starting elements) of this dense matrix
 		/// </summary>
 		public long LeadDim {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_size[0];
+			get => this.m_leadDim;
 		}
 
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => this.m_outerSize.AsSpan();
@@ -41,12 +52,18 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this symmetric matrix is hermitian or simply symmetric. For real-typed <typeparamref name="T"/>, this is always false.
 		/// </summary>
-		public bool Hermitian { get; } = false;
+		public bool Hermitian {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_hermitian;
+		}
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this symmetric matrix stores the data at upper triangle or lower triangle
 		/// </summary>
-		public bool StoredUpper { get; } = true;
+		public bool StoredUpper {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_upper;
+		}
 
 		/// <summary>
 		/// Create an empty <see cref="SymmetricDenseMatrix{T}"/>
@@ -75,7 +92,7 @@ namespace Althea.Backend.Arrays
 
 			this.m_outerSize = default;
 			this.m_outerSize[0] = leadDim; this.m_outerSize[1] = n;
-			this.Hermitian = hermitian && Const<T>.IsComplex; this.StoredUpper = storedUpper;
+			this.m_hermitian = hermitian && Const<T>.IsComplex; this.m_upper = storedUpper;
 			this.m_dense = new DenseMatrix<T>(this.Storage, this.NRows, this.NCols, this.LeadDim);
 		}
 		#endregion

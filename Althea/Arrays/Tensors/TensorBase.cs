@@ -17,15 +17,40 @@ namespace Althea.Arrays
 	public abstract class TensorBase<T> : ValueArray<T>, ITensor where T : unmanaged
 	{
 		#region basic
+		// previously defined 8 + (8 * 2) bytes
+		private readonly FixedBuffer_128<long> m_size = default;
+
 		private readonly FixedBuffer_128<long> m_sizeProd = default;
 
 		private FixedBuffer_32<char> m_labels = default;
+
+		private readonly int m_rank = 0;
+		// this defines extra 128 + 128 + 32 + 4 bytes
+
+		/// <summary>
+		/// Get the rank of this tensor as a <see cref="int"/>
+		/// </summary>
+		public override int Rank {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_rank;
+		}
+
+		/// <summary>
+		/// Get the size of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		public override ReadOnlySpan<long> Size {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size.AsSpan(this.m_rank);
+		}
 
 		/// <summary>
 		/// Get the (inclusive) accumulated product of the <see cref="AbstractArray{T}.Size"/> of this tensor
 		/// </summary>
 		/// <remarks>The first element is 1 and the length is the same as <see cref="AbstractArray{T}.Size"/></remarks>
-		public ReadOnlySpan<long> SizeProd => this.m_sizeProd.AsSpan(this.Rank);
+		public ReadOnlySpan<long> SizeProd {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_sizeProd.AsSpan(this.m_rank);
+		}
 
 		/// <summary>
 		/// Construct a <see cref="TensorBase{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="size"/>
@@ -35,21 +60,27 @@ namespace Althea.Arrays
 		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
 		/// <param name="actualLength">The actual length of the <paramref name="values"/>, default 0 means the length of it</param>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
-		protected TensorBase(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<char> labels, long actualLength = 0) : base(values, size, actualLength)
+		protected TensorBase(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<char> labels, long actualLength = 0) : base(values, size.Prod(), actualLength)
 		{
+			if (size.Length == 0)
+				throw new ArgumentNullException(nameof(size));
+			if (size.Length > 16)
+				throw new NotSupportedException(Resources.Parameter.WrongSize);
+			if (size.Length == 1 && size[0] == 0)
+				return;
+			if (size.Any(static s => s <= 0))
+				throw new ArgumentOutOfRangeException(nameof(size), size.IndexOf(static s => s <= 0), Resources.Parameter.MustPositive);
+			if (!labels.IsEmpty && labels.Length != size.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(labels));
+			// get real labels
 			Span<char> span = stackalloc char[size.Length];
 			if (labels.IsEmpty)
-			{
 				span.FillWithRange('a');
-			}
 			else
-			{
 				labels.CopyTo(span);
-			}
-			if (labels.Length != size.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(labels));
+			// set members
+			this.m_rank = size.Length;
 			this.m_labels.CopyFromSpan(span);
-
 			var prod = this.m_sizeProd.AsSpan(this.Rank);
 			this.Size.AccumulateProd(result: prod, inclusive: true);
 		}

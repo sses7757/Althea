@@ -803,7 +803,10 @@ namespace Althea
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in bytes. The default implementation returns the multiplication of <see cref="Length"/> and <see cref="Const{T}.SizeT"/>.
 		/// </summary>
-		public virtual long LengthInBytes => this.Length * Const<T>.SizeT;
+		public virtual long LengthInBytes {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Length * Const<T>.SizeT;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
@@ -855,6 +858,7 @@ namespace Althea
 		/// When implemented by a derived class, allocate and creates a new <see cref="Storage{T}"/> that is a copy of the current one. The default implementation utilizes <see cref="Althea.Storage.StorageFactory{T}.CreateAlike(Storage{T})"/> and <see cref="MEM.MemoryCopy{T}(Storage{T}, Storage{T})"/>.
 		/// </summary>
 		/// <returns>A new <see cref="Storage{T}"/> that is a copy of the current instance</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual ActualStorage<T> Clone()
 		{
 			var storage = Storage.StorageFactory<T>.CreateAlike(this);
@@ -874,6 +878,7 @@ namespace Althea
 		/// When implemented by a derived class, allocate and creates a new <see cref="Storage{T}"/> alike the current one. The default implementation utilizes <see cref="Althea.Storage.StorageFactory{T}.CreateAlike(Storage{T})"/>.
 		/// </summary>
 		/// <returns>A new <see cref="Storage{T}"/> that is a copy of the current instance</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual ActualStorage<T> CreateAlike() => Storage.StorageFactory<T>.CreateAlike(this);
 
 		/// <summary>
@@ -881,6 +886,7 @@ namespace Althea
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
 		/// <returns>A new <see cref="Storage{T}"/> of <typeparamref name="TOut"/> that is a copy of the current instance</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual ActualStorage<TOut> CreateAlike<TOut>() where TOut : unmanaged => Storage.StorageFactory<T>.CreateAlike<TOut>(this);
 
 		/// <summary>
@@ -893,6 +899,7 @@ namespace Althea
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="locationsAndLengths"/> has length(s) equals to 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ActualStorage<T> Create(CombinationType combinationType, params (StorageLocation location, long length)[] locationsAndLengths)
 		{
 			if (locationsAndLengths is null || locationsAndLengths.Length <= 0)
@@ -926,6 +933,7 @@ namespace Althea
 		/// <param name="length">The corresponding length in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <exception cref="InvalidOperationException">If underlying creation fails</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ActualStorage<T> Create(StorageLocation location, long length)
 		{
 			Span<StorageLocation> locations = stackalloc StorageLocation[1];
@@ -991,6 +999,7 @@ namespace Althea
 		/// When implemented by a derived class, make a direct <see cref="ReferenceStorage{T}"/> of this one.
 		/// </summary>
 		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual ReferenceStorage<T> MakeReference() => this is ReferenceStorage<T> @ref ? @ref : this.MakeReference(0, 0);
 
 		/// <summary>
@@ -1001,6 +1010,7 @@ namespace Althea
 		/// <param name="sizeInBytes">Whether <paramref name="size"/> is in bytes or in <typeparamref name="T"/></param>
 		/// <returns>The <paramref name="size"/> (multiplies the size of <typeparamref name="T"/> then) divides the size of <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">if <paramref name="size"/>( multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static long CheckCast<TOut>(long size, bool sizeInBytes = false) where TOut : unmanaged
 		{
 			long newSize = sizeInBytes ? size : (size * Const<T>.SizeT);
@@ -1022,12 +1032,14 @@ namespace Althea
 		/// Create a referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage
 		/// </summary>
 		/// <returns>A referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Storage<byte> AsByteStorage() => this.As<byte>();
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not. The default implementation checks the <see cref="Disposed"/>, <see cref="Count"/> and the <see cref="ICheckValid.IsValid"/> of each pointer.
 		/// </summary>
 		/// <returns>The validness of this <see cref="Storage{T}"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual bool IsValid()
 		{
 			if (this.Disposed || this.Count == 0)

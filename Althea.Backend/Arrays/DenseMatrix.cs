@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Arrays;
 using Althea.Helpers;
@@ -149,20 +150,24 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense matrix class with the only <see cref="ValueArray{T}.Storage"/> that refers to the data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	[StructLayout(LayoutKind.Explicit)]
 	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T>
 		where T : unmanaged
 	{
 		#region basic
-		private readonly FixedBuffer_16<long> m_outerSize = default;
-
+		[FieldOffset(0)]
 		private readonly FixedBuffer_16<long> m_strides = default;
+		[FieldOffset(sizeof(long))]
+		private readonly FixedBuffer_16<long> m_outerSize = default;
+		[FieldOffset(sizeof(long))]
+		private readonly long m_leadDim = 0;
 
 		/// <summary>
 		/// Get the leading dimension (the length in <typeparamref name="T"/> between to consecutive column starting elements) of this dense matrix
 		/// </summary>
 		public long LeadDim {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_outerSize[0];
+			get => this.m_leadDim;
 		}
 
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => this.m_outerSize.AsSpan();

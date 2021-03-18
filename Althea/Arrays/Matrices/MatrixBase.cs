@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-using Althea.Linq;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra;
+using Althea.NativeTypes;
 
 
 namespace Althea.Arrays
@@ -13,23 +13,49 @@ namespace Althea.Arrays
 	/// The abstract matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="MatrixBase{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	[StructLayout(LayoutKind.Explicit)]
 	public abstract class MatrixBase<T> : ValueArray<T> where T : unmanaged
 	{
 		#region basic
+		// previously defined 8 + (8 * 2) bytes
+		[FieldOffset(0)]
+		private readonly FixedBuffer_16<long> m_size = default;
+		[FieldOffset(0)]
+		private readonly long m_rows;
+		[FieldOffset(sizeof(long))]
+		private readonly long m_cols;
+		// this defined extra 8 + 8 bytes
+
 		/// <summary>
-		/// Number of rows of this matrix
+		/// Get the rank of this matrix -- 2
 		/// </summary>
-		public long NRows {
+		public override int Rank {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_size[0];
+			get => 2;
 		}
 
 		/// <summary>
-		/// Number of columns of this matrix
+		/// Get the size of this matrix ({<see cref="NRows"/>, <see cref="NCols"/>}) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		public override ReadOnlySpan<long> Size {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size.AsSpan();
+		}
+
+		/// <summary>
+		/// Get the umber of rows of this matrix
+		/// </summary>
+		public long NRows {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_rows;
+		}
+
+		/// <summary>
+		/// Get the umber of columns of this matrix
 		/// </summary>
 		public long NCols {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_size[1];
+			get => this.m_cols;
 		}
 
 		/// <summary>
@@ -39,7 +65,7 @@ namespace Althea.Arrays
 		/// <param name="rows">The presenting number of rows of this matrix</param>
 		/// <param name="cols">The presenting number of columns of this matrix</param>
 		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
-		protected MatrixBase(Storage<T> values, long rows, long cols, long actualLength = 0) : base(values, stackalloc long[2].SetValue(rows, cols), actualLength) { }
+		protected MatrixBase(Storage<T> values, long rows, long cols, long actualLength = 0) : base(values, rows * cols, actualLength) { }
 		#endregion
 
 		#region basic indexers
@@ -201,6 +227,7 @@ namespace Althea.Arrays
 		#endregion
 
 		#region diagonal indexer
+		[FieldOffset(2 * sizeof(long))]
 		private MatrixDiagonalAccessor<T> m_diagonalAccessor;
 
 		/// <summary>

@@ -29,20 +29,20 @@ namespace Althea.Arrays
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 
-		// offset = 0
+		// previously defined 8 + (8 * 2) + (8 * 2) bytes
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
-		// offset = 64
+		// offset = 40 + 64
 		/// <summary>
 		/// The member of all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>, is null if there is only one index array
 		/// </summary>
 		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
 
-		// offset = 132
+		// offset = 40 + 132
 		private readonly SparseMatrixFormat m_format;
 
-		// offset = 136
+		// offset = 40 + 136
 		private T m_defaultValue;
-		// offset = 136 + size of T
+		// this defines extra (136 + size of T) bytes
 
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.

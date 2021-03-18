@@ -16,34 +16,27 @@
             Therefore, the derived class shall follow the same strategy, such as <see cref="T:Althea.Arrays.SparseVector`2"/> and <see cref="T:Althea.Arrays.SparseMatrix`2"/>.
             </remarks>
         </member>
-        <member name="F:Althea.Arrays.AbstractArray`1.m_size">
-            <summary>
-            The member that actually stores the size of this array
-            </summary>
-        </member>
         <member name="P:Althea.Arrays.AbstractArray`1.Rank">
             <summary>
-            Get the rank of this array as a <see cref="T:System.Int32"/>
+            When implemented by a derived class, get the rank of this array as a <see cref="T:System.Int32"/>
             </summary>
         </member>
         <member name="P:Althea.Arrays.AbstractArray`1.Size">
             <summary>
-            Get the size of this mutable array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            When implemented by a derived class, get the size of this array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
             </summary>
         </member>
         <member name="P:Althea.Arrays.AbstractArray`1.Length">
             <summary>
-            Total appearance length of the array, in <typeparamref name="T"/> rather than bytes
+            Get the total appearance length of the array, in <typeparamref name="T"/> rather than bytes
             </summary>
         </member>
-        <member name="M:Althea.Arrays.AbstractArray`1.#ctor(System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.AbstractArray`1.#ctor(System.Int64)">
             <summary>
-            Create a new instance of <see cref="T:Althea.Arrays.AbstractArray`1"/> by indicating the size of each rank.
+            Create a new instance of <see cref="T:Althea.Arrays.AbstractArray`1"/> by indicating the total appearance length.
             </summary>
-            <param name="size">The size of this abstract array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="size"/> is of length 0</exception>
-            <exception cref="T:System.NotSupportedException">If <paramref name="size"/> has length larger than 16</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> contains any non-positive value</exception>
+            <param name="length">The total appearance length of this array as a <see cref="T:System.Int64"/>, 0 means an empty array</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> is negative</exception>
         </member>
         <member name="P:Althea.Arrays.AbstractArray`1.Disposed">
             <summary>
@@ -75,9 +68,9 @@
         </member>
         <member name="M:Althea.Arrays.AbstractArray`1.Equals(System.Object)">
             <summary>
-            When implemented by a derived class, check whether this object is equal to another one. The default implementation <b>only</b> compares the size.
+            When implemented by a derived class, check whether this array equals to another object.
             </summary>
-            <param name="obj">The other <see cref="T:Althea.Arrays.AbstractArray`1"/> to compare with</param>
+            <param name="obj">The other object to compare with</param>
             <returns>True if this == <paramref name="obj"/></returns>
         </member>
         <member name="M:Althea.Arrays.AbstractArray`1.op_Equality(Althea.Arrays.AbstractArray{`0},Althea.Arrays.AbstractArray{`0})">
@@ -498,14 +491,24 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
+        <member name="P:Althea.Arrays.MatrixBase`1.Rank">
+            <summary>
+            Get the rank of this matrix -- 2
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.MatrixBase`1.Size">
+            <summary>
+            Get the size of this matrix ({<see cref="P:Althea.Arrays.MatrixBase`1.NRows"/>, <see cref="P:Althea.Arrays.MatrixBase`1.NCols"/>}) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            </summary>
+        </member>
         <member name="P:Althea.Arrays.MatrixBase`1.NRows">
             <summary>
-            Number of rows of this matrix
+            Get the umber of rows of this matrix
             </summary>
         </member>
         <member name="P:Althea.Arrays.MatrixBase`1.NCols">
             <summary>
-            Number of columns of this matrix
+            Get the umber of columns of this matrix
             </summary>
         </member>
         <member name="M:Althea.Arrays.MatrixBase`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64,System.Int64)">
@@ -1011,6 +1014,16 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
+        <member name="P:Althea.Arrays.TensorBase`1.Rank">
+            <summary>
+            Get the rank of this tensor as a <see cref="T:System.Int32"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.TensorBase`1.Size">
+            <summary>
+            Get the size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            </summary>
+        </member>
         <member name="P:Althea.Arrays.TensorBase`1.SizeProd">
             <summary>
             Get the (inclusive) accumulated product of the <see cref="P:Althea.Arrays.AbstractArray`1.Size"/> of this tensor
@@ -1309,15 +1322,15 @@
             </summary>
             <returns>The validness of this array</returns>
         </member>
-        <member name="M:Althea.Arrays.ValueArray`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.Int64)">
+        <member name="M:Althea.Arrays.ValueArray`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.ValueArray`1"/> using preallocated <paramref name="storage"/> and given <paramref name="size"/>
+            Create a new <see cref="T:Althea.Arrays.ValueArray`1"/> using preallocated <paramref name="storage"/> and given <paramref name="length"/>
             </summary>
             <param name="storage">The preallocated <see cref="T:Althea.Storage`1"/> (can be a <see cref="T:Althea.ReferenceStorage`1"/>) as the underlying <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> of this array</param>
-            <param name="size">The presenting size of this array</param>
+            <param name="length">The total appearance length of this array as a <see cref="T:System.Int64"/>, 0 means an empty array</param>
             <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="storage"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="size"/> is not 0 while <paramref name="storage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="actualLength"/> is out of the length range of <paramref name="storage"/> or <paramref name="size"/></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> is negative</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="actualLength"/> is out of the length range of <paramref name="storage"/></exception>
         </member>
         <member name="M:Althea.Arrays.ValueArray`1.Dispose(System.Boolean)">
             <summary>
@@ -1501,7 +1514,7 @@
         </member>
         <member name="M:Althea.Arrays.ValueArray`1.Equals(System.Object)">
             <summary>
-            When implemented by a derived class, check whether this object is equal to another one. The default implementation utilizes <see cref="M:Althea.Arrays.AbstractArray`1.Equals(System.Object)"/> and additionally compares <see cref="P:Althea.Arrays.ValueArray`1.Storage"/>s.
+            When implemented by a derived class, check whether this object is equal to another one. The default implementation only compares <see cref="P:Althea.Arrays.ValueArray`1.Storage"/>s.
             </summary>
             <param name="obj">The other object to compare with</param>
             <returns>True if this == <paramref name="obj"/></returns>
@@ -3381,6 +3394,42 @@
             <param name="span">The time span</param>
             <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
             <returns>the string representation</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.Char)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.String)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.Char)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.String)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
         <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.Span{``0},System.Int32)">
             <summary>

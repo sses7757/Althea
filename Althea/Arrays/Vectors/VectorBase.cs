@@ -1,28 +1,50 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-using Althea.Linq;
 using Althea.Helpers;
 using Althea.NativeTypes;
-using System.Runtime.CompilerServices;
+
 
 namespace Althea.Arrays
 {
-/// <summary>
-/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
-/// </summary>
-/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <summary>
+	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public abstract class VectorBase<T> : ValueArray<T>, IReadOnlyList<T> where T : unmanaged
 	{
-		#region initialize
+		#region basic
+		private long m_length;
+
+		/// <summary>
+		/// Get the rank of this vector -- 1
+		/// </summary>
+		public override int Rank {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
+
+		/// <summary>
+		/// Get the size of this vector ({<see cref="AbstractArray{T}.Length"/>}) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		public override ReadOnlySpan<long> Size {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_length, 1);
+		}
+
 		/// <summary>
 		/// Construct a <see cref="VectorBase{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="length"/>
 		/// </summary>
 		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
 		/// <param name="length">The presenting size of the vector</param>
 		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
-		protected VectorBase(Storage<T> values, long length, long actualLength = 0) : base(values, stackalloc long[1].SetValue(length), actualLength) { }
+		protected VectorBase(Storage<T> values, long length, long actualLength = 0) : base(values, length, actualLength)
+		{
+			this.m_length = length;
+		}
 		#endregion
 
 		#region reshape

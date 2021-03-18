@@ -41,21 +41,22 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, check whether this array is a valid one or not. The default implementation only checks <see cref="AbstractArray{T}.Length"/> and <see cref="Storage"/>.
 		/// </summary>
 		/// <returns>The validness of this array</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual bool IsValid() => this.Length > 0 && this.Storage is not null && this.Storage.IsValid();
 		#endregion
 
 		#region initialize and destroy
 		/// <summary>
-		/// Create a new <see cref="ValueArray{T}"/> using preallocated <paramref name="storage"/> and given <paramref name="size"/>
+		/// Create a new <see cref="ValueArray{T}"/> using preallocated <paramref name="storage"/> and given <paramref name="length"/>
 		/// </summary>
 		/// <param name="storage">The preallocated <see cref="Storage{T}"/> (can be a <see cref="ReferenceStorage{T}"/>) as the underlying <see cref="Storage"/> of this array</param>
-		/// <param name="size">The presenting size of this array</param>
+		/// <param name="length">The total appearance length of this array as a <see cref="long"/>, 0 means an empty array</param>
 		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="storage"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="size"/> is not 0 while <paramref name="storage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="actualLength"/> is out of the length range of <paramref name="storage"/> or <paramref name="size"/></exception>
-		protected ValueArray(Storage<T> storage, ReadOnlySpan<long> size, long actualLength = 0) : base(size)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> is negative</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="actualLength"/> is out of the length range of <paramref name="storage"/></exception>
+		protected ValueArray(Storage<T> storage, long length, long actualLength = 0) : base(length)
 		{
-			if (size.Length == 1 && size[0] == 0)
+			if (length == 0)
 			{
 				this.m_orginalStorage = this.Storage = Storage<T>.Empty;
 				return;
@@ -929,7 +930,7 @@ namespace Althea.Arrays
 		public override int GetHashCode() => HashCode.Combine(this.Storage, this.Size.HashCodeOfSpan());
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation utilizes <see cref="AbstractArray{T}.Equals(object?)"/> and additionally compares <see cref="Storage"/>s.
+		/// When implemented by a derived class, check whether this object is equal to another one. The default implementation only compares <see cref="Storage"/>s.
 		/// </summary>
 		/// <param name="obj">The other object to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>
@@ -938,7 +939,7 @@ namespace Althea.Arrays
 			if (obj is null || obj is not ValueArray<T> a)
 				return false;
 			else
-				return base.Equals(obj) && this.Storage == a.Storage;
+				return this.Storage == a.Storage;
 		}
 		#endregion
 
