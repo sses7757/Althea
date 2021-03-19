@@ -139,6 +139,7 @@ namespace Althea.NativeTypes
 		#region delegates
 		internal static readonly Func<T, T> ReciprocalDelegate, NegateDelegate, SqrtDelegate, ConjugateDelegate;
 		internal static readonly Func<T, double> AbsoluteDelegate;
+		internal static readonly Converter<T, double> AbsoluteDelegate_;
 
 		internal static readonly Func<T, T, T> AddDelegate;
 		internal static readonly Func<T, T, T> SubtractDelegate;
@@ -406,11 +407,13 @@ namespace Althea.NativeTypes
 			}
 		}
 
-		private static Func<T, double> GetAbsolute()
+		private static void GetAbsolute(out Func<T, double> result1, out Converter<T, double> result2)
 		{
 			if (DataTypeClass == DataTypeClassification.UnsignedInteger)
 			{
-				return static v => ConstConvert<T, double>.ConvertDelegate.Invoke(v);
+				result1 = static v => ConstConvert<T, double>.ConvertDelegate.Invoke(v);
+				result2 = ConstConvert<T, double>.ConvertDelegate;
+				return;
 			}
 			else if (typeof(T).IsPrimitive)
 			{
@@ -420,7 +423,8 @@ namespace Althea.NativeTypes
 				IL.Emit(OpCodes.Call, typeof(Math).GetMethod(nameof(Math.Abs), new[] { typeof(T) }) ?? throw new NotSupportedException());
 				IL.Emit(OpCodes.Conv_R8);
 				IL.Emit(OpCodes.Ret);
-				return method.CreateDelegate<Func<T, double>>();
+				result1 = method.CreateDelegate<Func<T, double>>();
+				result2 = method.CreateDelegate<Converter<T, double>>();
 			}
 			else
 			{
@@ -433,16 +437,24 @@ namespace Althea.NativeTypes
 				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorNonStatic).FirstOrDefault();
 				func ??= typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(predicatorStatic).FirstOrDefault();
 				if (func is null)
-					return static v => ((dynamic)v).Sqrt();
+				{
+					result1 = static v => ((dynamic)v).Sqrt();
+					result2 = static v => ((dynamic)v).Sqrt();
+					return;
+				}
 				if (func.IsStatic)
-					return func.CreateDelegate<Func<T, double>>();
+				{
+					result1 = func.CreateDelegate<Func<T, double>>();
+					result2 = func.CreateDelegate<Converter<T, double>>();
+				}
 				// object call
 				DynamicMethod method = new("Absolute", ATTR, CALL, typeof(double), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Callvirt, func);
 				IL.Emit(OpCodes.Ret);
-				return method.CreateDelegate<Func<T, double>>();
+				result1 = method.CreateDelegate<Func<T, double>>();
+				result2 = method.CreateDelegate<Converter<T, double>>();
 			}
 		}
 		#endregion
@@ -468,7 +480,7 @@ namespace Althea.NativeTypes
 			NegateDelegate = GetNegate();
 			SqrtDelegate = GetSqrt();
 			ConjugateDelegate = GetConjugate();
-			AbsoluteDelegate = GetAbsolute();
+			GetAbsolute(out AbsoluteDelegate, out AbsoluteDelegate_);
 		}
 		#endregion
 	}

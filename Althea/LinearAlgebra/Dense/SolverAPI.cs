@@ -89,7 +89,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
 		/// <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void EigenSpecialMatrixHermitian<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) where T : unmanaged where TReal : unmanaged
@@ -125,7 +125,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void EigenGeneralMatrixHermitian<T, TReal>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TReal : unmanaged
@@ -162,7 +162,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComplex"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
 		/// <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void EigenSpecialMatrixGeneral<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>
@@ -221,7 +221,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void EigenGeneralMatrixGeneral<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>
@@ -281,7 +281,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
 		/// <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
 		/// <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="SVDStore.Overwrite"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -333,7 +333,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void LuDecomposition<T>(long n, Storage<T> A, long lda) where T : unmanaged
 		{
@@ -360,7 +360,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void LinearSolve<T>(long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged
 		{
@@ -392,7 +392,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
 		/// <param name="ldt">The leading dimension of <paramref name="tri"/></param>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void QRDecomposition<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> tri, long ldt) where T : unmanaged
@@ -422,7 +422,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
 		/// <param name="orderVal">The eigenvalues in this array will be selected to at the top left of Schur form. Default null means no particular order is preferred.</param>
 		/// <returns>The actual number of eigenvalues returned</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -482,7 +482,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool EigenSpecialMatrixHermitian_<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) where T : unmanaged where TReal : unmanaged;
@@ -501,7 +501,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool EigenGeneralMatrixHermitian_<T, TReal>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TReal : unmanaged;
@@ -521,7 +521,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
@@ -544,7 +544,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
@@ -568,7 +568,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
 		/// <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="SVDStore.Overwrite"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -584,7 +584,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool LuDecomposition_<T>(long n, Storage<T> A, long lda) where T : unmanaged;
 
@@ -600,7 +600,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool LinearSolve_<T>(long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
 		#endregion
@@ -621,7 +621,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
 		/// <param name="ldt">The leading dimension of <paramref name="tri"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		protected abstract bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> tri, long ldt) where T : unmanaged;
@@ -640,7 +640,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="orderVal">The eigenvalues in this array will be selected to at the top left of Schur form. Default null means no particular order is preferred.</param>
 		/// <param name="actualNumber">Output the actual number of eigenvalues returned</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>

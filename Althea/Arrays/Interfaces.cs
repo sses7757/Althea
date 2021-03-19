@@ -1,137 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.NativeTypes;
+
+
 namespace Althea.Arrays
 {
-#region vector
-/// <summary>
-/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
-/// </summary>
-/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-/// <typeparam name="TVec">The vector type</typeparam>
-	public interface IKrylovVector<TVec, T> : IDisposable
-		where TVec : class, IKrylovVector<TVec, T>, IDisposable, ICheckValid, new()
-		where T : unmanaged
-	{
-		#region operation
-		/// <summary>
-		/// The total presenting length of this vector
-		/// </summary>
-		long Length { get; }
-
-		/// <summary>
-		/// Create a new vector alike this one
-		/// </summary>
-		/// <returns>The new vector alike this one</returns>
-		TVec NewArrayAlike();
-
-		/// <summary>
-		/// Fill this vector with the given <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The value to fill</param>
-		void FillWith(T value);
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
-		/// </summary>
-		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-		void Scale(T value);
-
-		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
-		/// </summary>
-		/// <returns>The 2-norm of this vector</returns>
-		double Norm();
-
-		/// <summary>
-		/// When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
-		/// </summary>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		void Normalize();
-
-		/// <summary>
-		/// When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
-		/// </summary>
-		/// <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
-		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-		T Dot(TVec other);
-
-		/// <summary>
-		/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
-		/// </summary>
-		/// <param name="other">The other <typeparamref name="TVec"/> to add</param>
-		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-		void AddBy(TVec other, T scalar);
-
-		/// <summary>
-		/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
-		/// </summary>
-		/// <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-		/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-		void ReplaceBy(TVec other);
-
-		/// <summary>
-		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
-		/// </summary>
-		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
-		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-		/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-		TVec OperateOn(IReadOnlyList<TVec> unjoinedVectors, ReadOnlySpan<T> input)
-		{
-			if (unjoinedVectors is null || unjoinedVectors.Count == 0)
-				throw new ArgumentNullException(nameof(unjoinedVectors));
-			if (input.IsEmpty)
-				throw new ArgumentNullException(nameof(input));
-			if (unjoinedVectors.Count != input.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-
-			// sort first to reduce errors
-			int length = input.Length;
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
-			for (int i = 0; i < length; i++)
-			{
-				values[i] = input[i];
-				keys[i] = input[i].GenericAbsolute();
-			}
-			keys.Sort(values);
-
-			var vec = this.NewArrayAlike();
-			try
-			{
-				vec.FillWith(default);
-				for (int i = 0; i < length; i++)
-				{
-					var dnvec = unjoinedVectors[i];
-					if (dnvec is null || !dnvec.IsValid())
-						throw new ArgumentNullException(nameof(unjoinedVectors));
-					if (dnvec.Length != this.Length)
-						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(unjoinedVectors));
-					if (!values[i].IsZero())
-						vec.AddBy(dnvec, values[i]);
-				}
-				return vec;
-			}
-			catch (Exception)
-			{
-				vec.Dispose();
-				throw;
-			}
-		}
-		#endregion
-	}
-	#endregion
-
-
 	#region pitched (strided) array
 	/// <summary>
 	/// The interface of (column-major) dense array that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
@@ -156,8 +33,9 @@ namespace Althea.Arrays
 		bool HasPitch => this.Size.Length != 1 && !this.OuterSize.SequenceEqual(this.Size);
 
 		/// <summary>
-		/// When implemented by a derived class, get the strides of this tensor's all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. Must be the inclusive accumulated product of <see cref="OuterSize"/>.
+		/// When implemented by a derived class, get (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
+		/// <remarks>The first element shall be 1, the last element shall be the product of <see cref="OuterSize"/> and the size == rank + 1</remarks>
 		ReadOnlySpan<long> Strides { get; }
 		#endregion
 	}
@@ -243,7 +121,28 @@ namespace Althea.Arrays
 		where TIndex : unmanaged
 	{
 		#region properties
+		/// <summary>
+		/// When implemented by a derived class, get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
+		/// </summary>
+		SizedFixedClassBuffer_8<Storage<TIndex>> IndexArrays { get; }
+		#endregion
+
+		#region implementation
 		DataType ISparseArray<T>.IndexType => Const<TIndex>.DataType;
+
+		int IReadOnlyCollection<Storage<TIndex>>.Count => this.IndexArrays.Count;
+
+		int IReadOnlyCollection<IStorage>.Count => this.IndexArrays.Count;
+
+		IStorage IReadOnlyList<IStorage>.this[int index] => this.IndexArrays[index];
+
+		Storage<TIndex> IReadOnlyList<Storage<TIndex>>.this[int index] => this.IndexArrays[index];
+
+		IEnumerator<Storage<TIndex>> IEnumerable<Storage<TIndex>>.GetEnumerator() => this.IndexArrays.GetEnumerator();
+
+		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => this.IndexArrays.GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => this.IndexArrays.GetEnumerator();
 		#endregion
 
 		#region helpers
@@ -434,6 +333,37 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="NRows"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
 		void ToDense(Storage<T> denseStorage, long leadDim = 0);
+		#endregion
+	}
+
+	/// <summary>
+	/// The interface for sparse tensor without indicating the index data type. The value array is <see cref="ISparseArray{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface ISparseTensor<T> : ISparseArray<T> where T : unmanaged
+	{
+		#region property
+		/// <summary>
+		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this tensor (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
+		/// </summary>
+		ReadOnlySpan<long> Size { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the format of this sparse tensor as a <see cref="TensorAlgebra.Sparse.SparseTensorFormat"/>
+		/// </summary>
+		TensorAlgebra.Sparse.SparseTensorFormat Format { get; }
+		#endregion
+
+		#region conversion
+		/// <summary>
+		/// When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense tensor to overwrite</param>
+		/// <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="Size"/> of this one</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="Size"/></exception>
+		/// <exception cref="ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		void ToDense(Storage<T> denseStorage, ReadOnlySpan<long> outerSize = default);
 		#endregion
 	}
 	#endregion

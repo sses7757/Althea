@@ -127,7 +127,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		public static void DiagonalMatrixMultiplyGeneral<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) where T : unmanaged
 		{
@@ -153,7 +153,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="p">The exponent as a <see cref="double"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		public static void PointWisePower<T>(Storage<T> x, int stride, double p) where T : unmanaged
 		{
@@ -177,7 +177,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="p">The exponent as a <typeparamref name="T"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		public static void PointWisePower<T>(Storage<T> x, int stride, T p) where T : unmanaged
 		{
@@ -200,7 +200,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="x">The vector to be conjugated</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		public static void PointWiseConjugate<T>(Storage<T> x, int stride) where T : unmanaged
 		{
@@ -223,7 +223,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="x">The vector to be truncated</param>
 		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		public static void TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription;
@@ -245,7 +245,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="x">The vector to be summed</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		/// <returns>The sum as a <typeparamref name="T"/></returns>
 		public static T AggregateSum<T>(Storage<T> x, int stride) where T : unmanaged
@@ -272,7 +272,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The sum as a <typeparamref name="T"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		public static T AggregateProduct<T>(Storage<T> x, int stride) where T : unmanaged
 		{
@@ -298,7 +298,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="scalar">The scalar to add</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
 		public static void PointWiseAddScalar<T>(Storage<T> x, int stride, T scalar) where T : unmanaged
 		{
@@ -324,7 +324,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>Whether all elements in <paramref name="x"/> and <paramref name="y"/> are equal</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
 		public static bool PointWiseEquals<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
 		{
@@ -351,7 +351,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector to multiply</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
 		public static void PointWiseMultiply<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
 		{
@@ -376,7 +376,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector to multiply</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
 		public static void PointWiseDivide<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
 		{
@@ -402,7 +402,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="destination">The destination vector</param>
 		/// <param name="strideDst">The stride between consecutive elements of <paramref name="destination"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSrc"/> or <paramref name="strideDst"/> is less than 1</exception>
 		public static void PointWiseCast<T, TOut>(Storage<T> source, int strideSrc, Storage<TOut> destination, int strideDst) where T : unmanaged where TOut : unmanaged
 		{
@@ -432,7 +432,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector to store the partial sum result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
 		public static void PartialSum<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
 		{
@@ -457,7 +457,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector to store the partial product result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
 		public static void PartialProduct<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
 		{
@@ -485,7 +485,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		public static void MatrixCopyUpperLowerParts<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda) where T : unmanaged
 		{
 			CombinationOfLocations location1 = A.LocationDescription;
@@ -518,7 +518,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="C">The pre-allocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
 		/// <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		public static void MatrixKronecker<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;

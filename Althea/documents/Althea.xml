@@ -288,8 +288,9 @@
         </member>
         <member name="P:Althea.Arrays.IPitchedArray`1.Strides">
             <summary>
-            When implemented by a derived class, get the strides of this tensor's all dimensions as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>. Must be the inclusive accumulated product of <see cref="P:Althea.Arrays.IPitchedArray`1.OuterSize"/>.
+            When implemented by a derived class, get (the both-end inclusive accumulated product of <see cref="P:Althea.Arrays.IPitchedArray`1.OuterSize"/>) of this tensor at all dimensions as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>.
             </summary>
+            <remarks>The first element shall be 1, the last element shall be the product of <see cref="P:Althea.Arrays.IPitchedArray`1.OuterSize"/> and the size == rank + 1</remarks>
         </member>
         <member name="T:Althea.Arrays.ISparseArray`1">
             <summary>
@@ -330,6 +331,11 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <typeparam name="TIndex">Any integer-typed unmanaged struct as the index data type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.ISparseArray`2.IndexArrays">
+            <summary>
+            When implemented by a derived class, get all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/>
+            </summary>
         </member>
         <member name="M:Althea.Arrays.ISparseArray`2.GetHashCode">
             <summary>
@@ -439,6 +445,32 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="P:Althea.Arrays.ISparseMatrix`1.NRows"/></exception>
             <exception cref="T:System.ArgumentException">If <paramref name="leadDim"/> * <see cref="P:Althea.Arrays.ISparseMatrix`1.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
+        </member>
+        <member name="T:Althea.Arrays.ISparseTensor`1">
+            <summary>
+            The interface for sparse tensor without indicating the index data type. The value array is <see cref="P:Althea.Arrays.ISparseArray`1.Storage"/> and index array(s) is/are the inherited <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <see cref="T:Althea.IStorage"/>s.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.ISparseTensor`1.Size">
+            <summary>
+            When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this tensor (the extent at each dimension) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>, must be of positive numbers.
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.ISparseTensor`1.Format">
+            <summary>
+            When implemented by a derived class, get the format of this sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.ISparseTensor`1.ToDense(Althea.Storage{`0},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="T:Althea.Storage`1"/> is <paramref name="denseStorage"/>
+            </summary>
+            <param name="denseStorage">The <see cref="T:Althea.Storage`1"/> of the dense tensor to overwrite</param>
+            <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="P:Althea.Arrays.ISparseTensor`1.Size"/> of this one</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="P:Althea.Arrays.ISparseTensor`1.Size"/></exception>
+            <exception cref="T:System.ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
         </member>
         <member name="T:Althea.Arrays.ITensor">
             <summary>
@@ -828,6 +860,11 @@
             Get or set the default value (the values which are not specified) of this sparse matrix
             </summary>
         </member>
+        <member name="P:Althea.Arrays.SparseMatrix`2.IndexArrays">
+            <summary>
+            Get all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            </summary>
+        </member>
         <member name="M:Althea.Arrays.SparseMatrix`2.#ctor(System.Int64,System.Int64,Althea.Storage{`0},Althea.Storage{`1},Althea.Storage{`1},Althea.LinearAlgebra.Sparse.SparseMatrixFormat,`0,System.Int64,System.Int64,System.Int64)">
             <summary>
             Create a <see cref="T:Althea.Arrays.SparseMatrix`2"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/>, <paramref name="rowIndexArray"/> and <paramref name="colIndexArray"/>
@@ -1008,6 +1045,172 @@
             </summary>
             <returns>Other requisite informations used to re-construct this sparse matrix</returns>
         </member>
+        <member name="T:Althea.Arrays.SparseTensor`2">
+            <summary>
+            The abstract sparse tensor class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the value array storage.
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IFormattable"/> and <see cref="T:System.IEquatable`1"/> as the data type</typeparam>
+            <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.SparseTensor`2.NStored">
+            <summary>
+            When implemented by a derived class, get the number of stored values of this sparse tensor. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.ActualLength"/>.
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.SparseTensor`2.Format">
+            <summary>
+            Get the sparse format of this sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.SparseTensor`2.DefaultValue">
+            <summary>
+            Get or set the default value (the values which are not specified) of this sparse tensor
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.SparseTensor`2.IndexArrays">
+            <summary>
+            Get all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.#ctor(System.ReadOnlySpan{System.Int64},Althea.Storage{`0},Althea.Helpers.SizedFixedClassBuffer_8{Althea.Storage{`1}},Althea.TensorAlgebra.Sparse.SparseTensorFormat,System.ReadOnlySpan{System.Char},System.Int64,System.ReadOnlySpan{System.Int64},`0)">
+            <summary>
+            Create a <see cref="T:Althea.Arrays.SparseTensor`2"/> with given <paramref name="size"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
+            </summary>
+            <param name="size">The presenting size of this sparse tensor</param>
+            <param name="valueArray">The value array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/></param>
+            <param name="indexArrays">The index array(s) as a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
+            <param name="format">The <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> of this sparse tensor, must be atomic</param>
+            <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
+            <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
+            <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, default empty means the lengths of <paramref name="indexArrays"/></param>
+            <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="indexArrays"/> and <paramref name="indexRealLengths"/> are not the same</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.IsValid">
+            <summary>
+            When implemented by a derived class, check whether this sparse tensor is a valid one or not. The default implementation only utilizes the default implementation of <see cref="M:Althea.ICheckValid.IsValid"/> in <see cref="T:Althea.Arrays.ISparseArray`1"/>.
+            </summary>
+            <returns>The validness of this array</returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.OverlapWith(Althea.Arrays.ValueArray{`0})">
+            <summary>
+            When implemented by a derived class, check if this sparse tensor share some storage(s) with the <paramref name="other"/> one. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`2.OverlapWith(Althea.Arrays.ISparseArray{`0,`1})"/>
+            </summary>
+            <param name="other">The other <see cref="T:Althea.Arrays.ValueArray`1"/> to check</param>
+            <returns>True if they do share some storage, false otherwise</returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.DisposeExclude(Althea.Arrays.ISparseArray{`0})">
+            <summary>
+            When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`1.DisposeExclude(Althea.Arrays.ISparseArray{`0})"/>.
+            </summary>
+            <param name="array">The target <see cref="T:Althea.Arrays.ISparseArray`1"/> to exclude before disposing this sparse tensor</param>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) passed to the constructor of <see cref="T:Althea.Arrays.SparseVector`2"/>.
+            </summary>
+            <param name="disposing">Dispose managed resources or not</param>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.Clone">
+            <summary>
+            When implemented by a derived class, deep clone the sparse tensor, the mutable status will not be copied.
+            </summary>
+            <returns>The cloned sparse tensor</returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.NewArrayAlike">
+            <summary>
+            When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled.
+            </summary>
+            <returns>The new sparse tensor alike this one</returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.NewArrayAlike``1">
+            <summary>
+            When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
+            </summary>
+            <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+            <returns>The new sparse tensor alike this one</returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.NewArrayAlike``2">
+            <summary>
+            When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
+            </summary>
+            <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+            <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+            <returns>The new sparse tensor alike this one</returns>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.DataTypeCast``2">
+            <summary>
+            When implemented by a derived class, cast this sparse tensor into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="N:Althea.Storage"/> of this array.
+            </summary>
+            <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+            <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+            <returns>The new <see cref="T:Althea.Arrays.SparseTensor`2"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.ToDense(Althea.Storage{`0},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="T:Althea.Storage`1"/> is <paramref name="denseStorage"/>
+            </summary>
+            <param name="denseStorage">The <see cref="T:Althea.Storage`1"/> of the dense tensor to overwrite</param>
+            <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="P:Althea.Arrays.TensorBase`1.Size"/> of this one</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="P:Althea.Arrays.TensorBase`1.Size"/></exception>
+            <exception cref="T:System.ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.ToFormat(Althea.TensorAlgebra.Sparse.SparseTensorFormat,Althea.LinearAlgebra.Sparse.IOtherInfo)">
+            <summary>
+            When implemented by a derived class, convert this sparse tensor to another sparse tensor with <see cref="P:Althea.Arrays.SparseTensor`2.Format"/> fitting <paramref name="format"/>
+            </summary>
+            <param name="format">The target format, can be anatomic</param>
+            <param name="otherInfo">The target sparse tensor's <see cref="T:Althea.LinearAlgebra.Sparse.IOtherInfo"/>, default null means letting the internal implementation determine</param>
+            <returns>The converted <see cref="T:Althea.Arrays.SparseTensor`2"/> whose <see cref="P:Althea.Arrays.SparseTensor`2.Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
+            <exception cref="T:System.InvalidOperationException">The default implementation <b>always</b> throws this exception since the sparse tensor format conversions usually have high costs.</exception>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.GetHashCode">
+            <summary>
+            When implemented by a derived class, get the hash code this sparse tensor. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`2.GetHashCode"/>.
+            </summary>
+            <returns>The hash code of this sparse tensor</returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.Equals(System.Object)">
+            <summary>
+            When implemented by a derived class, check whether this sparse tensor is equal to another one. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`2.Equals(System.Object)"/>.
+            </summary>
+            <param name="obj">The other object to compare with</param>
+            <returns>True if this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.IndexStorageNameOf(System.Int32)">
+            <summary>
+            The helper method used by <see cref="M:Althea.Arrays.SparseTensor`2.GetStorages"/> to get the index storages' names.
+            </summary>
+            <param name="orderOfIndexStorage">The index of all index storages of this sparse tensor</param>
+            <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
+        </member>
+        <member name="F:Althea.Arrays.SparseTensor`2.DefaultValueName">
+            <summary>
+            The presenting name of the <see cref="P:Althea.Arrays.SparseTensor`2.DefaultValue"/>.
+            </summary>
+        </member>
+        <member name="F:Althea.Arrays.SparseTensor`2.FormatName">
+            <summary>
+            The presenting name of the <see cref="P:Althea.Arrays.SparseTensor`2.Format"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.GetStorages">
+            <summary>
+            When implemented by a derived class, get all the storages of this sparse tensor. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) (whose names are from <see cref="M:Althea.Arrays.SparseTensor`2.IndexStorageNameOf(System.Int32)"/>) used to construct this sparse tensor. If there are exactly 2 index arrays, the default implementation only works correctly when they are (general) row and column index arrays respectively.
+            </summary>
+            <returns>All the storages of the array as an <see cref="T:System.Collections.Generic.IReadOnlyDictionary`2"/> of <see cref="T:System.String"/> and <see cref="T:Althea.IStorage"/></returns>
+        </member>
+        <member name="M:Althea.Arrays.SparseTensor`2.GetMetaData">
+            <summary>
+            When implemented by a derived class, get other requisite informations for re-constructing the sparse tensor of that derived class type. The default implementation returns the <see cref="P:Althea.Arrays.SparseTensor`2.DefaultValue"/> and <see cref="P:Althea.Arrays.SparseTensor`2.Format"/>.
+            </summary>
+            <returns>Other requisite informations used to re-construct this sparse tensor</returns>
+        </member>
         <member name="T:Althea.Arrays.TensorBase`1">
             <summary>
             The abstract tensor class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="T:Althea.Arrays.TensorBase`1"/>, but they shall be immutable.
@@ -1026,9 +1229,9 @@
         </member>
         <member name="P:Althea.Arrays.TensorBase`1.SizeProd">
             <summary>
-            Get the (inclusive) accumulated product of the <see cref="P:Althea.Arrays.AbstractArray`1.Size"/> of this tensor
+            Get the (both end inclusive) accumulated product of the <see cref="P:Althea.Arrays.AbstractArray`1.Size"/> of this tensor
             </summary>
-            <remarks>The first element is 1 and the length is the same as <see cref="P:Althea.Arrays.AbstractArray`1.Size"/></remarks>
+            <remarks>The first element is 1, the last element is <see cref="P:Althea.Arrays.AbstractArray`1.Length"/> and the size == <see cref="P:Althea.Arrays.TensorBase`1.Rank"/> + 1</remarks>
         </member>
         <member name="M:Althea.Arrays.TensorBase`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Char},System.Int64)">
             <summary>
@@ -1601,11 +1804,6 @@
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
         </member>
-        <member name="F:Althea.Arrays.SparseVector`2.m_indexArrays">
-            <summary>
-            The member of all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>, is null if there is only one index array
-            </summary>
-        </member>
         <member name="P:Althea.Arrays.SparseVector`2.NStored">
             <summary>
             When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.ActualLength"/>.
@@ -1619,6 +1817,11 @@
         <member name="P:Althea.Arrays.SparseVector`2.DefaultValue">
             <summary>
             Get or set the default value (the values which are not specified) of this sparse vector
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.SparseVector`2.IndexArrays">
+            <summary>
+            Get all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
             </summary>
         </member>
         <member name="M:Althea.Arrays.SparseVector`2.#ctor(System.Int64,Althea.Storage{`0},Althea.Storage{`1},Althea.LinearAlgebra.Sparse.SparseVectorFormat,`0,System.Int64)">
@@ -1791,6 +1994,16 @@
             The abstract vector class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="T:Althea.Arrays.VectorBase`1"/>, but they shall be immutable.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.VectorBase`1.Rank">
+            <summary>
+            Get the rank of this vector -- 1
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.VectorBase`1.Size">
+            <summary>
+            Get the size of this vector ({<see cref="P:Althea.Arrays.AbstractArray`1.Length"/>}) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            </summary>
         </member>
         <member name="M:Althea.Arrays.VectorBase`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64)">
             <summary>
@@ -5439,7 +5652,7 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <returns>The resulting index</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.AbsoluteValueArgMin``1(Althea.Storage{``0},System.Int32)">
@@ -5451,7 +5664,7 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <returns>The resulting index or 0 if <paramref name="strideX"/> is less than 1</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.AbsoluteValueSum``1(Althea.Storage{``0},System.Int32)">
@@ -5463,7 +5676,7 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <returns>The result value as a <see cref="T:System.Double"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.Norm``1(Althea.Storage{``0},System.Int32)">
@@ -5486,7 +5699,7 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="scalar">The scalar used for multiplication</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.VectorGeneralAdd``1(``0,Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -5500,7 +5713,7 @@
             <param name="y">The another vector of type <typeparamref name="T"/></param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.Dot``1(System.Boolean,Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -5515,7 +5728,7 @@
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <returns>The result value as a <typeparamref name="T"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.GeneralMatrixMultiplyVector``1(Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int32)">
@@ -5536,7 +5749,7 @@
             <param name="y">The input and output vector at least <c>(1+(<paramref name="m"/>-1)*<paramref name="strideY"/>)</c> elements if <paramref name="op"/>==<see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> otherwise</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SymmHermMatrixMultiplyVector``1(System.Boolean,System.Boolean,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int32)">
@@ -5557,7 +5770,7 @@
             <param name="y">The input and output vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideY"/>))</c></param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.GenralRankOneUpdate``1(System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int64)">
@@ -5578,7 +5791,7 @@
             <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SymmHermRankOneUpdate``1(System.Boolean,System.Boolean,System.Int64,``0,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int64)">
@@ -5597,7 +5810,7 @@
             <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.GeneralMatricesMultiply``1(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
@@ -5620,7 +5833,7 @@
             <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SymmHermMatrixMultiplyGeneral``1(System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
             <summary>
@@ -5642,7 +5855,7 @@
             <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.RankKUpdate``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
             <summary>
@@ -5662,7 +5875,7 @@
             <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.AbsoluteValueArgMax_``1(Althea.Storage{``0},System.Int32,System.Int64@)">
             <summary>
@@ -5978,7 +6191,7 @@
             <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWisePower``1(Althea.Storage{``0},System.Int32,System.Double)">
@@ -5990,7 +6203,7 @@
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="p">The exponent as a <see cref="T:System.Double"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWisePower``1(Althea.Storage{``0},System.Int32,``0)">
@@ -6002,7 +6215,7 @@
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="p">The exponent as a <typeparamref name="T"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWiseConjugate``1(Althea.Storage{``0},System.Int32)">
@@ -6013,7 +6226,7 @@
             <param name="x">The vector to be conjugated</param>
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TruncateArray``1(Althea.Storage{``0},System.Double)">
@@ -6024,7 +6237,7 @@
             <param name="x">The vector to be truncated</param>
             <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.AggregateSum``1(Althea.Storage{``0},System.Int32)">
             <summary>
@@ -6034,7 +6247,7 @@
             <param name="x">The vector to be summed</param>
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
             <returns>The sum as a <typeparamref name="T"/></returns>
         </member>
@@ -6047,7 +6260,7 @@
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <returns>The sum as a <typeparamref name="T"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWiseAddScalar``1(Althea.Storage{``0},System.Int32,``0)">
@@ -6059,7 +6272,7 @@
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="scalar">The scalar to add</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWiseEquals``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -6073,7 +6286,7 @@
             <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
             <returns>Whether all elements in <paramref name="x"/> and <paramref name="y"/> are equal</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWiseMultiply``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -6086,7 +6299,7 @@
             <param name="y">The vector to multiply</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWiseDivide``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -6099,7 +6312,7 @@
             <param name="y">The vector to multiply</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PointWiseCast``2(Althea.Storage{``0},System.Int32,Althea.Storage{``1},System.Int32)">
@@ -6113,7 +6326,7 @@
             <param name="destination">The destination vector</param>
             <param name="strideDst">The stride between consecutive elements of <paramref name="destination"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideSrc"/> or <paramref name="strideDst"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialSum``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -6126,7 +6339,7 @@
             <param name="y">The vector to store the partial sum result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialProduct``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
@@ -6139,7 +6352,7 @@
             <param name="y">The vector to store the partial product result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.MatrixCopyUpperLowerParts``1(System.Boolean,System.Boolean,System.Int64,Althea.Storage{``0},System.Int64)">
@@ -6153,7 +6366,7 @@
             <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.MatrixKronecker``1(System.Int64,System.Int64,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
             <summary>
@@ -6174,7 +6387,7 @@
             <param name="C">The pre-allocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
             <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.GeneralMatricesAdd_``1(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
@@ -6480,7 +6693,7 @@
             <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
             <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6498,7 +6711,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6517,7 +6730,7 @@
             <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComplex"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
             <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
             <param name="lda">leading dimension of <paramref name="A"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6539,7 +6752,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6560,7 +6773,7 @@
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
             <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
             <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6573,7 +6786,7 @@
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolve``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
@@ -6588,7 +6801,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
@@ -6606,7 +6819,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
             <param name="ldt">The leading dimension of <paramref name="tri"/></param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6624,7 +6837,7 @@
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
             <param name="orderVal">The eigenvalues in this array will be selected to at the top left of Schur form. Default null means no particular order is preferred.</param>
             <returns>The actual number of eigenvalues returned</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6641,7 +6854,7 @@
             <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6660,7 +6873,7 @@
             <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6680,7 +6893,7 @@
             <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
             <param name="lda">leading dimension of <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6703,7 +6916,7 @@
             <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6725,7 +6938,7 @@
             <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
             <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6739,7 +6952,7 @@
             <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolve_``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
@@ -6755,7 +6968,7 @@
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition_``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
@@ -6774,7 +6987,7 @@
             <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
             <param name="ldt">The leading dimension of <paramref name="tri"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6793,7 +7006,7 @@
             <param name="orderVal">The eigenvalues in this array will be selected to at the top left of Schur form. Default null means no particular order is preferred.</param>
             <param name="actualNumber">Output the actual number of eigenvalues returned</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6833,7 +7046,7 @@
             <param name="x">The input sparse vector as a <see cref="T:Althea.Arrays.ISparseVector`1"/></param>
             <param name="y">The input/output dense vector as a <see cref="T:Althea.Storage`1"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If the <see cref="P:Althea.Arrays.ISparseArray`1.IndexType"/> is not an integral type</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparseDotDense``1(System.Boolean,Althea.Arrays.ISparseVector{``0},Althea.Storage{``0})">
@@ -6846,7 +7059,7 @@
             <param name="y">The input dense vector as a <see cref="T:Althea.Storage`1"/></param>
             <returns>The dot product result as a <typeparamref name="T"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparseDotSparse``1(System.Boolean,Althea.Arrays.ISparseVector{``0},Althea.Arrays.ISparseVector{``0})">
             <summary>
@@ -6858,7 +7071,7 @@
             <param name="y">The other input sparse vector as a <see cref="T:Althea.Arrays.ISparseVector`1"/></param>
             <returns>The dot product result as a <typeparamref name="T"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparseAddSparse``1(Althea.Arrays.ISparseVector{``0},Althea.Arrays.ISparseVector{``0},Althea.LinearAlgebra.Sparse.SparseVectorFormat)">
             <summary>
@@ -6870,7 +7083,7 @@
             <param name="format">The desired output sparse vector's <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/>, can be anatomic</param>
             <returns>The result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparsePointWiseMultiplyDense``1(Althea.Arrays.ISparseVector{``0},Althea.Storage{``0})">
             <summary>
@@ -6880,7 +7093,7 @@
             <param name="x">The input/output sparse vector x</param>
             <param name="y">The input dense vector y</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparsePointWiseDivideDense``1(Althea.Arrays.ISparseVector{``0},Althea.Storage{``0})">
             <summary>
@@ -6890,7 +7103,7 @@
             <param name="x">The input/output sparse vector x</param>
             <param name="y">The input dense vector y</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseMultiplyVectorDense``1(Althea.LinearAlgebra.MatrixOperation,``0,Althea.Arrays.ISparseMatrix{``0},Althea.Storage{``0},``0,Althea.Storage{``0})">
             <summary>
@@ -6904,7 +7117,7 @@
             <param name="α">The scalar to multiply <paramref name="M"/></param>
             <param name="β">The scalar to multiply <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixDenseMultiplyVectorSparse``1(Althea.LinearAlgebra.MatrixOperation,``0,System.Int64,Althea.Storage{``0},System.Int64,Althea.Arrays.ISparseVector{``0},``0,Althea.Storage{``0})">
             <summary>
@@ -6920,7 +7133,7 @@
             <param name="y">The input/output dense vector y</param>
             <param name="β">The scalar to multiply <paramref name="y"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparseOuter``1(System.Boolean,Althea.Arrays.ISparseVector{``0},Althea.Arrays.ISparseVector{``0},Althea.LinearAlgebra.Sparse.SparseMatrixFormat)">
             <summary>
@@ -6933,7 +7146,7 @@
             <param name="format">The desired output sparse matrix's format, can be anatomic</param>
             <returns>A new sparse matrix as the outer product with format fitting <paramref name="format"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixDenseAddSparse``1(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,``0,Althea.Storage{``0},System.Int64,``0,Althea.Arrays.ISparseMatrix{``0},Althea.Storage{``0},System.Int64)">
             <summary>
@@ -6986,7 +7199,7 @@
             <param name="format">The desired output sparse matrix's format, can be anatomic</param>
             <returns>A new sparse matrix as the product (and sum) with format fitting <paramref name="format"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixDenseMultiplySparse``1(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Arrays.ISparseMatrix{``0},``0,Althea.Storage{``0},System.Int64)">
             <summary>
@@ -7004,7 +7217,7 @@
             <param name="C">The input/output dense matrix</param>
             <param name="ldc">The leading dimension of <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseMultiplyDense``1(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,Althea.Arrays.ISparseMatrix{``0},Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
             <summary>
@@ -7022,7 +7235,7 @@
             <param name="C">The input/output dense matrix</param>
             <param name="ldc">The leading dimension of <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseKronecker``1(Althea.Arrays.ISparseMatrix{``0},Althea.Arrays.ISparseMatrix{``0},Althea.LinearAlgebra.Sparse.SparseMatrixFormat)">
             <summary>
@@ -7034,7 +7247,7 @@
             <param name="format">The desired output sparse matrix's format, can be anatomic</param>
             <returns>A new sparse matrix as the Kronecker product with format fitting <paramref name="format"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparseAddToDense_``1(``0,Althea.Arrays.ISparseVector{``0},Althea.Storage{``0})">
             <summary>
@@ -7377,7 +7590,7 @@
             <param name="positions">The given positions as a <see cref="T:Althea.Storage`1"/> of <see cref="T:System.Int32"/></param>
             <param name="value">The value to set</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorSparseToDense``1(Althea.Arrays.ISparseVector{``0},Althea.Storage{``0})">
             <summary>
@@ -7387,7 +7600,7 @@
             <param name="x">The sparse vector x as a <see cref="T:Althea.Arrays.ISparseVector`1"/></param>
             <param name="y">The dense vector y as a <see cref="T:Althea.Storage`1"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorGatherValuesAt``1(Althea.Storage{``0},Althea.Arrays.ISparseVector{``0})">
             <summary>
@@ -7398,7 +7611,7 @@
             <param name="y">The input (sparse index) and output (value array) sparse vector</param>
             <remarks>This is equivalent to converting dense vector to sparse vector when the sparsity is known</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.VectorDenseToSparse``1(Althea.Storage{``0},Althea.LinearAlgebra.Sparse.SparseVectorFormat,System.Single)">
             <summary>
@@ -7410,7 +7623,7 @@
             <param name="format">The desired <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
             <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with format fitting <paramref name="format"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.SparseVectorToMatrix``1(Althea.Arrays.ISparseVector{``0},System.Int64,Althea.LinearAlgebra.Sparse.SparseMatrixFormat)">
@@ -7423,7 +7636,7 @@
             <param name="format">The desired <see cref="T:Althea.LinearAlgebra.Sparse.SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
             <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="vector"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.SparseMatrixToVector``1(Althea.Arrays.ISparseMatrix{``0},Althea.LinearAlgebra.Sparse.SparseVectorFormat)">
             <summary>
@@ -7434,7 +7647,7 @@
             <param name="format">The desired <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
             <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="P:Althea.Arrays.ISparseMatrix`1.NRows"/> and <see cref="P:Althea.Arrays.ISparseMatrix`1.NCols"/>)</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="matrix"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseToDense``1(Althea.Arrays.ISparseMatrix{``0},Althea.Storage{``0},System.Int64)">
             <summary>
@@ -7444,7 +7657,7 @@
             <param name="destination">The storage of the destination dense matrix of the same size as <paramref name="source"/></param>
             <param name="ld">The leading dimension of <paramref name="destination"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixDenseToSparse``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.LinearAlgebra.Sparse.SparseMatrixFormat,System.Single)">
             <summary>
@@ -7458,7 +7671,7 @@
             <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
             <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> of the given properties</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparsePrune``1(Althea.Arrays.ISparseMatrix{``0},System.Single)">
@@ -7469,7 +7682,7 @@
             <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
             <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> itself if the no prune is necessary</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseFormatConvert``1(Althea.Arrays.ISparseMatrix{``0},Althea.LinearAlgebra.Sparse.SparseMatrixFormat,Althea.LinearAlgebra.Sparse.IOtherInfo)">
@@ -7481,7 +7694,7 @@
             <param name="otherInfo">The target sparse matrix's <see cref="T:Althea.LinearAlgebra.Sparse.IOtherInfo"/>, default null means letting the internal implementation determine</param>
             <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseFillIdentity``1(Althea.Arrays.ISparseMatrix{``0})">
             <summary>
@@ -7489,7 +7702,7 @@
             </summary>
             <param name="M">The sparse matrix to be filled with identity</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="M"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="M"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexMax``1(Althea.Storage{``0})">
@@ -7500,7 +7713,7 @@
             <param name="array">The storage of the integer-typed array</param>
             <returns>The maximum value of <paramref name="array"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexMin``1(Althea.Storage{``0})">
@@ -7511,7 +7724,7 @@
             <param name="array">The storage of the integer-typed array</param>
             <returns>The minimum value of <paramref name="array"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexFind``1(System.Boolean,Althea.Storage{``0},``0)">
@@ -7524,7 +7737,7 @@
             <param name="value">The target value to find</param>
             <returns>The zero-based index of the target <paramref name="value"/> in <paramref name="array"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexBound``1(Althea.Storage{``0},``0,System.Boolean)">
@@ -7538,7 +7751,7 @@
             <returns>The zero-based index of the target bound in <paramref name="array"/></returns>
             <remarks>If not found, returns -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="P:Althea.Storage`1.Length">Length</see> otherwise.</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexGetAllBounds``2(Althea.Storage{``0},Althea.Storage{``1},``0,``0,System.Boolean)">
@@ -7553,7 +7766,7 @@
             <param name="end">The inclusive end value to find</param>
             <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
             <remarks>If some value is not found, the corresponding index in <paramref name="target"/> is -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="P:Althea.Storage`1.Length">Length</see> otherwise.</remarks>
-            <exception cref="T:System.NullReferenceException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
         </member>
@@ -7567,7 +7780,7 @@
             <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
             <param name="start">The start value to fill in <paramref name="target"/></param>
             <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
-            <exception cref="T:System.NullReferenceException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
         </member>
@@ -7843,16 +8056,9 @@
         </member>
         <member name="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1">
             <summary>
-            The simple wrapper structure for any sparse array (usually <see cref="T:Althea.Arrays.SparseVector`2"/> and <see cref="T:Althea.Arrays.SparseMatrix`2"/>) which is typically used as outputs of methods in <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/>.
+            The simple wrapper structure for any sparse array which is typically used as outputs of API methods.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.Dispose">
-            <summary>
-            Dispose this wrapper.
-            </summary>
-            <remarks>When the <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> was created from <see cref="T:Althea.Arrays.ISparseArray`1"/>, it shall only contains referenced storages. Therefore, the disposition in such situation does nothing.<br/>
-            However, it will dispose the storages created inside the method implementations of <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/>.</remarks>
         </member>
         <member name="P:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.ValueStorage">
             <summary>
@@ -7861,7 +8067,7 @@
         </member>
         <member name="P:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.IndexStorages">
             <summary>
-            Get the storages of index arrays of this sparse array wrapper as a <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <see cref="T:Althea.IStorage"/>
+            Get the storages of index arrays of this sparse array wrapper as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.IStorage"/>
             </summary>
         </member>
         <member name="P:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.VectorFormat">
@@ -7874,12 +8080,17 @@
             Get the <see cref="T:Althea.LinearAlgebra.Sparse.SparseMatrixFormat"/> of this sparse array as if this array is a sparse matrix
             </summary>
         </member>
+        <member name="P:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.TensorFormat">
+            <summary>
+            Get the <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> of this sparse array as if this array is a sparse tensor
+            </summary>
+        </member>
         <member name="P:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.OtherInfo">
             <summary>
             Get the <see cref="T:Althea.LinearAlgebra.Sparse.IOtherInfo"/> of this sparse array
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.#ctor(Althea.Storage{`0},System.Collections.Generic.IReadOnlyList{Althea.IStorage},System.Int32,Althea.LinearAlgebra.Sparse.IOtherInfo)">
+        <member name="M:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{Althea.IStorage},System.Int32,Althea.LinearAlgebra.Sparse.IOtherInfo)">
             <summary>
             Create a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with given <paramref name="values"/>, <paramref name="indices"/> and <paramref name="format"/>
             </summary>
@@ -7888,21 +8099,12 @@
             <param name="format">The format as a <see cref="T:System.Int32"/></param>
             <param name="info">The <see cref="T:Althea.LinearAlgebra.Sparse.IOtherInfo"/> storing other information, can be null</param>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.Create(Althea.Arrays.ISparseVector{`0},Althea.LinearAlgebra.Sparse.IOtherInfo)">
+        <member name="M:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.Dispose">
             <summary>
-            Create a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with the given sparse <paramref name="vector"/>
+            Dispose this wrapper.
             </summary>
-            <param name="vector">The given <see cref="T:Althea.Arrays.ISparseVector`1"/> used to create</param>
-            <param name="info">The <see cref="T:Althea.LinearAlgebra.Sparse.IOtherInfo"/> storing other information, can be null</param>
-            <returns>The <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> created from <paramref name="vector"/></returns>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1.Create(Althea.Arrays.ISparseMatrix{`0},Althea.LinearAlgebra.Sparse.IOtherInfo)">
-            <summary>
-            Create a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with the given sparse <paramref name="matrix"/>
-            </summary>
-            <param name="matrix">The given <see cref="T:Althea.Arrays.ISparseMatrix`1"/> used to create</param>
-            <param name="info">The <see cref="T:Althea.LinearAlgebra.Sparse.IOtherInfo"/> storing other information, can be null</param>
-            <returns>The <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> created from <paramref name="matrix"/></returns>
+            <remarks>When the <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> was created from <see cref="T:Althea.Arrays.ISparseArray`1"/>, it shall only contains referenced storages. Therefore, the disposition in such situation does nothing.<br/>
+            However, it will dispose the storages created inside the method implementations of <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/>.</remarks>
         </member>
         <member name="T:Althea.LinearAlgebra.Sparse.FormatExtension">
             <summary>
@@ -11742,7 +11944,7 @@
             <param name="pointer">The pointer to be filled</param>
             <param name="value">The value to set as a <see cref="T:System.Byte"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="pointer"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.FillWithValue``1(Althea.PointerSegment,``0)">
             <summary>
@@ -11752,7 +11954,7 @@
             <param name="pointer">The pointer to be filled</param>
             <param name="value">The value to set as a <typeparamref name="T"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="pointer"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.MemoryCopy(Althea.PointerSegment,Althea.PointerSegment)">
             <summary>
@@ -11763,7 +11965,7 @@
             <returns>The number of bytes of actually copied block</returns>
             <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.MemoryCopy2D(Althea.PointerSegment,System.Int64,Althea.PointerSegment,System.Int64,System.Int64,System.Int64)">
             <summary>
@@ -11778,7 +11980,7 @@
             <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the parameters is zero</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">
             If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
             or <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
@@ -11799,7 +12001,7 @@
             <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
             <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.ToManaged``1(Althea.PointerSegment)">
@@ -11810,7 +12012,7 @@
             <param name="source">The source <see cref="T:Althea.PointerSegment"/> to copy from</param>
             <returns>The first element in <paramref name="source"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.FromManaged``1(Althea.PointerSegment,``0)">
             <summary>
@@ -11820,7 +12022,7 @@
             <param name="destination">The destination <see cref="T:Althea.PointerSegment"/> to copy to</param>
             <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.ToManaged``1(Althea.PointerSegment,System.Span{``0})">
             <summary>
@@ -11831,7 +12033,7 @@
             <param name="destination">The managed <see cref="T:System.Span`1"/> of type <typeparamref name="T"/> to copy to</param>
             <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.FromManaged``1(Althea.PointerSegment,System.ReadOnlySpan{``0})">
             <summary>
@@ -11842,7 +12044,7 @@
             <param name="values">The managed <see cref="T:System.ReadOnlySpan`1"/> of type <typeparamref name="T"/> to copy from</param>
             <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.ToManaged2D``1(Althea.PointerSegment,System.Int64,System.Int64,System.Int64,System.Span{``0},System.Int64)">
             <summary>
@@ -11856,7 +12058,7 @@
             <param name="destination">The managed <see cref="T:System.Span`1"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="P:System.Array.Length">Length</see> ≥ <paramref name="height"/> <paramref name="width"/></c></param>
             <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">
             If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
             or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="P:Althea.PointerSegment.LengthInBytes">Length</see></c>,
@@ -11875,7 +12077,7 @@
             <param name="values">The managed <see cref="T:System.ReadOnlySpan`1"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="P:System.Array.Length">Length</see> ≥ <paramref name="height"/> * <paramref name="width"/></c></param>
             <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">
             If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
             or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="P:Althea.PointerSegment.LengthInBytes">Length</see></c>,
@@ -11890,7 +12092,7 @@
             <param name="storage">The <see cref="T:Althea.Storage`1"/> to be filled</param>
             <param name="value">The value to fill</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="storage"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.FillWithValue``1(Althea.Storage{``0},``0)">
             <summary>
@@ -11900,7 +12102,7 @@
             <param name="storage">The <see cref="T:Althea.Storage`1"/> to be filled</param>
             <param name="value">The value to fill</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="storage"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.MemoryCopy``1(Althea.Storage{``0},Althea.Storage{``0})">
             <summary>
@@ -11913,7 +12115,7 @@
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
             <exception cref="T:System.NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.StridedCopy``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
             <summary>
@@ -11927,7 +12129,7 @@
             <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
             <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1 or larger than lengths</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.MemoryCopy2D``1(Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,System.Int64,System.Int64)">
@@ -11943,7 +12145,7 @@
             <param name="width">The width to copy in the real type</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are <b>not</b> ignored</remarks>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the parameters is zero</exception>
             <exception cref="T:System.ArgumentException">
             If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
@@ -11959,7 +12161,7 @@
             <param name="source">The source <see cref="T:Althea.Storage`1"/> to copy from</param>
             <returns>The first element in <paramref name="source"/></returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.FromManaged``1(Althea.Storage{``0},``0)">
             <summary>
@@ -11969,7 +12171,7 @@
             <param name="destination">The destination <see cref="T:Althea.Storage`1"/> to copy to</param>
             <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="destination"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.ToManaged``1(Althea.Storage{``0},System.Span{``0})">
             <summary>
@@ -11980,7 +12182,7 @@
             <param name="destination">The managed <see cref="T:System.Span`1"/> of type <typeparamref name="T"/> to copy to</param>
             <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.FromManaged``1(Althea.Storage{``0},System.ReadOnlySpan{``0})">
             <summary>
@@ -11991,7 +12193,7 @@
             <param name="values">The managed <see cref="T:System.ReadOnlySpan`1"/> of type <typeparamref name="T"/> to copy from</param>
             <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
         </member>
         <member name="M:Althea.Storage.AbstractApi.ToManaged2D``1(Althea.Storage{``0},System.Int64,System.Int64,System.Int64,System.Span{``0},System.Int64)">
             <summary>
@@ -12005,7 +12207,7 @@
             <param name="destination">The managed <see cref="T:System.Span`1"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="P:System.Array.Length">Length</see> ≥ <paramref name="height"/> * <paramref name="width"/></c></param>
             <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="source"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">
             If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
             or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="P:Althea.Storage`1.Length">Length</see></c>,
@@ -12024,7 +12226,7 @@
             <param name="values">The managed <see cref="T:System.ReadOnlySpan`1"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="P:System.Array.Length">Length</see> ≥ <paramref name="height"/> * <paramref name="width"/></c></param>
             <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">
             If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
             or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="P:Althea.Storage`1.Length">Length</see></c>,
@@ -13486,7 +13688,7 @@
         </member>
         <member name="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1">
             <summary>
-            The wrapper for a (possibly pitched) dense tensor
+            The computation wrapper for a (possibly pitched) dense tensor
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
@@ -13579,6 +13781,13 @@
             long number = AbstractApi.Dynamic.CholeskyDecompose(...);
             </code></example>
         </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.IsSupportedFormat(Althea.TensorAlgebra.Sparse.SparseTensorFormat)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> is supported by this implementation or not.
+            </summary>
+            <param name="format">The given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> to check</param>
+            <returns>Whether <paramref name="format"/>is supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
+        </member>
         <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.IsSupportedTensorBinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
             <summary>
             When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by tensor binary operations of this implementation or not.
@@ -13595,6 +13804,167 @@
             <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
             <param name="location3">The third given <see cref="T:Althea.CombinationOfLocations"/></param>
             <returns>Whether trinary operations on <paramref name="location1"/>, <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Permute_``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int32},Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
+            <summary>
+            When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and output a <paramref name="destination"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="source">The source sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/></param>
+            <param name="permutationOrder">The permutation order as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/></param>
+            <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method shall simply returns <paramref name="source"/></remarks>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.OperationBinary_``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.Span{System.Int32},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.Span{System.Int32},Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
+            <summary>
+            When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="binary">The <see cref="T:Althea.TensorAlgebra.BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
+            <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/>, can be invalid</param>
+            <param name="right">The right input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/>, can be invalid</param>
+            <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
+            <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
+            <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Reduce_``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int32},Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
+            <summary>
+            When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>.:<br/>
+            <c><paramref name="destination"/> = <paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see>[<paramref name="reduceDimensions"/>]))</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="reduce">The (symmetric) reduction operation as a <see cref="T:Althea.TensorAlgebra.BinaryOperation"/></param>
+            <param name="source">The source sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be reduced</param>
+            <param name="reduceDimensions">The values in this <b>set</b> (as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/>) are the dimensions of which <paramref name="source"/> tensor are reduced</param>
+            <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Contract_``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.TensorContractInfo,Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
+            <summary>
+            When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
+            <c><paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see> = <paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see>))</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="right">The right input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="info">The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> indicating how the contraction shall be performed</param>
+            <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
+        </member>
+        <member name="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat">
+            <summary>
+            The <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> enum indicates the format specification of a sparse tensor. Each bit flag indicates an atomic format.
+            </summary>
+        </member>
+        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.Coordinated">
+            <summary>
+            The simple Coordinate Sparse Format that stores each non-zero element and its <b>zero-based</b> index in separate storages.
+            </summary>
+        </member>
+        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BlockCoordinated">
+            <summary>
+            The Block Coordinated Sparse Format that divides the tensor into block tensors of fixed size and store their <b>zero-based</b> indices in a storage.<br/>
+            This is similar to the <see cref="F:Althea.LinearAlgebra.Sparse.SparseMatrixFormat.BCOC"/>.
+            </summary>
+        </member>
+        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.VariableBlockCoordinated">
+            <summary>
+            The Variable Block Sparse Format that only differs from <see cref="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BlockCoordinated"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
+            Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of that rank.
+            </summary>
+        </member>
+        <member name="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1">
+            <summary>
+            The computation wrapper for a sparse tensor
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">
+            <summary>
+            Get the underlying sparse tensor of this wrapper as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Size">
+            <summary>
+            Get the presenting size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">
+            <summary>
+            Get the <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this tensor if this wrapper is used as an input
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">
+            <summary>
+            Get the scalar which is about to be applied to this tensor if this wrapper is used as an input. If this wrapper is a pure input while <see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar"/> is 0, this wrapper shall be considered as a null input.
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IsInvalid">
+            <summary>
+            Check whether this wrapper is an invalid one or not
+            </summary>
+            <returns>The invalidness of this wrapper</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IsInputInvalid">
+            <summary>
+            Check whether this wrapper is an invalid one or not when it is an input parameter
+            </summary>
+            <returns>The invalidness of this wrapper</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.#ctor(Althea.Arrays.ISparseTensor{`0},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation)">
+            <summary>
+            Create a new <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> with all given parameters and scalar set to 1
+            </summary>
+            <param name="tensor">The given sparse tensor</param>
+            <param name="size">The presenting size</param>
+            <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.#ctor(Althea.Arrays.ISparseTensor{`0},System.ReadOnlySpan{System.Int64},`0,Althea.TensorAlgebra.UnaryOperation)">
+            <summary>
+            Create a new <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> with all given parameters
+            </summary>
+            <param name="value">The given sparse tensor</param>
+            <param name="size">The presenting size</param>
+            <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+            <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
+        </member>
+        <member name="T:Althea.TensorAlgebra.Sparse.FormatExtension">
+            <summary>
+            The static class for extension methods of <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>
+            </summary>
+        </member>
+        <member name="F:Althea.TensorAlgebra.Sparse.FormatExtension.Any">
+            <summary>
+            All of the possible <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>s. Value = 111...111
+            </summary>
+            <remarks>Since the atom formats are all orthogonal in binary, this kind of definition becomes useful.<br/>
+            If some custom formats are defined afterwards, this trick should still be used.</remarks>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.FormatExtension.IsAtomic(Althea.TensorAlgebra.Sparse.SparseTensorFormat)">
+            <summary>
+            Check whether the given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> is an atomic format or not
+            </summary>
+            <param name="format">The given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> to check</param>
+            <returns>True if <paramref name="format"/> is an atomic format, i.e. a power of two; false otherwise.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.FormatExtension.Decompose(Althea.TensorAlgebra.Sparse.SparseTensorFormat,System.Span{Althea.TensorAlgebra.Sparse.SparseTensorFormat})">
+            <summary>
+            Decompose the given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> into atomic <paramref name="result"/>s.
+            </summary>
+            <param name="format">The given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> to be decomposed</param>
+            <param name="result">The <see cref="T:System.Span`1"/> to put the results</param>
+            <returns>The sliced <paramref name="result"/> whose length is the number of atomic formats</returns>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="result"/> is less than the number of atomic formats</exception>
         </member>
         <member name="T:Althea.TensorAlgebra.TensorOrder">
             <summary>

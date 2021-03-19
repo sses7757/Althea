@@ -29,17 +29,15 @@ namespace Althea.Arrays
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 
-		// previously defined 8 + (8 * 2) + (8 * 2) bytes
+		// previously defined 40 bytes
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
 		// offset = 40 + 64
 		/// <summary>
 		/// The member of all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>, is null if there is only one index array
 		/// </summary>
 		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
-
 		// offset = 40 + 132
 		private readonly SparseMatrixFormat m_format;
-
 		// offset = 40 + 136
 		private T m_defaultValue;
 		// this defines extra (136 + size of T) bytes
@@ -68,6 +66,14 @@ namespace Althea.Arrays
 			get => this.m_defaultValue;
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set => this.m_defaultValue = value;
+		}
+
+		/// <summary>
+		/// Get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// </summary>
+		public SizedFixedClassBuffer_8<Storage<TInd>> IndexArrays {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -173,22 +179,6 @@ namespace Althea.Arrays
 		}
 		#endregion
 
-		#region IReadOnlyList of ISparseArray
-		int IReadOnlyCollection<Storage<TInd>>.Count => this.m_indexArrays.Count;
-
-		int IReadOnlyCollection<IStorage>.Count => this.m_indexArrays.Count;
-
-		IStorage IReadOnlyList<IStorage>.this[int index] => this.m_indexArrays[index];
-
-		Storage<TInd> IReadOnlyList<Storage<TInd>>.this[int index] => this.m_indexArrays[index];
-
-		IEnumerator<Storage<TInd>> IEnumerable<Storage<TInd>>.GetEnumerator() => this.m_indexArrays.GetEnumerator();
-
-		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
-
-		IEnumerator IEnumerable.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
-		#endregion
-
 		#region clone related
 		/// <summary>
 		/// When implemented by a derived class, deep clone the sparse matrix, the mutable status will not be copied.
@@ -280,43 +270,6 @@ namespace Althea.Arrays
 		/// <param name="obj">The other object to compare with</param>
 		/// <returns>True if this == <paramref name="obj"/></returns>
 		public override bool Equals(object? obj) => ((ISparseArray<T, TInd>)this).Equals(obj);
-		#endregion
-
-		#region print
-		/// <summary>
-		/// The helper method used in <see cref="Print(PrintSettings?)"/> to get the first several row and column indices of this sparse matrix
-		/// </summary>
-		/// <param name="rowIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the row indices</param>
-		/// <param name="colIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the column indices</param>
-		protected abstract void GetIndices(Span<long> rowIndices, Span<long> colIndices);
-
-		/// <summary>
-		/// When implemented by a derived class, print out this sparse matrix.
-		/// </summary>
-		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
-		/// <returns>The detailed string representation of this sparse matrix</returns>
-		public override string Print(PrintSettings? overrideSetting = null)
-		{
-			string description = this.ToString();
-			if (this.Disposed)
-				return description;
-
-			var settings = overrideSetting ?? Settings.PrintSetting;
-
-			string detail = ":" + Environment.NewLine;
-			// get managed arrays
-			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			MEM.ToManaged(this.Storage, values);
-			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
-			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
-			this.GetIndices(row, col);
-			// to matrix string
-			detail += values.ToSparseMatrixString(row, col, precision: settings.Precision);
-			if (this.NStored > values.Length)
-				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
-			return description + detail;
-		}
 		#endregion
 
 		#region serialization

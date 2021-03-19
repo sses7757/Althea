@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 
 
-namespace Althea.Solver
+namespace Althea.Statistics
 {
 	/// <summary>
-	/// The abstract class for runtime general solver API routines 
+	/// The abstract class for runtime statistics API routines 
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{

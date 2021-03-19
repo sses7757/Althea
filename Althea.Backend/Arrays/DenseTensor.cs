@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Althea.Arrays;
@@ -9,6 +10,7 @@ using Althea.Helpers;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.TensorAlgebra;
+using Althea.Solver;
 
 using MEM = Althea.Storage.AbstractApi;
 using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
@@ -20,22 +22,37 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual (pitched) data storage without any index storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	[StructLayout(LayoutKind.Explicit)]
 	public class DenseTensor<T> : TensorBase<T>, IPitchedArray<T>, IKrylovVector<DenseTensor<T>, T> where T : unmanaged
 	{
 		#region basic
+		// previously defined 324 bytes
+		[FieldOffset(0)]
 		private readonly FixedBuffer_128<long> m_outerSize = default;
-
+		[FieldOffset(128)]
+		private long __overlap;
+		[FieldOffset(128)]
 		private readonly FixedBuffer_128<long> m_outerSizeProd = default;
+		[FieldOffset(128 * 2)]
+		private readonly long m_outerLength;
+		// this defines extra 264 bytes
 
 		/// <summary>
 		/// Get the pitch (in <typeparamref name="T"/>) of this array (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		public ReadOnlySpan<long> OuterSize => this.m_outerSize.AsSpan(this.Rank);
+		public ReadOnlySpan<long> OuterSize {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_outerSize.AsSpan(this.Rank);
+		}
 
 		/// <summary>
-		/// Get the strides (the inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
+		/// Get the strides (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		public ReadOnlySpan<long> Strides => this.m_outerSizeProd.AsSpan(this.Rank);
+		/// <remarks>The first element is 1, the last element is the product of <see cref="OuterSize"/> and the size == <see cref="TensorBase{T}.Rank"/> + 1</remarks>
+		public ReadOnlySpan<long> Strides {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.__overlap, this.Rank + 1);
+		}
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this tensor is actually pitched.
@@ -121,6 +138,14 @@ namespace Althea.Backend.Arrays
 			}
 			var prod = this.m_outerSizeProd.AsSpan(this.Rank);
 			this.OuterSize.AccumulateProd(result: prod, inclusive: true);
+			if (this.Rank < 16)
+			{
+				prod[this.Rank] = prod[^1] * size[^1];
+			}
+			else
+			{
+				this.m_outerLength = prod[^1] * size[^1];
+			}
 		}
 
 		/// <summary>

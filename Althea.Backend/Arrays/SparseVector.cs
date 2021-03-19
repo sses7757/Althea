@@ -8,6 +8,7 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Solver;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;

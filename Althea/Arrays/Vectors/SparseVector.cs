@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
-using Althea.Linq;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.LinearAlgebra.Sparse;
+using Althea.Linq;
+using Althea.NativeTypes;
 
 using MEM = Althea.Storage.AbstractApi;
 
@@ -30,14 +31,9 @@ namespace Althea.Arrays
 		// offset = 0
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
 		// offset = 64
-		/// <summary>
-		/// The member of all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>, is null if there is only one index array
-		/// </summary>
-		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
-
+		private readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
 		// offset = 132
 		private readonly SparseVectorFormat m_format;
-
 		// offset = 136
 		private T m_defaultValue;
 		// offset = 136 + size of T
@@ -45,17 +41,36 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
 		/// </summary>
-		public virtual long NStored => this.ActualLength;
+		public virtual long NStored {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.ActualLength;
+		}
 
 		/// <summary>
 		/// Get the sparse format of this sparse vector as a <see cref="SparseVectorFormat"/>
 		/// </summary>
-		public SparseVectorFormat Format => this.m_format;
+		public SparseVectorFormat Format {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_format;
+		}
 
 		/// <summary>
 		/// Get or set the default value (the values which are not specified) of this sparse vector
 		/// </summary>
-		public T DefaultValue { get => this.m_defaultValue; set => this.m_defaultValue = value; }
+		public T DefaultValue {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_defaultValue;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set => this.m_defaultValue = value;
+		}
+
+		/// <summary>
+		/// Get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// </summary>
+		public SizedFixedClassBuffer_8<Storage<TInd>> IndexArrays {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays;
+		}
 
 		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
 
@@ -149,20 +164,6 @@ namespace Althea.Arrays
 				this.m_originalIndexArrays[i]?.Dispose();
 			}
 		}
-		#endregion
-
-		#region IReadOnlyList of ISparseArray
-		int IReadOnlyCollection<Storage<TInd>>.Count => this.m_indexArrays.Count;
-
-		int IReadOnlyCollection<IStorage>.Count => this.m_indexArrays.Count;
-
-		IStorage IReadOnlyList<IStorage>.this[int index] => this.m_indexArrays[index];
-
-		Storage<TInd> IReadOnlyList<Storage<TInd>>.this[int index] => this.m_indexArrays[index];
-
-		IEnumerator<Storage<TInd>> IEnumerable<Storage<TInd>>.GetEnumerator() => this.m_indexArrays.GetEnumerator();
-
-		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IReadOnlyList<Storage<TInd>>)this).GetEnumerator();
 		#endregion
 
 		#region clone related

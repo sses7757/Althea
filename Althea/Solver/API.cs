@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Dynamic;
 
+using Althea.Arrays;
 
-namespace Althea.Statistics
+
+namespace Althea.Solver
 {
 	/// <summary>
-	/// The abstract class for runtime statistics API routines 
+	/// The abstract class for runtime general solver API routines 
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
@@ -68,5 +70,92 @@ namespace Althea.Statistics
 		protected abstract bool IsSupportedTensorTrinary(CombinationOfLocations location1, CombinationOfLocations location2, CombinationOfLocations location3);
 		#endregion
 
+
+		#region static methods as dispatchers
+		/// <summary>
+		/// Compute the tensor permutation from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="permutationOrder"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
+		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
+		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
+		/// <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method simply performs (pitched) tensor copy</remarks>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
+		public static void Permute<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged
+		{
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = destination.ValueStorage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedTensorBinary(location1, location2), node);
+				success = node.Value.Permute_(source, destination, permutationOrder);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+		#endregion
+
+
+		#region abstract methods that actually do computations
+		// Ignore Spelling: vec
+		//tex:
+		//Facts about Kronecker sum  times vector:
+		//$$(A\oplus B)vec(X)\equiv(A\otimes I+I\otimes B)vec(X)=vec(XA^T+BX)$$
+		//Facts about Kronecker product times vector:
+		//$$(A\otimes B)vec(X)=vec(BXA^T) \text{ (notice that it is not } A^\dagger\text)$$
+
+		/// <summary>
+		/// When implemented by a derived class, compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+		/// <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
+		/// <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
+		/// <param name="rightMatrix">The input right matrix to perform the Kronecker sum</param>
+		/// <param name="vector">The input / output vector</param>
+		/// <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		protected abstract bool KroneckerSumMultiplyVector_<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+		/// <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
+		/// <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
+		/// <param name="rightMatrix">The input right matrix to perform the Kronecker product</param>
+		/// <param name="vector">The input / output vector</param>
+		/// <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		protected abstract bool KroneckerProdMultiplyVector_<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, perform the naïve Lanczos algorithm to calculate the lowest eigenvalue and eigenvector of the target matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
+		/// </summary>
+		/// <typeparam name="TVec">The concrete vector class type</typeparam>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrixFunction">The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/></param>
+		/// <param name="initial">The initial vector as a <typeparamref name="TVec"/></param>
+		/// <param name="maxIter">The maximum number of iterations which may be decreased when out of memory</param>
+		/// <param name="checkFirst">Whether to check the <paramref name="matrixFunction"/> and <paramref name="maxIter"/> first. If true, it may introduce some overhead</param>
+		/// <param name="eigenvalue">The output approximate lowest eigenvalue</param>
+		/// <param name="eigenvector">The output approximate lowest eigenvalue's corresponding approximate eigenvector as a <typeparamref name="TVec"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null or invalid</exception>
+		/// <remarks>All the temporary vectors shall be created by <see cref="IKrylovVector{TVec, T}.NewArrayAlike"/> of <paramref name="initial"/>, hence, using vector with simple storage location(s) may help reduce overheads.</remarks>
+		/// <exception cref="ArgumentException">If the internal check fails</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="maxIter"/> is too large to fit in the memory</exception>
+		protected abstract bool NaiveLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged;
+		#endregion
 	}
 }

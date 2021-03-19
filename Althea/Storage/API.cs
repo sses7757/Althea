@@ -723,7 +723,7 @@ namespace Althea.Storage
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <see cref="byte"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="pointer"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
 		protected internal static void FillWithValue(PointerSegment pointer, byte value)
 		{
 			StorageLocation location = pointer.Location;
@@ -745,7 +745,7 @@ namespace Althea.Storage
 		/// <param name="pointer">The pointer to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="pointer"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
 		protected internal static void FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged
 		{
 			StorageLocation location = pointer.Location;
@@ -768,7 +768,7 @@ namespace Althea.Storage
 		/// <returns>The number of bytes of actually copied block</returns>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		protected internal static long MemoryCopy(PointerSegment source, PointerSegment destination)
 		{
 			CombinationOfLocations src = source.Location, dst = destination.Location;
@@ -797,7 +797,7 @@ namespace Althea.Storage
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
 		/// or <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
@@ -830,7 +830,7 @@ namespace Althea.Storage
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
 		protected internal static long StridedCopy<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged
 		{
@@ -857,7 +857,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="PointerSegment"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		protected internal static T ToManaged<T>(PointerSegment source) where T : unmanaged
 		{
 			CombinationOfLocations location = source.Location;
@@ -881,7 +881,7 @@ namespace Althea.Storage
 		/// <param name="destination">The destination <see cref="PointerSegment"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		protected internal static void FromManaged<T>(PointerSegment destination, T value) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.Location;
@@ -904,7 +904,7 @@ namespace Althea.Storage
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		protected internal static long ToManaged<T>(PointerSegment source, Span<T> destination) where T : unmanaged
 		{
 			CombinationOfLocations location = source.Location;
@@ -929,7 +929,7 @@ namespace Althea.Storage
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		protected internal static long FromManaged<T>(PointerSegment destination, ReadOnlySpan<T> values) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.Location;
@@ -958,7 +958,7 @@ namespace Althea.Storage
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="source"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
@@ -989,7 +989,7 @@ namespace Althea.Storage
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> * sizeof(<typeparamref name="T"/>) &gt; <paramref name="destination"/>.<see cref="PointerSegment.LengthInBytes">Length</see></c>,
@@ -1018,7 +1018,7 @@ namespace Althea.Storage
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="storage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		public static void FillWithValue<T>(Storage<T> storage, byte value) where T : unmanaged
 		{
 			CombinationOfLocations location = storage.LocationDescription;
@@ -1040,7 +1040,7 @@ namespace Althea.Storage
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled</param>
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="storage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		public static void FillWithValue<T>(Storage<T> storage, T value) where T : unmanaged
 		{
 			CombinationOfLocations location = storage.LocationDescription;
@@ -1065,7 +1065,7 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <remarks>The one with less length among <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length</remarks>
 		/// <exception cref="NotSupportedException">If <paramref name="source"/> or <paramref name="destination"/> is not supported</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		public static long MemoryCopy<T>(Storage<T> source, Storage<T> destination) where T : unmanaged
 		{
 			CombinationOfLocations src = source.LocationDescription, dst = destination.LocationDescription;
@@ -1093,7 +1093,7 @@ namespace Althea.Storage
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <return>The number of elements (in <typeparamref name="T"/>) actually copied</return>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1 or larger than lengths</exception>
 		public static long StridedCopy<T>(Storage<T> source, int incrementSource, Storage<T> destination, int incrementDestination) where T : unmanaged
 		{
@@ -1123,7 +1123,7 @@ namespace Althea.Storage
 		/// <param name="width">The width to copy in the real type</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are <b>not</b> ignored</remarks>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameters is zero</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destLD"/>,
@@ -1153,7 +1153,7 @@ namespace Althea.Storage
 		/// <param name="source">The source <see cref="Storage{T}"/> to copy from</param>
 		/// <returns>The first element in <paramref name="source"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public static T ToManaged<T>(Storage<T> source) where T : unmanaged
 		{
 			CombinationOfLocations location = source.LocationDescription;
@@ -1177,7 +1177,7 @@ namespace Althea.Storage
 		/// <param name="destination">The destination <see cref="Storage{T}"/> to copy to</param>
 		/// <param name="value">The value of type <typeparamref name="T"/> to copy from</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is null or invalid</exception>
 		public static void FromManaged<T>(Storage<T> destination, T value) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.LocationDescription;
@@ -1200,7 +1200,7 @@ namespace Althea.Storage
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to</param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public static long ToManaged<T>(Storage<T> source, Span<T> destination) where T : unmanaged
 		{
 			CombinationOfLocations location = source.LocationDescription;
@@ -1225,7 +1225,7 @@ namespace Althea.Storage
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from</param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		public static long FromManaged<T>(Storage<T> destination, ReadOnlySpan<T> values) where T : unmanaged
 		{
 			CombinationOfLocations location = destination.LocationDescription;
@@ -1253,7 +1253,7 @@ namespace Althea.Storage
 		/// <param name="destination">The managed <see cref="Span{T}"/> of type <typeparamref name="T"/> to copy to, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="destinationLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="destination"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="destinationLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="source"/>.<see cref="Storage{T}.Length">Length</see></c>,
@@ -1284,7 +1284,7 @@ namespace Althea.Storage
 		/// <param name="values">The managed <see cref="ReadOnlySpan{T}"/> of type <typeparamref name="T"/> to copy from, must has <c><see cref="Array.Length">Length</see> ¡Ý <paramref name="height"/> * <paramref name="width"/></c></param>
 		/// <param name="valuesLeadDim">The actual height (actual leading dimension) in <typeparamref name="T"/> of <paramref name="values"/>, default 0 means <paramref name="height"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">
 		/// If <paramref name="height"/> is larger than <paramref name="leadDim"/> or <paramref name="valuesLeadDim"/>,
 		/// or <c><paramref name="leadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/>.<see cref="Storage{T}.Length">Length</see></c>,

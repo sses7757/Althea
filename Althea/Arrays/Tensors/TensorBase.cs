@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -14,18 +15,24 @@ namespace Althea.Arrays
 	/// The abstract tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="TensorBase{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	[StructLayout(LayoutKind.Explicit)]
 	public abstract class TensorBase<T> : ValueArray<T>, ITensor where T : unmanaged
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes
+		[FieldOffset(0)]
 		private readonly FixedBuffer_128<long> m_size = default;
-
+		[FieldOffset(128)]
+		private long __overlap;
+		[FieldOffset(128)]
 		private readonly FixedBuffer_128<long> m_sizeProd = default;
-
+		[FieldOffset(128 * 2)]
+		private readonly long m_length;
+		[FieldOffset(128 * 2 + sizeof(long))]
 		private FixedBuffer_32<char> m_labels = default;
-
+		[FieldOffset(128 * 2 + sizeof(long) + 32)]
 		private readonly int m_rank = 0;
-		// this defines extra 128 + 128 + 32 + 4 bytes
+		// this defines extra 128 + 128 + 8 + 32 + 4 == 300 bytes
 
 		/// <summary>
 		/// Get the rank of this tensor as a <see cref="int"/>
@@ -44,12 +51,12 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get the (inclusive) accumulated product of the <see cref="AbstractArray{T}.Size"/> of this tensor
+		/// Get the (both end inclusive) accumulated product of the <see cref="AbstractArray{T}.Size"/> of this tensor
 		/// </summary>
-		/// <remarks>The first element is 1 and the length is the same as <see cref="AbstractArray{T}.Size"/></remarks>
+		/// <remarks>The first element is 1, the last element is <see cref="AbstractArray{T}.Length"/> and the size == <see cref="Rank"/> + 1</remarks>
 		public ReadOnlySpan<long> SizeProd {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_sizeProd.AsSpan(this.m_rank);
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.__overlap, this.m_rank + 1);
 		}
 
 		/// <summary>
@@ -81,8 +88,16 @@ namespace Althea.Arrays
 			// set members
 			this.m_rank = size.Length;
 			this.m_labels.CopyFromSpan(span);
-			var prod = this.m_sizeProd.AsSpan(this.Rank);
+			var prod = this.m_sizeProd.AsSpan(this.m_rank);
 			this.Size.AccumulateProd(result: prod, inclusive: true);
+			if (this.m_rank < 16)
+			{
+				prod[this.m_rank] = this.Length;
+			}
+			else
+			{
+				this.m_length = this.Length;
+			}
 		}
 		#endregion
 

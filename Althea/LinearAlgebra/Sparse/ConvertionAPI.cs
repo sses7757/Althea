@@ -143,7 +143,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="positions">The given positions as a <see cref="Storage{T}"/> of <see cref="int"/></param>
 		/// <param name="value">The value to set</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
 		public static void VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged where TInd : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = positions.LocationDescription;
@@ -165,7 +165,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static void VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
@@ -188,7 +188,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="y">The input (sparse index) and output (value array) sparse vector</param>
 		/// <remarks>This is equivalent to converting dense vector to sparse vector when the sparsity is known</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static void VectorGatherValuesAt<T>(Storage<T> x, ISparseVector<T> y) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.Storage.LocationDescription;
@@ -212,7 +212,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
 		public static SparseArrayWrapper<T> VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, float threshold = 0) where T : unmanaged
 		{
@@ -241,7 +241,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="vector"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="vector"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format) where T : unmanaged
 		{
 			CombinationOfLocations location1 = vector.Storage.LocationDescription;
@@ -266,7 +266,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format) where T : unmanaged
 		{
 			CombinationOfLocations location1 = matrix.Storage.LocationDescription;
@@ -292,7 +292,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="destination">The storage of the destination dense matrix of the same size as <paramref name="source"/></param>
 		/// <param name="ld">The leading dimension of <paramref name="destination"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		public static void MatrixSparseToDense<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged
 		{
 			CombinationOfLocations location1 = source.Storage.LocationDescription, location2 = destination.LocationDescription;
@@ -318,7 +318,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of the given properties</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
 		public static SparseArrayWrapper<T> MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, float threshold = 0) where T : unmanaged
 		{
@@ -343,7 +343,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> itself if the no prune is necessary</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
 		public static SparseArrayWrapper<T> MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold) where T : unmanaged
 		{
@@ -369,7 +369,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
 		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format, IOtherInfo? otherInfo = null) where T : unmanaged
 		{
 			CombinationOfLocations location1 = source.Storage.LocationDescription;
@@ -387,24 +387,28 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// Fill the given sparse matrix <paramref name="M"/> with identity matrix.
+		/// Reshape the given sparse matrix <paramref name="source"/> to a new one with <paramref name="newNRows"/>.
 		/// </summary>
-		/// <param name="M">The sparse matrix to be filled with identity</param>
+		/// <param name="source">The source sparse matrix to convert from</param>
+		/// <param name="newNRows">The target sparse matrix's number of rows</param>
+		/// <returns>A created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="newNRows"/>.</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="M"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
-		public static void MatrixSparseFillIdentity<T>(ISparseMatrix<T> M) where T : unmanaged
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newNRows"/> is out of range</exception>
+		public static SparseArrayWrapper<T> MatrixSparseReshape<T>(ISparseMatrix<T> source, long newNRows) where T : unmanaged
 		{
-			CombinationOfLocations location1 = M.Storage.LocationDescription;
+			CombinationOfLocations location1 = source.Storage.LocationDescription;
+			SparseArrayWrapper<T> result = default;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(M), node);
-				success = node.Value.MatrixSparseFillIdentity_(M);
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1) && a.IsSupportedSparseMatrix(source), node);
+				success = node.Value.MatrixSparseReshape_(source, newNRows, out result);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
+			return result;
 		}
 		#endregion
 
@@ -416,7 +420,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <returns>The maximum value of <paramref name="array"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
 		public static TInd IndexMax<TInd>(Storage<TInd> array) where TInd : unmanaged
 		{
@@ -441,7 +445,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <returns>The minimum value of <paramref name="array"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
 		public static TInd IndexMin<TInd>(Storage<TInd> array) where TInd : unmanaged
 		{
@@ -468,7 +472,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="value">The target value to find</param>
 		/// <returns>The zero-based index of the target <paramref name="value"/> in <paramref name="array"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
 		public static long IndexFind<TInd>(bool sorted, Storage<TInd> array, TInd value) where TInd : unmanaged
 		{
@@ -496,7 +500,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>The zero-based index of the target bound in <paramref name="array"/></returns>
 		/// <remarks>If not found, returns -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
 		public static long IndexBound<TInd>(Storage<TInd> array, TInd value, bool lowerBound) where TInd : unmanaged
 		{
@@ -525,7 +529,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="end">The inclusive end value to find</param>
 		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
 		/// <remarks>If some value is not found, the corresponding index in <paramref name="target"/> is -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
-		/// <exception cref="NullReferenceException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public static void IndexGetAllBounds<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
@@ -553,7 +557,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
 		/// <param name="start">The start value to fill in <paramref name="target"/></param>
 		/// <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
-		/// <exception cref="NullReferenceException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public static void IndexGenerateFromBounds<TInd, TIndOut>(Storage<TInd> bounds, Storage<TIndOut> target, bool lowerBound, TIndOut start = default)
@@ -698,13 +702,15 @@ namespace Althea.LinearAlgebra.Sparse
 		protected abstract bool MatrixSparseFormatConvert_<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target, IOtherInfo? otherInfo = null) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.
+		/// When implemented by a derived class, reshape the given sparse matrix <paramref name="source"/> to a new one with <paramref name="newNRows"/>.
 		/// </summary>
-		/// <param name="M">The sparse matrix to be filled with identity</param>
+		/// <param name="source">The source sparse matrix to convert from</param>
+		/// <param name="newNRows">The target sparse matrix's number of rows</param>
+		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="newNRows"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="M"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
-		protected abstract bool MatrixSparseFillIdentity_<T>(ISparseMatrix<T> M) where T : unmanaged;
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newNRows"/> is out of range</exception>
+		protected abstract bool MatrixSparseReshape_<T>(ISparseMatrix<T> source, long newNRows, out SparseArrayWrapper<T> target) where T : unmanaged;
 		#endregion
 
 		#region index only

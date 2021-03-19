@@ -75,57 +75,66 @@ namespace Althea.LinearAlgebra.Sparse
 	public interface IOtherInfo : IReadOnlyList<object> { }
 
 	/// <summary>
-	/// The simple wrapper structure for any sparse array (usually <see cref="SparseVector{T, TInd}"/> and <see cref="SparseMatrix{T, TInd}"/>) which is typically used as outputs of methods in <see cref="AbstractApi"/>.
+	/// The simple wrapper structure for any sparse array which is typically used as outputs of API methods.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public readonly struct SparseArrayWrapper<T> : IDisposable where T : unmanaged
+	public readonly ref struct SparseArrayWrapper<T> where T : unmanaged
 	{
 		private readonly Storage<T> values;
 
-		private readonly SizedFixedClassBuffer_8<IStorage> indices;
+		private readonly ReadOnlySpan<IStorage> indices;
 
 		private readonly int format;
 
 		private readonly IOtherInfo? info;
 
 		/// <summary>
-		/// Dispose this wrapper.
+		/// Get the value array storage of this sparse array wrapper as a <see cref="Storage{T}"/> of <typeparamref name="T"/>
 		/// </summary>
-		/// <remarks>When the <see cref="SparseArrayWrapper{T}"/> was created from <see cref="ISparseArray{T}"/>, it shall only contains referenced storages. Therefore, the disposition in such situation does nothing.<br/>
-		/// However, it will dispose the storages created inside the method implementations of <see cref="AbstractApi"/>.</remarks>
-		public void Dispose()
-		{
-			this.values?.Dispose();
-			for (int i = 0; i < this.indices.Count; i++)
-			{
-				this.indices[i]?.Dispose();
-			}
+		public Storage<T> ValueStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.values;
 		}
 
 		/// <summary>
-		/// Get the value array storage of this sparse array wrapper as a <see cref="Storage{T}"/> of <typeparamref name="T"/>
+		/// Get the storages of index arrays of this sparse array wrapper as a <see cref="ReadOnlySpan{T}"/> of <see cref="IStorage"/>
 		/// </summary>
-		public Storage<T> ValueStorage => this.values;
-
-		/// <summary>
-		/// Get the storages of index arrays of this sparse array wrapper as a <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>
-		/// </summary>
-		public IReadOnlyList<IStorage> IndexStorages => this.indices;
+		public ReadOnlySpan<IStorage> IndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.indices;
+		}
 
 		/// <summary>
 		/// Get the <see cref="SparseVectorFormat"/> of this sparse array as if this array is a sparse vector
 		/// </summary>
-		public SparseVectorFormat VectorFormat => (SparseVectorFormat)this.format;
+		public SparseVectorFormat VectorFormat {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => (SparseVectorFormat)this.format;
+		}
 
 		/// <summary>
 		/// Get the <see cref="SparseMatrixFormat"/> of this sparse array as if this array is a sparse matrix
 		/// </summary>
-		public SparseMatrixFormat MatrixFormat => (SparseMatrixFormat)this.format;
+		public SparseMatrixFormat MatrixFormat {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => (SparseMatrixFormat)this.format;
+		}
+
+		/// <summary>
+		/// Get the <see cref="TensorAlgebra.Sparse.SparseTensorFormat"/> of this sparse array as if this array is a sparse tensor
+		/// </summary>
+		public TensorAlgebra.Sparse.SparseTensorFormat TensorFormat {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => (TensorAlgebra.Sparse.SparseTensorFormat)this.format;
+		}
 
 		/// <summary>
 		/// Get the <see cref="IOtherInfo"/> of this sparse array
 		/// </summary>
-		public IOtherInfo? OtherInfo => this.info;
+		public IOtherInfo? OtherInfo {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.info;
+		}
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{T}"/> with given <paramref name="values"/>, <paramref name="indices"/> and <paramref name="format"/>
@@ -134,26 +143,26 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="indices">The storages of index arrays</param>
 		/// <param name="format">The format as a <see cref="int"/></param>
 		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
-		public SparseArrayWrapper(Storage<T> values, IReadOnlyList<IStorage> indices, int format, IOtherInfo? info = null)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SparseArrayWrapper(Storage<T> values, ReadOnlySpan<IStorage> indices, int format, IOtherInfo? info = null)
 		{
-			this.values = values; this.indices = new SizedFixedClassBuffer_8<IStorage>(indices); this.format = format; this.info = info;
+			this.values = values; this.indices = indices; this.format = format; this.info = info;
 		}
 
 		/// <summary>
-		/// Create a <see cref="SparseArrayWrapper{T}"/> with the given sparse <paramref name="vector"/>
+		/// Dispose this wrapper.
 		/// </summary>
-		/// <param name="vector">The given <see cref="ISparseVector{T}"/> used to create</param>
-		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
-		/// <returns>The <see cref="SparseArrayWrapper{T}"/> created from <paramref name="vector"/></returns>
-		public static SparseArrayWrapper<T> Create(ISparseVector<T> vector, IOtherInfo? info = null) => new(vector.Storage, vector, (int)vector.Format, info);
-
-		/// <summary>
-		/// Create a <see cref="SparseArrayWrapper{T}"/> with the given sparse <paramref name="matrix"/>
-		/// </summary>
-		/// <param name="matrix">The given <see cref="ISparseMatrix{T}"/> used to create</param>
-		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
-		/// <returns>The <see cref="SparseArrayWrapper{T}"/> created from <paramref name="matrix"/></returns>
-		public static SparseArrayWrapper<T> Create(ISparseMatrix<T> matrix, IOtherInfo? info = null) => new(matrix.Storage, matrix, (int)matrix.Format, info);
+		/// <remarks>When the <see cref="SparseArrayWrapper{T}"/> was created from <see cref="ISparseArray{T}"/>, it shall only contains referenced storages. Therefore, the disposition in such situation does nothing.<br/>
+		/// However, it will dispose the storages created inside the method implementations of <see cref="AbstractApi"/>.</remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			this.values?.Dispose();
+			for (int i = 0; i < this.indices.Length; i++)
+			{
+				this.indices[i]?.Dispose();
+			}
+		}
 	}
 	#endregion
 

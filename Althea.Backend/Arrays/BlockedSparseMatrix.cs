@@ -10,6 +10,7 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Solver;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
@@ -527,14 +528,25 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix, may be this matrix itself</returns>
-		public override Althea.Arrays.SparseMatrix<T, TInd> ToMatrix(long rows = 0)
+		public override BlockedSparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
 			Span<long> size = stackalloc long[2].SetValue(rows);
 			CheckSize(this, size);
 			if (size[0] == this.NRows)
 				return this;
-			using var vector = this.ToVector();
-			return vector.ToMatrix(rows);
+			var wrapper = LAS.MatrixSparseReshape(this, size[0]);
+			try
+			{
+				var matrix = SparseVector<T, TInd>.CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				if (matrix is not BlockedSparseMatrix<T, TInd> s)
+					throw new InvalidOperationException();
+				return s;
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -737,12 +749,7 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region helper methods
-		/// <summary>
-		/// The helper method used in <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Print(PrintSettings?)"/> to get the first several row and column indices of this sparse matrix's block sub-matrices
-		/// </summary>
-		/// <param name="rowIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the row indices</param>
-		/// <param name="colIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the column indices</param>
-		protected override void GetIndices(Span<long> rowIndices, Span<long> colIndices)
+		private void GetIndices(Span<long> rowIndices, Span<long> colIndices)
 		{
 			int rows = rowIndices.Length, cols = colIndices.Length;
 			long find;
@@ -802,7 +809,7 @@ namespace Althea.Backend.Arrays
 				string indexPair = $"({row[i]}, {col[i]}) -> ";
 				detail.Append(indexPair);
 				string pad = new(' ', indexPair.Length);
-				string matrixRepr = new DenseMatrix<T>(this.Storage + this.Pack * i, this.BlockNRows, this.BlockNCols).Print(overrideSetting);
+				string matrixRepr = DenseMatrix<T>.ActualPrint(this.Storage + this.Pack * i, this.BlockNRows, this.BlockNCols, this.BlockNRows, settings);
 				string[] reprs = matrixRepr.Split(Environment.NewLine);
 				for (int j = 0; j < reprs.Length - 1; j++)
 				{

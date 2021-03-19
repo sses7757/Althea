@@ -62,7 +62,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The input/output dense vector as a <see cref="Storage{T}"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If the <see cref="ISparseArray{T}.IndexType"/> is not an integral type</exception>
 		public static void VectorSparseAddToDense<T>(T α, ISparseVector<T> x, Storage<T> y) where T : unmanaged
 		{
@@ -87,7 +87,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="y">The input dense vector as a <see cref="Storage{T}"/></param>
 		/// <returns>The dot product result as a <typeparamref name="T"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static T VectorSparseDotDense<T>(bool conjX, ISparseVector<T> x, Storage<T> y) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
@@ -113,7 +113,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="y">The other input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <returns>The dot product result as a <typeparamref name="T"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static T VectorSparseDotSparse<T>(bool conjX, ISparseVector<T> x, ISparseVector<T> y) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.Storage.LocationDescription;
@@ -139,7 +139,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
 		/// <returns>The result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.Storage.LocationDescription;
@@ -163,7 +163,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input/output sparse vector x</param>
 		/// <param name="y">The input dense vector y</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static void VectorSparsePointWiseMultiplyDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
@@ -185,7 +185,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="x">The input/output sparse vector x</param>
 		/// <param name="y">The input dense vector y</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static void VectorSparsePointWiseDivideDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
@@ -213,7 +213,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="α">The scalar to multiply <paramref name="M"/></param>
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
 		public static void MatrixSparseMultiplyVectorDense<T>(MatrixOperation op, T α, ISparseMatrix<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged
 		{
 			CombinationOfLocations vector1 = x.LocationDescription, vector2 = y.LocationDescription, matrix = M.Storage.LocationDescription;
@@ -241,7 +241,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="y">The input/output dense vector y</param>
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
 		public static void MatrixDenseMultiplyVectorSparse<T>(MatrixOperation op, T α, long m, Storage<T> M, long ldm, ISparseVector<T> x, T β, Storage<T> y) where T : unmanaged
 		{
 			CombinationOfLocations vector1 = x.Storage.LocationDescription, vector2 = y.LocationDescription, matrix = M.LocationDescription;
@@ -266,7 +266,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
 		/// <returns>A new sparse matrix as the outer product with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> VectorSparseOuter<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
 		{
 			CombinationOfLocations vector1 = x.Storage.LocationDescription, vector2 = y.Storage.LocationDescription;
@@ -374,7 +374,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
 		/// <returns>A new sparse matrix as the product (and sum) with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> MatrixSparseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.Storage.LocationDescription;
@@ -412,7 +412,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="C">The input/output dense matrix</param>
 		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		public static void MatrixDenseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, long m, T α, Storage<T> A, long lda, ISparseMatrix<T> B, T β, Storage<T> C, long ldc) where T : unmanaged
 		{
 			CombinationOfLocations matrix1 = A.LocationDescription, matrix2 = B.Storage.LocationDescription, matrix3 = C.LocationDescription;
@@ -442,7 +442,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="C">The input/output dense matrix</param>
 		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		public static void MatrixSparseMultiplyDense<T>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseMatrix<T> A, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.LocationDescription, matrix3 = C.LocationDescription;
@@ -466,7 +466,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
 		/// <returns>A new sparse matrix as the Kronecker product with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="NullReferenceException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> MatrixSparseKronecker<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.Storage.LocationDescription;

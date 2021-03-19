@@ -9,6 +9,7 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Solver;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
@@ -879,8 +880,19 @@ namespace Althea.Backend.Arrays
 			CheckSize(this, size);
 			if (size[0] == this.NRows)
 				return this;
-			using var vector = this.ToVector();
-			return vector.ToMatrix(rows);
+			var wrapper = LAS.MatrixSparseReshape(this, size[0]);
+			try
+			{
+				var matrix = SparseVector<T, TInd>.CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				if (matrix is not SparseMatrix<T, TInd> s)
+					throw new InvalidOperationException();
+				return s;
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -1085,12 +1097,7 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region helper methods
-		/// <summary>
-		/// The helper method used in <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Print(PrintSettings?)"/> to get the first several row and column indices of this sparse matrix
-		/// </summary>
-		/// <param name="rowIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the row indices</param>
-		/// <param name="colIndices">The output <see cref="Span{T}"/> of <see cref="long"/> used to store the column indices</param>
-		protected override void GetIndices(Span<long> rowIndices, Span<long> colIndices)
+		private void GetIndices(Span<long> rowIndices, Span<long> colIndices)
 		{
 			int rows = rowIndices.Length, cols = colIndices.Length;
 			long find;
@@ -1122,6 +1129,34 @@ namespace Althea.Backend.Arrays
 				default:
 					break;
 			}
+		}
+
+		/// <summary>
+		/// Print out this sparse matrix.
+		/// </summary>
+		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
+		/// <returns>The detailed string representation of this sparse matrix</returns>
+		public override string Print(PrintSettings? overrideSetting = null)
+		{
+			string description = this.ToString();
+			if (this.Disposed)
+				return description;
+
+			var settings = overrideSetting ?? Settings.PrintSetting;
+
+			string detail = ":" + Environment.NewLine;
+			// get managed arrays
+			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			MEM.ToManaged(this.Storage, values);
+			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			this.GetIndices(row, col);
+			// to matrix string
+			detail += values.ToSparseMatrixString(row, col, precision: settings.Precision);
+			if (this.NStored > values.Length)
+				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
+			return description + detail;
 		}
 
 		/// <summary>

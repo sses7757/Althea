@@ -10,7 +10,7 @@ namespace Althea.TensorAlgebra.Dense
 {
 	#region wrapper
 	/// <summary>
-	/// The wrapper for a (possibly pitched) dense tensor
+	/// The computation wrapper for a (possibly pitched) dense tensor
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public readonly ref struct DenseTensorWrapper<T> where T : unmanaged
@@ -32,7 +32,7 @@ namespace Althea.TensorAlgebra.Dense
 		}
 
 		/// <summary>
-		/// The presenting size of this tensor as a <see cref="ReadOnlySpan{T}"/> of <typeparamref name="T"/>
+		/// The presenting size of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
 		public ReadOnlySpan<long> Size {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,7 +40,7 @@ namespace Althea.TensorAlgebra.Dense
 		}
 
 		/// <summary>
-		/// The outer size (actual size of all dimensions) of this tensor as a <see cref="ReadOnlySpan{T}"/> of <typeparamref name="T"/>
+		/// The outer size (actual size of all dimensions) of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
 		/// <remarks>If there is not pitch, <see cref="OuterSize"/> == <see cref="Size"/> (reference equals)</remarks>
 		public ReadOnlySpan<long> OuterSize {
