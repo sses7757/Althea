@@ -15,7 +15,7 @@ namespace Althea.General
 
 	#region restart strategy
 	/// <summary>
-	/// The strategy adopted by the thick restart Lanczos and Krylov-Shcur algorithm.
+	/// The strategy adopted by the thick restart Krylov subspace algorithms.
 	/// </summary>
 	public enum RestartStrategy
 	{
@@ -148,21 +148,21 @@ namespace Althea.General
 	public enum ReorthogonalizeMethod
 	{
 		/// <summary>
-		/// Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
-		/// </summary>
-		Selective = 0,
-		/// <summary>
 		/// Do not perform re-orthogonalization, <b>this may lead to serious problems, e.g. Lanczos may never converge</b>
 		/// </summary>
-		None = -1,
+		None = 0,
+		/// <summary>
+		/// Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
+		/// </summary>
+		Selective = 1,
 		/// <summary>
 		/// Perform full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="Selective"/> one does not perform well
 		/// </summary>
-		Full = 1,
+		Full = 2,
 		/// <summary>
 		/// Perform robust full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="Selective"/> one does not perform well
 		/// </summary>
-		RobustFull = 2
+		RobustFull = 3
 	}
 	#endregion
 

@@ -140,7 +140,7 @@ namespace Althea.Solver
 		protected abstract bool KroneckerProdMultiplyVector_<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, perform the naïve Lanczos algorithm to calculate the lowest eigenvalue and eigenvector of the target matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
+		/// When implemented by a derived class, perform the naïve Lanczos algorithm to calculate the lowest eigenvalue and eigenvector of a hermitian matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
 		/// </summary>
 		/// <typeparam name="TVec">The concrete vector class type</typeparam>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
@@ -156,6 +156,27 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentException">If the internal check fails</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="maxIter"/> is too large to fit in the memory</exception>
 		protected abstract bool NaiveLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged;
+
+		/// <summary>
+		/// Lanczos algorithm for Hermitian matrix's partial (especially the lowest eigenvalues) eigen-problem.
+		/// </summary>
+		/// <param name="MatMulVecFunc">a function that receives a dense vector input and give the result of the multiplication of the Hermitian matrix and the input vector</param>
+		/// <param name="initial">The initial vector</param>
+		/// <param name="smallestK">only the smallest k eigenvalues are the target, we DO NOT recommend a larger k since Lanczos is not designed for it</param>
+		/// <param name="tolerance">The tolerance of the Lanczos iterative solver, default 0 means <c>machine precision * 5</c></param>
+		/// <param name="maxIter">max iteration number, if <paramref name="maxIter"/> ≤ 0, it will be auto calculated and the thick restart strategy will be used to compute multiple eigen-pairs until they are all converged; otherwise, the computation stops at total number of iterations = <paramref name="maxIter"/> while some of the eigen-pairs may not be calculated at all</param>
+		/// <param name="reorthogonalize">perform re-orthogonalization or not, default is <c>true</c>, (notice that Lanczos algorithm is extremely numerical unstable without it)</param>
+		/// <param name="useGap">use the estimated gap in the convergence criteria or use the matrix norm, default true</param>
+		/// <param name="strategy">The restart strategy to use, if it is <see cref="RestartStrategy.UserDefine"/>, the <paramref name="selector"/> must be indicated</param>
+		/// <param name="selector">used for selecting the preservation Ritz pairs only when <paramref name="strategy"/> is <see cref="RestartStrategy.UserDefine"/></param>
+		/// <returns>An array of <see cref="double"/> as the eigenvalues and an array of <typeparamref name="TVec"/> as corresponding eigenvectors and the convergence.</returns>
+		/// <typeparam name="T">The data type, see <see cref="AbstractArray{T}"/> for more information</typeparam>
+		/// <typeparam name="TVec">The general dense vector type that inherits <see cref="AbstractArray{T}"/>, <see cref="IKrylovVector{TVec, T}"/> and must be a concrete class type</typeparam>
+		/// <exception cref="ArgumentException">if any of the arguments is wrong</exception>
+		/// <exception cref="InvalidOperationException">if the <paramref name="MatMulVecFunc"/> throws inner exceptions</exception>
+		/// <exception cref="InsufficientMemoryException">if the <paramref name="smallestK"/> is too large to be calculated within free memory</exception>
+		/// <remarks>Currently, if some eigen-pairs are not converged after maximum number of iterations, they will not be returned.</remarks>
+		protected abstract bool Lanczos<TVec, T>(Func<TVec, TVec> MatMulVecFunc, TVec initial, int smallestK = 1, int maxIter = 0, double tolerance = 0, ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.Selective, bool useGap = true, RestartStrategy strategy = RestartStrategy.Naive, IRestartStrategy selector = null)
 		#endregion
 	}
 }

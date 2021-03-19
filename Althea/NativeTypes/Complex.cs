@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Resources;
-using Althea.Helpers;
 using Althea.NativeTypes;
-using System.Runtime.CompilerServices;
+using Althea.Resources;
+
 
 namespace Althea.NativeTypes
 {
@@ -384,6 +384,11 @@ namespace Althea.NativeTypes
 
 		#region complex double arithmetic
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoubleMul(Complex<double> a, double b)
+		{
+			return new Complex<double>(a.real * b, a.imag * b);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Complex<double> DoubleMul(Complex<double> a, Complex<double> b)
 		{
 			double real = a.real * b.real - a.imag * b.imag;
@@ -401,7 +406,8 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static double DoubleAbs(Complex<double> a)
 		{
-			double squareAbsY = a.real * a.real + a.imag * a.imag;
+			double x = a.real, y = a.imag;
+			double squareAbsY = x * x + y * y;
 			return Math.Sqrt(squareAbsY);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -425,19 +431,27 @@ namespace Althea.NativeTypes
 			return new Complex<double>(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Complex<double> DoublePow(Complex<double> c, double p)
+		private static Complex<double> DoublePowReal(Complex<double> c, double p)
 		{
-			if ((c.real == 0 || c.real == 1) && c.imag == 0)
-				return c;
 			if (c.imag == 0)
 			{
 				return new Complex<double>(Math.Pow(c.real, p));
 			}
 			else
 			{
-				var doubleResult = DoubleLog(c) * p;
-				return DoubleExp(doubleResult);
+				double absC = DoubleAbs(c);
+				double argC = Math.Atan2(c.imag, c.real);
+				double phase = p * argC;
+				double scale = Math.Pow(absC, p);
+				return new Complex<double>(scale * Math.Cos(phase), scale * Math.Sin(phase));
 			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<double> DoublePow(Complex<double> c, double p)
+		{
+			if ((c.real == 0 || c.real == 1) && c.imag == 0)
+				return c;
+			return DoublePowReal(c, p);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Complex<double> DoublePow(Complex<double> c, Complex<double> p)
@@ -446,18 +460,14 @@ namespace Althea.NativeTypes
 				return c;
 			if (p.imag == 0)
 			{
-				return DoublePow(c, p.real);
+				return DoublePowReal(c, p.real);
 			}
-			Complex<double> result;
-			if (c.imag == 0 && c.real > 0)
-			{
-				result = Math.Log(c.real) * p;
-			}
-			else
-			{
-				result = DoubleLog(c) * p;
-			}
-			return DoubleExp(result);
+			// else
+			double absC = DoubleAbs(c);
+			double argC = Math.Atan2(c.imag, c.real);
+			double phase = p.real * argC + p.imag * Math.Log(absC);
+			double scale = Math.Pow(absC, p.real) * Math.Exp(-p.imag * argC);
+			return new Complex<double>(scale * Math.Cos(phase), scale * Math.Sin(phase));
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Complex<double> DoubleSqrt(Complex<double> c)

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.NativeTypes;
 
 
@@ -130,6 +131,141 @@ namespace Althea.Solver
 			{
 				vec.Dispose();
 				throw;
+			}
+		}
+	}
+	#endregion
+
+	#region Krylov subspace algorithms restart strategy
+	/// <summary>
+	/// The strategy adopted by the thick restart Krylov subspace algorithms.
+	/// </summary>
+	public enum RestartStrategy
+	{
+		/// <summary>
+		/// The naïve strategy which only preserve the lowest Ritz eigen-pair and converged ones.
+		/// </summary>
+		Naive,
+		// Ignore Spelling: \mathrm eig \left \right \underset
+		/// <summary>
+		/// Based on the index of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
+		/// $$k=n_c+\min{\left\{n_{\mathrm{eig}},\left(p-n_c\right)\left(\frac{2}{5}+\frac{n_{\mathrm{eig}}}{10p}\right)\right\}}$$
+		/// </summary>
+		//tex:$$k=n_c+\min{\left\{n_{\mathrm{eig}},\left(p-n_c\right)\left(\frac{2}{5}+\frac{n_{\mathrm{eig}}}{10p}\right)\right\}}$$
+		IndexBased,
+		/// <summary>
+		/// Based on the residual of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
+		/// $$k=\underset{i}{\mathrm{argmax}}\left( \left| s_{n,i} \right| &lt; \max\left\{ \sqrt{\left| s_{n,n_{\mathrm{eig}}} \right|\max_{j}\left| s_{n,j} \right|},2\left| s_{n,n_{\mathrm{eig}}} \right| \right\} \right)$$
+		/// </summary>
+		//tex:$$k=\underset{i}{\mathrm{argmax}}\left( \left| s_{n,i} \right| < \max\left\{ \sqrt{\left| s_{n,n_{\mathrm{eig}}} \right|\max_{j}\left| s_{n,j} \right|},2\left| s_{n,n_{\mathrm{eig}}} \right| \right\} \right)$$
+		CurrentResidualBest,
+		/// <summary>
+		/// Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+		/// $$k=\max{\left\{n_{\mathrm{eig}},\frac{3p+2n_c}{5}\right\}}$$
+		/// </summary>
+		//tex:$$k=\max{\left\{n_{\mathrm{eig}},\frac{3p+2n_c}{5}\right\}}$$
+		OneStepResidualImprove,
+		/// <summary>
+		/// Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+		/// $$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
+		/// </summary>
+		//tex:$$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
+		WholeIterResidualImprove,
+		/// <summary>
+		/// The heuristic used by Krylov-Schur algorithm to prevent stagnating
+		/// </summary>
+		KrylovSchur,
+		/// <summary>
+		/// User-defined restart strategy, see <see cref="IRestartStrategy"/>
+		/// </summary>
+		UserDefine,
+	}
+
+	/// <summary>
+	/// The interface for a user-defined (or a built in) restart strategy
+	/// </summary>
+	public interface IRestartStrategy
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
+		/// </summary>
+		/// <param name="estimateEigvals">The Ritz values, without converged ones</param>
+		/// <param name="estimateEigvecs">The Ritz vectors, without converged ones. This shall be a square matrix.</param>
+		/// <param name="nConverged">THe number of converged eigen-pairs</param>
+		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
+		/// <param name="maxIter">The maximum number of iteration</param>
+		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
+		/// <returns><paramref name="output"/>[..preserved_count]</returns>
+		/// <remarks>This method will only be invoked internally.</remarks>
+		Span<int> PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output);
+	}
+
+	/// <summary>
+	/// The built-in <see cref="IRestartStrategy"/> that implements the built-in <see cref="RestartStrategy"/>s.
+	/// </summary>
+	public sealed class BuiltInRestartStrategy : IRestartStrategy
+	{
+		private readonly RestartStrategy strategy;
+
+		/// <summary>
+		/// Create a <see cref="BuiltInRestartStrategy"/> with given <paramref name="strategy"/>
+		/// </summary>
+		/// <param name="strategy"></param>
+		public BuiltInRestartStrategy(RestartStrategy strategy)
+		{
+			this.strategy = strategy;
+		}
+
+		Span<int> IRestartStrategy.PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output)
+		{
+			int indexMax = 0;
+			int upperCount = estimateEigvals.Length * 2 / 3;
+			switch (this.strategy)
+			{
+				case RestartStrategy.Naive:
+					return ArrayLinq.Range(0, Math.Min(Math.Max(maxIter * 2 / 5, nTarget), estimateEigvals.Length)).ToArray();
+				case RestartStrategy.IndexBased:
+					indexMax = Math.Min(nTarget, (int)((maxIter - nConverged) * (0.4 + nTarget / 10.0 / maxIter)));
+					return ArrayLinq.Range(0, Math.Min(indexMax, upperCount)).ToArray();
+				case RestartStrategy.CurrentResidualBest:
+					if (nTarget >= upperCount)
+						return ArrayLinq.Range(0, upperCount).ToArray();
+					var lastRow = estimateEigvecs.Select(v => v[^1]).ToArray();
+					var lastMax = lastRow.Max(a => a.Abs());
+					var lastNeig = lastRow[nTarget - 1].Abs();
+					var upperBound = Math.Max(Math.Sqrt(lastMax * lastNeig), 2 * lastNeig);
+					for (indexMax = 0; indexMax < upperCount; indexMax++)
+					{
+						if (lastRow[indexMax].Abs() >= upperBound)
+							break;
+					}
+					indexMax -= nConverged;
+					return ArrayLinq.Range(0, indexMax - 1).ToArray();
+				case RestartStrategy.OneStepResidualImprove:
+					indexMax = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
+					indexMax -= nConverged;
+					return ArrayLinq.Range(0, Math.Min(indexMax, upperCount)).ToArray();
+				case RestartStrategy.WholeIterResidualImprove:
+					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
+					double maxVal = 0;
+					for (int i = 0; i < upperCount; i++)
+					{
+						double val = (maxIter - i - 1) * (estimateEigvals[i + 1].Abs() - estimateEigvals[0].Abs()) / (estimateEigvals[^1].Abs() - estimateEigvals[0].Abs());
+						if (val > maxVal)
+						{
+							maxVal = val;
+							indexMax = i;
+						}
+					}
+					indexMax -= nConverged;
+					return ArrayLinq.Range(0, indexMax).ToArray();
+				case RestartStrategy.KrylovSchur:
+					int k = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
+					if (k == 1 && maxIter > 3)
+						k = maxIter / 2;
+					return ArrayLinq.Range(0, k).ToArray();
+				default:
+					throw new NotSupportedException();
 			}
 		}
 	}
