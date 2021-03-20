@@ -105,7 +105,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the <see cref="DataTypeClassification"/> of type <typeparamref name="T"/>
 		/// </summary>
-		public static readonly DataTypeClassification DataTypeClass = DataTypeExtension.GetClassification<T>();
+		public static readonly DataTypeClassification DataTypeClass = NativeTypeExtension.GetClassification<T>();
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether type <typeparamref name="T"/> is an integral type or not
@@ -134,6 +134,11 @@ namespace Althea.NativeTypes
 			MinusHalf = (-0.5).GenericConvert<double, T>(),
 			E = Math.E.GenericConvert<double, T>(),
 			Pi = Math.PI.GenericConvert<double, T>();
+
+		/// <summary>
+		/// Get the machine precision of <typeparamref name="T"/>
+		/// </summary>
+		public static readonly double MachinePrecision = NativeTypeExtension.GetMachinePrecision<T>();
 		#endregion
 
 		#region delegates

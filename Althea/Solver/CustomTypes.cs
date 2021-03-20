@@ -138,9 +138,116 @@ namespace Althea.Solver
 
 	#region Krylov subspace algorithms restart strategy
 	/// <summary>
-	/// The strategy adopted by the thick restart Krylov subspace algorithms.
+	/// The interface for a user-defined (or a built in) restart strategy
 	/// </summary>
-	public enum RestartStrategy
+	public interface IPreserveSelector
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
+		/// </summary>
+		/// <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
+		/// <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
+		/// <param name="nConverged">THe number of converged eigen-pairs</param>
+		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
+		/// <param name="maxIter">The maximum number of iteration</param>
+		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
+		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
+		/// <returns><paramref name="output"/>[..preserved_count]</returns>
+		/// <remarks>This method will only be invoked internally.</remarks>
+		Span<int> PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true);
+	}
+
+	internal sealed class BuiltInPreserveSelector : IPreserveSelector
+	{
+		public RestartStrategy Strategy { get; }
+
+		public BuiltInPreserveSelector(RestartStrategy strategy)
+		{
+			this.Strategy = strategy;
+		}
+
+		Span<int> IPreserveSelector.PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged)
+		{
+			int length = estimateEigvals.Length;
+			int indexMax = 0;
+			int upperCount = length * 2 / 3;
+			switch (this.Strategy)
+			{
+				case RestartStrategy.Naive:
+					indexMax = Math.Min(Math.Max(maxIter * 2 / 5, nTarget), length);
+					if (withConverged)
+						indexMax = Math.Max(indexMax, nConverged);
+					return output[..indexMax].FillWithRange(0);
+
+				case RestartStrategy.IndexBased:
+					indexMax = Math.Min(nTarget, (int)((maxIter - nConverged) * (0.4 + nTarget / 10.0 / maxIter)));
+					indexMax = Math.Min(indexMax, upperCount);
+					if (withConverged)
+						indexMax = Math.Max(indexMax, nConverged);
+					return output[..].FillWithRange(0);
+
+				case RestartStrategy.CurrentResidualBest:
+					if (nTarget >= upperCount)
+						return output[..upperCount].FillWithRange(0);
+					Span<ComplexDouble> lastRow = length.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[length];
+					for (int i = 0; i < length; i++)
+					{
+						lastRow[i] = estimateEigvecs[length * (i + 1) - 1];
+					}
+					var lastMax = lastRow.Max(static v => v.Abs());
+					var lastNeig = lastRow[nTarget - 1].Abs();
+					var upperBound = Math.Max(Math.Sqrt(lastMax * lastNeig), 2 * lastNeig);
+					for (indexMax = 0; indexMax < upperCount; indexMax++)
+					{
+						if (lastRow[indexMax].Abs() >= upperBound)
+							break;
+					}
+					if (!withConverged)
+						indexMax -= nConverged;
+					return output[..(indexMax - 1)].FillWithRange(0);
+
+				case RestartStrategy.OneStepResidualImprove:
+					indexMax = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
+					if (!withConverged)
+						indexMax -= nConverged;
+					return output[..Math.Min(indexMax, upperCount)].FillWithRange(0);
+
+				case RestartStrategy.WholeIterResidualImprove:
+					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
+					double abs0 = estimateEigvals[0].Abs(), gap = estimateEigvals[^1].Abs() - abs0;
+					double maxVal = 0;
+					for (int i = 0; i < upperCount; i++)
+					{
+						double val = (maxIter - i - 1) * (estimateEigvals[i + 1].Abs() - abs0) / gap;
+						if (val > maxVal)
+						{
+							maxVal = val;
+							indexMax = i;
+						}
+					}
+					if (!withConverged)
+						indexMax -= nConverged;
+					return output[..indexMax].FillWithRange(0);
+
+				case RestartStrategy.KrylovSchur:
+					int k = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
+					if (k == 1 && maxIter > 3)
+						k = maxIter / 2;
+					return output[..k].FillWithRange(0);
+
+				default:
+					throw new NotSupportedException();
+			}
+		}
+	}
+	#endregion
+
+	#region enum
+	/// <summary>
+	/// The <see cref="RestartStrategy"/> indicates which strategy shall be adopted by the thick restart Krylov subspace algorithms.
+	/// </summary>
+	/// <remarks>Other non built-in strategies are possible and they work as long as there exists implementation supporting them.</remarks>
+	public enum RestartStrategy : byte
 	{
 		/// <summary>
 		/// The naïve strategy which only preserve the lowest Ritz eigen-pair and converged ones.
@@ -175,99 +282,372 @@ namespace Althea.Solver
 		/// The heuristic used by Krylov-Schur algorithm to prevent stagnating
 		/// </summary>
 		KrylovSchur,
-		/// <summary>
-		/// User-defined restart strategy, see <see cref="IRestartStrategy"/>
-		/// </summary>
-		UserDefine,
 	}
 
 	/// <summary>
-	/// The interface for a user-defined (or a built in) restart strategy
+	/// The <see cref="ReorthogonalizeMethod"/> indicates which method shall be used to re-orthogonalize with the previous basis in Krylov subspace algorithms.
 	/// </summary>
-	public interface IRestartStrategy
+	/// <remarks>Other non built-in methods are possible and they work as long as there exists implementation supporting them.</remarks>
+	public enum ReorthogonalizeMethod : byte
 	{
 		/// <summary>
-		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
+		/// Do not perform re-orthogonalization, <b>this may lead to serious problems, e.g. Lanczos may never converge</b>
 		/// </summary>
-		/// <param name="estimateEigvals">The Ritz values, without converged ones</param>
-		/// <param name="estimateEigvecs">The Ritz vectors, without converged ones. This shall be a square matrix.</param>
-		/// <param name="nConverged">THe number of converged eigen-pairs</param>
-		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
-		/// <param name="maxIter">The maximum number of iteration</param>
-		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
-		/// <returns><paramref name="output"/>[..preserved_count]</returns>
-		/// <remarks>This method will only be invoked internally.</remarks>
-		Span<int> PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output);
+		None,
+		/// <summary>
+		/// Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
+		/// </summary>
+		Selective,
+		/// <summary>
+		/// Perform full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="Selective"/> one does not perform well
+		/// </summary>
+		Full,
+		/// <summary>
+		/// Perform robust full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="Selective"/> one does not perform well
+		/// </summary>
+		RobustFull
 	}
 
 	/// <summary>
-	/// The built-in <see cref="IRestartStrategy"/> that implements the built-in <see cref="RestartStrategy"/>s.
+	/// The <see cref="WhichEigenvalues"/> indicates which eigen-pairs are desired in Krylov subspace algorithms of non-hermitian matrices.
 	/// </summary>
-	public sealed class BuiltInRestartStrategy : IRestartStrategy
+	/// <remarks>Other non built-in desired parts are possible and they work as long as there exists implementation supporting them.</remarks>
+	public enum WhichEigenvalues : byte
 	{
-		private readonly RestartStrategy strategy;
+		/// <summary>
+		/// The eigenvalues with largest absolute values are desired
+		/// </summary>
+		LargestAbsolute,
+		/// <summary>
+		/// The eigenvalues with largest real part values are desired
+		/// </summary>
+		LargestReal,
+		/// <summary>
+		/// The eigenvalues with largest imaginary part's absolute values are desired
+		/// </summary>
+		LargestAbsoluteImaginary,
+		/// <summary>
+		/// The eigenvalues with smallest absolute values are desired
+		/// </summary>
+		SmallestAbsolute,
+		/// <summary>
+		/// The eigenvalues with smallest real part values are desired
+		/// </summary>
+		SmallestReal,
+		/// <summary>
+		/// The eigenvalues with smallest imaginary part's absolute values are desired
+		/// </summary>
+		SmallestAbsoluteImaginary
+	}
+	#endregion
+
+	#region wrapper
+	/// <summary>
+	/// The information used as input and output of Krylov subspace methods
+	/// </summary>
+	/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+	/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
+	public ref struct KrylovSubspaceSolveInfo<TVec, T> where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
+	{
+		#region fields
+		/// <summary>
+		/// The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/>
+		/// </summary>
+		public readonly Func<TVec, TVec> MatrixFunction;
 
 		/// <summary>
-		/// Create a <see cref="BuiltInRestartStrategy"/> with given <paramref name="strategy"/>
+		/// The function used to create a new vector of type <typeparamref name="TVec"/>
 		/// </summary>
-		/// <param name="strategy"></param>
-		public BuiltInRestartStrategy(RestartStrategy strategy)
+		public readonly Func<TVec> NewVectorFunction;
+
+		/// <summary>
+		/// The initial vector as a <typeparamref name="TVec"/>
+		/// </summary>
+		public readonly TVec InitialVector;
+
+		/// <summary>
+		/// The other vector used as a <typeparamref name="TVec"/>
+		/// </summary>
+		public TVec? OtherVector;
+
+		/// <summary>
+		/// The tolerance of the convergence, default 0 means <c>machine precision of <typeparamref name="T"/> * 5</c>
+		/// </summary>
+		public readonly double Tolerance;
+
+		/// <summary>
+		/// The <see cref="IPreserveSelector"/> used for selecting the preservation Ritz pairs, default null means <c>new <see cref="BuiltInPreserveSelector(RestartStrategy)">BuiltInRestartStrategy</see>(<see cref="RestartStrategy"/>)</c>.
+		/// </summary>
+		public readonly IPreserveSelector PreserveSelector;
+
+		/// <summary>
+		/// The output converged eigenvalues of <see cref="double"/> if the matrix is hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+		/// </summary>
+		public Span<double> Eigenvalues;
+
+		/// <summary>
+		/// The output converged eigenvalues of <see cref="ComplexDouble"/> if the matrix is not hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+		/// </summary>
+		public Span<ComplexDouble> EigenvaluesComplex;
+
+		/// <summary>
+		/// The output converged eigenvectors' real parts, sorted with <see cref="EigenvaluesComplex"/>
+		/// </summary>
+		public Span<TVec> EigenvectorsReal;
+
+		/// <summary>
+		/// The output converged eigenvectors' complex parts, sorted with <see cref="EigenvaluesComplex"/>. Empty if the matrix is hermitian.
+		/// </summary>
+		public Span<TVec> EigenvectorsComplex;
+
+		/// <summary>
+		/// Only the top <see cref="NumberEigenvaluesDesired"/> eigen-pairs of <see cref="WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
+		/// </summary>
+		public readonly int NumberEigenvaluesDesired;
+
+		/// <summary>
+		/// The maximum number of restarts, must be positive
+		/// </summary>
+		public readonly int MaxRestarts;
+
+		/// <summary>
+		/// The iteration number per restart, default 0 means letting internal implementation determine
+		/// </summary>
+		public readonly int IterationsPerRestart;
+
+		/// <summary>
+		/// The <see cref="ReorthogonalizeMethod"/> to indicate which re-orthogonalization method to use
+		/// </summary>
+		public readonly ReorthogonalizeMethod ReorthogonalizeMethod;
+
+		/// <summary>
+		/// The <see cref="WhichEigenvalues"/> to indicate which kind of eigenvalues (and the corresponding eigenvectors) are desired
+		/// </summary>
+		public readonly WhichEigenvalues WhichEigenvaluesDesired;
+
+		/// <summary>
+		/// Whether to use the estimated gap in the convergence criteria or use the matrix norm, default true. If the gap can be especially difficult to estimate, this shall be set to false.
+		/// </summary>
+		public readonly bool UseGapEstimation;
+		#endregion
+
+		#region create
+		static KrylovSubspaceSolveInfo()
 		{
-			this.strategy = strategy;
+			if (Const<T>.IsIntegralType)
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotFloat);
 		}
 
-		Span<int> IRestartStrategy.PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output)
+		/// <summary>
+		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given naïve hermitian matrix eigen-solve problem
+		/// </summary>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+		/// <exception cref="ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, Func<TVec>? newVector = null)
 		{
-			int indexMax = 0;
-			int upperCount = estimateEigvals.Length * 2 / 3;
-			switch (this.strategy)
-			{
-				case RestartStrategy.Naive:
-					return ArrayLinq.Range(0, Math.Min(Math.Max(maxIter * 2 / 5, nTarget), estimateEigvals.Length)).ToArray();
-				case RestartStrategy.IndexBased:
-					indexMax = Math.Min(nTarget, (int)((maxIter - nConverged) * (0.4 + nTarget / 10.0 / maxIter)));
-					return ArrayLinq.Range(0, Math.Min(indexMax, upperCount)).ToArray();
-				case RestartStrategy.CurrentResidualBest:
-					if (nTarget >= upperCount)
-						return ArrayLinq.Range(0, upperCount).ToArray();
-					var lastRow = estimateEigvecs.Select(v => v[^1]).ToArray();
-					var lastMax = lastRow.Max(a => a.Abs());
-					var lastNeig = lastRow[nTarget - 1].Abs();
-					var upperBound = Math.Max(Math.Sqrt(lastMax * lastNeig), 2 * lastNeig);
-					for (indexMax = 0; indexMax < upperCount; indexMax++)
-					{
-						if (lastRow[indexMax].Abs() >= upperBound)
-							break;
-					}
-					indexMax -= nConverged;
-					return ArrayLinq.Range(0, indexMax - 1).ToArray();
-				case RestartStrategy.OneStepResidualImprove:
-					indexMax = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
-					indexMax -= nConverged;
-					return ArrayLinq.Range(0, Math.Min(indexMax, upperCount)).ToArray();
-				case RestartStrategy.WholeIterResidualImprove:
-					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
-					double maxVal = 0;
-					for (int i = 0; i < upperCount; i++)
-					{
-						double val = (maxIter - i - 1) * (estimateEigvals[i + 1].Abs() - estimateEigvals[0].Abs()) / (estimateEigvals[^1].Abs() - estimateEigvals[0].Abs());
-						if (val > maxVal)
-						{
-							maxVal = val;
-							indexMax = i;
-						}
-					}
-					indexMax -= nConverged;
-					return ArrayLinq.Range(0, indexMax).ToArray();
-				case RestartStrategy.KrylovSchur:
-					int k = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
-					if (k == 1 && maxIter > 3)
-						k = maxIter / 2;
-					return ArrayLinq.Range(0, k).ToArray();
-				default:
-					throw new NotSupportedException();
-			}
+			if (maxIter <= 0)
+				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.Parameter.MustPositive);
+			if (matrixFunction is null)
+				throw new ArgumentNullException(nameof(matrixFunction));
+			if (initial is null)
+				throw new ArgumentNullException(nameof(initial));
+
+			this.MatrixFunction = matrixFunction;
+			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
+			this.InitialVector = initial;
+			this.OtherVector = null;
+			this.NumberEigenvaluesDesired = 1;
+			this.WhichEigenvaluesDesired = default;
+			this.MaxRestarts = maxIter;
+			this.IterationsPerRestart = 0;
+			this.Tolerance = 0;
+			this.ReorthogonalizeMethod = default;
+			this.UseGapEstimation = default;
+			this.PreserveSelector = new BuiltInPreserveSelector(default);
+
+			this.Eigenvalues = default;
+			this.EigenvaluesComplex = default;
+			this.EigenvectorsReal = default;
+			this.EigenvectorsComplex = default;
 		}
+
+		/// <summary>
+		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given non-hermitian matrix eigen-solve problem
+		/// </summary>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
+									   Span<ComplexDouble> outputEigenvalues,
+									   Span<TVec> outputRealEigenvectors, Span<TVec> outputCompEigenvectors,
+									   int nEig = 1, WhichEigenvalues which = WhichEigenvalues.LargestAbsolute,
+									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
+									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull, bool useGap = true,
+									   IPreserveSelector? selector = null, Func<TVec>? newVector = null)
+		{
+			if (iterPerRestart < 0)
+				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
+			if (tolerance < 0)
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.CannotNegative);
+			if (maxRestarts <= 0)
+				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.Parameter.MustPositive);
+			if (nEig <= 0)
+				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.Parameter.MustPositive);
+			if (matrixFunction is null)
+				throw new ArgumentNullException(nameof(matrixFunction));
+			if (initial is null)
+				throw new ArgumentNullException(nameof(initial));
+			if (outputEigenvalues.Length < nEig)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvalues));
+			if (outputRealEigenvectors.Length < nEig)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputRealEigenvectors));
+			if (outputCompEigenvectors.Length < nEig)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputCompEigenvectors));
+
+			this.MatrixFunction = matrixFunction;
+			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
+			this.InitialVector = initial;
+			this.OtherVector = null;
+			this.NumberEigenvaluesDesired = nEig;
+			this.WhichEigenvaluesDesired = which;
+			this.MaxRestarts = maxRestarts;
+			this.IterationsPerRestart = iterPerRestart;
+			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
+			this.ReorthogonalizeMethod = reorthogonalize;
+			this.UseGapEstimation = useGap;
+			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
+
+			this.Eigenvalues = default;
+			this.EigenvaluesComplex = outputEigenvalues;
+			this.EigenvectorsReal = outputRealEigenvectors;
+			this.EigenvectorsComplex = outputCompEigenvectors;
+		}
+
+		/// <summary>
+		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given hermitian matrix eigen-solve problem
+		/// </summary>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
+									   Span<double> outputEigenvalues, Span<TVec> outputEigenvectors,
+									   int nEig = 1, int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
+									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull, bool useGap = true,
+									   IPreserveSelector? selector = null, Func<TVec>? newVector = null)
+		{
+			if (iterPerRestart < 0)
+				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
+			if (tolerance < 0)
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.CannotNegative);
+			if (maxRestarts <= 0)
+				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.Parameter.MustPositive);
+			if (nEig <= 0)
+				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.Parameter.MustPositive);
+			if (matrixFunction is null)
+				throw new ArgumentNullException(nameof(matrixFunction));
+			if (initial is null)
+				throw new ArgumentNullException(nameof(initial));
+			if (outputEigenvalues.Length < nEig)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvalues));
+			if (outputEigenvectors.Length < nEig)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvectors));
+
+			this.MatrixFunction = matrixFunction;
+			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
+			this.InitialVector = initial;
+			this.OtherVector = null;
+			this.NumberEigenvaluesDesired = nEig;
+			this.WhichEigenvaluesDesired = WhichEigenvalues.SmallestReal;
+			this.MaxRestarts = maxRestarts;
+			this.IterationsPerRestart = iterPerRestart;
+			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
+			this.ReorthogonalizeMethod = reorthogonalize;
+			this.UseGapEstimation = useGap;
+			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
+
+			this.Eigenvalues = outputEigenvalues;
+			this.EigenvaluesComplex = default;
+			this.EigenvectorsReal = outputEigenvectors;
+			this.EigenvectorsComplex = default;
+		}
+
+		/// <summary>
+		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given (non-)hermitian matrix solve problem
+		/// </summary>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec rightSide, TVec initial,
+									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
+									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull, bool useGap = true,
+									   IPreserveSelector? selector = null, Func<TVec>? newVector = null)
+		{
+			if (iterPerRestart < 0)
+				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
+			if (tolerance < 0)
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.CannotNegative);
+			if (maxRestarts <= 0)
+				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.Parameter.MustPositive);
+			if (matrixFunction is null)
+				throw new ArgumentNullException(nameof(matrixFunction));
+			if (initial is null)
+				throw new ArgumentNullException(nameof(initial));
+			if (rightSide is null)
+				throw new ArgumentNullException(nameof(rightSide));
+
+			this.MatrixFunction = matrixFunction;
+			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
+			this.InitialVector = initial;
+			this.OtherVector = rightSide;
+			this.NumberEigenvaluesDesired = 1;
+			this.WhichEigenvaluesDesired = default;
+			this.MaxRestarts = maxRestarts;
+			this.IterationsPerRestart = iterPerRestart;
+			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
+			this.ReorthogonalizeMethod = reorthogonalize;
+			this.UseGapEstimation = useGap;
+			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
+
+			this.Eigenvalues = default;
+			this.EigenvaluesComplex = default;
+			this.EigenvectorsReal = default;
+			this.EigenvectorsComplex = default;
+		}
+
+		/// <summary>
+		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> from an <paramref name="old"/> one
+		/// </summary>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, TVec? other, KrylovSubspaceSolveInfo<TVec, T> old, Func<TVec>? newVector = null)
+		{
+			if (matrixFunction is null)
+				throw new ArgumentNullException(nameof(matrixFunction));
+			if (initial is null)
+				throw new ArgumentNullException(nameof(initial));
+
+			this.MatrixFunction = matrixFunction;
+			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
+			this.InitialVector = initial;
+			this.OtherVector = other;
+			this.NumberEigenvaluesDesired = old.NumberEigenvaluesDesired;
+			this.WhichEigenvaluesDesired = old.WhichEigenvaluesDesired;
+			this.MaxRestarts = old.MaxRestarts;
+			this.IterationsPerRestart = old.IterationsPerRestart;
+			this.Tolerance = old.Tolerance;
+			this.ReorthogonalizeMethod = old.ReorthogonalizeMethod;
+			this.UseGapEstimation = old.UseGapEstimation;
+			this.PreserveSelector = old.PreserveSelector;
+
+			this.Eigenvalues = old.Eigenvalues;
+			this.EigenvaluesComplex = old.EigenvaluesComplex;
+			this.EigenvectorsReal = old.EigenvectorsReal;
+			this.EigenvectorsComplex = old.EigenvectorsComplex;
+		}
+		#endregion
 	}
 	#endregion
 }

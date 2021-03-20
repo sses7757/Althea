@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 
@@ -7,14 +6,10 @@ namespace Althea.NativeTypes
 {
 	#region data type enum
 	/// <summary>
-	/// The general classification of data types supported
+	/// The general classification of data types supported, values ≤ 0 are treaded as not supported
 	/// </summary>
-	public enum DataTypeClassification
+	public enum DataTypeClassification : short
 	{
-		/// <summary>
-		/// A not supported type
-		/// </summary>
-		NotSupported = 0,
 		/// <summary>
 		/// The floating point numbers defined in the "IEEE Standard 754 for Binary Floating-Point Arithmetic"
 		/// </summary>
@@ -140,7 +135,7 @@ namespace Althea.NativeTypes
 	{
 		#region constants
 		/// <summary>
-		/// The type mask (from 1st bit to 2nd bit), cannot be used separately.<br/>
+		/// The type mask (from 1st bit to 7th bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type classification as a <see cref="DataTypeClassification"/>.
 		/// </summary>
 		public const int TypeMask = 0b1111_1110;
@@ -150,14 +145,14 @@ namespace Althea.NativeTypes
 		public const int TypeMaskStart = 1;
 
 		/// <summary>
-		/// The number of bytes mask (from 4th bit to 7th bit), cannot be used separately.<br/>
+		/// The number of bytes mask (from 8th bit to 15th bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="ByteMask"/>) &gt;&gt; <see cref="ByteMaskStart"/> = </c> the bytes used (only half of a complex type's size shall be counted).
 		/// </summary>
 		public const int ByteMask = 0b1111_1111_0000_0000;
 		/// <summary>
 		/// The start bit of <see cref="ByteMask"/>.
 		/// </summary>
-		public const int ByteMaskStart = 4;
+		public const int ByteMaskStart = 8;
 
 		/// <summary>
 		/// The float base type; cannot be used separately.
@@ -197,15 +192,15 @@ namespace Althea.NativeTypes
 		/// <param name="complex">Whether the constructed <see cref="DataType"/> is a complex type</param>
 		/// <param name="type">The <see cref="DataTypeClassification"/> the constructed <see cref="DataType"/> is a floating point type</param>
 		/// <param name="size">The size in bytes of the constructed <see cref="DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
-		/// <returns>The constructed <see cref="DataType"/> or the default value if <paramref name="type"/> is <see cref="DataTypeClassification.NotSupported"/></returns>
+		/// <returns>The constructed <see cref="DataType"/> or the default value if <paramref name="type"/> is not supported</returns>
 		public static DataType MakeDataType(bool complex, DataTypeClassification type, int size)
 		{
-			if (type == DataTypeClassification.NotSupported)
+			if (type <= 0)
 				return default;
 			if (complex)
-				return DataType.Complex | (DataType)((int)type << TypeMaskStart) | (DataType)((size / 2) << ByteMaskStart);
+				return DataType.Complex | (DataType)((short)type << TypeMaskStart) | (DataType)((size / 2) << ByteMaskStart);
 			else
-				return DataType.Real | (DataType)((int)type << TypeMaskStart) | (DataType)(size << ByteMaskStart);
+				return DataType.Real | (DataType)((short)type << TypeMaskStart) | (DataType)(size << ByteMaskStart);
 		}
 
 		/// <summary>
@@ -290,51 +285,23 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType ToDataType(this Type type)
 		{
-			if (type == typeof(float))
-				return DataType.RealSingle;
-			if (type == typeof(double))
-				return DataType.RealDouble;
-			if (type == typeof(int))
-				return DataType.RealInt32;
-			if (type == typeof(long))
-				return DataType.RealInt64;
-			if (type == typeof(sbyte))
-				return DataType.RealInt8;
-			if (type == typeof(short))
-				return DataType.RealInt16;
-			if (type == typeof(uint))
-				return DataType.RealUInt32;
-			if (type == typeof(ulong))
-				return DataType.RealUInt64;
-			if (type == typeof(byte))
-				return DataType.RealUInt8;
-			if (type == typeof(ushort))
-				return DataType.RealUInt16;
-			if (type == typeof(Complex<float>))
-				return DataType.ComplexSingle;
-			if (type == typeof(Complex<double>))
-				return DataType.ComplexDouble;
-			if (type == typeof(Complex<int>))
-				return DataType.ComplexInt32;
-			if (type == typeof(Complex<long>))
-				return DataType.ComplexInt64;
-			if (type == typeof(Complex<sbyte>))
-				return DataType.ComplexInt8;
-			if (type == typeof(Complex<short>))
-				return DataType.ComplexInt16;
-			if (type == typeof(Complex<uint>))
-				return DataType.ComplexUInt32;
-			if (type == typeof(Complex<ulong>))
-				return DataType.ComplexUInt64;
-			if (type == typeof(Complex<byte>))
-				return DataType.ComplexUInt8;
-			if (type == typeof(Complex<ushort>))
-				return DataType.ComplexUInt16;
-			// otherwise
-			if (!type.IsSupportedDirect())
+			object? v;
+			try
+			{
+				v = typeof(DataTypeExtension).GetMethod(nameof(ToDataType), 1,
+														System.Reflection.BindingFlags.Static |
+														System.Reflection.BindingFlags.NonPublic,
+														null, Type.EmptyTypes, null)?
+											 .MakeGenericMethod(type)?
+											 .Invoke(null, null);
+			}
+			catch (Exception)
+			{
 				throw new NotSupportedException(Resources.Support.DataType);
-			else
-				return MakeDataType(type.IsComplexDirect(), type.GetClassificationDirect(), System.Runtime.InteropServices.Marshal.SizeOf(type));
+			}
+			if (v is not DataType d)
+				throw new NotSupportedException(Resources.Support.DataType);
+			return d;
 		}
 
 		/// <summary>
@@ -372,81 +339,8 @@ namespace Althea.NativeTypes
 				Complex<uint> => DataType.ComplexUInt32,
 				Complex<ulong> => DataType.ComplexUInt64,
 				// otherwise
-				_ => !typeof(T).IsSupportedDirect() ? throw new NotSupportedException(Resources.Support.DataType)
-						: MakeDataType(typeof(T).IsComplexDirect(), typeof(T).GetClassificationDirect(), Const<T>.SizeT),
-			};
-		}
-		#endregion
-
-		#region get classification native types
-		private static readonly Dictionary<Type, DataTypeClassification> _classificationCache = new();
-
-		internal static DataTypeClassification GetClassificationDirect(this Type type)
-		{
-			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
-			{
-				return DataTypeClassification.NotSupported;
-			}
-			// cache
-			if (!_classificationCache.ContainsKey(type))
-			{
-				Type? custom = NativeTypeExtension.MakeCustomNativeType(type);
-				var result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
-				_classificationCache.Add(type, result ?? DataTypeClassification.NotSupported);
-			}
-			return _classificationCache[type];
-		}
-
-		/// <summary>
-		/// Check whether <paramref name="type"/> is a floating point type or a integral type.
-		/// </summary>
-		/// <param name="type">The type</param>
-		/// <returns>0 for not supported data type</returns>
-		public static DataTypeClassification GetClassification(this Type type)
-		{
-			if (!type.IsValueType)
-				return DataTypeClassification.NotSupported;
-			// built-in float types
-			if (type == typeof(double) || type == typeof(float))
-				return DataTypeClassification.FloatPoint_IEEE754;
-			// built-in integer types
-			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
-				return DataTypeClassification.SignedInteger;
-			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(int) || type == typeof(long))
-				return DataTypeClassification.UnsignedInteger;
-			// complex float types
-			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
-				return DataTypeClassification.FloatPoint_IEEE754;
-			// complex integer types
-			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return DataTypeClassification.SignedInteger;
-			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return DataTypeClassification.UnsignedInteger;
-			// other primitive types are null
-			return GetClassificationDirect(type);
-		}
-
-		/// <summary>
-		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
-		/// </summary>
-		/// <typeparam name="T">The type to check</typeparam>
-		/// <returns>0 for not supported data type</returns>
-		internal static DataTypeClassification GetClassification<T>() where T : unmanaged
-		{
-			return default(T) switch
-			{
-				// built-in float types
-				float or double => DataTypeClassification.FloatPoint_IEEE754,
-				// built-in integer types
-				sbyte or short or int or long => DataTypeClassification.SignedInteger,
-				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
-				// built-in complex float types
-				Complex<float> or Complex<double> => DataTypeClassification.FloatPoint_IEEE754,
-				// built-in complex integer types
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => DataTypeClassification.SignedInteger,
-				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => DataTypeClassification.FloatPoint_IEEE754,
-				// otherwise
-				_ => GetClassificationDirect(typeof(T)),
+				_ => !Cacher<T>.IsSupported || Cacher<T>.IsComplex is null ? throw new NotSupportedException(Resources.Support.DataType)
+						: MakeDataType(Cacher<T>.IsComplex.Value, Cacher<T>.Classification, Const<T>.SizeT),
 			};
 		}
 		#endregion

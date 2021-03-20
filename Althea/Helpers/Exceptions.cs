@@ -33,6 +33,10 @@ namespace Althea.Helpers
 			/// The given type is not an integral type
 			/// </summary>
 			NotInteger,
+			/// <summary>
+			/// The given type is not an floating point type
+			/// </summary>
+			NotFloat,
 		}
 
 		/// <summary>
@@ -104,6 +108,7 @@ namespace Althea.Helpers
 				MismatchReason.IsNotRealCorrespondence => Resources.Exception.MismatchNotRealCorrespondence,
 				MismatchReason.IsNotComplexCorrespondence => Resources.Exception.MismatchNotComplexCorrespondence,
 				MismatchReason.NotInteger => Resources.Exception.MismatchNotInteger,
+				MismatchReason.NotFloat => Resources.Exception.MismatchNotFloat,
 				_ => Resources.Exception.MismatchOtherReason
 			};
 			string? fromString = from.GetGenericString(), toString = to?.GetGenericString();

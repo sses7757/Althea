@@ -96,9 +96,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the maximum item of <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="span">span to find maximum</param>
-		/// <returns>the maximum item</returns>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find maximum</param>
+		/// <returns>The maximum item</returns>
 		public static T Max<T>(this Span<T> span) where T : IComparable<T>
 		{
 			return Max((ReadOnlySpan<T>)span);
@@ -107,14 +107,14 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the maximum item of <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="span">span to find maximum</param>
-		/// <returns>the maximum item</returns>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find maximum</param>
+		/// <returns>The maximum item</returns>
 		public static T Max<T>(this ReadOnlySpan<T> span) where T : IComparable<T>
 		{
 			T maxVal = span[0];
 			int len = span.Length;
-			for (int i = 0; i < len; i++)
+			for (int i = 1; i < len; i++)
 			{
 				T val = span[i];
 				if (val.CompareTo(maxVal) > 0)
@@ -126,9 +126,9 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the minimum item of <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="span">span to find minimum</param>
-		/// <returns>the minimum item</returns>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find minimum</param>
+		/// <returns>The minimum item</returns>
 		public static T Min<T>(this Span<T> span) where T : IComparable<T>
 		{
 			return Min((ReadOnlySpan<T>)span);
@@ -137,17 +137,85 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the minimum item of <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="T">data type of array that can be compared</typeparam>
-		/// <param name="span">span to find minimum</param>
-		/// <returns>the minimum item</returns>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find minimum</param>
+		/// <returns>The minimum item</returns>
 		public static T Min<T>(this ReadOnlySpan<T> span) where T : IComparable<T>
 		{
 			T minVal = span[0];
 			int len = span.Length;
-			for (int i = 0; i < len; i++)
+			for (int i = 1; i < len; i++)
 			{
 				T val = span[i];
 				if (val.CompareTo(minVal) > 0)
+					minVal = val;
+			}
+			return minVal;
+		}
+
+		/// <summary>
+		/// Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
+		/// </summary>
+		/// <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find maximum</param>
+		/// <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+		/// <returns>The maximum item</returns>
+		public static T Max<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : IComparable<T>
+		{
+			return Max((ReadOnlySpan<TOrg>)span, selector);
+		}
+
+		/// <summary>
+		/// Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
+		/// </summary>
+		/// <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find maximum</param>
+		/// <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+		/// <returns>The maximum item</returns>
+		public static T Max<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : IComparable<T>
+		{
+			T maxVal = selector.Invoke(span[0]);
+			int len = span.Length;
+			for (int i = 1; i < len; i++)
+			{
+				T val = selector.Invoke(span[i]);
+				if (val.CompareTo(maxVal) > 0)
+					maxVal = val;
+			}
+			return maxVal;
+		}
+
+		/// <summary>
+		/// Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
+		/// </summary>
+		/// <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find minimum</param>
+		/// <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+		/// <returns>The minimum item</returns>
+		public static T Min<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : IComparable<T>
+		{
+			return Min((ReadOnlySpan<TOrg>)span, selector);
+		}
+
+		/// <summary>
+		/// Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
+		/// </summary>
+		/// <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+		/// <typeparam name="T">The data type of array that can be compared</typeparam>
+		/// <param name="span">The span to find minimum</param>
+		/// <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+		/// <returns>The minimum item</returns>
+		public static T Min<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : IComparable<T>
+		{
+			T minVal = selector.Invoke(span[0]);
+			int len = span.Length;
+			for (int i = 1; i < len; i++)
+			{
+				T val = selector.Invoke(span[i]);
+				if (val.CompareTo(minVal) < 0)
 					minVal = val;
 			}
 			return minVal;
@@ -162,7 +230,7 @@ namespace Althea.Linq
 		/// <param name="array">The array to order</param>
 		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
+		/// <returns>The re-ordered array</returns>
 		public static void ReOrderTo<T>(this Span<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
 			ReOrderTo((ReadOnlySpan<T>)array, target, indices);
@@ -175,7 +243,7 @@ namespace Althea.Linq
 		/// <param name="array">The array to order</param>
 		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
-		/// <returns>the re-ordered array</returns>
+		/// <returns>The re-ordered array</returns>
 		public static void ReOrderTo<T>(this ReadOnlySpan<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
 			if (indices.IsEmpty)
@@ -232,7 +300,7 @@ namespace Althea.Linq
 		/// <param name="array">The array before permutation</param>
 		/// <param name="target">The array after the permutation</param>
 		/// <param name="perm">The result permutation order to put in as a <see cref="Span{T}"/>, may be overwritten by undesired values if there is no such permutation</param>
-		/// <returns>success or not</returns>
+		/// <returns>The success or not</returns>
 		public static bool FindPermutationTo<T>(this Span<T> array, ReadOnlySpan<T> target, Span<int> perm) where T : IEquatable<T>
 		{
 			return FindPermutationTo((ReadOnlySpan<T>)array, target, perm);
@@ -245,7 +313,7 @@ namespace Althea.Linq
 		/// <param name="array">The array before permutation</param>
 		/// <param name="target">The array after the permutation</param>
 		/// <param name="perm">The result permutation order to put in as a <see cref="Span{T}"/>, may be overwritten by undesired values if there is no such permutation</param>
-		/// <returns>success or not</returns>
+		/// <returns>The success or not</returns>
 		public static bool FindPermutationTo<T>(this ReadOnlySpan<T> array, ReadOnlySpan<T> target, Span<int> perm) where T : IEquatable<T>
 		{
 			if (array.IsEmpty)
@@ -542,7 +610,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int IndexOf<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return IndexOf((ReadOnlySpan<T>)span, predicator);
@@ -554,7 +622,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int IndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			int len = span.Length;
@@ -572,7 +640,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int LastIndexOf<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return LastIndexOf((ReadOnlySpan<T>)span, predicator);
@@ -584,7 +652,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int LastIndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			for (int i = span.Length - 1; i >= 0; i--)
@@ -598,24 +666,24 @@ namespace Althea.Linq
 
 		#region predicate
 		/// <summary>
-		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return All((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
-		/// Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			int len = span.Length;
@@ -628,24 +696,24 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return Any((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
-		/// Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>extend method of <paramref name="span"/></remarks>
+		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			int len = span.Length;
@@ -813,8 +881,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
 		/// </summary>
-		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
 		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
@@ -834,8 +902,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
 		/// </summary>
-		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
 		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
@@ -855,8 +923,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
 		/// </summary>
-		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
 		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		/// <exception cref="ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
@@ -869,8 +937,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
 		/// </summary>
-		/// <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-		/// <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
 		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
 		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -883,8 +951,8 @@ namespace Althea.Linq
 		/// Get the hash code of an span using CRC method
 		/// </summary>
 		/// <typeparam name="T">any struct</typeparam>
-		/// <param name="span">span to get hash code</param>
-		/// <returns>the hash code of <paramref name="span"/></returns>
+		/// <param name="span">The span to get hash code</param>
+		/// <returns>The hash code of <paramref name="span"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int HashCodeOfSpan<T>(this Span<T> span) where T : struct
 		{
@@ -895,8 +963,8 @@ namespace Althea.Linq
 		/// Get the hash code of an span using CRC method
 		/// </summary>
 		/// <typeparam name="T">any struct</typeparam>
-		/// <param name="span">span to get hash code</param>
-		/// <returns>the hash code of <paramref name="span"/></returns>
+		/// <param name="span">The span to get hash code</param>
+		/// <returns>The hash code of <paramref name="span"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int HashCodeOfSpan<T>(this ReadOnlySpan<T> span) where T : struct
 		{
@@ -916,7 +984,7 @@ namespace Althea.Linq
 		/// Check if <paramref name="span"/>'s elements are unique
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="span">span to pick</param>
+		/// <param name="span">The span to pick</param>
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
 		{
@@ -927,7 +995,7 @@ namespace Althea.Linq
 		/// Check if <paramref name="span"/>'s elements are unique
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="span">span to pick</param>
+		/// <param name="span">The span to pick</param>
 		/// <returns><paramref name="span"/>'s elements are unique or not</returns>
 		public static bool ElementsUnique<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
 		{
@@ -954,8 +1022,8 @@ namespace Althea.Linq
 		/// Get the hash code of a set (order-independent) using ADD method
 		/// </summary>
 		/// <typeparam name="T">any struct</typeparam>
-		/// <param name="set">set to get hash code</param>
-		/// <returns>the hash code of <paramref name="set"/></returns>
+		/// <param name="set">The set to get hash code</param>
+		/// <returns>The hash code of <paramref name="set"/></returns>
 		public static int HashCodeOfSet<T>(this Span<T> set) where T : notnull
 		{
 			return HashCodeOfSet((ReadOnlySpan<T>)set);
@@ -965,8 +1033,8 @@ namespace Althea.Linq
 		/// Get the hash code of a set (order-independent) using ADD method
 		/// </summary>
 		/// <typeparam name="T">any struct</typeparam>
-		/// <param name="set">set to get hash code</param>
-		/// <returns>the hash code of <paramref name="set"/></returns>
+		/// <param name="set">The set to get hash code</param>
+		/// <returns>The hash code of <paramref name="set"/></returns>
 		public static int HashCodeOfSet<T>(this ReadOnlySpan<T> set) where T : notnull
 		{
 			if (set.IsEmpty)
@@ -982,8 +1050,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Count the distinct element(s) in <paramref name="span"/>
 		/// </summary>
-		/// <param name="span">span to pick</param>
-		/// <returns>the number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
+		/// <param name="span">The span to pick</param>
+		/// <returns>The number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
 		public static int DistinctCount<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
 		{
 			return DistinctCount((ReadOnlySpan<T>)span);
@@ -992,8 +1060,8 @@ namespace Althea.Linq
 		/// <summary>
 		/// Count the distinct element(s) in <paramref name="span"/>
 		/// </summary>
-		/// <param name="span">span to pick</param>
-		/// <returns>the number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
+		/// <param name="span">The span to pick</param>
+		/// <returns>The number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
 		public static int DistinctCount<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
 		{
 			if (span.Length <= 1)

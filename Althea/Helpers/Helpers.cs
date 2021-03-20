@@ -11,60 +11,6 @@ using Althea.Resources;
 
 namespace Althea.Helpers
 {
-	#region internal helpers
-	internal static class InternalHelper
-	{
-		internal static bool IsWindows {
-			get {
-				int p = (int)Environment.OSVersion.Platform;
-				return (p != 4) && (p != 6) && (p != 128);
-			}
-		}
-
-		// TODO: move to native codes?
-
-		/// <summary>
-		/// Double float type machine precision
-		/// </summary>
-		public const double DoubleMachinePrecision = 2.220446049250313E-16D;
-
-		/// <summary>
-		/// Single float type machine precision
-		/// </summary>
-		public const float SingleMachinePrecision = 1.1920928955078125E-07F;
-
-		private static readonly double	doublePrecision13 = Math.Pow(DoubleMachinePrecision, 1.0 / 3),
-										singlePrecision23 = Math.Pow(SingleMachinePrecision, 2.0 / 3);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int ApproxIndexOfSingle(this Complex<double>[] array, Complex<double> value)
-		{
-			for (int i = 0; i < array.Length; i++)
-			{
-				var diff = array[i] - value;
-				double diffMax = Math.Max(Math.Abs(diff.Real), Math.Abs(diff.Imag));
-				double max = Math.Max(Math.Abs(array[i].Real), Math.Abs(array[i].Imag));
-				if (diffMax / max < singlePrecision23)
-					return i;
-			}
-			return -1;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int ApproxIndexOfDouble(this Complex<double>[] array, Complex<double> value)
-		{
-			for (int i = 0; i < array.Length; i++)
-			{
-				var diff = array[i] - value;
-				double diffMax = Math.Max(Math.Abs(diff.Real), Math.Abs(diff.Imag));
-				double max = Math.Max(Math.Abs(array[i].Real), Math.Abs(array[i].Imag));
-				if (diffMax / max < doublePrecision13)
-					return i;
-			}
-			return -1;
-		}
-	}
-	#endregion
-
 	#region reflection helpers
 	/// <summary>
 	/// A static class that contains helper functions using reflections

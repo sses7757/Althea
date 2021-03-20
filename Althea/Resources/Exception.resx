@@ -153,6 +153,9 @@
   <data name="MismatchNotComplexCorrespondence" xml:space="preserve">
     <value>The type '{1}' is not a complex correspondence type of '{0}'.</value>
   </data>
+  <data name="MismatchNotFloat" xml:space="preserve">
+    <value>The type '{0}' is not a floating-point type.</value>
+  </data>
   <data name="MismatchNotInteger" xml:space="preserve">
     <value>The type '{0}' is not an integral type.</value>
   </data>

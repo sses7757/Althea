@@ -188,83 +188,6 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="storages"/> is null or it does not contain <paramref name="name"/></exception>
             <exception cref="T:System.ArgumentException">If <paramref name="storages"/>[<paramref name="name"/>] is not a <see cref="T:Althea.Storage`1"/></exception>
         </member>
-        <member name="T:Althea.Arrays.IKrylovVector`2">
-            <summary>
-            The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="TVec">The vector type</typeparam>
-        </member>
-        <member name="P:Althea.Arrays.IKrylovVector`2.Length">
-            <summary>
-            The total presenting length of this vector
-            </summary>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.NewArrayAlike">
-            <summary>
-            Create a new vector alike this one
-            </summary>
-            <returns>The new vector alike this one</returns>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.FillWith(`1)">
-            <summary>
-            Fill this vector with the given <paramref name="value"/>
-            </summary>
-            <param name="value">The value to fill</param>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.Scale(`1)">
-            <summary>
-            When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
-            </summary>
-            <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.Norm">
-            <summary>
-            When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
-            </summary>
-            <returns>The 2-norm of this vector</returns>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.Normalize">
-            <summary>
-            When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
-            </summary>
-            <exception cref="T:System.DivideByZeroException">If the 2-norm of this array is 0</exception>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.Dot(`0)">
-            <summary>
-            When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
-            </summary>
-            <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
-            <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.AddBy(`0,`1)">
-            <summary>
-            When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
-            </summary>
-            <param name="other">The other <typeparamref name="TVec"/> to add</param>
-            <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.ReplaceBy(`0)">
-            <summary>
-            When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
-            </summary>
-            <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-        </member>
-        <member name="M:Althea.Arrays.IKrylovVector`2.OperateOn(System.Collections.Generic.IReadOnlyList{`0},System.ReadOnlySpan{`1})">
-            <summary>
-            When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="T:System.ReadOnlySpan`1"/> and obtain the result vector as a <typeparamref name="TVec"/>.
-            </summary>
-            <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-            <param name="input">The input dense vector to be multiplied as a <see cref="T:System.ReadOnlySpan`1"/></param>
-            <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
-            <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-            <exception cref="T:System.ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-        </member>
         <member name="T:Althea.Arrays.IPitchedArray`1">
             <summary>
             The interface of (column-major) dense array that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
@@ -991,20 +914,6 @@
             </summary>
             <param name="obj">The other object to compare with</param>
             <returns>True if this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.GetIndices(System.Span{System.Int64},System.Span{System.Int64})">
-            <summary>
-            The helper method used in <see cref="M:Althea.Arrays.SparseMatrix`2.Print(System.Nullable{Althea.Helpers.PrintSettings})"/> to get the first several row and column indices of this sparse matrix
-            </summary>
-            <param name="rowIndices">The output <see cref="T:System.Span`1"/> of <see cref="T:System.Int64"/> used to store the row indices</param>
-            <param name="colIndices">The output <see cref="T:System.Span`1"/> of <see cref="T:System.Int64"/> used to store the column indices</param>
-        </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.Print(System.Nullable{Althea.Helpers.PrintSettings})">
-            <summary>
-            When implemented by a derived class, print out this sparse matrix.
-            </summary>
-            <param name="overrideSetting">Override global settings in <see cref="T:Althea.Helpers.Settings"/></param>
-            <returns>The detailed string representation of this sparse matrix</returns>
         </member>
         <member name="M:Althea.Arrays.SparseMatrix`2.IndexStorageNameOf(System.Int32)">
             <summary>
@@ -3406,16 +3315,6 @@
             <param name="from">The first mismatch type</param>
             <param name="to">The second mismatch type</param>
             <param name="reason">The mismatch reason</param>
-        </member>
-        <member name="F:Althea.Helpers.InternalHelper.DoubleMachinePrecision">
-            <summary>
-            Double float type machine precision
-            </summary>
-        </member>
-        <member name="F:Althea.Helpers.InternalHelper.SingleMachinePrecision">
-            <summary>
-            Single float type machine precision
-            </summary>
         </member>
         <member name="T:Althea.Helpers.ReflectionHelper">
             <summary>
@@ -7696,14 +7595,16 @@
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseFillIdentity``1(Althea.Arrays.ISparseMatrix{``0})">
+        <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseReshape``1(Althea.Arrays.ISparseMatrix{``0},System.Int64)">
             <summary>
-            Fill the given sparse matrix <paramref name="M"/> with identity matrix.
+            Reshape the given sparse matrix <paramref name="source"/> to a new one with <paramref name="newNRows"/>.
             </summary>
-            <param name="M">The sparse matrix to be filled with identity</param>
+            <param name="source">The source sparse matrix to convert from</param>
+            <param name="newNRows">The target sparse matrix's number of rows</param>
+            <returns>A created new <see cref="T:Althea.Arrays.ISparseMatrix`1"/> of desired <paramref name="newNRows"/>.</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="M"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="newNRows"/> is out of range</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexMax``1(Althea.Storage{``0})">
             <summary>
@@ -7900,14 +7801,16 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseFillIdentity_``1(Althea.Arrays.ISparseMatrix{``0})">
+        <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.MatrixSparseReshape_``1(Althea.Arrays.ISparseMatrix{``0},System.Int64,Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
             <summary>
-            When implemented by a derived class, fill the given sparse matrix <paramref name="M"/> with identity matrix.
+            When implemented by a derived class, reshape the given sparse matrix <paramref name="source"/> to a new one with <paramref name="newNRows"/>.
             </summary>
-            <param name="M">The sparse matrix to be filled with identity</param>
+            <param name="source">The source sparse matrix to convert from</param>
+            <param name="newNRows">The target sparse matrix's number of rows</param>
+            <param name="target">Output a created new <see cref="T:Althea.Arrays.ISparseMatrix`1"/> of desired <paramref name="newNRows"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="M"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="M"/> is not a square matrix or its sparsity cannot be filled to be an identity matrix</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="newNRows"/> is out of range</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.IndexMax_``1(Althea.Storage{``0},``0@)">
             <summary>
@@ -9474,33 +9377,73 @@
             <summary>
             Find the maximum item of <paramref name="span"/>.
             </summary>
-            <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="span">span to find maximum</param>
-            <returns>the maximum item</returns>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <returns>The maximum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Max``1(System.ReadOnlySpan{``0})">
             <summary>
             Find the maximum item of <paramref name="span"/>.
             </summary>
-            <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="span">span to find maximum</param>
-            <returns>the maximum item</returns>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <returns>The maximum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Min``1(System.Span{``0})">
             <summary>
             Find the minimum item of <paramref name="span"/>.
             </summary>
-            <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="span">span to find minimum</param>
-            <returns>the minimum item</returns>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <returns>The minimum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Min``1(System.ReadOnlySpan{``0})">
             <summary>
             Find the minimum item of <paramref name="span"/>.
             </summary>
-            <typeparam name="T">data type of array that can be compared</typeparam>
-            <param name="span">span to find minimum</param>
-            <returns>the minimum item</returns>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <returns>The minimum item</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Max``2(System.Span{``0},System.Converter{``0,``1})">
+            <summary>
+            Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
+            </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The maximum item</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Max``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
+            <summary>
+            Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
+            </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The maximum item</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Min``2(System.Span{``0},System.Converter{``0,``1})">
+            <summary>
+            Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
+            </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The minimum item</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Min``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
+            <summary>
+            Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
+            </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The minimum item</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -9510,7 +9453,7 @@
             <param name="array">The array to order</param>
             <param name="target">The array to put the reordered result</param>
             <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
+            <returns>The re-ordered array</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -9520,7 +9463,7 @@
             <param name="array">The array to order</param>
             <param name="target">The array to put the reordered result</param>
             <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
-            <returns>the re-ordered array</returns>
+            <returns>The re-ordered array</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
@@ -9548,7 +9491,7 @@
             <param name="array">The array before permutation</param>
             <param name="target">The array after the permutation</param>
             <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
-            <returns>success or not</returns>
+            <returns>The success or not</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.FindPermutationTo``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
             <summary>
@@ -9558,7 +9501,7 @@
             <param name="array">The array before permutation</param>
             <param name="target">The array after the permutation</param>
             <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
-            <returns>success or not</returns>
+            <returns>The success or not</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.InversePermutationTo(System.Span{System.Int32},System.Span{System.Int32})">
             <summary>
@@ -9681,7 +9624,7 @@
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
@@ -9690,7 +9633,7 @@
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.Span{``0},System.Predicate{``0})">
             <summary>
@@ -9699,7 +9642,7 @@
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
@@ -9708,43 +9651,43 @@
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.All``1(System.Span{``0},System.Predicate{``0})">
             <summary>
-            Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.All``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
-            Check if all elements of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Any``1(System.Span{``0},System.Predicate{``0})">
             <summary>
-            Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Any``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
-            Check if any element of <paramref name="span"/> <c>e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>extend method of <paramref name="span"/></remarks>
+            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.Span{``0})">
             <summary>
@@ -9840,8 +9783,8 @@
             <summary>
             Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will change accordingly.
             </summary>
-            <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
             <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be converted</param>
             <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
             <exception cref="T:System.ArgumentException">If <c><paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
@@ -9850,8 +9793,8 @@
             <summary>
             Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will change accordingly.
             </summary>
-            <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
             <param name="span">The <see cref="T:System.Span`1"/> to be converted</param>
             <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
             <exception cref="T:System.ArgumentException">If <c><paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
@@ -9860,8 +9803,8 @@
             <summary>
             Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will change accordingly.
             </summary>
-            <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
             <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be converted</param>
             <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
             <exception cref="T:System.ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
@@ -9870,8 +9813,8 @@
             <summary>
             Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will change accordingly.
             </summary>
-            <typeparam name="TFrom">conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">conversion to type, must be a struct</typeparam>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
             <param name="span">The <see cref="T:System.Span`1"/> to be converted</param>
             <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
         </member>
@@ -9880,23 +9823,23 @@
             Get the hash code of an span using CRC method
             </summary>
             <typeparam name="T">any struct</typeparam>
-            <param name="span">span to get hash code</param>
-            <returns>the hash code of <paramref name="span"/></returns>
+            <param name="span">The span to get hash code</param>
+            <returns>The hash code of <paramref name="span"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.ReadOnlySpan{``0})">
             <summary>
             Get the hash code of an span using CRC method
             </summary>
             <typeparam name="T">any struct</typeparam>
-            <param name="span">span to get hash code</param>
-            <returns>the hash code of <paramref name="span"/></returns>
+            <param name="span">The span to get hash code</param>
+            <returns>The hash code of <paramref name="span"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ElementsUnique``1(System.Span{``0})">
             <summary>
             Check if <paramref name="span"/>'s elements are unique
             </summary>
             <typeparam name="T">The data type</typeparam>
-            <param name="span">span to pick</param>
+            <param name="span">The span to pick</param>
             <returns><paramref name="span"/>'s elements are unique or not</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ElementsUnique``1(System.ReadOnlySpan{``0})">
@@ -9904,7 +9847,7 @@
             Check if <paramref name="span"/>'s elements are unique
             </summary>
             <typeparam name="T">The data type</typeparam>
-            <param name="span">span to pick</param>
+            <param name="span">The span to pick</param>
             <returns><paramref name="span"/>'s elements are unique or not</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSet``1(System.Span{``0})">
@@ -9912,30 +9855,30 @@
             Get the hash code of a set (order-independent) using ADD method
             </summary>
             <typeparam name="T">any struct</typeparam>
-            <param name="set">set to get hash code</param>
-            <returns>the hash code of <paramref name="set"/></returns>
+            <param name="set">The set to get hash code</param>
+            <returns>The hash code of <paramref name="set"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSet``1(System.ReadOnlySpan{``0})">
             <summary>
             Get the hash code of a set (order-independent) using ADD method
             </summary>
             <typeparam name="T">any struct</typeparam>
-            <param name="set">set to get hash code</param>
-            <returns>the hash code of <paramref name="set"/></returns>
+            <param name="set">The set to get hash code</param>
+            <returns>The hash code of <paramref name="set"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.DistinctCount``1(System.Span{``0})">
             <summary>
             Count the distinct element(s) in <paramref name="span"/>
             </summary>
-            <param name="span">span to pick</param>
-            <returns>the number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
+            <param name="span">The span to pick</param>
+            <returns>The number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.DistinctCount``1(System.ReadOnlySpan{``0})">
             <summary>
             Count the distinct element(s) in <paramref name="span"/>
             </summary>
-            <param name="span">span to pick</param>
-            <returns>the number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
+            <param name="span">The span to pick</param>
+            <returns>The number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.SetExept``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
             <summary>
@@ -10106,6 +10049,280 @@
             </summary>
             <returns>The argument of this complex</returns>
         </member>
+        <member name="T:Althea.NativeTypes.ComplexDouble">
+            <summary>
+            The double precision float complex type
+            </summary>
+        </member>
+        <member name="P:Althea.NativeTypes.ComplexDouble.Real">
+            <summary>
+            Get the real part
+            </summary>
+        </member>
+        <member name="P:Althea.NativeTypes.ComplexDouble.Imag">
+            <summary>
+            Get the imaginary part
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.#ctor(System.Double,System.Double)">
+            <summary>
+            Construct a <see cref="T:Althea.NativeTypes.ComplexDouble"/> from real and imaginary parts
+            </summary>
+            <param name="re">The real part</param>
+            <param name="im">The imaginary part, default value is 0</param>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexDouble.Zero">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexDouble"/> 0
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexDouble.One">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexDouble"/> 1
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexDouble.MinusOne">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexDouble"/> -1
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexDouble.ImOne">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexDouble"/> i
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexDouble.MinusImOne">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexDouble"/> -1
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.TryParse(System.String,Althea.NativeTypes.ComplexDouble@)">
+            <summary>
+            Try to parse a <see cref="T:System.String"/> to a new <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="s">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+            <param name="complex">The output <see cref="T:Althea.NativeTypes.ComplexDouble"/></param>
+            <returns>success or not</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Parse(System.String)">
+            <summary>
+            Parse a <see cref="T:System.String"/> to a <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+            <returns>The parsed <see cref="T:Althea.NativeTypes.ComplexDouble"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.Int32)~Althea.NativeTypes.ComplexDouble">
+            <summary>
+            Convert from int
+            </summary>
+            <param name="a">a int</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.Double)~Althea.NativeTypes.ComplexDouble">
+            <summary>
+            Convert from double
+            </summary>
+            <param name="a">a double</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Althea.NativeTypes.ComplexDouble">
+            <summary>
+            Convert from int tuple
+            </summary>
+            <param name="a">a int tuple</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.ValueTuple{System.Double,System.Double})~Althea.NativeTypes.ComplexDouble">
+            <summary>
+            Convert from double tuple
+            </summary>
+            <param name="a">a double tuple</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Explicit(Althea.NativeTypes.ComplexDouble)~System.Double">
+            <summary>
+            Convert to <see cref="T:System.Double"/> by getting absolute value
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Equality(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Inequality(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Equals(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Equality operator
+            </summary>
+            <param name="other">The other <see cref="T:Althea.NativeTypes.ComplexDouble"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.GetHashCode">
+            <summary>
+            Override <see cref="M:System.Object.GetHashCode"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.Object.Equals(System.Object)"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_UnaryNegation(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex negate
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Addition(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex add
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Subtraction(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex subtract
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Addition(Althea.NativeTypes.ComplexDouble,System.Double)">
+            <summary>
+            Complex add real
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Addition(System.Double,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex add real
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Subtraction(Althea.NativeTypes.ComplexDouble,System.Double)">
+            <summary>
+            Complex subtract real
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Subtraction(System.Double,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Real subtract complex
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Multiply(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex multiply
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Division(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex division, guards against intermediate underflow and overflow by scaling
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Multiply(Althea.NativeTypes.ComplexDouble,System.Double)">
+            <summary>
+            Complex multiply real number
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Multiply(System.Double,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex multiply real number
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Division(Althea.NativeTypes.ComplexDouble,System.Double)">
+            <summary>
+            Complex divide real number
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Division(System.Double,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Real number divide complex 
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Abs">
+            <summary>
+            Complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Arg">
+            <summary>
+            Compute the argument of this complex
+            </summary>
+            <returns>The argument of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Conjugate">
+            <summary>
+            Complex conjugate
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Exp">
+            <summary>
+            Complex exponential (of base <c>e</c>)
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Log">
+            <summary>
+            Complex logarithm (of base <c>e</c>)
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Pow(System.Double)">
+            <summary>
+            Complex number power
+            </summary>
+            <param name="p">The power of real type</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Pow(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Complex  number power
+            </summary>
+            <param name="p">The power of complex type <see cref="T:Althea.NativeTypes.ComplexDouble"/></param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Sqrt">
+            <summary>
+            Get the complex square root of this complex
+            </summary>
+            <returns>The complex square root of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Add(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place add <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="another">another value to be added</param>
+            <returns>The addition result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Subtract(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place subtract <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="another">another value to be subtracted</param>
+            <returns>The subtraction result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Multiply(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place multiply <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="another">another value to be multiplied</param>
+            <returns>The multiplication result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.Divide(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place divide <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="another">another value to be divided</param>
+            <returns>The division result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.ToString">
+            <summary>
+            Override <see cref="M:System.Object.ToString"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.ToString(System.String)">
+            <summary>
+            String representation of this complex number
+            </summary>
+            <param name="format">format of output</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.ToString(System.String,System.IFormatProvider)">
+            <summary>
+            Implementation of <see cref="M:System.IFormattable.ToString(System.String,System.IFormatProvider)"/> that formats the value of the current instance using the specified format.
+            </summary>
+            <param name="format">The format to use</param>
+            <param name="formatProvider">The provider to use to format the value</param>
+        </member>
         <member name="T:Althea.NativeTypes.Complex`1">
             <summary>
             The general complex type for built-in types
@@ -10126,10 +10343,10 @@
         </member>
         <member name="M:Althea.NativeTypes.Complex`1.#ctor(`0,`0)">
             <summary>
-            Constructor from real and imaginary parts
+            Construct a <see cref="T:Althea.NativeTypes.Complex`1"/> from real and imaginary parts
             </summary>
-            <param name="re">real part</param>
-            <param name="im">imaginary part, default value is <c>default(<typeparamref name="T"/>)</c></param>
+            <param name="re">The real part</param>
+            <param name="im">The imaginary part, default value is 0</param>
         </member>
         <member name="F:Althea.NativeTypes.Complex`1.Zero">
             <summary>
@@ -10156,12 +10373,6 @@
             <see cref="T:Althea.NativeTypes.Complex`1"/> -1
             </summary>
         </member>
-        <member name="M:Althea.NativeTypes.Complex`1.TryParsePart(System.String)">
-            <summary>
-            Try to parse part of complex string <paramref name="s"/>
-            </summary>
-            <returns>null for unsuccessful, value for parsed value and real part or imaginary part</returns>
-        </member>
         <member name="M:Althea.NativeTypes.Complex`1.TryParse(System.String,Althea.NativeTypes.Complex{`0}@)">
             <summary>
             Try to parse a <see cref="T:System.String"/> to a new <see cref="T:Althea.NativeTypes.Complex`1"/>
@@ -10172,10 +10383,10 @@
         </member>
         <member name="M:Althea.NativeTypes.Complex`1.Parse(System.String)">
             <summary>
-            Parse a <see cref="T:System.String"/> to a new <see cref="T:Althea.NativeTypes.Complex`1"/>
+            Parse a <see cref="T:System.String"/> to a <see cref="T:Althea.NativeTypes.Complex`1"/>
             </summary>
-            <param name="str">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-            <returns>the parsed <see cref="T:Althea.NativeTypes.Complex`1"/></returns>
+            <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+            <returns>The parsed <see cref="T:Althea.NativeTypes.Complex`1"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.Complex`1.op_Implicit(System.Int32)~Althea.NativeTypes.Complex{`0}">
             <summary>
@@ -10201,14 +10412,14 @@
             </summary>
             <param name="a">a T tuple</param>
         </member>
-        <member name="M:Althea.NativeTypes.Complex`1.op_Explicit(Althea.NativeTypes.Complex{`0})~Althea.NativeTypes.Complex{System.Double}">
+        <member name="M:Althea.NativeTypes.Complex`1.op_Explicit(Althea.NativeTypes.Complex{`0})~Althea.NativeTypes.ComplexDouble">
             <summary>
-            Convert to <see cref="T:System.Double"/> typed complex
+            Convert to <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
         </member>
-        <member name="M:Althea.NativeTypes.Complex`1.op_Explicit(Althea.NativeTypes.Complex{System.Double})~Althea.NativeTypes.Complex{`0}">
+        <member name="M:Althea.NativeTypes.Complex`1.op_Explicit(Althea.NativeTypes.ComplexDouble)~Althea.NativeTypes.Complex{`0}">
             <summary>
-            Convert from <see cref="T:System.Double"/> typed complex
+            Convert from <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
         </member>
         <member name="M:Althea.NativeTypes.Complex`1.op_Explicit(Althea.NativeTypes.Complex{`0})~`0">
@@ -10470,6 +10681,11 @@
             Generic type constant
             </summary>
         </member>
+        <member name="F:Althea.NativeTypes.Const`1.MachinePrecision">
+            <summary>
+            Get the machine precision of <typeparamref name="T"/>
+            </summary>
+        </member>
         <member name="T:Althea.NativeTypes.ConstExtension">
             <summary>
             The static class for extension methods utilizing <see cref="T:Althea.NativeTypes.Const`1"/>
@@ -10619,12 +10835,7 @@
         </member>
         <member name="T:Althea.NativeTypes.DataTypeClassification">
             <summary>
-            The general classification of data types supported
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeClassification.NotSupported">
-            <summary>
-            A not supported type
+            The general classification of data types supported, values ≤ 0 are treaded as not supported
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754">
@@ -10764,7 +10975,7 @@
         </member>
         <member name="F:Althea.NativeTypes.DataTypeExtension.TypeMask">
             <summary>
-            The type mask (from 1st bit to 2nd bit), cannot be used separately.<br/>
+            The type mask (from 1st bit to 7th bit), cannot be used separately.<br/>
             <c>(value &amp; <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeMask"/>) &gt;&gt; <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeMaskStart"/> = </c> the actual data type classification as a <see cref="T:Althea.NativeTypes.DataTypeClassification"/>.
             </summary>
         </member>
@@ -10775,7 +10986,7 @@
         </member>
         <member name="F:Althea.NativeTypes.DataTypeExtension.ByteMask">
             <summary>
-            The number of bytes mask (from 4th bit to 7th bit), cannot be used separately.<br/>
+            The number of bytes mask (from 8th bit to 15th bit), cannot be used separately.<br/>
             <c>(value &amp; <see cref="F:Althea.NativeTypes.DataTypeExtension.ByteMask"/>) &gt;&gt; <see cref="F:Althea.NativeTypes.DataTypeExtension.ByteMaskStart"/> = </c> the bytes used (only half of a complex type's size shall be counted).
             </summary>
         </member>
@@ -10826,7 +11037,7 @@
             <param name="complex">Whether the constructed <see cref="T:Althea.NativeTypes.DataType"/> is a complex type</param>
             <param name="type">The <see cref="T:Althea.NativeTypes.DataTypeClassification"/> the constructed <see cref="T:Althea.NativeTypes.DataType"/> is a floating point type</param>
             <param name="size">The size in bytes of the constructed <see cref="T:Althea.NativeTypes.DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
-            <returns>The constructed <see cref="T:Althea.NativeTypes.DataType"/> or the default value if <paramref name="type"/> is <see cref="F:Althea.NativeTypes.DataTypeClassification.NotSupported"/></returns>
+            <returns>The constructed <see cref="T:Althea.NativeTypes.DataType"/> or the default value if <paramref name="type"/> is not supported</returns>
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.IsReal(Althea.NativeTypes.DataType)">
             <summary>
@@ -10900,31 +11111,11 @@
             <returns>The corresponding <see cref="T:Althea.NativeTypes.DataType"/> of <typeparamref name="T"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
-        <member name="M:Althea.NativeTypes.DataTypeExtension.GetClassification(System.Type)">
-            <summary>
-            Check whether <paramref name="type"/> is a floating point type or a integral type.
-            </summary>
-            <param name="type">The type</param>
-            <returns>0 for not supported data type</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.DataTypeExtension.GetClassification``1">
-            <summary>
-            Check whether <typeparamref name="T"/> is a floating point type or a integral type.
-            </summary>
-            <typeparam name="T">The type to check</typeparam>
-            <returns>0 for not supported data type</returns>
-        </member>
         <member name="T:Althea.NativeTypes.ICustomNativeType`1">
             <summary>
             The interface for custom native types such as <c>long double</c> in C++ on some platforms.
             </summary>
             <typeparam name="T">The type of actual struct that implement this interface</typeparam>
-        </member>
-        <member name="M:Althea.NativeTypes.ICustomNativeType`1.Classification_Internal">
-            <summary>
-            A in-fact <b>static</b> method to be implemented to indicate whether this type is a floating point type or a integral type
-            </summary>
-            <returns>The <see cref="T:Althea.NativeTypes.DataTypeClassification"/> of <typeparamref name="T"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.ICustomNativeType`1.TryParse_Internal(System.String,`0@)">
             <summary>
@@ -10941,9 +11132,26 @@
             <param name="str">The <see cref="T:System.String"/> to be parsed</param>
             <returns>the output result of type <typeparamref name="T"/>, null means unsuccessful parse</returns>
         </member>
+        <member name="M:Althea.NativeTypes.ICustomNativeType`1.Classification_Internal">
+            <summary>
+            A in-fact <b>static</b> method to be implemented to indicate whether this type is a floating point type or a integral type
+            </summary>
+            <returns>The <see cref="T:Althea.NativeTypes.DataTypeClassification"/> of <typeparamref name="T"/></returns>
+        </member>
         <member name="P:Althea.NativeTypes.ICustomNativeType`1.Classification">
             <summary>
             The <see cref="T:Althea.NativeTypes.DataTypeClassification"/> of <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ICustomNativeType`1.MachinePrecision_Internal">
+            <summary>
+            A in-fact <b>static</b> method to be implemented to get the machine precision of this type
+            </summary>
+            <returns>The machine precision of <typeparamref name="T"/></returns>
+        </member>
+        <member name="P:Althea.NativeTypes.ICustomNativeType`1.MachinePrecision">
+            <summary>
+            The machine precision of <typeparamref name="T"/>
             </summary>
         </member>
         <member name="T:Althea.NativeTypes.CustomTypeTest">
@@ -11000,34 +11208,12 @@
             <typeparam name="T">Any unmanaged type to check</typeparam>
             <returns>Whether <typeparamref name="T"/> is an integral type or not</returns>
         </member>
-        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsComplex(System.Type)">
-            <summary>
-            Check whether <paramref name="type"/> is a complex data type.
-            </summary>
-            <param name="type">The type</param>
-            <returns>true for complex type</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsComplex``1(``0)">
-            <summary>
-            Check whether <typeparamref name="T"/> is a complex data type.
-            </summary>
-            <typeparam name="T">The type to check</typeparam>
-            <param name="value">an instance of <typeparamref name="T"/></param>
-            <returns>true for complex type</returns>
-        </member>
         <member name="M:Althea.NativeTypes.NativeTypeExtension.IsComplex``1">
             <summary>
             Check whether <typeparamref name="T"/> is a complex data type.
             </summary>
             <typeparam name="T">The type to check</typeparam>
-            <returns>true for complex type</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsSupported(System.Type)">
-            <summary>
-            Check whether <paramref name="type"/> is a supported data type.
-            </summary>
-            <param name="type">The type</param>
-            <returns>true for supported type</returns>
+            <returns>True for complex type</returns>
         </member>
         <member name="M:Althea.NativeTypes.NativeTypeExtension.IsSupported``1(``0)">
             <summary>
@@ -11043,6 +11229,20 @@
             </summary>
             <typeparam name="T">The type to check</typeparam>
             <returns>true for supported type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.GetClassification``1">
+            <summary>
+            Check whether <typeparamref name="T"/> is a floating point type or a integral type.
+            </summary>
+            <typeparam name="T">The type to check</typeparam>
+            <returns>0 for not supported data type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.GetMachinePrecision``1">
+            <summary>
+            Get the machine precision of <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">The type to check</typeparam>
+            <returns>The machine precision of <typeparamref name="T"/></returns>
         </member>
         <member name="T:Althea.Resources.Backend">
             <summary>
@@ -11561,6 +11761,531 @@
               查找类似 Tensors are not supported yet. 的本地化字符串。
             </summary>
         </member>
+        <member name="T:Althea.Solver.AbstractApi">
+            <summary>
+            The abstract class for runtime general solver API routines 
+            </summary>
+        </member>
+        <member name="P:Althea.Solver.AbstractApi.Current">
+            <summary>
+            Get the current using <see cref="T:Althea.Solver.AbstractApi"/>.
+            </summary>
+            <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="P:Althea.Solver.AbstractApi.Dynamic">
+            <summary>
+            Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
+            </summary>
+            <remarks>
+            Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
+            Since there are internal caching for <see cref="M:System.Dynamic.DynamicObject.TryInvokeMember(System.Dynamic.InvokeMemberBinder,System.Object[],System.Object@)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
+            </remarks>
+            <example><code>
+            long number = AbstractApi.Dynamic.CholeskyDecompose(...);
+            </code></example>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.IsSupportedKronecker(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by binary matrix and unary vector Kronecker operations of this implementation or not.
+            </summary>
+            <param name="matrix1">The given <see cref="T:Althea.CombinationOfLocations"/> of the first matrix</param>
+            <param name="matrix2">The given <see cref="T:Althea.CombinationOfLocations"/> of the second matrix</param>
+            <param name="vector">The given <see cref="T:Althea.CombinationOfLocations"/> of vector</param>
+            <returns>Whether binary matrix and unary vector Kronecker operations on <paramref name="matrix1"/> and <paramref name="matrix2"/> and <paramref name="vector"/> are supported by this <see cref="T:Althea.Solver.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+            <summary>
+            Compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker sum</param>
+            <param name="vector">The input / output vector</param>
+            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+            <summary>
+            Compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker product</param>
+            <param name="vector">The input / output vector</param>
+            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.NaiveKrylovSubspaceEigenHermitain``2(System.Func{``0,``0},``0,System.Int32)">
+            <summary>
+            Perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="matrixFunction">The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/></param>
+            <param name="initial">The initial vector as a <typeparamref name="TVec"/></param>
+            <param name="maxIter">The maximum number of iterations which may be decreased when out of memory</param>
+            <returns>The approximate lowest eigenvalue as a <see cref="T:System.Double"/> and corresponding approximate eigenvector as a <typeparamref name="TVec"/></returns>
+            <remarks>All the temporary vectors shall be created by <see cref="M:Althea.Solver.IKrylovVector`2.NewArrayAlike"/> of <paramref name="initial"/>, hence, using vector with simple storage location(s) may help reduce overheads.</remarks>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the internal check fails</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="maxIter"/> is too large to fit in the memory</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenHermitian``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
+            <summary>
+            Perform a restart Krylov subspace algorithm (typically the Lanczos algorithm) to solve a hermitian matrix's lowest several eigenvalues and eigenvectors.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>The number of converged eigen-pairs</returns>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex"/> are not used</remarks>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenGeneral``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
+            <summary>
+            Perform a restart Krylov subspace algorithm (typically the Krylov-Schur algorithm) to solve a non-hermitian (i.e. general) matrix's several extreme eigenvalues and eigenvectors.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>The number of converged eigen-pairs</returns>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> is not used</remarks>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceLinearSolve``2(System.Boolean,Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
+            <summary>
+            Perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian (or non-hermitian) matrix.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="hermitian">Whether the given matrix is hermitian or not</param>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>The relative error of the output solution</returns>
+            <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector_``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+            <summary>
+            When implemented by a derived class, compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker sum</param>
+            <param name="vector">The input / output vector</param>
+            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector_``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+            <summary>
+            When implemented by a derived class, compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker product</param>
+            <param name="vector">The input / output vector</param>
+            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.NaiveKrylovSubspaceEigenHermitain_``2(System.Func{``0,``0},``0,System.Int32,System.Double@,``0@)">
+            <summary>
+            When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="matrixFunction">The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/></param>
+            <param name="initial">The initial vector as a <typeparamref name="TVec"/></param>
+            <param name="maxIter">The maximum number of iterations which may be decreased when out of memory</param>
+            <param name="eigenvalue">The output approximate lowest eigenvalue</param>
+            <param name="eigenvector">The output approximate lowest eigenvalue's corresponding approximate eigenvector as a <typeparamref name="TVec"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks>All the temporary vectors shall be created by <see cref="M:Althea.Solver.IKrylovVector`2.NewArrayAlike"/> of <paramref name="initial"/>, hence, using vector with simple storage location(s) may help reduce overheads.</remarks>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the internal check fails</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="maxIter"/> is too large to fit in the memory</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenHermitian_``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
+            <summary>
+            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos algorithm) to solve a hermitian matrix's lowest several eigenvalues and eigenvectors.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <param name="converged">Output the number of converged eigen-pairs</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex"/> are not used</remarks>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenGeneral_``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
+            <summary>
+            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Krylov-Schur algorithm) to solve a non-hermitian (i.e. general) matrix's several extreme eigenvalues and eigenvectors.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <param name="converged">Output the number of converged eigen-pairs</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> is not used</remarks>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceLinearSolve_``2(System.Boolean,Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Double@)">
+            <summary>
+            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian (or non-hermitian) matrix.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+            <param name="hermitian">Whether the given matrix is hermitian or not</param>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <param name="relativeError">Output the relative error of the output</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="T:Althea.Solver.IKrylovVector`2">
+            <summary>
+            The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The vector type</typeparam>
+        </member>
+        <member name="P:Althea.Solver.IKrylovVector`2.Length">
+            <summary>
+            The total presenting length of this vector
+            </summary>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.NewArrayAlike">
+            <summary>
+            Create a new vector alike this one
+            </summary>
+            <returns>The new vector alike this one</returns>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.FillWith(`1)">
+            <summary>
+            Fill this vector with the given <paramref name="value"/>
+            </summary>
+            <param name="value">The value to fill</param>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.Scale(`1)">
+            <summary>
+            When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
+            </summary>
+            <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.Norm">
+            <summary>
+            When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
+            </summary>
+            <returns>The 2-norm of this vector</returns>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.Normalize">
+            <summary>
+            When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
+            </summary>
+            <exception cref="T:System.DivideByZeroException">If the 2-norm of this array is 0</exception>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.Dot(`0)">
+            <summary>
+            When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
+            </summary>
+            <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
+            <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.AddBy(`0,`1)">
+            <summary>
+            When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
+            </summary>
+            <param name="other">The other <typeparamref name="TVec"/> to add</param>
+            <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.ReplaceBy(`0)">
+            <summary>
+            When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
+            </summary>
+            <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+            <exception cref="T:System.InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
+        </member>
+        <member name="M:Althea.Solver.IKrylovVector`2.OperateOn(System.ReadOnlySpan{`0},System.ReadOnlySpan{`1})">
+            <summary>
+            When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="T:System.ReadOnlySpan`1"/> and obtain the result vector as a <typeparamref name="TVec"/>.
+            </summary>
+            <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
+            <param name="input">The input dense vector to be multiplied as a <see cref="T:System.ReadOnlySpan`1"/></param>
+            <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
+            <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
+            <exception cref="T:System.ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
+        </member>
+        <member name="T:Althea.Solver.IPreserveSelector">
+            <summary>
+            The interface for a user-defined (or a built in) restart strategy
+            </summary>
+        </member>
+        <member name="M:Althea.Solver.IPreserveSelector.PreserveSelect(System.Span{Althea.NativeTypes.ComplexDouble},System.Span{Althea.NativeTypes.ComplexDouble},System.Int32,System.Int32,System.Int32,System.Span{System.Int32},System.Boolean)">
+            <summary>
+            When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
+            </summary>
+            <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
+            <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
+            <param name="nConverged">THe number of converged eigen-pairs</param>
+            <param name="nTarget">The number of smallest eigen-pairs wanted</param>
+            <param name="maxIter">The maximum number of iteration</param>
+            <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
+            <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
+            <returns><paramref name="output"/>[..preserved_count]</returns>
+            <remarks>This method will only be invoked internally.</remarks>
+        </member>
+        <member name="T:Althea.Solver.RestartStrategy">
+            <summary>
+            The <see cref="T:Althea.Solver.RestartStrategy"/> indicates which strategy shall be adopted by the thick restart Krylov subspace algorithms.
+            </summary>
+            <remarks>Other non built-in strategies are possible and they work as long as there exists implementation supporting them.</remarks>
+        </member>
+        <member name="F:Althea.Solver.RestartStrategy.Naive">
+            <summary>
+            The naïve strategy which only preserve the lowest Ritz eigen-pair and converged ones.
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.RestartStrategy.IndexBased">
+            <summary>
+            Based on the index of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
+            $$k=n_c+\min{\left\{n_{\mathrm{eig}},\left(p-n_c\right)\left(\frac{2}{5}+\frac{n_{\mathrm{eig}}}{10p}\right)\right\}}$$
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.RestartStrategy.CurrentResidualBest">
+            <summary>
+            Based on the residual of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
+            $$k=\underset{i}{\mathrm{argmax}}\left( \left| s_{n,i} \right| &lt; \max\left\{ \sqrt{\left| s_{n,n_{\mathrm{eig}}} \right|\max_{j}\left| s_{n,j} \right|},2\left| s_{n,n_{\mathrm{eig}}} \right| \right\} \right)$$
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.RestartStrategy.OneStepResidualImprove">
+            <summary>
+            Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+            $$k=\max{\left\{n_{\mathrm{eig}},\frac{3p+2n_c}{5}\right\}}$$
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.RestartStrategy.WholeIterResidualImprove">
+            <summary>
+            Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+            $$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.RestartStrategy.KrylovSchur">
+            <summary>
+            The heuristic used by Krylov-Schur algorithm to prevent stagnating
+            </summary>
+        </member>
+        <member name="T:Althea.Solver.ReorthogonalizeMethod">
+            <summary>
+            The <see cref="T:Althea.Solver.ReorthogonalizeMethod"/> indicates which method shall be used to re-orthogonalize with the previous basis in Krylov subspace algorithms.
+            </summary>
+            <remarks>Other non built-in methods are possible and they work as long as there exists implementation supporting them.</remarks>
+        </member>
+        <member name="F:Althea.Solver.ReorthogonalizeMethod.None">
+            <summary>
+            Do not perform re-orthogonalization, <b>this may lead to serious problems, e.g. Lanczos may never converge</b>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.ReorthogonalizeMethod.Selective">
+            <summary>
+            Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.ReorthogonalizeMethod.Full">
+            <summary>
+            Perform full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="F:Althea.Solver.ReorthogonalizeMethod.Selective"/> one does not perform well
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.ReorthogonalizeMethod.RobustFull">
+            <summary>
+            Perform robust full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="F:Althea.Solver.ReorthogonalizeMethod.Selective"/> one does not perform well
+            </summary>
+        </member>
+        <member name="T:Althea.Solver.WhichEigenvalues">
+            <summary>
+            The <see cref="T:Althea.Solver.WhichEigenvalues"/> indicates which eigen-pairs are desired in Krylov subspace algorithms of non-hermitian matrices.
+            </summary>
+            <remarks>Other non built-in desired parts are possible and they work as long as there exists implementation supporting them.</remarks>
+        </member>
+        <member name="F:Althea.Solver.WhichEigenvalues.LargestAbsolute">
+            <summary>
+            The eigenvalues with largest absolute values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.WhichEigenvalues.LargestReal">
+            <summary>
+            The eigenvalues with largest real part values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.WhichEigenvalues.LargestAbsoluteImaginary">
+            <summary>
+            The eigenvalues with largest imaginary part's absolute values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.WhichEigenvalues.SmallestAbsolute">
+            <summary>
+            The eigenvalues with smallest absolute values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.WhichEigenvalues.SmallestReal">
+            <summary>
+            The eigenvalues with smallest real part values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.WhichEigenvalues.SmallestAbsoluteImaginary">
+            <summary>
+            The eigenvalues with smallest imaginary part's absolute values are desired
+            </summary>
+        </member>
+        <member name="T:Althea.Solver.KrylovSubspaceSolveInfo`2">
+            <summary>
+            The information used as input and output of Krylov subspace methods
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MatrixFunction">
+            <summary>
+            The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.NewVectorFunction">
+            <summary>
+            The function used to create a new vector of type <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.InitialVector">
+            <summary>
+            The initial vector as a <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector">
+            <summary>
+            The other vector used as a <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Tolerance">
+            <summary>
+            The tolerance of the convergence, default 0 means <c>machine precision of <typeparamref name="T"/> * 5</c>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.PreserveSelector">
+            <summary>
+            The <see cref="T:Althea.Solver.IPreserveSelector"/> used for selecting the preservation Ritz pairs, default null means <c>new <see cref="M:Althea.Solver.BuiltInPreserveSelector.#ctor(Althea.Solver.RestartStrategy)">BuiltInRestartStrategy</see>(<see cref="T:Althea.Solver.RestartStrategy"/>)</c>.
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues">
+            <summary>
+            The output converged eigenvalues of <see cref="T:System.Double"/> if the matrix is hermitian, sorted by the given order of <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex">
+            <summary>
+            The output converged eigenvalues of <see cref="T:Althea.NativeTypes.ComplexDouble"/> if the matrix is not hermitian, sorted by the given order of <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsReal">
+            <summary>
+            The output converged eigenvectors' real parts, sorted with <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex">
+            <summary>
+            The output converged eigenvectors' complex parts, sorted with <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>. Empty if the matrix is hermitian.
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired">
+            <summary>
+            Only the top <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired"/> eigen-pairs of <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MaxRestarts">
+            <summary>
+            The maximum number of restarts, must be positive
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.IterationsPerRestart">
+            <summary>
+            The iteration number per restart, default 0 means letting internal implementation determine
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.ReorthogonalizeMethod">
+            <summary>
+            The <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.ReorthogonalizeMethod"/> to indicate which re-orthogonalization method to use
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired">
+            <summary>
+            The <see cref="T:Althea.Solver.WhichEigenvalues"/> to indicate which kind of eigenvalues (and the corresponding eigenvectors) are desired
+            </summary>
+        </member>
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.UseGapEstimation">
+            <summary>
+            Whether to use the estimated gap in the convergence criteria or use the matrix norm, default true. If the gap can be especially difficult to estimate, this shall be set to false.
+            </summary>
+        </member>
+        <member name="M:Althea.Solver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`0,`0},`0,System.Span{Althea.NativeTypes.ComplexDouble},System.Span{`0},System.Span{`0},System.Int32,Althea.Solver.WhichEigenvalues,System.Int32,System.Int32,System.Double,Althea.Solver.ReorthogonalizeMethod,System.Boolean,Althea.Solver.IPreserveSelector,System.Func{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given non-hermitian matrix eigen-solve problem
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Solver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`0,`0},`0,System.Span{System.Double},System.Span{`0},System.Int32,System.Int32,System.Int32,System.Double,Althea.Solver.ReorthogonalizeMethod,System.Boolean,Althea.Solver.IPreserveSelector,System.Func{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given hermitian matrix eigen-solve problem
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Solver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`0,`0},`0,`0,System.Int32,System.Int32,System.Double,Althea.Solver.ReorthogonalizeMethod,System.Boolean,Althea.Solver.IPreserveSelector,System.Func{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given (non-)hermitian matrix solve problem
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+        </member>
+        <member name="M:Althea.Solver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`0,`0},`0,`0,Althea.Solver.KrylovSubspaceSolveInfo{`0,`1},System.Func{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> from an <paramref name="old"/> one
+            </summary>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+        </member>
         <member name="T:Althea.Statistics.AbstractApi">
             <summary>
             The abstract class for runtime statistics API routines 
@@ -11600,46 +12325,6 @@
             <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
             <param name="location3">The third given <see cref="T:Althea.CombinationOfLocations"/></param>
             <returns>Whether trinary operations on <paramref name="location1"/>, <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="T:Althea.Statistics.AbstractApi"/>.</returns>
-        </member>
-        <member name="T:Althea.Solver.AbstractApi">
-            <summary>
-            The abstract class for runtime general solver API routines 
-            </summary>
-        </member>
-        <member name="P:Althea.Solver.AbstractApi.Current">
-            <summary>
-            Get the current using <see cref="T:Althea.Solver.AbstractApi"/>.
-            </summary>
-            <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
-        </member>
-        <member name="P:Althea.Solver.AbstractApi.Dynamic">
-            <summary>
-            Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
-            </summary>
-            <remarks>
-            Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
-            Since there are internal caching for <see cref="M:System.Dynamic.DynamicObject.TryInvokeMember(System.Dynamic.InvokeMemberBinder,System.Object[],System.Object@)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
-            </remarks>
-            <example><code>
-            long number = AbstractApi.Dynamic.CholeskyDecompose(...);
-            </code></example>
-        </member>
-        <member name="M:Althea.Solver.AbstractApi.IsSupportedTensorBinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by tensor binary operations of this implementation or not.
-            </summary>
-            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="T:Althea.Solver.AbstractApi"/>.</returns>
-        </member>
-        <member name="M:Althea.Solver.AbstractApi.IsSupportedTensorTrinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by tensor trinary operations of this implementation or not.
-            </summary>
-            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <param name="location3">The third given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <returns>Whether trinary operations on <paramref name="location1"/>, <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="T:Althea.Solver.AbstractApi"/>.</returns>
         </member>
         <member name="T:Althea.Storage.PureMixedAndCachedStorageExtension">
             <summary>
@@ -13699,12 +14384,12 @@
         </member>
         <member name="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Size">
             <summary>
-            The presenting size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/>
+            The presenting size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
             </summary>
         </member>
         <member name="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.OuterSize">
             <summary>
-            The outer size (actual size of all dimensions) of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/>
+            The outer size (actual size of all dimensions) of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
             </summary>
             <remarks>If there is not pitch, <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.OuterSize"/> == <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Size"/> (reference equals)</remarks>
         </member>
@@ -13788,6 +14473,30 @@
             <param name="format">The given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> to check</param>
             <returns>Whether <paramref name="format"/>is supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
         </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.IsSupportedFormatBinary(Althea.TensorAlgebra.Sparse.SparseTensorFormat,Althea.TensorAlgebra.Sparse.SparseTensorFormat)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>s are supported by tensor binary operations of this implementation or not.
+            </summary>
+            <param name="format1">The first given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/></param>
+            <param name="format2">The second given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/></param>
+            <returns>Whether binary operations on <paramref name="format1"/> and <paramref name="format2"/> are supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.IsSupportedFormatTrinary(Althea.TensorAlgebra.Sparse.SparseTensorFormat,Althea.TensorAlgebra.Sparse.SparseTensorFormat,Althea.TensorAlgebra.Sparse.SparseTensorFormat)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>s are supported by tensor trinary operations of this implementation or not.
+            </summary>
+            <param name="format1">The first given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/></param>
+            <param name="format2">The second given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/></param>
+            <param name="format3">The third given <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/></param>
+            <returns>Whether trinary operations on <paramref name="format1"/>, <paramref name="format2"/> and <paramref name="format3"/> are supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.IsSupportedTensorUnary(Althea.CombinationOfLocations)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/> is supported by tensor unary operations of this implementation or not.
+            </summary>
+            <param name="location">The given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <returns>Whether unary operations on <paramref name="location"/> is supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
+        </member>
         <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.IsSupportedTensorBinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
             <summary>
             When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by tensor binary operations of this implementation or not.
@@ -13804,6 +14513,101 @@
             <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
             <param name="location3">The third given <see cref="T:Althea.CombinationOfLocations"/></param>
             <returns>Whether trinary operations on <paramref name="location1"/>, <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Reshape``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, reshape the sparse tensor <paramref name="source"/> tensor to the given <paramref name="newSize"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="source">The source sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/></param>
+            <param name="newSize">The new presenting size as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/></param>
+            <returns>The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/>.</returns>
+            <remarks>If <paramref name="newSize"/> is the same as <paramref name="source"/>'s size, this method simply returns default</remarks>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="newSize"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="newSize"/> is not a valid reshape size</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Permute``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int32})">
+            <summary>
+            When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="source">The source sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/></param>
+            <param name="permutationOrder">The permutation order as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/></param>
+            <returns>The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/>.</returns>
+            <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method simply returns <paramref name="source"/></remarks>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.OperationBinary``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.Span{System.Int32},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.Span{System.Int32})">
+            <summary>
+            When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="binary">The <see cref="T:Althea.TensorAlgebra.BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
+            <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/>, can be invalid</param>
+            <param name="right">The right input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/>, can be invalid</param>
+            <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
+            <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
+            <returns>The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/>.</returns>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Reduce``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int32})">
+            <summary>
+            When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>
+            <c>result = <paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="source"/>[<paramref name="reduceDimensions"/>]))</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="reduce">The (symmetric) reduction operation as a <see cref="T:Althea.TensorAlgebra.BinaryOperation"/></param>
+            <param name="source">The source sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be reduced</param>
+            <param name="reduceDimensions">The values in this <b>set</b> (as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/>) are the dimensions of which <paramref name="source"/> tensor are reduced</param>
+            <returns>The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/>.</returns>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Contract``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.TensorContractInfo)">
+            <summary>
+            When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors:<br/>
+            <c>result = <paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="left"/>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="right"/>)</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="right">The right input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="info">The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> indicating how the contraction shall be performed</param>
+            <returns>The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/>.</returns>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.ContractInPlace``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0})">
+            <summary>
+            When implemented by a derived class, compute the in-place sparse tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and overwrite the result value array to <paramref name="destination"/>:<br/>
+            <c><paramref name="destination"/> = <paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="left"/>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="right"/>)) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="destination"/>)</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="right">The right input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="info">The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> indicating how the contraction shall be performed</param>
+            <param name="destination">The destination sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors; or the contraction cannot be performed in-place</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Reshape_``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int64},Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
+            <summary>
+            When implemented by a derived class, reshape the sparse tensor <paramref name="source"/> tensor to the given <paramref name="newSize"/> and output a <paramref name="destination"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="source">The source sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/></param>
+            <param name="newSize">The new presenting size as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/></param>
+            <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks>If <paramref name="newSize"/> is the same as <paramref name="source"/>'s size, this method shall simply returns default</remarks>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="newSize"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="newSize"/> is not a valid reshape size</exception>
         </member>
         <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Permute_``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int32},Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
             <summary>
@@ -13830,13 +14634,12 @@
             <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
             <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
         </member>
         <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Reduce_``1(Althea.TensorAlgebra.BinaryOperation,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},System.ReadOnlySpan{System.Int32},Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
             <summary>
-            When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>.:<br/>
-            <c><paramref name="destination"/> = <paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see>[<paramref name="reduceDimensions"/>]))</c>.
+            When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
+            <c><paramref name="destination"/> = <paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="source"/>[<paramref name="reduceDimensions"/>]))</c>.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="reduce">The (symmetric) reduction operation as a <see cref="T:Althea.TensorAlgebra.BinaryOperation"/></param>
@@ -13844,13 +14647,13 @@
             <param name="reduceDimensions">The values in this <b>set</b> (as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int32"/>) are the dimensions of which <paramref name="source"/> tensor are reduced</param>
             <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
         </member>
         <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.Contract_``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.TensorContractInfo,Althea.LinearAlgebra.Sparse.SparseArrayWrapper{``0}@)">
             <summary>
             When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
-            <c><paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see> = <paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">Storage</see>))</c>.
+            <c><paramref name="destination"/> = <paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="left"/>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="right"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
@@ -13858,8 +14661,22 @@
             <param name="info">The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> indicating how the contraction shall be performed</param>
             <param name="destination">The output tensor as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.ContractInPlace_``1(Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0},Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.Sparse.SparseTensorWrapper{``0})">
+            <summary>
+            When implemented by a derived class, compute the in-place sparse tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and overwrite the result value array to <paramref name="destination"/>:<br/>
+            <c><paramref name="destination"/> = <paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="left"/>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="right"/>)) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">Op</see>(<paramref name="destination"/>)</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="left">The left input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="right">The right input sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> to be contracted</param>
+            <param name="info">The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> indicating how the contraction shall be performed</param>
+            <param name="destination">The destination sparse tensor as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors; or the contraction cannot be performed in-place</exception>
         </member>
         <member name="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat">
             <summary>
@@ -13889,14 +14706,34 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
-        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Tensor">
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.ValueStorage">
             <summary>
-            Get the underlying sparse tensor of this wrapper as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/>
+            Get the value array storage of this sparse tensor wrapper
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IndexArrays">
+            <summary>
+            Get the index arrays' storages of this sparse tensor wrapper as a list of <see cref="T:Althea.IStorage"/>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IndexType">
+            <summary>
+            Get the (major) data type of the index array(s) of this sparse tensor wrapper as a <see cref="T:Althea.NativeTypes.DataType"/>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.DefaultValue">
+            <summary>
+            When implemented by a derived class, get or set the default value of this sparse tensor wrapper as a <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Format">
+            <summary>
+            Get the format of this sparse tensor wrapper as a <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/>
             </summary>
         </member>
         <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Size">
             <summary>
-            Get the presenting size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/>
+            Get the presenting size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
             </summary>
         </member>
         <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.Operation">
@@ -13921,20 +14758,18 @@
             </summary>
             <returns>The invalidness of this wrapper</returns>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.#ctor(Althea.Arrays.ISparseTensor{`0},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation)">
+        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.#ctor(Althea.Arrays.ISparseTensor{`0},Althea.TensorAlgebra.UnaryOperation)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> with all given parameters and scalar set to 1
             </summary>
             <param name="tensor">The given sparse tensor</param>
-            <param name="size">The presenting size</param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.#ctor(Althea.Arrays.ISparseTensor{`0},System.ReadOnlySpan{System.Int64},`0,Althea.TensorAlgebra.UnaryOperation)">
+        <member name="M:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.#ctor(Althea.Arrays.ISparseTensor{`0},`0,Althea.TensorAlgebra.UnaryOperation)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> with all given parameters
             </summary>
             <param name="value">The given sparse tensor</param>
-            <param name="size">The presenting size</param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
             <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
         </member>

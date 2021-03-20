@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using Althea.Linq;
-using Althea.Storage;
-using RT = Althea.Runtime.API;
+using Althea.Solver;
 
 
 namespace Althea.General
@@ -567,8 +565,8 @@ namespace Althea.General
 		/// <exception cref="InvalidOperationException">if the <paramref name="MatMulVecFunc"/> throws inner exceptions</exception>
 		/// <remarks>Currently, if some eigen-pairs are not converged after maximum number of iterations, they will not be returned.</remarks>
 		public static (TVec solve, double error) LinearSolve<TVec, T>(Func<TVec, TVec> MatMulVecFunc, TVec b, TVec initGuess, int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0, bool robustOrthogonalize = true)
-			where TVec : AbstractArray<T>, IKrylovVector<TVec, T>, new()
-			where T : struct, IComparable<T>
+			where TVec : class, Althea.Solver.IKrylovVector<TVec, T>, new()
+			where T : unmanaged
 		{
 			#region basics
 			if (initGuess is null)

@@ -169,6 +169,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The type &apos;{0}&apos; is not a floating-point type. 的本地化字符串。
+        /// </summary>
+        internal static string MismatchNotFloat {
+            get {
+                return ResourceManager.GetString("MismatchNotFloat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The type &apos;{0}&apos; is not an integral type. 的本地化字符串。
         /// </summary>
         internal static string MismatchNotInteger {

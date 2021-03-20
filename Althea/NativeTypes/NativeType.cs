@@ -14,12 +14,6 @@ namespace Althea.NativeTypes
 	public interface ICustomNativeType<T> : IFormattable where T : unmanaged, ICustomNativeType<T>
 	{
 		/// <summary>
-		/// A in-fact <b>static</b> method to be implemented to indicate whether this type is a floating point type or a integral type
-		/// </summary>
-		/// <returns>The <see cref="DataTypeClassification"/> of <typeparamref name="T"/></returns>
-		protected DataTypeClassification Classification_Internal();
-
-		/// <summary>
 		/// A in-fact <b>static</b> method to be implemented to parse a string <paramref name="str"/> to <typeparamref name="T"/>
 		/// </summary>
 		/// <param name="str">The <see cref="string"/> to be parsed</param>
@@ -32,16 +26,34 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="str">The <see cref="string"/> to be parsed</param>
 		/// <returns>the output result of type <typeparamref name="T"/>, null means unsuccessful parse</returns>
-		public static object? TryParse(string str)
+		public static T? TryParse(string str)
 		{
 			bool success = default(T).TryParse_Internal(str, out T result);
 			return success ? result : null;
 		}
 
 		/// <summary>
+		/// A in-fact <b>static</b> method to be implemented to indicate whether this type is a floating point type or a integral type
+		/// </summary>
+		/// <returns>The <see cref="DataTypeClassification"/> of <typeparamref name="T"/></returns>
+		protected DataTypeClassification Classification_Internal();
+
+		/// <summary>
 		/// The <see cref="DataTypeClassification"/> of <typeparamref name="T"/>
 		/// </summary>
 		public static DataTypeClassification Classification => default(T).Classification_Internal();
+
+		/// <summary>
+		/// A in-fact <b>static</b> method to be implemented to get the machine precision of this type
+		/// </summary>
+		/// <returns>The machine precision of <typeparamref name="T"/></returns>
+		protected double MachinePrecision_Internal();
+
+		/// <summary>
+		/// The machine precision of <typeparamref name="T"/>
+		/// </summary>
+		public static double MachinePrecision => default(T).MachinePrecision_Internal();
+
 	}
 	#endregion
 
@@ -57,7 +69,10 @@ namespace Althea.NativeTypes
 		private readonly double low;
 		private readonly float high;
 
-		DataTypeClassification ICustomNativeType<CustomTypeTest>.Classification_Internal() => DataTypeClassification.FloatPoint_IEEE754;
+		DataTypeClassification ICustomNativeType<CustomTypeTest>.Classification_Internal() => 0;
+
+		double ICustomNativeType<CustomTypeTest>.MachinePrecision_Internal() => 0;
+
 		bool ICustomNativeType<CustomTypeTest>.TryParse_Internal(string str, out CustomTypeTest result) => throw new NotImplementedException();
 
 		public bool Equals(CustomTypeTest other) => this.low == other.low && this.high == other.high;
@@ -79,17 +94,12 @@ namespace Althea.NativeTypes
 	}
 	#endregion
 
-	#region extension methods
-	/// <summary>
-	/// A static class containing some extension methods for native types
-	/// </summary>
-	/// <remarks>Data type supported by this framework must be "native", i.e., it must be an <b>unmanaged</b> type which is either primitive or implementing <see cref="ICustomNativeType{T}"/>.</remarks>
-	public static class NativeTypeExtension
+	#region caching
+	internal static class Cacher<T> where T : unmanaged
 	{
-		#region internal
 		// not null return means T is a ICustomNativeType<T>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Type? MakeCustomNativeType(Type T)
+		private static Type? MakeCustomNativeType(Type T)
 		{
 			try
 			{
@@ -100,8 +110,102 @@ namespace Althea.NativeTypes
 				return null;
 			}
 		}
-		#endregion
 
+		internal static readonly bool IsSupported;
+
+		internal static readonly Func<string, T?>? ParseDelegate;
+
+		internal static readonly bool? IsComplex;
+
+		internal static readonly DataTypeClassification Classification;
+
+		internal static readonly double? MachinePrecision;
+
+		static Cacher()
+		{
+			IsSupported = GetIsSupported();
+			ParseDelegate = GetParse();
+			IsComplex = GetIsComplex();
+			Classification = GetClassification();
+			MachinePrecision = GetMachinePrecision();
+		}
+
+		private static bool GetIsSupported()
+		{
+			Type? custom = MakeCustomNativeType(typeof(T));
+			return custom is not null;
+		}
+
+		private static Func<string, T?>? GetParse()
+		{
+			try
+			{
+				Type type = typeof(T);
+				Type? custom = MakeCustomNativeType(type);
+				var func = custom?.GetMethod(nameof(ICustomNativeType<CustomTypeTest>.TryParse), System.Reflection.BindingFlags.Static)?
+								  .CreateDelegate<Func<string, T?>>();
+				return func;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+
+		private static bool? GetIsComplex()
+		{
+			Type type = typeof(T);
+			if (MakeCustomNativeType(type) is null)
+				return null;
+			bool isComplex = type.GenericTypeArguments.Length == 1;
+			try
+			{
+				isComplex = isComplex && typeof(IComplex<float>).MakeGenericType(type.GenericTypeArguments).IsAssignableFrom(type);
+				return isComplex;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+
+		private static DataTypeClassification GetClassification()
+		{
+			try
+			{
+				Type? custom = MakeCustomNativeType(typeof(T));
+				var result = (DataTypeClassification?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.Classification))?.GetValue(null);
+				return result ?? 0;
+			}
+			catch (Exception)
+			{
+				return 0;
+			}
+		}
+
+		private static double? GetMachinePrecision()
+		{
+			try
+			{
+				Type? custom = MakeCustomNativeType(typeof(T));
+				var result = (double?)custom?.GetProperty(nameof(ICustomNativeType<CustomTypeTest>.MachinePrecision))?.GetValue(null);
+				return result;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+	}
+	#endregion
+
+	#region extension methods
+	/// <summary>
+	/// A static class containing some extension methods for native types
+	/// </summary>
+	/// <remarks>Data type supported by this framework must be "native", i.e., it must be an <b>unmanaged</b> type which is either primitive or implementing <see cref="ICustomNativeType{T}"/>.</remarks>
+	public static class NativeTypeExtension
+	{
 		#region predicator
 		/// <summary>
 		/// Check whether the two given generic-typed numbers are bit-wise equal
@@ -144,10 +248,6 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region parse native type values
-		private delegate object _parseFunc(string str);
-
-		private static readonly Dictionary<Type, _parseFunc> _parseCache = new();
-
 		/// <summary>
 		/// Try to parse a <see cref="string"/> to a native type (including types that implements <see cref="ICustomNativeType{T}"/>)
 		/// </summary>
@@ -181,16 +281,7 @@ namespace Althea.NativeTypes
 				return false;
 			}
 			// other case
-			Type type = typeof(T);
-			if (!_parseCache.ContainsKey(type))
-			{
-				Type? custom = MakeCustomNativeType(type);
-				var func = custom?.GetMethod(nameof(ICustomNativeType<CustomTypeTest>.TryParse))?.CreateDelegate<_parseFunc>();
-				if (func is null)
-					throw new ArgumentException(string.Format(Resources.Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
-				_parseCache.Add(type, func);
-			}
-			object parseResult = _parseCache[type].Invoke(str);
+			var parseResult = Cacher<T>.ParseDelegate?.Invoke(str);
 			if (parseResult == null)
 			{
 				result = default;
@@ -198,7 +289,7 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				result = (T)parseResult;
+				result = parseResult.Value;
 				return true;
 			}
 		}
@@ -219,69 +310,14 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region check whether native types are complex types
-		private static readonly Dictionary<Type, bool> _complexCache = new();
-
-		internal static bool IsComplexDirect(this Type type)
-		{
-			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
-			{
-				return false;
-			}
-			// cache
-			if (!_complexCache.ContainsKey(type))
-			{
-				bool isComplex = type.GenericTypeArguments.Length == 1;
-				try
-				{
-					isComplex = isComplex && typeof(IComplex<float>).MakeGenericType(type.GenericTypeArguments).IsAssignableFrom(type);
-				}
-				catch (Exception)
-				{
-					isComplex = false;
-				}
-				_complexCache.Add(type, isComplex);
-			}
-			return _complexCache[type];
-		}
-
-		/// <summary>
-		/// Check whether <paramref name="type"/> is a complex data type.
-		/// </summary>
-		/// <param name="type">The type</param>
-		/// <returns>true for complex type</returns>
-		public static bool IsComplex(this Type type)
-		{
-			if (!type.IsValueType)
-				return false;
-			// built-in float types
-			if (type == typeof(double) || type == typeof(float))
-				return false;
-			// built-in integer types
-			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
-				return false;
-			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(int) || type == typeof(long))
-				return false;
-			// complex float types
-			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
-				return true;
-			// complex integer types
-			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return true;
-			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return true;
-			// other primitive types are null
-			return IsComplexDirect(type);
-		}
-
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a complex data type.
 		/// </summary>
 		/// <typeparam name="T">The type to check</typeparam>
-		/// <param name="value">an instance of <typeparamref name="T"/></param>
-		/// <returns>true for complex type</returns>
-		public static bool IsComplex<T>(this T value) where T : unmanaged
+		/// <returns>True for complex type</returns>
+		internal static bool IsComplex<T>() where T : unmanaged
 		{
-			return value switch
+			return default(T) switch
 			{
 				// built-in float types
 				float or double => false,
@@ -289,70 +325,17 @@ namespace Althea.NativeTypes
 				sbyte or short or int or long => false,
 				byte or ushort or uint or ulong => false,
 				// built-in complex float types
-				Complex<float> or Complex<double> => true,
+				IComplex<float> or IComplex<double> => true,
 				// built-in complex integer types
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => true,
-				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => true,
+				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => true,
+				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => true,
 				// otherwise
-				_ => IsComplexDirect(typeof(T)),
+				_ => Cacher<T>.IsComplex ?? throw new NotSupportedException(Resources.Support.DataType),
 			};
 		}
-
-		/// <summary>
-		/// Check whether <typeparamref name="T"/> is a complex data type.
-		/// </summary>
-		/// <typeparam name="T">The type to check</typeparam>
-		/// <returns>true for complex type</returns>
-		public static bool IsComplex<T>() where T : unmanaged => IsComplex(default(T));
 		#endregion
 
 		#region check whether native types are supported
-		private static readonly Dictionary<Type, bool> _supportCache = new();
-
-		internal static bool IsSupportedDirect(this Type type)
-		{
-			if (!type.IsValueType || type.IsEnum || type.IsPointer || type.IsPrimitive)
-			{
-				return false;
-			}
-			// cache
-			if (!_supportCache.ContainsKey(type))
-			{
-				Type? custom = MakeCustomNativeType(type);
-				_supportCache.Add(type, custom is not null);
-			}
-			return _supportCache[type];
-		}
-
-		/// <summary>
-		/// Check whether <paramref name="type"/> is a supported data type.
-		/// </summary>
-		/// <param name="type">The type</param>
-		/// <returns>true for supported type</returns>
-		public static bool IsSupported(this Type type)
-		{
-			if (!type.IsValueType)
-				return false;
-			// built-in float types
-			if (type == typeof(double) || type == typeof(float))
-				return true;
-			// built-in integer types
-			else if (type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
-				return true;
-			else if (type == typeof(byte) || type == typeof(ushort) || type == typeof(int) || type == typeof(long))
-				return true;
-			// complex float types
-			if (type == typeof(Complex<double>) || type == typeof(Complex<float>))
-				return true;
-			// complex integer types
-			else if (type == typeof(Complex<sbyte>) || type == typeof(Complex<short>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return true;
-			else if (type == typeof(Complex<byte>) || type == typeof(Complex<ushort>) || type == typeof(Complex<int>) || type == typeof(Complex<long>))
-				return true;
-			// other primitive types are null
-			return IsSupportedDirect(type);
-		}
-
 		/// <summary>
 		/// Check whether <typeparamref name="T"/> is a supported data type.
 		/// </summary>
@@ -369,12 +352,12 @@ namespace Althea.NativeTypes
 				sbyte or short or int or long => true,
 				byte or ushort or uint or ulong => true,
 				// built-in complex float types
-				Complex<float> or Complex<double> => true,
+				IComplex<float> or IComplex<double> => true,
 				// built-in complex integer types
-				Complex<sbyte> or Complex<short> or Complex<int> or Complex<long> => true,
-				Complex<byte> or Complex<ushort> or Complex<int> or Complex<long> => true,
+				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => true,
+				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => true,
 				// otherwise
-				_ => IsSupportedDirect(typeof(T)),
+				_ => Cacher<T>.IsSupported,
 			};
 		}
 
@@ -384,6 +367,57 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The type to check</typeparam>
 		/// <returns>true for supported type</returns>
 		public static bool IsSupported<T>() where T : unmanaged => IsSupported(default(T));
+		#endregion
+
+		#region get classification native types
+		/// <summary>
+		/// Check whether <typeparamref name="T"/> is a floating point type or a integral type.
+		/// </summary>
+		/// <typeparam name="T">The type to check</typeparam>
+		/// <returns>0 for not supported data type</returns>
+		internal static DataTypeClassification GetClassification<T>() where T : unmanaged
+		{
+			return default(T) switch
+			{
+				// built-in float types
+				float or double => DataTypeClassification.FloatPoint_IEEE754,
+				// built-in integer types
+				sbyte or short or int or long => DataTypeClassification.SignedInteger,
+				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
+				// built-in complex float types
+				IComplex<float> or IComplex<double> => DataTypeClassification.FloatPoint_IEEE754,
+				// built-in complex integer types
+				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => DataTypeClassification.SignedInteger,
+				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => DataTypeClassification.FloatPoint_IEEE754,
+				// otherwise
+				_ => Cacher<T>.Classification,
+			};
+		}
+		#endregion
+
+		#region get data type machine precision
+		/// <summary>
+		/// Get the machine precision of <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">The type to check</typeparam>
+		/// <returns>The machine precision of <typeparamref name="T"/></returns>
+		internal static double GetMachinePrecision<T>() where T : unmanaged
+		{
+			return default(T) switch
+			{
+				// built-in float types
+				float or IComplex<float> => 1.1920928955078125E-07,
+				double or IComplex<double> => 2.220446049250313E-16D,
+				// built-in integer types
+				sbyte or short or int or long => 1,
+				byte or ushort or uint or ulong => 1,
+				// built-in complex integer types
+				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => 1,
+				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => 1,
+				// otherwise
+				_ => Cacher<T>.MachinePrecision ?? throw new NotSupportedException(Resources.Support.DataType),
+			};
+		}
 		#endregion
 	}
 	#endregion
