@@ -396,8 +396,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="InvalidOperationException">If the computed new number of rows or columns is 1</exception>
 		public override MatrixBase<T> ToMatrix(long rows = 0)
 		{
-			Span<long> newSize = stackalloc long[2];
-			newSize[0] = rows;
+			Span<long> newSize = stackalloc long[] { rows, 0 };
 			CheckSize(this, newSize);
 			if (newSize[0] == this.NRows)
 				return this;

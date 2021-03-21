@@ -23,7 +23,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public sealed class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>
+	public sealed class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>, IConvertibleVector<SparseVector<T, TInd>, SparseMatrix<T, TInd>, T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -173,7 +173,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The reshaped matrix (a newly created one)</returns>
 		public override SparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
-			Span<long> size = stackalloc long[2].SetValue(rows);
+			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
 			var wrapper = LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC);
 			try

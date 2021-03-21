@@ -24,7 +24,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public sealed class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMatrix<T>
+	public sealed class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -876,7 +876,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The reshaped matrix, may be this matrix itself</returns>
 		public override SparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
-			Span<long> size = stackalloc long[2].SetValue(rows);
+			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
 			if (size[0] == this.NRows)
 				return this;
@@ -1019,7 +1019,7 @@ namespace Althea.Backend.Arrays
 				try
 				{
 					T defThis = this.DefaultValue, defOther = sparse.DefaultValue;
-					T defNew = (dynamic)defThis * defOther * k;
+					T defNew = defThis.GenericMultiply(defOther).GenericMultiply(k.FromLong<T>());
 					return SparseVector<T, TInd>.CheckWrapper(m, n, defNew, wrapper);
 				}
 				catch (Exception)
@@ -1093,6 +1093,31 @@ namespace Althea.Backend.Arrays
 			MEM.MemoryCopy(other.Storage, this.Storage);
 			MEM.MemoryCopy(other.RowIndexStorage, this.RowIndexStorage);
 			MEM.MemoryCopy(other.ColIndexStorage, this.ColIndexStorage);
+		}
+		#endregion
+
+		#region MyRegion
+		bool IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.CanMultiplyInPlace => false;
+
+		void IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
+
+		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
+		{
+			var (m, n, k) = ((IMatrix<T>)left).CheckMultiply(scalar, right, ref opLeft, ref opRight);
+			if (!scalarThis.IsZero() && (this.NRows != m || this.NCols != n))
+				throw new ArgumentException(Resources.Parameter.WrongSize);
+			var wrapper = LAS.MatrixSparseMultiplySparse(opLeft, opRight, scalar, left, right, scalarThis, this, FormatExtension.NonBlocked);
+			try
+			{
+				T defThis = left.DefaultValue, defOther = right.DefaultValue;
+				T defNew = defThis.GenericMultiply(defOther).GenericMultiply(k.FromLong<T>()).GenericAdd(this.DefaultValue);
+				return SparseVector<T, TInd>.CheckWrapper(m, n, defNew, wrapper) as SparseMatrix<T, TInd> ?? throw new InvalidOperationException();
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 		#endregion
 

@@ -8,8 +8,6 @@ using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
-
 
 namespace Althea.Arrays
 {
@@ -121,7 +119,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
 		protected SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0, long rowLength = 0, long colLength = 0) :
 			this(rows, cols, valueArray, stores, (rowIndexArray, colIndexArray),
-				stackalloc long[2].SetValue(rowLength == 0 ? long.MaxValue : rowLength, colLength == 0 ? long.MaxValue : colLength),
+				stackalloc long[] { rowLength == 0 ? long.MaxValue : rowLength, colLength == 0 ? long.MaxValue : colLength },
 				format, defaultValue)
 		{ }
 
@@ -158,12 +156,6 @@ namespace Althea.Arrays
 		/// <param name="other">The other <see cref="ValueArray{T}"/> to check</param>
 		/// <returns>True if they do share some storage, false otherwise</returns>
 		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
-
-		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T}.DisposeExclude(ISparseArray{T})"/>.
-		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing this sparse matrix</param>
-		public virtual void DisposeExclude(ISparseArray<T> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 
 		/// <summary>
 		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.

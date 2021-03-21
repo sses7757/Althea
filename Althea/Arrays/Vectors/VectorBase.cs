@@ -14,7 +14,7 @@ namespace Althea.Arrays
 	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public abstract class VectorBase<T> : ValueArray<T>, IReadOnlyList<T> where T : unmanaged
+	public abstract class VectorBase<T> : ValueArray<T>, IVector<T>, IReadOnlyList<T> where T : unmanaged
 	{
 		#region basic
 		private long m_length;

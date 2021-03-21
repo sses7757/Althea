@@ -85,6 +85,8 @@ namespace Althea.Arrays
 				this.Storage.Dispose();
 			for (int i = 0; i < list.Count; i++)
 			{
+				if (list[i] is IReferenceStorage)
+					continue;
 				bool canDispose = true;
 				for (int j = 0; j < other.Count; j++)
 				{
@@ -277,14 +279,9 @@ namespace Althea.Arrays
 	/// The interface for sparse vectors without indicating the index data type. The value array is <see cref="ISparseArray{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface ISparseVector<T> : ISparseArray<T> where T : unmanaged
+	public interface ISparseVector<T> : ISparseArray<T>, IVector<T> where T : unmanaged
 	{
 		#region property
-		/// <summary>
-		/// When implemented by a derived class, get the presenting length of this sparse vector
-		/// </summary>
-		long Length { get; }
-
 		/// <summary>
 		/// When implemented by a derived class, get the format of this sparse vector as a <see cref="LinearAlgebra.Sparse.SparseVectorFormat"/>
 		/// </summary>
@@ -304,19 +301,9 @@ namespace Althea.Arrays
 	/// The interface for sparse matrices without indicating the index data type. The value array is <see cref="ISparseArray{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface ISparseMatrix<T> : ISparseArray<T> where T : unmanaged
+	public interface ISparseMatrix<T> : ISparseArray<T>, IMatrix<T> where T : unmanaged
 	{
 		#region property
-		/// <summary>
-		/// When implemented by a derived class, get the presenting number of rows of this sparse matrix
-		/// </summary>
-		long NRows { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the presenting number of columns of this sparse matrix
-		/// </summary>
-		long NCols { get; }
-
 		/// <summary>
 		/// When implemented by a derived class, get the format of this sparse matrix as a <see cref="LinearAlgebra.Sparse.SparseMatrixFormat"/>
 		/// </summary>
@@ -328,10 +315,10 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
-		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="NRows"/></param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="IMatrix{T}.NRows"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="NRows"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="IMatrix{T}.NRows"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="IMatrix{T}.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
 		void ToDense(Storage<T> denseStorage, long leadDim = 0);
 		#endregion
 	}
@@ -340,14 +327,9 @@ namespace Althea.Arrays
 	/// The interface for sparse tensor without indicating the index data type. The value array is <see cref="ISparseArray{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface ISparseTensor<T> : ISparseArray<T> where T : unmanaged
+	public interface ISparseTensor<T> : ISparseArray<T>, ITensor where T : unmanaged
 	{
 		#region property
-		/// <summary>
-		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this tensor (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
-		/// </summary>
-		ReadOnlySpan<long> Size { get; }
-
 		/// <summary>
 		/// When implemented by a derived class, get the format of this sparse tensor as a <see cref="TensorAlgebra.Sparse.SparseTensorFormat"/>
 		/// </summary>
@@ -359,12 +341,44 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense tensor to overwrite</param>
-		/// <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="Size"/> of this one</param>
+		/// <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="ITensor.Size"/> of this one</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="Size"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="ITensor.Size"/></exception>
 		/// <exception cref="ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
 		void ToDense(Storage<T> denseStorage, ReadOnlySpan<long> outerSize = default);
 		#endregion
+	}
+	#endregion
+
+
+	#region matrix and vector
+	/// <summary>
+	/// The interface for basic vectors
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IVector<T> where T : unmanaged
+	{
+		/// <summary>
+		/// When implemented by a derived class, get the presenting length of this sparse vector
+		/// </summary>
+		long Length { get; }
+	}
+
+	/// <summary>
+	/// The interface for basic matrices
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IMatrix<T> where T : unmanaged
+	{
+		/// <summary>
+		/// When implemented by a derived class, get the presenting number of rows of this sparse matrix
+		/// </summary>
+		long NRows { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the presenting number of columns of this sparse matrix
+		/// </summary>
+		long NCols { get; }
 	}
 	#endregion
 
@@ -382,12 +396,12 @@ namespace Althea.Arrays
 		int Rank => this.Size.Length;
 
 		/// <summary>
-		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
 		/// </summary>
 		ReadOnlySpan<long> Size { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor
+		/// When implemented by a derived class, get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor.
 		/// </summary>
 		/// <exception cref="ArgumentException">If the setting value's length is not the same as the <see cref="Rank"/></exception>
 		ReadOnlySpan<char> Labels { get; set; }

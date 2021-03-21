@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Numerics;
-
-using Althea.Arrays;
-using Althea.Helpers;
 
 
 namespace Althea.Solver
@@ -53,23 +49,13 @@ namespace Althea.Solver
 		#endregion
 
 
-		#region support information
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by binary matrix and unary vector Kronecker operations of this implementation or not.
-		/// </summary>
-		/// <param name="matrix1">The given <see cref="CombinationOfLocations"/> of the first matrix</param>
-		/// <param name="matrix2">The given <see cref="CombinationOfLocations"/> of the second matrix</param>
-		/// <param name="vector">The given <see cref="CombinationOfLocations"/> of vector</param>
-		/// <returns>Whether binary matrix and unary vector Kronecker operations on <paramref name="matrix1"/> and <paramref name="matrix2"/> and <paramref name="vector"/> are supported by this <see cref="AbstractApi"/>.</returns>
-		protected abstract bool IsSupportedKronecker(CombinationOfLocations matrix1, CombinationOfLocations matrix2, CombinationOfLocations vector);
-		#endregion
-
-
 		#region static methods as dispatchers
 		/// <summary>
 		/// Compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
 		/// <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
 		/// </summary>
+		/// <typeparam name="TMat">The concrete matrix type as a <see cref="IMultipliableMatrix{TMat, TVec, T}"/></typeparam>
+		/// <typeparam name="TVec">The concrete vector type as a <see cref="IConvertibleVector{TVec, TMat, T}"/></typeparam>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
 		/// <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
@@ -80,15 +66,19 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public static void KroneckerSumMultiplyVector<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged
+		public static void KroneckerSumMultiplyVector<TMat, TVec, T>(T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
+			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+			where T : unmanaged
 		{
-			CombinationOfLocations location1 = leftMatrix.Storage.LocationDescription, location2 = rightMatrix.Storage.LocationDescription, location3 = vector.Storage.LocationDescription;
 			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
+			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedKronecker(location1, location2, location3), node);
+				if (node is null)
+					break;
 				success = node.Value.KroneckerSumMultiplyVector_(scalar, leftMatrix, rightMatrix, ref vector, scalarVector);
+				node = node?.Next;
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -98,6 +88,8 @@ namespace Althea.Solver
 		/// Compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
 		/// <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
 		/// </summary>
+		/// <typeparam name="TMat">The concrete matrix type as a <see cref="IMultipliableMatrix{TMat, TVec, T}"/></typeparam>
+		/// <typeparam name="TVec">The concrete vector type as a <see cref="IConvertibleVector{TVec, TMat, T}"/></typeparam>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
 		/// <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
@@ -108,15 +100,19 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public static void KroneckerProdMultiplyVector<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged
+		public static void KroneckerProdMultiplyVector<TMat, TVec, T>(T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
+			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+			where T : unmanaged
 		{
-			CombinationOfLocations location1 = leftMatrix.Storage.LocationDescription, location2 = rightMatrix.Storage.LocationDescription, location3 = vector.Storage.LocationDescription;
 			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
+			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedKronecker(location1, location2, location3), node);
+				if (node is null)
+					break;
 				success = node.Value.KroneckerProdMultiplyVector_(scalar, leftMatrix, rightMatrix, ref vector, scalarVector);
+				node = node?.Next;
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -254,6 +250,8 @@ namespace Althea.Solver
 		/// When implemented by a derived class, compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
 		/// <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
 		/// </summary>
+		/// <typeparam name="TMat">The concrete matrix type as a <see cref="IMultipliableMatrix{TMat, TVec, T}"/></typeparam>
+		/// <typeparam name="TVec">The concrete vector type as a <see cref="IConvertibleVector{TVec, TMat, T}"/></typeparam>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
 		/// <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
@@ -264,12 +262,17 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		protected abstract bool KroneckerSumMultiplyVector_<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged;
-		// TODO: use interface?
+		protected abstract bool KroneckerSumMultiplyVector_<TMat, TVec, T>(T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
+			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+			where T : unmanaged;
+
 		/// <summary>
 		/// When implemented by a derived class, compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
 		/// <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
 		/// </summary>
+		/// <typeparam name="TMat">The concrete matrix type as a <see cref="IMultipliableMatrix{TMat, TVec, T}"/></typeparam>
+		/// <typeparam name="TVec">The concrete vector type as a <see cref="IConvertibleVector{TVec, TMat, T}"/></typeparam>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
 		/// <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
@@ -280,7 +283,10 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		protected abstract bool KroneckerProdMultiplyVector_<T>(T scalar, MatrixBase<T> leftMatrix, MatrixBase<T> rightMatrix, ref VectorBase<T> vector, T scalarVector = default) where T : unmanaged;
+		protected abstract bool KroneckerProdMultiplyVector_<TMat, TVec, T>(T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
+			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+			where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.

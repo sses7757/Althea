@@ -112,7 +112,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or <paramref name="indexArray"/> or larger than the presenting length of this vector</exception>
 		protected SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
-			this(length, valueArray, stores, indexArray, stackalloc long[1].SetValue(stores), format, defaultValue) { }
+			this(length, valueArray, stores, indexArray, stackalloc long[] { stores }, format, defaultValue) { }
 
 		/// <summary>
 		/// Create a <see cref="SparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
@@ -145,12 +145,6 @@ namespace Althea.Arrays
 		/// <param name="other">The other <see cref="ValueArray{T}"/> to check</param>
 		/// <returns>True if they do share some storage, false otherwise</returns>
 		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
-
-		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T}.DisposeExclude(ISparseArray{T})"/>.
-		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing this sparse vector</param>
-		public virtual void DisposeExclude(ISparseArray<T> array) => ((ISparseArray<T>)this).DisposeExclude(array);
 
 		/// <summary>
 		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.

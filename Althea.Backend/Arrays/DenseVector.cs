@@ -18,7 +18,7 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public sealed class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T> where T : unmanaged
+	public sealed class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T>, IConvertibleVector<DenseVector<T>, DenseMatrix<T>, T> where T : unmanaged
 	{
 		#region create and dispose
 		/// <summary>
@@ -118,10 +118,16 @@ namespace Althea.Backend.Arrays
 		/// <returns>The reshaped matrix</returns>
 		public override DenseMatrix<T> ToMatrix(long rows = 0)
 		{
-			Span<long> size = stackalloc long[2];
-			size[0] = rows;
+			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
 			return new DenseMatrix<T>(this.Storage, size[0], size[1]);
+		}
+
+		DenseMatrix<T> IConvertibleVector<DenseVector<T>, DenseMatrix<T>, T>.ToMatrix(long rows)
+		{
+			Span<long> size = stackalloc long[] { rows, 0 };
+			CheckSize(this, size);
+			return this.ApplyToClone(c => c.ToMatrix(rows));
 		}
 
 		/// <summary>

@@ -938,8 +938,7 @@ namespace Althea
 		{
 			Span<StorageLocation> locations = stackalloc StorageLocation[1];
 			locations.SetValue(location);
-			Span<long> lengths = stackalloc long[1];
-			lengths.SetValue(length);
+			Span<long> lengths = stackalloc long[] { length };
 			return Storage.StorageFactory<T>.Create(CombinationType.PureOrMixed, locations, lengths);
 		}
 		#endregion

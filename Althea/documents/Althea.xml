@@ -322,11 +322,6 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
-        <member name="P:Althea.Arrays.ISparseVector`1.Length">
-            <summary>
-            When implemented by a derived class, get the presenting length of this sparse vector
-            </summary>
-        </member>
         <member name="P:Althea.Arrays.ISparseVector`1.Format">
             <summary>
             When implemented by a derived class, get the format of this sparse vector as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/>
@@ -344,16 +339,6 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
-        <member name="P:Althea.Arrays.ISparseMatrix`1.NRows">
-            <summary>
-            When implemented by a derived class, get the presenting number of rows of this sparse matrix
-            </summary>
-        </member>
-        <member name="P:Althea.Arrays.ISparseMatrix`1.NCols">
-            <summary>
-            When implemented by a derived class, get the presenting number of columns of this sparse matrix
-            </summary>
-        </member>
         <member name="P:Althea.Arrays.ISparseMatrix`1.Format">
             <summary>
             When implemented by a derived class, get the format of this sparse matrix as a <see cref="T:Althea.LinearAlgebra.Sparse.SparseMatrixFormat"/>
@@ -364,21 +349,16 @@
             When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="T:Althea.Storage`1"/> is <paramref name="denseStorage"/>
             </summary>
             <param name="denseStorage">The <see cref="T:Althea.Storage`1"/> of the dense matrix to overwrite</param>
-            <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="P:Althea.Arrays.ISparseMatrix`1.NRows"/></param>
+            <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="P:Althea.Arrays.IMatrix`1.NRows"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="P:Althea.Arrays.ISparseMatrix`1.NRows"/></exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="leadDim"/> * <see cref="P:Althea.Arrays.ISparseMatrix`1.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="P:Althea.Arrays.IMatrix`1.NRows"/></exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="leadDim"/> * <see cref="P:Althea.Arrays.IMatrix`1.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
         </member>
         <member name="T:Althea.Arrays.ISparseTensor`1">
             <summary>
             The interface for sparse tensor without indicating the index data type. The value array is <see cref="P:Althea.Arrays.ISparseArray`1.Storage"/> and index array(s) is/are the inherited <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <see cref="T:Althea.IStorage"/>s.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Arrays.ISparseTensor`1.Size">
-            <summary>
-            When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this tensor (the extent at each dimension) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>, must be of positive numbers.
-            </summary>
         </member>
         <member name="P:Althea.Arrays.ISparseTensor`1.Format">
             <summary>
@@ -390,10 +370,37 @@
             When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="T:Althea.Storage`1"/> is <paramref name="denseStorage"/>
             </summary>
             <param name="denseStorage">The <see cref="T:Althea.Storage`1"/> of the dense tensor to overwrite</param>
-            <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="P:Althea.Arrays.ISparseTensor`1.Size"/> of this one</param>
+            <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="P:Althea.Arrays.ITensor.Size"/> of this one</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="P:Althea.Arrays.ISparseTensor`1.Size"/></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="P:Althea.Arrays.ITensor.Size"/></exception>
             <exception cref="T:System.ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
+        </member>
+        <member name="T:Althea.Arrays.IVector`1">
+            <summary>
+            The interface for basic vectors
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.IVector`1.Length">
+            <summary>
+            When implemented by a derived class, get the presenting length of this sparse vector
+            </summary>
+        </member>
+        <member name="T:Althea.Arrays.IMatrix`1">
+            <summary>
+            The interface for basic matrices
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.IMatrix`1.NRows">
+            <summary>
+            When implemented by a derived class, get the presenting number of rows of this sparse matrix
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.IMatrix`1.NCols">
+            <summary>
+            When implemented by a derived class, get the presenting number of columns of this sparse matrix
+            </summary>
         </member>
         <member name="T:Althea.Arrays.ITensor">
             <summary>
@@ -407,12 +414,12 @@
         </member>
         <member name="P:Althea.Arrays.ITensor.Size">
             <summary>
-            When implemented by a derived class, get the size of this array (the extent at all dimensions) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            When implemented by a derived class, get the size of this array (the extent at all dimensions) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>, must be of positive numbers.
             </summary>
         </member>
         <member name="P:Althea.Arrays.ITensor.Labels">
             <summary>
-            When implemented by a derived class, get or set the label array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/> used to mark each index of this tensor
+            When implemented by a derived class, get or set the label array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/> used to mark each index of this tensor.
             </summary>
             <exception cref="T:System.ArgumentException">If the setting value's length is not the same as the <see cref="P:Althea.Arrays.ITensor.Rank"/></exception>
         </member>
@@ -836,12 +843,6 @@
             <param name="other">The other <see cref="T:Althea.Arrays.ValueArray`1"/> to check</param>
             <returns>True if they do share some storage, false otherwise</returns>
         </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.DisposeExclude(Althea.Arrays.ISparseArray{`0})">
-            <summary>
-            When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`1.DisposeExclude(Althea.Arrays.ISparseArray{`0})"/>.
-            </summary>
-            <param name="array">The target <see cref="T:Althea.Arrays.ISparseArray`1"/> to exclude before disposing this sparse matrix</param>
-        </member>
         <member name="M:Althea.Arrays.SparseMatrix`2.Dispose(System.Boolean)">
             <summary>
             When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) passed to the constructor of <see cref="T:Althea.Arrays.SparseVector`2"/>.
@@ -1010,12 +1011,6 @@
             </summary>
             <param name="other">The other <see cref="T:Althea.Arrays.ValueArray`1"/> to check</param>
             <returns>True if they do share some storage, false otherwise</returns>
-        </member>
-        <member name="M:Althea.Arrays.SparseTensor`2.DisposeExclude(Althea.Arrays.ISparseArray{`0})">
-            <summary>
-            When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`1.DisposeExclude(Althea.Arrays.ISparseArray{`0})"/>.
-            </summary>
-            <param name="array">The target <see cref="T:Althea.Arrays.ISparseArray`1"/> to exclude before disposing this sparse tensor</param>
         </member>
         <member name="M:Althea.Arrays.SparseTensor`2.Dispose(System.Boolean)">
             <summary>
@@ -1775,12 +1770,6 @@
             </summary>
             <param name="other">The other <see cref="T:Althea.Arrays.ValueArray`1"/> to check</param>
             <returns>True if they do share some storage, false otherwise</returns>
-        </member>
-        <member name="M:Althea.Arrays.SparseVector`2.DisposeExclude(Althea.Arrays.ISparseArray{`0})">
-            <summary>
-            When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="M:Althea.Arrays.ISparseArray`1.DisposeExclude(Althea.Arrays.ISparseArray{`0})"/>.
-            </summary>
-            <param name="array">The target <see cref="T:Althea.Arrays.ISparseArray`1"/> to exclude before disposing this sparse vector</param>
         </member>
         <member name="M:Althea.Arrays.SparseVector`2.Dispose(System.Boolean)">
             <summary>
@@ -3268,6 +3257,11 @@
         <member name="F:Althea.Helpers.TypeMismatchException.MismatchReason.NotInteger">
             <summary>
             The given type is not an integral type
+            </summary>
+        </member>
+        <member name="F:Althea.Helpers.TypeMismatchException.MismatchReason.NotFloat">
+            <summary>
+            The given type is not an floating point type
             </summary>
         </member>
         <member name="M:Althea.Helpers.TypeMismatchException.#ctor">
@@ -7544,7 +7538,7 @@
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="matrix">The input sparse matrix as a <see cref="T:Althea.Arrays.ISparseMatrix`1"/></param>
             <param name="format">The desired <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-            <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="P:Althea.Arrays.ISparseMatrix`1.NRows"/> and <see cref="P:Althea.Arrays.ISparseMatrix`1.NCols"/>)</returns>
+            <returns>The created new <see cref="T:Althea.LinearAlgebra.Sparse.SparseArrayWrapper`1"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="P:Althea.Arrays.IMatrix`1.NRows"/> and <see cref="P:Althea.Arrays.IMatrix`1.NCols"/>)</returns>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
         </member>
@@ -7750,7 +7744,7 @@
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="matrix">The input sparse matrix as a <see cref="T:Althea.Arrays.ISparseMatrix`1"/></param>
             <param name="format">The desired <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-            <param name="target">Output the created new <see cref="T:Althea.Arrays.ISparseVector`1"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="P:Althea.Arrays.ISparseMatrix`1.NRows"/> and <see cref="P:Althea.Arrays.ISparseMatrix`1.NCols"/>)</param>
+            <param name="target">Output the created new <see cref="T:Althea.Arrays.ISparseVector`1"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="P:Althea.Arrays.IMatrix`1.NRows"/> and <see cref="P:Althea.Arrays.IMatrix`1.NCols"/>)</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
         </member>
@@ -11346,6 +11340,11 @@
               查找类似 The type &apos;{1}&apos; is not a complex correspondence type of &apos;{0}&apos;. 的本地化字符串。
             </summary>
         </member>
+        <member name="P:Althea.Resources.Exception.MismatchNotFloat">
+            <summary>
+              查找类似 The type &apos;{0}&apos; is not a floating-point type. 的本地化字符串。
+            </summary>
+        </member>
         <member name="P:Althea.Resources.Exception.MismatchNotInteger">
             <summary>
               查找类似 The type &apos;{0}&apos; is not an integral type. 的本地化字符串。
@@ -11784,20 +11783,13 @@
             long number = AbstractApi.Dynamic.CholeskyDecompose(...);
             </code></example>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.IsSupportedKronecker(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by binary matrix and unary vector Kronecker operations of this implementation or not.
-            </summary>
-            <param name="matrix1">The given <see cref="T:Althea.CombinationOfLocations"/> of the first matrix</param>
-            <param name="matrix2">The given <see cref="T:Althea.CombinationOfLocations"/> of the second matrix</param>
-            <param name="vector">The given <see cref="T:Althea.CombinationOfLocations"/> of vector</param>
-            <returns>Whether binary matrix and unary vector Kronecker operations on <paramref name="matrix1"/> and <paramref name="matrix2"/> and <paramref name="vector"/> are supported by this <see cref="T:Althea.Solver.AbstractApi"/>.</returns>
-        </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector``3(``2,``0,``0,``1@,``2)">
             <summary>
             Compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
             <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
             </summary>
+            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
+            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="scalar">The scalar to multiply to the multiplication result</param>
             <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
@@ -11809,11 +11801,13 @@
             <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector``3(``2,``0,``0,``1@,``2)">
             <summary>
             Compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
             <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
             </summary>
+            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
+            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="scalar">The scalar to multiply to the multiplication result</param>
             <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
@@ -11825,22 +11819,17 @@
             <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.NaiveKrylovSubspaceEigenHermitain``2(System.Func{``0,``0},``0,System.Int32)">
+        <member name="M:Althea.Solver.AbstractApi.NaiveKrylovSubspaceEigenHermitain``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
             <summary>
-            Perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
+            Perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
             </summary>
             <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
             <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
-            <param name="matrixFunction">The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/></param>
-            <param name="initial">The initial vector as a <typeparamref name="TVec"/></param>
-            <param name="maxIter">The maximum number of iterations which may be decreased when out of memory</param>
-            <returns>The approximate lowest eigenvalue as a <see cref="T:System.Double"/> and corresponding approximate eigenvector as a <typeparamref name="TVec"/></returns>
-            <remarks>All the temporary vectors shall be created by <see cref="M:Althea.Solver.IKrylovVector`2.NewArrayAlike"/> of <paramref name="initial"/>, hence, using vector with simple storage location(s) may help reduce overheads.</remarks>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks>Only <paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MatrixFunction"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.NewVectorFunction"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.InitialVector"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MaxRestarts"/> are used as inputs. Its <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output eigenvector.</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If the internal check fails</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="maxIter"/> is too large to fit in the memory</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenHermitian``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
             <summary>
@@ -11852,7 +11841,6 @@
             <returns>The number of converged eigen-pairs</returns>
             <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex"/> are not used</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenGeneral``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
@@ -11865,7 +11853,6 @@
             <returns>The number of converged eigen-pairs</returns>
             <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> is not used</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceLinearSolve``2(System.Boolean,Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@)">
@@ -11879,14 +11866,15 @@
             <returns>The relative error of the output solution</returns>
             <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector_``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector_``3(``2,``0,``0,``1@,``2)">
             <summary>
             When implemented by a derived class, compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
             <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
             </summary>
+            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
+            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="scalar">The scalar to multiply to the multiplication result</param>
             <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
@@ -11898,11 +11886,13 @@
             <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector_``1(``0,Althea.Arrays.MatrixBase{``0},Althea.Arrays.MatrixBase{``0},Althea.Arrays.VectorBase{``0}@,``0)">
+        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector_``3(``2,``0,``0,``1@,``2)">
             <summary>
             When implemented by a derived class, compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
             <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
             </summary>
+            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
+            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="scalar">The scalar to multiply to the multiplication result</param>
             <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
@@ -11914,23 +11904,17 @@
             <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.NaiveKrylovSubspaceEigenHermitain_``2(System.Func{``0,``0},``0,System.Int32,System.Double@,``0@)">
+        <member name="M:Althea.Solver.AbstractApi.NaiveKrylovSubspaceEigenHermitain_``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Double@)">
             <summary>
-            When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix represented by <paramref name="matrixFunction"/> starting from the <paramref name="initial"/> vector.
+            When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
             </summary>
             <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
             <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.Solver.IKrylovVector`2"/></typeparam>
-            <param name="matrixFunction">The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/></param>
-            <param name="initial">The initial vector as a <typeparamref name="TVec"/></param>
-            <param name="maxIter">The maximum number of iterations which may be decreased when out of memory</param>
+            <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <param name="eigenvalue">The output approximate lowest eigenvalue</param>
-            <param name="eigenvector">The output approximate lowest eigenvalue's corresponding approximate eigenvector as a <typeparamref name="TVec"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks>All the temporary vectors shall be created by <see cref="M:Althea.Solver.IKrylovVector`2.NewArrayAlike"/> of <paramref name="initial"/>, hence, using vector with simple storage location(s) may help reduce overheads.</remarks>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If the internal check fails</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="maxIter"/> is too large to fit in the memory</exception>
+            <remarks>Only <paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MatrixFunction"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.NewVectorFunction"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.InitialVector"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MaxRestarts"/> are used as inputs. Its <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output eigenvector.</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenHermitian_``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
             <summary>
@@ -11942,7 +11926,6 @@
             <param name="converged">Output the number of converged eigen-pairs</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex"/> are not used</remarks>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceEigenGeneral_``2(Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
@@ -11954,8 +11937,7 @@
             <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <param name="converged">Output the number of converged eigen-pairs</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> is not used</remarks>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> is not used</remarks>\
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceLinearSolve_``2(System.Boolean,Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Double@)">
@@ -11969,30 +11951,29 @@
             <param name="relativeError">Output the relative error of the output</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="T:Althea.Solver.IKrylovVector`2">
             <summary>
             The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
             </summary>
+            <typeparam name="TVec">The concrete vector type</typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="TVec">The vector type</typeparam>
         </member>
         <member name="P:Althea.Solver.IKrylovVector`2.Length">
             <summary>
-            The total presenting length of this vector
+            When implemented by a derived class, get the total presenting length of this vector
             </summary>
         </member>
         <member name="M:Althea.Solver.IKrylovVector`2.NewArrayAlike">
             <summary>
-            Create a new vector alike this one
+            When implemented by a derived class, create a new vector alike this one
             </summary>
             <returns>The new vector alike this one</returns>
         </member>
         <member name="M:Althea.Solver.IKrylovVector`2.FillWith(`1)">
             <summary>
-            Fill this vector with the given <paramref name="value"/>
+            When implemented by a derived class, fill this vector with the given <paramref name="value"/>
             </summary>
             <param name="value">The value to fill</param>
         </member>
@@ -12048,6 +12029,63 @@
             <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
             <exception cref="T:System.ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
+        </member>
+        <member name="T:Althea.Solver.IMultipliableMatrix`3">
+            <summary>
+            The interface of multipliable matrices
+            </summary>
+            <typeparam name="TMat">The concrete matrix type</typeparam>
+            <typeparam name="TVec">The concrete vector type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Solver.IMultipliableMatrix`3.CanMultiplyInPlace">
+            <summary>
+            When implemented by a derived class, get a <see cref="T:System.Boolean"/> indicating whether this matrix can perform in-place matrix fused-multiply-addition or not
+            </summary>
+        </member>
+        <member name="M:Althea.Solver.IMultipliableMatrix`3.InPlaceFusedMultiplyAdd(`0,`0,`2,`2,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanMultiplyInPlace"/> is false.)
+            </summary>
+            <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
+            <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+            <param name="opLeft">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
+            <param name="opRight">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
+        </member>
+        <member name="M:Althea.Solver.IMultipliableMatrix`3.OutOfPlaceFusedMultiplyAdd(`0,`0,`2,`2,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (May be invalid if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanMultiplyInPlace"/> is true.)
+            </summary>
+            <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
+            <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+            <param name="opLeft">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
+            <param name="opRight">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
+            <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(<paramref name="left"/>) * <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="scalarThis"/> * this</c></returns>
+        </member>
+        <member name="M:Althea.Solver.IMultipliableMatrix`3.ToVector">
+            <summary>
+            When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>
+            </summary>
+            <returns>The converted vector as a <typeparamref name="TVec"/>. Shall not contain any referenced storage.</returns>
+        </member>
+        <member name="T:Althea.Solver.IConvertibleVector`3">
+            <summary>
+            The interface of vectors that can be converted to matrices
+            </summary>
+            <typeparam name="TMat">The concrete matrix type</typeparam>
+            <typeparam name="TVec">The concrete vector type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="M:Althea.Solver.IConvertibleVector`3.ToMatrix(System.Int64)">
+            <summary>
+            When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>
+            </summary>
+            <param name="rows">The number of rows of the target matrix</param>
+            <returns>The converted matrix as a <typeparamref name="TMat"/>. Shall not contain any referenced storage.</returns>
         </member>
         <member name="T:Althea.Solver.IPreserveSelector">
             <summary>
@@ -12257,10 +12295,19 @@
             Whether to use the estimated gap in the convergence criteria or use the matrix norm, default true. If the gap can be especially difficult to estimate, this shall be set to false.
             </summary>
         </member>
+        <member name="M:Althea.Solver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`0,`0},`0,System.Int32,System.Func{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given naïve hermitian matrix eigen-solve problem
+            </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+        </member>
         <member name="M:Althea.Solver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`0,`0},`0,System.Span{Althea.NativeTypes.ComplexDouble},System.Span{`0},System.Span{`0},System.Int32,Althea.Solver.WhichEigenvalues,System.Int32,System.Int32,System.Double,Althea.Solver.ReorthogonalizeMethod,System.Boolean,Althea.Solver.IPreserveSelector,System.Func{`0})">
             <summary>
             Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given non-hermitian matrix eigen-solve problem
             </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
             <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
@@ -12269,6 +12316,7 @@
             <summary>
             Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given hermitian matrix eigen-solve problem
             </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
             <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
@@ -12277,6 +12325,7 @@
             <summary>
             Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> of the given (non-)hermitian matrix solve problem
             </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
         </member>
@@ -12284,6 +12333,7 @@
             <summary>
             Create a <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> from an <paramref name="old"/> one
             </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
         </member>
         <member name="T:Althea.Statistics.AbstractApi">

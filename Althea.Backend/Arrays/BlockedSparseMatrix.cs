@@ -530,7 +530,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The reshaped matrix, may be this matrix itself</returns>
 		public override BlockedSparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
-			Span<long> size = stackalloc long[2].SetValue(rows);
+			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
 			if (size[0] == this.NRows)
 				return this;

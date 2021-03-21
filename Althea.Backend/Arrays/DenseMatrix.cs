@@ -152,7 +152,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T>
+	public class DenseMatrix<T> : MatrixBase<T>, IKrylovVector<DenseMatrix<T>, T>, IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>, IPitchedArray<T>, IDenseMatrix<T>
 		where T : unmanaged
 	{
 		#region basic
@@ -457,8 +457,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="InvalidOperationException">If the computed new number of rows or columns is 1</exception>
 		public override DenseMatrix<T> ToMatrix(long rows = 0)
 		{
-			Span<long> newSize = stackalloc long[2];
-			newSize[0] = rows;
+			Span<long> newSize = stackalloc long[] { rows, 0 };
 			CheckSize(this, newSize);
 			if (newSize[0] == this.NRows)
 				return this;
@@ -881,6 +880,23 @@ namespace Althea.Backend.Arrays
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 
 			MEM.MemoryCopy2D(other.Storage, other.LeadDim, this.Storage, this.LeadDim, this.NRows, this.NCols);
+		}
+		#endregion
+
+		#region IMultipliableMatrix
+		bool IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.CanMultiplyInPlace => true;
+
+		void IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => this.OverwriteByMatricesProduct(scalar, left, right, scalarThis, opLeft, opRight);
+
+		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
+
+		DenseVector<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.ToVector()
+		{
+			var vec = this.ToVector();
+			if (vec.Storage.SameOriginAs(this.Storage))
+				return vec.Clone();
+			else
+				return vec;
 		}
 		#endregion
 

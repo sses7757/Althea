@@ -132,12 +132,6 @@ namespace Althea.Arrays
 		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
 
 		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T}.DisposeExclude(ISparseArray{T})"/>.
-		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing this sparse tensor</param>
-		public virtual void DisposeExclude(ISparseArray<T> array) => ((ISparseArray<T>)this).DisposeExclude(array);
-
-		/// <summary>
 		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>

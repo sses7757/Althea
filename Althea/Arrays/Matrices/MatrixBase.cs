@@ -14,7 +14,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class MatrixBase<T> : ValueArray<T> where T : unmanaged
+	public abstract class MatrixBase<T> : ValueArray<T>, IMatrix<T> where T : unmanaged
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes

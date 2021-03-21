@@ -235,8 +235,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The reshaped matrix</returns>
 		public override DenseMatrix<T> ToMatrix(long rows = 0)
 		{
-			Span<long> size = stackalloc long[2];
-			size[0] = rows;
+			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
 			if (size.SequenceEqual(this.Size))
 				return new(this.Storage, size[0], size[1], this.m_outerSize[0]);

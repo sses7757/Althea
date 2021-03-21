@@ -2,7 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using Althea.Arrays;
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 
@@ -13,25 +15,25 @@ namespace Althea.Solver
 	/// <summary>
 	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
 	/// </summary>
+	/// <typeparam name="TVec">The concrete vector type</typeparam>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type</typeparam>
 	public interface IKrylovVector<TVec, T> : IDisposable
 		where TVec : class, IKrylovVector<TVec, T>, IDisposable, new()
 		where T : unmanaged
 	{
 		/// <summary>
-		/// The total presenting length of this vector
+		/// When implemented by a derived class, get the total presenting length of this vector
 		/// </summary>
 		long Length { get; }
 
 		/// <summary>
-		/// Create a new vector alike this one
+		/// When implemented by a derived class, create a new vector alike this one
 		/// </summary>
 		/// <returns>The new vector alike this one</returns>
 		TVec NewArrayAlike();
 
 		/// <summary>
-		/// Fill this vector with the given <paramref name="value"/>
+		/// When implemented by a derived class, fill this vector with the given <paramref name="value"/>
 		/// </summary>
 		/// <param name="value">The value to fill</param>
 		void FillWith(T value);
@@ -133,6 +135,71 @@ namespace Althea.Solver
 				throw;
 			}
 		}
+	}
+
+	/// <summary>
+	/// The interface of multipliable matrices
+	/// </summary>
+	/// <typeparam name="TMat">The concrete matrix type</typeparam>
+	/// <typeparam name="TVec">The concrete vector type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IMultipliableMatrix<TMat, TVec, T> : IMatrix<T>, IDisposable
+		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+		where T : unmanaged
+	{
+		/// <summary>
+		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this matrix can perform in-place matrix fused-multiply-addition or not
+		/// </summary>
+		bool CanMultiplyInPlace { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="CanMultiplyInPlace"/> is false.)
+		/// </summary>
+		/// <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
+		/// <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
+		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
+		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+		/// <param name="opLeft">The <see cref="MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
+		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
+		void InPlaceFusedMultiplyAdd(TMat left, TMat right, T scalar, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
+
+		/// <summary>
+		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (May be invalid if <see cref="CanMultiplyInPlace"/> is true.)
+		/// </summary>
+		/// <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
+		/// <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
+		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
+		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+		/// <param name="opLeft">The <see cref="MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
+		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
+		/// <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(<paramref name="left"/>) * <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="scalarThis"/> * this</c></returns>
+		TMat OutOfPlaceFusedMultiplyAdd(TMat left, TMat right, T scalar, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
+
+		/// <summary>
+		/// When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>
+		/// </summary>
+		/// <returns>The converted vector as a <typeparamref name="TVec"/>. Shall not contain any referenced storage.</returns>
+		TVec ToVector();
+	}
+
+	/// <summary>
+	/// The interface of vectors that can be converted to matrices
+	/// </summary>
+	/// <typeparam name="TMat">The concrete matrix type</typeparam>
+	/// <typeparam name="TVec">The concrete vector type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public interface IConvertibleVector<TVec, TMat, T> : IVector<T>, IDisposable
+		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+		where T : unmanaged
+	{
+		/// <summary>
+		/// When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix</param>
+		/// <returns>The converted matrix as a <typeparamref name="TMat"/>. Shall not contain any referenced storage.</returns>
+		TMat ToMatrix(long rows);
 	}
 	#endregion
 

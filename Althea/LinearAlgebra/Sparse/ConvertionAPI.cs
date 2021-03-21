@@ -264,7 +264,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</returns>
+		/// <returns>The created new <see cref="SparseArrayWrapper{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="IMatrix{T}.NRows"/> and <see cref="IMatrix{T}.NCols"/>)</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		public static SparseArrayWrapper<T> SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format) where T : unmanaged
@@ -647,7 +647,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
 		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="ISparseMatrix{T}.NRows"/> and <see cref="ISparseMatrix{T}.NCols"/>)</param>
+		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="IMatrix{T}.NRows"/> and <see cref="IMatrix{T}.NCols"/>)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		protected abstract bool SparseMatrixToVector_<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out SparseArrayWrapper<T> target) where T : unmanaged;
