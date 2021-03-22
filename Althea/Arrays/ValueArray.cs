@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -19,7 +18,7 @@ namespace Althea.Arrays
 	/// The abstract array class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse array that inherits <see cref="ValueArray{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid where T : unmanaged
+	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormat where T : unmanaged
 	{
 		#region properties
 		private readonly Storage<T> m_orginalStorage;
@@ -852,6 +851,31 @@ namespace Althea.Arrays
 			Size
 		}
 
+		string IMainPropertyFormat.StringMain {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.GetType().GetGenericString(full: false) ?? this.GetType().Name;
+		}
+
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get {
+				var other = this.GetMetaData();
+				var storages = this.GetStorages();
+				var terms = new KeyValuePair<string, object?>[1 + storages.Count + other.Count];
+				terms[0] = new(nameof(this.Size), this.Size.SpanJoin('x'));
+				int now = 1;
+				foreach (var kv in storages)
+				{
+					terms[now++] = new(kv.Key, kv.Value);
+				}
+				foreach (var kv in other)
+				{
+					terms[now++] = new(kv.Key, kv.Value);
+				}
+				return terms;
+			}
+		}
+
 		/// <summary>
 		/// Get the string representation of this array with new terms and existed ones (existed ones are shown at first).
 		/// </summary>
@@ -860,58 +884,60 @@ namespace Althea.Arrays
 		/// <returns>The string representation</returns>
 		protected string ToString(IReadOnlyDictionary<string, object>? terms, params StringTerms[] include)
 		{
+			// shortcut
+			if ((include is null || include.Length == 0) && terms is null)
+				return ((IMainPropertyFormat)this).ToString();
 			// default values
 			if (include is null || include.Length == 0)
 				include = new[] { StringTerms.DataType, StringTerms.Size, StringTerms.Storages };
 			terms ??= this.GetMetaData();
 			// get type name of this array
 			var type = this.GetType();
-			string? name;
+			string name;
 			if (include.Contains(StringTerms.DataType))
 			{
-				name = type.GetGenericString(full: true);
+				name = type.GetGenericString(full: false) ?? type.Name;
 			}
 			else
 			{
-				name = type.FullName;
+				name = type.FullName ?? type.Name;
 				if (type.IsGenericType)
 				{
-					name = name?.Replace($"`{type.GenericTypeArguments.Length}", "");
+					name = name.Replace($"`{type.GenericTypeArguments.Length}", "");
 				}
 			}
 			// output include terms and other terms
-			StringBuilder output = new(name);
-			output.Append(this.Disposed ? " (disposed) " : " ");
-			// start
-			output.Append('[');
-			foreach (var item in include)
+			if (include.Contains(StringTerms.Storages))
 			{
-				if (item == StringTerms.Size)
+				bool hasSize = include.Contains(StringTerms.Size);
+				var storages = this.GetStorages();
+				var newTerms = new KeyValuePair<string, object?>[(hasSize ? 1 : 0) + storages.Count + terms.Count];
+				if (hasSize)
+					newTerms[0] = new(nameof(this.Size), this.Size.SpanJoin('x'));
+				int now = hasSize ? 1 : 0;
+				foreach (var kv in storages)
 				{
-					output.Append($"Size={this.Size.SpanJoin('x')}");
+					newTerms[now++] = new(kv.Key, kv.Value);
 				}
-				else if (item == StringTerms.Storages)
+				foreach (var kv in terms)
 				{
-					output.Append('{');
-					foreach (var s in this.GetStorages())
-					{
-						output.Append(s.Key).Append("={").Append(s.Value).Append("}, ");
-					}
-					output.Remove(output.Length - 2, 2).Append('}');
+					newTerms[now++] = new(kv.Key, kv.Value);
 				}
-				else
-					continue;
-				output.Append(", ");
+				return IMainPropertyFormat.Combine(name, newTerms);
 			}
-			// other terms
-			foreach (var item in terms)
+			else
 			{
-				output.Append(item.Key).Append('=').Append(item.Value).Append(", ");
+				bool hasSize = include.Contains(StringTerms.Size);
+				var newTerms = new KeyValuePair<string, object?>[(hasSize ? 1 : 0) + terms.Count];
+				if (hasSize)
+					newTerms[0] = new(nameof(this.Size), this.Size.SpanJoin('x'));
+				int now = hasSize ? 1 : 0;
+				foreach (var kv in terms)
+				{
+					newTerms[now++] = new(kv.Key, kv.Value);
+				}
+				return IMainPropertyFormat.Combine(name, newTerms);
 			}
-			output.Remove(output.Length - 2, 2);
-			// end
-			output.Append(']');
-			return output.ToString();
 		}
 
 		/// <summary>

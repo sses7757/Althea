@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 using Althea.Linq;
+using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.Resources;
 
@@ -716,19 +717,23 @@ namespace Althea.Storage
 		#endregion
 
 		#region override
-		string IMainPropertyFormat.StringMain => ((IMainPropertyFormat)this[0]).StringMain;
+		string IMainPropertyFormat.StringMain {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ((IMainPropertyFormat)this[0]).StringMain;
+		}
 
-		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				int count = this.CacheLevels - 1;
-				var dict = new Dictionary<string, string>(2 + count)
+				var dict = new Dictionary<string, object?>(2 + count)
 				{
-					["type"] = this.GetType().GenericTypeArguments[0].Name,
-					["length"] = this.Length.ToString(),
+					[nameof(DataType)] = string.Join(", ", this.GetType().GenericTypeArguments.Select(static t => t.GetGenericString()).ToArray()),
+					[nameof(this.Length)] = this.Length,
 				};
 				for (int i = 0; i < count; i++)
 				{
-					dict.Add($"cache_level_{i}", '{' + this.GetCacheLevel(i).ToString() + '}');
+					dict.Add($"CacheLevel_{i}", this.GetCacheLevel(i));
 				}
 				return dict;
 			}

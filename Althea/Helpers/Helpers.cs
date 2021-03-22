@@ -31,7 +31,7 @@ namespace Althea.Helpers
 			if (type.IsGenericType)
 			{
 				var args = type.GenericTypeArguments;
-				name += $"<{string.Join(", ", args.Select(static a => a.GetGenericString()).ToArray())}>";
+				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString(full)).ToArray())}>";
 			}
 			return name;
 		}

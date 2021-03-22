@@ -528,33 +528,47 @@ namespace Althea
 		/// <summary>
 		/// Check whether this pointer is a valid pointer or not
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsValid() => this.length > 0 && this.pointer is not null && this.pointer.IsValid();
 
 		/// <summary>
 		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/>
 		/// </summary>
-		public StorageLocation Location => this.pointer?.Location ?? default;
+		public StorageLocation Location {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.pointer?.Location ?? default;
+		}
 
 		/// <summary>
 		/// The native pointer (without offset and presenting length) as a <see cref="IPointer"/>
 		/// </summary>
-		public IPointer Pointer => this.pointer;
+		public IPointer Pointer {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.pointer;
+		}
 
 		/// <summary>
 		/// The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment"/>
 		/// </summary>
-		public long OffsetInBytes => this.offset;
+		public long OffsetInBytes {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.offset;
+		}
 
 		/// <summary>
 		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment"/>
 		/// </summary>
-		public long LengthInBytes => this.length;
+		public long LengthInBytes {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.length;
+		}
 
 		/// <summary>
 		/// Create with given pointer
 		/// </summary>
 		/// <param name="pointer">The pointer</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is not a valid value</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PointerSegment(IPointer pointer)
 		{
 			if (pointer is null || !pointer.IsValid())
@@ -570,6 +584,7 @@ namespace Althea
 		/// <param name="offset">The offset to the <paramref name="storage"/> in bytes</param>
 		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer.LengthInBytes"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PointerSegment(PointerSegment storage, long offset = 0, long newLength = 0)
 		{
 			offset += storage.offset;
@@ -593,6 +608,7 @@ namespace Althea
 		/// <param name="newLength">The new length in bytes to set, default 0 means auto calculation from <paramref name="offset"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PointerSegment MoveBy(long offset, long newLength = 0) => offset == 0 && newLength <= 0 ? this : new PointerSegment(this, offset, newLength);
 
 		/// <summary>
@@ -601,6 +617,7 @@ namespace Althea
 		/// <param name="newLength">The new length in bytes to set</param>
 		/// <returns>The new <see cref="PointerSegment"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newLength"/> exceeds the boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PointerSegment AsLength(long newLength) => newLength == this.length ? this : new PointerSegment(this, 0, newLength);
 		#endregion
 
@@ -610,6 +627,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="other">The other <see cref="PointerSegment"/> to check overlap</param>
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool OverlapWith(PointerSegment other) => this.pointer.Equals(other.pointer) && (this.offset > other.offset + other.length || other.offset > this.offset + this.length);
 
 		/// <summary>
@@ -617,6 +635,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="other">another <see cref="PointerSegment"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(PointerSegment other)
 		{
 			return this.pointer.Equals(other.pointer) && this.offset == other.offset;
@@ -627,6 +646,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is PointerSegment storage && this.Equals(storage);
@@ -636,6 +656,7 @@ namespace Althea
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="PointerSegment"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(this.pointer.GetHashCode(), this.offset);
@@ -644,6 +665,7 @@ namespace Althea
 		/// <summary>
 		/// Equality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(PointerSegment left, PointerSegment right)
 		{
 			return left.Equals(right);
@@ -652,6 +674,7 @@ namespace Althea
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(PointerSegment left, PointerSegment right)
 		{
 			return !(left == right);
@@ -659,24 +682,32 @@ namespace Althea
 		#endregion
 
 		#region to string
-		string IMainPropertyFormat.StringMain => this.pointer.StringMain;
+		string IMainPropertyFormat.StringMain {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.pointer.StringMain;
+		}
 
-		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => this.offset == 0 ? new Dictionary<string, string>
-		{
-			["location"] = this.pointer.Location.ToString(),
-			["length_bytes"] = this.length.ToString(),
-		} : new Dictionary<string, string>
-		{
-			["location"] = this.pointer.Location.ToString(),
-			["offset_bytes"] = this.offset.ToString(),
-			["length_bytes"] = this.length.ToString(),
-		};
+
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.offset == 0 ? new Dictionary<string, object?>(2)
+			{
+				[nameof(this.Location)] = this.pointer.Location,
+				[nameof(this.LengthInBytes)] = this.length,
+			} : new Dictionary<string, object?>(3)
+			{
+				[nameof(this.Location)] = this.pointer.Location,
+				[nameof(this.LengthInBytes)] = this.length,
+				[nameof(this.OffsetInBytes)] = this.offset,
+			};
+		}
 
 		/// <summary>
 		/// Return the string representation of this <see cref="PointerSegment"/>
 		/// </summary>
 		/// <returns>the string representation of this <see cref="PointerSegment"/></returns>
-		public override string? ToString() => ((IMainPropertyFormat)this).ToString();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override string ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 
 		#region operator
@@ -686,6 +717,7 @@ namespace Althea
 		/// <param name="storage">The <see cref="PointerSegment"/></param>
 		/// <param name="offset">The offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PointerSegment operator +(PointerSegment storage, long offset) => offset == 0 ? storage : new PointerSegment(storage, offset);
 
 		/// <summary>
@@ -694,6 +726,7 @@ namespace Althea
 		/// <param name="storage">The <see cref="PointerSegment"/></param>
 		/// <param name="offset">The offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PointerSegment operator -(PointerSegment storage, long offset) => offset == 0 ? storage : new PointerSegment(storage, -offset);
 
 		/// <summary>
@@ -702,7 +735,9 @@ namespace Althea
 		/// <param name="left">The left <see cref="PointerSegment"/></param>
 		/// <param name="right">The right <see cref="PointerSegment"/></param>
 		/// <returns>If <paramref name="left"/> and <paramref name="right"/> have different references, return <see cref="long.MinValue"/>; otherwise, return a <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
-		public static long operator -(PointerSegment left, PointerSegment right) => left.Location != right.Location || !left.pointer.Equals(right.pointer) ? long.MinValue : left.offset - right.offset;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long operator -(PointerSegment left, PointerSegment right)
+			=> left.Location != right.Location || !left.pointer.Equals(right.pointer) ? long.MinValue : left.offset - right.offset;
 		#endregion
 	}
 	#endregion
@@ -718,7 +753,12 @@ namespace Althea
 	public interface IStorage : IReadOnlyList<PointerSegment>, IEquatable<IStorage>, ICheckValid, IDisposable, IMainPropertyFormat
 	{
 		/// <summary>
-		/// The total length of the presenting array in bytes
+		/// When implemented by a derived class, get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// </summary>
+		DataType DataType { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the total length of the presenting array in bytes
 		/// </summary>
 		long LengthInBytes { get; }
 
@@ -728,12 +768,12 @@ namespace Althea
 		long Length { get; }
 
 		/// <summary>
-		/// The description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
+		/// When implemented by a derived class, get the description of the storage locations of this <see cref="IStorage"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		CombinationOfLocations LocationDescription { get; }
 
 		/// <summary>
-		/// Check whether this <see cref="Storage{T}"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
+		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="offset">The offset to move in bytes</param>
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
@@ -794,6 +834,14 @@ namespace Althea
 		/// Get an empty <see cref="Storage{T}"/>
 		/// </summary>
 		public static readonly Storage<T> Empty = new Storage.PureOrMixedReferenceStorage<T>();
+
+		/// <summary>
+		/// Get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// </summary>
+		public DataType DataType {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => Const<T>.DataType;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in <typeparamref name="T"/> (rather than bytes)
@@ -1155,19 +1203,25 @@ namespace Althea
 		#endregion
 
 		#region string
-		string IMainPropertyFormat.StringMain => this.Count == 1 ? ((IMainPropertyFormat)this[0]).StringMain : ('{' + string.Join(", ", this) + '}');
+		string IMainPropertyFormat.StringMain {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Count == 1 ? ((IMainPropertyFormat)this[0]).StringMain : $"{{{string.Join(", ", this)}}}";
+		}
 
-		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
-		{
-			["type"] = typeof(T).Name,
-			[this.Count == 1 ? "length" : "total_length"] = this.Length.ToString(),
-		};
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => new Dictionary<string, object?>
+			{
+				[nameof(DataType)] = typeof(T).GetGenericString(),
+				[this.Count == 1 ? nameof(Length) : ("Total" + nameof(Length))] = this.Length,
+			};
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, get the string representation of this <see cref="Storage{T}"/>. The default implementation utilizes <see cref="IMainPropertyFormat.ToString()"/>
 		/// </summary>
 		/// <returns>The string representation</returns>
-		public override string? ToString() => ((IMainPropertyFormat)this).ToString();
+		public override string ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 
 		#region operator

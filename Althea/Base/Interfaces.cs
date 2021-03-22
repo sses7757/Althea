@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 
 [assembly: CLSCompliant(true)]
 
@@ -30,9 +31,9 @@ namespace Althea
 		string StringMain { get; }
 
 		/// <summary>
-		/// Get the string representation of printable properties of this object as a <see cref="IReadOnlyDictionary{TKey, TValue}"/>
+		/// Get the string representation of printable properties of this object as a <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/>
 		/// </summary>
-		IReadOnlyDictionary<string, string> StringProperties { get; }
+		IEnumerable<KeyValuePair<string, object?>> StringProperties { get; }
 
 		/// <summary>
 		/// Combine the string representation of the principle value (<paramref name="main"/>) and the string representation of printable properties (<paramref name="properties"/>)
@@ -40,26 +41,19 @@ namespace Althea
 		/// <param name="main">The string representation of the principle value</param>
 		/// <param name="properties">The string representation of printable properties</param>
 		/// <returns>The combination <see cref="string"/></returns>
-		public static string Combine(string main, params IReadOnlyDictionary<string, string>[] properties)
+		public static string Combine(string main, IEnumerable<KeyValuePair<string, object?>> properties)
 		{
-			if (properties is null || properties.Length == 0)
+			if (properties is null)
 			{
 				return main;
 			}
-			IEnumerable<KeyValuePair<string, string>> props = properties[0];
-			for (int i = 1; i < properties.Length; i++)
-			{
-				props = System.Linq.Enumerable.Concat(props, properties[i]);
-			}
 			StringBuilder stringBuilder = new(main);
-			stringBuilder.Append(' ').Append('[');
-			foreach (var item in props)
+			if (properties.Any())
 			{
-				stringBuilder.Append(item.Key).Append('=').Append(item.Value);
-				stringBuilder.Append(',').Append(' ');
+				stringBuilder.Append(' ').Append('[');
+				stringBuilder.Append(string.Join(", ", properties.Select(static p => $"{p.Key}={p.Value}")));
+				stringBuilder.Append(']');
 			}
-			stringBuilder.Remove(stringBuilder.Length - 2, 2);
-			stringBuilder.Append(']');
 			return stringBuilder.ToString();
 		}
 
@@ -67,14 +61,7 @@ namespace Althea
 		/// Get the string representation of this object by printing <see cref="StringMain"/>, <see cref="StringProperties"/>
 		/// </summary>
 		/// <returns>The string representation of this object</returns>
-		string? ToString() => Combine(this.StringMain, this.StringProperties);
-
-		/// <summary>
-		/// Get the string representation of this object by printing not only <see cref="StringMain"/> and <see cref="StringProperties"/> but also <paramref name="otherProperties"/>
-		/// </summary>
-		/// <param name="otherProperties">The string representation of other printable properties as a <see cref="IReadOnlyDictionary{TKey, TValue}"/></param>
-		/// <returns>The combined string representation</returns>
-		string ToString(IReadOnlyDictionary<string, string> otherProperties) => Combine(this.StringMain, this.StringProperties, otherProperties);
+		string ToString() => Combine(this.StringMain, this.StringProperties);
 	}
 
 	/// <summary>

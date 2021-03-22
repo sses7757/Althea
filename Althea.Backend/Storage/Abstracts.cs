@@ -26,11 +26,21 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		IntPtr Pointer { get; }
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes > 0;
 
-		string IMainPropertyFormat.StringMain => this.Pointer.ToString("X");
+		string IMainPropertyFormat.StringMain {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Pointer.ToString("X");
+		}
 
-		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string> { ["length"] = this.LengthInBytes.ToString() };
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => new Dictionary<string, object?>(1)
+			{
+				[nameof(LengthInBytes)] = this.LengthInBytes
+			};
+		}
 		#endregion
 	}
 
@@ -328,15 +338,22 @@ namespace Althea.Backend.Storage
 		#endregion
 
 		#region implemented interface methods
-		long IPointer.LengthInBytes => this.NativeStream.Length;
+		long IPointer.LengthInBytes {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.NativeStream.Length;
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool ICheckValid.IsValid() => this.NativeStream.IsValid();
 
-		IReadOnlyDictionary<string, string> IMainPropertyFormat.StringProperties => new Dictionary<string, string>
-		{
-			["length"] = this.NativeStream.Length.ToString(),
-			["position"] = this.NativeStream.Position.ToString(),
-		};
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => new Dictionary<string, object?>(2)
+			{
+				[nameof(this.LengthInBytes)] = this.NativeStream.Length,
+				[nameof(Stream.Position)] = this.NativeStream.Position,
+			};
+		}
 		#endregion
 	}
 }

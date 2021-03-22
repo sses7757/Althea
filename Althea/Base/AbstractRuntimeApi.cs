@@ -44,8 +44,13 @@ namespace Althea
 			}
 		}
 
+		/// <summary>
+		/// Initialize the given <paramref name="node"/> whose <see cref="LinkedListNode{T}.Value"/> is a <see cref="AbstractRuntimeApi"/>
+		/// </summary>
+		/// <typeparam name="T">The API class that inherits <see cref="AbstractRuntimeApi"/></typeparam>
+		/// <param name="node">The <see cref="LinkedListNode{T}"/> to initialize</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
+		protected static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
 		{
 			if (node is null)
 				throw new ArgumentNullException(nameof(node));
