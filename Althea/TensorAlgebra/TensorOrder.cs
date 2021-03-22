@@ -572,7 +572,7 @@ namespace Althea.TensorAlgebra
 		/// <returns>equal or not</returns>
 		public bool Equals(TensorOrder other)
 		{
-			return this.order.SequenceEqual(other.order);
+			return this.order.Equals(other.order);
 		}
 
 		/// <summary>

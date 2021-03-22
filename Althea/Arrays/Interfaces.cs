@@ -124,9 +124,9 @@ namespace Althea.Arrays
 	{
 		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
+		/// When implemented by a derived class, get all the index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
 		/// </summary>
-		SizedFixedClassBuffer_8<Storage<TIndex>> IndexArrays { get; }
+		IReadOnlyList<Storage<TIndex>> IndexArrays { get; }
 		#endregion
 
 		#region implementation
@@ -152,7 +152,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the hash code this sparse array. The default implementation only takes <see cref="Storage"/> and the index array(s) into account.
 		/// </summary>
 		/// <returns>The hash code of <see cref="Storage"/> and the index array(s) of this sparse array</returns>
-		int GetHashCode() => HashCode.Combine(this.Storage.MakeReference(newLength: this.NStored), ((IReadOnlyList<Storage<TIndex>>)this).HashCodeOfArray());
+		int GetHashCode() => HashCode.Combine(this.Storage.MakeReference(newLength: this.NStored), this.IndexArrays.HashCodeOfArray());
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this sparse array is equal to another one. The default implementation only compares <see cref="Storage"/> and the index array(s) of this sparse array.
@@ -163,7 +163,7 @@ namespace Althea.Arrays
 		{
 			if (!(obj is ISparseArray<T, TIndex> sv && this.NStored == sv.NStored && this.Storage.MakeReference(newLength: this.NStored) == sv.Storage.MakeReference(newLength: this.NStored)))
 				return false;
-			IReadOnlyList<Storage<TIndex>> list1 = this, list2 = sv;
+			IReadOnlyList<Storage<TIndex>> list1 = this.IndexArrays, list2 = sv.IndexArrays;
 			return list1.SequenceEqual(list2);
 		}
 
@@ -176,7 +176,7 @@ namespace Althea.Arrays
 		{
 			if (this.Storage.OverlapWith(other.Storage))
 				return true;
-			IReadOnlyList<Storage<TIndex>> list = this, array = other;
+			IReadOnlyList<Storage<TIndex>> list = this.IndexArrays, array = other.IndexArrays;
 			for (int i = 0; i < list.Count; i++)
 			{
 				for (int j = 0; j < array.Count; j++)
@@ -199,13 +199,13 @@ namespace Althea.Arrays
 		/// <param name="copyValues">Copy the value array from original arrays to the new arrays or not</param>
 		/// <returns>The output index arrays as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndexOut"/></returns>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TIndexOut"/> is not an integral type</exception>
-		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> NewArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyValues)
+		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> CreateArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyValues)
 			where TOut : unmanaged where TIndexOut : unmanaged
 		{
 			if (!Const<TIndexOut>.IsIntegralType)
 				throw new TypeMismatchException(typeof(TIndexOut), TypeMismatchException.MismatchReason.NotInteger);
 
-			IReadOnlyList<Storage<TIndex>> list = this;
+			IReadOnlyList<Storage<TIndex>> list = this.IndexArrays;
 			ActualStorage<TOut>? value = null;
 			SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> indices = new(list.Count);
 			try

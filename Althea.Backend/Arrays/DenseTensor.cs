@@ -474,40 +474,32 @@ namespace Althea.Backend.Arrays
 			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
 			identityPerm.SetExept(outPerm, outPerm);
 			// get output members
+			ReadOnlySpan<long> size; ReadOnlySpan<char> label;
+			Span<long> sizeOne = stackalloc long[] { 1 };
+			Span<long> sizeAll = stackalloc long[outRank];
+			Span<char> labelAll = stackalloc char[outRank];
 			if (outRank == 0)
 			{
-				Span<long> size = stackalloc long[] { 1 };
-				var storage = Storage<T>.Create(this.Storage[0].Location, 1);
-				try
-				{
-					var tensor = new DenseTensor<T>(storage, size, size);
-					TAD.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), new(tensor), reducePerm);
-					return tensor;
-				}
-				catch (Exception)
-				{
-					storage?.Dispose();
-					throw;
-				}
+				size = MemoryMarshal.CreateReadOnlySpan(ref sizeOne[0], 1); label = default;
 			}
 			else
 			{
-				Span<long> size = stackalloc long[outRank];
-				Span<char> label = stackalloc char[outRank];
-				this.Size.ReOrderTo(size, outPerm);
-				this.Labels.ReOrderTo(label, outPerm);
-				var storage = Storage<T>.Create(this.Storage[0].Location, size.Prod());
-				try
-				{
-					var tensor = new DenseTensor<T>(storage, size, size, label);
-					TAD.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), new(tensor), reducePerm);
-					return tensor;
-				}
-				catch (Exception)
-				{
-					storage?.Dispose();
-					throw;
-				}
+				this.Size.ReOrderTo(sizeAll, outPerm);
+				this.Labels.ReOrderTo(labelAll, outPerm);
+				size = MemoryMarshal.CreateReadOnlySpan(ref sizeAll[0], outRank);
+				label = MemoryMarshal.CreateReadOnlySpan(ref labelAll[0], outRank);
+			}
+			var storage = Storage<T>.Create(this.Storage[0].Location, size.Prod());
+			try
+			{
+				var tensor = new DenseTensor<T>(storage, size, size, label);
+				TAD.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), new(tensor), reducePerm);
+				return tensor;
+			}
+			catch (Exception)
+			{
+				storage?.Dispose();
+				throw;
 			}
 		}
 

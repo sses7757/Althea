@@ -159,7 +159,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned sparse matrix</returns>
 		public override BlockedSparseMatrix<T, TInd> Clone()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
 			return new BlockedSparseMatrix<T, TInd>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
 		}
 
@@ -167,11 +167,7 @@ namespace Althea.Backend.Arrays
 		/// Create a new sparse matrix with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse matrix alike this one</returns>
-		public override BlockedSparseMatrix<T, TInd> NewArrayAlike()
-		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: false);
-			return new BlockedSparseMatrix<T, TInd>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
-		}
+		public override BlockedSparseMatrix<T, TInd> NewArrayAlike() => (BlockedSparseMatrix<T, TInd>)base.NewArrayAlike();
 
 		/// <summary>
 		/// Create a new sparse matrix with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
@@ -182,7 +178,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override BlockedSparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: false);
+			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: false);
 			return new BlockedSparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
@@ -554,7 +550,24 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) { }
+		public override SparseTensor<T, TInd> ToTensor(ReadOnlySpan<long> size)
+		{
+			Span<long> newSize = stackalloc long[size.Length];
+			size.CopyTo(newSize);
+			CheckSize(this, newSize);
+			// to vector
+			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
+			try
+			{
+				SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, this.DefaultValue, wrapper);
+				return new(newSize, wrapper.ValueStorage, (Storage<TInd>)wrapper.IndexStorages[0], defaultValue: this.DefaultValue);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
+		}
 		#endregion
 
 		#region linear algebra

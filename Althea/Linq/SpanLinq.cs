@@ -19,26 +19,6 @@ namespace Althea.Linq
 		/// <summary>
 		/// Copy <paramref name="array"/> to <paramref name="span"/>.
 		/// </summary>
-		/// <typeparam name="T">The type of <paramref name="span"/> and <paramref name="array"/></typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> to be copied into</param>
-		/// <param name="array">The destination array to be copied</param>
-		/// <returns>The <paramref name="span"/></returns>
-		public static Span<T> CopyTo<T>(this IReadOnlyList<T> array, Span<T> span)
-		{
-			if (span.Length != array.Count)
-				throw new ArgumentException(Parameter.NotSameSize);
-
-			int len = span.Length;
-			for (int i = 0; i < len; i++)
-			{
-				span[i] = array[i];
-			}
-			return span;
-		}
-
-		/// <summary>
-		/// Copy <paramref name="array"/> to <paramref name="span"/>.
-		/// </summary>
 		/// <typeparam name="TIn">The type of <paramref name="array"/></typeparam>
 		/// <typeparam name="TOut">The type of <paramref name="span"/></typeparam>
 		/// <param name="span">The <see cref="Span{T}"/> to be copied into</param>
@@ -724,6 +704,45 @@ namespace Althea.Linq
 			}
 			return false;
 		}
+
+		/// <summary>
+		/// Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
+		/// </summary>
+		/// <typeparam name="TL">The left input type</typeparam>
+		/// <typeparam name="TR">The right input type</typeparam>
+		/// <param name="span">The span to compare</param>
+		/// <param name="other">The other span to compare</param>
+		/// <param name="equalityComparer">The function used to compare equality</param>
+		/// <returns>Sequentially equals or not</returns>
+		public static bool SequenceEqual<TL, TR>(this Span<TL> span, ReadOnlySpan<TR> other, EqualComparer<TL, TR> equalityComparer)
+		{
+			return SequenceEqual((ReadOnlySpan<TL>)span, other, equalityComparer);
+		}
+
+		/// <summary>
+		/// Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
+		/// </summary>
+		/// <typeparam name="TL">The left input type</typeparam>
+		/// <typeparam name="TR">The right input type</typeparam>
+		/// <param name="span">The span to compare</param>
+		/// <param name="other">The other span to compare</param>
+		/// <param name="equalityComparer">The function used to compare equality</param>
+		/// <returns>Sequentially equals or not</returns>
+		public static bool SequenceEqual<TL, TR>(this ReadOnlySpan<TL> span, ReadOnlySpan<TR> other, EqualComparer<TL, TR> equalityComparer)
+		{
+			int len = span.Length;
+			if (len != other.Length)
+				return false;
+			if (equalityComparer is null)
+				throw new ArgumentNullException(nameof(equalityComparer));
+
+			for (int i = 0; i < len; i++)
+			{
+				if (!equalityComparer(span[i], other[i]))
+					return false;
+			}
+			return true;
+		}
 		#endregion
 
 		#region converter
@@ -833,7 +852,6 @@ namespace Althea.Linq
 			span[0] = value1; span[1] = value2;
 			return span;
 		}
-
 
 		/// <summary>
 		/// Set the first to the third element of <see cref="Span{T}"/> to the given <paramref name="value1"/> and <paramref name="value2"/>

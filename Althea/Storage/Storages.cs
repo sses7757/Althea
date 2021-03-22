@@ -399,7 +399,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
-		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[1].SetValue(location), stackalloc long[] { length })
+		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[] { location }, stackalloc long[] { length })
 		{
 			this.pointer = length == 0 ? default : Allocate(location, length);
 		}
@@ -1120,7 +1120,7 @@ namespace Althea.Storage
 		/// <param name="length">The actual length of this storage in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memoryLocation"/> is not a memory-typed location or <paramref name="streamLocation"/> is not a stream-typed location</exception>
 		public StreamToMemoryCachedStorage(StorageLocation memoryLocation, StorageLocation streamLocation, long maxMemoryCacheSize, long length) :
-			base(stackalloc StorageLocation[2].SetValue(memoryLocation, streamLocation), stackalloc long[] { maxMemoryCacheSize, length })
+			base(stackalloc StorageLocation[] { memoryLocation, streamLocation }, stackalloc long[] { maxMemoryCacheSize, length })
 		{
 			if (memoryLocation.Type.GetClassification() != LocationTypeExtension.ClassMemory)
 				throw new ArgumentOutOfRangeException(nameof(memoryLocation), memoryLocation, Parameter.InvalidValue);

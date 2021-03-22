@@ -713,90 +713,6 @@ namespace Althea.Linq
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释
 #endregion
 
-	#region ordered list
-	/// <summary>
-	/// The interface for ordered list
-	/// </summary>
-	/// <typeparam name="T">any comparable data type</typeparam>
-	public interface IOrderedList<T> : IReadOnlyList<T> where T : IComparable<T>
-	{
-		/// <summary>
-		/// Whether this list is ordered ascendingly or descendingly
-		/// </summary>
-		bool Ascending { get; }
-
-		/// <summary>
-		/// Binary search <paramref name="value"/> to get its index of occurrence
-		/// </summary>
-		/// <param name="value">The value to search</param>
-		/// <returns>the index of occurrence</returns>
-		int BinarySearch(T value);
-
-		/// <summary>
-		/// Calculate the multiplicities of values in this ordered list
-		/// </summary>
-		/// <returns>the multiplicities of values as a list of <see cref="int"/></returns>
-		IReadOnlyList<int> Multiplicities();
-	}
-
-	internal sealed class OrderedList<T> : IOrderedList<T> where T : IComparable<T>
-	{
-		private readonly T[] array;
-
-		public bool Ascending { get; }
-
-		internal OrderedList(T[] array, bool ascend)
-		{
-			this.array = array; this.Ascending = ascend;
-		}
-
-		public int Count => this.array.Length;
-
-		public T this[int index] => this.array[index];
-
-		public int BinarySearch(T value)
-		{
-			return Array.BinarySearch(this.array, value);
-		}
-
-		private int[]? _multiplicity = null;
-
-		public IReadOnlyList<int> Multiplicities()
-		{
-			if (this._multiplicity is not null)
-				return this._multiplicity;
-			var mul = new List<int>(this.array.Length);
-			T now = this.array[0];
-			int mNow = 1;
-			for (int i = 1; i < this.array.Length; i++)
-			{
-				if (this.array[i].CompareTo(now) != 0)
-				{
-					mul.Add(mNow);
-					mNow = 0;
-					now = this.array[i];
-				}
-				else
-				{
-					mNow++;
-				}
-			}
-			this._multiplicity = mul.ToArray();
-			return this._multiplicity;
-		}
-
-		public IEnumerator<T> GetEnumerator()
-		{
-			return (this.array as IReadOnlyList<T>).GetEnumerator();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return this.array.GetEnumerator();
-		}
-	}
-	#endregion
-
 	#region immutable grouping
 	/// <summary>
 	/// The interface for read-only grouping that represents a list of objects that have a common key. Similar as <see cref="System.Linq.IGrouping{TKey, TElement}"/>
@@ -871,7 +787,7 @@ namespace Althea.Linq
 	/// <param name="value">The value</param>
 	/// <param name="index">The corresponding index</param>
 	/// <returns>the predication result as a <see cref="bool"/></returns>
-	public delegate bool IndexPredicator<in TIn>(TIn value, int index);
+	public delegate bool IndexdPredicator<in TIn>(TIn value, int index);
 
 	/// <summary>
 	/// Represents a method that converts two objects of possible different types to another type.

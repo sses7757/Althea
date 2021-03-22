@@ -308,7 +308,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// Convert the given dense matrix <paramref name="source"/> of to the <paramref name="format"/> format.
+		/// Convert the the given dense matrix <paramref name="source"/> to a sparse matrix of the given <paramref name="format"/>.
 		/// </summary>
 		/// <param name="m">The number of rows of <paramref name="source"/></param>
 		/// <param name="n">The number of columns of <paramref name="source"/></param>
@@ -665,7 +665,7 @@ namespace Althea.LinearAlgebra.Sparse
 		protected abstract bool MatrixSparseToDense_<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> of to the <paramref name="format"/> format.
+		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> to a sparse matrix of the given <paramref name="format"/>.
 		/// </summary>
 		/// <param name="m">The number of rows of <paramref name="source"/></param>
 		/// <param name="n">The number of columns of <paramref name="source"/></param>

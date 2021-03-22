@@ -36,7 +36,7 @@ namespace Althea
 			else
 			{
 				var constructors = type.GetConstructors();
-				if (constructors.Length == 0 || !constructors.Contains(0, c => c.GetParameters().Length))
+				if (constructors.Length == 0 || !constructors.Contains(0, static c => c.GetParameters().Length))
 					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
 				if (constructors.Where(c => c.GetParameters().Length == 0)[0].Invoke(Array.Empty<object>()) is not T result)
 					throw new InvalidOperationException(Resources.Backend.CannotInitialize);

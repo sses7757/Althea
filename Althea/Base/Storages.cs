@@ -358,7 +358,7 @@ namespace Althea
 			if (this.type.IsOrdered())
 				return this.data.Equals(other.data);
 			else
-				return this.data.SetEquals(other.data);
+				return this.data.AsSpan(this.count).SetEquals(other.data.AsSpan(this.count));
 		}
 
 		/// <summary>

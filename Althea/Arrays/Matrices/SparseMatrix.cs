@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -14,7 +13,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract sparse matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	public abstract class SparseMatrix<T, TInd> : MatrixBase<T>, ISparseMatrix<T>, ISparseArray<T, TInd>
 		where T : unmanaged
@@ -69,7 +68,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public SizedFixedClassBuffer_8<Storage<TInd>> IndexArrays {
+		public IReadOnlyList<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_indexArrays;
 		}
@@ -182,7 +181,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse matrix alike this one</returns>
-		public override abstract SparseMatrix<T, TInd> NewArrayAlike();
+		public override SparseMatrix<T, TInd> NewArrayAlike() => this.NewArrayAlike<T, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse matrix with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.

@@ -96,8 +96,8 @@ namespace Althea.LinearAlgebra.Dense
 		{
 			bool Local_Supported(AbstractApi api)
 			{
-				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[1].SetValue(A.LocationDescription);
-				Span<CombinationOfLocations> reals = stackalloc CombinationOfLocations[1].SetValue(valOut.LocationDescription);
+				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[] { A.LocationDescription };
+				Span<CombinationOfLocations> reals = stackalloc CombinationOfLocations[] { valOut.LocationDescription };
 				return api.IsSupportedNormalTypeRealType(normals, reals);
 			}
 
@@ -132,8 +132,8 @@ namespace Althea.LinearAlgebra.Dense
 		{
 			bool Local_Supported(AbstractApi api)
 			{
-				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[2].SetValue(A.LocationDescription, B.LocationDescription);
-				Span<CombinationOfLocations> reals = stackalloc CombinationOfLocations[1].SetValue(valOut.LocationDescription);
+				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[] { A.LocationDescription, B.LocationDescription };
+				Span<CombinationOfLocations> reals = stackalloc CombinationOfLocations[] { valOut.LocationDescription };
 				return api.IsSupportedNormalTypeRealType(normals, reals);
 			}
 
@@ -169,7 +169,9 @@ namespace Althea.LinearAlgebra.Dense
 		{
 			bool Local_Supported(AbstractApi api)
 			{
-				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[1].SetValue(A.LocationDescription);
+				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[] {
+					A.LocationDescription
+				};
 				Span<CombinationOfLocations> complexes = stackalloc CombinationOfLocations[3].SetValue(valOut.LocationDescription);
 				if (leftVec is not null && rightVec is not null)
 				{
@@ -228,7 +230,7 @@ namespace Althea.LinearAlgebra.Dense
 		{
 			bool Local_Supported(AbstractApi api)
 			{
-				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[2].SetValue(A.LocationDescription, B.LocationDescription);
+				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[] { A.LocationDescription, B.LocationDescription };
 				Span<CombinationOfLocations> complexes = stackalloc CombinationOfLocations[3].SetValue(valOut.LocationDescription);
 				if (leftVec is not null && rightVec is not null)
 				{
@@ -309,7 +311,9 @@ namespace Althea.LinearAlgebra.Dense
 					normals.SetValue(A.LocationDescription);
 					normals = normals[0..1];
 				}
-				Span<CombinationOfLocations> reals = stackalloc CombinationOfLocations[1].SetValue(S.LocationDescription);
+				Span<CombinationOfLocations> reals = stackalloc CombinationOfLocations[] {
+					S.LocationDescription
+				};
 				return api.IsSupportedNormalTypeRealType(normals, reals);
 			}
 

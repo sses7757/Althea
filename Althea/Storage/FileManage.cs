@@ -118,11 +118,13 @@ namespace Althea.Storage
 
 			public string StringMain => throw new NotImplementedException();
 
-			public IReadOnlyDictionary<string, string> StringProperties => throw new NotImplementedException();
+			public IEnumerable<KeyValuePair<string, object?>> StringProperties => throw new NotImplementedException();
 
 			public bool Equals(IPointer? other) => throw new NotImplementedException();
 
 			public bool IsValid() => true;
+
+			public override string ToString() => throw new NotImplementedException();
 		}
 
 		public override PointerSegment Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

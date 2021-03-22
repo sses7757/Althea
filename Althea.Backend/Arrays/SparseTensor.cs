@@ -1,0 +1,519 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+using Althea.Arrays;
+using Althea.Helpers;
+using Althea.Linq;
+using Althea.NativeTypes;
+using Althea.TensorAlgebra;
+using Althea.Solver;
+using Althea.TensorAlgebra.Sparse;
+
+using MEM = Althea.Storage.AbstractApi;
+using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
+using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
+
+
+namespace Althea.Backend.Arrays
+{
+	/// <summary>
+	/// The concrete sparse tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
+	public class SparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<SparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
+	{
+		#region basic
+		private readonly SparseVector<T, TInd> m_vector;
+
+		/// <summary>
+		/// Get the storage of the total presenting offsets of stored elements of this sparse tensor as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// </summary>
+		public Storage<TInd> OffsetStorage {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_indexArrays[0];
+		}
+
+		/// <summary>
+		/// Create a <see cref="SparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.Coordinated"/> with given <paramref name="size"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/>.
+		/// </summary>
+		/// <param name="size">The presenting size of this sparse tensor</param>
+		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
+		/// <param name="offsets">The total presenting offsets of stored elements as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
+		/// <param name="offsetStores">The actual presenting length of <paramref name="offsets"/>, default 0 means its length</param>
+		/// <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="offsets"/> and <paramref name="offsetStores"/> are not the same</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
+		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, long stores = 0, long offsetStores = 0, T defaultValue = default) :
+			base(size, valueArray, offsets, SparseTensorFormat.Coordinated, labels, stores, stackalloc long[] { offsetStores }, default)
+		{
+			this.m_vector = new(this.Length, this.Storage, this.OffsetStorage, defaultValue);
+		}
+
+		/// <summary>
+		/// Create an empty <see cref="SparseTensor{T, TInd}"/>
+		/// </summary>
+		public SparseTensor() : base(stackalloc long[1], Storage<T>.Empty, Storage<TInd>.Empty, SparseTensorFormat.Coordinated)
+		{
+			this.m_vector = new();
+		}
+		#endregion
+
+		#region clone related
+		/// <summary>
+		/// Deep clone the array, the mutable status will not be copied.
+		/// </summary>
+		/// <returns>The cloned array</returns>
+		public override SparseTensor<T, TInd> Clone()
+		{
+			var alike = this.NewArrayAlike();
+			try
+			{
+				MEM.MemoryCopy(this.Storage, alike.Storage);
+				MEM.MemoryCopy(this.OffsetStorage, alike.OffsetStorage);
+				return alike;
+			}
+			catch (Exception)
+			{
+				alike?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Create a new sparse tensor with same properties as this one while the underlying storages are not filled.
+		/// </summary>
+		/// <returns>The new sparse tensor alike this one</returns>
+		public override SparseTensor<T, TInd> NewArrayAlike() => (SparseTensor<T, TInd>)base.NewArrayAlike();
+
+		/// <summary>
+		/// Create a new sparse tensor with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
+		/// </summary>
+		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <returns>The new sparse tensor alike this one</returns>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
+		public override SparseTensor<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+		{
+			var indices = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> values, copyValues: false);
+			return new(this.Size, values, indices[0], labels: this.Labels, defaultValue: this.DefaultValue.GenericConvert<T, TOut>());
+		}
+		#endregion
+
+		#region conversion
+		/// <summary>
+		/// Convert this sparse tensor to a dense tensor whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
+		/// </summary>
+		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense tensor to overwrite</param>
+		/// <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="TensorBase{T}.Size"/> of this one</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="TensorBase{T}.Size"/></exception>
+		/// <exception cref="ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		public override void ToDense(Storage<T> denseStorage, ReadOnlySpan<long> outerSize = default)
+		{
+			if (denseStorage is null || !denseStorage.IsValid())
+				throw new ArgumentNullException(nameof(denseStorage));
+			if (outerSize.IsEmpty)
+			{
+				outerSize = this.Size;
+			}
+			else
+			{
+				if (outerSize.Length != this.Rank)
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(outerSize));
+				if (outerSize.Prod() > denseStorage.Length)
+					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(outerSize));
+				if (!outerSize.SequenceEqual(this.Size, static (a, b) => a >= b))
+					throw new ArgumentOutOfRangeException(nameof(outerSize), outerSize.ToArray(), Resources.Parameter.InvalidValue);
+			}
+			TAS.ToDense(new SparseTensorWrapper<T>(this), denseStorage, outerSize);
+		}
+		#endregion
+
+		#region reshape
+		/// <summary>
+		/// Reshape this array to a vector
+		/// </summary>
+		/// <returns>The referenced vector reshaped from this array</returns>
+		public override SparseVector<T, TInd> ToVector() => this.m_vector;
+
+		/// <summary>
+		/// Reshape this array to a matrix with leading dimension = <paramref name="rows"/>
+		/// </summary>
+		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
+		/// <returns>The reshaped matrix</returns>
+		public override SparseMatrix<T, TInd> ToMatrix(long rows = 0)
+		{
+			return this.m_vector.ToMatrix(rows);
+		}
+
+		/// <summary>
+		/// Reshape this tensor to another tensor with the given <paramref name="newSize"/> 
+		/// </summary>
+		/// <param name="newSize">The new size of the tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
+		/// <returns>The referenced reshaped tensor</returns>
+		public override SparseTensor<T, TInd> TensorReshape(ReadOnlySpan<long> newSize)
+		{
+			Span<long> size = stackalloc long[newSize.Length];
+			newSize.CopyTo(size);
+			CheckSize(this, size);
+			return new(size, this.Storage, this.OffsetStorage, labels: this.Labels, defaultValue: this.DefaultValue);
+		}
+		#endregion
+
+		#region indexing
+		/// <summary>
+		/// The basic indexed getter and setter of this tensor
+		/// </summary>
+		/// <param name="indices">The position indicated by a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
+		/// <returns>The element at <paramref name="indices"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
+		public override T this[ReadOnlySpan<long> indices] {
+			get {
+				long offset = this.CheckIndex(indices);
+				return this.m_vector[offset];
+			}
+			set {
+				long offset = this.CheckIndex(indices);
+				this.m_vector[offset] = value;
+			}
+		}
+
+		/// <summary>
+		/// Get a sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
+		/// </summary>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <returns>The sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/>. Shall be a referenced tensor if possible.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
+		public override SparseTensor<T, TInd> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		{
+			long offset = this.CheckRange(offsets, lengths);
+			
+		}
+
+		// Ignore Spelling: stackalloc
+		/// <summary>
+		/// Get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
+		/// </summary>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="overwrite">The tensor to be overwritten by the sub-tensor</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
+		public override void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite)
+		{
+			if (overwrite is null || !overwrite.IsValid())
+				throw new ArgumentNullException(nameof(overwrite));
+			if (overwrite is not SparseTensor<T, TInd> sparse)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
+			var refSub = this.GetSlice(offsets, lengths);
+			if (!sparse.Size.SequenceEqual(refSub.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(overwrite));
+
+			TAD.Permute<T>(new(refSub), new(sparse), stackalloc int[this.Rank].FillWithRange(0));
+		}
+
+		/// <summary>
+		/// Set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
+		/// </summary>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="value">The tensor to set whose size is the lengths of the sub-tensor's size</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
+		public override void SetSlice(ReadOnlySpan<long> offsets, TensorBase<T> value)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			if (value is not SparseTensor<T, TInd> sparse)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
+
+			var refSub = this.GetSlice(offsets, sparse.Size);
+			TAD.Permute<T>(new(sparse), new(refSub), stackalloc int[this.Rank].FillWithRange(0));
+		}
+		#endregion
+
+		#region tensor algebra methods
+		/// <summary>
+		/// Compute the tensor reduction (self partial summation) of this tensor under the given <paramref name="order"/>.
+		/// </summary>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) to sum, its order will be ignored</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <returns>The reduction result as a new <see cref="SparseTensor{T, TInd}"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public override SparseTensor<T, TInd> Reduce(TensorOrder order, T scalar)
+		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			// get reduction permutation
+			Span<int> reducePerm = stackalloc int[this.Rank];
+			reducePerm = order.GetIntSpanOrder(this, reducePerm, allowPartial: true);
+			// get output permutation
+			int outRank = this.Rank - reducePerm.Length;
+			Span<int> outPerm = stackalloc int[outRank];
+			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
+			identityPerm.SetExept(outPerm, outPerm);
+			// get output members
+			ReadOnlySpan<long> size; ReadOnlySpan<char> label;
+			Span<long> sizeOne = stackalloc long[] { 1 };
+			Span<long> sizeAll = stackalloc long[outRank];
+			Span<char> labelAll = stackalloc char[outRank];
+			if (outRank == 0)
+			{
+				size = MemoryMarshal.CreateReadOnlySpan(ref sizeOne[0], 1); label = default;
+			}
+			else
+			{
+				this.Size.ReOrderTo(sizeAll, outPerm);
+				this.Labels.ReOrderTo(labelAll, outPerm);
+				size = MemoryMarshal.CreateReadOnlySpan(ref sizeAll[0], outRank);
+				label = MemoryMarshal.CreateReadOnlySpan(ref labelAll[0], outRank);
+			}
+			// reduce
+			var wrapper = TAS.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), reducePerm);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(size, label, this.DefaultValue, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Compute the tensor permutation of this tensor under the given <paramref name="order"/>.
+		/// </summary>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate the permutation order</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <returns>The permutation result as a new <see cref="SparseTensor{T, TInd}"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public override SparseTensor<T, TInd> Permute(TensorOrder order, T scalar)
+		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			// get permutation
+			int rank = this.Rank;
+			Span<int> perm = stackalloc int[rank];
+			perm = order.GetIntSpanOrder(this, perm, allowPartial: false);
+			// get output members
+			Span<long> size = stackalloc long[rank];
+			Span<char> label = stackalloc char[rank];
+			this.Size.ReOrderTo(size, perm);
+			this.Labels.ReOrderTo(label, perm);
+			// permute
+			var wrapper = TAS.Permute<T>(new(this, scalar: scalar), perm);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(size, label, this.DefaultValue, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.
+		/// </summary>
+		/// <param name="scalarThis">The scalar to multiply to this tensor</param>
+		/// <param name="other">The other tensor to perform the addition with</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> tensor</param>
+		/// <returns>The addition result as a new <see cref="SparseTensor{T, TInd}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="other"/> has different size than this one</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
+		public override SparseTensor<T, TInd> AddTensor(T scalarThis, TensorBase<T> other, T scalarOther)
+		{
+			if (scalarThis.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
+			if (scalarOther.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalarOther), scalarOther, Resources.Parameter.CannotZero);
+			if (other is not SparseTensor<T, TInd> sparse)
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+
+			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
+			var wrapper = TAS.OperationBinary<T>(BinaryOperation.Addition, new(this, scalar: scalarThis), identityPerm, new(sparse, scalar: scalarOther), identityPerm);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(this.Size, this.Labels, this.DefaultValue.GenericAdd(sparse.DefaultValue), wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Compute the tensor contraction of this tensor and the <paramref name="other"/> tensor using their .
+		/// </summary>
+		/// <param name="other">The other tensor to perform the contraction with</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="outputLabels">The desired output tensor's labels as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>. Default (empty) means simple union of the labels of this tensor and the <paramref name="other"/> tensor.</param>
+		/// <returns>The contraction result as a new <see cref="SparseTensor{T, TInd}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public override SparseTensor<T, TInd> Contract(TensorBase<T> other, T scalar, ReadOnlySpan<char> outputLabels = default)
+		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			if (other is not SparseTensor<T, TInd> sparse)
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
+			// stack allocate
+			int commonRank = TensorContractInfo.GetContractRank(this, other);
+			Span<int> concA = stackalloc int[commonRank], concB = stackalloc int[commonRank];
+			Span<int> freeCA = stackalloc int[this.Rank - commonRank], freeCB = stackalloc int[sparse.Rank - commonRank];
+			Span<long> sizeC = stackalloc long[this.Rank + sparse.Rank - commonRank];
+			Span<char> labelC = stackalloc char[sizeC.Length];
+			// get contraction info
+			var info = TensorContractInfo.GetBinaryContractInfo(this.Size, this.Labels,
+																sparse.Size, sparse.Labels,
+																concA, concB, freeCA, freeCB,
+																sizeC, labelC, outputLabels);
+			// contract tensor
+			var wrapper = TAS.Contract<T>(new(this, scalar: scalar), new(sparse), info);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(sizeC, labelC, this.DefaultValue, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
+		}
+		#endregion
+
+		#region in-place tensor contraction
+		/// <summary>
+		/// Compute the tensor contraction of the given tensors <paramref name="A"/> and <paramref name="B"/> and add the result to this tensor (scaled by <paramref name="scalarThis"/>) in-place.
+		/// </summary>
+		/// <param name="A">The first input tensor to perform the contraction</param>
+		/// <param name="B">The second input tensor to perform the contraction</param>
+		/// <param name="scalar">The scalar to multiply to the contraction result</param>
+		/// <param name="scalarThis">The scalar to multiply this tensor before addition</param>
+		/// <param name="unaryA">The <see cref="UnaryOperation"/> to be applied to each element of <paramref name="A"/> before contraction</param>
+		/// <param name="unaryB">The <see cref="UnaryOperation"/> to be applied to each element of <paramref name="B"/> before contraction</param>
+		/// <param name="unaryThis">The <see cref="UnaryOperation"/> to be applied to each element of this tensor before addition</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="A"/>'s labels indicate that it cannot contract with <paramref name="B"/>'s; or the contraction cannot be performed in-place</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public void ContractFrom(T scalar, SparseTensor<T, TInd> A, SparseTensor<T, TInd> B, T scalarThis = default, UnaryOperation unaryA = UnaryOperation.Identity, UnaryOperation unaryB = UnaryOperation.Identity, UnaryOperation unaryThis = UnaryOperation.Identity)
+		{
+			int concRank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> concA = stackalloc int[concRank], concB = stackalloc int[concRank];
+			Span<int> freeCA = stackalloc int[A.Rank - concRank], freeCB = stackalloc int[B.Rank - concRank];
+			TensorContractInfo info = new(A, B, this, concA, concB, freeCA, freeCB);
+			TAS.ContractInPlace<T>(new(A, scalar, unaryA), new(B, unaryB), info, new(this, scalarThis, unaryThis));
+		}
+		#endregion
+
+		#region IKrylovVector
+		T IKrylovVector<SparseTensor<T, TInd>, T>.Dot(SparseTensor<T, TInd> other)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+
+			return this.m_vector.Dot(other.m_vector);
+		}
+
+		void IKrylovVector<SparseTensor<T, TInd>, T>.AddBy(SparseTensor<T, TInd> other, T scalar)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+
+			this.m_vector.AddByVector(other.m_vector, scalar);
+		}
+
+		/// <summary>
+		/// Replace this tensor's content with the <paramref name="other"/> tensor in-place.
+		/// </summary>
+		/// <param name="other">The other <see cref="SparseTensor{T, TInd}"/> to replace from</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+		/// <exception cref="InvalidOperationException">If this and <paramref name="other"/> have different sizes</exception>
+		public void ReplaceBy(SparseTensor<T, TInd> other)
+		{
+			if (other is null || !other.IsValid())
+				throw new ArgumentNullException(nameof(other));
+			if (!this.Size.SequenceEqual(other.Size))
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+			if (this.NStored != other.NStored)
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+
+			MEM.MemoryCopy(other.Storage, this.Storage);
+			MEM.MemoryCopy(other.OffsetStorage, this.OffsetStorage);
+		}
+		#endregion
+
+		#region print
+		/// <summary>
+		/// Print out this tensor.
+		/// </summary>
+		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
+		/// <returns>The detailed string representation</returns>
+		public override string Print(PrintSettings? overrideSetting = null)
+		{
+			string description = this.ToString();
+			if (this.Disposed)
+				return description;
+
+			var settings = overrideSetting ?? Settings.PrintSetting;
+
+			description += ":" + Environment.NewLine;
+			string detail = this.m_vector.Print(settings);
+			detail = detail[(detail.IndexOf(Environment.NewLine) + Environment.NewLine.Length)..];
+			return description + detail;
+		}
+		#endregion
+
+		#region serialization
+		/// <summary>
+		/// The presenting name of <see cref="OffsetStorage"/>
+		/// </summary>
+		protected internal const string OffsetStorageName = nameof(OffsetStorage);
+
+		/// <summary>
+		/// The helper method to get the index storages' names. Simply returns <see cref="OffsetStorageName"/>.
+		/// </summary>
+		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse tensor</param>
+		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
+		protected override string IndexStorageNameOf(int orderOfIndexStorage)
+		{
+			if (orderOfIndexStorage != 0)
+				throw new ArgumentOutOfRangeException(nameof(orderOfIndexStorage), orderOfIndexStorage, Resources.Parameter.InvalidValue);
+			return OffsetStorageName;
+		}
+
+		/// <summary>
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/>.
+		/// </summary>
+		/// <returns>Other requisite informations used to re-construct this array</returns>
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
+		{
+			[LabelsName] = this.Labels.ToArray(),
+		};
+		#endregion
+	}
+}

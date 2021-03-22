@@ -31,7 +31,10 @@ namespace Althea.Arrays
 		// offset = 0
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
 		// offset = 64
-		private readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
+		/// <summary>
+		/// The member that actually stores the index arrays' storages
+		/// </summary>
+		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
 		// offset = 132
 		private readonly SparseVectorFormat m_format;
 		// offset = 136
@@ -65,9 +68,9 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// Get all the index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public SizedFixedClassBuffer_8<Storage<TInd>> IndexArrays {
+		public IReadOnlyList<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_indexArrays;
 		}
@@ -171,14 +174,14 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
-		public override abstract SparseVector<T, TInd> NewArrayAlike();
+		public override SparseVector<T, TInd> NewArrayAlike() => this.NewArrayAlike<T, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new sparse vector alike this one</returns>
-		public override abstract SparseVector<TOut, TInd> NewArrayAlike<TOut>();
+		public override SparseVector<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
@@ -188,8 +191,8 @@ namespace Althea.Arrays
 		/// <returns>The new sparse vector of type (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public abstract SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
-			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged, IEquatable<TIndOut>;
+			where TOut : unmanaged
+			where TIndOut : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, cast this sparse vector into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
@@ -256,6 +259,21 @@ namespace Althea.Arrays
 		/// <param name="indices">The <see cref="Span{T}"/> of <see cref="long"/> used to store the indices</param>
 		protected abstract void GetIndices(Span<long> indices);
 
+		private string ActualPrint(PrintSettings settings)
+		{
+			// get managed arrays
+			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			MEM.ToManaged(this.Storage, values);
+			Span<long> indices = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			this.GetIndices(indices);
+			// to vector string
+			string detail = values.ToSparseVectorString(indices, precision: settings.Precision);
+			if (this.Length > values.Length)
+				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
+			return detail;
+		}
+
 		/// <summary>
 		/// When implemented by a derived class, print out this sparse vector.
 		/// </summary>
@@ -269,18 +287,7 @@ namespace Althea.Arrays
 
 			var settings = overrideSetting ?? Settings.PrintSetting;
 
-			string detail = ":" + Environment.NewLine;
-			// get managed arrays
-			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			MEM.ToManaged(this.Storage, values);
-			Span<long> indices = length.CheckStackLimit<long>() ?? stackalloc long[length];
-			this.GetIndices(indices);
-			// to vector string
-			detail += values.ToSparseVectorString(indices, precision: settings.Precision);
-			if (this.Length > values.Length)
-				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
-			return description + detail;
+			return description + ":" + Environment.NewLine + this.ActualPrint(settings);
 		}
 		#endregion
 

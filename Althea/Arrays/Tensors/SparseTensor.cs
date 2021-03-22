@@ -15,7 +15,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract sparse tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IFormattable"/> and <see cref="IEquatable{T}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	public abstract class SparseTensor<T, TInd> : TensorBase<T>, ISparseTensor<T>, ISparseArray<T, TInd>
 		where T : unmanaged
@@ -31,7 +31,10 @@ namespace Althea.Arrays
 		// previously defined 324 bytes
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
 		// offset = 324 + 64
-		private readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
+		/// <summary>
+		/// The member that actually stores the index arrays' storages
+		/// </summary>
+		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
 		// offset = 324 + 64 + 68
 		private readonly SparseTensorFormat m_format;
 		// offset = 324 + 136
@@ -65,9 +68,9 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// Get all the index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public SizedFixedClassBuffer_8<Storage<TInd>> IndexArrays {
+		public IReadOnlyList<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_indexArrays;
 		}
@@ -156,7 +159,7 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse tensor alike this one</returns>
-		public override abstract SparseTensor<T, TInd> NewArrayAlike();
+		public override SparseTensor<T, TInd> NewArrayAlike() => this.NewArrayAlike<T, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.

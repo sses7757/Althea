@@ -50,7 +50,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray,T defaultValue = default, long stores = 0) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue, stores) { }
+		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, T defaultValue = default, long stores = 0) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue, stores) { }
 		#endregion
 
 		#region helper
@@ -59,12 +59,14 @@ namespace Althea.Backend.Arrays
 		{
 			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages is null || wrapper.IndexStorages.Count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages?.Count, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Count != 1)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Count, Resources.Parameter.WrongSize);
+			if (wrapper.IndexStorages.Length == 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages.Length != 1)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.WrongSize);
 			if (wrapper.IndexStorages[0] is not Storage<TInd> indices)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
+			if (indices.Length != wrapper.ValueStorage.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(wrapper));
 			if (wrapper.ValueStorage.Length > length)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
 			if (wrapper.VectorFormat != SparseVectorFormat.Coordinated)
@@ -78,10 +80,10 @@ namespace Althea.Backend.Arrays
 		{
 			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages is null || wrapper.IndexStorages.Count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages?.Count, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Count != 2)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Count, Resources.Parameter.WrongSize);
+			if (wrapper.IndexStorages.Length == 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages.Length != 2)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.WrongSize);
 			if (wrapper.IndexStorages[0] is not Storage<TInd> rowIndex)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
 			if (wrapper.IndexStorages[1] is not Storage<TInd> colIndex)
@@ -99,6 +101,27 @@ namespace Althea.Backend.Arrays
 			}
 			else
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static SparseTensor<T, TInd> CheckWrapper(ReadOnlySpan<long> size, ReadOnlySpan<char> labels, T def, SparseArrayWrapper<T> wrapper)
+		{
+			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages.Length == 0)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.ZeroSize);
+			if (wrapper.IndexStorages.Length != 1)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.WrongSize);
+			if (wrapper.IndexStorages[0] is not Storage<TInd> indices)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
+			if (indices.Length != wrapper.ValueStorage.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(wrapper));
+			if (wrapper.ValueStorage.Length > size.Prod())
+				throw new ArgumentOutOfRangeException(nameof(size), size.Prod(), Resources.Parameter.InvalidValue);
+			if (wrapper.TensorFormat != TensorAlgebra.Sparse.SparseTensorFormat.Coordinated)
+				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.TensorFormat, Resources.Parameter.InvalidValue);
+
+			return new SparseTensor<T, TInd>(size, wrapper.ValueStorage, indices, labels, defaultValue: def);
 		}
 		#endregion
 
@@ -195,7 +218,13 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override ValueArray<T> ToTensor(ReadOnlySpan<long> size) { }
+		public override SparseTensor<T, TInd> ToTensor(ReadOnlySpan<long> size)
+		{
+			Span<long> newSize = stackalloc long[size.Length];
+			size.CopyTo(newSize);
+			CheckSize(this, newSize);
+			return new(newSize, this.Storage, this.IndexStorage, defaultValue: this.DefaultValue);
+		}
 		#endregion
 
 		#region linear algebra
@@ -339,22 +368,7 @@ namespace Althea.Backend.Arrays
 		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
-		public override SparseVector<T, TInd> NewArrayAlike()
-		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: false);
-			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
-		}
-
-		/// <summary>
-		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <returns>The new sparse vector alike this one</returns>
-		public override SparseVector<TOut, TInd> NewArrayAlike<TOut>()
-		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TInd>(out ActualStorage<TOut> value, copyValues: true);
-			return new SparseVector<TOut, TInd>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<T, TOut>());
-		}
+		public override SparseVector<T, TInd> NewArrayAlike() => (SparseVector<T, TInd>)base.NewArrayAlike();
 
 		/// <summary>
 		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
@@ -365,7 +379,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: true);
 			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
@@ -377,7 +391,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned array</returns>
 		public override SparseVector<T, TInd> Clone()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).NewArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
+			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
 			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
 		}
 

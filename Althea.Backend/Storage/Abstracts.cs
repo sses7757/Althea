@@ -300,11 +300,11 @@ namespace Althea.Backend.Storage
 				}
 				else
 				{
-					var intersect = this.SupportedTransfers.Intersect(other.SupportedTransfers);
-					if (intersect.Count == 0)
+					var intersect = this.SupportedTransfers.FirstIntersect(other.SupportedTransfers);
+					if (intersect == default)
 						throw new NotSupportedException(Support.Location);
-					cache_double_location.Add(key, intersect[0]);
-					value = intersect[0];
+					cache_double_location.Add(key, intersect);
+					value = intersect;
 				}
 				// copy
 				long len = Math.Min(bufferSize, length);

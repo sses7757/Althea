@@ -51,14 +51,14 @@ namespace Althea.Backend.CSharp.Storage
 
 		#region private
 		private static readonly CombinationOfLocations[] NoTCPUnary
-			= GenerateUnaryLoactions(stackalloc StorageLocation[2].SetValue(CpuAlone, FileAlone));
+			= GenerateUnaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone });
 		private static readonly CombinationOfLocations[] WithTCPUnary
-			= GenerateUnaryLoactions(stackalloc StorageLocation[3].SetValue(CpuAlone, FileAlone, TcpAlone));
+			= GenerateUnaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone, TcpAlone });
 
 		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] NoTCPBinary
-			= GenerateBinaryLoactions(stackalloc StorageLocation[2].SetValue(CpuAlone, FileAlone));
+			= GenerateBinaryLoactions(stackalloc StorageLocation[]{ CpuAlone, FileAlone });
 		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] WithTCBinary
-			= GenerateBinaryLoactions(stackalloc StorageLocation[3].SetValue(CpuAlone, FileAlone, TcpAlone));
+			= GenerateBinaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone, TcpAlone });
 		#endregion
 
 		#region support

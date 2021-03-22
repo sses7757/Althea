@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Dynamic;
 
+using Althea.Arrays;
 using Althea.LinearAlgebra.Sparse;
-using Althea.Resources;
 
 
 namespace Althea.TensorAlgebra.Sparse
@@ -104,6 +104,57 @@ namespace Althea.TensorAlgebra.Sparse
 
 
 		#region static methods as dispatchers
+		/// <summary>
+		/// Convert the sparse tensor <paramref name="source"/> to a dense tensor whose storage is <paramref name="destination"/> and outer size if <paramref name="outerSize"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="outerSize">The <see cref="IPitchedArray{T}.OuterSize"/> of the target dense tensor</param>
+		/// <param name="destination">The value array storage of the target dense matrix</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="outerSize"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is smaller than <paramref name="source"/> or its product is larger than <paramref name="destination"/>'s length</exception>
+		public static void ToDense<T>(SparseTensorWrapper<T> source, Storage<T> destination, ReadOnlySpan<long> outerSize) where T : unmanaged
+		{
+			SparseTensorFormat format = source.Format;
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = destination.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorBinary(location1, location2), node);
+				success = node.Value.ToDense_(source, destination, outerSize);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Convert the given dense tensor <paramref name="source"/> to a sparse tensor of the given <paramref name="format"/>.
+		/// </summary>
+		/// <param name="source">The source dense matrix to convert from</param>
+		/// <param name="format">The destination <see cref="SparseTensorFormat"/> of the target sparse tensor, must be atomic</param>
+		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
+		/// <returns>A created new sparse tensor of the given properties</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
+		public static SparseArrayWrapper<T> FromDense<T>(Dense.DenseTensorWrapper<T> source, SparseTensorFormat format, float threshold = 0) where T : unmanaged
+		{
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription;
+			bool success = false;
+			SparseArrayWrapper<T> result = default;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location1), node);
+				success = node.Value.FromDense_(source, format, out result, threshold);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
 		/// <summary>
 		/// When implemented by a derived class, reshape the sparse tensor <paramref name="source"/> tensor to the given <paramref name="newSize"/>.
 		/// </summary>
@@ -278,7 +329,31 @@ namespace Althea.TensorAlgebra.Sparse
 
 		#region abstract methods that actually do computations
 		/// <summary>
-		/// When implemented by a derived class, reshape the sparse tensor <paramref name="source"/> tensor to the given <paramref name="newSize"/> and output a <paramref name="destination"/>.
+		/// When implemented by a derived class, convert the sparse tensor <paramref name="source"/> to a dense tensor whose storage is <paramref name="destination"/> and outer size if <paramref name="outerSize"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="outerSize">The <see cref="IPitchedArray{T}.OuterSize"/> of the target dense tensor</param>
+		/// <param name="destination">The value array storage of the target dense matrix</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="outerSize"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is smaller than <paramref name="source"/> or its product is larger than <paramref name="destination"/>'s length</exception>
+		protected abstract bool ToDense_<T>(SparseTensorWrapper<T> source, Storage<T> destination, ReadOnlySpan<long> outerSize) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, convert the given dense tensor <paramref name="source"/> to a sparse tensor of the given <paramref name="format"/>.
+		/// </summary>
+		/// <param name="source">The source dense matrix to convert from</param>
+		/// <param name="format">The destination <see cref="SparseTensorFormat"/> of the target sparse tensor, must be atomic</param>
+		/// <param name="destination">Output a created new sparse tensor of the given properties</param>
+		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
+		protected abstract bool FromDense_<T>(Dense.DenseTensorWrapper<T> source, SparseTensorFormat format, out SparseArrayWrapper<T> destination, float threshold = 0) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, reshape the sparse tensor <paramref name="source"/> to the given <paramref name="newSize"/> and output a <paramref name="destination"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
