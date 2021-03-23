@@ -105,6 +105,113 @@ namespace Althea.TensorAlgebra.Sparse
 
 		#region static methods as dispatchers
 		/// <summary>
+		/// Slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <returns>The sparse sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/></returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		public static SparseArrayWrapper<T> GetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths) where T : unmanaged
+		{
+			SparseTensorFormat format = source.Format;
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription;
+			bool success = false;
+			SparseArrayWrapper<T> result = default;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location1), node);
+				success = node.Value.GetSlice_(source, offsets, lengths, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension and overwrite the result to a sparse <paramref name="sub"/> tensor.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">The sparse sub-tensor to be overwritten</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		public static void GetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged
+		{
+			SparseTensorFormat format1 = source.Format, format2 = sub.Format;
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = sub.ValueStorage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
+				success = node.Value.GetSlice_(source, offsets, lengths, sub);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension and overwrite the result to a dense <paramref name="sub"/> tensor.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">The dense sub-tensor to be overwritten</param>
+		/// <param name="subOuterSize">The <see cref="IPitchedArray{T}.OuterSize"/> of the dense <paramref name="sub"/> tensor</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		public static void GetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Storage<T> sub, ReadOnlySpan<long> subOuterSize) where T : unmanaged
+		{
+			SparseTensorFormat format1 = source.Format;
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = sub.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format1) && a.IsSupportedTensorBinary(location1, location2), node);
+				success = node.Value.GetSlice_(source, offsets, lengths, sub, subOuterSize);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Set the sparse tensor <paramref name="source"/>'s slice indicated by <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension with the values of <paramref name="sub"/> sparse tensor.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/> whose slice will be overwritten</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">The sparse sub-tensor used to overwrite</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		public static void SetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged
+		{
+			SparseTensorFormat format1 = source.Format, format2 = sub.Format;
+			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = sub.ValueStorage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
+				success = node.Value.SetSlice_(source, offsets, lengths, sub);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
 		/// Convert the sparse tensor <paramref name="source"/> to a dense tensor whose storage is <paramref name="destination"/> and outer size if <paramref name="outerSize"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
@@ -328,6 +435,59 @@ namespace Althea.TensorAlgebra.Sparse
 
 
 		#region abstract methods that actually do computations
+		/// <summary>
+		/// When implemented by a derived class, slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">Output the sparse sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		protected abstract bool GetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, out SparseArrayWrapper<T> sub) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension and overwrite the result to a sparse <paramref name="sub"/> tensor.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">The sparse sub-tensor to be overwritten</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		protected abstract bool GetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension and overwrite the result to a dense <paramref name="sub"/> tensor.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/></param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">The dense sub-tensor to be overwritten</param>
+		/// <param name="subOuterSize">The <see cref="IPitchedArray{T}.OuterSize"/> of the dense <paramref name="sub"/> tensor</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		protected abstract bool GetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Storage<T> sub, ReadOnlySpan<long> subOuterSize) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, set the sparse tensor <paramref name="source"/>'s slice indicated by <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension with the values of <paramref name="sub"/> sparse tensor.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="source">The source sparse tensor as a <see cref="SparseTensorWrapper{T}"/> whose slice will be overwritten</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="sub">The sparse sub-tensor used to overwrite</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
+		protected abstract bool SetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged;
+
 		/// <summary>
 		/// When implemented by a derived class, convert the sparse tensor <paramref name="source"/> to a dense tensor whose storage is <paramref name="destination"/> and outer size if <paramref name="outerSize"/>.
 		/// </summary>

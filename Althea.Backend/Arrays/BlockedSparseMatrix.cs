@@ -184,27 +184,6 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region indexer helpers
-		/// <summary>
-		/// Check the row and column ranges
-		/// </summary>
-		/// <returns>The row and column offsets and lengths, divided by <see cref="BlockNRows"/> and <see cref="BlockNCols"/> respectively</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> cannot divide <see cref="BlockNRows"/>; or <paramref name="offsetCol"/> or <paramref name="countCol"/> cannot divide <see cref="BlockNCols"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long offsetRow, long countRow, long offsetCol, long countCol) CheckRangeAndBlock(long offsetRow, long countRow, long offsetCol, long countCol)
-		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
-			if (offsetRow % this.BlockNRows != 0)
-				throw new InvalidOperationException(Resources.Other.CannotDivide);
-			if (countRow % this.BlockNRows != 0)
-				throw new InvalidOperationException(Resources.Other.CannotDivide);
-			if (offsetCol % this.BlockNCols != 0)
-				throw new InvalidOperationException(Resources.Other.CannotDivide);
-			if (countCol % this.BlockNCols != 0)
-				throw new InvalidOperationException(Resources.Other.CannotDivide);
-			return (offsetRow / this.BlockNRows, countRow / this.BlockNRows, offsetCol / this.BlockNCols, countCol / this.BlockNCols);
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long ToLong(TInd i) => i.GenericConvert<TInd, long>();
 
@@ -250,36 +229,17 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="InvalidOperationException">If the ranges cuts through the block sub-matrices of this matrix</exception>
 		public override BlockedSparseMatrix<T, TInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			(offsetRow, countRow, offsetCol, countCol) = this.CheckRangeAndBlock(offsetRow, countRow, offsetCol, countCol);
-			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
-			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
-			bool allRows = countRow == this.NRows, allCols = countCol == this.NCols;
-			// shortcut
-			if (allRows && allCols)
-				return new BlockedSparseMatrix<T, TInd>(this);
-			// else
-			SparseMatrixFormat format = this.Format;
-			var values = this.Storage; var rowInd = this.RowIndexStorage; var colInd = this.ColIndexStorage;
-			switch (this.Format)
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this);
+			var wrapper = LAS.SparseMatrixSlice(this, slice);
+			try
 			{
-				case SparseMatrixFormat.BCOR:
-					SparseMatrix<T, TInd>.GetRangeCoordinated(x1, x2, y1, y2, allCols, ref rowInd, ref colInd, ref values, this.Pack);
-					format = SparseMatrixFormat.BSR;
-					break;
-				case SparseMatrixFormat.BCOC:
-					SparseMatrix<T, TInd>.GetRangeCoordinated(y1, y2, x1, x2, allRows, ref colInd, ref rowInd, ref values, this.Pack);
-					format = SparseMatrixFormat.BSC;
-					break;
-				case SparseMatrixFormat.BSR:
-					SparseMatrix<T, TInd>.GetRangeCompressed(offsetRow, countRow, y1, y2, allCols, ref rowInd, ref colInd, ref values, this.Pack);
-					break;
-				case SparseMatrixFormat.BSC:
-					SparseMatrix<T, TInd>.GetRangeCompressed(offsetCol, countCol, x1, x2, allRows, ref colInd, ref rowInd, ref values, this.Pack);
-					break;
-				default: // never here
-					throw new NotSupportedException();
+				return SparseVector<T, TInd>.CheckWrapper(countRow, countCol, wrapper) as BlockedSparseMatrix<T, TInd> ?? throw new InvalidOperationException();
 			}
-			return new BlockedSparseMatrix<T, TInd>(countRow, countCol, this.BlockNRows, this.BlockNCols, values, rowInd, colInd, format, this.DefaultValue);
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -292,70 +252,51 @@ namespace Althea.Backend.Arrays
 		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to be overwritten</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-		/// <exception cref="InvalidOperationException">If the ranges cuts through the block sub-matrices of this matrix</exception>
 		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, overwrite);
 
 			if (overwrite is DenseMatrix<T> dense)
 			{
-				if (dense.NRows < countRow || dense.NCols < countCol)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
-				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
-				sub.ToDense(dense.Storage, dense.LeadDim);
+				LAS.SparseMatrixSlice(this, slice, dense.Storage, dense.LeadDim);
 			}
 			else if (overwrite is BlockedSparseMatrix<T, TInd> sparse)
-{
-				if (sparse.NRows != countRow || sparse.NCols != countCol || sparse.BlockNRows != this.BlockNRows || sparse.BlockNCols != this.BlockNCols)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
-				if (this.Format != sparse.Format)
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
-				if (sub.NStored != sparse.NStored)
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-				// copy
-				MEM.MemoryCopy(sub.Storage, sparse.Storage);
-				MEM.MemoryCopy(sub.RowIndexStorage, sparse.RowIndexStorage);
-				MEM.MemoryCopy(sub.ColIndexStorage, sparse.ColIndexStorage);
+			{
+				LAS.SparseMatrixSlice(this, slice, sparse);
 			}
 			else
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
 		}
 
 		/// <summary>
-		/// Set a sub-matrix by the row and column starting index (inclusive).
+		/// Set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
 		/// </summary>
-		/// <param name="rowStart">The <see cref="long"/> to indicate the starting row index to set</param>
-		/// <param name="colStart">The <see cref="long"/> to indicate the starting column index to set</param>
-		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="rowStart"/>, <paramref name="colStart"/>)</param>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowStart"/> or <paramref name="colStart"/> and <paramref name="value"/>'s <see cref="MatrixBase{T}.NRows"/> or <see cref="MatrixBase{T}.NCols"/> are out of range</exception>
-		/// <exception cref="ArgumentException">If <paramref name="value"/> is not a <see cref="SparseMatrix{T, TInd}"/> or of incompatible format</exception>
-		public override void SetSubmatrix(long rowStart, long colStart, MatrixBase<T> value)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		/// <exception cref="NotSupportedException">If <paramref name="value"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
+		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
-			if (value is not BlockedSparseMatrix<T, TInd> sp || sp.Format.IsRowMajor() != this.Format.IsRowMajor())
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
-			var (offsetRow, countRow, offsetCol, countCol) = this.CheckRangeAndBlock(rowStart, sp.NRows, colStart, sp.NCols);
+			if (value is not BlockedSparseMatrix<T, TInd> sparse)
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, value);
 
-			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
-			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
-			bool allRows = value.NRows == this.NRows, allCols = value.NCols == this.NCols;
-			// shortcut
-			if (allRows && allCols)
+			try
 			{
-				if (sp.NStored != this.NStored)
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
-				MEM.MemoryCopy(sp.Storage, this.Storage);
-				MEM.MemoryCopy(sp.RowIndexStorage, this.RowIndexStorage);
-				MEM.MemoryCopy(sp.ColIndexStorage, this.ColIndexStorage);
-				return;
+				LAS.SparseMatrixSetSlice(this, slice, sparse);
 			}
-			// else
-			SparseMatrix<T, TInd>.SetRange(x1, x2, y1, y2, this, sp, this.Pack);
+			catch (Exception e)
+			{
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType, e);
+			}
 		}
 
 		/// <summary>
@@ -490,7 +431,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseFormatConvert(this, format, otherInfo);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.NRows, this.NCols, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(this.NRows, this.NCols, wrapper);
 			}
 			catch (Exception)
 			{
@@ -510,7 +451,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, wrapper);
 			}
 			catch (Exception)
 			{
@@ -533,7 +474,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseReshape(this, size[0]);
 			try
 			{
-				var matrix = SparseVector<T, TInd>.CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				var matrix = SparseVector<T, TInd>.CheckWrapper(size[0], size[1], wrapper);
 				if (matrix is not BlockedSparseMatrix<T, TInd> s)
 					throw new InvalidOperationException();
 				return s;
@@ -559,7 +500,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
 			try
 			{
-				SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, this.DefaultValue, wrapper);
+				SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, wrapper);
 				return new(newSize, wrapper.ValueStorage, (Storage<TInd>)wrapper.IndexStorages[0], defaultValue: this.DefaultValue);
 			}
 			catch (Exception)
@@ -588,7 +529,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseAddSparse(operation, MatrixOperation.None, Const<T>.One, this, default, null);
 			try
 			{
-				var res = SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, this.DefaultValue, wrapper);
+				var res = SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, wrapper);
 				if (res is not BlockedSparseMatrix<T, TInd> ss)
 					throw new InvalidOperationException(Resources.Support.Format);
 				return ss;
@@ -635,7 +576,7 @@ namespace Althea.Backend.Arrays
 				var wrapper = LAS.MatrixSparseAddSparse(opThis, opOther, scalarThis, this, scalarOther, sparse);
 				try
 				{
-					return SparseVector<T, TInd>.CheckWrapper(m, n, this.DefaultValue.GenericAdd(sparse.DefaultValue), wrapper);
+					return SparseVector<T, TInd>.CheckWrapper(m, n, wrapper);
 				}
 				catch (Exception)
 				{
@@ -661,7 +602,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
 		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n, k) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
+			var (m, n, _) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
 			if (other is DenseMatrix<T> dense)
 			{
 				var output = Storage<T>.Create(dense.Storage[0].Location, m * n);
@@ -681,9 +622,7 @@ namespace Althea.Backend.Arrays
 				var wrapper = LAS.MatrixSparseMultiplySparse(opThis, opOther, scalar, this, sparse, default, null);
 				try
 				{
-					T defThis = this.DefaultValue, defOther = sparse.DefaultValue;
-					T defNew = (dynamic)defThis * defOther * k;
-					return SparseVector<T, TInd>.CheckWrapper(m, n, defNew, wrapper);
+					return SparseVector<T, TInd>.CheckWrapper(m, n, wrapper);
 				}
 				catch (Exception)
 				{

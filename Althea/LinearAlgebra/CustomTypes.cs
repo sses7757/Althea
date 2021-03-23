@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
+using Althea.Arrays;
 using Althea.NativeTypes;
 
 
@@ -321,6 +323,95 @@ namespace Althea.LinearAlgebra
 		/// <param name="operation">The <see cref="MatrixOperation"/> to be conjugated</param>
 		/// <returns>The result <see cref="MatrixOperation"/></returns>
 		public static MatrixOperation Conjugate(this MatrixOperation operation) => ~operation;
+	}
+	#endregion
+
+
+	#region wrapper
+	/// <summary>
+	/// The wrapper struct used to store the matrix slicing parameters
+	/// </summary>
+	public readonly ref struct MatrixSliceWrapper
+	{
+		private readonly long offsetRow, countRow, offsetCol, countCol;
+
+		/// <summary>
+		/// Get the starting offset of the row to take
+		/// </summary>
+		public long OffsetRow {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.offsetRow;
+		}
+		/// <summary>
+		/// Get the starting offset of the column to take
+		/// </summary>
+		public long OffsetCol {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.offsetCol;
+		}
+		/// <summary>
+		/// Get the number of the rows to take
+		/// </summary>
+		public long CountRow {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.countRow;
+		}
+		/// <summary>
+		/// Get the number of the rows to take
+		/// </summary>
+		public long CountCol {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.countCol;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private MatrixSliceWrapper(long offsetRow, long countRow, long offsetCol, long countCol)
+		{
+			this.offsetRow = offsetRow; this.countRow = countRow; this.offsetCol = offsetCol; this.countCol = countCol;
+		}
+
+		/// <summary>
+		/// Create a <see cref="MatrixSliceWrapper"/> after checking parameters with the given <paramref name="matrix"/> and <paramref name="sub"/> matrix
+		/// </summary>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="matrix">The matrix to take slice from</param>
+		/// <param name="sub">The sub-matrix to be overwritten by the sliced <paramref name="matrix"/> or to overwrite the <paramref name="matrix"/>'s slice</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MatrixSliceWrapper Create<T>(long offsetRow, long countRow, long offsetCol, long countCol, IMatrix matrix, IMatrix? sub = null)
+		{
+			// check matrix
+			if (matrix is null)
+				throw new ArgumentNullException(nameof(matrix));
+			if (offsetRow < 0)
+				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.Parameter.CannotNegative);
+			if (offsetRow >= matrix.NRows)
+				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.Parameter.InvalidValue);
+			if (countRow <= 0)
+				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.Parameter.CannotNegative);
+			if (countRow + offsetRow > matrix.NRows)
+				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.Parameter.InvalidValue);
+			if (offsetCol < 0)
+				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.Parameter.CannotNegative);
+			if (offsetCol >= matrix.NCols)
+				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.Parameter.InvalidValue);
+			if (countCol <= 0)
+				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.Parameter.CannotNegative);
+			if (countCol + offsetCol > matrix.NCols)
+				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.Parameter.InvalidValue);
+			// check sub
+			if (sub is not null)
+			{
+				if (countRow < sub.NRows)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sub));
+				if (countCol < sub.NCols)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sub));
+			}
+			// return
+			return new(offsetRow, countRow, offsetCol, countCol);
+		}
 	}
 	#endregion
 

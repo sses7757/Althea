@@ -174,10 +174,10 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		public override MatrixBase<T> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this);
 			if (offsetRow == offsetCol && countRow == countCol)
 			{
-				return new SymmetricDenseMatrix<T>(this.Storage + ((offsetRow + 1) * this.LeadDim), countRow, this.LeadDim, this.Hermitian, this.StoredUpper);
+				return new SymmetricDenseMatrix<T>(this.Storage + (offsetRow * (this.LeadDim + 1)), countRow, this.LeadDim, this.Hermitian, this.StoredUpper);
 			}
 			else
 			{
@@ -197,18 +197,16 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
 		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not DenseMatrix<T> dense)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (dense.NRows < countRow || dense.NCols < countCol)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
+			if (overwrite is not SymmetricDenseMatrix<T> && overwrite is not DenseMatrix<T>)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
+			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, overwrite);
 
 			if (offsetRow == offsetCol && countRow == countCol &&
 				overwrite is SymmetricDenseMatrix<T> symm && this.Hermitian == symm.Hermitian && this.StoredUpper == symm.StoredUpper)
 			{
-				MEM.MemoryCopy2D(this.Storage + ((offsetRow + 1) * this.LeadDim), this.LeadDim, symm.Storage, symm.LeadDim, countRow, countRow);
+				MEM.MemoryCopy2D(this.Storage + (offsetRow * (this.LeadDim + 1)), this.LeadDim, symm.Storage, symm.LeadDim, countRow, countRow);
 			}
 			else
 			{
@@ -217,23 +215,25 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Set a sub-matrix by the row and column starting index (inclusive).
+		/// Set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
 		/// </summary>
-		/// <param name="rowStart">The <see cref="long"/> to indicate the starting row index to set</param>
-		/// <param name="columnStart">The <see cref="long"/> to indicate the starting column index to set</param>
-		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="rowStart"/>, <paramref name="columnStart"/>)</param>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowStart"/> or <paramref name="columnStart"/> and <paramref name="value"/>'s <see cref="MatrixBase{T}.NRows"/> or <see cref="MatrixBase{T}.NCols"/> are out of range</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="rowStart"/> != <paramref name="columnStart"/> or <paramref name="value"/> is not a <see cref="SymmetricDenseMatrix{T}"/></exception>
-		public override void SetSubmatrix(long rowStart, long columnStart, MatrixBase<T> value)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="value"/> is neither a <see cref="SymmetricDenseMatrix{T}"/></exception>
+		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
-			this.CheckRange(rowStart, columnStart, value.NRows, value.NCols);
+			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, value);
 
-			if (rowStart == columnStart && value is SymmetricDenseMatrix<T> symm && this.Hermitian == symm.Hermitian && this.StoredUpper == symm.StoredUpper)
+			if (offsetRow == offsetCol && countRow == countCol && value is SymmetricDenseMatrix<T> symm && this.Hermitian == symm.Hermitian && this.StoredUpper == symm.StoredUpper)
 			{
-				MEM.MemoryCopy2D(symm.Storage, symm.LeadDim, this.Storage + ((rowStart + 1) * this.LeadDim), this.LeadDim, symm.NRows, symm.NRows);
+				MEM.MemoryCopy2D(symm.Storage, symm.LeadDim, this.Storage + (offsetRow * (this.LeadDim + 1)), this.LeadDim, countRow, countRow);
 			}
 			else
 				throw new InvalidOperationException();

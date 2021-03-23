@@ -286,7 +286,107 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
-		/// When implemented by a derived class, perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// Slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <returns>The sliced sub sparse matrix of <paramref name="matrix"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		public static SparseArrayWrapper<T> SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice) where T : unmanaged
+		{
+			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription;
+			SparseArrayWrapper<T> result = default;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(matrix1), node);
+				success = node.Value.SparseMatrixSlice_(matrix, slice, out result);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub sparse matrix to be overwritten</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot be overwritten by the sliced <paramref name="matrix"/></exception>
+		public static void SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged
+		{
+			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription, matrix2 = sub.Storage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
+				success = node.Value.SparseMatrixSlice_(matrix, slice, sub);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> dense matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub dense matrix to be overwritten</param>
+		/// <param name="subLD">The leading dimension of <paramref name="sub"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default or <paramref name="subLD"/> is out of range</exception>
+		public static void SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, Storage<T> sub, long subLD) where T : unmanaged
+		{
+			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription, matrix2 = sub.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
+				success = node.Value.SparseMatrixSlice_(matrix, slice, sub, subLD);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Set the given sparse <paramref name="matrix"/>'s <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix whose slice will be overwritten</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
+		public static void SparseMatrixSetSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged
+		{
+			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription, matrix2 = sub.Storage.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
+				success = node.Value.SparseMatrixSetSlice_(matrix, slice, sub);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
@@ -603,6 +703,57 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 
 		#region matrix
+		/// <summary>
+		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">Output the sliced sub sparse matrix of <paramref name="matrix"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, out SparseArrayWrapper<T> sub) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub sparse matrix to be overwritten</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot be overwritten by the sliced <paramref name="matrix"/></exception>
+		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> dense matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub dense matrix to be overwritten</param>
+		/// <param name="subLD">The leading dimension of <paramref name="sub"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default or <paramref name="subLD"/> is out of range</exception>
+		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, Storage<T> sub, long subLD) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, set the given sparse <paramref name="matrix"/>'s <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="matrix">The input sparse matrix whose slice will be overwritten</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
+		protected abstract bool SparseMatrixSetSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged;
+
 		/// <summary>
 		/// When implemented by a derived class, perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>

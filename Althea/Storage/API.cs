@@ -698,10 +698,10 @@ namespace Althea.Storage
 		/// Free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
-		/// <param name="disposeManaged">Whether to dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
 		/// <returns>True if <paramref name="pointer"/> is valid the free succeeded; false otherwise.</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		protected internal static bool Free(PointerSegment pointer, bool disposeManaged = true)
+		protected internal static bool Free(PointerSegment pointer, bool invokedByUser)
 		{
 			StorageLocation location = pointer.Location;
 			bool result = default;
@@ -710,9 +710,9 @@ namespace Althea.Storage
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
-				success = node.Value.Free_(pointer, disposeManaged, out result);
+				success = node.Value.Free_(pointer, out result);
 			}
-			if (success && node is not null)
+			if (invokedByUser && success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
 			return result;
 		}
@@ -1324,11 +1324,10 @@ namespace Althea.Storage
 		/// When implemented by a derived class, free a storage indicated by a given <paramref name="pointer"/>
 		/// </summary>
 		/// <param name="pointer">The <see cref="PointerSegment"/> to free</param>
-		/// <param name="disposeManaged">Whether to dispose managed resources held by <paramref name="pointer"/>'s <see cref="PointerSegment.Pointer"/> or not</param>
 		/// <param name="valid">If <paramref name="pointer"/> is not valid, output false; otherwise, output true</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>This methods shall <b>never</b> be exposed publicly to prevent unexpected wild pointers due to improper usage.</remarks>
-		protected abstract bool Free_(PointerSegment pointer, bool disposeManaged, out bool valid);
+		protected abstract bool Free_(PointerSegment pointer, out bool valid);
 
 		/// <summary>
 		/// When implemented by a derived class, fill the <paramref name="pointer"/> by same <paramref name="value"/>, byte by byte.

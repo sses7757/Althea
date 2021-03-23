@@ -26,7 +26,7 @@ namespace Althea.TensorAlgebra.Sparse
 		BlockCoordinated = 1 << 1,
 		/// <summary>
 		/// The Variable Block Sparse Format that only differs from <see cref="BlockCoordinated"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
-		/// Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of that rank.
+		/// Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of corresponding dimensions.
 		/// </summary>
 		VariableBlockCoordinated = 1 << 2,
 		/////// <summary>

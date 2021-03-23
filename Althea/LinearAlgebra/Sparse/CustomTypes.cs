@@ -88,6 +88,8 @@ namespace Althea.LinearAlgebra.Sparse
 
 		private readonly IOtherInfo? info;
 
+		private readonly T defaultValue;
+
 		/// <summary>
 		/// Get the value array storage of this sparse array wrapper as a <see cref="Storage{T}"/> of <typeparamref name="T"/>
 		/// </summary>
@@ -137,16 +139,25 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
+		/// Get the default value of this sparse array
+		/// </summary>
+		public T DefaultValue {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.defaultValue;
+		}
+
+		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{T}"/> with given <paramref name="values"/>, <paramref name="indices"/> and <paramref name="format"/>
 		/// </summary>
 		/// <param name="values">The value array storage</param>
 		/// <param name="indices">The storages of index arrays</param>
 		/// <param name="format">The format as a <see cref="int"/></param>
+		/// <param name="defaultValue">The default value of this sparse array</param>
 		/// <param name="info">The <see cref="IOtherInfo"/> storing other information, can be null</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SparseArrayWrapper(Storage<T> values, ReadOnlySpan<IStorage> indices, int format, IOtherInfo? info = null)
+		public SparseArrayWrapper(Storage<T> values, ReadOnlySpan<IStorage> indices, int format, T defaultValue, IOtherInfo? info = null)
 		{
-			this.values = values; this.indices = indices; this.format = format; this.info = info;
+			this.values = values; this.indices = indices; this.format = format; this.defaultValue = defaultValue; this.info = info;
 		}
 
 		/// <summary>

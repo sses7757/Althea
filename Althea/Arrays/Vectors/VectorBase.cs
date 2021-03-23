@@ -14,7 +14,7 @@ namespace Althea.Arrays
 	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="VectorBase{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public abstract class VectorBase<T> : ValueArray<T>, IVector<T>, IReadOnlyList<T> where T : unmanaged
+	public abstract class VectorBase<T> : ValueArray<T>, IVector, IReadOnlyList<T> where T : unmanaged
 	{
 		#region basic
 		private long m_length;
@@ -108,13 +108,24 @@ namespace Althea.Arrays
 		public T this[int index] => this[(long)index];
 
 		/// <summary>
-		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
+		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>
 		/// </summary>
 		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
-		/// <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
-		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>. Shall be a referenced vector if possible.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
-		public abstract VectorBase<T> Slice(long start, long length);
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>. Shall be a referenced vector if possible.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		public abstract VectorBase<T> GetSlice(long start, long count);
+
+		/// <summary>
+		/// When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
+		/// </summary>
+		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <param name="value">The sub-vector to set</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
+		public abstract void SetSlice(long start, long count, VectorBase<T> value);
 
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Range"/>]</c>

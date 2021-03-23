@@ -279,7 +279,7 @@ namespace Althea.Arrays
 	/// The interface for sparse vectors without indicating the index data type. The value array is <see cref="ISparseArray{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface ISparseVector<T> : ISparseArray<T>, IVector<T> where T : unmanaged
+	public interface ISparseVector<T> : ISparseArray<T>, IVector where T : unmanaged
 	{
 		#region property
 		/// <summary>
@@ -301,7 +301,7 @@ namespace Althea.Arrays
 	/// The interface for sparse matrices without indicating the index data type. The value array is <see cref="ISparseArray{T}.Storage"/> and index array(s) is/are the inherited <see cref="IReadOnlyList{T}"/> of <see cref="IStorage"/>s.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface ISparseMatrix<T> : ISparseArray<T>, IMatrix<T> where T : unmanaged
+	public interface ISparseMatrix<T> : ISparseArray<T>, IMatrix where T : unmanaged
 	{
 		#region property
 		/// <summary>
@@ -315,10 +315,10 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
-		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="IMatrix{T}.NRows"/></param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="IMatrix.NRows"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="IMatrix{T}.NRows"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="IMatrix{T}.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="IMatrix.NRows"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="IMatrix.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
 		void ToDense(Storage<T> denseStorage, long leadDim = 0);
 		#endregion
 	}
@@ -355,8 +355,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for basic vectors
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IVector<T> where T : unmanaged
+	public interface IVector
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the presenting length of this sparse vector
@@ -367,8 +366,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for basic matrices
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IMatrix<T> where T : unmanaged
+	public interface IMatrix
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the presenting number of rows of this sparse matrix

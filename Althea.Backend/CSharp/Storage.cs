@@ -120,7 +120,7 @@ namespace Althea.Backend.CSharp.Storage
 			result = new PointerSegment(pointer); return true;
 		}
 
-		protected override bool Free_(PointerSegment pointer, bool disposeManaged, out bool valid)
+		protected override bool Free_(PointerSegment pointer, out bool valid)
 		{
 			var offset = pointer.GetPointerOffset(out IMemoryPointer? mp, out IStreamPointer? sp, @throw: false);
 			if (offset == INVALID)

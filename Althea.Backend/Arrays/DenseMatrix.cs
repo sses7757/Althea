@@ -215,7 +215,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		public override DenseMatrix<T> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this);
 			return new DenseMatrix<T>(this.Storage + (offsetCol * this.LeadDim + offsetRow), countRow, countCol, this.LeadDim);
 		}
 
@@ -231,41 +231,39 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
 		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
 			if (overwrite is not DenseMatrix<T> dense)
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (dense.NRows < countRow || dense.NCols < countCol)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
+			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, overwrite);
 
 			MEM.MemoryCopy2D(this.Storage + (offsetCol * this.LeadDim + offsetRow), this.LeadDim, dense.Storage, dense.LeadDim, countRow, countCol);
 		}
 
 		/// <summary>
-		/// Set a sub-matrix by the row and column starting index (inclusive).
+		/// Set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
 		/// </summary>
-		/// <param name="rowStart">The <see cref="long"/> to indicate the starting row index to set</param>
-		/// <param name="columnStart">The <see cref="long"/> to indicate the starting column index to set</param>
-		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="rowStart"/>, <paramref name="columnStart"/>)</param>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowStart"/> or <paramref name="columnStart"/> and <paramref name="value"/>'s <see cref="MatrixBase{T}.NRows"/> or <see cref="MatrixBase{T}.NCols"/> are out of range</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="value"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		public override void SetSubmatrix(long rowStart, long columnStart, MatrixBase<T> value)
+		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
-			this.CheckRange(rowStart, columnStart, value.NRows, value.NCols);
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, value);
 
 			if (value is DenseMatrix<T> dense)
 			{
-				MEM.MemoryCopy2D(dense.Storage, dense.LeadDim, this.Storage + (rowStart * this.LeadDim + columnStart), this.LeadDim, dense.NRows, dense.NCols);
+				MEM.MemoryCopy2D(dense.Storage, dense.LeadDim, this.Storage + (offsetRow * this.LeadDim + offsetCol), this.LeadDim, countRow, countCol);
 			}
 			else if (value is ISparseMatrix<T> sparse)
 			{
-				using var dn = Storage<T>.Create(this.Storage[0].Location, sparse.NRows * sparse.NCols);
-				sparse.ToDense(dn, sparse.NRows);
-				MEM.MemoryCopy2D(dn, sparse.NRows, this.Storage + (rowStart * this.LeadDim + columnStart), this.LeadDim, sparse.NRows, sparse.NCols);
+				LAS.SparseMatrixSlice(sparse, slice, this.Storage + (offsetRow * this.LeadDim + offsetCol), this.LeadDim);
 			}
 			else
 				throw new NotSupportedException();

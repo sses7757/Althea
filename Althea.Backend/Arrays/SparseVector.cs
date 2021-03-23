@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
@@ -55,7 +56,7 @@ namespace Althea.Backend.Arrays
 
 		#region helper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static SparseVector<T, TInd> CheckWrapper(long length, T def, SparseArrayWrapper<T> wrapper)
+		internal static SparseVector<T, TInd> CheckWrapper(long length, SparseArrayWrapper<T> wrapper)
 		{
 			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
@@ -72,11 +73,11 @@ namespace Althea.Backend.Arrays
 			if (wrapper.VectorFormat != SparseVectorFormat.Coordinated)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
 
-			return new SparseVector<T, TInd>(length, wrapper.ValueStorage, indices, def);
+			return new SparseVector<T, TInd>(length, wrapper.ValueStorage, indices, wrapper.DefaultValue);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Althea.Arrays.SparseMatrix<T, TInd> CheckWrapper(long rows, long cols, T def, SparseArrayWrapper<T> wrapper)
+		internal static Althea.Arrays.SparseMatrix<T, TInd> CheckWrapper(long rows, long cols, SparseArrayWrapper<T> wrapper)
 		{
 			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
@@ -92,19 +93,19 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentException(Resources.Parameter.WrongSize);
 
 			if ((wrapper.MatrixFormat & FormatExtension.NonBlocked) == wrapper.MatrixFormat)
-				return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
+				return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, wrapper.DefaultValue);
 			else if ((wrapper.MatrixFormat & FormatExtension.Blocked) == wrapper.MatrixFormat)
 			{
 				if (wrapper.OtherInfo is not BlockedSparseMatrixOtherInfo info)
 					throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.OtherInfo, Resources.Parameter.UnexpectedType);
-				return new BlockedSparseMatrix<T, TInd>(rows, cols, info.BlockRows, info.BlockCols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, def);
+				return new BlockedSparseMatrix<T, TInd>(rows, cols, info.BlockRows, info.BlockCols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, wrapper.DefaultValue);
 			}
 			else
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static SparseTensor<T, TInd> CheckWrapper(ReadOnlySpan<long> size, ReadOnlySpan<char> labels, T def, SparseArrayWrapper<T> wrapper)
+		internal static SparseTensor<T, TInd> CheckWrapper(ReadOnlySpan<long> size, ReadOnlySpan<char> labels, SparseArrayWrapper<T> wrapper)
 		{
 			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
@@ -121,7 +122,7 @@ namespace Althea.Backend.Arrays
 			if (wrapper.TensorFormat != TensorAlgebra.Sparse.SparseTensorFormat.Coordinated)
 				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.TensorFormat, Resources.Parameter.InvalidValue);
 
-			return new SparseTensor<T, TInd>(size, wrapper.ValueStorage, indices, labels, defaultValue: def);
+			return new SparseTensor<T, TInd>(size, wrapper.ValueStorage, indices, labels, defaultValue: wrapper.DefaultValue);
 		}
 		#endregion
 
@@ -152,12 +153,41 @@ namespace Althea.Backend.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void Slice(TInd start, TInd end, ref Storage<T> value, ref Storage<TInd> index, long pack = 1)
+		internal static void GetSlice(TInd start, TInd end, ref Storage<T> value, ref Storage<TInd> index, long pack = 1)
 		{
 			long offset = LAS.IndexBound(index, start, lowerBound: true);
 			long length = LAS.IndexBound(index, end, lowerBound: false) - offset;
 			value = value.MakeReference(offset * pack, length * pack);
 			index = index.MakeReference(offset, length);
+			if (!start.IsZero())
+			{
+				index = index.Clone();
+				try
+				{
+					LAD.PointWiseAddScalar(index, 1, start.GenericNegate());
+				}
+				catch (Exception)
+				{
+					index?.Dispose();
+					throw;
+				}
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void SetSlice(TInd start, TInd end, Storage<T> value, Storage<TInd> index, Storage<T> setValue, Storage<TInd> setIndex, long pack = 1)
+		{
+			long offset = LAS.IndexBound(index, start, lowerBound: true);
+			long length = LAS.IndexBound(index, end, lowerBound: false) - offset;
+			if (setValue.Length != length * pack)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(setValue));
+			if (setIndex.Length != length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(setIndex));
+
+			MEM.MemoryCopy(setValue, value + offset * pack);
+			index += offset;
+			MEM.MemoryCopy(setIndex, index);
+			if (!start.IsZero())
+				LAD.PointWiseAddScalar(index, 1, start);
 		}
 
 		/// <summary>
@@ -165,14 +195,33 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
 		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
-		/// <returns>The referenced sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>.</returns>
+		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
-		public override SparseVector<T, TInd> Slice(long start, long count)
+		public override SparseVector<T, TInd> GetSlice(long start, long count)
 		{
 			this.CheckRange(start, count);
 			var value = this.Storage; var index = this.IndexStorage;
-			Slice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), ref value, ref index);
+			GetSlice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), ref value, ref index);
 			return new SparseVector<T, TInd>(count, value, index, this.DefaultValue);
+		}
+
+		/// <summary>
+		/// Set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
+		/// </summary>
+		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <param name="value">The sub-vector to set</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
+		public override void SetSlice(long start, long count, VectorBase<T> value)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			if (value is not SparseVector<T, TInd> sparse)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
+			this.CheckRange(start, count);
+			SetSlice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), this.Storage, this.IndexStorage, sparse.Storage, sparse.IndexStorage);
 		}
 		#endregion
 
@@ -201,7 +250,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC);
 			try
 			{
-				var res = CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				var res = CheckWrapper(size[0], size[1], wrapper);
 				if (res is not SparseMatrix<T, TInd> ss)
 					throw new InvalidOperationException(Resources.Support.Format);
 				return ss;
@@ -290,7 +339,7 @@ namespace Althea.Backend.Arrays
 				var wrapper = LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated);
 				try
 				{
-					return CheckWrapper(this.Length, this.DefaultValue, wrapper);
+					return CheckWrapper(this.Length, wrapper);
 				}
 				catch (Exception)
 				{

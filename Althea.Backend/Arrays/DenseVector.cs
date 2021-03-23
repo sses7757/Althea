@@ -31,12 +31,6 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="storage">The given <see cref="Storage{T}"/> as the value array of this vector</param>
 		public DenseVector(Storage<T> storage) : base(storage, storage.Length) { }
-
-		/// <summary>
-		/// Actually the dispose this array by disposing <see cref="ValueArray{T}.Storage"/>.
-		/// </summary>
-		/// <param name="disposing">Dispose managed resources or not</param>
-		protected override void Dispose(bool disposing) => base.Dispose(disposing);
 		#endregion
 
 		#region indexing
@@ -64,10 +58,32 @@ namespace Althea.Backend.Arrays
 		/// <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
 		/// <returns>The referenced sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
-		public override DenseVector<T> Slice(long start, long length)
+		public override DenseVector<T> GetSlice(long start, long length)
 		{
 			this.CheckRange(start, length);
 			return new DenseVector<T>(this.Storage.MakeReference(start, length));
+		}
+
+		/// <summary>
+		/// Set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
+		/// </summary>
+		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <param name="value">The sub-vector to set</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
+		public override void SetSlice(long start, long count, VectorBase<T> value)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			if (value is not DenseVector<T> dense)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
+			if (dense.Length != count)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(value));
+
+			this.CheckRange(start, count);
+			MEM.MemoryCopy(value.Storage, this.Storage);
 		}
 		#endregion
 
@@ -127,7 +143,17 @@ namespace Althea.Backend.Arrays
 		{
 			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
-			return this.ApplyToClone(c => c.ToMatrix(rows));
+			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
+			try
+			{
+				MEM.MemoryCopy(this.Storage, storage);
+				return new(storage, size[0], size[1]);
+			}
+			catch (Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>

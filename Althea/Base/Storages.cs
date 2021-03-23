@@ -893,10 +893,10 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, actually unmanaged (and possibly managed) resources held by this <see cref="Storage{T}"/>
+		/// When implemented by a derived class, actually unmanaged resources held by this <see cref="Storage{T}"/>
 		/// </summary>
-		/// <param name="disposeManaged">dispose managed resources or not</param>
-		protected abstract void Dispose(bool disposeManaged);
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected abstract void Dispose(bool invokedByUser);
 		#endregion
 
 		#region create
@@ -1351,9 +1351,9 @@ namespace Althea
 		/// <summary>
 		/// The function that actually dispose this <see cref="ReferenceStorage{T}"/>, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
-		/// <param name="disposeManaged">dispose managed resources or not</param>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
 		/// <remarks>Since this is a reference, this method does nothing</remarks>
-		protected override void Dispose(bool disposeManaged) { }
+		protected override void Dispose(bool invokedByUser) { }
 		#endregion
 	}
 
@@ -1392,14 +1392,14 @@ namespace Althea
 		/// <summary>
 		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
-		/// <param name="disposeManaged">dispose managed resources or not</param>
-		protected override void Dispose(bool disposeManaged)
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected override void Dispose(bool invokedByUser)
 		{
 			for (int i = 0; i < this.Count; i++)
 			{
 				var ptr = this[i];
 				if (ptr.IsValid())
-					MEM.Free(ptr, disposeManaged);
+					MEM.Free(ptr, invokedByUser);
 			}
 		}
 

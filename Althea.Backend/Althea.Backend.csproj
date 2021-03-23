@@ -8,7 +8,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>D:\Works\git\ALTHEA\Althea\Althea.Backend.xml</DocumentationFile>
+    <DocumentationFile>D:\Works\git\ALTHEA\Althea.Backend\doucuments\Althea.Backend.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

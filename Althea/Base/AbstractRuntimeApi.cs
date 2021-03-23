@@ -448,7 +448,7 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// When implemented, the method used to actually dispose 
+		/// When implemented by a derived class, actually the release all unmanaged resources held by this runtime API.
 		/// </summary>
 		/// <param name="disposeManaged"></param>
 		protected abstract void Dispose(bool disposeManaged);

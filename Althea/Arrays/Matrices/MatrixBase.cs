@@ -14,7 +14,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class MatrixBase<T> : ValueArray<T>, IMatrix<T> where T : unmanaged
+	public abstract class MatrixBase<T> : ValueArray<T>, IMatrix where T : unmanaged
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes
@@ -93,14 +93,16 @@ namespace Althea.Arrays
 		public abstract void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite);
 
 		/// <summary>
-		/// When implemented by a derived class, set a sub-matrix by the row and column starting index (inclusive).
+		/// When implemented by a derived class, set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
 		/// </summary>
-		/// <param name="rowStart">The <see cref="long"/> to indicate the starting row index to set</param>
-		/// <param name="columnStart">The <see cref="long"/> to indicate the starting column index to set</param>
-		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="rowStart"/>, <paramref name="columnStart"/>)</param>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowStart"/> or <paramref name="columnStart"/> and <paramref name="value"/>'s <see cref="NRows"/> or <see cref="NCols"/> are out of range</exception>
-		public abstract void SetSubmatrix(long rowStart, long columnStart, MatrixBase<T> value);
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		public abstract void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> value);
 
 		/// <summary>
 		/// Check the row and column indices
@@ -121,61 +123,20 @@ namespace Althea.Arrays
 				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.InvalidValue);
 		}
 
-		/// <summary>
-		/// Check the row and column index then return the offset of them.
-		/// </summary>
-		/// <param name="row">The row <see cref="Index"/></param>
-		/// <param name="col">The column <see cref="Index"/></param>
-		/// <returns>The row and column offsets</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long row, long col) CheckIndex(Index row, Index col)
+		private (long row, long col) CheckIndex(Index row, Index col)
 		{
 			long rowPos = row.GetPosition(this.NRows), colPos = col.GetPosition(this.NCols);
 			this.CheckIndex(rowPos, colPos);
 			return (rowPos, colPos);
 		}
 
-		/// <summary>
-		/// Check the row and column ranges
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol)
-		{
-			if (offsetRow < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.Parameter.CannotNegative);
-			if (offsetRow >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.Parameter.InvalidValue);
-			if (countRow <= 0)
-				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.Parameter.CannotNegative);
-			if (countRow + offsetRow > this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.Parameter.InvalidValue);
-
-			if (offsetCol < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.Parameter.CannotNegative);
-			if (offsetCol >= this.NCols)
-				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.Parameter.InvalidValue);
-			if (countCol <= 0)
-				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.Parameter.CannotNegative);
-			if (countCol + offsetCol > this.NCols)
-				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.Parameter.InvalidValue);
-		}
-
-
-		/// <summary>
-		/// Check the row and column range then return the offset/count of them.
-		/// </summary>
-		/// <param name="row">The row <see cref="Range"/></param>
-		/// <param name="col">The column <see cref="Range"/></param>
-		/// <returns>The row and column offsets and lengths</returns>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected (long offsetRow, long countRow, long offsetCol, long countCol) CheckRange(Range row, Range col)
+		private (long offsetRow, long countRow, long offsetCol, long countCol) CheckRange(Range row, Range col, MatrixBase<T>? sub = null)
 		{
 			var (offsetRow, countRow) = row.GetOffsetAndCount(this.NRows);
 			var (offsetCol, countCol) = col.GetOffsetAndCount(this.NCols);
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
+			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, sub);
 			return (offsetRow, countRow, offsetCol, countCol);
 		}
 
@@ -216,12 +177,8 @@ namespace Althea.Arrays
 				return this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
 			}
 			set {
-				var (offsetRow, countRow, offsetCol, countCol) = this.CheckRange(x, y);
-				if (value.NRows != countRow)
-					throw new ArgumentOutOfRangeException(nameof(value), value.NRows, Resources.Parameter.NotSameSize);
-				if (value.NCols != countCol)
-					throw new ArgumentOutOfRangeException(nameof(value), value.NCols, Resources.Parameter.NotSameSize);
-				this.SetSubmatrix(offsetRow, offsetCol, value);
+				var (offsetRow, countRow, offsetCol, countCol) = this.CheckRange(x, y, value);
+				this.SetSubmatrix(offsetRow, countRow, offsetCol, countCol, value);
 			}
 		}
 		#endregion

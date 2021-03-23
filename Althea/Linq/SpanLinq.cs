@@ -743,6 +743,37 @@ namespace Althea.Linq
 			}
 			return true;
 		}
+
+		/// <summary>
+		/// Check if <paramref name="span"/>'s all elements are sequentially larger or equal than <paramref name="other"/>'s
+		/// </summary>
+		/// <param name="span">The span to compare</param>
+		/// <param name="other">The other span to compare</param>
+		/// <returns>Sequentially larger or equals or not</returns>
+		public static bool SequenceLargerEqualThan(this Span<long> span, ReadOnlySpan<long> other)
+		{
+			return SequenceLargerEqualThan((ReadOnlySpan<long>)span, other);
+		}
+
+		/// <summary>
+		/// Check if <paramref name="span"/>'s all elements are sequentially larger or equal than <paramref name="other"/>'s
+		/// </summary>
+		/// <param name="span">The span to compare</param>
+		/// <param name="other">The other span to compare</param>
+		/// <returns>Sequentially larger or equals or not</returns>
+		public static bool SequenceLargerEqualThan(this ReadOnlySpan<long> span, ReadOnlySpan<long> other)
+		{
+			int len = span.Length;
+			if (len != other.Length)
+				return false;
+
+			for (int i = 0; i < len; i++)
+			{
+				if (span[i] < other[i])
+					return false;
+			}
+			return true;
+		}
 		#endregion
 
 		#region converter

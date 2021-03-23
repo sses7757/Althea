@@ -432,15 +432,16 @@ namespace Althea.Storage
 			}
 			else
 			{
-				var pointer = storageAPI.AllocateFileAt(path, length);
+				string tempPath = path + ".temp";
+				var pointer = storageAPI.AllocateFileAt(tempPath, length);
 				try
 				{
 					MEM.MemoryCopy(byteStorage, new PureReferenceStorage<byte>(pointer));
+					File.Copy(tempPath, path);
 				}
-				catch (Exception)
+				finally
 				{
-					MEM.Free(pointer);
-					throw;
+					MEM.Free(pointer, true);
 				}
 			}
 		}

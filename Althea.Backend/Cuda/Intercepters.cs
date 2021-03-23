@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 
 namespace Althea.Backend.Cuda
-{
+{/*
 	internal static class CudaStatusUtilities
 	{
 		internal static void Check(this CudaError err, string name)
@@ -289,5 +289,5 @@ namespace Althea.Backend.Cuda
 					return this.stackTrace.ToString();
 			}
 		}
-	}
+	}*/
 }

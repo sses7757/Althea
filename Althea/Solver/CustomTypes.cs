@@ -143,7 +143,7 @@ namespace Althea.Solver
 	/// <typeparam name="TMat">The concrete matrix type</typeparam>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IMultipliableMatrix<TMat, TVec, T> : IMatrix<T>, IDisposable
+	public interface IMultipliableMatrix<TMat, TVec, T> : IMatrix, IDisposable
 		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
 		where T : unmanaged
@@ -189,7 +189,7 @@ namespace Althea.Solver
 	/// <typeparam name="TMat">The concrete matrix type</typeparam>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IConvertibleVector<TVec, TMat, T> : IVector<T>, IDisposable
+	public interface IConvertibleVector<TVec, TMat, T> : IVector, IDisposable
 		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
 		where T : unmanaged

@@ -333,18 +333,22 @@ namespace Althea.Backend.Arrays
 		/// Set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="value">The tensor to set whose size is the lengths of the sub-tensor's size</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
-		public override void SetSlice(ReadOnlySpan<long> offsets, TensorBase<T> value)
+		public override void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
 			if (value is not DenseTensor<T> dense)
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
 
-			var refSub = this.GetSlice(offsets, dense.Size);
+			var refSub = this.GetSlice(offsets, lengths);
+			if (!value.Size.SequenceLargerEqualThan(lengths))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(value));
+
 			TAD.Permute<T>(new(dense), new(refSub), stackalloc int[this.Rank].FillWithRange(0));
 		}
 
@@ -358,40 +362,12 @@ namespace Althea.Backend.Arrays
 		/// <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
-		public DenseTensor<T> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		public override DenseTensor<T> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
 		{
-			int rank = this.Rank;
-			if (n <= 0 || n >= rank - 1)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
-			if (restIndices.Length + n != rank)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
 			// get equivalent ranges
-			Span<long> allOffsets = stackalloc long[rank];
-			Span<long> allLengths = stackalloc long[rank];
-			restIndices.CopyTo(allOffsets[n..]);
-			allLengths[n..].Fill(1);
-			if (!offsets.IsEmpty)
-			{
-				if (offsets.Length != n)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(offsets));
-				offsets.CopyTo(allOffsets[..n]);
-			}
-			if (!lengths.IsEmpty)
-			{
-				if (lengths.Length != n)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(lengths));
-				lengths.CopyTo(allLengths[..n]);
-			}
-			else
-			{
-				var size = this.Size;
-				for (int i = 0; i < n; i++)
-				{
-					allLengths[i] = size[i] - allOffsets[i];
-				}
-			}
-			// check ranges and return
-			long offset = CheckRange(allOffsets, allLengths);
+			Span<long> allOffsets = stackalloc long[this.Rank];
+			Span<long> allLengths = stackalloc long[this.Rank];
+			long offset = this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths);
 			return new(this.Storage + offset, allLengths[..n], this.OuterSize[..n], this.Labels[..n]);
 		}
 
@@ -406,49 +382,17 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
-		public void SetFirstDims(int n, ReadOnlySpan<long> restIndices, DenseTensor<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		public override void SetFirstDims(int n, ReadOnlySpan<long> restIndices, TensorBase<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
+			if (value is not DenseTensor<T> dense)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
 			var refSub = this.GetFirstDims(n, restIndices, offsets, lengths);
-			if (!value.Size.SequenceEqual(refSub.Size))
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(value));
+			if (!dense.Size.SequenceLargerEqualThan(refSub.Size))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(value));
 
-			TAD.Permute<T>(new(value), new(refSub), stackalloc int[n].FillWithRange(0));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void CheckFirstDims(byte n, Index[] restIndices, Span<long> rest)
-		{
-			int rank = this.Rank, len = restIndices.Length;
-			if (n >= rank - 1)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
-			if (len + n != rank)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
-			var size = this.Size;
-			for (int i = 0; i < len; i++)
-			{
-				rest[i] = restIndices[i].GetPosition(size[n + i]);
-			}
-		}
-
-		/// <summary>
-		/// Get or set the (full) sub-tensor of rank <paramref name="n"/> located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c>.
-		/// </summary>
-		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
-		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
-		/// <returns>The (full) sub-tensor of the first <paramref name="n"/> dimensions</returns>
-		public DenseTensor<T> this[byte n, params Index[] restIndices] {
-			get {
-				Span<long> rest = stackalloc long[restIndices.Length];
-				this.CheckFirstDims(n, restIndices, rest);
-				return this.GetFirstDims(n, rest);
-			}
-			set {
-				Span<long> rest = stackalloc long[restIndices.Length];
-				this.CheckFirstDims(n, restIndices, rest);
-				this.SetFirstDims(n, rest, value);
-			}
+			TAD.Permute<T>(new(value), new(dense), stackalloc int[n].FillWithRange(0));
 		}
 		#endregion
 

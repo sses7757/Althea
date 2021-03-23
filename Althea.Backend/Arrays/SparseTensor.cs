@@ -13,7 +13,6 @@ using Althea.Solver;
 using Althea.TensorAlgebra.Sparse;
 
 using MEM = Althea.Storage.AbstractApi;
-using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
 using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
 
 
@@ -129,7 +128,7 @@ namespace Althea.Backend.Arrays
 					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(outerSize));
 				if (outerSize.Prod() > denseStorage.Length)
 					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(outerSize));
-				if (!outerSize.SequenceEqual(this.Size, static (a, b) => a >= b))
+				if (!outerSize.SequenceLargerEqualThan(this.Size))
 					throw new ArgumentOutOfRangeException(nameof(outerSize), outerSize.ToArray(), Resources.Parameter.InvalidValue);
 			}
 			TAS.ToDense(new SparseTensorWrapper<T>(this), denseStorage, outerSize);
@@ -196,8 +195,17 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
 		public override SparseTensor<T, TInd> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
-			long offset = this.CheckRange(offsets, lengths);
-			
+			this.CheckRange(offsets, lengths);
+			var wrapper = TAS.GetSlice<T>(new(this), offsets, lengths);
+			try
+			{
+				return SparseVector<T, TInd>.CheckWrapper(lengths, this.Labels, wrapper);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		// Ignore Spelling: stackalloc
@@ -214,32 +222,95 @@ namespace Althea.Backend.Arrays
 		{
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not SparseTensor<T, TInd> sparse)
-				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
-			var refSub = this.GetSlice(offsets, lengths);
-			if (!sparse.Size.SequenceEqual(refSub.Size))
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(overwrite));
+			if (!overwrite.Size.SequenceLargerEqualThan(lengths))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
+			this.CheckRange(offsets, lengths);
 
-			TAD.Permute<T>(new(refSub), new(sparse), stackalloc int[this.Rank].FillWithRange(0));
+			if (overwrite is DenseTensor<T> dense)
+			{
+				TAS.GetSlice(new(this), offsets, lengths, dense.Storage, dense.OuterSize);
+			}
+			else if (overwrite is SparseTensor<T, TInd> sparse)
+			{
+				TAS.GetSlice<T>(new(this), offsets, lengths, new(sparse));
+			}
+			else
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
 		}
 
 		/// <summary>
 		/// Set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
 		/// <param name="value">The tensor to set whose size is the lengths of the sub-tensor's size</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
-		public override void SetSlice(ReadOnlySpan<long> offsets, TensorBase<T> value)
+		public override void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
 			if (value is not SparseTensor<T, TInd> sparse)
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
+			if (!sparse.Size.SequenceLargerEqualThan(lengths))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(value));
 
-			var refSub = this.GetSlice(offsets, sparse.Size);
-			TAD.Permute<T>(new(sparse), new(refSub), stackalloc int[this.Rank].FillWithRange(0));
+			this.CheckRange(offsets, lengths);
+			TAS.SetSlice<T>(new(this), offsets, lengths, new(sparse));
+		}
+
+		/// <summary>
+		/// Get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c>.
+		/// </summary>
+		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+		/// <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
+		public override SparseTensor<T, TInd> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		{
+			// get equivalent ranges
+			Span<long> allOffsets = stackalloc long[this.Rank];
+			Span<long> allLengths = stackalloc long[this.Rank];
+			long offset = this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths);
+			// check
+			if (!allOffsets[n..].All(static a => a == 0) || !allLengths[n..].SequenceEqual(this.Size[n..]))
+				throw new NotSupportedException();
+			// return
+			var value = this.Storage; var index = this.OffsetStorage;
+			SparseVector<T, TInd>.GetSlice(offset.FromLong<TInd>(), this.Length.FromLong<TInd>(), ref value, ref index);
+			return new SparseTensor<T, TInd>(allLengths[n..], value, index, this.Labels[n..], defaultValue: this.DefaultValue);
+		}
+
+		/// <summary>
+		/// Set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
+		/// </summary>
+		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="value">The dense tensor to set</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
+		public override void SetFirstDims(int n, ReadOnlySpan<long> restIndices, TensorBase<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		{
+			if (value is null || !value.IsValid())
+				throw new ArgumentNullException(nameof(value));
+			if (value is not SparseTensor<T, TInd> sparse)
+				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
+			// get equivalent ranges
+			Span<long> allOffsets = stackalloc long[this.Rank];
+			Span<long> allLengths = stackalloc long[this.Rank];
+			long offset = this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths);
+			// check
+			if (!allOffsets[n..].All(static a => a == 0) || !allLengths[n..].SequenceEqual(this.Size[n..]))
+				throw new NotSupportedException();
+			// set
+			SparseVector<T, TInd>.SetSlice(offset.FromLong<TInd>(), this.Length.FromLong<TInd>(), this.Storage, this.OffsetStorage, sparse.Storage, sparse.OffsetStorage);
 		}
 		#endregion
 
@@ -284,7 +355,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), reducePerm);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(size, label, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(size, label, wrapper);
 			}
 			catch (Exception)
 			{
@@ -318,7 +389,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.Permute<T>(new(this, scalar: scalar), perm);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(size, label, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(size, label, wrapper);
 			}
 			catch (Exception)
 			{
@@ -352,7 +423,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.OperationBinary<T>(BinaryOperation.Addition, new(this, scalar: scalarThis), identityPerm, new(sparse, scalar: scalarOther), identityPerm);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.Size, this.Labels, this.DefaultValue.GenericAdd(sparse.DefaultValue), wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(this.Size, this.Labels, wrapper);
 			}
 			catch (Exception)
 			{
@@ -392,7 +463,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.Contract<T>(new(this, scalar: scalar), new(sparse), info);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(sizeC, labelC, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(sizeC, labelC, wrapper);
 			}
 			catch (Exception)
 			{

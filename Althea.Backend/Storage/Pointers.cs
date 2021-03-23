@@ -67,6 +67,12 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer, this.Location);
+
+		/// <summary>
+		/// Get the string representation of this <see cref="MemoryPointer"/>
+		/// </summary>
+		/// <returns>The string representation of this <see cref="MemoryPointer"/></returns>
+		public override string ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 	}
 
@@ -82,7 +88,7 @@ namespace Althea.Backend.Storage
 		public Stream NativeStream { get; }
 
 		/// <summary>
-		/// The storage location of this <see cref="MemoryPointer"/> as a <see cref="StorageLocation"/>
+		/// The storage location of this <see cref="StreamPointer"/> as a <see cref="StorageLocation"/>
 		/// </summary>
 		public StorageLocation Location { get; }
 
@@ -124,10 +130,16 @@ namespace Althea.Backend.Storage
 		}
 
 		/// <summary>
-		/// Get the hash code of this <see cref="MemoryPointer"/>
+		/// Get the hash code of this <see cref="StreamPointer"/>
 		/// </summary>
-		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
+		/// <returns>The hash code of this <see cref="StreamPointer"/></returns>
 		public override int GetHashCode() => HashCode.Combine(this.NativeStream, this.Location);
+
+		/// <summary>
+		/// Get the string representation of this <see cref="StreamPointer"/>
+		/// </summary>
+		/// <returns>The string representation of this <see cref="StreamPointer"/></returns>
+		public override string ToString() => ((IMainPropertyFormat)this).ToString();
 		#endregion
 	}
 

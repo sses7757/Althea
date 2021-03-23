@@ -800,14 +800,14 @@ namespace Althea.Storage
 		/// <summary>
 		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
-		/// <param name="disposeManaged">dispose managed resources or not</param>
-		protected override void Dispose(bool disposeManaged)
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected override void Dispose(bool invokedByUser)
 		{
 			for (int i = 0; i < this.CacheLevels; i++)
 			{
 				var ptr = this.GetCacheLevel(i);
 				if (ptr.IsValid())
-					MEM.Free(ptr, disposeManaged);
+					MEM.Free(ptr, invokedByUser);
 			}
 		}
 

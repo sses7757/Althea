@@ -211,7 +211,7 @@ namespace Althea.Backend.Arrays
 				long off = rowStarts[i], len = rowStarts[i + 1] - off;
 				Storage<T> value = values.MakeReference(off * pack, len * pack);
 				Storage<TInd> index = column.MakeReference(off, len);
-				SparseVector<T, TInd>.Slice(y1, y2, ref value, ref index, pack);
+				SparseVector<T, TInd>.GetSlice(y1, y2, ref value, ref index, pack);
 				if (allColumns && index.Length != len)
 					allColumns = false;
 				valueArray[i] = value; indexArray[i] = index;
@@ -266,169 +266,6 @@ namespace Althea.Backend.Arrays
 		internal static long[] CompressedToRowStarts(long start, long count, Storage<TInd> sortedRow)
 		{
 			return ToManaged(sortedRow.MakeReference(start, count));
-		}
-
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void GetRangeCoordinated(TInd x1, TInd x2, TInd y1, TInd y2, bool allColumns, ref Storage<TInd> sortedRow, ref Storage<TInd> column, ref Storage<T> values, long pack = 1)
-		{
-			long rows = ToLong(x2) - ToLong(x1) + 1;
-			long[] rowStarts = CoordinatedToRowStarts(x1, x2, rows, sortedRow);
-			rows--;
-			// get column and value
-			if (allColumns)
-			{
-				RefColumValue(rowStarts, ref column, ref values, default, pack);
-			}
-			else
-			{
-				GetRange(rows, y1, y2, rowStarts, ref column, ref values, pack);
-			}
-			// get compressed row
-			var compressed = Storage<TInd>.Create(sortedRow[0].Location, rowStarts.LongLength);
-			try
-			{
-				FromManaged(compressed, rowStarts);
-			}
-			catch (Exception)
-			{
-				compressed?.Dispose();
-				throw;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void GetRangeCompressed(long start, long count, TInd y1, TInd y2, bool allColumns, ref Storage<TInd> compressed, ref Storage<TInd> column, ref Storage<T> values, long pack = 1)
-		{
-			long[] rowStarts = CompressedToRowStarts(start, count + 1, compressed);
-			// return
-			if (allColumns)
-			{
-				RefColumValue(rowStarts, ref column, ref values, default, pack);
-			}
-			else
-			{
-				GetRange(count, y1, y2, rowStarts, ref column, ref values, pack);
-			}
-			bool allRows = count == compressed.Length - 1;
-			if (allRows)
-			{
-				compressed = compressed.MakeReference();
-			}
-			else
-			{
-				ActualStorage<TInd> outCompressed = compressed.MakeReference(newLength: count + 1).Clone();
-				try
-				{
-					LAD.PointWiseAddScalar(outCompressed, 1, ToInd(-rowStarts[0]));
-					compressed = outCompressed;
-				}
-				catch (Exception)
-				{
-					outCompressed?.Dispose();
-					throw;
-				}
-			}
-		}
-		#endregion
-
-		#region sub matrix set
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetRange(long rows, TInd y1, TInd y2, long[] rowStarts, Storage<TInd> column, Storage<T> values, long[] srcRowStarts, Storage<TInd> srcColumn, Storage<T> srcValues, long pack)
-		{
-			// combine all consecutive copies
-			int estimateLen = (int)(rows / 2);
-			List<long> dstOffsets = new(estimateLen) { rowStarts[0] }, cpyLengths = new(estimateLen) { 0 }, srcOffsets = new(estimateLen) { 0 };
-			for (long i = 0; i < rows; i++)
-			{
-				long offset = rowStarts[i], length = rowStarts[i + 1] - offset;
-				Storage<T> value = values.MakeReference(offset * pack, length * pack);
-				Storage<TInd> index = column.MakeReference(offset, length);
-				SparseVector<T, TInd>.Slice(y1, y2, ref value, ref index);
-				// check
-				long realLength = index.Length;
-				if (realLength != srcRowStarts[i])
-					throw new ArgumentException(Resources.Parameter.InvalidValue);
-				// combine consecutive copies
-				long realOffset = index - column, relativeOffset = realOffset - offset;
-				if (realLength == length)
-				{	// both align
-					cpyLengths[^1] += length;
-				}
-				else if (realOffset == offset)
-				{	// left align
-					cpyLengths[^1] += realLength;
-					// create next
-					dstOffsets.Add(rowStarts[i + 1]);
-					srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
-					cpyLengths.Add(0);
-				}
-				else if (realLength + relativeOffset == length)
-				{   // right align
-					if (cpyLengths[^1] == 0)
-					{
-						cpyLengths[^1] = realLength;
-						dstOffsets[^1] += relativeOffset;
-					}
-					else
-					{	// create this
-						dstOffsets.Add(rowStarts[i + 1] + relativeOffset);
-						srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
-						cpyLengths.Add(realLength);
-					}
-				}
-				else
-				{	// no align
-					if (cpyLengths[^1] == 0)
-					{
-						cpyLengths[^1] = realLength;
-						dstOffsets[^1] += realOffset;
-					}
-					// create next
-					dstOffsets.Add(rowStarts[i + 1]);
-					srcOffsets.Add(rowStarts[i + 1] - rowStarts[0]);
-					cpyLengths.Add(0);
-				}
-			}
-			// actual copy
-			for (int i = 0; i < cpyLengths.Count; i++)
-			{
-				if (cpyLengths[i] <= 0)
-					continue;
-				var tempVal = values.MakeReference(dstOffsets[i] * pack, cpyLengths[i] * pack);
-				var tempCol = column.MakeReference(dstOffsets[i], cpyLengths[i]);
-				MEM.MemoryCopy(srcValues + srcOffsets[i] * pack, tempVal);
-				MEM.MemoryCopy(srcColumn + srcOffsets[i], tempCol);
-				LAD.PointWiseAddScalar(tempCol, 1, y1);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void SetRange<TMat>(TInd x1, TInd x2, TInd y1, TInd y2, TMat org, TMat src, long pack = 1)
-			where TMat : MatrixBase<T>, ISparseMatrix<T>, ISparseArray<T, TInd>
-		{
-			IReadOnlyList<Storage<TInd>> orgInd = org, srcInd = src;
-			bool allRows = src.NRows == org.NRows, allCols = src.NCols == org.NCols, rowMajor = org.Format.IsRowMajor();
-			// get storages
-			var values = org.Storage; var srcValues = src.Storage;
-			if (rowMajor)
-				(x1, x2, y1, y2) = (y1, y2, x1, x2);
-			var (sortedRow, column) = rowMajor ? (orgInd[0], orgInd[1]) : (orgInd[1], orgInd[0]);
-			var (srcRow, srcColumn) = rowMajor ? (srcInd[0], srcInd[1]) : (srcInd[1], srcInd[0]);
-			// get row starts
-			long startRow = ToLong(x1), rows = ToLong(x2) - startRow + 1; TInd rowsInd = ToInd(rows);
-			long[] rowStarts = org.Format.IsCompressed() ? CompressedToRowStarts(startRow, rows, sortedRow) : CoordinatedToRowStarts(x1, x2, rows, sortedRow);
-			long[] srcRowStarts = src.Format.IsCompressed() ? CompressedToRowStarts(0, rows, srcRow) : CoordinatedToRowStarts(default, rowsInd, rows, srcRow);
-			// set columns and values, rows are not necessary
-			if (allRows && !allCols)
-			{
-				SetRange(rows - 1, y1, y2, rowStarts, column, values, srcRowStarts, srcColumn, srcValues, pack);
-			}
-			else if (!allRows && allCols)
-			{
-				MEM.MemoryCopy(srcColumn, column + rowStarts[0]);
-				MEM.MemoryCopy(srcValues, values + rowStarts[0] * pack);
-			}
 		}
 		#endregion
 
@@ -508,37 +345,17 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		public override SparseMatrix<T, TInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
-
-			TInd x1 = ToInd(offsetRow), x2 = ToInd(offsetRow + countRow);
-			TInd y1 = ToInd(offsetCol), y2 = ToInd(offsetCol + countCol);
-			bool allRows = countRow == this.NRows, allCols = countCol == this.NCols;
-			// shortcut
-			if (allRows && allCols)
-				return new SparseMatrix<T, TInd>(this);
-			// else
-			SparseMatrixFormat format = this.Format;
-			var values = this.Storage; var rowInd = this.RowIndexStorage; var colInd = this.ColIndexStorage;
-			switch (this.Format)
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this);
+			var wrapper = LAS.SparseMatrixSlice(this, slice);
+			try
 			{
-				case SparseMatrixFormat.COOR:
-					GetRangeCoordinated(x1, x2, y1, y2, allCols, ref rowInd, ref colInd, ref values);
-					format = SparseMatrixFormat.CSR;
-					break;
-				case SparseMatrixFormat.COOC:
-					GetRangeCoordinated(y1, y2, x1, x2, allRows, ref colInd, ref rowInd, ref values);
-					format = SparseMatrixFormat.CSC;
-					break;
-				case SparseMatrixFormat.CSR:
-					GetRangeCompressed(offsetRow, countRow, y1, y2, allCols, ref rowInd, ref colInd, ref values);
-					break;
-				case SparseMatrixFormat.CSC:
-					GetRangeCompressed(offsetCol, countCol, x1, x2, allRows, ref colInd, ref rowInd, ref values);
-					break;
-				default: // never here
-					throw new NotSupportedException();
+				return SparseVector<T, TInd>.CheckWrapper(countRow, countCol, wrapper) as SparseMatrix<T, TInd> ?? throw new InvalidOperationException();
 			}
-			return new SparseMatrix<T, TInd>(countRow, countCol, values, rowInd, colInd, format, this.DefaultValue);
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -553,69 +370,49 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
 		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol);
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
-			if (overwrite is not (DenseMatrix<T> or SparseMatrix<T, TInd>))
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-			if (overwrite is DenseMatrix<T> dn && (dn.NRows < countRow || dn.NCols < countCol))
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
-			if (overwrite is SparseMatrix<T, TInd> sp && (sp.NRows != countRow || sp.NCols != countCol))
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(overwrite));
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, overwrite);
 
 			if (overwrite is DenseMatrix<T> dense)
 			{
-				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
-				sub.ToDense(dense.Storage, dense.LeadDim);
+				LAS.SparseMatrixSlice(this, slice, dense.Storage, dense.LeadDim);
 			}
 			else if (overwrite is SparseMatrix<T, TInd> sparse)
 			{
-				if (this.Format != sparse.Format)
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-				using var sub = this.GetSubmatrix(offsetRow, countRow, offsetCol, countCol);
-				if (sub.NStored != sparse.NStored)
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(overwrite));
-				// copy
-				MEM.MemoryCopy(sub.Storage, sparse.Storage);
-				MEM.MemoryCopy(sub.RowIndexStorage, sparse.RowIndexStorage);
-				MEM.MemoryCopy(sub.ColIndexStorage, sparse.ColIndexStorage);
+				LAS.SparseMatrixSlice(this, slice, sparse);
 			}
 			else
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(overwrite));
 		}
 
 		/// <summary>
-		/// Set a sub-matrix by the row and column starting index (inclusive).
+		/// Set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
 		/// </summary>
-		/// <param name="rowStart">The <see cref="long"/> to indicate the starting row index to set</param>
-		/// <param name="colStart">The <see cref="long"/> to indicate the starting column index to set</param>
-		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="rowStart"/>, <paramref name="colStart"/>)</param>
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowStart"/> or <paramref name="colStart"/> and <paramref name="value"/>'s <see cref="MatrixBase{T}.NRows"/> or <see cref="MatrixBase{T}.NCols"/> are out of range</exception>
-		/// <exception cref="ArgumentException">If <paramref name="value"/> is not a <see cref="SparseMatrix{T, TInd}"/> or of incompatible format</exception>
-		public override void SetSubmatrix(long rowStart, long colStart, MatrixBase<T> value)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		/// <exception cref="NotSupportedException">If <paramref name="value"/> is neither a <see cref="SparseMatrix{T, TInd}"/> of compatible format</exception>
+		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
-			this.CheckRange(rowStart, value.NRows, colStart, value.NCols);
-			if (value is not SparseMatrix<T, TInd> sp || sp.Format.IsRowMajor() != this.Format.IsRowMajor())
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
+			if (value is not SparseMatrix<T, TInd> sparse)
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType);
+			var slice = MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this, value);
 
-			TInd x1 = ToInd(rowStart), x2 = ToInd(rowStart + value.NRows);
-			TInd y1 = ToInd(colStart), y2 = ToInd(colStart + value.NCols);
-			bool allRows = value.NRows == this.NRows, allCols = value.NCols == this.NCols;
-			// shortcut
-			if (allRows && allCols)
+			try
 			{
-				if (sp.NStored != this.NStored)
-					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(value));
-				MEM.MemoryCopy(sp.Storage, this.Storage);
-				MEM.MemoryCopy(sp.RowIndexStorage, this.RowIndexStorage);
-				MEM.MemoryCopy(sp.ColIndexStorage, this.ColIndexStorage);
-				return;
+				LAS.SparseMatrixSetSlice(this, slice, sparse);
 			}
-			// else
-			SetRange(x1, x2, y1, y2, this, sp);
+			catch (Exception e)
+			{
+				throw new NotSupportedException(Resources.Parameter.UnexpectedType, e);
+			}
 		}
 
 		/// <summary>
@@ -836,7 +633,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseFormatConvert(this, format, otherInfo);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.NRows, this.NCols, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(this.NRows, this.NCols, wrapper);
 			}
 			catch (Exception)
 			{
@@ -856,7 +653,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, this.DefaultValue, wrapper);
+				return SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, wrapper);
 			}
 			catch (Exception)
 			{
@@ -879,7 +676,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseReshape(this, size[0]);
 			try
 			{
-				var matrix = SparseVector<T, TInd>.CheckWrapper(size[0], size[1], this.DefaultValue, wrapper);
+				var matrix = SparseVector<T, TInd>.CheckWrapper(size[0], size[1], wrapper);
 				if (matrix is not SparseMatrix<T, TInd> s)
 					throw new InvalidOperationException();
 				return s;
@@ -905,7 +702,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
 			try
 			{
-				SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, this.DefaultValue, wrapper);
+				SparseVector<T, TInd>.CheckWrapper(this.NRows * this.NCols, wrapper);
 				return new(newSize, wrapper.ValueStorage, (Storage<TInd>)wrapper.IndexStorages[0], defaultValue: this.DefaultValue);
 			}
 			catch (Exception)
@@ -934,7 +731,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseAddSparse(operation, MatrixOperation.None, Const<T>.One, this, default, null);
 			try
 			{
-				var res = SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, this.DefaultValue, wrapper);
+				var res = SparseVector<T, TInd>.CheckWrapper(this.NCols, this.NRows, wrapper);
 				if (res is not SparseMatrix<T, TInd> ss)
 					throw new InvalidOperationException(Resources.Support.Format);
 				return ss;
@@ -983,7 +780,7 @@ namespace Althea.Backend.Arrays
 				var wrapper = LAS.MatrixSparseAddSparse(opThis, opOther, scalarThis, this, scalarOther, sparse);
 				try
 				{
-					return SparseVector<T, TInd>.CheckWrapper(m, n, this.DefaultValue.GenericAdd(sparse.DefaultValue), wrapper);
+					return SparseVector<T, TInd>.CheckWrapper(m, n, wrapper);
 				}
 				catch (Exception)
 				{
@@ -1009,7 +806,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
 		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
-			var (m, n, k) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
+			var (m, n, _) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
 			if (other is IDenseMatrix<T> dense)
 			{
 				var output = Storage<T>.Create(other.Storage[0].Location, m * n);
@@ -1031,9 +828,7 @@ namespace Althea.Backend.Arrays
 				var wrapper = LAS.MatrixSparseMultiplySparse(opThis, opOther, scalar, this, sparse, default, null);
 				try
 				{
-					T defThis = this.DefaultValue, defOther = sparse.DefaultValue;
-					T defNew = defThis.GenericMultiply(defOther).GenericMultiply(k.FromLong<T>());
-					return SparseVector<T, TInd>.CheckWrapper(m, n, defNew, wrapper);
+					return SparseVector<T, TInd>.CheckWrapper(m, n, wrapper);
 				}
 				catch (Exception)
 				{
@@ -1109,22 +904,20 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region MyRegion
+		#region IMultipliableMatrix
 		bool IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.CanMultiplyInPlace => false;
 
 		void IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
 
 		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
 		{
-			var (m, n, k) = ((IMatrix<T>)left).CheckMultiply(scalar, right, ref opLeft, ref opRight);
+			var (m, n, _) = ((IMatrix<T>)left).CheckMultiply(scalar, right, ref opLeft, ref opRight);
 			if (!scalarThis.IsZero() && (this.NRows != m || this.NCols != n))
 				throw new ArgumentException(Resources.Parameter.WrongSize);
 			var wrapper = LAS.MatrixSparseMultiplySparse(opLeft, opRight, scalar, left, right, scalarThis, this, FormatExtension.NonBlocked);
 			try
 			{
-				T defThis = left.DefaultValue, defOther = right.DefaultValue;
-				T defNew = defThis.GenericMultiply(defOther).GenericMultiply(k.FromLong<T>()).GenericAdd(this.DefaultValue);
-				return SparseVector<T, TInd>.CheckWrapper(m, n, defNew, wrapper) as SparseMatrix<T, TInd> ?? throw new InvalidOperationException();
+				return SparseVector<T, TInd>.CheckWrapper(m, n, wrapper) as SparseMatrix<T, TInd> ?? throw new InvalidOperationException();
 			}
 			catch (Exception)
 			{
