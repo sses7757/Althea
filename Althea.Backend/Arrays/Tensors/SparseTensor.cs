@@ -19,7 +19,7 @@ using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
 namespace Althea.Backend.Arrays
 {
 	/// <summary>
-	/// The concrete sparse tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
+	/// The concrete sparse tensor class of format <see cref="SparseTensorFormat.Coordinated"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="SparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset array storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
@@ -199,7 +199,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.GetSlice<T>(new(this), offsets, lengths);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(lengths, this.Labels, wrapper);
+				return (SparseTensor<T, TInd>)wrapper.CheckWrapper<T, TInd>(lengths, this.Labels);
 			}
 			catch (Exception)
 			{
@@ -277,12 +277,12 @@ namespace Althea.Backend.Arrays
 			Span<long> allLengths = stackalloc long[this.Rank];
 			long offset = this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths);
 			// check
-			if (!allOffsets[n..].All(static a => a == 0) || !allLengths[n..].SequenceEqual(this.Size[n..]))
+			if (!allOffsets[..n].All(static a => a == 0) || !allLengths[..n].SequenceEqual(this.Size[..n]))
 				throw new NotSupportedException();
 			// return
 			var value = this.Storage; var index = this.OffsetStorage;
 			SparseVector<T, TInd>.GetSlice(offset.FromLong<TInd>(), this.Length.FromLong<TInd>(), ref value, ref index);
-			return new SparseTensor<T, TInd>(allLengths[n..], value, index, this.Labels[n..], defaultValue: this.DefaultValue);
+			return new SparseTensor<T, TInd>(allLengths[..n], value, index, this.Labels[..n], defaultValue: this.DefaultValue);
 		}
 
 		/// <summary>
@@ -307,7 +307,7 @@ namespace Althea.Backend.Arrays
 			Span<long> allLengths = stackalloc long[this.Rank];
 			long offset = this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths);
 			// check
-			if (!allOffsets[n..].All(static a => a == 0) || !allLengths[n..].SequenceEqual(this.Size[n..]))
+			if (!allOffsets[..n].All(static a => a == 0) || !allLengths[..n].SequenceEqual(this.Size[..n]))
 				throw new NotSupportedException();
 			// set
 			SparseVector<T, TInd>.SetSlice(offset.FromLong<TInd>(), this.Length.FromLong<TInd>(), this.Storage, this.OffsetStorage, sparse.Storage, sparse.OffsetStorage);
@@ -327,35 +327,16 @@ namespace Althea.Backend.Arrays
 		{
 			if (scalar.IsZero())
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
-			// get reduction permutation
+
 			Span<int> reducePerm = stackalloc int[this.Rank];
-			reducePerm = order.GetIntSpanOrder(this, reducePerm, allowPartial: true);
-			// get output permutation
-			int outRank = this.Rank - reducePerm.Length;
-			Span<int> outPerm = stackalloc int[outRank];
-			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
-			identityPerm.SetExept(outPerm, outPerm);
-			// get output members
-			ReadOnlySpan<long> size; ReadOnlySpan<char> label;
-			Span<long> sizeOne = stackalloc long[] { 1 };
-			Span<long> sizeAll = stackalloc long[outRank];
-			Span<char> labelAll = stackalloc char[outRank];
-			if (outRank == 0)
-			{
-				size = MemoryMarshal.CreateReadOnlySpan(ref sizeOne[0], 1); label = default;
-			}
-			else
-			{
-				this.Size.ReOrderTo(sizeAll, outPerm);
-				this.Labels.ReOrderTo(labelAll, outPerm);
-				size = MemoryMarshal.CreateReadOnlySpan(ref sizeAll[0], outRank);
-				label = MemoryMarshal.CreateReadOnlySpan(ref labelAll[0], outRank);
-			}
+			Span<long> size = stackalloc long[this.Rank];
+			Span<char> label = stackalloc char[this.Rank];
+			reducePerm = this.CheckReduce(order, reducePerm, ref size, ref label);
 			// reduce
 			var wrapper = TAS.Reduce<T>(BinaryOperation.Addition, new(this, scalar: scalar), reducePerm);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(size, label, wrapper);
+				return (SparseTensor<T, TInd>)wrapper.CheckWrapper<T, TInd>(size, label);
 			}
 			catch (Exception)
 			{
@@ -389,7 +370,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.Permute<T>(new(this, scalar: scalar), perm);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(size, label, wrapper);
+				return (SparseTensor<T, TInd>)wrapper.CheckWrapper<T, TInd>(size, label);
 			}
 			catch (Exception)
 			{
@@ -423,7 +404,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.OperationBinary<T>(BinaryOperation.Addition, new(this, scalar: scalarThis), identityPerm, new(sparse, scalar: scalarOther), identityPerm);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(this.Size, this.Labels, wrapper);
+				return (SparseTensor<T, TInd>)wrapper.CheckWrapper<T, TInd>(this.Size, this.Labels);
 			}
 			catch (Exception)
 			{
@@ -463,7 +444,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = TAS.Contract<T>(new(this, scalar: scalar), new(sparse), info);
 			try
 			{
-				return SparseVector<T, TInd>.CheckWrapper(sizeC, labelC, wrapper);
+				return (SparseTensor<T, TInd>)wrapper.CheckWrapper<T, TInd>(sizeC, labelC);
 			}
 			catch (Exception)
 			{
@@ -489,6 +470,13 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		public void ContractFrom(T scalar, SparseTensor<T, TInd> A, SparseTensor<T, TInd> B, T scalarThis = default, UnaryOperation unaryA = UnaryOperation.Identity, UnaryOperation unaryB = UnaryOperation.Identity, UnaryOperation unaryThis = UnaryOperation.Identity)
 		{
+			if (scalar.IsZero())
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
+			if (A is null || !A.IsValid())
+				throw new ArgumentNullException(nameof(A));
+			if (B is null || !B.IsValid())
+				throw new ArgumentNullException(nameof(B));
+
 			int concRank = TensorContractInfo.GetContractRank(A, B);
 			Span<int> concA = stackalloc int[concRank], concB = stackalloc int[concRank];
 			Span<int> freeCA = stackalloc int[A.Rank - concRank], freeCB = stackalloc int[B.Rank - concRank];

@@ -345,4 +345,54 @@ namespace Althea.TensorAlgebra
 		#endregion
 	}
 	#endregion
+
+	#region extension
+	/// <summary>
+	/// The static class for check methods other than contract ones which are already implied in <see cref="TensorContractInfo"/>
+	/// </summary>
+	public static class CheckExtensions
+	{
+		/// <summary>
+		/// Check the <paramref name="tensor"/> reduction indicated by the given <paramref name="order"/>
+		/// </summary>
+		/// <param name="tensor">The <see cref="ITensor"/> to be reduced</param>
+		/// <param name="order">The <see cref="TensorOrder"/> to indicate the reduction dimensions</param>
+		/// <param name="reducePerm">The <see cref="Span{T}"/> of length equaling the rank. Filled with the reduce dimensions of actual reduction rank at exit.</param>
+		/// <param name="size">The <see cref="Span{T}"/> of length equaling the rank. Filled with the actual output size of actual output rank at exit.</param>
+		/// <param name="labels">The <see cref="Span{T}"/> of length equaling the rank. Filled with the actual output labels of actual output rank at exit.</param>
+		/// <returns>The <paramref name="reducePerm"/> of actual reduction rank</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<int> CheckReduce(this ITensor tensor, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels)
+		{
+			if (tensor is null)
+				throw new ArgumentNullException(nameof(tensor));
+			int rank = tensor.Rank;
+			if (size.Length != rank)
+				throw new ArgumentException(Parameter.WrongSize, nameof(size));
+			if (labels.Length != rank)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labels));
+			if (reducePerm.Length != rank)
+				throw new ArgumentException(Parameter.WrongSize, nameof(reducePerm));
+			// get reduce permutation
+			reducePerm = order.GetIntSpanOrder(tensor, reducePerm, allowPartial: true);
+			// get output permutation
+			int outRank = rank - reducePerm.Length;
+			Span<int> outPerm = stackalloc int[outRank];
+			Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
+			identityPerm.SetExept(reducePerm, outPerm);
+			// get output members
+			if (outRank == 0)
+			{
+				size = size.SetValue(1)[..1]; labels = default;
+			}
+			else
+			{
+				tensor.Size.ReOrderTo(size, outPerm);
+				tensor.Labels.ReOrderTo(labels, outPerm);
+				size = size[..outRank]; labels = labels[..outRank];
+			}
+			return reducePerm;
+		}
+	}
+	#endregion
 }

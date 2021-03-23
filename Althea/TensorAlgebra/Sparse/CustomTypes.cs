@@ -69,6 +69,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <summary>
 		/// Get the index arrays' storages of this sparse tensor wrapper as a list of <see cref="IStorage"/>
 		/// </summary>
+		/// <remarks>If this was created using defined constructors, this is also the actual sparse tensor</remarks>
 		public IReadOnlyList<IStorage> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_indexArrays;

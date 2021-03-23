@@ -29,15 +29,15 @@ namespace Althea.Arrays
 		}
 
 		// previously defined 324 bytes
+		private readonly SparseTensorFormat m_format;
+		// offset = 324 + 4
 		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
-		// offset = 324 + 64
+		// offset = 324 + 4 + 64
 		/// <summary>
 		/// The member that actually stores the index arrays' storages
 		/// </summary>
 		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
-		// offset = 324 + 64 + 68
-		private readonly SparseTensorFormat m_format;
-		// offset = 324 + 136
+		// offset = 324 + 4 + 64 + 68
 		private T m_defaultValue;
 		// this defines extra (136 + size of T) bytes
 

@@ -1172,6 +1172,24 @@
             <param name="newSize">The new size of the tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/></param>
             <returns>The reshaped tensor, may be a referenced one of this tensor</returns>
         </member>
+        <member name="P:Althea.Arrays.TensorBase`1.Item(System.Index[])">
+            <summary>
+            The basic indexed getter and setter of this tensor
+            </summary>
+            <param name="indices">The position indicated by an array of <see cref="T:System.Index"/> to be checked</param>
+            <returns>The element at <paramref name="indices"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Arrays.TensorBase`1.Item(System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, provide the basic indexed getter and setter of this tensor
+            </summary>
+            <param name="indices">The position indicated by a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/> to be checked</param>
+            <returns>The element at <paramref name="indices"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
+        </member>
         <member name="M:Althea.Arrays.TensorBase`1.CheckIndex(System.ReadOnlySpan{System.Int64})">
             <summary>
             Check whether the given <paramref name="indices"/> is out of range of this tensor
@@ -1212,15 +1230,6 @@
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Item(System.Index[])">
-            <summary>
-            The basic indexed getter and setter of this tensor
-            </summary>
-            <param name="indices">The position indicated by an array of <see cref="T:System.Index"/> to be checked</param>
-            <returns>The element at <paramref name="indices"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
-        </member>
         <member name="P:Althea.Arrays.TensorBase`1.Item(System.Range[])">
             <summary>
             Get or set a sub-tensor (of same rank) indicated by the given <paramref name="ranges"/>
@@ -1229,15 +1238,6 @@
             <exception cref="T:System.ArgumentNullException">If the input value is null or empty</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="ranges"/> and/or value's size is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="ranges"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Item(System.ReadOnlySpan{System.Int64})">
-            <summary>
-            When implemented by a derived class, provide the basic indexed getter and setter of this tensor
-            </summary>
-            <param name="indices">The position indicated by a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/> to be checked</param>
-            <returns>The element at <paramref name="indices"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
         </member>
         <member name="M:Althea.Arrays.TensorBase`1.GetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
@@ -1270,6 +1270,53 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
+        </member>
+        <member name="P:Althea.Arrays.TensorBase`1.Item(System.Byte,System.Index[])">
+            <summary>
+            Get or set the (full) sub-tensor of rank <paramref name="n"/> located by the given <paramref name="restIndices"/> of length <c>(<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</c>.
+            </summary>
+            <param name="n">The first <paramref name="n"/> dimensions to get/set</param>
+            <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+            <returns>The (full) sub-tensor of the first <paramref name="n"/> dimensions</returns>
+        </member>
+        <member name="M:Althea.Arrays.TensorBase`1.CheckFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.Span{System.Int64},System.Span{System.Int64})">
+            <summary>
+            Check whether the given first-few-dimension(s) taking indicated by <paramref name="n"/>, <paramref name="restIndices"/>, <paramref name="offsets"/> and <paramref name="lengths"/> are valid and put the overall offsets and lengths to <paramref name="allOffsets"/> and <paramref name="allLengths"/>.
+            </summary>
+            <param name="n">The first <paramref name="n"/> dimensions to take</param>
+            <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+            <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+            <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+            <param name="allOffsets">The output overall offsets of all dimensions, must be of size == rank</param>
+            <param name="allLengths">The output overall lengths of all dimensions, must be of size == rank</param>
+            <returns>The equivalent total offset of the position indicated by (at exit) <paramref name="allOffsets"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</exception>
+        </member>
+        <member name="M:Althea.Arrays.TensorBase`1.GetFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</c>.
+            </summary>
+            <param name="n">The first <paramref name="n"/> dimensions to get</param>
+            <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+            <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+            <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+            <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</exception>
+        </member>
+        <member name="M:Althea.Arrays.TensorBase`1.SetFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},Althea.Arrays.TensorBase{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
+            </summary>
+            <param name="n">The first <paramref name="n"/> dimensions to get</param>
+            <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+            <param name="value">The dense tensor to set</param>
+            <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+            <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>); or <paramref name="value"/> cannot be used as the set parameter</exception>
         </member>
         <member name="M:Althea.Arrays.TensorBase`1.Reduce(Althea.TensorAlgebra.TensorOrder,`0)">
             <summary>
@@ -1937,14 +1984,25 @@
             Provide legacy support of <see cref="P:Althea.Arrays.VectorBase`1.Item(System.Int64)"/> and C# duck type for <c>this[<see cref="T:System.Index"/>]</c>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.Slice(System.Int64,System.Int64)">
+        <member name="M:Althea.Arrays.VectorBase`1.GetSlice(System.Int64,System.Int64)">
             <summary>
-            When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="length"/>
+            When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>
             </summary>
             <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
-            <param name="length">The length of the target sub-vector, in <typeparamref name="T"/></param>
-            <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="length"/>. Shall be a referenced vector if possible.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="length"/> is out of range</exception>
+            <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+            <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>. Shall be a referenced vector if possible.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Arrays.VectorBase`1.SetSlice(System.Int64,System.Int64,Althea.Arrays.VectorBase{`0})">
+            <summary>
+            When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
+            </summary>
+            <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+            <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+            <param name="value">The sub-vector to set</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
         </member>
         <member name="M:Althea.Arrays.VectorBase`1.Slice(System.Int32,System.Int32)">
             <summary>
@@ -14234,6 +14292,22 @@
             <returns>The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> created from the given parameters</returns>
             <remarks>This method assumes that all labels are sets</remarks>
         </member>
+        <member name="T:Althea.TensorAlgebra.CheckExtensions">
+            <summary>
+            The static class for check methods other than contract ones which are already implied in <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/>
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.CheckExtensions.CheckReduce(Althea.Arrays.ITensor,Althea.TensorAlgebra.TensorOrder,System.Span{System.Int32},System.Span{System.Int64}@,System.Span{System.Char}@)">
+            <summary>
+            Check the <paramref name="tensor"/> reduction indicated by the given <paramref name="order"/>
+            </summary>
+            <param name="tensor">The <see cref="T:Althea.Arrays.ITensor"/> to be reduced</param>
+            <param name="order">The <see cref="T:Althea.TensorAlgebra.TensorOrder"/> to indicate the reduction dimensions</param>
+            <param name="reducePerm">The <see cref="T:System.Span`1"/> of length equaling the rank. Filled with the reduce dimensions of actual reduction rank at exit.</param>
+            <param name="size">The <see cref="T:System.Span`1"/> of length equaling the rank. Filled with the actual output size of actual output rank at exit.</param>
+            <param name="labels">The <see cref="T:System.Span`1"/> of length equaling the rank. Filled with the actual output labels of actual output rank at exit.</param>
+            <returns>The <paramref name="reducePerm"/> of actual reduction rank</returns>
+        </member>
         <member name="T:Althea.TensorAlgebra.Dense.AbstractApi">
             <summary>
             The abstract class for runtime dense tensor algebra API routines 
@@ -14866,7 +14940,7 @@
         <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.VariableBlockCoordinated">
             <summary>
             The Variable Block Sparse Format that only differs from <see cref="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BlockCoordinated"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
-            Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of that rank.
+            Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of corresponding dimensions.
             </summary>
         </member>
         <member name="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1">
@@ -14884,6 +14958,7 @@
             <summary>
             Get the index arrays' storages of this sparse tensor wrapper as a list of <see cref="T:Althea.IStorage"/>
             </summary>
+            <remarks>If this was created using defined constructors, this is also the actual sparse tensor</remarks>
         </member>
         <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IndexType">
             <summary>

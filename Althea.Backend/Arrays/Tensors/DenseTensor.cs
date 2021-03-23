@@ -48,7 +48,7 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get the strides (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		/// <remarks>The first element is 1, the last element is the product of <see cref="OuterSize"/> and the size == <see cref="TensorBase{T}.Rank"/> + 1</remarks>
+		/// <remarks>The first element is 1, the last element is the product of <see cref="OuterSize"/> and the <see cref="ReadOnlySpan{T}.Length"/> == <see cref="TensorBase{T}.Rank"/> + 1</remarks>
 		public ReadOnlySpan<long> Strides {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => MemoryMarshal.CreateReadOnlySpan(ref this.__overlap, this.Rank + 1);
@@ -409,30 +409,11 @@ namespace Althea.Backend.Arrays
 		{
 			if (scalar.IsZero())
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
-			// get reduction permutation
+
 			Span<int> reducePerm = stackalloc int[this.Rank];
-			reducePerm = order.GetIntSpanOrder(this, reducePerm, allowPartial: true);
-			// get output permutation
-			int outRank = this.Rank - reducePerm.Length;
-			Span<int> outPerm = stackalloc int[outRank];
-			Span<int> identityPerm = stackalloc int[this.Rank].FillWithRange(0);
-			identityPerm.SetExept(outPerm, outPerm);
-			// get output members
-			ReadOnlySpan<long> size; ReadOnlySpan<char> label;
-			Span<long> sizeOne = stackalloc long[] { 1 };
-			Span<long> sizeAll = stackalloc long[outRank];
-			Span<char> labelAll = stackalloc char[outRank];
-			if (outRank == 0)
-			{
-				size = MemoryMarshal.CreateReadOnlySpan(ref sizeOne[0], 1); label = default;
-			}
-			else
-			{
-				this.Size.ReOrderTo(sizeAll, outPerm);
-				this.Labels.ReOrderTo(labelAll, outPerm);
-				size = MemoryMarshal.CreateReadOnlySpan(ref sizeAll[0], outRank);
-				label = MemoryMarshal.CreateReadOnlySpan(ref labelAll[0], outRank);
-			}
+			Span<long> size = stackalloc long[this.Rank];
+			Span<char> label = stackalloc char[this.Rank];
+			reducePerm = this.CheckReduce(order, reducePerm, ref size, ref label);
 			var storage = Storage<T>.Create(this.Storage[0].Location, size.Prod());
 			try
 			{

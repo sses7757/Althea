@@ -54,78 +54,6 @@ namespace Althea.Backend.Arrays
 		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, T defaultValue = default, long stores = 0) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue, stores) { }
 		#endregion
 
-		#region helper
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static SparseVector<T, TInd> CheckWrapper(long length, SparseArrayWrapper<T> wrapper)
-		{
-			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Length == 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Length != 1)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.WrongSize);
-			if (wrapper.IndexStorages[0] is not Storage<TInd> indices)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
-			if (indices.Length != wrapper.ValueStorage.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(wrapper));
-			if (wrapper.ValueStorage.Length > length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
-			if (wrapper.VectorFormat != SparseVectorFormat.Coordinated)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
-
-			return new SparseVector<T, TInd>(length, wrapper.ValueStorage, indices, wrapper.DefaultValue);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Althea.Arrays.SparseMatrix<T, TInd> CheckWrapper(long rows, long cols, SparseArrayWrapper<T> wrapper)
-		{
-			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Length == 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Length != 2)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.WrongSize);
-			if (wrapper.IndexStorages[0] is not Storage<TInd> rowIndex)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
-			if (wrapper.IndexStorages[1] is not Storage<TInd> colIndex)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[1], Resources.Parameter.UnexpectedType);
-			if (wrapper.ValueStorage.Length > rows * cols)
-				throw new ArgumentException(Resources.Parameter.WrongSize);
-
-			if ((wrapper.MatrixFormat & FormatExtension.NonBlocked) == wrapper.MatrixFormat)
-				return new SparseMatrix<T, TInd>(rows, cols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, wrapper.DefaultValue);
-			else if ((wrapper.MatrixFormat & FormatExtension.Blocked) == wrapper.MatrixFormat)
-			{
-				if (wrapper.OtherInfo is not BlockedSparseMatrixOtherInfo info)
-					throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.OtherInfo, Resources.Parameter.UnexpectedType);
-				return new BlockedSparseMatrix<T, TInd>(rows, cols, info.BlockRows, info.BlockCols, wrapper.ValueStorage, rowIndex, colIndex, wrapper.MatrixFormat, wrapper.DefaultValue);
-			}
-			else
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.VectorFormat, Resources.Parameter.InvalidValue);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static SparseTensor<T, TInd> CheckWrapper(ReadOnlySpan<long> size, ReadOnlySpan<char> labels, SparseArrayWrapper<T> wrapper)
-		{
-			if (wrapper.ValueStorage is null || wrapper.ValueStorage.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.ValueStorage?.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Length == 0)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.ZeroSize);
-			if (wrapper.IndexStorages.Length != 1)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages.Length, Resources.Parameter.WrongSize);
-			if (wrapper.IndexStorages[0] is not Storage<TInd> indices)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.IndexStorages[0], Resources.Parameter.UnexpectedType);
-			if (indices.Length != wrapper.ValueStorage.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(wrapper));
-			if (wrapper.ValueStorage.Length > size.Prod())
-				throw new ArgumentOutOfRangeException(nameof(size), size.Prod(), Resources.Parameter.InvalidValue);
-			if (wrapper.TensorFormat != TensorAlgebra.Sparse.SparseTensorFormat.Coordinated)
-				throw new ArgumentOutOfRangeException(nameof(wrapper), wrapper.TensorFormat, Resources.Parameter.InvalidValue);
-
-			return new SparseTensor<T, TInd>(size, wrapper.ValueStorage, indices, labels, defaultValue: wrapper.DefaultValue);
-		}
-		#endregion
-
 		#region indexer
 		/// <summary>
 		/// The basic indexed getter and setter of this vector.
@@ -250,7 +178,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.SparseVectorToMatrix(this, rows, SparseMatrixFormat.COOC);
 			try
 			{
-				var res = CheckWrapper(size[0], size[1], wrapper);
+				var res = wrapper.CheckWrapper<T, TInd>(size[0], size[1]);
 				if (res is not SparseMatrix<T, TInd> ss)
 					throw new InvalidOperationException(Resources.Support.Format);
 				return ss;
@@ -339,7 +267,7 @@ namespace Althea.Backend.Arrays
 				var wrapper = LAS.VectorSparseAddSparse(this, sparse, SparseVectorFormat.Coordinated);
 				try
 				{
-					return CheckWrapper(this.Length, wrapper);
+					return wrapper.CheckWrapper<T, TInd>(this.Length);
 				}
 				catch (Exception)
 				{
