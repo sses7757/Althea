@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 using Althea.Arrays;
 using Althea.Helpers;
@@ -14,6 +15,7 @@ using Althea.Solver;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Sparse;
 
+using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
 using MEM = Althea.Storage.AbstractApi;
 using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
@@ -123,7 +125,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="offsets"/> and <paramref name="offsetStores"/> are not the same; or <paramref name="size"/> cannot be divided by <paramref name="blockSize"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
-		public BlockedSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<int> blockSize, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, long stores = 0, long offsetStores = 0, T defaultValue = default) :
+		public BlockedSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<int> blockSize, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0, long offsetStores = 0) :
 			base(size, valueArray, offsets, SparseTensorFormat.Coordinated, labels, stores, stackalloc long[] { offsetStores }, default)
 		{
 			if (blockSize.Length != size.Length)
@@ -222,16 +224,65 @@ namespace Althea.Backend.Arrays
 		/// Reshape this array to a vector
 		/// </summary>
 		/// <returns>The referenced vector reshaped from this array</returns>
-		public override SparseVector<T, TInd> ToVector() => this.m_vector;
+		public override SparseVector<T, TInd> ToVector()
+		{
+			var wrapper = TAS.Reshape<T>(new(this), stackalloc long[] { this.Length });
+			try
+			{
+				return wrapper.CheckWrapper<T, TInd>(this.Length);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
+		}
 
 		/// <summary>
 		/// Reshape this array to a matrix with leading dimension = <paramref name="rows"/>
 		/// </summary>
 		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public override SparseMatrix<T, TInd> ToMatrix(long rows = 0)
+		public unsafe override Althea.Arrays.SparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
-			return this.m_vector.ToMatrix(rows);
+			var sizePtr = stackalloc long[] { rows, 0 };
+			Span<long> size = new(sizePtr, 2);
+			CheckSize(this, size);
+			// get matrix shaped tensor
+			SparseArrayWrapper<T> tensor;
+			IStorage orgIndex = this.OffsetStorage;
+			if (size.SequenceEqual(this.Size))
+			{
+				var span = MemoryMarshal.CreateReadOnlySpan(ref orgIndex, 1);
+				tensor = new(this.Storage, span, (int)this.Format, this.DefaultValue, new BlockedSparseTensorOtherInfo(this.BlockSize));
+			}
+			else 
+			{
+				tensor = TAS.Reshape<T>(new(this), size);
+			}
+			// index to matrix indices
+			try
+			{
+				if (tensor.OtherInfo is not BlockedSparseTensorOtherInfo info)
+					throw new NotSupportedException();
+				var refVec = new SparseVector<T, TInd>(this.Length, this.Storage, this.OffsetStorage, this.DefaultValue);
+				var wrapper = LAS.SparseVectorToMatrix(refVec, rows, LinearAlgebra.Sparse.FormatExtension.NonBlocked);
+				try
+				{
+					if (wrapper.IndexStorages.Length != 2)
+						throw new NotSupportedException();
+					return new BlockedSparseMatrix<T, TInd>(rows, size[1], info.BlockSize[0], info.BlockSize[1], this.Storage, (Storage<TInd>)wrapper.IndexStorages[0], (Storage<TInd>)wrapper.IndexStorages[1], wrapper.MatrixFormat, this.DefaultValue);
+				}
+				catch (Exception)
+				{
+					wrapper.Dispose();
+					throw;
+				}
+			}
+			finally
+			{
+				tensor.Dispose();
+			}
 		}
 
 		/// <summary>
@@ -244,7 +295,19 @@ namespace Althea.Backend.Arrays
 			Span<long> size = stackalloc long[newSize.Length];
 			newSize.CopyTo(size);
 			CheckSize(this, size);
-			return new(size, this.Storage, this.OffsetStorage, labels: this.Labels, defaultValue: this.DefaultValue);
+			if (size.SequenceEqual(this.Size))
+				return this;
+			// else
+			var wrapper = TAS.Reshape<T>(new(this), size);
+			try
+			{
+				return (BlockedSparseTensor<T, TInd>)wrapper.CheckWrapper<T, TInd>(size, default);
+			}
+			catch (Exception)
+			{
+				wrapper.Dispose();
+				throw;
+			}
 		}
 		#endregion
 
@@ -601,24 +664,43 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
-		T IKrylovVector<BlockedSparseTensor<T, TInd>, T>.Dot(BlockedSparseTensor<T, TInd> other)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void CheckSparsity(BlockedSparseTensor<T, TInd> other)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
 			if (!this.Size.SequenceEqual(other.Size))
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
+			if (this.NStored != other.NStored || !this.BlockSize.SequenceEqual(other.BlockSize))
+				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
+			if (this.OffsetStorage != other.OffsetStorage && !LAD.PointWiseEquals(this.OffsetStorage, 1, other.OffsetStorage, 1))
+				throw new InvalidOperationException(Resources.Other.DifferentSparsity);
+		}
 
-			return this.m_vector.Dot(other.m_vector);
+		BlockedSparseTensor<T, TInd> IKrylovVector<BlockedSparseTensor<T, TInd>, T>.NewArrayAlike()
+		{
+			var values = this.Storage.Clone();
+			try
+			{
+				return new(this.Size, this.BlockSize, values, this.OffsetStorage, this.Labels, this.DefaultValue);
+			}
+			catch (Exception)
+			{
+				values?.Dispose();
+				throw;
+			}
+		}
+
+		T IKrylovVector<BlockedSparseTensor<T, TInd>, T>.Dot(BlockedSparseTensor<T, TInd> other)
+		{
+			this.CheckSparsity(other);
+			return LAD.Dot(conjX: true, this.Storage, 1, other.Storage, 1);
 		}
 
 		void IKrylovVector<BlockedSparseTensor<T, TInd>, T>.AddBy(BlockedSparseTensor<T, TInd> other, T scalar)
 		{
-			if (other is null || !other.IsValid())
-				throw new ArgumentNullException(nameof(other));
-			if (!this.Size.SequenceEqual(other.Size))
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(other));
-
-			this.m_vector.AddByVector(other.m_vector, scalar);
+			this.CheckSparsity(other);
+			LAD.VectorGeneralAdd(scalar, other.Storage, 1, this.Storage, 1);
 		}
 
 		/// <summary>
@@ -655,10 +737,29 @@ namespace Althea.Backend.Arrays
 
 			var settings = overrideSetting ?? Settings.PrintSetting;
 
-			description += ":" + Environment.NewLine;
-			string detail = this.m_vector.Print(settings);
-			detail = detail[(detail.IndexOf(Environment.NewLine) + Environment.NewLine.Length)..];
-			return description + detail;
+			StringBuilder detail = new(description);
+			detail.AppendLine(":");
+			// get managed arrays
+			int length = (int)Math.Min(settings.ArrayLength, this.NStored / this.m_blockLength);
+			
+			// to matrix string
+			int brow = this.BlockNRows, bcol = this.BlockNCols;
+			for (int i = 0; i < length; i++)
+			{
+				string indexPair = $"[{rowInd}..{rowInd_}, {colInd}..{colInd_}] -> ";
+				detail.Append(indexPair);
+				string pad = new(' ', indexPair.Length);
+				string matrixRepr = DenseTensor<T>.Print(this.Storage + this.m_blockLength * i, this.BlockNRows, this.BlockNCols, this.BlockNRows, settings);
+				string[] reprs = matrixRepr.Split(Environment.NewLine);
+				for (int j = 0; j < reprs.Length - 1; j++)
+				{
+					detail.AppendLine(reprs[j]).Append(pad);
+				}
+				detail.Append(reprs[^1]);
+			}
+			if (this.NStored / this.m_blockLength > length)
+				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / this.m_blockLength - length));
+			return detail.ToString();
 		}
 		#endregion
 

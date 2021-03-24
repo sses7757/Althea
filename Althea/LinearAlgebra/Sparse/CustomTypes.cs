@@ -238,6 +238,98 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region methods
 		/// <summary>
+		/// Get the non-blocked corresponding <see cref="SparseMatrixFormat"/> of the given (pre-defined, atomic) <paramref name="format"/>
+		/// </summary>
+		/// <param name="format">The atomic pre-defined <see cref="SparseMatrixFormat"/> whose non-blocked corresponding format is about be obtained</param>
+		/// <returns>The non-blocked corresponding <see cref="SparseMatrixFormat"/> of the given <paramref name="format"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is anatomic or not pre-defined</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixFormat NonBlockedCorresponding(this SparseMatrixFormat format)
+		{
+			return format switch
+			{
+				SparseMatrixFormat.COOR => format,
+				SparseMatrixFormat.COOC => format,
+				SparseMatrixFormat.BCOR => SparseMatrixFormat.COOR,
+				SparseMatrixFormat.BCOC => SparseMatrixFormat.COOC,
+				SparseMatrixFormat.CSC => format,
+				SparseMatrixFormat.CSR => format,
+				SparseMatrixFormat.BSC => SparseMatrixFormat.CSC,
+				SparseMatrixFormat.BSR => SparseMatrixFormat.CSR,
+				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
+			};
+		}
+
+		/// <summary>
+		/// Get the blocked corresponding <see cref="SparseMatrixFormat"/> of the given (pre-defined, atomic) <paramref name="format"/>
+		/// </summary>
+		/// <param name="format">The atomic pre-defined <see cref="SparseMatrixFormat"/> whose blocked corresponding format is about be obtained</param>
+		/// <returns>The blocked corresponding <see cref="SparseMatrixFormat"/> of the given <paramref name="format"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is anatomic or not pre-defined</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixFormat BlockedCorresponding(this SparseMatrixFormat format)
+		{
+			return format switch
+			{
+				SparseMatrixFormat.COOR => SparseMatrixFormat.BCOR,
+				SparseMatrixFormat.COOC => SparseMatrixFormat.BCOC,
+				SparseMatrixFormat.BCOR => format,
+				SparseMatrixFormat.BCOC => format,
+				SparseMatrixFormat.CSC => SparseMatrixFormat.BSC,
+				SparseMatrixFormat.CSR => SparseMatrixFormat.BSR,
+				SparseMatrixFormat.BSC => format,
+				SparseMatrixFormat.BSR => format,
+				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
+			};
+		}
+
+		/// <summary>
+		/// Get the column-major corresponding <see cref="SparseMatrixFormat"/> of the given (pre-defined, atomic) <paramref name="format"/>
+		/// </summary>
+		/// <param name="format">The atomic pre-defined <see cref="SparseMatrixFormat"/> whose column-major corresponding format is about be obtained</param>
+		/// <returns>The column-major corresponding <see cref="SparseMatrixFormat"/> of the given <paramref name="format"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is anatomic or not pre-defined</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixFormat ColumnMajorCorresponding(this SparseMatrixFormat format)
+		{
+			return format switch
+			{
+				SparseMatrixFormat.COOR => SparseMatrixFormat.COOC,
+				SparseMatrixFormat.COOC => format,
+				SparseMatrixFormat.BCOR => SparseMatrixFormat.BCOC,
+				SparseMatrixFormat.BCOC => format,
+				SparseMatrixFormat.CSC => format,
+				SparseMatrixFormat.CSR => SparseMatrixFormat.CSC,
+				SparseMatrixFormat.BSC => format,
+				SparseMatrixFormat.BSR => SparseMatrixFormat.BSC,
+				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
+			};
+		}
+
+		/// <summary>
+		/// Get the row-major corresponding <see cref="SparseMatrixFormat"/> of the given (pre-defined, atomic) <paramref name="format"/>
+		/// </summary>
+		/// <param name="format">The atomic pre-defined <see cref="SparseMatrixFormat"/> whose row-major corresponding format is about be obtained</param>
+		/// <returns>The row-major corresponding <see cref="SparseMatrixFormat"/> of the given <paramref name="format"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is anatomic or not pre-defined</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixFormat RowMajorCorresponding(this SparseMatrixFormat format)
+		{
+			return format switch
+			{
+				SparseMatrixFormat.COOR => format,
+				SparseMatrixFormat.COOC => SparseMatrixFormat.COOR,
+				SparseMatrixFormat.BCOR => format,
+				SparseMatrixFormat.BCOC => SparseMatrixFormat.BCOR,
+				SparseMatrixFormat.CSC => SparseMatrixFormat.CSR,
+				SparseMatrixFormat.CSR => format,
+				SparseMatrixFormat.BSC => SparseMatrixFormat.CSR,
+				SparseMatrixFormat.BSR => format,
+				_ => throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue),
+			};
+		}
+
+		/// <summary>
 		/// Check whether the given <see cref="SparseVectorFormat"/> is an atomic format or not
 		/// </summary>
 		/// <param name="format">The given <see cref="SparseVectorFormat"/> to check</param>

@@ -842,6 +842,20 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
+		SparseMatrix<T, TInd> IKrylovVector<SparseMatrix<T, TInd>, T>.NewArrayAlike()
+		{
+			var values = this.Storage.Clone();
+			try
+			{
+				return new(this.NRows, this.NCols, values, this.RowIndexStorage, this.ColIndexStorage, this.Format, this.DefaultValue);
+			}
+			catch (Exception)
+			{
+				values?.Dispose();
+				throw;
+			}
+		}
+
 		/// <summary>
 		/// Check the sparsity of this sparse matrix and the <paramref name="other"/> one
 		/// </summary>
@@ -927,7 +941,7 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region helper methods
+		#region print
 		private void GetIndices(Span<long> rowIndices, Span<long> colIndices)
 		{
 			int rows = rowIndices.Length, cols = colIndices.Length;
@@ -989,7 +1003,9 @@ namespace Althea.Backend.Arrays
 				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
 			return description + detail;
 		}
+		#endregion
 
+		#region serialization
 		/// <summary>
 		/// The helper method used by <see cref="Althea.Arrays.SparseMatrix{T, TInd}.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
 		/// </summary>

@@ -15,6 +15,8 @@ using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
 using MEM = Althea.Storage.AbstractApi;
 
+using INFO = Althea.Backend.Arrays.BlockedSparseMatrixOtherInfo;
+
 
 namespace Althea.Backend.Arrays
 {
@@ -430,7 +432,7 @@ namespace Althea.Backend.Arrays
 				return this;
 			if ((format & FormatExtension.PreDefined) == 0)
 				throw new NotSupportedException(Resources.Support.Format);
-			if (otherInfo is not null && otherInfo is not BlockedSparseMatrixOtherInfo)
+			if (otherInfo is not null && otherInfo is not INFO)
 				throw new NotSupportedException(Resources.Support.Format);
 
 			var wrapper = LAS.MatrixSparseFormatConvert(this, format, otherInfo);
@@ -479,10 +481,7 @@ namespace Althea.Backend.Arrays
 			var wrapper = LAS.MatrixSparseReshape(this, size[0]);
 			try
 			{
-				var matrix = wrapper.CheckWrapper<T, TInd>(size[0], size[1]);
-				if (matrix is not BlockedSparseMatrix<T, TInd> s)
-					throw new InvalidOperationException();
-				return s;
+				return (BlockedSparseMatrix<T, TInd>)wrapper.CheckWrapper<T, TInd>(size[0], size[1]);
 			}
 			catch (Exception)
 			{
@@ -501,8 +500,7 @@ namespace Althea.Backend.Arrays
 			Span<long> newSize = stackalloc long[size.Length];
 			size.CopyTo(newSize);
 			CheckSize(this, newSize);
-			// TODO: to blocked sparse tensor
-			// to vector
+			// return
 			var wrapper = LAS.SparseMatrixToVector(this, SparseVectorFormat.Coordinated);
 			try
 			{
@@ -642,6 +640,20 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
+		BlockedSparseMatrix<T, TInd> IKrylovVector<BlockedSparseMatrix<T, TInd>, T>.NewArrayAlike()
+		{
+			var values = this.Storage.Clone();
+			try
+			{
+				return new(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, values, this.RowIndexStorage, this.ColIndexStorage, this.Format, this.DefaultValue);
+			}
+			catch (Exception)
+			{
+				values?.Dispose();
+				throw;
+			}
+		}
+
 		/// <summary>
 		/// Check the sparsity of this sparse matrix and the <paramref name="other"/> one
 		/// </summary>
@@ -706,7 +718,7 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region helper methods
+		#region print
 		private void GetIndices(Span<long> rowIndices, Span<long> colIndices)
 		{
 			int rows = rowIndices.Length, cols = colIndices.Length;
@@ -762,9 +774,11 @@ namespace Althea.Backend.Arrays
 			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
 			// to matrix string
+			int brow = this.BlockNRows, bcol = this.BlockNCols;
 			for (int i = 0; i < length; i++)
 			{
-				string indexPair = $"({row[i]}, {col[i]}) -> ";
+				long rowInd = row[i] * brow, rowInd_ = rowInd + brow, colInd = col[i] * bcol, colInd_ = colInd + bcol;
+				string indexPair = $"[{rowInd}..{rowInd_}, {colInd}..{colInd_}] -> ";
 				detail.Append(indexPair);
 				string pad = new(' ', indexPair.Length);
 				string matrixRepr = DenseMatrix<T>.ActualPrint(this.Storage + this.Pack * i, this.BlockNRows, this.BlockNCols, this.BlockNRows, settings);
@@ -779,7 +793,9 @@ namespace Althea.Backend.Arrays
 				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / this.Pack - length));
 			return detail.ToString();
 		}
+		#endregion
 
+		#region serialization
 		/// <summary>
 		/// The helper method used by <see cref="Althea.Arrays.SparseMatrix{T, TInd}.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
 		/// </summary>

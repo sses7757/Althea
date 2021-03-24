@@ -6,6 +6,7 @@ using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Solver;
 
 using MEM = Althea.Storage.AbstractApi;
 

@@ -30,27 +30,32 @@ namespace Althea.Helpers
 		/// The maximum columns of matrices to print
 		/// </summary>
 		public readonly int MatrixColumn;
+		/// <summary>
+		/// Whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
+		/// </summary>
+		public readonly bool MatrixFormTensor;
 
 		internal PrintSettings(bool _)
 		{
-			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5;
+			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5; MatrixFormTensor = true;
 		}
 
 		/// <summary>
 		/// Create a new <see cref="PrintSettings"/> with previous settings. The non-positive new value(s) are inherited from <paramref name="previousSettings"/>
 		/// </summary>
-		public PrintSettings(PrintSettings previousSettings, int precision = 0, int arrayLength = 0, int matrixRow = 0, int matrixColumn = 0)
+		public PrintSettings(PrintSettings previousSettings, int precision = 0, int arrayLength = 0, int matrixRow = 0, int matrixColumn = 0, bool? matrixFormTensor = null)
 		{
 			Precision = precision > 0 ? precision : previousSettings.Precision;
 			ArrayLength = arrayLength > 0 ? arrayLength : previousSettings.ArrayLength;
 			MatrixRow = matrixRow > 0 ? matrixRow : previousSettings.MatrixRow;
 			MatrixColumn = matrixColumn > 0 ? matrixColumn : previousSettings.MatrixColumn;
+			MatrixFormTensor = matrixFormTensor ?? previousSettings.MatrixFormTensor;
 		}
 
 		[JsonConstructor]
-		internal PrintSettings(int precision, int arrayLength, int matrixRow, int matrixColumn)
+		internal PrintSettings(int precision, int arrayLength, int matrixRow, int matrixColumn, bool matrixFormTensor)
 		{
-			Precision = precision; ArrayLength = arrayLength; MatrixRow = matrixRow; MatrixColumn = matrixColumn;
+			Precision = precision; ArrayLength = arrayLength; MatrixRow = matrixRow; MatrixColumn = matrixColumn; MatrixFormTensor = matrixFormTensor;
 		}
 	}
 	#endregion
@@ -218,6 +223,13 @@ namespace Althea.Helpers
 		public static int PrintMatrixColumn {
 			get => singletonSettings.PrintSettings.MatrixColumn;
 			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixColumn: value);
+		}
+		/// <summary>
+		/// Get and set whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
+		/// </summary>
+		public static bool PrintTensorAsEmbeddedMatrices {
+			get => singletonSettings.PrintSettings.MatrixFormTensor;
+			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixFormTensor: value);
 		}
 		#endregion
 

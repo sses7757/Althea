@@ -27,7 +27,7 @@ namespace Althea.Solver
 		long Length { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, create a new vector alike this one
+		/// When implemented by a derived class, create a new vector alike this one. The sparsities storages shall NOT be deep cloned.
 		/// </summary>
 		/// <returns>The new vector alike this one</returns>
 		TVec NewArrayAlike();

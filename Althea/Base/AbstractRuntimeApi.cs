@@ -478,7 +478,7 @@ namespace Althea
 		/// </summary>
 		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>
 		{
-			private readonly FixedBuffer_56<TypeHandle> inputTypes;
+			private readonly FixedBuffer_64<TypeHandle> inputTypes;
 
 			private readonly string name;
 
@@ -491,11 +491,11 @@ namespace Althea
 			{
 				if (string.IsNullOrWhiteSpace(name))
 					throw new ArgumentNullException(nameof(name));
-				if (inputTypes.Length > 56 / 8)
+				this.inputTypes = default;
+				if (inputTypes.Length > this.inputTypes.Count / 8)
 					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(inputTypes));
 
 				this.name = name;
-				this.inputTypes = new FixedBuffer_56<TypeHandle>();
 				for (int i = 0; i < inputTypes.Length; i++)
 				{
 					this.inputTypes[i] = inputTypes[i];

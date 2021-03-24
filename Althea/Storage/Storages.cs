@@ -67,6 +67,7 @@ namespace Althea.Storage
 		/// or <paramref name="name"/> already exists,
 		/// this method returns false;
 		/// otherwise, the name will be set and this method returns true</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool SetName(this UriScheme scheme, string name)
 		{
 			if (scheme >= UriScheme.Unknown && scheme <= UriScheme.HTTPS)
@@ -85,6 +86,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="scheme">The given <see cref="UriScheme"/> whose name will be get</param>
 		/// <returns>The name (string representation) of <paramref name="scheme"/> or the underlying number if the name cannot be obtained</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this UriScheme scheme)
 		{
 			if (static_names.ContainsKey(scheme))
@@ -99,6 +101,7 @@ namespace Althea.Storage
 		/// <param name="uri">The absolute <see cref="Uri"/></param>
 		/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or <see cref="UriScheme.Unknown"/> if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> is not an absolute URI</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UriScheme GetScheme(this Uri uri)
 		{
 			if (!uri.IsAbsoluteUri)
@@ -172,6 +175,7 @@ namespace Althea.Storage
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
@@ -183,6 +187,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
 		{
 			long newLength = CheckCast<TOut>(this.Length);
@@ -190,32 +195,11 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Determines whether the specified object is equal to the current object
-		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T>? obj)
-		{
-			if (obj is not null && obj is ActualStorage<T> another)
-			{
-				if (this.Count != another.Count)
-					return false;
-				for (int i = 0; i < this.Count; i++)
-				{
-					if (this[i] != another[i])
-						return false;
-				}
-				return true;
-			}
-			return false;
-		}
-
-		/// <summary>
 		/// Get the hash code of this <see cref="ActualStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() => this.HashCodeOfArray();
-
 		#endregion
 	}
 
@@ -233,16 +217,23 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		public override int Count => this.end - this.start;
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.end - this.start;
+		}
 
 		/// <summary>
 		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription[this.start..this.end] ?? default;
+		public override CombinationOfLocations LocationDescription {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Reference?.LocationDescription[this.start..this.end] ?? default;
+		}
 
 		/// <summary>
 		/// Create an empty <see cref="PureOrMixedReferenceStorage{T}"/>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal PureOrMixedReferenceStorage() : base(null) { }
 
 		/// <summary>
@@ -254,6 +245,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureOrMixedStorage{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PureOrMixedReferenceStorage(IStorage storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
@@ -292,6 +284,7 @@ namespace Althea.Storage
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private PureOrMixedReferenceStorage(IStorage? storage, long offset, long newLength, int start, int end, long startOffsetBytes, long endOffsetBytes) : base(storage, offset, newLength)
 		{
 			this.start = start; this.end = end;
@@ -308,6 +301,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
 		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureOrMixedReferenceStorage{T}"/> is null</exception>
 		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
@@ -332,6 +326,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
@@ -343,6 +338,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.Reference is null)
@@ -357,11 +353,12 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="obj">another object</param>
 		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(Storage<T>? obj)
 		{
-			if (obj is not null && obj is PureOrMixedReferenceStorage<T> @ref)
+			if (obj is not null && obj is PureOrMixedReferenceStorage<T> r)
 			{
-				return this.Reference == @ref.Reference && this.start == @ref.start && this.end == @ref.end && this.startOffsetBytes == @ref.startOffsetBytes && this.endOffsetBytes == @ref.endOffsetBytes;
+				return this.Reference == r.Reference && this.start == r.start && this.end == r.end && this.startOffsetBytes == r.startOffsetBytes && this.endOffsetBytes == r.endOffsetBytes;
 			}
 			return false;
 		}
@@ -370,6 +367,7 @@ namespace Althea.Storage
 		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() => HashCode.Combine(this.Reference, this.start, this.end, this.startOffsetBytes, this.endOffsetBytes);
 		#endregion
 	}
@@ -387,6 +385,7 @@ namespace Althea.Storage
 		/// <param name="type">The given <see cref="CombinationType"/></param>
 		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
 		{
 			return type == CombinationType.PureOrMixed && locations.Length == 1;
@@ -399,6 +398,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
 		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[] { location }, stackalloc long[] { length })
 		{
 			this.pointer = length == 0 ? default : Allocate(location, length);
@@ -409,7 +409,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		public override int Count => 1;
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
 
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
@@ -418,6 +421,7 @@ namespace Althea.Storage
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
@@ -429,6 +433,7 @@ namespace Althea.Storage
 		/// Allocate and creates a new <see cref="PureStorage{T}"/> that is a copy of the current one.
 		/// </summary>
 		/// <returns>A new <see cref="PureStorage{T}"/> that is a copy of the current instance</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureStorage<T> Clone()
 		{
 			var storage = new PureStorage<T>(this.pointer.Location, this.Length);
@@ -451,6 +456,7 @@ namespace Althea.Storage
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="PureReferenceStorage{T}"/> of this one</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureReferenceStorage<T>(this, offset, newLength);
@@ -472,15 +478,23 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		public override int Count => 1;
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
 
 		/// <summary>
 		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription ?? default;
+		public override CombinationOfLocations LocationDescription {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Reference?.LocationDescription ?? default;
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal PureReferenceStorage() : base(null) { }
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal PureReferenceStorage(PointerSegment refPointer) : base(null, 0, refPointer.LengthInBytes / Const<T>.SizeT) => this.refPointer = refPointer;
 
 		/// <summary>
@@ -492,6 +506,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorage{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PureReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
@@ -513,6 +528,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
 		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureReferenceStorage{T}"/> is null</exception>
 		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= this.Count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
@@ -526,6 +542,7 @@ namespace Althea.Storage
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="PureReferenceStorage{T}"/> of this one</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new PureReferenceStorage<T>(this, offset, newLength);
@@ -537,6 +554,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="PureReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PureReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.Reference is null)
@@ -547,23 +565,10 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Determines whether the specified object is equal to the current object.
-		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T>? obj)
-		{
-			if (obj is not null && obj is PureReferenceStorage<T> @ref)
-			{
-				return this.Reference == @ref.Reference && this.TotalOffsetInBytes == @ref.TotalOffsetInBytes && this.Length == @ref.Length;
-			}
-			return false;
-		}
-
-		/// <summary>
 		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() => HashCode.Combine(this.Reference, this.TotalOffsetInBytes, this.Length);
 		#endregion
 	}
@@ -581,12 +586,15 @@ namespace Althea.Storage
 		/// <param name="type">The given <see cref="CombinationType"/></param>
 		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
 		{
 			return type == CombinationType.PureOrMixed && locations.Length > 1;
 		}
 
-		private readonly PointerSegment[] pointers;
+		private readonly FixedStructBuffer_360<PointerSegment> pointers;
+
+		private readonly int count;
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
@@ -597,6 +605,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same; or <paramref name="allowSameLocation"/> is false while <paramref name="locations"/> contains duplicate value(s)</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths, bool allowSameLocation = true) : base(locations, lengths)
 		{
 			if (!allowSameLocation && !locations.ElementsUnique())
@@ -604,7 +613,8 @@ namespace Althea.Storage
 
 			try
 			{
-				this.pointers = new PointerSegment[locations.Length];
+				this.pointers = default;
+				this.count = locations.Length;
 				for (int i = 0; i < locations.Length; i++)
 				{
 					this.pointers[i] = Allocate(locations[i], lengths[i]);
@@ -621,6 +631,7 @@ namespace Althea.Storage
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
 		/// </summary>
 		/// <param name="param">The <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MixedStorage(params (StorageLocation location, long length)[] param) :
 			this(param.CopyTo(stackalloc StorageLocation[param.Length], static p => p.location),
 				 param.CopyTo(stackalloc long[param.Length], static p => p.length),
@@ -632,7 +643,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		public override int Count => this.pointers.Length;
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.count;
+		}
 
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
@@ -641,8 +655,9 @@ namespace Althea.Storage
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
-				if (index < 0 || index >= this.Count)
+				if (index < 0 || index >= this.count)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				return this.pointers[index];
 			}
@@ -674,7 +689,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, get the number of total caching levels, include the actual storage level. The default implementation is <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see>.
 		/// </summary>
-		int CacheLevels => this.LocationDescription.Count;
+		int CacheLevels {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.LocationDescription.Count;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>
@@ -756,7 +774,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the number of total caching levels, include the actual storage level.
 		/// </summary>
-		public int CacheLevels => this.LocationDescription.Count;
+		public int CacheLevels {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.LocationDescription.Count;
+		}
 
 		/// <summary>
 		/// The cache sizes in bytes of the top level as a <see cref="long"/>.
@@ -771,6 +792,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="maxLengths"/> is 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="locations"/> is of wrong size or has duplicate value(s) or is of wrong size; or if <paramref name="maxLengths"/> is of wrong size or has non-increase cache size</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="maxLengths"/> is 0</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected CachedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> maxLengths) : base(maxLengths[^1])
 		{
 			if (locations.Length <= 1)
@@ -801,6 +823,7 @@ namespace Althea.Storage
 		/// The function that actually dispose this storage, override <see cref="Storage{T}.Dispose(bool)"/>
 		/// </summary>
 		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override void Dispose(bool invokedByUser)
 		{
 			for (int i = 0; i < this.CacheLevels; i++)
@@ -814,7 +837,10 @@ namespace Althea.Storage
 		/// <summary>
 		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/>, always return 1
 		/// </summary>
-		public override int Count => 1;
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
 
 		/// <summary>
 		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
@@ -824,6 +850,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
 		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
@@ -836,32 +863,14 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="i">The actual index</param>
 		/// <returns>The actual <see cref="PointerSegment"/> at <paramref name="i"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal protected override PointerSegment GetActualPointerAt(int i) => this.GetCacheLevel(i);
-
-		/// <summary>
-		/// Determines whether the specified object is equal to the current object.
-		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T>? obj)
-		{
-			if (obj is not CachedStorage<T> c)
-				return false;
-			if (this.CacheLevels != c.LocationDescription.Count)
-				return false;
-			int count = this.CacheLevels;
-			for (int i = 0; i < count; i++)
-			{
-				if (this.GetCacheLevel(i) != c.GetCacheLevel(i))
-					return false;
-			}
-			return true;
-		}
 
 		/// <summary>
 		/// Get the hash code of this <see cref="CachedStorage{T}"/>.
 		/// </summary>
 		/// <returns>the hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			int count = this.CacheLevels;
@@ -881,6 +890,7 @@ namespace Althea.Storage
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override CachedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new CachedReferenceStorage<T>(this, offset, newLength);
@@ -892,6 +902,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>A <see cref="CachedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override CachedReferenceStorage<TOut> As<TOut>()
 		{
 			long newLength = CheckCast<TOut>(this.Length);
@@ -942,22 +953,34 @@ namespace Althea.Storage
 		/// <summary>
 		/// The cache sizes in bytes of the top level as a <see cref="long"/>.
 		/// </summary>
-		public long TopCacheSizeInBytes => this.Reference is ICachedStorage c ? c.TopCacheSizeInBytes : 0;
+		public long TopCacheSizeInBytes {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Reference is ICachedStorage c ? c.TopCacheSizeInBytes : 0;
+		}
 
 		/// <summary>
 		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		public override int Count => this.Reference is null ? 0 : 1;
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Reference is null ? 0 : 1;
+		}
 
 		/// <summary>
 		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription => this.Reference?.LocationDescription ?? default;
+		public override CombinationOfLocations LocationDescription {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Reference?.LocationDescription ?? default;
+		}
 
 		/// <summary>
 		/// Get the number of total caching levels, include the actual storage level.
 		/// </summary>
-		public int CacheLevels => this.Reference is ICachedStorage c ? c.CacheLevels : 0;
+		public int CacheLevels {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.Reference is ICachedStorage c ? c.CacheLevels : 0;
+		}
 
 		/// <summary>
 		/// Create a <see cref="CachedReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
@@ -968,6 +991,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorage{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CachedReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
 		{
 			if (this.Reference is null)
@@ -983,6 +1007,7 @@ namespace Althea.Storage
 		/// <param name="index">The index to indicate the cache level</param>
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PointerSegment GetCacheLevel(int index)
 		{
 			if (this.Reference is ICachedStorage c)
@@ -1002,6 +1027,7 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="CachedReferenceStorage{T}"/> is null</exception>
 		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
 		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
@@ -1018,6 +1044,7 @@ namespace Althea.Storage
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
 		/// <returns>A <see cref="CachedReferenceStorage{T}"/> of this one</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override CachedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
 		{
 			return new CachedReferenceStorage<T>(this, offset, newLength);
@@ -1029,6 +1056,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">The output data type</typeparam>
 		/// <returns>a referenced <see cref="CachedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override CachedReferenceStorage<TOut> As<TOut>()
 		{
 			if (this.Reference is null)
@@ -1048,6 +1076,7 @@ namespace Althea.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="copy"/> returns false</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="TopCacheSizeInBytes"/></exception>
 		/// <remarks>This method utilizes the <see cref="ICachedStorage.Retrieve(long, long, ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (this.Reference is not ICachedStorage c)
@@ -1064,29 +1093,17 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="copy">See <see cref="Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>.</param>
 		/// <remarks>This method utilizes the <see cref="ICachedStorage.Flush(ICachedStorage.CopyDelegate?)"/> of <see cref="ReferenceStorage{T}.Reference"/></remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Flush(ICachedStorage.CopyDelegate? copy = null)
 		{
 			(this.Reference as ICachedStorage)?.Flush(copy);
 		}
 
 		/// <summary>
-		/// Determines whether the specified object is equal to the current object.
-		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		public override bool Equals(Storage<T>? obj)
-		{
-			if (obj is not null && obj is CachedReferenceStorage<T> @ref)
-			{
-				return this.Reference == @ref.Reference && this.TotalOffsetInBytes == @ref.TotalOffsetInBytes && this.Length == @ref.Length;
-			}
-			return false;
-		}
-
-		/// <summary>
 		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
 		/// </summary>
 		/// <returns>the hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() => HashCode.Combine(this.Reference, this.TotalOffsetInBytes, this.Length);
 		#endregion
 	}
@@ -1104,6 +1121,7 @@ namespace Althea.Storage
 		/// <param name="type">The given <see cref="CombinationType"/></param>
 		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
 		{
 			return type == CombinationType.Cached && locations.Length == 2 && locations[0].Type == LocationType.CpuRam && locations[1].Type == LocationType.Uri;
@@ -1119,6 +1137,7 @@ namespace Althea.Storage
 		/// <param name="maxMemoryCacheSize">The maximum size in <typeparamref name="T"/> allowed in <paramref name="memoryLocation"/></param>
 		/// <param name="length">The actual length of this storage in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memoryLocation"/> is not a memory-typed location or <paramref name="streamLocation"/> is not a stream-typed location</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StreamToMemoryCachedStorage(StorageLocation memoryLocation, StorageLocation streamLocation, long maxMemoryCacheSize, long length) :
 			base(stackalloc StorageLocation[] { memoryLocation, streamLocation }, stackalloc long[] { maxMemoryCacheSize, length })
 		{
@@ -1147,6 +1166,7 @@ namespace Althea.Storage
 		/// <param name="index">The index to indicate the cache level</param>
 		/// <returns>The whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PointerSegment GetCacheLevel(int index)
 		{
 			if (index < 0 || index >= 2)
@@ -1165,6 +1185,7 @@ namespace Althea.Storage
 		/// Update all the data in the lowest caching level by causing all caching levels to fall back to the lower ones.
 		/// </summary>
 		/// <param name="copy">See <see cref="Retrieve(long, long, ICachedStorage.CopyDelegate?)"/>.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Flush(ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (!this.cached)
@@ -1193,6 +1214,7 @@ namespace Althea.Storage
 		/// <returns>The <see cref="PointerSegment"/> of the highest caching level containing the required data</returns>
 		/// <exception cref="NotSupportedException">If <paramref name="copy"/> returns false</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="totalOffsetInBytes"/> + <paramref name="lengthInBytes"/> is out of the boundary, or <paramref name="lengthInBytes"/> is larger than <see cref="CachedStorage{T}.TopCacheSizeInBytes"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override PointerSegment Retrieve(long totalOffsetInBytes, long lengthInBytes = 0, ICachedStorage.CopyDelegate? copy = null)
 		{
 			if (totalOffsetInBytes >= this.stream.LengthInBytes)
@@ -1339,6 +1361,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="combinationType">The given <see cref="CombinationType"/> to set the creation method</param>
 		/// <param name="createDelegate">The creation method as a <see cref="CreateDelegate"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetCreateMethod(CombinationType combinationType, CreateDelegate createDelegate)
 		{
 			cache_create[combinationType] = createDelegate;
@@ -1347,6 +1370,7 @@ namespace Althea.Storage
 
 		private delegate bool _SupportDelegate(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool TryFindAndSetCreateMethod(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations)
 		{
 			var thisAssembly = Assembly.GetExecutingAssembly();
@@ -1435,6 +1459,7 @@ namespace Althea.Storage
 		/// (the type with static method like <see cref="PureStorage{T}.IsSupported"/> and constructor using <paramref name="locations"/> and <paramref name="lengths"/>)<br/>
 		/// which can be <b>really</b> slow. Therefore, try to use <see cref="SetCreateMethod"/> before calling this method if possible.</remarks>
 		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/>, and it cannot be obtained from the public constructors of other assemblies</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ActualStorage<T> Create(CombinationType type, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
 			if (!cache_create.ContainsKey(type))
@@ -1498,6 +1523,7 @@ namespace Althea.Storage
 		/// <param name="storage">The given <see cref="Storage{T}"/> as the template of <see cref="Storage{T}.LocationDescription"/> and lengths to create the new one</param>
 		/// <returns>A new <see cref="Storage{T}"/> alike <paramref name="storage"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/>'s <see cref="PointerSegment"/> are not aligned to the size of <typeparamref name="T"/>, meanwhile auto alignment cannot be done with neither <see cref="Storage{T}.this[int]"/> nor <see cref="Storage{T}.GetActualPointerAt(int)"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ActualStorage<T> CreateAlike(Storage<T> storage)
 		{
 			int sizeT = Const<T>.SizeT;

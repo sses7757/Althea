@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -140,12 +141,18 @@ namespace Althea
 		/// <summary>
 		/// The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/>
 		/// </summary>
-		public LocationType Type => (LocationType)unchecked((byte)(this._data & byte.MaxValue));
+		public LocationType Type {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => (LocationType)unchecked((byte)(this._data & byte.MaxValue));
+		}
 
 		/// <summary>
 		/// The location detail of the <see cref="Type"/>.
 		/// </summary>
-		public int LocationDetail => this._data >> 8;
+		public int LocationDetail {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this._data >> 8;
+		}
 
 		/// <summary>
 		/// Create with given location and device ID
@@ -153,6 +160,7 @@ namespace Althea
 		/// <param name="location">The location of this <see cref="StorageLocation"/>, must be a flag</param>
 		/// <param name="detail">The detail of <paramref name="location"/>: a <see cref="Althea.Storage.UriScheme"/> for a <see cref="LocationType.Uri"/> or a device ID otherwise. The largest 8 bits must be empty.</param>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="detail"/> is too large to fit with <see cref="LocationType"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StorageLocation(LocationType location, int detail)
 		{
 			if (detail < 0 || (uint)detail >= 0xffffff)
@@ -167,6 +175,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="other">another <see cref="StorageLocation"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(StorageLocation other)
 		{
 			return this._data == other._data;
@@ -177,6 +186,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is StorageLocation storageDetail && this.Equals(storageDetail);
@@ -186,6 +196,7 @@ namespace Althea
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StorageLocation"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return this._data;
@@ -194,6 +205,7 @@ namespace Althea
 		/// <summary>
 		/// Equality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(StorageLocation left, StorageLocation right)
 		{
 			return left.Equals(right);
@@ -202,6 +214,7 @@ namespace Althea
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(StorageLocation left, StorageLocation right)
 		{
 			return !(left == right);
@@ -269,8 +282,10 @@ namespace Althea
 			return str;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal int AsInt() => this._data;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal StorageLocation(int data) => this._data = data;
 		#endregion
 	}
@@ -280,27 +295,37 @@ namespace Althea
 	/// </summary>
 	/// <remarks>
 	/// The size of this structure is 64, which is exactly inside the cache line boundaries for Intel CPUs.<br/>
-	/// The data field of this struct is a <see cref="FixedBuffer_60{T}"/> rather than an array of <see cref="StorageLocation"/> to reduce GC pressure since this structure is frequently created.<br/>
-	/// In fact, nearly no GC is necessary even if some reference type has field of this <see cref="CombinationOfLocations"/>.
+	/// The data field of this struct is a <see cref="FixedBuffer_64{T}"/> rather than an array of <see cref="StorageLocation"/> to reduce GC pressure since this structure is frequently created.<br/>
+	/// Furthermore, still nearly no GC is necessary even if some reference type has field of this <see cref="CombinationOfLocations"/>.
 	/// </remarks>
+	[StructLayout(LayoutKind.Explicit)]
 	public readonly struct CombinationOfLocations : IEquatable<CombinationOfLocations>, IReadOnlyList<StorageLocation>
 	{
 		#region basic
-		private readonly FixedBuffer_60<StorageLocation> data;
+		private const int MaxSize = (64 - 4) / 4 ;//default(FixedBuffer_64<StorageLocation>).Count - 1;
 
+		[FieldOffset(0)]
+		private readonly FixedBuffer_64<StorageLocation> data;
+		[FieldOffset(64 - 4)]
 		private readonly CombinationType type; // size = 2
-
+		[FieldOffset(64 - 4 + 2)]
 		private readonly ushort count;
 
 		/// <summary>
 		/// The number of <see cref="StorageLocation"/>s in this description
 		/// </summary>
-		public int Count => this.count;
+		public int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.count; 
+		}
 
 		/// <summary>
 		/// The <see cref="CombinationType"/> of this <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public CombinationType Type => this.type;
+		public CombinationType Type {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.type;
+		}
 
 		/// <summary>
 		/// Create a <see cref="CombinationOfLocations"/> with given <see cref="CombinationType"/> (whether <paramref name="type"/> represents a set or a list is defined inside), and a <see cref="ReadOnlySpan{T}"/> containing the actual data
@@ -308,13 +333,14 @@ namespace Althea
 		/// <param name="type">The <see cref="CombinationType"/></param>
 		/// <param name="data">A <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/> containing the actual storage details, must has length between 1 and 15</param>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="data"/> has incompatible size</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CombinationOfLocations(CombinationType type, ReadOnlySpan<StorageLocation> data)
 		{
-			if (data.Length > 15 || data.Length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(data), data.ToArray(), Parameter.WrongSize);
+			this.data = default;
+			if (data.Length >= MaxSize || data.IsEmpty)
+				throw new ArgumentOutOfRangeException(nameof(data), data.Length, Parameter.WrongSize);
 			// initialize
 			this.type = type;
-			this.data = new FixedBuffer_60<StorageLocation>();
 			this.count = (ushort)data.Length;
 			// set the values of data
 			this.data.CopyFromSpan(data);
@@ -326,16 +352,18 @@ namespace Althea
 		/// <param name="type">The <see cref="CombinationType"/></param>
 		/// <param name="data">An array of <see cref="StorageLocation"/> containing the actual storage details, must has length between 1 and 15</param>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="data"/> has incompatible size</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CombinationOfLocations(CombinationType type, params StorageLocation[] data) : this(type, (ReadOnlySpan<StorageLocation>)data) { }
 
 		/// <summary>
 		/// Create a <see cref="CombinationOfLocations"/> from a single <see cref="StorageLocation"/>
 		/// </summary>
 		/// <param name="memoryLocation">The given <see cref="StorageLocation"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CombinationOfLocations(StorageLocation memoryLocation)
 		{
 			this.type = CombinationType.PureOrMixed;
-			this.data = new FixedBuffer_60<StorageLocation>();
+			this.data = default;
 			this.data[0] = memoryLocation;
 			this.count = 1;
 		}
@@ -347,6 +375,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="other">another <see cref="CombinationOfLocations"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(CombinationOfLocations other)
 		{
 			if (this.type != other.type)
@@ -366,6 +395,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is CombinationOfLocations descr && this.Equals(descr);
@@ -375,6 +405,7 @@ namespace Althea
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="CombinationOfLocations"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			Span<StorageLocation> span = stackalloc StorageLocation[this.count];
@@ -389,6 +420,7 @@ namespace Althea
 		/// <summary>
 		/// Equality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(CombinationOfLocations left, CombinationOfLocations right)
 		{
 			return left.Equals(right);
@@ -397,6 +429,7 @@ namespace Althea
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(CombinationOfLocations left, CombinationOfLocations right)
 		{
 			return !(left == right);
@@ -410,7 +443,10 @@ namespace Althea
 		/// <param name="index">The index</param>
 		/// <returns>The element at <paramref name="index"/> as a <see cref="StorageLocation"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-		public StorageLocation this[int index] => index >= 0 && index < this.Count ? this.data[index] : throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+		public StorageLocation this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => index >= 0 && index < this.count ? this.data[index] : throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+		}
 
 		/// <summary>
 		/// Forms a slice out of the current <see cref="CombinationOfLocations"/> starting at a specified <paramref name="start"/> for a specified <paramref name="length"/>.
@@ -419,11 +455,12 @@ namespace Althea
 		/// <param name="length">The desired length for the slice.</param>
 		/// <returns>A <see cref="CombinationOfLocations"/> that consists of <see cref="StorageLocation"/>s composed of <paramref name="length"/> elements from the <paramref name="start"/> and the same <see cref="Type"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="start"/> and/or <paramref name="length"/> exceeds the boundary of this <see cref="CombinationOfLocations"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CombinationOfLocations Slice(int start, int length)
 		{
-			if (start < 0 || start >= this.Count)
+			if (start < 0 || start >= this.count)
 				throw new ArgumentOutOfRangeException(nameof(start), start, Parameter.InvalidValue);
-			if (length <= 0 || length + start > this.Count)
+			if (length <= 0 || length + start > this.count)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 
 			var locations = this.CopyLocationsToSpan(stackalloc StorageLocation[this.count]);
@@ -436,16 +473,19 @@ namespace Althea
 		/// <param name="start">The index at which to begin this slice.</param>
 		/// <returns>A <see cref="CombinationOfLocations"/> that consists of <see cref="StorageLocation"/>s composed of (<see cref="Count"/> - <paramref name="start"/>) elements from the <paramref name="start"/> and the same <see cref="Type"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="start"/> exceeds the boundary of this <see cref="CombinationOfLocations"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CombinationOfLocations Slice(int start) => this[start..];
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator<StorageLocation> IEnumerable<StorageLocation>.GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < this.count; i++)
 			{
 				yield return this.data[i];
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<StorageLocation>)this).GetEnumerator();
 		#endregion
 
@@ -454,6 +494,7 @@ namespace Althea
 		/// Implicitly convert a <see cref="StorageLocation"/> to a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		/// <param name="storageDetail">The <see cref="StorageLocation"/> to be converted</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator CombinationOfLocations(StorageLocation storageDetail) => new(storageDetail);
 
 		/// <summary>
@@ -479,7 +520,7 @@ namespace Althea
 		/// <returns>the string representation of this <see cref="CombinationOfLocations"/></returns>
 		public override string ToString()
 		{
-			return $"{nameof(CombinationOfLocations)}[type={this.type}, data={string.Join(", ", this)}]";
+			return $"{nameof(CombinationOfLocations)} [Type={this.type}, Data={this.data.AsSpan(this.count).SpanJoin(", ")}]";
 		}
 		#endregion
 	}
@@ -1169,10 +1210,10 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, determines whether the specified object is equal to the current object.
+		/// When implemented by a derived class, determines whether the given <see cref="Storage{T}"/> equals to this one.
 		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
+		/// <param name="obj">The other storage to compare</param>
+		/// <returns>This storage equals to <paramref name="obj"/> or not</returns>
 		public abstract bool Equals(Storage<T>? obj);
 
 		/// <summary>
@@ -1296,7 +1337,10 @@ namespace Althea
 		/// <summary>
 		/// The referenced storage as a nullable <see cref="IStorage"/>
 		/// </summary>
-		public IStorage? Reference => this.reference;
+		public IStorage? Reference {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.reference;
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, get the total offset compared to the start of the referenced <see cref="IStorage"/> in bytes. It is not counted in <typeparamref name="T"/> since there may be data type difference between the <see cref="IStorage"/> and this.
@@ -1354,6 +1398,14 @@ namespace Althea
 		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
 		/// <remarks>Since this is a reference, this method does nothing</remarks>
 		protected override void Dispose(bool invokedByUser) { }
+
+		/// <summary>
+		/// When implemented by a derived class, determines whether the given <see cref="Storage{T}"/> equals to this one. The default implementation simply compares the <see cref="Reference"/>, <see cref="TotalOffsetInBytes"/> and <see cref="Length"/>.
+		/// </summary>
+		/// <param name="obj">The other storage to compare</param>
+		/// <returns>This storage equals to <paramref name="obj"/> or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(Storage<T>? obj) => obj is ReferenceStorage<T> r && ReferenceEquals(this.reference, r.reference) && this.TotalOffsetInBytes == r.TotalOffsetInBytes && this.Length == r.Length;
 		#endregion
 	}
 
@@ -1421,6 +1473,15 @@ namespace Althea
 		{
 			return MEM.Allocate<T>(location, length);
 		}
+		#endregion
+
+		#region override
+		/// <summary>
+		/// When implemented by a derived class, determines whether the given <see cref="Storage{T}"/> equals to this one. The default implementation assumes that no part of this <see cref="ActualStorage{T}"/> is shared with any other one.
+		/// </summary>
+		/// <param name="obj">The other storage to compare</param>
+		/// <returns>This storage equals to <paramref name="obj"/> or not</returns>
+		public override bool Equals(Storage<T>? obj) => ReferenceEquals(this, obj);
 		#endregion
 	}
 	#endregion

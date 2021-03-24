@@ -49,7 +49,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="offsets"/> and <paramref name="offsetStores"/> are not the same</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
-		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, long stores = 0, long offsetStores = 0, T defaultValue = default) :
+		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0, long offsetStores = 0) :
 			base(size, valueArray, offsets, SparseTensorFormat.Coordinated, labels, stores, stackalloc long[] { offsetStores }, default)
 		{
 			this.m_vector = new(this.Length, this.Storage, this.OffsetStorage, defaultValue);
@@ -486,6 +486,20 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
+		SparseTensor<T, TInd> IKrylovVector<SparseTensor<T, TInd>, T>.NewArrayAlike()
+		{
+			var values = this.Storage.Clone();
+			try
+			{
+				return new(this.Size, values, this.OffsetStorage, this.Labels, this.DefaultValue);
+			}
+			catch (Exception)
+			{
+				values?.Dispose();
+				throw;
+			}
+		}
+
 		T IKrylovVector<SparseTensor<T, TInd>, T>.Dot(SparseTensor<T, TInd> other)
 		{
 			if (other is null || !other.IsValid())

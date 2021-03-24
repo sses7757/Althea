@@ -387,6 +387,20 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IKrylovVector
+		SparseVector<T, TInd> IKrylovVector<SparseVector<T, TInd>, T>.NewArrayAlike()
+		{
+			var values = this.Storage.Clone();
+			try
+			{
+				return new(this.Length, values, this.IndexStorage, this.DefaultValue);
+			}
+			catch (Exception)
+			{
+				values?.Dispose();
+				throw;
+			}
+		}
+
 		T IKrylovVector<SparseVector<T, TInd>, T>.Dot(SparseVector<T, TInd> other) => this.Dot(other);
 
 		void IKrylovVector<SparseVector<T, TInd>, T>.AddBy(SparseVector<T, TInd> other, T scalar) => this.AddByVector(other, scalar);
