@@ -349,14 +349,14 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region print
-		internal static string ActualPrint(Storage<T> storage, long actual, PrintSettings settings)
+		internal static string ActualPrint(Storage<T> storage, long actual, PrintSettings settings, string? prefix = null)
 		{
 			// get managed array
 			int length = (int)Math.Min(settings.ArrayLength, actual);
 			Span<T> managed = length.CheckStackLimit<T>() ?? stackalloc T[length];
 			MEM.ToManaged(storage, managed);
 			// to dense vector string
-			string str = managed.ToVectorString(precision: settings.Precision);
+			string str = managed.ToVectorString(precision: settings.Precision, prefix: prefix);
 			if (actual > managed.Length)
 				str += Environment.NewLine + string.Format(Resources.Print.MoreStored, actual - managed.Length);
 			return str;

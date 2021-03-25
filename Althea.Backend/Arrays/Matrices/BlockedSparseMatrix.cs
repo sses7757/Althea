@@ -769,7 +769,8 @@ namespace Althea.Backend.Arrays
 			StringBuilder detail = new(description);
 			detail.AppendLine(":");
 			// get managed arrays
-			int length = (int)Math.Min(settings.ArrayLength, this.NStored / this.Pack);
+			long pack = this.Pack;
+			int length = (int)Math.Min(settings.ArrayLength, this.NStored / pack);
 			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
@@ -781,16 +782,11 @@ namespace Althea.Backend.Arrays
 				string indexPair = $"[{rowInd}..{rowInd_}, {colInd}..{colInd_}] -> ";
 				detail.Append(indexPair);
 				string pad = new(' ', indexPair.Length);
-				string matrixRepr = DenseMatrix<T>.ActualPrint(this.Storage + this.Pack * i, this.BlockNRows, this.BlockNCols, this.BlockNRows, settings);
-				string[] reprs = matrixRepr.Split(Environment.NewLine);
-				for (int j = 0; j < reprs.Length - 1; j++)
-				{
-					detail.AppendLine(reprs[j]).Append(pad);
-				}
-				detail.Append(reprs[^1]);
+				string matrixRepr = DenseMatrix<T>.ActualPrint(this.Storage + pack * i, brow, bcol, brow, settings, prefix: pad);
+				detail.Append(((ReadOnlySpan<char>)matrixRepr)[pad.Length..]);
 			}
-			if (this.NStored / this.Pack > length)
-				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / this.Pack - length));
+			if (this.NStored / pack > length)
+				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / pack - length));
 			return detail.ToString();
 		}
 		#endregion

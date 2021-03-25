@@ -739,23 +739,36 @@ namespace Althea.Backend.Arrays
 
 			StringBuilder detail = new(description);
 			detail.AppendLine(":");
-			// get managed arrays
+			// get sizes
 			int length = (int)Math.Min(settings.ArrayLength, this.NStored / this.m_blockLength);
-			
-			// to matrix string
-			int brow = this.BlockNRows, bcol = this.BlockNCols;
+			if (!settings.MatrixFormTensor)
+			{
+				length = (int)Math.Ceiling(Math.Sqrt(length));
+				settings = new(settings, arrayLength: length);
+			}
+			int rank = this.Rank;
+			var sizeProd = this.SizeProd;
+			Span<long> blockSize = stackalloc long[rank];
+			this.BlockSize.CopyTo(blockSize, static s => s);
+			Span<long> blockOffsets = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			SparseMatrix<T, TInd>.ToManaged(this.OffsetStorage, blockOffsets);
+			// to string
 			for (int i = 0; i < length; i++)
 			{
-				string indexPair = $"[{rowInd}..{rowInd_}, {colInd}..{colInd_}] -> ";
-				detail.Append(indexPair);
-				string pad = new(' ', indexPair.Length);
-				string matrixRepr = DenseTensor<T>.Print(this.Storage + this.m_blockLength * i, this.BlockNRows, this.BlockNCols, this.BlockNRows, settings);
-				string[] reprs = matrixRepr.Split(Environment.NewLine);
-				for (int j = 0; j < reprs.Length - 1; j++)
+				// append range part
+				long offset = blockOffsets[i] * this.m_blockLength;
+				int detailLengthPrev = detail.Length;
+				detail.Append('[');
+				for (int k = 0; k < rank; k++)
 				{
-					detail.AppendLine(reprs[j]).Append(pad);
+					long offsetK = (offset % sizeProd[k + 1]) / sizeProd[k];
+					detail.Append(offsetK).Append("..").Append(offsetK + blockSize[k]).Append(", ");
 				}
-				detail.Append(reprs[^1]);
+				detail.Remove(detail.Length - 2, 2).Append("] -> ");
+				// append dense block tensor
+				string pad = new(' ', detail.Length - detailLengthPrev);
+				string tensorRepr = DenseTensor<T>.ActualPrint(this.Storage + i * this.m_blockLength, blockSize, blockSize, settings, prefix: pad);
+				detail.Append(((ReadOnlySpan<char>)tensorRepr)[pad.Length..]);
 			}
 			if (this.NStored / this.m_blockLength > length)
 				detail.AppendLine().Append(string.Format(Resources.Print.MoreStored, this.NStored / this.m_blockLength - length));

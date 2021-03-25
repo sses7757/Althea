@@ -917,14 +917,14 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region print
-		internal static string ActualPrint(Storage<T> storage, long actualRow, long actualCol, long ld, PrintSettings settings)
+		internal static string ActualPrint(Storage<T> storage, long actualRow, long actualCol, long ld, PrintSettings settings, string? prefix = null)
 		{
 			// get managed array
 			int rows = (int)Math.Min(settings.MatrixRow, actualRow), cols = (int)Math.Min(settings.MatrixColumn, actualCol);
 			Span<T> managed = (rows * cols).CheckStackLimit<T>() ?? stackalloc T[rows * cols];
 			MEM.ToManaged2D(storage, ld, rows, cols, managed);
 			// to dense vector string
-			string str = managed.ToMatrixString(rows, more: actualCol - cols, precision: settings.Precision);
+			string str = managed.ToMatrixString(rows, more: actualCol - cols, precision: settings.Precision, prefix: prefix);
 			if (actualRow > rows)
 				str += Environment.NewLine + string.Format(Resources.Print.MoreRows, actualRow - rows);
 			return str;

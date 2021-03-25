@@ -37,7 +37,7 @@ namespace Althea.Helpers
 
 		internal PrintSettings(bool _)
 		{
-			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5; MatrixFormTensor = true;
+			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5; MatrixFormTensor = false;
 		}
 
 		/// <summary>

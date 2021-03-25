@@ -89,7 +89,7 @@ namespace Althea.Backend.Arrays
 			long prod = 1;
 			for (int i = 0; i < r; i++)
 			{
-				prodOuter -= prod * (outerSize[i] - outerSize[i]);
+				prodOuter -= prod * (outerSize[i] - size[i]);
 				prod *= outerSize[i];
 			}
 			return prodOuter;
@@ -155,6 +155,32 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region clone related
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Storage<T> ToContiguous(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, long newLength)
+		{
+			if (size.SequenceEqual(outerSize))
+				return CopyToStorage(storage, size, outerSize, newLength);
+			else
+				return storage;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ActualStorage<T> CopyToStorage(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, long newLength)
+		{
+			var newStorage = Storage<T>.Create(storage[0].Location, newLength);
+			try
+			{
+				TAD.Permute<T>(new(storage, size, outerSize), new(newStorage, size, size), stackalloc int[size.Length].FillWithRange(0));
+				return newStorage;
+			}
+			catch (Exception)
+			{
+				newStorage?.Dispose();
+				throw;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Storage<T> ToContiguous()
 		{
 			if (this.HasPitch)
@@ -163,6 +189,7 @@ namespace Althea.Backend.Arrays
 				return this.Storage;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ActualStorage<T> CopyToStorage()
 		{
 			var size = this.Size;
@@ -239,6 +266,13 @@ namespace Althea.Backend.Arrays
 			CheckSize(this, size);
 			if (size.SequenceEqual(this.Size))
 				return new(this.Storage, size[0], size[1], this.m_outerSize[0]);
+			// check leading dimension
+			int f = this.SizeProd.IndexOf(size[0]);
+			if (f >= 0 && this.Strides[..f].SequenceEqual(this.SizeProd[..f]))
+			{
+				if (this.OuterSize[f..^1].SequenceEqual(this.Size[f..^1]))
+					return new(this.Storage, size[0], size[1], this.m_outerSizeProd[f]);
+			}
 			// else
 			var storage = this.CopyToStorage();
 			return new(storage, size[0], size[1]);
@@ -682,219 +716,93 @@ namespace Althea.Backend.Arrays
 		}
 		#endregion
 
-		#region matrix operation and decompositions
-		/*
-		/// <summary>
-		/// Multiply this tensor as a matrix with the <paramref name="right"/> tensor as another matrix.
-		/// </summary>
-		/// <param name="right">The other <see cref="DenseTensor{T}"/> as a matrix</param>
-		/// <param name="partitionLeft">a <see cref="Index"/> to indicate the first <paramref name="partitionLeft"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="partitionRight">a <see cref="Index"/> to indicate the first <paramref name="partitionRight"/> (exclude) indices of tensor <paramref name="right"/> will be regarded as the row and others column</param>
-		/// <param name="leftOp">The <see cref="MatrixOperation"/> to apply on this one</param>
-		/// <param name="rightOp">The <see cref="MatrixOperation"/> to apply on <paramref name="right"/></param>
-		/// <returns>the multiplication result, out-of-place</returns>
-		public DenseTensor<T> OperatorMatrixMultiply(DenseTensor<T> right, Index partitionLeft, Index partitionRight, MatrixOperation leftOp = MatrixOperation.None, MatrixOperation rightOp = MatrixOperation.None)
+		#region print
+		internal static string ActualPrint(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, PrintSettings settings, string? prefix = null)
 		{
-			if (this.OnHost != right.OnHost)
-				throw new ArgumentException(Resource.RequireSamePos, nameof(right));
-			int pl = (int)partitionLeft.GetPosition(this.Rank);
-			int pr = (int)partitionRight.GetPosition(right.Rank);
-
-			var (m, n) = (this.SizeProd[pl], this.Length / this.SizeProd[pl]);
-			if (leftOp != MatrixOperation.None)
-				(m, n) = (n, m);
-			var (p, q) = (right.SizeProd[pr], right.Length / right.SizeProd[pr]);
-			if (rightOp != MatrixOperation.None)
-				(p, q) = (q, p);
-			if (n != p)
-				throw new ArgumentException(Resource.TensorWrongSize, nameof(right));
-			var outSizeL = leftOp == MatrixOperation.None ? this.Size.Take(pl) : this.Size.TakeLast(this.Rank - pl);
-			var outSizeR = rightOp != MatrixOperation.None ? right.Size.Take(pr) : right.Size.TakeLast(right.Rank - pr);
-
-			var output = new DenseMatrix<T>(m, q, this.OnHost);
-			try
+			int vectorMaxLen = settings.ArrayLength, matrixMaxRows = settings.MatrixRow, matrixMaxCols = settings.MatrixColumn;
+			// get actual rank
+			int actualRank = 0, rank = size.Length;
+			long allLength = 1;
+			for (int i = 0; i < size.Length; i++)
 			{
-				using var l = this.ToMatrix(this.SizeProd[pl]) as DenseMatrix<T>;
-				using var r = right.ToMatrix(right.SizeProd[pr]) as DenseMatrix<T>;
-				output.Mulβ_AddBy_αAB(l, r, Scalars<T>.One, opA: leftOp, opB: rightOp);
-				return FromDense(output, outSizeL.Concat(outSizeR).ToArray());
+				allLength *= size[i];
+				if (size[i] != 1)
+					actualRank++;
 			}
-			catch (Exception)
+			Span<long> truncateSize = stackalloc long[rank];
+			size.CopyTo(truncateSize);
+			// actually a vector
+			if (actualRank == 1)
 			{
-				output.Dispose();
-				throw;
+				int dd = truncateSize.IndexOf(static s => s > 1);
+				truncateSize[dd] = Math.Min(vectorMaxLen, truncateSize[dd]);
+				using var temp = ToContiguous(storage, truncateSize, outerSize, truncateSize[dd]);
+				return DenseVector<T>.ActualPrint(temp, allLength, settings, prefix);
 			}
-		}
-
-		/// <summary>
-		/// Compute the singular value decomposition (SVD) of this tensor and corresponding the left and/or right singular vectors: $A = U S V^*$ <b>out-of-place</b>, where $A$ is this matrix.
-		/// </summary>
-		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="calcU">calculate the left singular vectors or not, if false, the return <c>U</c> will be null</param>
-		/// <param name="calcV">calculate the right singular vectors or not, if false, the return <c>Vct</c> will be null</param>
-		/// <returns>the singular values as a <see cref="double"/> array and left, right singular vectors</returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
-		public (double[] S, DenseTensor<T> U, DenseTensor<T> Vct) SingularValues(Index partition, bool calcU = true, bool calcV = true)
-		{
-			int p = (int)partition.GetPosition(this.Rank);
-
-			var leftSize = this.Size.Take(p); var rightSize = this.Size.TakeLast(this.Rank - p);
-			long leftLength = this.SizeProd[p], rightLength = this.Length / leftLength;
-			var middleSize = new[] { Math.Min(leftLength, rightLength) };
-			var Usize = leftSize.Concat(middleSize).ToArray();
-			var VctSize = middleSize.Concat(rightSize).ToArray();
-
-			using var mat = this.ToMatrix(leftLength) as DenseMatrix<T>;
-			var (S, U, Vct) = mat.SingularValues(null, null, null, calcU, calcV);
-			using (S)
-				return (Array.ConvertAll(S.ToFortranOrderArray(), s => s.ToDouble()), FromDense(U, Usize), FromDense(Vct, VctSize));
-		}
-
-		/// <summary>
-		/// Compute the singular value decomposition (SVD) of this tensor and corresponding the left and/or right singular vectors: $A = U S V^*$ <b>out-of-place</b>, where $A$ is this matrix. Not necessarily sorted descending by singular values. Then truncate the singular values $S$ and vectors $U$, $V^*$ to preserve at most <paramref name="maxPreserve"/> entries.
-		/// </summary>
-		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="maxPreserve">The maximum number of singular values and vectors to preserve, must be positive</param>
-		/// <returns>The singular values and left, right singular vectors with at most <paramref name="maxPreserve"/> entries.</returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="partition"/> is out of range</exception>
-		public (DenseTensor<T> S, DenseTensor<T> U, DenseTensor<T> Vct) SingularValuesTruncate(Index partition, int maxPreserve)
-		{
-			int p = (int)partition.GetPosition(this.Rank);
-
-			var leftSize = this.Size.Take(p); var rightSize = this.Size.TakeLast(this.Rank - p);
-			long leftLength = this.SizeProd[p], rightLength = this.Length / leftLength;
-			var middleSize = new[] { Math.Min(Math.Min(leftLength, rightLength), maxPreserve) };
-			var Usize = leftSize.Concat(middleSize).ToArray();
-			var VctSize = middleSize.Concat(rightSize).ToArray();
-
-			using var mat = this.ToMatrix(leftLength) as DenseMatrix<T>;
-			var (S, U, Vct) = mat.SingularValues(null, null, null, calcU: true, calcV: true);
-			if (maxPreserve >= leftLength || maxPreserve >= rightLength)
+			int d = truncateSize.IndexOf(static s => s > 1);
+			long rows = truncateSize[d];
+			truncateSize[d] = Math.Min(matrixMaxRows, truncateSize[d]);
+			long ld = truncateSize[d];
+			d = truncateSize[(d + 1)..].IndexOf(static s => s > 1) + d + 1;
+			long cols = truncateSize[d];
+			truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
+			long matrixLength = rows * cols;
+			// actually a matrix
+			if (actualRank == 2)
 			{
-				var returnS = new DenseTensor<T>(new[] { middleSize[0], middleSize[0] }, onHost: this.OnHost);
-				try
-				{
-					(returnS.ToMatrix() as DenseMatrix<T>).SetDiag(0, S);
-					return (returnS, FromDense(U, Usize), FromDense(Vct, VctSize));
-				}
-				catch (Exception)
-				{
-					returnS?.Dispose();
-					throw;
-				}
-				finally
-				{
-					S.Dispose();
-				}
+				using var temp = ToContiguous(storage, truncateSize, outerSize, matrixLength);
+				return DenseMatrix<T>.ActualPrint(temp, rows, cols, ld, settings, prefix);
 			}
 			// else
-			using (S) using (U) using (Vct)
+			if (settings.MatrixFormTensor)
 			{
-				var arrayS = S.ToFortranOrderArray();
-				var arrayU = U.GetColumns();
-				var arrayV = Vct.GetRows();
-				try
+				// reduce matrix size
+				matrixMaxRows = (int)Math.Ceiling(Math.Sqrt(matrixMaxRows));
+				matrixMaxCols = (int)Math.Ceiling(Math.Sqrt(matrixMaxCols));
+				settings = new(settings, matrixRow: matrixMaxRows, matrixColumn: matrixMaxCols);
+				d = truncateSize.IndexOf(static s => s > 1);
+				truncateSize[d] = Math.Min(matrixMaxRows, truncateSize[d]);
+				ld = truncateSize[d];
+				d = truncateSize[(d + 1)..].IndexOf(static s => s > 1) + d + 1;
+				truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
+				matrixLength = rows * cols;
+				// print
+
+			}
+			else
+			{
+				StringBuilder sb = new();
+				// get lengths
+				Span<long> offsets = stackalloc long[rank];
+				Span<long> matrixSize = stackalloc long[rank];
+				truncateSize.CopyTo(matrixSize);
+				int matrixRank = d + 1;
+				matrixSize[matrixRank..].Fill(1);
+				string matrixRankString = ".., ".RepeatString(matrixRank);
+				// prepare loop
+				int restRank = rank - matrixRank;
+				int numberOfMatrices = (int)Math.Min(vectorMaxLen, allLength / matrixLength);
+				Span<long> sizeProd = stackalloc long[restRank + 1].SetValue(1);
+				for (int i = 1; i <= restRank; i++)
 				{
-					var combine = arrayU.Zip(arrayV).ToArray();
-					Array.Sort(keys: arrayS, items: combine);
-					arrayS = arrayS.Reverse().ToArray();
-					combine = combine.Reverse().ToArray();
-					arrayS = arrayS[..maxPreserve];
-					combine = combine[..maxPreserve];
-					// copy to return U
-					var returnU = new DenseMatrix<T>(U.NRows, U.NCols, U.OnHost);
-					returnU.FromColumnVectors(Array.ConvertAll(combine, c => c.First));
-					// copy to return V
-					using var returnV = new DenseMatrix<T>(Vct.NCols, Vct.NRows, Vct.OnHost);
-					returnV.FromColumnVectors(Array.ConvertAll(combine, c => c.Second));
-					var returnVct = returnV.Transpose();
-					// copy to return S
-					var returnS = new DenseTensor<T>(new[] { middleSize[0], middleSize[0] }, onHost: this.OnHost);
-					using var vecS = new DenseVector<T>(arrayS.Length, S.OnHost);
-					vecS.FromFortranOrderArray(arrayS);
-					(returnS.ToMatrix() as DenseMatrix<T>).SetDiag(0, S);
-					// return
-					return (returnS, FromDense(returnU, Usize), FromDense(returnVct, VctSize));
+					sizeProd[i] = sizeProd[i - 1] * size[i + matrixRank - 1];
 				}
-				finally
+				// loop
+				for (int i = 0; i < numberOfMatrices; i++)
 				{
-					arrayU.ClearList();
-					arrayV.ClearList();
+					for (int k = 0; k < restRank; k++)
+					{
+						offsets[k + matrixRank] = (i % sizeProd[k + 1]) / sizeProd[k];
+					}
+					using var tempMat = ToContiguous(storage + i * matrixLength, matrixSize, outerSize, matrixLength);
+					sb.Append(prefix).Append("Tensor[").Append(matrixRankString).Append(offsets[matrixRank..].SpanJoin(", ")).AppendLine("] =");
+					sb.AppendLine(DenseMatrix<T>.ActualPrint(tempMat, rows, cols, ld, settings, prefix));
 				}
+				// return
+				return sb.ToString();
 			}
 		}
 
-		/// <summary>
-		/// QR factorize this tensor <b>out-of-place</b>.
-		/// </summary>
-		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="full">perform full factorization or not</param>
-		/// <returns>the Q matrix and R matrix</returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not one of the supported type</exception>
-		public (DenseTensor<T> Q, DenseTensor<T> R) QR(Index partition, bool full = false)
-		{
-			int p = (int)partition.GetPosition(this.Rank);
-
-			var leftSize = this.Size.Take(p); var rightSize = this.Size.TakeLast(this.Rank - p);
-			long leftLength = this.SizeProd[p], rightLength = this.Length / leftLength;
-			full = full && leftLength > rightLength; // for 'fat' matrices, full == economic
-			var middleSize = new[] { full ? leftLength : Math.Min(leftLength, rightLength) };
-			var Qsize = leftSize.Concat(middleSize).ToArray();
-			var Rsize = middleSize.Concat(rightSize).ToArray();
-
-			using var mat = this.ToMatrix(leftLength) as DenseMatrix<T>;
-			var (Q, R) = mat.QR(full, null, null);
-			return (FromDense(Q, Qsize), FromDense(R, Rsize));
-		}
-
-		/// <summary>
-		/// (Conjugate) transpose this tensor <b>out-of-place</b>.
-		/// </summary>
-		/// <param name="partition">a <see cref="Index"/> to indicate the first <paramref name="partition"/> (exclude) indices of this tensor will be regarded as the row and others column</param>
-		/// <param name="conjugate">conjugate or not, default null means true for complex type (<see cref="IComplex{T}"/>)</param>
-		/// <returns>the (conjugate) transpose of this tensor with <c>Size = this.Size[<paramref name="partition"/>..] concatenate this.Size[..<paramref name="partition"/>]</c></returns>
-		public DenseTensor<T> Transpose(Index partition, bool? conjugate = null)
-		{
-			int p = (int)partition.GetPosition(this.Rank);
-			using var mat = this.ToMatrix(this.SizeProd[p]) as DenseMatrix<T>;
-			var matTranspose = (conjugate ?? !default(T).ToDataType().IsReal()) ? mat.ConjugateTranspose() : mat.Transpose();
-			return FromDense(matTranspose, this.Size.TakeLast(this.Rank - p).Concat(this.Size.Take(p)).ToArray());
-		}
-
-		/// <summary>
-		/// Calculate the trace of this tensor as a matrix.
-		/// </summary>
-		/// <returns>the trace of this tensor as a matrix</returns>
-		/// <exception cref="InvalidOperationException">if this tensor's shape is not a square matrix</exception>
-		public T Trace()
-		{
-			if (this.Rank != 2 || this.Size[0] != this.Size[1])
-				throw new InvalidOperationException();
-			using var diag = ((DenseMatrix<T>)this.ToMatrix(this.Size[0])).GetDiag(0);
-			return diag.Sum();
-		}
-
-		/// <summary>
-		/// Shift all the eigenvalues of this tensor by adding <paramref name="shift"/> to each diagonal elements of this tensor as a matrix.
-		/// </summary>
-		/// <param name="shift">The shift value, if it is zero, no operation shall be performed</param>
-		/// <exception cref="InvalidOperationException">if this tensor's shape is not a square matrix</exception>
-		public void EigenvalueShift(T shift)
-		{
-			if (this.Rank != 2 || this.Size[0] != this.Size[1])
-				throw new InvalidOperationException();
-			// shortcut
-			if (shift.CompareTo(Scalars<T>.Zero) == 0)
-				return;
-			using var ones = new DenseVector<T>(this.Size[0], this.OnHost);
-			ones.FillWithOnes();
-			BLAS.VectorAddBy(y: (DenseMatrix<T>)this.ToMatrix(this.Size[0]), x: ones, α: shift, strideY: (int)ones.Length + 1);
-		}
-		*/
-		#endregion
-
-		#region print
 		/// <summary>
 		/// Print out this tensor.
 		/// </summary>
@@ -905,70 +813,8 @@ namespace Althea.Backend.Arrays
 			string description = this.ToString();
 			if (this.Disposed)
 				return description;
-
 			var settings = overrideSetting ?? Settings.PrintSetting;
-			int vectorMaxLen = settings.ArrayLength, matrixMaxRows = settings.MatrixRow, matrixMaxCols = settings.MatrixColumn;
-
-			// get actual rank
-			int actualRank = 0;
-			var size = this.Size;
-			for (int i = 0; i < size.Length; i++)
-			{
-				if (size[i] != 1)
-					actualRank++;
-			}
-			Span<long> truncateSize = stackalloc long[this.Rank];
-			size.CopyTo(truncateSize);
-			Span<long> offsets = stackalloc long[this.Rank];
-			// actually a vector
-			if (actualRank == 1)
-			{
-				int dd = truncateSize.IndexOf(static s => s > 1);
-				truncateSize[dd] = Math.Min(vectorMaxLen, truncateSize[dd]);
-				using var temp = this.GetSlice(offsets, truncateSize).ToContiguous();
-				return description + ":" + Environment.NewLine + DenseVector<T>.ActualPrint(temp, this.Length, settings);
-			}
-			int d = truncateSize.IndexOf(static s => s > 1);
-			long rows = truncateSize[d];
-			truncateSize[d] = Math.Min(matrixMaxRows, truncateSize[d]);
-			long ld = truncateSize[d];
-			d = truncateSize[(d + 1)..].IndexOf(static s => s > 1);
-			long cols = truncateSize[d];
-			truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
-			// actually a matrix
-			if (actualRank == 2)
-			{
-				using var temp = this.GetSlice(offsets, truncateSize).ToContiguous();
-				return description + ":" + Environment.NewLine + DenseMatrix<T>.ActualPrint(temp, rows, cols, ld, settings);
-			}
-			// else
-			StringBuilder sb = new(description);
-			sb.AppendLine(":");
-			// get lengths
-			Span<long> matSize = stackalloc long[this.Rank];
-			truncateSize.CopyTo(matSize);
-			int matrixRank = d + 1;
-			matSize[matrixRank..].Fill(1);
-			// prepare loop
-			int restRank = this.Rank - matrixRank;
-			long matrixLength = rows * cols;
-			int maxShow = (int)Math.Min(vectorMaxLen, this.Length / matrixLength);
-			Span<long> sizeProd = stackalloc long[restRank + 1];
-			this.SizeProd[matrixRank..].CopyTo(sizeProd); sizeProd[^1] = this.Length;
-			sizeProd.CopyTo(sizeProd, s => s / matrixLength);
-			// loop
-			for (int i = 0; i < maxShow; i++)
-			{
-				for (int k = 0; k < restRank; k++)
-				{
-					offsets[k + matrixRank] = (i % sizeProd[k + 1]) / sizeProd[k];
-				}
-				using var tempMat = this.GetSlice(offsets, matSize).ToContiguous();
-				sb.Append($"Tensor[.., .., {offsets[matrixRank..].SpanJoin(", ")}]:").AppendLine();
-				sb.AppendLine(DenseMatrix<T>.ActualPrint(tempMat, rows, cols, ld, settings)).AppendLine();
-			}
-			// return
-			return sb.ToString();
+			return description + ":" + Environment.NewLine + ActualPrint(this.Storage, this.Size, this.OuterSize, settings);
 		}
 		#endregion
 
