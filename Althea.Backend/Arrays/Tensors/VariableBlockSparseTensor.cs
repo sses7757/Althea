@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -24,86 +23,34 @@ using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
 namespace Althea.Backend.Arrays
 {
 	#region other info
-	/// <summary>
-	/// The <see cref="IOtherInfo"/> corresponding to <see cref="BlockedSparseTensor{T, TInd}"/>
-	/// </summary>
-	public sealed class BlockedSparseTensorOtherInfo : IOtherInfo
-	{
-		private readonly int rank;
 
-		private readonly FixedBuffer_64<int> blockSize = default;
-
-		/// <summary>
-		/// Get the block size as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
-		/// </summary>
-		public ReadOnlySpan<int> BlockSize {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.blockSize.AsSpan(this.rank);
-		}
-
-		/// <summary>
-		/// Create a <see cref="BlockedSparseTensorOtherInfo"/> from the given <paramref name="blockSize"/>
-		/// </summary>
-		/// <param name="blockSize">The block size</param>
-		public BlockedSparseTensorOtherInfo(ReadOnlySpan<int> blockSize)
-		{
-			this.rank = blockSize.Length;
-			this.blockSize.CopyFromSpan(blockSize);
-		}
-
-		object IReadOnlyList<object>.this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index < 0 || index >= this.rank ? throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) : this.blockSize[index];
-		}
-
-		int IReadOnlyCollection<object>.Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.rank;
-		}
-
-		IEnumerator<object> IEnumerable<object>.GetEnumerator()
-		{
-			for (int i = 0; i < this.rank; i++)
-			{
-				yield return this.blockSize[i];
-			}
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<object>)this).GetEnumerator();
-	}
 	#endregion
 
 	/// <summary>
-	/// The concrete blocked sparse tensor class of format <see cref="SparseTensorFormat.BlockCoordinated"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="BlockedSparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset (of blocked tensors) array storage.
+	/// The concrete variable blocked sparse tensor class of format <see cref="SparseTensorFormat.VariableBlockCoordinated"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="VariableBlockSparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset (of blocked tensors) array storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public class BlockedSparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<BlockedSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
+	[StructLayout(LayoutKind.Explicit)]
+	public class VariableBlockSparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<VariableBlockSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
 	{
 		#region basic
+		[FieldOffset(0)]
 		private readonly Storage<TInd> m_originalIndex;
-
+		[FieldOffset(8)]
+		private readonly FixedClassBuffer_16<Storage<TInd>> m_orginalBlockLengths;
+		[FieldOffset(8 * 17)]
 		private Storage<TInd> m_index;
+		[FieldOffset(8 * 17 + 8)]
+		private readonly FixedClassBuffer_16<Storage<TInd>> m_blockLengths;
+		
+		[FieldOffset(8 * 17 * 2)]
+		private FixedClassBuffer_16<Storage<TInd>> m_blockLengthSums; // only calculated when necessary
 
-		private readonly FixedBuffer_64<int> m_blockSize = default;
-
-		private readonly int m_blockLength;
-
-		/// <summary>
-		/// Get the size of the block tensors of this sparse tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
-		/// </summary>
-		public ReadOnlySpan<int> BlockSize {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_blockSize.AsSpan(this.Rank);
-		}
-
-		/// <summary>
-		/// Get the total length (the product of <see cref="BlockSize"/>) of the block tensors of this sparse tensor as an <see cref="int"/>.
-		/// </summary>
-		public int BlockLength {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_blockLength;
-		}
+		[FieldOffset(8 * (17 * 2 + 16))]
+		private readonly FixedBuffer_64<int> m_numberBlocks;
+		[FieldOffset(8 * (17 * 2 + 16) + 64)]
+		private readonly int m_allNumberBlocks;
 
 		/// <summary>
 		/// Get the storage of the total presenting offsets of stored block tensors of this sparse tensor as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
@@ -114,53 +61,89 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
+		/// Get the block tensors' aligned lengths at dimension <paramref name="d"/>
+		/// </summary>
+		/// <param name="d">The dimension index</param>
+		/// <returns>The block tensors' aligned lengths at dimension <paramref name="d"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="d"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Storage<TInd> BlockLengthsOfDimension(int d)
+		{
+			return this.m_blockLengths[d];
+		}
+
+		/// <summary>
+		/// Get the numbers of block divisions (the maximum possible number of blocks at that dimension) of all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>
+		/// </summary>
+		public ReadOnlySpan<int> NumberOfBlocks {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_numberBlocks.AsSpan(this.Rank);
+		}
+
+		/// <summary>
+		/// Get the maximum possible number of block sub-tensors of this blocked sparse tensor
+		/// </summary>
+		public int MaxNumberOfBlocks {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_allNumberBlocks;
+		}
+
+		/// <summary>
 		/// Get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
 		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_index, 1);
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_index, this.Rank + 1);
 		}
 
 		/// <summary>
-		/// Create an empty <see cref="BlockedSparseTensor{T, TInd}"/>
+		/// Create an empty <see cref="VariableBlockSparseTensor{T, TInd}"/>
 		/// </summary>
-		public BlockedSparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.BlockCoordinated)
+		public VariableBlockSparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.VariableBlockCoordinated)
 		{
 			this.m_index = this.m_originalIndex = Storage<TInd>.Empty;
-			this.m_blockLength = 0;
+			this.m_blockLengths = this.m_orginalBlockLengths = default;
 		}
 
 		/// <summary>
-		/// Create a <see cref="BlockedSparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.BlockCoordinated"/> with given <paramref name="size"/>, <paramref name="blockSize"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/> of block tensors.
+		/// Create a <see cref="VariableBlockSparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.VariableBlockCoordinated"/> with given <paramref name="size"/>, <paramref name="blockLengths"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/> of block tensors.
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
-		/// <param name="blockSize">The size of the block tensors</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="offsets">The total presenting offsets of stored block tensors as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="offsets">The total offsets of the first elements of all stored block tensors as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="blockLengths">The block tensors' aligned lengths at all dimensions</param>
 		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
+		/// <param name="blockLengthsRealSize">The presenting size of the <paramref name="blockLengths"/></param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or <paramref name="size"/> cannot be divided by <paramref name="blockSize"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or <paramref name="blockLengths"/> and <paramref name="size"/> have different lengths; or the sums of <paramref name="blockLengths"/> are not the same as <paramref name="size"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
-		public BlockedSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<int> blockSize, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(size, valueArray, SparseTensorFormat.BlockCoordinated, labels, defaultValue, stores)
+		public VariableBlockSparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<Storage<TInd>> blockLengths, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0, ReadOnlySpan<long> blockLengthsRealSize = default) : base(size, valueArray, SparseTensorFormat.Coordinated, labels, defaultValue, stores)
 		{
-			if (blockSize.Length != size.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(blockSize));
-			if (!size.SequenceEqual(blockSize, static (s, b) => s % b == 0))
-				throw new ArgumentException(Resources.Other.CannotDivide, nameof(blockSize));
-
-			this.m_blockSize.CopyFromSpan(blockSize);
-			this.m_blockLength = blockSize.Prod();
-			if (this.NStored % this.m_blockLength != 0)
-				throw new ArgumentException(Resources.Other.CannotDivide, nameof(blockSize));
-
-			var span = MemoryMarshal.CreateReadOnlySpan(ref offsets, 1);
-			Storage<TInd> refIndexArray = Storage<TInd>.Empty;
-			var outSpan = MemoryMarshal.CreateSpan(ref refIndexArray, 1);
-			ISparseArray<T, TInd>.CheckIndexArrays(span, stackalloc long[] { stores / this.m_blockLength }, outSpan);
+			// index array storages check
+			int rank = size.Length;
+			if (blockLengths.Length != rank)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(blockLengths));
+			this.m_blockLengths = this.m_orginalBlockLengths = new(blockLengths);
+			ISparseArray<T, TInd>.CheckIndexArrays(this.m_orginalBlockLengths.AsSpan(rank), blockLengthsRealSize, this.m_blockLengths.AsSpan(rank));
+			// block check
+			this.m_numberBlocks = default;
+			var blockCountsSpan = this.m_numberBlocks.AsSpan(rank);
+			for (int i = 0; i < rank; i++)
+			{
+				long sum = LAD.AggregateSum(blockLengths[i], 1).ToLong();
+				if (sum != size[i])
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(blockLengths));
+				blockCountsSpan[i] = checked((int)blockLengths[i].Length);
+			}
+			this.m_allNumberBlocks = blockCountsSpan.Prod();
+			// offsets storage check
 			this.m_originalIndex = offsets;
-			this.m_index = refIndexArray;
+			var offsetSpan = MemoryMarshal.CreateReadOnlySpan(ref offsets, 1);
+			this.m_index = Storage<TInd>.Empty;
+			var outOffsetSpan = MemoryMarshal.CreateSpan(ref this.m_index, 1);
+			ISparseArray<T, TInd>.CheckIndexArrays(offsetSpan, default, outOffsetSpan);
 		}
 		#endregion
 
@@ -171,10 +154,18 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned array</returns>
 		public override BlockedSparseTensor<T, TInd> Clone()
 		{
-			var outIndex = ActualStorage<TInd>.Empty;
-			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
-			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(span, copyValues: true);
-			return new BlockedSparseTensor<T, TInd>(this.Size, this.BlockSize, value, outIndex, this.Labels, this.DefaultValue);
+			var alike = this.NewArrayAlike();
+			try
+			{
+				MEM.MemoryCopy(this.Storage, alike.Storage);
+				MEM.MemoryCopy(this.OffsetStorage, alike.OffsetStorage);
+				return alike;
+			}
+			catch (Exception)
+			{
+				alike?.Dispose();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -192,10 +183,8 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override BlockedSparseTensor<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var outIndex = ActualStorage<TIndOut>.Empty;
-			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
-			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(span, copyValues: false);
-			return new BlockedSparseTensor<TOut, TIndOut>(this.Size, this.BlockSize, value, outIndex, this.Labels, this.DefaultValue.GenericConvert<T, TOut>());
+			var indices = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> values, copyValues: false);
+			return new(this.Size, this.BlockSize, values, indices[0], labels: this.Labels, defaultValue: this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
 
@@ -798,25 +787,28 @@ namespace Althea.Backend.Arrays
 		/// Get all the storages of this array. Only returns <see cref="ValueArray{T}.Storage"/> and <see cref="OffsetStorage"/>.
 		/// </summary>
 		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage>(2)
+		public override IReadOnlyDictionary<string, IStorage> GetStorages()
 		{
-			[StorageName] = this.Storage,
-			[OffsetStorageName] = this.m_index,
-		};
+			var dict = new Dictionary<string, IStorage>(2 + this.Rank)
+			{
+				[StorageName] = this.Storage,
+				[OffsetStorageName] = this.m_index,
+			};
+			var span = this.m_blockLengths.AsSpan(this.Rank);
+			for (int i = 0; i < span.Length; i++)
+			{
+				dict.Add($"{nameof(BlockLengthsOfDimension)}_{i + 1}", span[i]);
+			}
+			return dict;
+		}
 
 		/// <summary>
-		/// The presenting name of <see cref="BlockSize"/>
-		/// </summary>
-		protected internal const string BlockSizeName = nameof(BlockSize);
-
-		/// <summary>
-		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="BlockSize"/>.
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
-		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
 		{
 			[LabelsName] = this.Labels.ToArray(),
-			[BlockSizeName] = this.BlockSize.ToArray(),
 		};
 		#endregion
 	}

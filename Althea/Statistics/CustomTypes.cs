@@ -209,7 +209,9 @@ namespace Althea.Statistics
 	{
 		private readonly long m_seed;
 
-		private readonly SizedFixedClassBuffer_8<IRandomDistribution> m_distributions;
+		private readonly FixedClassBuffer_16<IRandomDistribution> m_distributions;
+
+		private readonly int m_count;
 
 		/// <summary>
 		/// Create a new <see cref="SimpleJointRandomDistribution"/> from the given <paramref name="distributions"/>
@@ -222,7 +224,8 @@ namespace Althea.Statistics
 			if (distributions is null || distributions.Length == 0)
 				throw new ArgumentNullException(nameof(distributions));
 
-			this.m_distributions = new(distributions.Length);
+			this.m_count = distributions.Length;
+			this.m_distributions = new(distributions);
 			this.m_seed = 0;
 			for (int i = 0; i < distributions.Length; i++)
 			{
@@ -245,7 +248,7 @@ namespace Althea.Statistics
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		public DataType this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index < 0 || index >= this.Count ?
+			get => index < 0 || index >= this.m_count ?
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) :
 					this.m_distributions[index][0];
 		}
@@ -263,12 +266,12 @@ namespace Althea.Statistics
 		/// </summary>
 		public int Count {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_distributions.Count;
+			get => this.m_count;
 		}
 
 		IRandomDistribution IReadOnlyList<IRandomDistribution>.this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index < 0 || index >= this.Count ?
+			get => index < 0 || index >= this.m_count ?
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) :
 					this.m_distributions[index];
 		}
@@ -276,7 +279,7 @@ namespace Althea.Statistics
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator<IRandomDistribution> IEnumerable<IRandomDistribution>.GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < this.m_count; i++)
 			{
 				yield return this.m_distributions[i];
 			}
@@ -289,7 +292,7 @@ namespace Althea.Statistics
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IEnumerator<DataType> GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < this.m_count; i++)
 			{
 				yield return this.m_distributions[i][0];
 			}
@@ -304,7 +307,7 @@ namespace Althea.Statistics
 		/// <returns>The string representation of this joint distribution</returns>
 		public override string ToString()
 		{
-			if (this.Count == 1)
+			if (this.m_count == 1)
 				return this.m_distributions[0].ToString();
 			else
 				return $"{{({string.Join("), (", this.m_distributions)})}}";

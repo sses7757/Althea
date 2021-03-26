@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using Althea.Arrays;
 using Althea.Helpers;
@@ -24,17 +25,28 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public sealed class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
+	[StructLayout(LayoutKind.Explicit)]
+	public class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
 		#region basic
+		[FieldOffset(0)]
+		private readonly Storage<TInd> m_originalRowIndex;
+		[FieldOffset(8)]
+		private readonly Storage<TInd> m_originalColIndex;
+
+		[FieldOffset(16)]
+		private Storage<TInd> m_rowIndex;
+		[FieldOffset(24)]
+		private readonly Storage<TInd> m_colIndex;
+
 		/// <summary>
 		/// Get the storage of the row index array of this sparse matrix as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
 		public Storage<TInd> RowIndexStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays[0];
+			get => this.m_rowIndex;
 		}
 
 		/// <summary>
@@ -42,13 +54,24 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		public Storage<TInd> ColIndexStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays[1];
+			get => this.ColIndexStorage;
+		}
+
+		/// <summary>
+		/// Get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// </summary>
+		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_rowIndex, 2);
 		}
 
 		/// <summary>
 		/// Create an empty <see cref="SparseMatrix{T, TInd}"/>
 		/// </summary>
-		public SparseMatrix() : base(0, 0, Storage<T>.Empty, Storage<TInd>.Empty, Storage<TInd>.Empty, SparseMatrixFormat.COOR) { }
+		public SparseMatrix() : base(0, 0, Storage<T>.Empty, SparseMatrixFormat.COOR)
+		{
+			this.m_rowIndex = this.m_colIndex = this.m_originalRowIndex = this.m_originalColIndex = Storage<TInd>.Empty;
+		}
 
 		/// <summary>
 		/// Create a <see cref="SparseMatrix{T, TInd}"/> (of <see cref="SparseMatrixFormat.COOR"/>, <see cref="SparseMatrixFormat.COOC"/>, <see cref="SparseMatrixFormat.CSR"/> or <see cref="SparseMatrixFormat.CSC"/> format) with given size, <paramref name="valueArray"/> and index arrays.
@@ -65,13 +88,18 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If the size is not 0 while any of the storages is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic or not of allowed format</exception>
 		/// <exception cref="ArgumentException">If the lengths of storages does not fit the underlying regulations indicated by <paramref name="format"/></exception>
-		public SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
-			base(rows, cols, valueArray, rowIndexArray, colIndexArray, format, defaultValue, stores,
-				rowLength: GetRowLength(rows, valueArray, stores, format),
-				colLength: GetColLength(cols, valueArray, stores, format))
-		{ }
+		public SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) : base(rows, cols, valueArray, format, defaultValue, stores)
+		{
+			long rowLen = GetRowLength(rows, valueArray, stores, format);
+			long colLen = GetColLength(cols, valueArray, stores, format);
+			this.m_rowIndex = this.m_originalRowIndex = rowIndexArray;
+			this.m_colIndex = this.m_originalColIndex = colIndexArray;
+			var span = this.IndexArrays;
+			var outSpan = MemoryMarshal.CreateSpan(ref this.m_rowIndex, 2);
+			ISparseArray<T, TInd>.CheckIndexArrays(span, stackalloc long[] { rowLen, colLen }, outSpan);
+		}
 
-		private SparseMatrix(SparseMatrix<T, TInd> reference) : base(reference.NRows, reference.NCols, reference.Storage.MakeReference(), reference.RowIndexStorage.MakeReference(), reference.ColIndexStorage.MakeReference(), reference.Format, reference.DefaultValue) { }
+		private SparseMatrix(SparseMatrix<T, TInd> r) : this(r.NRows, r.NCols, r.Storage, r.RowIndexStorage, r.ColIndexStorage, r.Format, r.DefaultValue, r.NStored) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long GetRowLength(long rows, Storage<T> valueArray, long stores, SparseMatrixFormat format)
@@ -106,8 +134,9 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned sparse matrix</returns>
 		public override SparseMatrix<T, TInd> Clone()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
-			return new SparseMatrix<T, TInd>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue);
+			var outIndex = new FixedClassBuffer_2<ActualStorage<TInd>>();
+			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(outIndex.AsSpan(), copyValues: false);
+			return new SparseMatrix<T, TInd>(this.NRows, this.NCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue);
 		}
 
 		/// <summary>
@@ -125,8 +154,9 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override SparseMatrix<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: false);
-			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, indexArrays[0], indexArrays[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>());
+			var outIndex = new FixedClassBuffer_2<ActualStorage<TIndOut>>();
+			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(outIndex.AsSpan(), copyValues: false);
+			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
 
@@ -1007,11 +1037,25 @@ namespace Althea.Backend.Arrays
 
 		#region serialization
 		/// <summary>
-		/// The helper method used by <see cref="Althea.Arrays.SparseMatrix{T, TInd}.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
+		/// The presenting name of <see cref="RowIndexStorage"/>
 		/// </summary>
-		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse matrix</param>
-		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-		protected override string IndexStorageNameOf(int orderOfIndexStorage) => string.Empty;
+		protected internal const string RowIndexStorageName = nameof(RowIndexStorage);
+
+		/// <summary>
+		/// The presenting name of <see cref="ColIndexStorage"/>
+		/// </summary>
+		protected internal const string ColIndexStorageName =nameof(ColIndexStorage);
+
+		/// <summary>
+		/// Get all the storages of this array. Only returns <see cref="ValueArray{T}.Storage"/>, <see cref="RowIndexStorage"/> and <see cref="ColIndexStorage"/>.
+		/// </summary>
+		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
+		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage>(2)
+		{
+			[StorageName] = this.Storage,
+			[RowIndexStorageName] = this.m_rowIndex,
+			[ColIndexStorageName] = this.m_colIndex,
+		};
 		#endregion
 	}
 }

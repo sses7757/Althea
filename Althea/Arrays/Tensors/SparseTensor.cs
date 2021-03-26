@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
-using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.TensorAlgebra.Sparse;
 
@@ -28,18 +26,9 @@ namespace Althea.Arrays
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 
-		// previously defined 324 bytes
 		private readonly SparseTensorFormat m_format;
-		// offset = 324 + 4
-		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
-		// offset = 324 + 4 + 64
-		/// <summary>
-		/// The member that actually stores the index arrays' storages
-		/// </summary>
-		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
-		// offset = 324 + 4 + 64 + 68
+
 		private T m_defaultValue;
-		// this defines extra (136 + size of T) bytes
 
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse tensor. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
@@ -68,55 +57,30 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get all the index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// When implemented by a derived class, get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public IReadOnlyList<Storage<TInd>> IndexArrays {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays;
-		}
+		public abstract ReadOnlySpan<Storage<TInd>> IndexArrays { get; }
 
 		/// <summary>
-		/// Create a <see cref="SparseTensor{T, TInd}"/> with given <paramref name="size"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
+		/// Create a <see cref="SparseTensor{T, TInd}"/> with given <paramref name="size"/> and <paramref name="valueArray"/>
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="indexArrays">The index array(s) as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseTensorFormat"/> of this sparse tensor, must be atomic</param>
 		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, default empty means the lengths of <paramref name="indexArrays"/></param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="indexArrays"/> and <paramref name="indexRealLengths"/> are not the same</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, SparseTensorFormat format,
-							 ReadOnlySpan<char> labels = default, long stores = 0, ReadOnlySpan<long> indexRealLengths = default, T defaultValue = default)
-			: base(valueArray, size, labels, stores)
+		protected SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, SparseTensorFormat format, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(valueArray, size, labels, stores)
 		{
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-			if (!indexRealLengths.IsEmpty && indexArrays.Count != indexRealLengths.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-			if (indexArrays.Any(static a => a is null || !a.IsValid()))
-				throw new ArgumentNullException(nameof(indexArrays));
-
-			this.m_originalIndexArrays = indexArrays;
-			this.m_indexArrays = new SizedFixedClassBuffer_8<Storage<TInd>>(indexArrays.Count);
-			for (int i = 0; i < indexArrays.Count; i++)
-			{
-				long len = indexRealLengths.IsEmpty ? 0 : indexRealLengths[i];
-				if (len < 0)
-					throw new ArgumentOutOfRangeException(nameof(indexRealLengths), len, Resources.Parameter.CannotNegative);
-				if (len == long.MaxValue)
-					len = this.ActualLength;
-				if (len == 0)
-					this.m_indexArrays[i] = indexArrays[i].MakeReference();
-				else
-					this.m_indexArrays[i] = indexArrays[i].MakeReference(newLength: len);
-			}
-			this.m_format = format; this.m_defaultValue = defaultValue;
+			this.m_format = format;
+			this.m_defaultValue = defaultValue;
 		}
 		#endregion
 
@@ -141,9 +105,9 @@ namespace Althea.Arrays
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			for (int i = 0; i < this.m_indexArrays.Count; i++)
+			if (!this.Disposed && !this.IndexArrays.IsEmpty)
 			{
-				this.m_originalIndexArrays[i]?.Dispose();
+				((ISparseArray<T>)this).Dispose();
 			}
 		}
 		#endregion
@@ -245,13 +209,6 @@ namespace Althea.Arrays
 
 		#region serialization
 		/// <summary>
-		/// The helper method used by <see cref="GetStorages"/> to get the index storages' names.
-		/// </summary>
-		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse tensor</param>
-		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-		protected abstract string IndexStorageNameOf(int orderOfIndexStorage);
-
-		/// <summary>
 		/// The presenting name of the <see cref="DefaultValue"/>.
 		/// </summary>
 		public const string DefaultValueName = nameof(DefaultValue);
@@ -260,20 +217,6 @@ namespace Althea.Arrays
 		/// The presenting name of the <see cref="Format"/>.
 		/// </summary>
 		public const string FormatName = nameof(Format);
-
-		/// <summary>
-		/// When implemented by a derived class, get all the storages of this sparse tensor. The default implementation returns the <see cref="ValueArray{T}.Storage"/> and the index array(s) (whose names are from <see cref="IndexStorageNameOf(int)"/>) used to construct this sparse tensor. If there are exactly 2 index arrays, the default implementation only works correctly when they are (general) row and column index arrays respectively.
-		/// </summary>
-		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetStorages()
-		{
-			var dict = new Dictionary<string, IStorage>(this.m_indexArrays.Count + 1) { [StorageName] = this.Storage };
-			for (int i = 0; i < this.m_indexArrays.Count; i++)
-			{
-				dict.Add(this.IndexStorageNameOf(i), this.m_indexArrays[i]);
-			}
-			return dict;
-		}
 
 		/// <summary>
 		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse tensor of that derived class type. The default implementation returns the <see cref="DefaultValue"/> and <see cref="Format"/>.

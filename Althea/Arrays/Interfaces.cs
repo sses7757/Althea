@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -74,6 +75,18 @@ namespace Althea.Arrays
 
 		#region dispose
 		/// <summary>
+		/// When implemented by a derived class, actually dispose this array. The default implementation disposes the index array(s) implied in <see cref="ISparseArray{T}"/>.
+		/// </summary>
+		void Dispose()
+		{
+			var list = (IReadOnlyList<IStorage>)this;
+			for (int i = 0; i < list.Count; i++)
+			{
+				list[i]?.Dispose();
+			}
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only compares <see cref="ISparseArray{T}.Storage"/> and the index array(s) implied in <see cref="ISparseArray{T}"/>.
 		/// </summary>
 		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing</param>
@@ -124,35 +137,71 @@ namespace Althea.Arrays
 	{
 		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get all the index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
+		/// When implemented by a derived class, get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
 		/// </summary>
-		IReadOnlyList<Storage<TIndex>> IndexArrays { get; }
+		ReadOnlySpan<Storage<TIndex>> IndexArrays { get; }
 		#endregion
 
 		#region implementation
 		DataType ISparseArray<T>.IndexType => Const<TIndex>.DataType;
 
-		int IReadOnlyCollection<Storage<TIndex>>.Count => this.IndexArrays.Count;
+		int IReadOnlyCollection<Storage<TIndex>>.Count => this.IndexArrays.Length;
 
-		int IReadOnlyCollection<IStorage>.Count => this.IndexArrays.Count;
+		int IReadOnlyCollection<IStorage>.Count => this.IndexArrays.Length;
 
 		IStorage IReadOnlyList<IStorage>.this[int index] => this.IndexArrays[index];
 
 		Storage<TIndex> IReadOnlyList<Storage<TIndex>>.this[int index] => this.IndexArrays[index];
 
-		IEnumerator<Storage<TIndex>> IEnumerable<Storage<TIndex>>.GetEnumerator() => this.IndexArrays.GetEnumerator();
+		IEnumerator<Storage<TIndex>> IEnumerable<Storage<TIndex>>.GetEnumerator()
+		{
+			int len = this.IndexArrays.Length;
+			for (int i = 0; i < len; i++)
+			{
+				yield return this.IndexArrays[i];
+			}
+		}
 
-		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => this.IndexArrays.GetEnumerator();
+		IEnumerator<IStorage> IEnumerable<IStorage>.GetEnumerator() => ((IEnumerable<Storage<TIndex>>)this).GetEnumerator();
 
-		IEnumerator IEnumerable.GetEnumerator() => this.IndexArrays.GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<Storage<TIndex>>)this).GetEnumerator();
 		#endregion
 
 		#region helpers
 		/// <summary>
+		/// Check given <paramref name="indexArrays"/> and its <paramref name="indexRealLengths"/> and put the referenced ones to <paramref name="refIndexArrays"/>
+		/// </summary>
+		/// <param name="indexArrays">The index array(s)' original storage(s) as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/></param>
+		/// <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, any 0 elements means the same as the length of <paramref name="indexArrays"/>. An empty one means all 0.</param>
+		/// <param name="refIndexArrays">The output <see cref="Span{T}"/> to put the referenced <paramref name="indexArrays"/></param>
+		/// <exception cref="ArgumentException">If the lengths are not the same</exception>
+		/// <exception cref="ArgumentNullException">If any of <paramref name="indexArrays"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of <paramref name="indexRealLengths"/> is less than 0</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckIndexArrays(ReadOnlySpan<Storage<TIndex>> indexArrays, ReadOnlySpan<long> indexRealLengths, Span<Storage<TIndex>> refIndexArrays)
+		{
+			if ((!indexRealLengths.IsEmpty && indexArrays.Length != indexRealLengths.Length) || refIndexArrays.Length != indexArrays.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize);
+			if (indexArrays.Any(static a => a is null || !a.IsValid()))
+				throw new ArgumentNullException(nameof(indexArrays));
+
+			for (int i = 0; i < indexArrays.Length; i++)
+			{
+				long len = indexRealLengths.IsEmpty ? 0 : indexRealLengths[i];
+				if (len < 0)
+					throw new ArgumentOutOfRangeException(nameof(indexRealLengths), len, Resources.Parameter.CannotNegative);
+				if (len == 0)
+					refIndexArrays[i] = indexArrays[i].MakeReference();
+				else
+					refIndexArrays[i] = indexArrays[i].MakeReference(newLength: len);
+			}
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, get the hash code this sparse array. The default implementation only takes <see cref="Storage"/> and the index array(s) into account.
 		/// </summary>
 		/// <returns>The hash code of <see cref="Storage"/> and the index array(s) of this sparse array</returns>
-		int GetHashCode() => HashCode.Combine(this.Storage.MakeReference(newLength: this.NStored), this.IndexArrays.HashCodeOfArray());
+		int GetHashCode() => HashCode.Combine(this.Storage.MakeReference(newLength: this.NStored), this.IndexArrays.HashCodeOfSpan());
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this sparse array is equal to another one. The default implementation only compares <see cref="Storage"/> and the index array(s) of this sparse array.
@@ -163,7 +212,7 @@ namespace Althea.Arrays
 		{
 			if (!(obj is ISparseArray<T, TIndex> sv && this.NStored == sv.NStored && this.Storage.MakeReference(newLength: this.NStored) == sv.Storage.MakeReference(newLength: this.NStored)))
 				return false;
-			IReadOnlyList<Storage<TIndex>> list1 = this.IndexArrays, list2 = sv.IndexArrays;
+			ReadOnlySpan<Storage<TIndex>> list1 = this.IndexArrays, list2 = sv.IndexArrays;
 			return list1.SequenceEqual(list2);
 		}
 
@@ -176,10 +225,10 @@ namespace Althea.Arrays
 		{
 			if (this.Storage.OverlapWith(other.Storage))
 				return true;
-			IReadOnlyList<Storage<TIndex>> list = this.IndexArrays, array = other.IndexArrays;
-			for (int i = 0; i < list.Count; i++)
+			ReadOnlySpan<Storage<TIndex>> list = this.IndexArrays, array = other.IndexArrays;
+			for (int i = 0; i < list.Length; i++)
 			{
-				for (int j = 0; j < array.Count; j++)
+				for (int j = 0; j < array.Length; j++)
 				{
 					if (list[i].OverlapWith(array[j]))
 					{
@@ -195,38 +244,39 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
 		/// <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the output type</typeparam>
-		/// <param name="valueArray">The cloned output value array</param>
+		/// <param name="indexArrays">The output index arrays as a <see cref="Span{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndexOut"/>. Must be of the same length as <see cref="IndexArrays"/>.</param>
 		/// <param name="copyValues">Copy the value array from original arrays to the new arrays or not</param>
-		/// <returns>The output index arrays as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="ActualStorage{T}"/> of <typeparamref name="TIndexOut"/></returns>
+		/// <returns>The cloned output value array</returns>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TIndexOut"/> is not an integral type</exception>
-		SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> CreateArraysAlike<TOut, TIndexOut>(out ActualStorage<TOut> valueArray, bool copyValues)
+		/// <exception cref="ArgumentException">If <paramref name="indexArrays"/> has different length</exception>
+		ActualStorage<TOut> CreateArraysAlike<TOut, TIndexOut>(Span<ActualStorage<TIndexOut>> indexArrays, bool copyValues)
 			where TOut : unmanaged where TIndexOut : unmanaged
 		{
 			if (!Const<TIndexOut>.IsIntegralType)
 				throw new TypeMismatchException(typeof(TIndexOut), TypeMismatchException.MismatchReason.NotInteger);
+			ReadOnlySpan<Storage<TIndex>> list = this.IndexArrays;
+			if (indexArrays.Length != list.Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(indexArrays));
 
-			IReadOnlyList<Storage<TIndex>> list = this.IndexArrays;
 			ActualStorage<TOut>? value = null;
-			SizedFixedClassBuffer_8<ActualStorage<TIndexOut>> indices = new(list.Count);
 			try
 			{
 				value = this.Storage.CreateAlike<TOut>();
 				if (copyValues)
 					LinearAlgebra.Dense.AbstractApi.PointWiseCast(this.Storage, 1, value, 1);
-				for (int i = 0; i < list.Count; i++)
+				for (int i = 0; i < list.Length; i++)
 				{
-					indices[i] = list[i].CreateAlike<TIndexOut>();
-					LinearAlgebra.Dense.AbstractApi.PointWiseCast(list[i], 1, indices[i], 1);
+					indexArrays[i] = list[i].CreateAlike<TIndexOut>();
+					LinearAlgebra.Dense.AbstractApi.PointWiseCast(list[i], 1, indexArrays[i], 1);
 				}
-				valueArray = value;
-				return indices;
+				return value;
 			}
 			catch (Exception)
 			{
 				value?.Dispose();
-				for (int i = 0; i < indices.Count; i++)
+				for (int i = 0; i < indexArrays.Length; i++)
 				{
-					indices[i]?.Dispose();
+					indexArrays[i]?.Dispose();
 				}
 				throw;
 			}

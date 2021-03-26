@@ -1003,7 +1003,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to get hash code</param>
 		/// <returns>The hash code of <paramref name="span"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int HashCodeOfSpan<T>(this Span<T> span) where T : struct
+		public static int HashCodeOfSpan<T>(this Span<T> span) where T : notnull
 		{
 			return HashCodeOfSpan((ReadOnlySpan<T>)span);
 		}
@@ -1015,7 +1015,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to get hash code</param>
 		/// <returns>The hash code of <paramref name="span"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int HashCodeOfSpan<T>(this ReadOnlySpan<T> span) where T : struct
+		public static int HashCodeOfSpan<T>(this ReadOnlySpan<T> span) where T : notnull
 		{
 			if (span.IsEmpty)
 				return 0; // hash code of empty

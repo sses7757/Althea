@@ -717,7 +717,162 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region print
-		internal static string ActualPrint(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, PrintSettings settings, string? prefix = null)
+		private sealed class TensorPrintCommonInfo
+		{
+			private readonly FixedBuffer_128<long> outerSize = default, matrixSize = default;
+
+			private readonly long rows, cols, ld, length;
+
+			private readonly PrintSettings settings;
+
+			internal ReadOnlySpan<long> OuterSize {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.outerSize.AsSpan();
+			}
+
+			internal ReadOnlySpan<long> MatrixSize {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.matrixSize.AsSpan();
+			}
+
+			internal long MatrixOrgRows {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.rows;
+			}
+			internal long MatrixOrgCols {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.cols;
+			}
+			internal long MatrixNowLD {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.ld;
+			}
+			internal long MatrixNowLength {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.length;
+			}
+
+			internal PrintSettings Settings {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.settings;
+			}
+
+			internal TensorPrintCommonInfo(ReadOnlySpan<long> outerSize, ReadOnlySpan<long> matrixSize, long rows, long cols, long ld, long matrixLength, PrintSettings settings)
+			{
+				this.outerSize.CopyFromSpan(outerSize); this.matrixSize.CopyFromSpan(matrixSize);
+				this.rows = rows; this.cols = cols; this.ld = ld; this.length = matrixLength;
+				this.settings = settings;
+			}
+		}
+
+		private readonly ref struct TensorPrinter
+		{
+			private readonly Storage<T> storage;
+
+			private readonly ReadOnlySpan<long> size;
+
+			private readonly ReadOnlySpan<long> outerSize;
+
+			private readonly ReadOnlySpan<long> outerSizeProd;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private TensorPrinter(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> outerSizeProd, Storage<T> storage)
+			{
+				this.storage = storage;
+				this.size = size;
+				this.outerSize = outerSize;
+				this.outerSizeProd = outerSizeProd;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private TensorPrinter(TensorPrinter parent, long rowIndex, long colIndex)
+			{
+				this.size = parent.size[..^2];
+				this.outerSize = parent.outerSize[..^2];
+				this.outerSizeProd = parent.outerSizeProd[..^2];
+				this.storage = parent.storage + (parent.outerSizeProd[^2] * (rowIndex + parent.outerSize[^2] * colIndex));
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private static void AppendRow(StringBuilder sb, string currentRow, string prefix, string postfix, bool lastRow, long moreRows)
+			{
+				if (lastRow)
+				{
+					if (moreRows <= 0)
+					{
+						sb.Append(currentRow);
+						return;
+					}
+					sb.AppendLine(currentRow).Append(prefix).AppendFormat(Resources.Print.MoreRows, moreRows);
+				}
+				else
+				{
+					sb.AppendLine(currentRow);
+					int find = currentRow.LastIndexOf(Environment.NewLine, sb.Length - 2);
+					int lineWidth = sb.Length - find - Environment.NewLine.Length * 2 - postfix.Length;
+					sb.Append(prefix.PadRight(lineWidth)).AppendLine(postfix);
+				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal static string Print(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> outerSizeProd, Storage<T> storage, ReadOnlySpan<long> matrixSize, long rows, long cols, long ld, PrintSettings settings, string? prefix = null, string? postfix = null)
+			{
+				int rank = size.Length;
+				bool topLayerIsVec = rank % 2 == 1;
+				long matrixLength = matrixSize.Prod();
+				prefix += "|"; postfix = "|" + postfix;
+				TensorPrintCommonInfo info = new(outerSize, matrixSize, rows, cols, ld, matrixLength, settings);
+				if (topLayerIsVec)
+				{
+					StringBuilder sb = new();
+					string subPrefix = prefix + "|", subPostfix = "|" + postfix;
+					long crows = size[0], lastOuterSizeProd = outerSizeProd[^1];
+					int nrows = (int)Math.Min(crows, settings.MatrixRow);
+					ReadOnlySpan<long> vecSize = size[..^1], vecOuterSize = outerSize[..^1], vecOuterSizeProd = outerSizeProd[..^1];
+					for (int i = 0; i < nrows; i++)
+					{
+						TensorPrinter current = new(vecSize, vecOuterSize, vecOuterSizeProd, storage + lastOuterSizeProd * i);
+						string currentRow = Print(current, info, subPrefix, subPostfix);
+						AppendRow(sb, currentRow, prefix, postfix, lastRow: i == nrows - 1, moreRows: 0);
+					}
+					return sb.ToString();
+				}
+				else
+				{
+					var tensor = new TensorPrinter(size, outerSize, outerSizeProd, storage);
+					return Print(tensor, info, prefix, postfix);
+				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+			private static string Print(TensorPrinter tensor, TensorPrintCommonInfo info, string prefix, string postfix)
+			{
+				if (tensor.size.Length == 2)
+				{
+					using var temp = ToContiguous(tensor.storage, info.MatrixSize, info.OuterSize, info.MatrixNowLength);
+					return DenseMatrix<T>.ActualPrint(temp, info.MatrixOrgRows, info.MatrixOrgCols, info.MatrixNowLD, info.Settings, prefix, postfix);
+				}
+				// else
+				StringBuilder sb = new();
+				long rows = tensor.size[0], cols = tensor.size[1];
+				int nrows = (int)Math.Min(rows, info.Settings.MatrixRow), ncols = (int)Math.Min(cols, info.Settings.MatrixColumn);
+				string moreElem = cols > ncols ? string.Format(Resources.Print.RowMore + postfix, cols - ncols) : postfix;
+				string[] subMatsCurrentRow = new string[ncols];
+				for (int i = 0; i < nrows; i++)
+				{
+					for (int j = 0; j < ncols; j++)
+					{
+						TensorPrinter current = new(tensor, i, j);
+						subMatsCurrentRow[j] = Print(current, info, "|", "|");
+					}
+					string currentRow = subMatsCurrentRow.MultilineConcat(prefix, "|  |", moreElem);
+					AppendRow(sb, currentRow, prefix, postfix, lastRow: i == nrows - 1, moreRows: rows - nrows);
+				}
+				return sb.ToString();
+			}
+		}
+
+		internal static string ActualPrint(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> outerSizeProd, PrintSettings settings, string? prefix = null)
 		{
 			int vectorMaxLen = settings.ArrayLength, matrixMaxRows = settings.MatrixRow, matrixMaxCols = settings.MatrixColumn;
 			// get actual rank
@@ -767,17 +922,15 @@ namespace Althea.Backend.Arrays
 				truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
 				matrixLength = rows * cols;
 				// print
-
+				return TensorPrinter.Print(size, outerSize, outerSizeProd, storage, truncateSize, rows, cols, ld, settings, prefix);
 			}
 			else
 			{
 				StringBuilder sb = new();
 				// get lengths
 				Span<long> offsets = stackalloc long[rank];
-				Span<long> matrixSize = stackalloc long[rank];
-				truncateSize.CopyTo(matrixSize);
 				int matrixRank = d + 1;
-				matrixSize[matrixRank..].Fill(1);
+				truncateSize[matrixRank..].Fill(1);
 				string matrixRankString = ".., ".RepeatString(matrixRank);
 				// prepare loop
 				int restRank = rank - matrixRank;
@@ -794,7 +947,7 @@ namespace Althea.Backend.Arrays
 					{
 						offsets[k + matrixRank] = (i % sizeProd[k + 1]) / sizeProd[k];
 					}
-					using var tempMat = ToContiguous(storage + i * matrixLength, matrixSize, outerSize, matrixLength);
+					using var tempMat = ToContiguous(storage + i * matrixLength, truncateSize, outerSize, matrixLength);
 					sb.Append(prefix).Append("Tensor[").Append(matrixRankString).Append(offsets[matrixRank..].SpanJoin(", ")).AppendLine("] =");
 					sb.AppendLine(DenseMatrix<T>.ActualPrint(tempMat, rows, cols, ld, settings, prefix));
 				}
@@ -814,7 +967,7 @@ namespace Althea.Backend.Arrays
 			if (this.Disposed)
 				return description;
 			var settings = overrideSetting ?? Settings.PrintSetting;
-			return description + ":" + Environment.NewLine + ActualPrint(this.Storage, this.Size, this.OuterSize, settings);
+			return description + ":" + Environment.NewLine + ActualPrint(this.Storage, this.Size, this.OuterSize, this.Strides, settings);
 		}
 		#endregion
 

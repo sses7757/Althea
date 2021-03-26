@@ -236,6 +236,11 @@
             When implemented by a derived class, get or set the default value of this sparse array
             </summary>
         </member>
+        <member name="M:Althea.Arrays.ISparseArray`1.Dispose">
+            <summary>
+            When implemented by a derived class, actually dispose this array. The default implementation disposes the index array(s) implied in <see cref="T:Althea.Arrays.ISparseArray`1"/>.
+            </summary>
+        </member>
         <member name="M:Althea.Arrays.ISparseArray`1.DisposeExclude(Althea.Arrays.ISparseArray{`0})">
             <summary>
             When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only compares <see cref="P:Althea.Arrays.ISparseArray`1.Storage"/> and the index array(s) implied in <see cref="T:Althea.Arrays.ISparseArray`1"/>.
@@ -251,8 +256,19 @@
         </member>
         <member name="P:Althea.Arrays.ISparseArray`2.IndexArrays">
             <summary>
-            When implemented by a derived class, get all the index arrays as a list of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/>
+            When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/>
             </summary>
+        </member>
+        <member name="M:Althea.Arrays.ISparseArray`2.CheckIndexArrays(System.ReadOnlySpan{Althea.Storage{`1}},System.ReadOnlySpan{System.Int64},System.Span{Althea.Storage{`1}})">
+            <summary>
+            Check given <paramref name="indexArrays"/> and its <paramref name="indexRealLengths"/> and put the referenced ones to <paramref name="refIndexArrays"/>
+            </summary>
+            <param name="indexArrays">The index array(s)' original storage(s) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/></param>
+            <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, any 0 elements means the same as the length of <paramref name="indexArrays"/></param>
+            <param name="refIndexArrays">The output <see cref="T:System.Span`1"/> to put the referenced <paramref name="indexArrays"/></param>
+            <exception cref="T:System.ArgumentException">If the lengths are not the same</exception>
+            <exception cref="T:System.ArgumentNullException">If any of <paramref name="indexArrays"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of <paramref name="indexRealLengths"/> is less than 0</exception>
         </member>
         <member name="M:Althea.Arrays.ISparseArray`2.GetHashCode">
             <summary>
@@ -274,16 +290,17 @@
             <param name="other">The other <see cref="T:Althea.Arrays.ValueArray`1"/> to check</param>
             <returns>True if they do share some storage, false otherwise</returns>
         </member>
-        <member name="M:Althea.Arrays.ISparseArray`2.CreateArraysAlike``2(Althea.ActualStorage{``0}@,System.Boolean)">
+        <member name="M:Althea.Arrays.ISparseArray`2.CreateArraysAlike``2(System.Span{Althea.ActualStorage{``1}},System.Boolean)">
             <summary>
             The helper method used to create new array alike (and copy contents) the value array and index array(s) of this sparse array
             </summary>
             <typeparam name="TOut">Any unmanaged struct as the output type</typeparam>
             <typeparam name="TIndexOut">Any integral-typed unmanaged struct as the output type</typeparam>
-            <param name="valueArray">The cloned output value array</param>
+            <param name="indexArrays">The output index arrays as a <see cref="T:System.Span`1"/> of <see cref="T:Althea.ActualStorage`1"/> of <typeparamref name="TIndexOut"/>. Must be of the same length as <see cref="P:Althea.Arrays.ISparseArray`2.IndexArrays"/>.</param>
             <param name="copyValues">Copy the value array from original arrays to the new arrays or not</param>
-            <returns>The output index arrays as a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> of <see cref="T:Althea.ActualStorage`1"/> of <typeparamref name="TIndexOut"/></returns>
+            <returns>The cloned output value array</returns>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TIndexOut"/> is not an integral type</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="indexArrays"/> has different length</exception>
         </member>
         <member name="M:Althea.Arrays.ISparseArray`2.TypeCast``2(Althea.Arrays.ISparseArray{``0,``1})">
             <summary>
@@ -740,11 +757,6 @@
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
         </member>
-        <member name="F:Althea.Arrays.SparseMatrix`2.m_indexArrays">
-            <summary>
-            The member of all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>, is null if there is only one index array
-            </summary>
-        </member>
         <member name="P:Althea.Arrays.SparseMatrix`2.NStored">
             <summary>
             When implemented by a derived class, get the number of stored values of this sparse matrix. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.ActualLength"/>.
@@ -762,43 +774,22 @@
         </member>
         <member name="P:Althea.Arrays.SparseMatrix`2.IndexArrays">
             <summary>
-            Get all the index arrays as an array of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.#ctor(System.Int64,System.Int64,Althea.Storage{`0},Althea.Storage{`1},Althea.Storage{`1},Althea.LinearAlgebra.Sparse.SparseMatrixFormat,`0,System.Int64,System.Int64,System.Int64)">
+        <member name="M:Althea.Arrays.SparseMatrix`2.#ctor(System.Int64,System.Int64,Althea.Storage{`0},Althea.LinearAlgebra.Sparse.SparseMatrixFormat,`0,System.Int64)">
             <summary>
-            Create a <see cref="T:Althea.Arrays.SparseMatrix`2"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/>, <paramref name="rowIndexArray"/> and <paramref name="colIndexArray"/>
+            Create a <see cref="T:Althea.Arrays.SparseMatrix`2"/> with given <paramref name="rows"/>, <paramref name="cols"/> and <paramref name="valueArray"/>
             </summary>
             <param name="rows">The presenting number of rows of this sparse matrix</param>
             <param name="cols">The presenting number of columns of this sparse matrix</param>
             <param name="valueArray">The value array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/></param>
-            <param name="rowIndexArray">The row index array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
-            <param name="colIndexArray">The column index array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
             <param name="format">The <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of this sparse matrix, must be atomic</param>
             <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
             <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-            <param name="rowLength">The actual presenting length of <paramref name="rowIndexArray"/>, default 0 means <paramref name="stores"/></param>
-            <param name="colLength">The actual presenting length of <paramref name="colIndexArray"/>, default 0 means <paramref name="stores"/></param>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="rowIndexArray"/> or <paramref name="colIndexArray"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
-        </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.#ctor(System.Int64,System.Int64,Althea.Storage{`0},Althea.Helpers.SizedFixedClassBuffer_8{Althea.Storage{`1}},System.Span{System.Int64},Althea.LinearAlgebra.Sparse.SparseMatrixFormat,`0,System.Int64)">
-            <summary>
-            Create a <see cref="T:Althea.Arrays.SparseMatrix`2"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
-            </summary>
-            <param name="rows">The presenting number of rows of this sparse matrix</param>
-            <param name="cols">The presenting number of columns of this sparse matrix</param>
-            <param name="valueArray">The value array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/></param>
-            <param name="indexArrays">The index array(s) as a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
-            <param name="realIndexArrayLengths">The actual presenting length of each array in <paramref name="indexArrays"/></param>
-            <param name="format">The <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of this sparse matrix, must be atomic</param>
-            <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
-            <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-            <exception cref="T:System.ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
         </member>
         <member name="M:Althea.Arrays.SparseMatrix`2.IsValid">
             <summary>
@@ -886,23 +877,6 @@
             <param name="obj">The other object to compare with</param>
             <returns>True if this == <paramref name="obj"/></returns>
         </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.IndexStorageNameOf(System.Int32)">
-            <summary>
-            The helper method used by <see cref="M:Althea.Arrays.SparseMatrix`2.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
-            </summary>
-            <param name="orderOfIndexStorage">The index of all index storages of this sparse matrix</param>
-            <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-        </member>
-        <member name="F:Althea.Arrays.SparseMatrix`2.RowIndexStorageName">
-            <summary>
-            The name of the row index storage to be used when the sparse array only contains one index storage
-            </summary>
-        </member>
-        <member name="F:Althea.Arrays.SparseMatrix`2.ColIndexStorageName">
-            <summary>
-            The name of the column index storage to be used when the sparse array only contains one index storage
-            </summary>
-        </member>
         <member name="F:Althea.Arrays.SparseMatrix`2.DefaultValueName">
             <summary>
             The presenting name of the <see cref="P:Althea.Arrays.SparseMatrix`2.DefaultValue"/>.
@@ -912,12 +886,6 @@
             <summary>
             The presenting name of the <see cref="P:Althea.Arrays.SparseMatrix`2.Format"/>.
             </summary>
-        </member>
-        <member name="M:Althea.Arrays.SparseMatrix`2.GetStorages">
-            <summary>
-            When implemented by a derived class, get all the storages of this sparse matrix. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) (whose names are from <see cref="M:Althea.Arrays.SparseMatrix`2.IndexStorageNameOf(System.Int32)"/>) used to construct this sparse matrix. If there are exactly 2 index arrays, the default implementation only works correctly when they are (general) row and column index arrays respectively.
-            </summary>
-            <returns>All the storages of the array as an <see cref="T:System.Collections.Generic.IReadOnlyDictionary`2"/> of <see cref="T:System.String"/> and <see cref="T:Althea.IStorage"/></returns>
         </member>
         <member name="M:Althea.Arrays.SparseMatrix`2.GetMetaData">
             <summary>
@@ -931,11 +899,6 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-        </member>
-        <member name="F:Althea.Arrays.SparseTensor`2.m_indexArrays">
-            <summary>
-            The member that actually stores the index arrays' storages
-            </summary>
         </member>
         <member name="P:Althea.Arrays.SparseTensor`2.NStored">
             <summary>
@@ -954,24 +917,22 @@
         </member>
         <member name="P:Althea.Arrays.SparseTensor`2.IndexArrays">
             <summary>
-            Get all the index arrays as a list of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.SparseTensor`2.#ctor(System.ReadOnlySpan{System.Int64},Althea.Storage{`0},Althea.Helpers.SizedFixedClassBuffer_8{Althea.Storage{`1}},Althea.TensorAlgebra.Sparse.SparseTensorFormat,System.ReadOnlySpan{System.Char},System.Int64,System.ReadOnlySpan{System.Int64},`0)">
+        <member name="M:Althea.Arrays.SparseTensor`2.#ctor(System.ReadOnlySpan{System.Int64},Althea.Storage{`0},Althea.TensorAlgebra.Sparse.SparseTensorFormat,System.ReadOnlySpan{System.Char},`0,System.Int64)">
             <summary>
-            Create a <see cref="T:Althea.Arrays.SparseTensor`2"/> with given <paramref name="size"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
+            Create a <see cref="T:Althea.Arrays.SparseTensor`2"/> with given <paramref name="size"/> and <paramref name="valueArray"/>
             </summary>
             <param name="size">The presenting size of this sparse tensor</param>
             <param name="valueArray">The value array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/></param>
-            <param name="indexArrays">The index array(s) as a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
             <param name="format">The <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> of this sparse tensor, must be atomic</param>
             <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
             <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-            <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, default empty means the lengths of <paramref name="indexArrays"/></param>
             <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="indexArrays"/> and <paramref name="indexRealLengths"/> are not the same</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> is null or empty</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
         </member>
         <member name="M:Althea.Arrays.SparseTensor`2.IsValid">
@@ -1061,13 +1022,6 @@
             <param name="obj">The other object to compare with</param>
             <returns>True if this == <paramref name="obj"/></returns>
         </member>
-        <member name="M:Althea.Arrays.SparseTensor`2.IndexStorageNameOf(System.Int32)">
-            <summary>
-            The helper method used by <see cref="M:Althea.Arrays.SparseTensor`2.GetStorages"/> to get the index storages' names.
-            </summary>
-            <param name="orderOfIndexStorage">The index of all index storages of this sparse tensor</param>
-            <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-        </member>
         <member name="F:Althea.Arrays.SparseTensor`2.DefaultValueName">
             <summary>
             The presenting name of the <see cref="P:Althea.Arrays.SparseTensor`2.DefaultValue"/>.
@@ -1077,12 +1031,6 @@
             <summary>
             The presenting name of the <see cref="P:Althea.Arrays.SparseTensor`2.Format"/>.
             </summary>
-        </member>
-        <member name="M:Althea.Arrays.SparseTensor`2.GetStorages">
-            <summary>
-            When implemented by a derived class, get all the storages of this sparse tensor. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) (whose names are from <see cref="M:Althea.Arrays.SparseTensor`2.IndexStorageNameOf(System.Int32)"/>) used to construct this sparse tensor. If there are exactly 2 index arrays, the default implementation only works correctly when they are (general) row and column index arrays respectively.
-            </summary>
-            <returns>All the storages of the array as an <see cref="T:System.Collections.Generic.IReadOnlyDictionary`2"/> of <see cref="T:System.String"/> and <see cref="T:Althea.IStorage"/></returns>
         </member>
         <member name="M:Althea.Arrays.SparseTensor`2.GetMetaData">
             <summary>
@@ -1737,11 +1685,6 @@
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
         </member>
-        <member name="F:Althea.Arrays.SparseVector`2.m_indexArrays">
-            <summary>
-            The member that actually stores the index arrays' storages
-            </summary>
-        </member>
         <member name="P:Althea.Arrays.SparseVector`2.NStored">
             <summary>
             When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.ActualLength"/>.
@@ -1759,38 +1702,21 @@
         </member>
         <member name="P:Althea.Arrays.SparseVector`2.IndexArrays">
             <summary>
-            Get all the index arrays as a list of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.SparseVector`2.#ctor(System.Int64,Althea.Storage{`0},Althea.Storage{`1},Althea.LinearAlgebra.Sparse.SparseVectorFormat,`0,System.Int64)">
+        <member name="M:Althea.Arrays.SparseVector`2.#ctor(System.Int64,Althea.Storage{`0},Althea.LinearAlgebra.Sparse.SparseVectorFormat,`0,System.Int64)">
             <summary>
-            Create a <see cref="T:Althea.Arrays.SparseVector`2"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArray"/>
+            Create a <see cref="T:Althea.Arrays.SparseVector`2"/> with given <paramref name="length"/> and <paramref name="valueArray"/>
             </summary>
             <param name="length">The presenting length of this sparse vector</param>
             <param name="valueArray">The value array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/></param>
-            <param name="indexArray">The index array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
             <param name="format">The <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of this sparse vector, must be atomic</param>
             <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
             <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or <paramref name="indexArray"/> or larger than the presenting length of this vector</exception>
-        </member>
-        <member name="M:Althea.Arrays.SparseVector`2.#ctor(System.Int64,Althea.Storage{`0},Althea.Helpers.SizedFixedClassBuffer_8{Althea.Storage{`1}},System.Span{System.Int64},Althea.LinearAlgebra.Sparse.SparseVectorFormat,`0,System.Int64)">
-            <summary>
-            Create a <see cref="T:Althea.Arrays.SparseVector`2"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
-            </summary>
-            <param name="length">The presenting length of this sparse vector</param>
-            <param name="valueArray">The value array as a <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/></param>
-            <param name="indexArrays">The index array(s) as a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/></param>
-            <param name="realIndexArrayLengths">The actual presenting length of each array in <paramref name="indexArrays"/></param>
-            <param name="format">The <see cref="T:Althea.LinearAlgebra.Sparse.SparseVectorFormat"/> of this sparse vector, must be atomic</param>
-            <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
-            <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-            <exception cref="T:System.ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valueArray"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this vector</exception>
         </member>
         <member name="M:Althea.Arrays.SparseVector`2.IsValid">
             <summary>
@@ -1807,7 +1733,7 @@
         </member>
         <member name="M:Althea.Arrays.SparseVector`2.Dispose(System.Boolean)">
             <summary>
-            When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) passed to the constructor of <see cref="T:Althea.Arrays.SparseVector`2"/>.
+            When implemented by a derived class, actually the dispose this array. The default implementation utilizes <see cref="M:Althea.Arrays.ISparseArray`1.Dispose"/>.
             </summary>
             <param name="disposing">Dispose managed resources or not</param>
         </member>
@@ -1887,18 +1813,6 @@
             <param name="overrideSetting">Override global settings in <see cref="T:Althea.Helpers.Settings"/></param>
             <returns>The detailed string representation of this sparse vector</returns>
         </member>
-        <member name="M:Althea.Arrays.SparseVector`2.IndexStorageNameOf(System.Int32)">
-            <summary>
-            The helper method used by <see cref="M:Althea.Arrays.SparseVector`2.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
-            </summary>
-            <param name="orderOfIndexStorage">The index of all index storages of this sparse vector</param>
-            <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-        </member>
-        <member name="F:Althea.Arrays.SparseVector`2.IndexStorageName">
-            <summary>
-            The name of the index storage to be used when the sparse array only contains one index storage
-            </summary>
-        </member>
         <member name="F:Althea.Arrays.SparseVector`2.DefaultValueName">
             <summary>
             The presenting name of the <see cref="P:Althea.Arrays.SparseVector`2.DefaultValue"/>.
@@ -1908,12 +1822,6 @@
             <summary>
             The presenting name of the <see cref="P:Althea.Arrays.SparseVector`2.Format"/>.
             </summary>
-        </member>
-        <member name="M:Althea.Arrays.SparseVector`2.GetStorages">
-            <summary>
-            When implemented by a derived class, get all the storages of this sparse vector. The default implementation returns the <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> and the index array(s) (whose names are from <see cref="M:Althea.Arrays.SparseVector`2.IndexStorageNameOf(System.Int32)"/>) used to construct this sparse vector.
-            </summary>
-            <returns>All the storages of the array as an <see cref="T:System.Collections.Generic.IReadOnlyDictionary`2"/> of <see cref="T:System.String"/> and <see cref="T:Althea.IStorage"/></returns>
         </member>
         <member name="M:Althea.Arrays.SparseVector`2.GetMetaData">
             <summary>
@@ -3379,446 +3287,260 @@
             <param name="to">The second mismatch type</param>
             <param name="reason">The mismatch reason</param>
         </member>
-        <member name="T:Althea.Helpers.ReflectionHelper">
+        <member name="T:Althea.Helpers.FixedClassBuffer_2`1">
             <summary>
-            A static class that contains helper functions using reflections
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 2.
+            </summary>
+            <typeparam name="T">Any class</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.#ctor(`0[])">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> with a given <paramref name="array"/>
+            </summary>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 2</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.#ctor(System.ReadOnlySpan{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> with a given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 2</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
+            </summary>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_2`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_2`1.Count">
+            <summary>
+            Get the number of elements in this fixed buffer
             </summary>
         </member>
-        <member name="M:Althea.Helpers.ReflectionHelper.GetGenericString(System.Type,System.Boolean)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.GetEnumerator">
             <summary>
-            Get the name string representation of given <paramref name="type"/> together with its generic parameters
+            Returns an enumerator that iterates through the collection.
             </summary>
-            <param name="type">The given <see cref="T:System.Type"/> to get name</param>
-            <param name="full">Whether to use <see cref="P:System.Type.FullName"/> or only <see cref="P:System.Reflection.MemberInfo.Name"/></param>
-            <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
         </member>
-        <member name="T:Althea.Helpers.ExtensionHelper">
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.Equals(Althea.Helpers.FixedClassBuffer_2{`0})">
             <summary>
-            A static class that contains general purposed extension helper methods
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.op_Equality(Althea.Helpers.FixedClassBuffer_2{`0},Althea.Helpers.FixedClassBuffer_2{`0})">
+            <summary>
+            Equality operator
             </summary>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.CombinationNumber(System.Int32,System.Int32)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.op_Inequality(Althea.Helpers.FixedClassBuffer_2{`0},Althea.Helpers.FixedClassBuffer_2{`0})">
             <summary>
-            Get the combination number of given integers
+            Inequality operator
             </summary>
-            <param name="n">The length of any combination</param>
-            <param name="N">The number of all potential values</param>
-            <returns>0 if <paramref name="n"/> &gt; <paramref name="N"/> or <paramref name="n"/> == 0 or <paramref name="N"/> == 0, the binomial (<paramref name="N"/>, <paramref name="n"/>) otherwise</returns>
-            <exception cref="T:System.OverflowException">If an overflow happened during the calculation</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int32)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.ToString">
             <summary>
-            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/>
             </summary>
-            <param name="a">The input number</param>
-            <returns>the ordinal representation string</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsPerfectSquare(System.Int64)">
+        <member name="T:Althea.Helpers.FixedClassBuffer_8`1">
             <summary>
-            Is the input integer a perfect square or not.
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 8.
             </summary>
-            <param name="input">The input integer</param>
-            <returns>Whether <paramref name="input"/> is perfect square or not.</returns>
+            <typeparam name="T">Any class</typeparam>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsPowerOfTwo(System.Int64)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(`0[])">
             <summary>
-            Whether the input integer is a power of 2
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> with a given <paramref name="array"/>
             </summary>
-            <param name="x">The input integer</param>
-            <returns>Whether <paramref name="x"/> is a power of 2</returns>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsPowerOfTwo(System.Int32)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(System.ReadOnlySpan{`0})">
             <summary>
-            Whether the input integer is a power of 2
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> with a given <paramref name="span"/>
             </summary>
-            <param name="x">The input integer</param>
-            <returns>Whether <paramref name="x"/> is a power of 2</returns>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 8</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsPowerOfTwo(System.Int16)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.AsSpan(System.Int32)">
             <summary>
-            Whether the input integer is a power of 2
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
             </summary>
-            <param name="x">The input integer</param>
-            <returns>Whether <paramref name="x"/> is a power of 2</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.NearestPowerOfTwo(System.Int32)">
+        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Item(System.Int32)">
             <summary>
-            Get the nearest power of 2 integer of the input integer
+            Basic indexer of this fixed buffer
             </summary>
-            <param name="x">The input integer</param>
-            <returns><paramref name="x"/>'s the nearest power of 2</returns>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.NearestPowerOfTwo(System.Int64)">
+        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Count">
             <summary>
-            Get the nearest power of 2 integer of the input integer
+            Get the number of elements in this fixed buffer
             </summary>
-            <param name="x">The input integer</param>
-            <returns><paramref name="x"/>'s the nearest power of 2</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.Log2(System.Int16)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetEnumerator">
             <summary>
-            Get the floor round of log2(<paramref name="input"/>)
+            Returns an enumerator that iterates through the collection.
             </summary>
-            <param name="input">input number</param>
-            <returns>the nearest log2 of <paramref name="input"/></returns>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.Log2(System.Int32)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(Althea.Helpers.FixedClassBuffer_8{`0})">
             <summary>
-            Get the floor round of log2(<paramref name="input"/>)
+            Whether this == <paramref name="other"/>
             </summary>
-            <param name="input">input number</param>
-            <returns>the nearest log2 of <paramref name="input"/></returns>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.Log2(System.Int64)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(System.Object)">
             <summary>
-            Get the floor round of log2(<paramref name="input"/>)
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
             </summary>
-            <param name="input">input number</param>
-            <returns>the nearest log2 of <paramref name="input"/></returns>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.CountBitSet(System.Int16)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetHashCode">
             <summary>
-            Count the <paramref name="input"/>'s bits which are set to 1
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>.
             </summary>
-            <param name="input">input integer</param>
-            <returns>the number <paramref name="input"/>'s bits set</returns>
+            <returns>The hash code</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.CountBitSet(System.Int32)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Equality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
             <summary>
-            Count the <paramref name="input"/>'s bits which are set to 1
+            Equality operator
             </summary>
-            <param name="input">input integer</param>
-            <returns>the number <paramref name="input"/>'s bits set</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.CountBitSet(System.Int64)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Inequality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
             <summary>
-            Count the <paramref name="input"/>'s bits which are set to 1
+            Inequality operator
             </summary>
-            <param name="input">input integer</param>
-            <returns>the number <paramref name="input"/>'s bits set</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int16,System.Byte)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.ToString">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int32,System.Byte)">
+        <member name="T:Althea.Helpers.FixedClassBuffer_16`1">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 16.
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+            <typeparam name="T">Any class</typeparam>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int64,System.Byte)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.#ctor(`0[])">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> with a given <paramref name="array"/>
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 16</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int32,System.Byte)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.#ctor(System.ReadOnlySpan{`0})">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> with a given <paramref name="span"/>
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 16</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int64,System.Byte)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.AsSpan(System.Int32)">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Int32,System.Byte)">
+        <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Item(System.Int32)">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            Basic indexer of this fixed buffer
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Int64,System.Byte)">
+        <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Count">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            Get the number of elements in this fixed buffer
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.TotalMinutesString(System.TimeSpan,System.String)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.GetEnumerator">
             <summary>
-            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total minutes and rest of them (seconds and smaller ones).
+            Returns an enumerator that iterates through the collection.
             </summary>
-            <param name="span">The time span</param>
-            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
-            <returns>the string representation</returns>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.TotalHoursString(System.TimeSpan,System.String)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.Equals(Althea.Helpers.FixedClassBuffer_16{`0})">
             <summary>
-            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total hours and rest of them (minutes, seconds and smaller ones).
+            Whether this == <paramref name="other"/>
             </summary>
-            <param name="span">The time span</param>
-            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
-            <returns>the string representation</returns>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.Char)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.Equals(System.Object)">
             <summary>
-            Concatenates the members of a span, using the specified separator between each member.
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
             </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.String)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.GetHashCode">
             <summary>
-            Concatenates the members of a span, using the specified separator between each member.
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/>.
             </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+            <returns>The hash code</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.Char)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.op_Equality(Althea.Helpers.FixedClassBuffer_16{`0},Althea.Helpers.FixedClassBuffer_16{`0})">
             <summary>
-            Concatenates the members of a span, using the specified separator between each member.
+            Equality operator
             </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.String)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.op_Inequality(Althea.Helpers.FixedClassBuffer_16{`0},Althea.Helpers.FixedClassBuffer_16{`0})">
             <summary>
-            Concatenates the members of a span, using the specified separator between each member.
+            Inequality operator
             </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.Span{``0},System.Int32)">
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.ToString">
             <summary>
-            Print out 1D array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/>
             </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="input">The dense vector to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``1(System.Span{``0},System.Span{System.Int64},System.Int32)">
-            <summary>
-            Print out 1D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="values">The values of the sparse vector to print</param>
-            <param name="indices">The indices of the sparse vector to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.Span{``0},System.Int32,System.Int64,System.Int32)">
-            <summary>
-            Print out 2D array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="matrix">The column-major values of the dense matrix to print</param>
-            <param name="rows">The number of rows of the given matrix</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
-            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``1(System.Span{``0},System.Span{System.Int64},System.Span{System.Int64},System.Int32)">
-            <summary>
-            Print out 2D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="values">The values of the sparse matrix to print</param>
-            <param name="indx">The row indices of the sparse matrix to print</param>
-            <param name="indy">The column indices of the sparse matrix to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToClone``1(``0,System.Action{``0})">
-            <summary>
-            Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
-            </summary>
-            <typeparam name="T">The array that is <see cref="T:System.ICloneable"/> and <see cref="T:System.IDisposable"/></typeparam>
-            <param name="array">The array to be acted by <paramref name="action"/></param>
-            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
-            <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToAlike``2(``0,System.Action{``0})">
-            <summary>
-            Safely apply <paramref name="action"/> to a new array alike <paramref name="array"/>. When <paramref name="action"/> throws error, the new array will be safely disposed.
-            </summary>
-            <typeparam name="TArr">The array that is <see cref="T:Althea.Arrays.ValueArray`1"/></typeparam>
-            <typeparam name="T">The data type used by <typeparamref name="TArr"/></typeparam>
-            <param name="array">The array to be acted by <paramref name="action"/></param>
-            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
-            <returns>The new array alike <paramref name="array"/> after applying <paramref name="action"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0},System.Func{System.Int32,System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
-            <summary>
-            Perform general inner product of two matrices <paramref name="left"/> and <paramref name="right"/> with <paramref name="multiply"/> as general multiplication
-            </summary>
-            <typeparam name="TL">The left matrix's data type</typeparam>
-            <typeparam name="TR">The right matrix's data type</typeparam>
-            <typeparam name="TO">The output matrix's data type</typeparam>
-            <param name="m">number of rows of <paramref name="left"/></param>
-            <param name="n">number of columns of <paramref name="right"/></param>
-            <param name="k">number of columns of <paramref name="left"/> and rows of <paramref name="right"/></param>
-            <param name="left">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
-            <param name="right">right matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TR"/></param>
-            <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-            <param name="newZero">The function used to create a new output element with value of a general zero</param>
-            <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0},System.Func{System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
-            <summary>
-            Perform general inner product of a matrix <paramref name="leftMat"/> and a vector <paramref name="rightVec"/> with <paramref name="multiply"/> as general multiplication
-            </summary>
-            <typeparam name="TL">The left matrix's data type</typeparam>
-            <typeparam name="TR">The right matrix's data type</typeparam>
-            <typeparam name="TO">The output matrix's data type</typeparam>
-            <param name="m">number of rows of <paramref name="leftMat"/></param>
-            <param name="k">number of columns of <paramref name="leftMat"/> and rows of <paramref name="rightVec"/></param>
-            <param name="leftMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
-            <param name="rightVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
-            <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-            <param name="newZero">The function used to create a new output element with value of a general zero</param>
-            <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Func{System.Int32,``0},System.Func{System.Int32,System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
-            <summary>
-            Perform general inner product of a vector <paramref name="leftVec"/> and a matrix <paramref name="rightMat"/> with <paramref name="multiply"/> as general multiplication
-            </summary>
-            <typeparam name="TL">The left matrix's data type</typeparam>
-            <typeparam name="TR">The right matrix's data type</typeparam>
-            <typeparam name="TO">The output matrix's data type</typeparam>
-            <param name="n">number of columns of <paramref name="leftVec"/> and rows of <paramref name="rightMat"/></param>
-            <param name="k">number of columns of <paramref name="rightMat"/></param>
-            <param name="rightMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
-            <param name="leftVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
-            <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-            <param name="newZero">The function used to create a new output element with value of a general zero</param>
-            <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.GetPosition(System.Index,System.Int64,System.Boolean)">
-            <summary>
-            Calculate the offset from the start using the giving collection length.
-            </summary>
-            <param name="index">The <see cref="T:System.Index"/></param>
-            <param name="length">The length of the collection that the Index will be used with. It has to be a positive value</param>
-            <param name="check">check parameters and result or not</param>
-            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Index.GetOffset(System.Int32)"/>.</remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of [0, <paramref name="length"/>)</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.GetOffsetAndCount(System.Range,System.Int64,System.Boolean)">
-            <summary>
-            Calculate the start offset and length of range object using a collection length.
-            </summary>
-            <param name="range">The <see cref="T:System.Range"/></param>
-            <param name="length">The length of the collection that the range will be used with. It has to be a positive value.</param>
-            <param name="check">check parameters and result or not</param>
-            <returns>the offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
-            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> at x64 platforms.</remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="range"/> is out of [0, <paramref name="length"/>)</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToJagged``1(``0[],System.Int64)">
-            <summary>
-            Convert a 1D array to a 2D jagged array
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to convert</param>
-            <param name="innerSize">The size of inner dimension of the 2D jagged array</param>
-            <returns>the 2D jagged array</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.Make2DArray``1(``0[],System.Int64,System.Int64)">
-            <summary>
-            Construct a new 2D array out of a 1D array, column major
-            </summary>
-            <typeparam name="T">any data type</typeparam>
-            <returns>a 2D array T[,]</returns>
-            <param name="input">input 1D array</param>
-            <param name="rows">height (number of rows) of the new 2D array</param>
-            <param name="columns">width (number of columns) of the new 2D array</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.GetRowColumns``1(``0[0:,0:])">
-            <summary>
-            Get the number of rows and columns of the 2D array.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="arr">2D array</param>
-            <returns>the number of rows and columns</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ColumnTake``1(``0[0:,0:])">
-            <summary>
-            Take out the 2D array column by column.
-            </summary>
-            <param name="arr">input array</param>
-            <returns>the result 1D array</returns>
-            <typeparam name="T">any data type</typeparam>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ForEach``1(``0[0:,0:],System.Action{``0,System.Int32,System.Int32})">
-            <summary>
-            Act on each element of a 2D array.
-            </summary>
-            <typeparam name="T">input array type</typeparam>
-            <param name="arr">input 2D array</param>
-            <param name="action">action function, parameter 2 &amp; 3 are row &amp; column indices respectively</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsHermitian``1(``0[0:,0:])">
-            <summary>
-            Check if the 2D array is Hermitian or not
-            </summary>
-            <param name="arr">input 2D array to test</param>
-            <returns>Hermitian or not</returns>
-            <typeparam name="T">The supported data type</typeparam>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(``0[])">
-            <summary>
-            Clear a general array
-            </summary>
-            <typeparam name="TArr">The array type</typeparam>
-            <param name="array">The array to clear</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.List{``0})">
-            <summary>
-            Clear a general list
-            </summary>
-            <typeparam name="TArr">The array type</typeparam>
-            <param name="list">The list to clear</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.IReadOnlyList{``0})">
-            <summary>
-            Dispose a general read-only list
-            </summary>
-            <typeparam name="TArr">The array type</typeparam>
-            <param name="list">The read-only list to dispose</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearDict``2(System.Collections.Generic.IReadOnlyDictionary{``0,``1})">
-            <summary>
-            Dispose a general dictionary
-            </summary>
-            <typeparam name="T">The dictionary key type</typeparam>
-            <typeparam name="TArr">The array type</typeparam>
-            <param name="dict">The dictionary to dispose</param>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/></returns>
         </member>
         <member name="T:Althea.Helpers.IFixedBuffer`1">
             <summary>
@@ -4397,289 +4119,498 @@
             </summary>
             <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/></returns>
         </member>
-        <member name="T:Althea.Helpers.FixedClassBuffer_8`1">
+        <member name="T:Althea.Helpers.ReflectionHelper">
             <summary>
-            The fixed buffer struct of class type <typeparamref name="T"/> with size = 8.
-            </summary>
-            <typeparam name="T">Any class</typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(`0[])">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> with a given <paramref name="array"/>
-            </summary>
-            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(System.Collections.Generic.IReadOnlyList{`0})">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> with a given <paramref name="list"/>
-            </summary>
-            <param name="list">The given <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="list"/> is larger than 8</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="list"/> is null</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Count">
-            <summary>
-            Get the number of elements in this fixed buffer
+            A static class that contains helper functions using reflections
             </summary>
         </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetEnumerator">
+        <member name="M:Althea.Helpers.ReflectionHelper.GetGenericString(System.Type,System.Boolean)">
             <summary>
-            Returns an enumerator that iterates through the collection.
+            Get the name string representation of given <paramref name="type"/> together with its generic parameters
             </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
+            <param name="type">The given <see cref="T:System.Type"/> to get name</param>
+            <param name="full">Whether to use <see cref="P:System.Type.FullName"/> or only <see cref="P:System.Reflection.MemberInfo.Name"/></param>
+            <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(Althea.Helpers.FixedClassBuffer_8{`0})">
+        <member name="T:Althea.Helpers.ExtensionHelper">
             <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Equality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
-            <summary>
-            Equality operator
+            A static class that contains general purposed extension helper methods
             </summary>
         </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Inequality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.CombinationNumber(System.Int32,System.Int32)">
             <summary>
-            Inequality operator
+            Get the combination number of given integers
             </summary>
+            <param name="n">The length of any combination</param>
+            <param name="N">The number of all potential values</param>
+            <returns>0 if <paramref name="n"/> &gt; <paramref name="N"/> or <paramref name="n"/> == 0 or <paramref name="N"/> == 0, the binomial (<paramref name="N"/>, <paramref name="n"/>) otherwise</returns>
+            <exception cref="T:System.OverflowException">If an overflow happened during the calculation</exception>
         </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.ToString">
+        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int32)">
             <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>
+            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
             </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/></returns>
+            <param name="a">The input number</param>
+            <returns>the ordinal representation string</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
         </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Implicit(Althea.Helpers.SizedFixedClassBuffer_8{`0})~Althea.Helpers.FixedClassBuffer_8{`0}">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsPerfectSquare(System.Int64)">
             <summary>
-            Implicitly convert a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> to a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>
+            Is the input integer a perfect square or not.
             </summary>
-            <param name="sized">The input <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/></param>
+            <param name="input">The input integer</param>
+            <returns>Whether <paramref name="input"/> is perfect square or not.</returns>
         </member>
-        <member name="T:Althea.Helpers.SizedFixedClassBuffer_8`1">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsPowerOfTwo(System.Int64)">
             <summary>
-            The sized fixed buffer struct of class type <typeparamref name="T"/> with maximum size = 8.
+            Whether the input integer is a power of 2
             </summary>
-            <typeparam name="T">Any class</typeparam>
+            <param name="x">The input integer</param>
+            <returns>Whether <paramref name="x"/> is a power of 2</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.#ctor(System.Int32)">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsPowerOfTwo(System.Int32)">
             <summary>
-            Create a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> of the given <paramref name="size"/>
+            Whether the input integer is a power of 2
             </summary>
-            <param name="size">The size</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+            <param name="x">The input integer</param>
+            <returns>Whether <paramref name="x"/> is a power of 2</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.#ctor(`0[])">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsPowerOfTwo(System.Int16)">
             <summary>
-            Create a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> with a given <paramref name="array"/>
+            Whether the input integer is a power of 2
             </summary>
-            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
+            <param name="x">The input integer</param>
+            <returns>Whether <paramref name="x"/> is a power of 2</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.#ctor(System.Collections.Generic.IReadOnlyList{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.NearestPowerOfTwo(System.Int32)">
             <summary>
-            Create a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> with a given <paramref name="list"/>
+            Get the nearest power of 2 integer of the input integer
             </summary>
-            <param name="list">The given <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="list"/> is larger than 8</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="list"/> is null</exception>
+            <param name="x">The input integer</param>
+            <returns><paramref name="x"/>'s the nearest power of 2</returns>
         </member>
-        <member name="P:Althea.Helpers.SizedFixedClassBuffer_8`1.Item(System.Int32)">
+        <member name="M:Althea.Helpers.ExtensionHelper.NearestPowerOfTwo(System.Int64)">
             <summary>
-            Basic indexer of this fixed buffer
+            Get the nearest power of 2 integer of the input integer
             </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+            <param name="x">The input integer</param>
+            <returns><paramref name="x"/>'s the nearest power of 2</returns>
         </member>
-        <member name="P:Althea.Helpers.SizedFixedClassBuffer_8`1.Count">
+        <member name="M:Althea.Helpers.ExtensionHelper.Log2(System.Int16)">
             <summary>
-            Get the number of elements in this fixed buffer
+            Get the floor round of log2(<paramref name="input"/>)
             </summary>
+            <param name="input">input number</param>
+            <returns>the nearest log2 of <paramref name="input"/></returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.GetEnumerator">
+        <member name="M:Althea.Helpers.ExtensionHelper.Log2(System.Int32)">
             <summary>
-            Returns an enumerator that iterates through the collection.
+            Get the floor round of log2(<paramref name="input"/>)
             </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
+            <param name="input">input number</param>
+            <returns>the nearest log2 of <paramref name="input"/></returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.Equals(Althea.Helpers.SizedFixedClassBuffer_8{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.Log2(System.Int64)">
             <summary>
-            Whether this == <paramref name="other"/>
+            Get the floor round of log2(<paramref name="input"/>)
             </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
+            <param name="input">input number</param>
+            <returns>the nearest log2 of <paramref name="input"/></returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.Equals(System.Object)">
+        <member name="M:Althea.Helpers.ExtensionHelper.CountBitSet(System.Int16)">
             <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            Count the <paramref name="input"/>'s bits which are set to 1
             </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
+            <param name="input">input integer</param>
+            <returns>the number <paramref name="input"/>'s bits set</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.GetHashCode">
+        <member name="M:Althea.Helpers.ExtensionHelper.CountBitSet(System.Int32)">
             <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/>.
+            Count the <paramref name="input"/>'s bits which are set to 1
             </summary>
-            <returns>The hash code</returns>
+            <param name="input">input integer</param>
+            <returns>the number <paramref name="input"/>'s bits set</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.op_Equality(Althea.Helpers.SizedFixedClassBuffer_8{`0},Althea.Helpers.SizedFixedClassBuffer_8{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.CountBitSet(System.Int64)">
             <summary>
-            Equality operator
+            Count the <paramref name="input"/>'s bits which are set to 1
             </summary>
+            <param name="input">input integer</param>
+            <returns>the number <paramref name="input"/>'s bits set</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.op_Inequality(Althea.Helpers.SizedFixedClassBuffer_8{`0},Althea.Helpers.SizedFixedClassBuffer_8{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int16,System.Byte)">
             <summary>
-            Inequality operator
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.ToString">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int32,System.Byte)">
             <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/>
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/></returns>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.op_Implicit(`0)~Althea.Helpers.SizedFixedClassBuffer_8{`0}">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int64,System.Byte)">
             <summary>
-            Implicitly convert a <typeparamref name="T"/> to a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/>
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
-            <param name="value">The value of type <typeparamref name="T"/> to be converted</param>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.SizedFixedClassBuffer_8`1.op_Implicit(System.ValueTuple{`0,`0})~Althea.Helpers.SizedFixedClassBuffer_8{`0}">
+        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int32,System.Byte)">
             <summary>
-            Implicitly convert a tuple of <typeparamref name="T"/> to a <see cref="T:Althea.Helpers.SizedFixedClassBuffer_8`1"/>
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
-            <param name="value">The value tuple of type <typeparamref name="T"/> to be converted</param>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="T:Althea.Helpers.FixedStructBuffer_360`1">
+        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int64,System.Byte)">
             <summary>
-            The fixed buffer struct of struct type <typeparamref name="T"/> and size in bytes = 360
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
-            <typeparam name="T">Any struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.AsSpan(System.Int32)">
+        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Int32,System.Byte)">
             <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.ToArray">
+        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Int64,System.Byte)">
             <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+        <member name="M:Althea.Helpers.ExtensionHelper.TotalMinutesString(System.TimeSpan,System.String)">
             <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total minutes and rest of them (seconds and smaller ones).
             </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+            <param name="span">The time span</param>
+            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
+            <returns>the string representation</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.CopyToSpan(System.Span{`0},System.Int32)">
+        <member name="M:Althea.Helpers.ExtensionHelper.TotalHoursString(System.TimeSpan,System.String)">
             <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total hours and rest of them (minutes, seconds and smaller ones).
             </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+            <param name="span">The time span</param>
+            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
+            <returns>the string representation</returns>
         </member>
-        <member name="P:Althea.Helpers.FixedStructBuffer_360`1.NonDefaults">
+        <member name="M:Althea.Helpers.ExtensionHelper.RepeatString(System.String,System.Int32)">
             <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            Repeat the given <see cref="T:System.String"/> <paramref name="s"/> for <paramref name="n"/> times
             </summary>
+            <param name="s">The given <see cref="T:System.String"/> to repeat</param>
+            <param name="n">The repeat count</param>
+            <returns><see cref="F:System.String.Empty"/> if <paramref name="n"/> == 0; otherwise, the repeated string</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> is less than 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="s"/> is null or empty</exception>
         </member>
-        <member name="P:Althea.Helpers.FixedStructBuffer_360`1.Count">
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.Char)">
             <summary>
-            The number of elements in this fixed buffer
+            Concatenates the members of a span, using the specified separator between each member.
             </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
-        <member name="P:Althea.Helpers.FixedStructBuffer_360`1.Item(System.Int32)">
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.String)">
             <summary>
-            Basic indexer of this fixed buffer
+            Concatenates the members of a span, using the specified separator between each member.
             </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.GetEnumerator">
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.Char)">
             <summary>
-            Returns an enumerator that iterates through the collection.
+            Concatenates the members of a span, using the specified separator between each member.
             </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.Contains(`0)">
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.String)">
             <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            Concatenates the members of a span, using the specified separator between each member.
             </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.Equals(Althea.Helpers.FixedStructBuffer_360{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.MultilinePrePostfix(System.String,System.String,System.String)">
             <summary>
-            Whether this == <paramref name="other"/>
+            Concatenates the multi-line <see cref="T:System.String"/> <paramref name="s"/> with <paramref name="prefix"/> and <paramref name="postfix"/> line-by-line
             </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedStructBuffer_360`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
+            <param name="s">The <see cref="T:System.String"/> to be concatenated with pre- and post- fix</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
+            <returns>The concatenated <see cref="T:System.String"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="s"/> is null or empty</exception>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.Equals(System.Object)">
+        <member name="M:Althea.Helpers.ExtensionHelper.MultilineConcat(System.String,System.String,System.String,System.String,System.String)">
             <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            Concatenates the multi-line <see cref="T:System.String"/>s <paramref name="left"/> and <paramref name="right"/> line-by-line
             </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
+            <param name="left">The <see cref="T:System.String"/> to be concatenated at left</param>
+            <param name="right">The <see cref="T:System.String"/> to be concatenated at right</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
+            <param name="midfix">The mid-fix <see cref="T:System.String"/> to be added between each line of <paramref name="left"/> and <paramref name="right"/>, not used for lines with only <paramref name="left"/> or <paramref name="right"/></param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
+            <returns>The concatenated <see cref="T:System.String"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.GetHashCode">
+        <member name="M:Althea.Helpers.ExtensionHelper.MultilineConcat(System.String[],System.String,System.String,System.String)">
             <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedStructBuffer_360`1"/>.
+            Concatenates the multi-line <paramref name="strings"/> line-by-line
             </summary>
-            <returns>The hash code</returns>
+            <param name="strings">The array of <see cref="T:System.String"/>s to be concatenated in order</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
+            <param name="midfix">The mid-fix <see cref="T:System.String"/> to be added in between of each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
+            <returns>The concatenated <see cref="T:System.String"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="strings"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="strings"/> have different number of lines</exception>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.op_Equality(Althea.Helpers.FixedStructBuffer_360{`0},Althea.Helpers.FixedStructBuffer_360{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.Span{``0},System.Int32,System.String,System.String)">
             <summary>
-            Equality operator
+            Print out 1D array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
             </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="input">The dense vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.op_Inequality(Althea.Helpers.FixedStructBuffer_360{`0},Althea.Helpers.FixedStructBuffer_360{`0})">
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``1(System.Span{``0},System.Span{System.Int64},System.Int32,System.String,System.String)">
             <summary>
-            Inequality operator
+            Print out 1D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
             </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="values">The values of the sparse vector to print</param>
+            <param name="indices">The indices of the sparse vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
         </member>
-        <member name="M:Althea.Helpers.FixedStructBuffer_360`1.ToString">
+        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.Span{``0},System.Int32,System.Int64,System.Int32,System.String,System.String)">
             <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedStructBuffer_360`1"/>
+            Print out 2D array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
             </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedStructBuffer_360`1"/></returns>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="matrix">The column-major values of the dense matrix to print</param>
+            <param name="rows">The number of rows of the given matrix</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``1(System.Span{``0},System.Span{System.Int64},System.Span{System.Int64},System.Int32,System.String,System.String)">
+            <summary>
+            Print out 2D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="values">The values of the sparse matrix to print</param>
+            <param name="indx">The row indices of the sparse matrix to print</param>
+            <param name="indy">The column indices of the sparse matrix to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToClone``1(``0,System.Action{``0})">
+            <summary>
+            Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+            </summary>
+            <typeparam name="T">The array that is <see cref="T:System.ICloneable"/> and <see cref="T:System.IDisposable"/></typeparam>
+            <param name="array">The array to be acted by <paramref name="action"/></param>
+            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
+            <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToAlike``2(``0,System.Action{``0})">
+            <summary>
+            Safely apply <paramref name="action"/> to a new array alike <paramref name="array"/>. When <paramref name="action"/> throws error, the new array will be safely disposed.
+            </summary>
+            <typeparam name="TArr">The array that is <see cref="T:Althea.Arrays.ValueArray`1"/></typeparam>
+            <typeparam name="T">The data type used by <typeparamref name="TArr"/></typeparam>
+            <param name="array">The array to be acted by <paramref name="action"/></param>
+            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
+            <returns>The new array alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0},System.Func{System.Int32,System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
+            <summary>
+            Perform general inner product of two matrices <paramref name="left"/> and <paramref name="right"/> with <paramref name="multiply"/> as general multiplication
+            </summary>
+            <typeparam name="TL">The left matrix's data type</typeparam>
+            <typeparam name="TR">The right matrix's data type</typeparam>
+            <typeparam name="TO">The output matrix's data type</typeparam>
+            <param name="m">number of rows of <paramref name="left"/></param>
+            <param name="n">number of columns of <paramref name="right"/></param>
+            <param name="k">number of columns of <paramref name="left"/> and rows of <paramref name="right"/></param>
+            <param name="left">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
+            <param name="right">right matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TR"/></param>
+            <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
+            <param name="newZero">The function used to create a new output element with value of a general zero</param>
+            <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
+            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0},System.Func{System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
+            <summary>
+            Perform general inner product of a matrix <paramref name="leftMat"/> and a vector <paramref name="rightVec"/> with <paramref name="multiply"/> as general multiplication
+            </summary>
+            <typeparam name="TL">The left matrix's data type</typeparam>
+            <typeparam name="TR">The right matrix's data type</typeparam>
+            <typeparam name="TO">The output matrix's data type</typeparam>
+            <param name="m">number of rows of <paramref name="leftMat"/></param>
+            <param name="k">number of columns of <paramref name="leftMat"/> and rows of <paramref name="rightVec"/></param>
+            <param name="leftMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
+            <param name="rightVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
+            <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
+            <param name="newZero">The function used to create a new output element with value of a general zero</param>
+            <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
+            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Func{System.Int32,``0},System.Func{System.Int32,System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
+            <summary>
+            Perform general inner product of a vector <paramref name="leftVec"/> and a matrix <paramref name="rightMat"/> with <paramref name="multiply"/> as general multiplication
+            </summary>
+            <typeparam name="TL">The left matrix's data type</typeparam>
+            <typeparam name="TR">The right matrix's data type</typeparam>
+            <typeparam name="TO">The output matrix's data type</typeparam>
+            <param name="n">number of columns of <paramref name="leftVec"/> and rows of <paramref name="rightMat"/></param>
+            <param name="k">number of columns of <paramref name="rightMat"/></param>
+            <param name="rightMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
+            <param name="leftVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
+            <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
+            <param name="newZero">The function used to create a new output element with value of a general zero</param>
+            <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
+            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.GetPosition(System.Index,System.Int64,System.Boolean)">
+            <summary>
+            Calculate the offset from the start using the giving collection length.
+            </summary>
+            <param name="index">The <see cref="T:System.Index"/></param>
+            <param name="length">The length of the collection that the Index will be used with. It has to be a positive value</param>
+            <param name="check">check parameters and result or not</param>
+            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Index.GetOffset(System.Int32)"/>.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of [0, <paramref name="length"/>)</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.GetOffsetAndCount(System.Range,System.Int64,System.Boolean)">
+            <summary>
+            Calculate the start offset and length of range object using a collection length.
+            </summary>
+            <param name="range">The <see cref="T:System.Range"/></param>
+            <param name="length">The length of the collection that the range will be used with. It has to be a positive value.</param>
+            <param name="check">check parameters and result or not</param>
+            <returns>the offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
+            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> at x64 platforms.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="range"/> is out of [0, <paramref name="length"/>)</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToJagged``1(``0[],System.Int64)">
+            <summary>
+            Convert a 1D array to a 2D jagged array
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array to convert</param>
+            <param name="innerSize">The size of inner dimension of the 2D jagged array</param>
+            <returns>the 2D jagged array</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.Make2DArray``1(``0[],System.Int64,System.Int64)">
+            <summary>
+            Construct a new 2D array out of a 1D array, column major
+            </summary>
+            <typeparam name="T">any data type</typeparam>
+            <returns>a 2D array T[,]</returns>
+            <param name="input">input 1D array</param>
+            <param name="rows">height (number of rows) of the new 2D array</param>
+            <param name="columns">width (number of columns) of the new 2D array</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.GetRowColumns``1(``0[0:,0:])">
+            <summary>
+            Get the number of rows and columns of the 2D array.
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="arr">2D array</param>
+            <returns>the number of rows and columns</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ColumnTake``1(``0[0:,0:])">
+            <summary>
+            Take out the 2D array column by column.
+            </summary>
+            <param name="arr">input array</param>
+            <returns>the result 1D array</returns>
+            <typeparam name="T">any data type</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ForEach``1(``0[0:,0:],System.Action{``0,System.Int32,System.Int32})">
+            <summary>
+            Act on each element of a 2D array.
+            </summary>
+            <typeparam name="T">input array type</typeparam>
+            <param name="arr">input 2D array</param>
+            <param name="action">action function, parameter 2 &amp; 3 are row &amp; column indices respectively</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.IsHermitian``1(``0[0:,0:])">
+            <summary>
+            Check if the 2D array is Hermitian or not
+            </summary>
+            <param name="arr">input 2D array to test</param>
+            <returns>Hermitian or not</returns>
+            <typeparam name="T">The supported data type</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(``0[])">
+            <summary>
+            Clear a general array
+            </summary>
+            <typeparam name="TArr">The array type</typeparam>
+            <param name="array">The array to clear</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.List{``0})">
+            <summary>
+            Clear a general list
+            </summary>
+            <typeparam name="TArr">The array type</typeparam>
+            <param name="list">The list to clear</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.IReadOnlyList{``0})">
+            <summary>
+            Dispose a general read-only list
+            </summary>
+            <typeparam name="TArr">The array type</typeparam>
+            <param name="list">The read-only list to dispose</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearDict``2(System.Collections.Generic.IReadOnlyDictionary{``0,``1})">
+            <summary>
+            Dispose a general dictionary
+            </summary>
+            <typeparam name="T">The dictionary key type</typeparam>
+            <typeparam name="TArr">The array type</typeparam>
+            <param name="dict">The dictionary to dispose</param>
         </member>
         <member name="T:Althea.Helpers.LogLevel">
             <summary>
@@ -4779,7 +4710,12 @@
             The maximum columns of matrices to print
             </summary>
         </member>
-        <member name="M:Althea.Helpers.PrintSettings.#ctor(Althea.Helpers.PrintSettings,System.Int32,System.Int32,System.Int32,System.Int32)">
+        <member name="F:Althea.Helpers.PrintSettings.MatrixFormTensor">
+            <summary>
+            Whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.PrintSettings.#ctor(Althea.Helpers.PrintSettings,System.Int32,System.Int32,System.Int32,System.Int32,System.Nullable{System.Boolean})">
             <summary>
             Create a new <see cref="T:Althea.Helpers.PrintSettings"/> with previous settings. The non-positive new value(s) are inherited from <paramref name="previousSettings"/>
             </summary>
@@ -4812,6 +4748,11 @@
         <member name="P:Althea.Helpers.Settings.PrintMatrixColumn">
             <summary>
             Get and set the maximum number of columns of printed matrices
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.Settings.PrintTensorAsEmbeddedMatrices">
+            <summary>
+            Get and set whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
             </summary>
         </member>
         <member name="P:Althea.Helpers.Settings.StackAllocLimit">

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 using Althea.Arrays;
 using Althea.Helpers;
@@ -24,23 +25,38 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public sealed class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>, IConvertibleVector<SparseVector<T, TInd>, SparseMatrix<T, TInd>, T>
+	public class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>, IConvertibleVector<SparseVector<T, TInd>, SparseMatrix<T, TInd>, T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
 		#region basic
+		private readonly Storage<TInd> m_originalIndex;
+
+		private Storage<TInd> m_index;
+
 		/// <summary>
 		/// Get the index array's storage as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
 		public Storage<TInd> IndexStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays[0];
+			get => this.m_index;
+		}
+
+		/// <summary>
+		/// Get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// </summary>
+		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_index, 1);
 		}
 
 		/// <summary>
 		/// Create an empty <see cref="SparseVector{T, TInd}"/>
 		/// </summary>
-		public SparseVector() : base(0, Storage<T>.Empty, Storage<TInd>.Empty, SparseVectorFormat.Coordinated) { }
+		public SparseVector() : base(0, Storage<T>.Empty, SparseVectorFormat.Coordinated)
+		{
+			this.m_index = this.m_originalIndex = Storage<TInd>.Empty;
+		}
 
 		/// <summary>
 		/// Create a <see cref="SparseVector{T, TInd}"/> (of coordinate-format) with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArray"/> the <paramref name="defaultValue"/>
@@ -51,7 +67,15 @@ namespace Althea.Backend.Arrays
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="NotSupportedException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, T defaultValue = default, long stores = 0) : base(length, valueArray, indexArray, SparseVectorFormat.Coordinated, defaultValue, stores) { }
+		public SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, T defaultValue = default, long stores = 0) : base(length, valueArray, SparseVectorFormat.Coordinated, defaultValue, stores)
+		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref indexArray, 1);
+			Storage<TInd> refIndexArray = Storage<TInd>.Empty;
+			var outSpan = MemoryMarshal.CreateSpan(ref refIndexArray, 1);
+			ISparseArray<T, TInd>.CheckIndexArrays(span, stackalloc long[] { stores }, outSpan);
+			this.m_originalIndex = indexArray;
+			this.m_index = refIndexArray;
+		}
 		#endregion
 
 		#region indexer
@@ -65,7 +89,7 @@ namespace Althea.Backend.Arrays
 		public override T this[long index] {
 			get {
 				this.CheckIndex(index);
-				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.FromLong<TInd>());
+				long find = LAS.IndexFind(sorted: true, this.m_index, index.FromLong<TInd>());
 				if (find < 0)
 					return this.DefaultValue;
 				else
@@ -73,7 +97,7 @@ namespace Althea.Backend.Arrays
 			}
 			set {
 				this.CheckIndex(index);
-				long find = LAS.IndexFind(sorted: true, this.IndexStorage, index.FromLong<TInd>());
+				long find = LAS.IndexFind(sorted: true, this.m_index, index.FromLong<TInd>());
 				if (find < 0)
 					throw new InvalidOperationException();
 				MEM.FromManaged(this.Storage + find, value);
@@ -128,7 +152,7 @@ namespace Althea.Backend.Arrays
 		public override SparseVector<T, TInd> GetSlice(long start, long count)
 		{
 			this.CheckRange(start, count);
-			var value = this.Storage; var index = this.IndexStorage;
+			var value = this.Storage; var index = this.m_index;
 			GetSlice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), ref value, ref index);
 			return new SparseVector<T, TInd>(count, value, index, this.DefaultValue);
 		}
@@ -149,7 +173,7 @@ namespace Althea.Backend.Arrays
 			if (value is not SparseVector<T, TInd> sparse)
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(value));
 			this.CheckRange(start, count);
-			SetSlice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), this.Storage, this.IndexStorage, sparse.Storage, sparse.IndexStorage);
+			SetSlice(start.FromLong<TInd>(), (start + count).FromLong<TInd>(), this.Storage, this.m_index, sparse.Storage, sparse.m_index);
 		}
 		#endregion
 
@@ -200,7 +224,7 @@ namespace Althea.Backend.Arrays
 			Span<long> newSize = stackalloc long[size.Length];
 			size.CopyTo(newSize);
 			CheckSize(this, newSize);
-			return new(newSize, this.Storage, this.IndexStorage, defaultValue: this.DefaultValue);
+			return new(newSize, this.Storage, this.m_index, defaultValue: this.DefaultValue);
 		}
 		#endregion
 
@@ -218,9 +242,9 @@ namespace Althea.Backend.Arrays
 			if (this.Length != other.Length || this.NStored != other.NStored)
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 			// check same indices
-			if (this.IndexStorage == other.IndexStorage)
+			if (this.m_index == other.m_index)
 				return;
-			if (!LAD.PointWiseEquals(this.IndexStorage, 1, other.IndexStorage, 1))
+			if (!LAD.PointWiseEquals(this.m_index, 1, other.m_index, 1))
 				throw new InvalidOperationException(Resources.Other.DifferentSparsity);
 		}
 
@@ -342,6 +366,18 @@ namespace Althea.Backend.Arrays
 
 		#region clone related
 		/// <summary>
+		/// Deep clone the sparse vector, the mutable status will not be copied.
+		/// </summary>
+		/// <returns>The cloned array</returns>
+		public override SparseVector<T, TInd> Clone()
+		{
+			var outIndex = ActualStorage<TInd>.Empty;
+			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
+			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(span, copyValues: true);
+			return new SparseVector<T, TInd>(this.Length, value, outIndex, this.DefaultValue);
+		}
+
+		/// <summary>
 		/// Create a new sparse vector with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse vector alike this one</returns>
@@ -356,22 +392,14 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override SparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> value, copyValues: true);
-			return new SparseVector<TOut, TIndOut>(this.Length, value, indexArrays[0], this.DefaultValue.GenericConvert<T, TOut>());
+			var outIndex = ActualStorage<TIndOut>.Empty;
+			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
+			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(span, copyValues: false);
+			return new SparseVector<TOut, TIndOut>(this.Length, value, outIndex, this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
 
 		#region conversion
-		/// <summary>
-		/// Deep clone the sparse vector, the mutable status will not be copied.
-		/// </summary>
-		/// <returns>The cloned array</returns>
-		public override SparseVector<T, TInd> Clone()
-		{
-			var indexArrays = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(out ActualStorage<T> value, copyValues: true);
-			return new SparseVector<T, TInd>(this.Length, value, indexArrays[0], this.DefaultValue);
-		}
-
 		/// <summary>
 		/// Convert this sparse vector to another sparse vector with <see cref="Althea.Arrays.SparseVector{T, TInd}.Format"/> fitting <paramref name="format"/>
 		/// </summary>
@@ -392,7 +420,7 @@ namespace Althea.Backend.Arrays
 			var values = this.Storage.Clone();
 			try
 			{
-				return new(this.Length, values, this.IndexStorage, this.DefaultValue);
+				return new(this.Length, values, this.m_index, this.DefaultValue);
 			}
 			catch (Exception)
 			{
@@ -426,21 +454,29 @@ namespace Althea.Backend.Arrays
 		{
 			if (typeof(TInd) == typeof(long))
 			{
-				MEM.ToManaged(this.IndexStorage as Storage<long> ?? Storage<long>.Empty, indices);
+				MEM.ToManaged(this.m_index as Storage<long> ?? Storage<long>.Empty, indices);
 				return;
 			}
 			// else
 			Span<TInd> temp = indices.Length.CheckStackLimit<TInd>() ?? stackalloc TInd[indices.Length];
-			MEM.ToManaged(this.IndexStorage, temp);
+			MEM.ToManaged(this.m_index, temp);
 			temp.CopyTo(indices, static a => a.GenericConvert<TInd, long>());
 		}
 
 		/// <summary>
-		/// The helper method used by <see cref="Althea.Arrays.SparseVector{T, TInd}.GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
+		/// The presenting name of <see cref="IndexStorage"/>
 		/// </summary>
-		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse vector</param>
-		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-		protected override string IndexStorageNameOf(int orderOfIndexStorage) => IndexStorageName;
+		protected internal const string IndexStorageName = nameof(IndexStorage);
+
+		/// <summary>
+		/// Get all the storages of this array. Only returns <see cref="ValueArray{T}.Storage"/> and <see cref="IndexStorage"/>.
+		/// </summary>
+		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
+		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage>(2)
+		{
+			[StorageName] = this.Storage,
+			[IndexStorageName] = this.m_index,
+		};
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="Althea.Arrays.SparseVector{T, TInd}.DefaultValue"/>.

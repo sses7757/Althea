@@ -28,12 +28,33 @@ namespace Althea.Backend.Arrays
 		#region basic
 		private readonly SparseVector<T, TInd> m_vector;
 
+		private readonly Storage<TInd> m_originalIndex;
+
+		private Storage<TInd> m_index;
+
+		/// <summary>
+		/// Get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// </summary>
+		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_index, 1);
+		}
+
 		/// <summary>
 		/// Get the storage of the total presenting offsets of stored elements of this sparse tensor as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
 		public Storage<TInd> OffsetStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays[0];
+			get => this.m_index;
+		}
+
+		/// <summary>
+		/// Create an empty <see cref="SparseTensor{T, TInd}"/>
+		/// </summary>
+		public SparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.Coordinated)
+		{
+			this.m_index = this.m_originalIndex = Storage<TInd>.Empty;
+			this.m_vector = new();
 		}
 
 		/// <summary>
@@ -44,23 +65,19 @@ namespace Althea.Backend.Arrays
 		/// <param name="offsets">The total presenting offsets of stored elements as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <param name="offsetStores">The actual presenting length of <paramref name="offsets"/>, default 0 means its length</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or the lengths of <paramref name="offsets"/> and <paramref name="offsetStores"/> are not the same</exception>
+		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
-		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0, long offsetStores = 0) :
-			base(size, valueArray, offsets, SparseTensorFormat.Coordinated, labels, stores, stackalloc long[] { offsetStores }, default)
+		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(size, valueArray, SparseTensorFormat.Coordinated, labels, defaultValue, stores)
 		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref offsets, 1);
+			Storage<TInd> refIndexArray = Storage<TInd>.Empty;
+			var outSpan = MemoryMarshal.CreateSpan(ref refIndexArray, 1);
+			ISparseArray<T, TInd>.CheckIndexArrays(span, stackalloc long[] { stores }, outSpan);
+			this.m_originalIndex = offsets;
+			this.m_index = refIndexArray;
 			this.m_vector = new(this.Length, this.Storage, this.OffsetStorage, defaultValue);
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="SparseTensor{T, TInd}"/>
-		/// </summary>
-		public SparseTensor() : base(stackalloc long[1], Storage<T>.Empty, Storage<TInd>.Empty, SparseTensorFormat.Coordinated)
-		{
-			this.m_vector = new();
 		}
 		#endregion
 
@@ -71,18 +88,10 @@ namespace Althea.Backend.Arrays
 		/// <returns>The cloned array</returns>
 		public override SparseTensor<T, TInd> Clone()
 		{
-			var alike = this.NewArrayAlike();
-			try
-			{
-				MEM.MemoryCopy(this.Storage, alike.Storage);
-				MEM.MemoryCopy(this.OffsetStorage, alike.OffsetStorage);
-				return alike;
-			}
-			catch (Exception)
-			{
-				alike?.Dispose();
-				throw;
-			}
+			var outIndex = ActualStorage<TInd>.Empty;
+			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
+			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(span, copyValues: true);
+			return new SparseTensor<T, TInd>(this.Size, value, outIndex, this.Labels, this.DefaultValue);
 		}
 
 		/// <summary>
@@ -100,8 +109,10 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public override SparseTensor<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 		{
-			var indices = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(out ActualStorage<TOut> values, copyValues: false);
-			return new(this.Size, values, indices[0], labels: this.Labels, defaultValue: this.DefaultValue.GenericConvert<T, TOut>());
+			var outIndex = ActualStorage<TIndOut>.Empty;
+			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
+			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(span, copyValues: false);
+			return new SparseTensor<TOut, TIndOut>(this.Size, value, outIndex, this.Labels, this.DefaultValue.GenericConvert<T, TOut>());
 		}
 		#endregion
 
@@ -568,16 +579,14 @@ namespace Althea.Backend.Arrays
 		protected internal const string OffsetStorageName = nameof(OffsetStorage);
 
 		/// <summary>
-		/// The helper method to get the index storages' names. Simply returns <see cref="OffsetStorageName"/>.
+		/// Get all the storages of this array. Only returns <see cref="ValueArray{T}.Storage"/> and <see cref="OffsetStorage"/>.
 		/// </summary>
-		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse tensor</param>
-		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-		protected override string IndexStorageNameOf(int orderOfIndexStorage)
+		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
+		public override IReadOnlyDictionary<string, IStorage> GetStorages() => new Dictionary<string, IStorage>(2)
 		{
-			if (orderOfIndexStorage != 0)
-				throw new ArgumentOutOfRangeException(nameof(orderOfIndexStorage), orderOfIndexStorage, Resources.Parameter.InvalidValue);
-			return OffsetStorageName;
-		}
+			[StorageName] = this.Storage,
+			[OffsetStorageName] = this.m_index,
+		};
 
 		/// <summary>
 		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/>.

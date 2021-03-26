@@ -592,9 +592,7 @@ namespace Althea.Storage
 			return type == CombinationType.PureOrMixed && locations.Length > 1;
 		}
 
-		private readonly FixedStructBuffer_360<PointerSegment> pointers;
-
-		private readonly int count;
+		private readonly PointerSegment[] pointers;
 
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
@@ -613,8 +611,7 @@ namespace Althea.Storage
 
 			try
 			{
-				this.pointers = default;
-				this.count = locations.Length;
+				this.pointers = new PointerSegment[locations.Length];
 				for (int i = 0; i < locations.Length; i++)
 				{
 					this.pointers[i] = Allocate(locations[i], lengths[i]);
@@ -645,7 +642,7 @@ namespace Althea.Storage
 		/// </summary>
 		public override int Count {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.count;
+			get => this.pointers.Length;
 		}
 
 		/// <summary>
@@ -657,8 +654,6 @@ namespace Althea.Storage
 		public override PointerSegment this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
-				if (index < 0 || index >= this.count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				return this.pointers[index];
 			}
 		}

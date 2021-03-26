@@ -4,9 +4,7 @@ using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
-using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.Solver;
 
 using MEM = Althea.Storage.AbstractApi;
 
@@ -29,18 +27,9 @@ namespace Althea.Arrays
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 
-		// offset = 0
-		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
-		// offset = 64
-		/// <summary>
-		/// The member that actually stores the index arrays' storages
-		/// </summary>
-		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
-		// offset = 132
 		private readonly SparseVectorFormat m_format;
-		// offset = 136
+
 		private T m_defaultValue;
-		// offset = 136 + size of T
 
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
@@ -69,71 +58,28 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get all the index arrays as a list of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// When implemented by a derived class, get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public IReadOnlyList<Storage<TInd>> IndexArrays {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays;
-		}
-
-		T ISparseArray<T>.DefaultValue { get => this.DefaultValue; set => this.DefaultValue = value; }
-
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		private SparseVector(long length, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseVectorFormat format, T defaultValue) : base(valueArray, length, stores)
-		{
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-			if (indexArrays.Count != indexRealLengths.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-			if (indexArrays.Any(static a => a is null || !a.IsValid()))
-				throw new ArgumentNullException(nameof(indexArrays));
-
-			this.m_originalIndexArrays = indexArrays;
-			this.m_indexArrays = new SizedFixedClassBuffer_8<Storage<TInd>>(indexArrays.Count);
-			for (int i = 0; i < indexArrays.Count; i++)
-			{
-				long len = indexRealLengths[i];
-				if (len < 0)
-					throw new ArgumentOutOfRangeException(nameof(indexRealLengths), len, Resources.Parameter.CannotNegative);
-				if (len == 0)
-					this.m_indexArrays[i] = indexArrays[i].MakeReference();
-				else
-					this.m_indexArrays[i] = indexArrays[i].MakeReference(newLength: len);
-			}
-			this.m_format = format; this.m_defaultValue = defaultValue;
-		}
+		public abstract ReadOnlySpan<Storage<TInd>> IndexArrays { get; }
 
 		/// <summary>
-		/// Create a <see cref="SparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArray"/>
+		/// Create a <see cref="SparseVector{T, TInd}"/> with given <paramref name="length"/> and <paramref name="valueArray"/>
 		/// </summary>
 		/// <param name="length">The presenting length of this sparse vector</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="indexArray">The index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
 		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="indexArray"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or <paramref name="indexArray"/> or larger than the presenting length of this vector</exception>
-		protected SparseVector(long length, Storage<T> valueArray, Storage<TInd> indexArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
-			this(length, valueArray, stores, indexArray, stackalloc long[] { stores }, format, defaultValue) { }
-
-		/// <summary>
-		/// Create a <see cref="SparseVector{T, TInd}"/> with given <paramref name="length"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
-		/// </summary>
-		/// <param name="length">The presenting length of this sparse vector</param>
-		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="indexArrays">The index array(s) as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="realIndexArrayLengths">The actual presenting length of each array in <paramref name="indexArrays"/></param>
-		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
-		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
-		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected SparseVector(long length, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseVectorFormat format, T defaultValue = default, long stores = 0) :
-			this(length, valueArray, stores, indexArrays, realIndexArrayLengths, format, defaultValue) { }
+		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this vector</exception>
+		protected SparseVector(long length, Storage<T> valueArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) : base(valueArray, length, stores)
+		{
+			if (!format.IsAtomic())
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+			this.m_format = format;
+			this.m_defaultValue = defaultValue;
+		}
 		#endregion
 
 		#region storage related
@@ -151,15 +97,15 @@ namespace Althea.Arrays
 		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
 
 		/// <summary>
-		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.
+		/// When implemented by a derived class, actually the dispose this array. The default implementation utilizes <see cref="ISparseArray{T}.Dispose()"/>.
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			for (int i = 0; i < this.m_indexArrays.Count; i++)
+			if (!this.Disposed && !this.IndexArrays.IsEmpty)
 			{
-				this.m_originalIndexArrays[i]?.Dispose();
+				((ISparseArray<T>)this).Dispose();
 			}
 		}
 		#endregion
@@ -294,18 +240,6 @@ namespace Althea.Arrays
 
 		#region serialization
 		/// <summary>
-		/// The helper method used by <see cref="GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
-		/// </summary>
-		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse vector</param>
-		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-		protected abstract string IndexStorageNameOf(int orderOfIndexStorage);
-
-		/// <summary>
-		/// The name of the index storage to be used when the sparse array only contains one index storage
-		/// </summary>
-		public const string IndexStorageName = @"IndexStorage";
-
-		/// <summary>
 		/// The presenting name of the <see cref="DefaultValue"/>.
 		/// </summary>
 		public const string DefaultValueName = nameof(DefaultValue);
@@ -314,24 +248,6 @@ namespace Althea.Arrays
 		/// The presenting name of the <see cref="Format"/>.
 		/// </summary>
 		public const string FormatName = nameof(Format);
-
-		/// <summary>
-		/// When implemented by a derived class, get all the storages of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.Storage"/> and the index array(s) (whose names are from <see cref="IndexStorageNameOf(int)"/>) used to construct this sparse vector.
-		/// </summary>
-		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetStorages()
-		{
-			if (this.m_indexArrays.Count == 1)
-			{
-				return new Dictionary<string, IStorage>(2) { [StorageName] = this.Storage, [IndexStorageName] = this.m_indexArrays[0] };
-			}
-			var dict = new Dictionary<string, IStorage>(this.m_indexArrays.Count + 1) { [StorageName] = this.Storage };
-			for (int i = 0; i < this.m_indexArrays.Count; i++)
-			{
-				dict.Add(this.IndexStorageNameOf(i), this.m_indexArrays[i]);
-			}
-			return dict;
-		}
 
 		/// <summary>
 		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="DefaultValue"/> and <see cref="Format"/>.

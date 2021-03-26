@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
-using Althea.Linq;
 using Althea.NativeTypes;
 
 
@@ -26,18 +25,9 @@ namespace Althea.Arrays
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
 		}
 
-		// previously defined 40 bytes
-		private readonly FixedClassBuffer_8<Storage<TInd>> m_originalIndexArrays;
-		// offset = 40 + 64
-		/// <summary>
-		/// The member of all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>, is null if there is only one index array
-		/// </summary>
-		protected readonly SizedFixedClassBuffer_8<Storage<TInd>> m_indexArrays;
-		// offset = 40 + 132
 		private readonly SparseMatrixFormat m_format;
-		// offset = 40 + 136
+
 		private T m_defaultValue;
-		// this defines extra (136 + size of T) bytes
 
 		/// <summary>
 		/// When implemented by a derived class, get the number of stored values of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
@@ -66,80 +56,30 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Get all the index arrays as an array of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// When implemented by a derived class, get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
 		/// </summary>
-		public IReadOnlyList<Storage<TInd>> IndexArrays {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays;
-		}
+		public abstract ReadOnlySpan<Storage<TInd>> IndexArrays { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private SparseMatrix(long rows, long cols, Storage<T> valueArray, long stores, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, ReadOnlySpan<long> indexRealLengths, SparseMatrixFormat format, T defaultValue) : base(valueArray, rows, cols, stores)
+		/// <summary>
+		/// Create a <see cref="SparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/> and <paramref name="valueArray"/>
+		/// </summary>
+		/// <param name="rows">The presenting number of rows of this sparse matrix</param>
+		/// <param name="cols">The presenting number of columns of this sparse matrix</param>
+		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
+		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse matrix, must be atomic</param>
+		/// <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
+		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
+		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
+		protected SparseMatrix(long rows, long cols, Storage<T> valueArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
+			base(valueArray, rows, cols, stores)
 		{
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-			if (indexArrays.Count != indexRealLengths.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
-			if (indexArrays.Any(static a => a is null || !a.IsValid()))
-				throw new ArgumentNullException(nameof(indexArrays));
-
-			this.m_originalIndexArrays = indexArrays;
-			this.m_indexArrays = new SizedFixedClassBuffer_8<Storage<TInd>>(indexArrays.Count);
-			for (int i = 0; i < indexArrays.Count; i++)
-			{
-				long len = indexRealLengths[i];
-				if (len < 0)
-					throw new ArgumentOutOfRangeException(nameof(indexRealLengths), len, Resources.Parameter.CannotNegative);
-				if (len == long.MaxValue)
-					len = this.ActualLength;
-				if (len == 0)
-					this.m_indexArrays[i] = indexArrays[i].MakeReference();
-				else
-					this.m_indexArrays[i] = indexArrays[i].MakeReference(newLength: len);
-			}
-			this.m_format = format; this.m_defaultValue = defaultValue;
+			this.m_format = format;
+			this.m_defaultValue = defaultValue;
 		}
-
-		/// <summary>
-		/// Create a <see cref="SparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/>, <paramref name="rowIndexArray"/> and <paramref name="colIndexArray"/>
-		/// </summary>
-		/// <param name="rows">The presenting number of rows of this sparse matrix</param>
-		/// <param name="cols">The presenting number of columns of this sparse matrix</param>
-		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="rowIndexArray">The row index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="colIndexArray">The column index array as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse matrix, must be atomic</param>
-		/// <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
-		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <param name="rowLength">The actual presenting length of <paramref name="rowIndexArray"/>, default 0 means <paramref name="stores"/></param>
-		/// <param name="colLength">The actual presenting length of <paramref name="colIndexArray"/>, default 0 means <paramref name="stores"/></param>
-		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="rowIndexArray"/> or <paramref name="colIndexArray"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this matrix</exception>
-		protected SparseMatrix(long rows, long cols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0, long rowLength = 0, long colLength = 0) :
-			this(rows, cols, valueArray, stores, (rowIndexArray, colIndexArray),
-				stackalloc long[] { rowLength == 0 ? long.MaxValue : rowLength, colLength == 0 ? long.MaxValue : colLength },
-				format, defaultValue)
-		{ }
-
-		/// <summary>
-		/// Create a <see cref="SparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="valueArray"/> and <paramref name="indexArrays"/>
-		/// </summary>
-		/// <param name="rows">The presenting number of rows of this sparse matrix</param>
-		/// <param name="cols">The presenting number of columns of this sparse matrix</param>
-		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="indexArrays">The index array(s) as a <see cref="SizedFixedClassBuffer_8{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
-		/// <param name="realIndexArrayLengths">The actual presenting length of each array in <paramref name="indexArrays"/></param>
-		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse matrix, must be atomic</param>
-		/// <param name="defaultValue">The default value (the value not specified) of this sparse matrix</param>
-		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentException">If the lengths of <paramref name="indexArrays"/> and <paramref name="realIndexArrayLengths"/> are not the same</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any array in <paramref name="indexArrays"/> is null or empty</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
-		protected SparseMatrix(long rows, long cols, Storage<T> valueArray, SizedFixedClassBuffer_8<Storage<TInd>> indexArrays, Span<long> realIndexArrayLengths, SparseMatrixFormat format, T defaultValue = default, long stores = 0) :
-			this(rows, cols, valueArray, stores, indexArrays, realIndexArrayLengths, format, defaultValue)
-		{ }
 		#endregion
 
 		#region storage related
@@ -163,9 +103,9 @@ namespace Althea.Arrays
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			for (int i = 0; i < this.m_indexArrays.Count; i++)
+			if (!this.Disposed && !this.IndexArrays.IsEmpty)
 			{
-				this.m_originalIndexArrays[i]?.Dispose();
+				((ISparseArray<T>)this).Dispose();
 			}
 		}
 		#endregion
@@ -265,23 +205,6 @@ namespace Althea.Arrays
 
 		#region serialization
 		/// <summary>
-		/// The helper method used by <see cref="GetStorages"/> to get the index storages' names. Only used when the sparse array contains more than one index storages.
-		/// </summary>
-		/// <param name="orderOfIndexStorage">The index of all index storages of this sparse matrix</param>
-		/// <returns>The name the index storage indicated by the given <paramref name="orderOfIndexStorage"/></returns>
-		protected abstract string IndexStorageNameOf(int orderOfIndexStorage);
-
-		/// <summary>
-		/// The name of the row index storage to be used when the sparse array only contains one index storage
-		/// </summary>
-		public const string RowIndexStorageName = @"RowIndexStorage";
-
-		/// <summary>
-		/// The name of the column index storage to be used when the sparse array only contains one index storage
-		/// </summary>
-		public const string ColIndexStorageName = @"ColIndexStorage";
-
-		/// <summary>
 		/// The presenting name of the <see cref="DefaultValue"/>.
 		/// </summary>
 		public const string DefaultValueName = nameof(DefaultValue);
@@ -290,24 +213,6 @@ namespace Althea.Arrays
 		/// The presenting name of the <see cref="Format"/>.
 		/// </summary>
 		public const string FormatName = nameof(Format);
-
-		/// <summary>
-		/// When implemented by a derived class, get all the storages of this sparse matrix. The default implementation returns the <see cref="ValueArray{T}.Storage"/> and the index array(s) (whose names are from <see cref="IndexStorageNameOf(int)"/>) used to construct this sparse matrix. If there are exactly 2 index arrays, the default implementation only works correctly when they are (general) row and column index arrays respectively.
-		/// </summary>
-		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/></returns>
-		public override IReadOnlyDictionary<string, IStorage> GetStorages()
-		{
-			if (this.m_indexArrays.Count == 2)
-			{
-				return new Dictionary<string, IStorage>(3) { [StorageName] = this.Storage, [RowIndexStorageName] = this.m_indexArrays[0], [ColIndexStorageName] = this.m_indexArrays[1] };
-			}
-			var dict = new Dictionary<string, IStorage>(this.m_indexArrays.Count + 1) { [StorageName] = this.Storage };
-			for (int i = 0; i < this.m_indexArrays.Count; i++)
-			{
-				dict.Add(this.IndexStorageNameOf(i), this.m_indexArrays[i]);
-			}
-			return dict;
-		}
 
 		/// <summary>
 		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="DefaultValue"/> and <see cref="Format"/>.

@@ -484,6 +484,26 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
+		/// Concatenates the multi-line <see cref="string"/> <paramref name="s"/> with <paramref name="prefix"/> and <paramref name="postfix"/> line-by-line
+		/// </summary>
+		/// <param name="s">The <see cref="string"/> to be concatenated with pre- and post- fix</param>
+		/// <param name="prefix">The prefix <see cref="string"/> to be added at the start of each line</param>
+		/// <param name="postfix">The postfix <see cref="string"/> to be added at the end of each line</param>
+		/// <returns>The concatenated <see cref="string"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="s"/> is null or empty</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string MultilinePrePostfix(this string s, string? prefix = null, string? postfix = null)
+		{
+			if (string.IsNullOrEmpty(s))
+				throw new ArgumentNullException(nameof(s));
+			if (string.IsNullOrEmpty(prefix) && string.IsNullOrEmpty(postfix))
+				return s;
+
+			string[] ss = s.Split(Environment.NewLine);
+			return string.Join(postfix + Environment.NewLine + prefix, ss);
+		}
+
+		/// <summary>
 		/// Concatenates the multi-line <see cref="string"/>s <paramref name="left"/> and <paramref name="right"/> line-by-line
 		/// </summary>
 		/// <param name="left">The <see cref="string"/> to be concatenated at left</param>
@@ -492,13 +512,16 @@ namespace Althea.Helpers
 		/// <param name="midfix">The mid-fix <see cref="string"/> to be added between each line of <paramref name="left"/> and <paramref name="right"/>, not used for lines with only <paramref name="left"/> or <paramref name="right"/></param>
 		/// <param name="postfix">The postfix <see cref="string"/> to be added at the end of each line</param>
 		/// <returns>The concatenated <see cref="string"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ConcatMultilineStrings(this string left, string right, string? prefix = null, string? midfix = null, string? postfix = null)
+		public static string MultilineConcat(this string left, string right, string? prefix = null, string? midfix = null, string? postfix = null)
 		{
+			if (string.IsNullOrEmpty(left) && string.IsNullOrEmpty(right))
+				throw new ArgumentException(Parameter.CannotAllNull);
 			if (string.IsNullOrEmpty(left))
-				throw new ArgumentNullException(nameof(left));
+				return MultilinePrePostfix(right, prefix, postfix);
 			if (string.IsNullOrEmpty(right))
-				throw new ArgumentNullException(nameof(right));
+				return MultilinePrePostfix(left, prefix, postfix);
 
 			string[] ls = left.Split(Environment.NewLine), rs = right.Split(Environment.NewLine);
 			StringBuilder sb = new(left.Length + rs.Length);
@@ -516,6 +539,54 @@ namespace Althea.Helpers
 			{
 				sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length);
 			}
+			return sb.ToString();
+		}
+
+		/// <summary>
+		/// Concatenates the multi-line <paramref name="strings"/> line-by-line
+		/// </summary>
+		/// <param name="strings">The array of <see cref="string"/>s to be concatenated in order</param>
+		/// <param name="prefix">The prefix <see cref="string"/> to be added at the start of each line</param>
+		/// <param name="midfix">The mid-fix <see cref="string"/> to be added in between of each line</param>
+		/// <param name="postfix">The postfix <see cref="string"/> to be added at the end of each line</param>
+		/// <returns>The concatenated <see cref="string"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="strings"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="strings"/> have different number of lines</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string MultilineConcat(this string[] strings, string? prefix = null, string? midfix = null, string? postfix = null)
+		{
+			if (strings is null || strings.Length == 0 || strings.Any(static s => string.IsNullOrEmpty(s)))
+				throw new ArgumentNullException(nameof(strings));
+			if (strings.Length == 1)
+				return MultilinePrePostfix(strings[0], prefix, postfix);
+			if (strings.Length == 2)
+				return MultilineConcat(strings[0], strings[1], prefix, midfix, postfix);
+			// otherwise
+			int nStrings = strings.Length;
+			string[][] ss = new string[strings.Length][];
+			ss[0] = strings[0].Split(Environment.NewLine);
+			int lines = ss[0].Length;
+			int allLength = ss[0].Length;
+			for (int i = 1; i < nStrings; i++)
+			{
+				ss[i] = strings[i].Split(Environment.NewLine);
+				if (ss[i].Length != lines)
+					throw new ArgumentException(Parameter.NotSameSize, nameof(strings));
+				allLength = checked(allLength + ss[i].Length);
+			}
+			nStrings--;
+			StringBuilder sb = new(allLength);
+			for (int i = 0; i < lines; i++)
+			{
+				sb.Append(prefix);
+				for (int j = 0; j < nStrings; j++)
+				{
+					sb.Append(ss[j][i]).Append(midfix);
+				}
+				sb.Append(ss[nStrings][i]);
+				sb.AppendLine(postfix);
+			}
+			sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length);
 			return sb.ToString();
 		}
 		#endregion
@@ -628,9 +699,10 @@ namespace Althea.Helpers
 		/// <param name="input">The dense vector to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
+		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToVectorString<T>(this Span<T> input, int precision = -1, string? prefix = null) where T : unmanaged
+		public static string ToVectorString<T>(this Span<T> input, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
 		{
 			if (input.IsEmpty)
 				return string.Empty;
@@ -639,7 +711,7 @@ namespace Althea.Helpers
 			StringBuilder sb = new();
 			for (int i = 0; i < input.Length; i++)
 			{
-				sb.Append(prefix).AppendLine(toStringFunc.Invoke(input[i], format, precision));
+				sb.Append(prefix).Append(toStringFunc.Invoke(input[i], format, precision)).AppendLine(postfix);
 			}
 			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
 		}
@@ -652,10 +724,11 @@ namespace Althea.Helpers
 		/// <param name="indices">The indices of the sparse vector to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
+		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseVectorString<T>(this Span<T> values, Span<long> indices, int precision = -1, string? prefix = null) where T : unmanaged
+		public static string ToSparseVectorString<T>(this Span<T> values, Span<long> indices, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
 		{
 			if (values.Length != indices.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
@@ -667,7 +740,7 @@ namespace Althea.Helpers
 			StringBuilder sb = new();
 			for (int i = 0; i < values.Length; i++)
 			{
-				sb.Append(prefix).Append(indices[i]).Append(" -> ").AppendLine(toStringFunc.Invoke(values[i], format, precision));
+				sb.Append(prefix).Append(indices[i]).Append(" -> ").Append(toStringFunc.Invoke(values[i], format, precision)).AppendLine(postfix);
 			}
 			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
 		}
@@ -681,11 +754,12 @@ namespace Althea.Helpers
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
+		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null) where T : unmanaged
+		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
 		{
 			if (matrix.IsEmpty)
 				return string.Empty;
@@ -706,7 +780,7 @@ namespace Althea.Helpers
 				{
 					sb.Append(toStringFunc.Invoke(matrix[i + j * rows], format, precision));
 				}
-				sb.Append(moreStr);
+				sb.Append(moreStr).AppendLine(postfix);
 			}
 			return sb.ToString();
 		}
@@ -720,10 +794,11 @@ namespace Althea.Helpers
 		/// <param name="indy">The column indices of the sparse matrix to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
+		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseMatrixString<T>(this Span<T> values, Span<long> indx, Span<long> indy, int precision = -1, string? prefix = null) where T : unmanaged
+		public static string ToSparseMatrixString<T>(this Span<T> values, Span<long> indx, Span<long> indy, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
 		{
 			if (values.Length != indx.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
@@ -737,7 +812,8 @@ namespace Althea.Helpers
 			StringBuilder sb = new();
 			for (int i = 0; i < values.Length; i++)
 			{
-				sb.Append(prefix).Append('(').Append(indx[i]).Append(", ").Append(indy[i]).Append(") -> ").AppendLine(toStringFunc.Invoke(values[i], format, precision));
+				sb.Append(prefix).Append('(').Append(indx[i]).Append(", ").Append(indy[i]).Append(") -> ")
+				  .Append(toStringFunc.Invoke(values[i], format, precision)).AppendLine(postfix);
 			}
 			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
 		}
