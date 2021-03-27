@@ -338,12 +338,12 @@ namespace Althea.Backend.Arrays
 		/// <param name="overwrite">The tensor to be overwritten by the sub-tensor</param>
 		/// <example>If you want to get a sub-tensor of lower rank, there is a way to do so:<br/>
 		/// <code>
-		/// var offsets = stackalloc long[] { 5, 50, 20, 0, 40 };
-		/// var lengths = stackalloc long[] { 1, 100, 1, 200, 1 };
-		/// // the size of 'tensor' is { 10, 200, 50, 200, 60 }
-		/// var sub = tensor.<see cref="GetSlice(ReadOnlySpan{long}, ReadOnlySpan{long})">GetSlice</see>(offsets, lengths);
-		/// var sizeWithoutOnes = stackalloc long[] { 100, 200 };
-		/// var refSub = sub.<see cref="TensorReshape(ReadOnlySpan{long})">Reshape</see>(sizeWithoutOnes);
+		/// var offsets = stackalloc long[] { 5, 50, 20, 0, 40 };<br/>
+		/// var lengths = stackalloc long[] { 1, 100, 1, 200, 1 };<br/>
+		/// // the size of 'tensor' is { 10, 200, 50, 200, 60 }<br/>
+		/// var sub = tensor.<see cref="GetSlice(ReadOnlySpan{long}, ReadOnlySpan{long})">GetSlice</see>(offsets, lengths);<br/>
+		/// var sizeWithoutOnes = stackalloc long[] { 100, 200 };<br/>
+		/// var refSub = sub.<see cref="TensorReshape(ReadOnlySpan{long})">Reshape</see>(sizeWithoutOnes);<br/>
 		/// // now, the 'refSub' (a <b>non</b>-referenced sub-tensor of 'tensor') contains the desired sub-tensor of lower rank
 		/// </code>
 		/// </example>

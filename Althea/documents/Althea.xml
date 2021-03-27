@@ -218,7 +218,12 @@
         </member>
         <member name="P:Althea.Arrays.ISparseArray`1.Storage">
             <summary>
-            When implemented by a derived class, get the value array storage of this sparse array.
+            When implemented by a derived class, get the presented value array storage of this sparse array.
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.ISparseArray`1.OriginalIndexStorages">
+            <summary>
+            When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
             </summary>
         </member>
         <member name="P:Althea.Arrays.ISparseArray`1.NStored">
@@ -238,12 +243,12 @@
         </member>
         <member name="M:Althea.Arrays.ISparseArray`1.Dispose">
             <summary>
-            When implemented by a derived class, actually dispose this array. The default implementation disposes the index array(s) implied in <see cref="T:Althea.Arrays.ISparseArray`1"/>.
+            When implemented by a derived class, actually dispose this sparse array's index storages. The default implementation disposes <see cref="P:Althea.Arrays.ISparseArray`1.OriginalIndexStorages"/>.
             </summary>
         </member>
         <member name="M:Althea.Arrays.ISparseArray`1.DisposeExclude(Althea.Arrays.ISparseArray{`0})">
             <summary>
-            When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only compares <see cref="P:Althea.Arrays.ISparseArray`1.Storage"/> and the index array(s) implied in <see cref="T:Althea.Arrays.ISparseArray`1"/>.
+            When implemented by a derived class, dispose this sparse array's index storages after excluding the internal ones shared between this array and the target <paramref name="array"/>. The default implementation only compares the two <see cref="P:Althea.Arrays.ISparseArray`1.OriginalIndexStorages"/>.
             </summary>
             <param name="array">The target <see cref="T:Althea.Arrays.ISparseArray`1"/> to exclude before disposing</param>
         </member>
@@ -256,7 +261,7 @@
         </member>
         <member name="P:Althea.Arrays.ISparseArray`2.IndexArrays">
             <summary>
-            When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/>
+            When implemented by a derived class, get all the presenting index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/>
             </summary>
         </member>
         <member name="M:Althea.Arrays.ISparseArray`2.CheckIndexArrays(System.ReadOnlySpan{Althea.Storage{`1}},System.ReadOnlySpan{System.Int64},System.Span{Althea.Storage{`1}})">
@@ -264,7 +269,7 @@
             Check given <paramref name="indexArrays"/> and its <paramref name="indexRealLengths"/> and put the referenced ones to <paramref name="refIndexArrays"/>
             </summary>
             <param name="indexArrays">The index array(s)' original storage(s) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TIndex"/></param>
-            <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, any 0 elements means the same as the length of <paramref name="indexArrays"/></param>
+            <param name="indexRealLengths">The actual presenting length of each array in <paramref name="indexArrays"/>, any 0 elements means the same as the length of <paramref name="indexArrays"/>. An empty one means all 0.</param>
             <param name="refIndexArrays">The output <see cref="T:System.Span`1"/> to put the referenced <paramref name="indexArrays"/></param>
             <exception cref="T:System.ArgumentException">If the lengths are not the same</exception>
             <exception cref="T:System.ArgumentNullException">If any of <paramref name="indexArrays"/> is null or invalid</exception>
@@ -777,6 +782,11 @@
             When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
             </summary>
         </member>
+        <member name="P:Althea.Arrays.SparseMatrix`2.OriginalIndexStorages">
+            <summary>
+            When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
+            </summary>
+        </member>
         <member name="M:Althea.Arrays.SparseMatrix`2.#ctor(System.Int64,System.Int64,Althea.Storage{`0},Althea.LinearAlgebra.Sparse.SparseMatrixFormat,`0,System.Int64)">
             <summary>
             Create a <see cref="T:Althea.Arrays.SparseMatrix`2"/> with given <paramref name="rows"/>, <paramref name="cols"/> and <paramref name="valueArray"/>
@@ -918,6 +928,11 @@
         <member name="P:Althea.Arrays.SparseTensor`2.IndexArrays">
             <summary>
             When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.SparseTensor`2.OriginalIndexStorages">
+            <summary>
+            When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
             </summary>
         </member>
         <member name="M:Althea.Arrays.SparseTensor`2.#ctor(System.ReadOnlySpan{System.Int64},Althea.Storage{`0},Althea.TensorAlgebra.Sparse.SparseTensorFormat,System.ReadOnlySpan{System.Char},`0,System.Int64)">
@@ -1703,6 +1718,11 @@
         <member name="P:Althea.Arrays.SparseVector`2.IndexArrays">
             <summary>
             When implemented by a derived class, get all the index arrays as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:Althea.Storage`1"/> of <typeparamref name="TInd"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.SparseVector`2.OriginalIndexStorages">
+            <summary>
+            When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
             </summary>
         </member>
         <member name="M:Althea.Arrays.SparseVector`2.#ctor(System.Int64,Althea.Storage{`0},Althea.LinearAlgebra.Sparse.SparseVectorFormat,`0,System.Int64)">
@@ -5987,7 +6007,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideSrc"/> or <paramref name="strideDst"/> is less than 1</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialSum``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialSum``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,System.Boolean)">
             <summary>
             Perform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -5996,11 +6016,12 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="y">The vector to store the partial sum result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialProduct``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialProduct``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,System.Boolean)">
             <summary>
             Perform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -6009,6 +6030,7 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="y">The vector to store the partial product result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
@@ -6223,7 +6245,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialSum_``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialSum_``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,System.Boolean)">
             <summary>
             When implemented by a derived class, perform partial aggregate sum of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -6232,11 +6254,12 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="y">The vector to store the partial sum result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialProduct_``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.PartialProduct_``1(Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,System.Boolean)">
             <summary>
             When implemented by a derived class, perform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -6245,6 +6268,7 @@
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="y">The vector to store the partial product result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
@@ -9254,7 +9278,7 @@
             </summary>
             <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
             <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be converted</param>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be casted</param>
             <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
             <exception cref="T:System.ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
         </member>
@@ -9264,8 +9288,26 @@
             </summary>
             <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
             <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to be converted</param>
+            <param name="span">The <see cref="T:System.Span`1"/> to be casted</param>
             <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.AsClassType``1(System.ReadOnlySpan{System.IntPtr})">
+            <summary>
+            Cast the given <paramref name="span"/> from <see cref="T:System.IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will not be changed.
+            </summary>
+            <typeparam name="T">Any class type as the output type</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.IntPtr"/> to be casted</param>
+            <returns>The casted <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/></returns>
+            <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.AsClassType``1(System.Span{System.IntPtr})">
+            <summary>
+            Cast the given <paramref name="span"/> from <see cref="T:System.IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will not be changed.
+            </summary>
+            <typeparam name="T">Any class type as the output type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> of <see cref="T:System.IntPtr"/> to be casted</param>
+            <returns>The casted <see cref="T:System.Span`1"/> of <typeparamref name="T"/></returns>
+            <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.Span{``0})">
             <summary>

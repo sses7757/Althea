@@ -30,9 +30,7 @@ namespace Althea.Backend.Arrays
 		where TInd : unmanaged
 	{
 		#region basic
-		private readonly Storage<TInd> m_originalIndex;
-
-		private Storage<TInd> m_index;
+		private Storage<TInd> m_originalIndex, m_index;
 
 		/// <summary>
 		/// Get the index array's storage as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
@@ -48,6 +46,14 @@ namespace Althea.Backend.Arrays
 		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_index, 1);
+		}
+
+		/// <summary>
+		/// Get the original index array's storage of this sparse vector.
+		/// </summary>
+		protected override ReadOnlySpan<IStorage> OriginalIndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Storage<TInd>, IStorage>(ref this.m_originalIndex), 1);
 		}
 
 		/// <summary>

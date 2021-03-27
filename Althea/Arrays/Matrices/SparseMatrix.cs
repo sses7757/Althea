@@ -61,6 +61,16 @@ namespace Althea.Arrays
 		public abstract ReadOnlySpan<Storage<TInd>> IndexArrays { get; }
 
 		/// <summary>
+		/// When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
+		/// </summary>
+		protected abstract ReadOnlySpan<IStorage> OriginalIndexStorages { get; }
+
+		ReadOnlySpan<IStorage> ISparseArray<T>.OriginalIndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.OriginalIndexStorages;
+		}
+
+		/// <summary>
 		/// Create a <see cref="SparseMatrix{T, TInd}"/> with given <paramref name="rows"/>, <paramref name="cols"/> and <paramref name="valueArray"/>
 		/// </summary>
 		/// <param name="rows">The presenting number of rows of this sparse matrix</param>

@@ -28,9 +28,7 @@ namespace Althea.Backend.Arrays
 		#region basic
 		private readonly SparseVector<T, TInd> m_vector;
 
-		private readonly Storage<TInd> m_originalIndex;
-
-		private Storage<TInd> m_index;
+		private Storage<TInd> m_originalIndex, m_index;
 
 		/// <summary>
 		/// Get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
@@ -46,6 +44,14 @@ namespace Althea.Backend.Arrays
 		public Storage<TInd> OffsetStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_index;
+		}
+
+		/// <summary>
+		/// Get the original index array's storage of this sparse tensor.
+		/// </summary>
+		protected override ReadOnlySpan<IStorage> OriginalIndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Storage<TInd>, IStorage>(ref this.m_originalIndex), 1);
 		}
 
 		/// <summary>

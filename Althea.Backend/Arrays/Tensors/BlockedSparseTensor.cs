@@ -81,9 +81,7 @@ namespace Althea.Backend.Arrays
 	public class BlockedSparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<BlockedSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
 	{
 		#region basic
-		private readonly Storage<TInd> m_originalIndex;
-
-		private Storage<TInd> m_index;
+		private Storage<TInd> m_originalIndex, m_index;
 
 		private readonly FixedBuffer_64<int> m_blockSize = default;
 
@@ -119,6 +117,14 @@ namespace Althea.Backend.Arrays
 		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_index, 1);
+		}
+
+		/// <summary>
+		/// Get the original index array's storage of this sparse tensor.
+		/// </summary>
+		protected override ReadOnlySpan<IStorage> OriginalIndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Storage<TInd>, IStorage>(ref this.m_originalIndex), 1);
 		}
 
 		/// <summary>

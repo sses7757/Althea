@@ -32,7 +32,7 @@ namespace Althea.Backend.Arrays
 	{
 		#region basic
 		[FieldOffset(0)]
-		private readonly Storage<TInd> m_originalRowIndex;
+		private Storage<TInd> m_originalRowIndex;
 		[FieldOffset(8)]
 		private readonly Storage<TInd> m_originalColIndex;
 
@@ -63,6 +63,14 @@ namespace Althea.Backend.Arrays
 		public override ReadOnlySpan<Storage<TInd>> IndexArrays {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_rowIndex, 2);
+		}
+
+		/// <summary>
+		/// Get the original index arrays' storages of this sparse matrix.
+		/// </summary>
+		protected override ReadOnlySpan<IStorage> OriginalIndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Storage<TInd>, IStorage>(ref this.m_originalRowIndex), 2);
 		}
 
 		/// <summary>

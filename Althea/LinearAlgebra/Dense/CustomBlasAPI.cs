@@ -431,10 +431,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The vector to store the partial sum result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void PartialSum<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
+		public static void PartialSum<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription;
 			bool success = false;
@@ -442,7 +443,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
-				success = node.Value.PartialSum_(x, strideX, y, strideY);
+				success = node.Value.PartialSum_(x, strideX, y, strideY, inclusive);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -456,10 +457,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The vector to store the partial product result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void PartialProduct<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
+		public static void PartialProduct<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription;
 			bool success = false;
@@ -467,7 +469,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
-				success = node.Value.PartialProduct_(x, strideX, y, strideY);
+				success = node.Value.PartialProduct_(x, strideX, y, strideY, inclusive);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -724,10 +726,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The vector to store the partial sum result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
+		protected abstract bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate product of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
@@ -737,10 +740,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The vector to store the partial product result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
+		protected abstract bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).

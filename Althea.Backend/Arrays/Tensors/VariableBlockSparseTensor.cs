@@ -36,16 +36,16 @@ namespace Althea.Backend.Arrays
 	{
 		#region basic
 		[FieldOffset(0)]
-		private readonly Storage<TInd> m_originalIndex;
+		private Storage<TInd> m_originalIndex;
 		[FieldOffset(8)]
 		private readonly FixedClassBuffer_16<Storage<TInd>> m_orginalBlockLengths;
 		[FieldOffset(8 * 17)]
+		private readonly FixedClassBuffer_16<Storage<TInd>> m_blockLengthSums;
+
+		[FieldOffset(8 * (17 + 16))]
 		private Storage<TInd> m_index;
-		[FieldOffset(8 * 17 + 8)]
-		private readonly FixedClassBuffer_16<Storage<TInd>> m_blockLengths;
-		
 		[FieldOffset(8 * 17 * 2)]
-		private FixedClassBuffer_16<Storage<TInd>> m_blockLengthSums; // only calculated when necessary
+		private readonly FixedClassBuffer_16<Storage<TInd>> m_blockLengths;
 
 		[FieldOffset(8 * (17 * 2 + 16))]
 		private readonly FixedBuffer_64<int> m_numberBlocks;
@@ -58,6 +58,30 @@ namespace Althea.Backend.Arrays
 		public Storage<TInd> OffsetStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_index;
+		}
+
+		/// <summary>
+		/// Get the original block lengths arrays' storages of this sparse tensor
+		/// </summary>
+		protected ReadOnlySpan<Storage<TInd>> OriginalBlockLengths {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_orginalBlockLengths.AsSpan(this.Rank);
+		}
+
+		/// <summary>
+		/// Get the original block length partial sum arrays' storages of this sparse tensor
+		/// </summary>
+		protected ReadOnlySpan<Storage<TInd>> OriginalBlockLengthsSums {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_originalIndex, 1 + this.Rank * 2)[(1 + this.Rank)..];
+		}
+
+		/// <summary>
+		/// Get the original index arrays' storages of this sparse tensor.
+		/// </summary>
+		protected override ReadOnlySpan<IStorage> OriginalIndexStorages {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Storage<TInd>, IStorage>(ref this.m_originalIndex), 1 + this.Rank * 2);
 		}
 
 		/// <summary>
@@ -110,16 +134,17 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="offsets">The total offsets of the first elements of all stored block tensors as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/></param>
+		/// <param name="offsets">The total offsets of all stored block tensors as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/> counted in <see cref="NumberOfBlocks"/></param>
 		/// <param name="blockLengths">The block tensors' aligned lengths at all dimensions</param>
 		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse tensor, default 0</param>
 		/// <param name="blockLengthsRealSize">The presenting size of the <paramref name="blockLengths"/></param>
+		/// <param name="check">Whether to check the <paramref name="offsets"/> and <paramref name="blockLengths"/> which may lead to some overhead or not</param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or <paramref name="blockLengths"/> and <paramref name="size"/> have different lengths; or the sums of <paramref name="blockLengths"/> are not the same as <paramref name="size"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
-		public VariableBlockSparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<Storage<TInd>> blockLengths, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0, ReadOnlySpan<long> blockLengthsRealSize = default) : base(size, valueArray, SparseTensorFormat.Coordinated, labels, defaultValue, stores)
+		public VariableBlockSparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<Storage<TInd>> blockLengths, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0, ReadOnlySpan<long> blockLengthsRealSize = default, bool check = true) : base(size, valueArray, SparseTensorFormat.Coordinated, labels, defaultValue, stores)
 		{
 			// index array storages check
 			int rank = size.Length;
@@ -132,18 +157,46 @@ namespace Althea.Backend.Arrays
 			var blockCountsSpan = this.m_numberBlocks.AsSpan(rank);
 			for (int i = 0; i < rank; i++)
 			{
+				blockCountsSpan[i] = checked((int)blockLengths[i].Length);
+				if (!check)
+					continue;
 				long sum = LAD.AggregateSum(blockLengths[i], 1).ToLong();
 				if (sum != size[i])
 					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(blockLengths));
-				blockCountsSpan[i] = checked((int)blockLengths[i].Length);
 			}
 			this.m_allNumberBlocks = blockCountsSpan.Prod();
-			// offsets storage check
+			// compute partial sums of all dimensions
 			this.m_originalIndex = offsets;
+			this.m_blockLengthSums = default;
+			var blockSumsSpan = MemoryMarshal.CreateSpan(ref this.m_originalIndex, 1 + rank * 2)[(1 + rank)..];
+			try
+			{
+				for (int i = 0; i < rank; i++)
+				{
+					var notSummed = blockLengths[i];
+					var summed = Storage<TInd>.Create(notSummed[0].Location, notSummed.Length);
+					LAD.PartialSum(notSummed, 1, summed, 1, inclusive: false);
+					blockSumsSpan[i] = summed;
+				}
+			}
+			catch (Exception)
+			{
+				foreach (var item in blockSumsSpan)
+				{
+					item?.Dispose();
+				}
+				throw;
+			}
+			// offsets storage check
+			Span<long> offsetsActualSize = stackalloc long[1];
+			if (check)
+			{
+				// TODO: change offsets to positions
+			}
 			var offsetSpan = MemoryMarshal.CreateReadOnlySpan(ref offsets, 1);
 			this.m_index = Storage<TInd>.Empty;
 			var outOffsetSpan = MemoryMarshal.CreateSpan(ref this.m_index, 1);
-			ISparseArray<T, TInd>.CheckIndexArrays(offsetSpan, default, outOffsetSpan);
+			ISparseArray<T, TInd>.CheckIndexArrays(offsetSpan, offsetsActualSize, outOffsetSpan);
 		}
 		#endregion
 

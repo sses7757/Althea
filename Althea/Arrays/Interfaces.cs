@@ -53,9 +53,14 @@ namespace Althea.Arrays
 	{
 		#region property
 		/// <summary>
-		/// When implemented by a derived class, get the value array storage of this sparse array.
+		/// When implemented by a derived class, get the presented value array storage of this sparse array.
 		/// </summary>
 		Storage<T> Storage { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
+		/// </summary>
+		protected ReadOnlySpan<IStorage> OriginalIndexStorages { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the number of non-default values (the values that are actually stored) of this sparse array. The default implementation returns the <see cref="Storage{T}.Length"/> of <see cref="Storage"/>
@@ -75,33 +80,31 @@ namespace Althea.Arrays
 
 		#region dispose
 		/// <summary>
-		/// When implemented by a derived class, actually dispose this array. The default implementation disposes the index array(s) implied in <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, actually dispose this sparse array's index storages. The default implementation disposes <see cref="ISparseArray{T}.OriginalIndexStorages"/>.
 		/// </summary>
 		void Dispose()
 		{
-			var list = (IReadOnlyList<IStorage>)this;
-			for (int i = 0; i < list.Count; i++)
+			var list = this.OriginalIndexStorages;
+			for (int i = 0; i < list.Length; i++)
 			{
 				list[i]?.Dispose();
 			}
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array after excluding the internal storages shared between this array and the target <paramref name="array"/>. The default implementation only compares <see cref="ISparseArray{T}.Storage"/> and the index array(s) implied in <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, dispose this sparse array's index storages after excluding the internal ones shared between this array and the target <paramref name="array"/>. The default implementation only compares the two <see cref="ISparseArray{T}.OriginalIndexStorages"/>.
 		/// </summary>
 		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing</param>
 		void DisposeExclude(ISparseArray<T> array)
 		{
-			var list = (IReadOnlyList<IStorage>)this;
-			var other = (IReadOnlyList<IStorage>)array;
-			if (!this.Storage.SameOriginAs(array.Storage))
-				this.Storage.Dispose();
-			for (int i = 0; i < list.Count; i++)
+			var list = this.OriginalIndexStorages;
+			var other = array.OriginalIndexStorages;
+			for (int i = 0; i < list.Length; i++)
 			{
 				if (list[i] is IReferenceStorage)
 					continue;
 				bool canDispose = true;
-				for (int j = 0; j < other.Count; j++)
+				for (int j = 0; j < other.Length; j++)
 				{
 					if (list[i].SameOriginAs(other[j]))
 					{
@@ -120,7 +123,7 @@ namespace Althea.Arrays
 		{
 			if (this.Storage is null || !this.Storage.IsValid() || this.NStored <= 0)
 				return false;
-			IReadOnlyList<IStorage> list = this;
+			var list = this.OriginalIndexStorages;
 			return list.All(static l => l is not null && l.IsValid());
 		}
 		#endregion
@@ -137,7 +140,7 @@ namespace Althea.Arrays
 	{
 		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
+		/// When implemented by a derived class, get all the presenting index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TIndex"/>
 		/// </summary>
 		ReadOnlySpan<Storage<TIndex>> IndexArrays { get; }
 		#endregion
@@ -210,7 +213,7 @@ namespace Althea.Arrays
 		/// <returns>True if this == <paramref name="obj"/></returns>
 		bool Equals(object? obj)
 		{
-			if (!(obj is ISparseArray<T, TIndex> sv && this.NStored == sv.NStored && this.Storage.MakeReference(newLength: this.NStored) == sv.Storage.MakeReference(newLength: this.NStored)))
+			if (!(obj is ISparseArray<T, TIndex> sv && this.NStored == sv.NStored && this.Storage == sv.Storage))
 				return false;
 			ReadOnlySpan<Storage<TIndex>> list1 = this.IndexArrays, list2 = sv.IndexArrays;
 			return list1.SequenceEqual(list2);
