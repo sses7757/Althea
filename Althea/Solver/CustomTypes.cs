@@ -149,12 +149,12 @@ namespace Althea.Solver
 		where T : unmanaged
 	{
 		/// <summary>
-		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this matrix can perform in-place matrix fused-multiply-addition or not
+		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this matrix can perform in-place matrix operations or not
 		/// </summary>
-		bool CanMultiplyInPlace { get; }
+		bool CanOperateInPlace { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="CanMultiplyInPlace"/> is false.)
+		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="CanOperateInPlace"/> is false.)
 		/// </summary>
 		/// <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
 		/// <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
@@ -165,7 +165,15 @@ namespace Althea.Solver
 		void InPlaceFusedMultiplyAdd(TMat left, TMat right, T scalar, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
 
 		/// <summary>
-		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (May be invalid if <see cref="CanMultiplyInPlace"/> is true.)
+		/// When implemented by a derived class, add the <paramref name="other"/> matrix to this matrix in-place. (May be invalid if <see cref="CanOperateInPlace"/> is false.)
+		/// </summary>
+		/// <param name="other">The other matrix to be added as a <typeparamref name="TMat"/></param>
+		/// <param name="scalarThis">The scalar to multiply to this matrix</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix</param>
+		void InPlaceAdd(TMat other, T scalarThis, T scalarOther);
+
+		/// <summary>
+		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (Shall be valid even if <see cref="CanOperateInPlace"/> is true.)
 		/// </summary>
 		/// <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
 		/// <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
@@ -175,6 +183,25 @@ namespace Althea.Solver
 		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
 		/// <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(<paramref name="left"/>) * <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="scalarThis"/> * this</c></returns>
 		TMat OutOfPlaceFusedMultiplyAdd(TMat left, TMat right, T scalar, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
+
+		/// <summary>
+		/// When implemented by a derived class, multiply this matrix and the <paramref name="other"/> matrix out-of-place. (Shall be valid even if <see cref="CanOperateInPlace"/> is true.)
+		/// </summary>
+		/// <param name="other">The other matrix to be multiplied as a <typeparamref name="TMat"/></param>
+		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
+		/// <param name="opLeft">The <see cref="MatrixOperation"/> to be applied to this matrix before multiplication</param>
+		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="other"/> matrix before multiplication</param>
+		/// <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(this) * <paramref name="opRight"/>(<paramref name="other"/>)</c></returns>
+		TMat OutOfPlaceMultiply(TMat other, T scalar, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
+
+		/// <summary>
+		/// When implemented by a derived class, add the <paramref name="other"/> matrix to this matrix out-of-place. (Shall be valid even if <see cref="CanOperateInPlace"/> is true.)
+		/// </summary>
+		/// <param name="other">The other matrix to be added as a <typeparamref name="TMat"/></param>
+		/// <param name="scalarThis">The scalar to multiply to this matrix</param>
+		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix</param>
+		/// <returns><c><paramref name="scalarThis"/> * this + <paramref name="scalarOther"/> * <paramref name="other"/></c></returns>
+		TMat OutOfPlaceAdd(TMat other, T scalarThis, T scalarOther);
 
 		/// <summary>
 		/// When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>

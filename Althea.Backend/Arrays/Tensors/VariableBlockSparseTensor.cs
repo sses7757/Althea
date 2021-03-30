@@ -1,4 +1,6 @@
-﻿using System;
+﻿// TODO: write this later
+
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -191,7 +193,7 @@ namespace Althea.Backend.Arrays
 			Span<long> offsetsActualSize = stackalloc long[1];
 			if (check)
 			{
-				// TODO: change offsets to positions
+				
 			}
 			var offsetSpan = MemoryMarshal.CreateReadOnlySpan(ref offsets, 1);
 			this.m_index = Storage<TInd>.Empty;
@@ -866,3 +868,4 @@ namespace Althea.Backend.Arrays
 		#endregion
 	}
 }
+*/

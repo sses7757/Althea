@@ -1404,6 +1404,7 @@
             The abstract array class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse array that inherits <see cref="T:Althea.Arrays.ValueArray`1"/>, but they shall be immutable.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <remarks>All inherited classes shall be of column major if not specified.</remarks>
         </member>
         <member name="P:Althea.Arrays.ValueArray`1.Storage">
             <summary>
@@ -3505,6 +3506,15 @@
             </summary>
             <param name="size">The size of the span, default 0 means all</param>
             <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.AsSpan``1(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
+            </summary>
+            <typeparam name="TClass">Another class type as the output type</typeparam>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
         </member>
         <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Item(System.Int32)">

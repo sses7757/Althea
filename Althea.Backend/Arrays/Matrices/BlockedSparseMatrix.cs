@@ -24,22 +24,29 @@ namespace Althea.Backend.Arrays
 	/// <summary>
 	/// The <see cref="IOtherInfo"/> corresponding to <see cref="BlockedSparseMatrix{T, TInd}"/>
 	/// </summary>
-	public sealed record BlockedSparseMatrixOtherInfo(int BlockRows, int BlockCols) : IOtherInfo
+	public sealed record BlockedSparseMatrixOtherInfo(int BlockRows, int BlockCols, bool BlockColumnMajor) : IOtherInfo
 	{
 		object IReadOnlyList<object>.this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index == 0 ? this.BlockRows : index == 1 ? this.BlockCols : throw new ArgumentOutOfRangeException(nameof(index));
+			get => index switch
+			{
+				0 => this.BlockRows,
+				1 => this.BlockRows,
+				2 => this.BlockColumnMajor,
+				_ => throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue),
+			};
 		}
 
 		int IReadOnlyCollection<object>.Count {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 2;
+			get => 3;
 		}
 
 		IEnumerator<object> IEnumerable<object>.GetEnumerator()
 		{
 			yield return this.BlockRows;
 			yield return this.BlockCols;
+			yield return this.BlockColumnMajor;
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<object>)this).GetEnumerator();
@@ -73,6 +80,8 @@ namespace Althea.Backend.Arrays
 		private readonly int m_blockRows;
 		[FieldOffset(36)]
 		private readonly int m_blockCols;
+		[FieldOffset(40)]
+		private readonly bool m_blockColumnMajor;
 
 		/// <summary>
 		/// Get the storage of the row index array of this sparse matrix as a <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
@@ -107,7 +116,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Get the number of rows of (any) block sub-matrix
+		/// Get the number of rows of (any) block sub-matrix of this sparse matrix
 		/// </summary>
 		public int BlockNRows {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,7 +124,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Get the number of column of (any) block sub-matrix
+		/// Get the number of column of (any) block sub-matrix of this sparse matrix
 		/// </summary>
 		public int BlockNCols {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,16 +137,24 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether the blocks of this sparse matrix are stored in column major or row major
+		/// </summary>
+		public bool BlockColumnMajor {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_blockColumnMajor;
+		}
+
+		/// <summary>
 		/// Create an empty <see cref="BlockedSparseMatrix{T, TInd}"/>
 		/// </summary>
 		public BlockedSparseMatrix() : base(0, 0, Storage<T>.Empty, SparseMatrixFormat.COOR)
 		{
 			this.m_rowIndex = this.m_colIndex = this.m_originalRowIndex = this.m_originalColIndex = Storage<TInd>.Empty;
-			this.m_blockCols = this.m_blockRows = 0;
+			this.m_blockCols = this.m_blockRows = 0; this.m_blockColumnMajor = true;
 		}
 
 		/// <summary>
-		/// Create a <see cref="SparseMatrix{T, TInd}"/> (of <see cref="SparseMatrixFormat.COOR"/>, <see cref="SparseMatrixFormat.COOC"/>, <see cref="SparseMatrixFormat.CSR"/> or <see cref="SparseMatrixFormat.CSC"/> format) with given size, <paramref name="valueArray"/> and index arrays.
+		/// Create a <see cref="BlockedSparseMatrix{T, TInd}"/> (of <see cref="SparseMatrixFormat.BCOR"/>, <see cref="SparseMatrixFormat.BCOC"/>, <see cref="SparseMatrixFormat.BSR"/> or <see cref="SparseMatrixFormat.BSC"/> format) with given size, <paramref name="valueArray"/> and index arrays.
 		/// </summary>
 		/// <param name="blockRows">The number of rows of (any) block sub-matrix of this matrix</param>
 		/// <param name="blockCols">The number of column of (any) block sub-matrix of this matrix</param>
@@ -149,22 +166,24 @@ namespace Althea.Backend.Arrays
 		/// <param name="format">The atomic <see cref="SparseMatrixFormat"/> of a <see cref="FormatExtension.Blocked"/> value</param>
 		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
 		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
+		/// <param name="blockColumnMajor">Whether the blocks of this sparse matrix are stored in column major or row major</param>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentNullException">If the size is not 0 while any of the storages is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic or not of allowed format; or <paramref name="blockRows"/> or <paramref name="blockCols"/> is non-positive</exception>
 		/// <exception cref="ArgumentException">If the lengths of storages does not fit the underlying regulations indicated by <paramref name="format"/></exception>
-		public BlockedSparseMatrix(long rows, long cols, int blockRows, int blockCols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0) : base(rows, cols, valueArray, format, defaultValue, stores)
+		public BlockedSparseMatrix(long rows, long cols, int blockRows, int blockCols, Storage<T> valueArray, Storage<TInd> rowIndexArray, Storage<TInd> colIndexArray, SparseMatrixFormat format, T defaultValue = default, long stores = 0, bool blockColumnMajor = true) : base(rows, cols, valueArray, format, defaultValue, stores)
 		{
 			long rowLen = GetRowLength(rows, blockRows, blockCols, valueArray, stores, format);
 			long colLen = GetColLength(cols, blockRows, blockCols, valueArray, stores, format);
 			this.m_rowIndex = this.m_originalRowIndex = rowIndexArray;
 			this.m_colIndex = this.m_originalColIndex = colIndexArray;
+			this.m_blockColumnMajor = blockColumnMajor;
 			var span = this.IndexArrays;
 			var outSpan = MemoryMarshal.CreateSpan(ref this.m_rowIndex, 2);
 			ISparseArray<T, TInd>.CheckIndexArrays(span, stackalloc long[] { rowLen, colLen }, outSpan);
 		}
 
-		private BlockedSparseMatrix(BlockedSparseMatrix<T, TInd> r) : this(r.NRows, r.NCols, r.BlockNRows, r.BlockNCols, r.Storage, r.RowIndexStorage, r.ColIndexStorage, r.Format, r.DefaultValue) { }
+		private BlockedSparseMatrix(BlockedSparseMatrix<T, TInd> r) : this(r.NRows, r.NCols, r.m_blockRows, r.m_blockCols, r.Storage, r.RowIndexStorage, r.ColIndexStorage, r.Format, r.DefaultValue) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long GetRowLength(long rows, int blockRows, int blockCols, Storage<T> valueArray, long stores, SparseMatrixFormat format)
@@ -213,7 +232,7 @@ namespace Althea.Backend.Arrays
 		{
 			var outIndex = new FixedClassBuffer_2<ActualStorage<TInd>>();
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<T, TInd>(outIndex.AsSpan(), copyValues: false);
-			return new BlockedSparseMatrix<T, TInd>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue);
+			return new BlockedSparseMatrix<T, TInd>(this.NRows, this.NCols, this.m_blockRows, this.m_blockCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue, 0, this.m_blockColumnMajor);
 		}
 
 		/// <summary>
@@ -233,7 +252,7 @@ namespace Althea.Backend.Arrays
 		{
 			var outIndex = new FixedClassBuffer_2<ActualStorage<TIndOut>>();
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(outIndex.AsSpan(), copyValues: false);
-			return new BlockedSparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>());
+			return new BlockedSparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, this.m_blockRows, this.m_blockCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>(), 0, this.m_blockColumnMajor);
 		}
 		#endregion
 
@@ -247,13 +266,17 @@ namespace Althea.Backend.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private T ElementIndex(long x, long y, Storage<TInd> sorted, Storage<TInd> other, T value, bool compressed, bool get)
 		{
-			long xx = Math.DivRem(x, this.BlockNRows, out long remX);
-			long yy = Math.DivRem(y, this.BlockNCols, out long remY);
+			long xx = Math.DivRem(x, this.m_blockRows, out long remX);
+			long yy = Math.DivRem(y, this.m_blockCols, out long remY);
 			long find = compressed ? SparseMatrix<T, TInd>.IndexCompressed(xx, yy, sorted, other) :
 									SparseMatrix<T, TInd>.IndexCoordinated(xx, yy, sorted, other, this.NStored / this.Pack);
 			if (find >= 0)
 			{
-				find = find * this.Pack + remY * this.BlockNRows + remX;
+				find *= this.Pack;
+				if (this.m_blockColumnMajor)
+					find += remY * this.m_blockRows + remX;
+				else
+					find += remX * this.m_blockCols + remY;
 				if (get)
 					return MEM.ToManaged(this.Storage + find);
 				// else
@@ -692,7 +715,7 @@ namespace Althea.Backend.Arrays
 			var values = this.Storage.Clone();
 			try
 			{
-				return new(this.NRows, this.NCols, this.BlockNRows, this.BlockNCols, values, this.RowIndexStorage, this.ColIndexStorage, this.Format, this.DefaultValue);
+				return new(this.NRows, this.NCols, this.m_blockRows, this.m_blockCols, values, this.RowIndexStorage, this.ColIndexStorage, this.Format, this.DefaultValue);
 			}
 			catch (Exception)
 			{
@@ -712,7 +735,7 @@ namespace Althea.Backend.Arrays
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
 			if (this.NRows != other.NRows || this.NCols != other.NCols ||
-				this.BlockNRows != other.BlockNRows || this.BlockNCols != other.BlockNCols ||
+				this.m_blockRows != other.m_blockRows || this.m_blockCols != other.m_blockCols ||
 				this.Format != other.Format || this.NStored != other.NStored)
 				throw new InvalidOperationException(Resources.Parameter.NotSameSize);
 			// check same indices
@@ -822,7 +845,7 @@ namespace Althea.Backend.Arrays
 			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
 			// to matrix string
-			int brow = this.BlockNRows, bcol = this.BlockNCols;
+			int brow = this.m_blockRows, bcol = this.m_blockCols;
 			for (int i = 0; i < length; i++)
 			{
 				long rowInd = row[i] * brow, rowInd_ = rowInd + brow, colInd = col[i] * bcol, colInd_ = colInd + bcol;
@@ -871,15 +894,21 @@ namespace Althea.Backend.Arrays
 		protected internal const string BlockNColsName = nameof(BlockNCols);
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="Althea.Arrays.SparseMatrix{T, TInd}.DefaultValue"/>, <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>, <see cref="BlockNRows"/> and <see cref="BlockNCols"/>.
+		/// The presenting name of <see cref="BlockColumnMajor"/>
+		/// </summary>
+		protected internal const string BlockColumnMajorName = nameof(BlockColumnMajor);
+
+		/// <summary>
+		/// Get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="Althea.Arrays.SparseMatrix{T, TInd}.DefaultValue"/>, <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>, <see cref="BlockNRows"/>, <see cref="BlockNCols"/> and <see cref="BlockColumnMajor"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this sparse matrix</returns>
-		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(4)
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(5)
 		{
 			[DefaultValueName] = this.DefaultValue,
 			[FormatName] = this.Format,
-			[BlockNRowsName] = this.BlockNRows,
-			[BlockNColsName] = this.BlockNCols
+			[BlockNRowsName] = this.m_blockRows,
+			[BlockNColsName] = this.m_blockCols,
+			[BlockColumnMajorName] = this.m_blockColumnMajor
 		};
 		#endregion
 	}

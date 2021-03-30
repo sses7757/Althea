@@ -9,7 +9,6 @@ using Althea.NativeTypes;
 using Althea.Resources;
 using Althea.Storage;
 
-
 using static Althea.Backend.Storage.ConcretePointersExtension;
 
 

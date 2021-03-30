@@ -957,7 +957,7 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IMultipliableMatrix
-		bool IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.CanMultiplyInPlace => false;
+		bool IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.CanOperateInPlace => false;
 
 		void IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
 

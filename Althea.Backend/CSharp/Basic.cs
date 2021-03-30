@@ -22,6 +22,6 @@ namespace Althea.Backend.CSharp
 
 		Type ISetBackend.StatisticsImplementation => throw new NotImplementedException();
 
-		Type ISetBackend.SolverImplementation => throw new NotImplementedException();
+		Type ISetBackend.SolverImplementation => typeof(Solver.SolverApi);
 	}
 }

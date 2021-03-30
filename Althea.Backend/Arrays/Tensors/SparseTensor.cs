@@ -595,12 +595,13 @@ namespace Althea.Backend.Arrays
 		};
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/>.
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="Althea.Arrays.SparseTensor{T, TInd}.DefaultValue"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
-		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)
+		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)
 		{
 			[LabelsName] = this.Labels.ToArray(),
+			[DefaultValueName] = this.DefaultValue
 		};
 		#endregion
 	}

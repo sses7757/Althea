@@ -18,6 +18,7 @@ namespace Althea.Arrays
 	/// The abstract array class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse array that inherits <see cref="ValueArray{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
 	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormat where T : unmanaged
 	{
 		#region properties

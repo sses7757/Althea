@@ -143,17 +143,7 @@ namespace Althea.Backend.Arrays
 		{
 			Span<long> size = stackalloc long[] { rows, 0 };
 			CheckSize(this, size);
-			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
-			try
-			{
-				MEM.MemoryCopy(this.Storage, storage);
-				return new(storage, size[0], size[1]);
-			}
-			catch (Exception)
-			{
-				storage?.Dispose();
-				throw;
-			}
+			return new DenseMatrix<T>(this.Storage.Clone(), size[0], size[1]);
 		}
 
 		/// <summary>

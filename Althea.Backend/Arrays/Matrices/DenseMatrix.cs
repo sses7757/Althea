@@ -764,10 +764,17 @@ namespace Althea.Backend.Arrays
 			}
 			else if (dnA is not null && syB is not null)
 			{
-				// TODO: op
-				LAD.SymmHermMatrixMultiplyGeneral(syB.StoredUpper, leftA: false, syB.Hermitian, m, n,
-												  α, syB.Storage, syB.LeadDim, dnA.Storage, dnA.LeadDim,
-												  β, this.Storage, this.LeadDim);
+				if (opA == opB && opB == MatrixOperation.None)
+				{
+					LAD.SymmHermMatrixMultiplyGeneral(syB.StoredUpper, leftA: false, syB.Hermitian, m, n,
+													  α, syB.Storage, syB.LeadDim, dnA.Storage, dnA.LeadDim,
+													  β, this.Storage, this.LeadDim);
+				}
+				else
+				{
+					syB.ToNormal();
+					LAD.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.Storage, dnA.LeadDim, B.Storage, syB.LeadDim, β, this.Storage, this.LeadDim);
+				}
 			}
 			else if (dnA is not null && spB is not null)
 			{
@@ -776,18 +783,32 @@ namespace Althea.Backend.Arrays
 
 			else if (syA is not null && dnB is not null)
 			{
-				// TODO: op
-				LAD.SymmHermMatrixMultiplyGeneral(syA.StoredUpper, leftA: true, syA.Hermitian, m, n,
-												  α, syA.Storage, syA.LeadDim, dnB.Storage, dnB.LeadDim,
-												  β, this.Storage, this.LeadDim);
+				if (opA == opB && opB == MatrixOperation.None)
+				{
+					LAD.SymmHermMatrixMultiplyGeneral(syA.StoredUpper, leftA: true, syA.Hermitian, m, n,
+													  α, syA.Storage, syA.LeadDim, dnB.Storage, dnB.LeadDim,
+													  β, this.Storage, this.LeadDim);
+				}
+				else
+				{
+					syA.ToNormal();
+					LAD.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.Storage, syA.LeadDim, B.Storage, dnB.LeadDim, β, this.Storage, this.LeadDim);
+				}
 			}
 			else if (syA is not null && syB is not null)
 			{
 				syB.ToNormal();
-				// TODO: op
-				LAD.SymmHermMatrixMultiplyGeneral(syA.StoredUpper, leftA: true, syA.Hermitian, m, n,
-												  α, syA.Storage, syA.LeadDim, syB.Storage, syB.LeadDim,
-												  β, this.Storage, this.LeadDim);
+				if (opA == opB && opB == MatrixOperation.None)
+				{
+					LAD.SymmHermMatrixMultiplyGeneral(syA.StoredUpper, leftA: true, syA.Hermitian, m, n,
+													  α, syA.Storage, syA.LeadDim, syB.Storage, syB.LeadDim,
+													  β, this.Storage, this.LeadDim);
+				}
+				else
+				{
+					syA.ToNormal();
+					LAD.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.Storage, syA.LeadDim, B.Storage, syB.LeadDim, β, this.Storage, this.LeadDim);
+				}
 			}
 			else if (syA is not null && spB is not null)
 			{
@@ -882,11 +903,33 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IMultipliableMatrix
-		bool IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.CanMultiplyInPlace => true;
+		bool IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.CanOperateInPlace => true;
+
+		void IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceAdd(DenseMatrix<T> other, T scalarThis, T scalarOther) => this.OverwriteByMatricesSum(this, other, scalarThis, scalarOther);
+
+		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceAdd(DenseMatrix<T> other, T scalarThis, T scalarOther) => this.AddMatrix(scalarThis, scalarOther, other);
 
 		void IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => this.OverwriteByMatricesProduct(scalar, left, right, scalarThis, opLeft, opRight);
 
-		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
+		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceMultiply(DenseMatrix<T> other, T scalar, MatrixOperation opLeft, MatrixOperation opRight) => (DenseMatrix<T>)this.MultiplyMatrix(scalar, other, opLeft, opRight);
+
+		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
+		{
+			var (m, n, k) = ((IDenseMatrix<T>)this).CheckOverwriteByProduct(scalar, left, right, ref opLeft, ref opRight);
+			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
+			try
+			{
+				if (!scalarThis.IsZero())
+					MEM.MemoryCopy2D(this.Storage, this.LeadDim, storage, this.NRows, this.NRows, this.NCols);
+				LAD.GeneralMatricesMultiply(opLeft, opRight, m, n, k, scalar, left.Storage, left.LeadDim, right.Storage, right.LeadDim, scalarThis, storage, this.NRows);
+				return new DenseMatrix<T>(storage, this.NRows, this.NCols);
+			}
+			catch (Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
+		}
 
 		DenseVector<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.ToVector()
 		{

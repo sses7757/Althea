@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 using Althea.LinearAlgebra.Sparse;
-
 using Althea.Linq;
+
 
 namespace Althea.Backend.Arrays
 {
@@ -69,31 +67,39 @@ namespace Althea.Backend.Arrays
 				throw new ArgumentOutOfRangeException(nameof(tensor), tensor.ValueStorage?.Length, Resources.Parameter.ZeroSize);
 			if (tensor.IndexStorages.Length == 0)
 				throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages.Length, Resources.Parameter.ZeroSize);
-			if (tensor.IndexStorages.Length != 1)
-				throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages.Length, Resources.Parameter.WrongSize);
-			if (tensor.IndexStorages[0] is not Storage<TInd> indices)
-				throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages[0], Resources.Parameter.UnexpectedType);
-			if (indices.Length != tensor.ValueStorage.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(tensor));
 			if (tensor.ValueStorage.Length > size.Prod())
 				throw new ArgumentOutOfRangeException(nameof(size), size.Prod(), Resources.Parameter.InvalidValue);
 
 			if (tensor.TensorFormat == TensorAlgebra.Sparse.SparseTensorFormat.Coordinated)
 			{
+				if (tensor.IndexStorages.Length != 1)
+					throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages.Length, Resources.Parameter.WrongSize);
+				if (tensor.IndexStorages[0] is not Storage<TInd> indices)
+					throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages[0], Resources.Parameter.UnexpectedType);
+				if (indices.Length != tensor.ValueStorage.Length)
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(tensor));
+
 				return new SparseTensor<T, TInd>(size, tensor.ValueStorage, indices, labels, defaultValue: tensor.DefaultValue);
 			}
 			else if (tensor.TensorFormat == TensorAlgebra.Sparse.SparseTensorFormat.BlockCoordinated)
 			{
 				if (tensor.OtherInfo is not BlockedSparseTensorOtherInfo info)
 					throw new ArgumentOutOfRangeException(nameof(tensor), tensor.OtherInfo, Resources.Parameter.InvalidValue);
-				return new BlockedSparseTensor<T, TInd>(size, info.BlockSize, tensor.ValueStorage, indices, labels, defaultValue: tensor.DefaultValue);
+				if (tensor.IndexStorages.Length != size.Length)
+					throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages.Length, Resources.Parameter.WrongSize);
+				if (tensor.IndexStorages.Any(static s => s is not Storage<TInd>))
+					throw new ArgumentOutOfRangeException(nameof(tensor), tensor.IndexStorages.ToArray(), Resources.Parameter.UnexpectedType);
+				var values = tensor.ValueStorage;
+				if (tensor.IndexStorages.Any(s => s.Length != values.Length))
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(tensor));
+
+				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<IStorage, Storage<TInd>>(ref tensor.IndexStorages.Ref()), size.Length);
+				return new BlockedSparseTensor<T, TInd>(size, info.BlockSize, tensor.ValueStorage, span, labels, defaultValue: tensor.DefaultValue);
 			}
 			else if (tensor.TensorFormat == TensorAlgebra.Sparse.SparseTensorFormat.VariableBlockCoordinated)
 			{
-				// TODO
-				if (tensor.OtherInfo is not BlockedSparseTensorOtherInfo info)
-					throw new ArgumentOutOfRangeException(nameof(tensor), tensor.OtherInfo, Resources.Parameter.InvalidValue);
-				return new BlockedSparseTensor<T, TInd>(size, info.BlockSize, tensor.ValueStorage, indices, labels, defaultValue: tensor.DefaultValue);
+				// TODO: variable blocked sparse tensor
+				throw new NotImplementedException();
 			}
 			else
 				throw new ArgumentOutOfRangeException(nameof(tensor), tensor.TensorFormat, Resources.Parameter.InvalidValue);

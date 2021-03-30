@@ -428,6 +428,24 @@ namespace Althea.Helpers
 				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_16<T>, T>(ref this), size);
 		}
+
+		/// <summary>
+		/// Create a <see cref="Span{T}"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
+		/// </summary>
+		/// <typeparam name="TClass">Another class type as the output type</typeparam>
+		/// <param name="size">The size of the span, default 0 means all</param>
+		/// <returns>The <see cref="Span{T}"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<TClass> AsSpan<TClass>(int size = 0) where TClass : class
+		{
+			if (size == 0)
+				return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_16<T>, TClass>(ref this), _count);
+			// else
+			if (size < 0 || size > _count)
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+			return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_16<T>, TClass>(ref this), size);
+		}
 		#endregion
 
 		#region indexer
