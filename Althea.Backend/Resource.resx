@@ -117,49 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CacheSizeRatioSmall" xml:space="preserve">
-    <value>Some of the ratios between the sizes of caches are too small to have proper performance.</value>
+  <data name="CannotCreateDelegate" xml:space="preserve">
+    <value>Cannot create the delegate of {0}.</value>
   </data>
-  <data name="CannotAdd" xml:space="preserve">
-    <value>There is not suitable addition operator for the given type.</value>
+  <data name="IterationAndTimeInfo" xml:space="preserve">
+    <value>Krylov subspace algorithm: now at iteration {0}, {1} passed since start.</value>
   </data>
-  <data name="CannotDeserialize" xml:space="preserve">
-    <value>Cannot deserialize the received message.</value>
+  <data name="LanczosConvergeOnePair" xml:space="preserve">
+    <value>Restarting Lanczos algorithm found that the {0} eigen-pair converges.</value>
   </data>
-  <data name="CannotDivide" xml:space="preserve">
-    <value>The given interger(s) cannot perform lossless integer division.</value>
+  <data name="NaiveLanczosFinish" xml:space="preserve">
+    <value>Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {0}.</value>
   </data>
-  <data name="CannotFindMethod" xml:space="preserve">
-    <value>Cannot find a mehtod of given requirement(s).</value>
+  <data name="NaiveLanczosStart" xml:space="preserve">
+    <value>Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iteration = {1}.</value>
   </data>
-  <data name="CannotParse" xml:space="preserve">
-    <value>Cannot parse '{0}' to a custom type {1}.</value>
+  <data name="RestartLanczosStart" xml:space="preserve">
+    <value>Restarting Lanczos algorithm statrs with matrix size = {0} and maximum number of restarts = {1}.</value>
   </data>
-  <data name="CannotParseComplex" xml:space="preserve">
-    <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
-  </data>
-  <data name="DifferentSparsity" xml:space="preserve">
-    <value>The given sparse array has different sparsity from this one, hence, this in-place operation cannot be executed.</value>
-  </data>
-  <data name="ErrorOccur" xml:space="preserve">
-    <value>An error happened:</value>
-  </data>
-  <data name="InvalidGeneric" xml:space="preserve">
-    <value>The given generic type is invalid.</value>
-  </data>
-  <data name="ListCannotAdd" xml:space="preserve">
-    <value>Cannot append more items to this list since there is no extra space for it.</value>
-  </data>
-  <data name="MatrixSquare" xml:space="preserve">
-    <value>The diagonal accessor of this matrix cannot be obtained since the it is not a square matrix.</value>
-  </data>
-  <data name="NanOccured" xml:space="preserve">
-    <value>The float 'NaN' occured during the calculations.</value>
-  </data>
-  <data name="PerfectSquare" xml:space="preserve">
-    <value>The size of the target matrix cannot be obtained since the length of array is not a perfect square.</value>
-  </data>
-  <data name="UseDefault" xml:space="preserve">
-    <value>Use default settings instead...</value>
+  <data name="TooMuchEigenvaluesRequired" xml:space="preserve">
+    <value>The number of smallest eigenvalues required ({0}) is larger than the desired value, maybe the native eigen solver is a better option.</value>
   </data>
 </root>

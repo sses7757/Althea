@@ -42,6 +42,7 @@ namespace Althea.Backend.Storage
 		/// <param name="length">The length in bytes</param>
 		/// <param name="location">The location of this pointer</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="location"/>'s <see cref="LocationType"/> is not a memory type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemoryPointer(IntPtr pointer, long length, StorageLocation location)
 		{
 			if (location.Type.GetClassification() != LocationTypeExtension.ClassMemory)
@@ -50,10 +51,23 @@ namespace Althea.Backend.Storage
 		}
 
 		/// <summary>
+		/// Create a new <see cref="MemoryPointer"/> with given allocated <paramref name="pointer"/> on managed memory and corresponding <paramref name="length"/> in <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged type as the data type</typeparam>
+		/// <param name="pointer">The allocated pointer on managed memory</param>
+		/// <param name="length">The length in <typeparamref name="T"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged
+		{
+			return new(pointer, length * Const<T>.SizeT, new(LocationType.CpuRam, 0));
+		}
+
+		/// <summary>
 		/// Indicates whether the current object is equal to another object of the same type.
 		/// </summary>
 		/// <param name="other"> An object to compare with this object.</param>
 		/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(IPointer? other)
 		{
 			if (other is MemoryPointer mp)
@@ -66,6 +80,7 @@ namespace Althea.Backend.Storage
 		/// Get the hash code of this <see cref="MemoryPointer"/>
 		/// </summary>
 		/// <returns>The hash code of this <see cref="MemoryPointer"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() => HashCode.Combine(this.Pointer, this.Location);
 
 		/// <summary>
@@ -98,6 +113,7 @@ namespace Althea.Backend.Storage
 		/// <param name="stream">The given <see cref="Stream"/></param>
 		/// <param name="location">The <see cref="StorageLocation"/> of this <see cref="StreamPointer"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="location"/>'s <see cref="LocationType"/> is not a stream type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StreamPointer(Stream stream, StorageLocation location)
 		{
 			if (location.Type.GetClassification() != LocationTypeExtension.ClassStream)
@@ -108,12 +124,14 @@ namespace Althea.Backend.Storage
 		/// <summary>
 		/// When implemented by a derived class, dispose unmanaged and managed resources held by this <see cref="StreamPointer"/>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual void Dispose()
 		{
 			this.NativeStream.Dispose();
 			GC.SuppressFinalize(this);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		string IMainPropertyFormat.StringMain => this.NativeStream.ToString();
 
 		/// <summary>
@@ -121,6 +139,7 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <param name="other"> An object to compare with this object.</param>
 		/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(IPointer? other)
 		{
 			if (other is StreamPointer mp)
@@ -133,6 +152,7 @@ namespace Althea.Backend.Storage
 		/// Get the hash code of this <see cref="StreamPointer"/>
 		/// </summary>
 		/// <returns>The hash code of this <see cref="StreamPointer"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() => HashCode.Combine(this.NativeStream, this.Location);
 
 		/// <summary>

@@ -220,9 +220,9 @@ namespace Althea.Arrays
 		{
 			// get managed arrays
 			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<T> values = length.CheckStackLimitFast<T>() ?? stackalloc T[length];
 			MEM.ToManaged(this.Storage, values);
-			Span<long> indices = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			Span<long> indices = length.CheckStackLimitFast<long>() ?? stackalloc long[length];
 			this.GetIndices(indices);
 			// to vector string
 			string detail = values.ToSparseVectorString(indices, precision: settings.Precision);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -438,9 +439,25 @@ namespace Althea.Helpers
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="length">The desired length to allocate</param>
 		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
-		public static T[]? CheckStackLimit<T>(this int length) where T : unmanaged
+		public static T[]? CheckStackLimitFast<T>(this int length) where T : unmanaged
 		{
 			if (length * Const<T>.SizeT > StackAllocLimit)
+				return new T[length];
+			else
+				return null;
+		}
+
+		/// <summary>
+		/// Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="length">The desired length to allocate</param>
+		/// <param name="size">Output the size of <typeparamref name="T"/></param>
+		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
+		public static T[]? CheckStackLimit<T>(this int length, out int size) where T : notnull
+		{
+			size = Marshal.SizeOf<T>();
+			if (length * size > StackAllocLimit)
 				return new T[length];
 			else
 				return null;

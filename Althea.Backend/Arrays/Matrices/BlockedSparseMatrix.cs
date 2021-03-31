@@ -841,8 +841,8 @@ namespace Althea.Backend.Arrays
 			// get managed arrays
 			long pack = this.Pack;
 			int length = (int)Math.Min(settings.ArrayLength, this.NStored / pack);
-			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
-			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			Span<long> row = length.CheckStackLimitFast<long>() ?? stackalloc long[length];
+			Span<long> col = length.CheckStackLimitFast<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
 			// to matrix string
 			int brow = this.m_blockRows, bcol = this.m_blockCols;

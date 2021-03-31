@@ -17,8 +17,8 @@ namespace Althea.Solver
 	/// </summary>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IKrylovVector<TVec, T> : IDisposable
-		where TVec : class, IKrylovVector<TVec, T>, IDisposable, new()
+	public interface IKrylovVector<TVec, T> : ICloneable<TVec>, IDisposable
+		where TVec : class, IKrylovVector<TVec, T>, ICloneable<TVec>, IDisposable, new()
 		where T : unmanaged
 	{
 		/// <summary>
@@ -100,9 +100,9 @@ namespace Althea.Solver
 
 			// sort first to reduce errors
 			int length = input.Length;
-			Span<(T, IntPtr)> temp = length.CheckStackLimit<(T, IntPtr)>() ?? stackalloc (T, IntPtr)[length];
+			Span<(T, IntPtr)> temp = length.CheckStackLimitFast<(T, IntPtr)>() ?? stackalloc (T, IntPtr)[length];
 			Span<(T val, TVec vec)> values = MemoryMarshal.CreateSpan(ref Unsafe.As<(T, IntPtr), (T, TVec)>(ref temp[0]), length);
-			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
+			Span<double> keys = length.CheckStackLimitFast<double>() ?? stackalloc double[length];
 			TVec[] vectors = unjoinedVectors.ToArray();
 			for (int i = 0; i < length; i++)
 			{
@@ -283,7 +283,7 @@ namespace Althea.Solver
 				case RestartStrategy.CurrentResidualBest:
 					if (nTarget >= upperCount)
 						return output[..upperCount].FillWithRange(0);
-					Span<ComplexDouble> lastRow = length.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[length];
+					Span<ComplexDouble> lastRow = length.CheckStackLimitFast<ComplexDouble>() ?? stackalloc ComplexDouble[length];
 					for (int i = 0; i < length; i++)
 					{
 						lastRow[i] = estimateEigvecs[length * (i + 1) - 1];

@@ -393,15 +393,38 @@ namespace Althea.Storage
 
 		private readonly PointerSegment pointer;
 
+		private readonly bool _noFree = false;
+
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="PureStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
 		/// </summary>
-		/// <param name="location">a <see cref="StorageLocation"/> to represent the memory location</param>
+		/// <param name="location">The <see cref="StorageLocation"/> representing the memory location</param>
 		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PureStorage(StorageLocation location, long length) : base(stackalloc StorageLocation[] { location }, stackalloc long[] { length })
+		public PureStorage(StorageLocation location, long length) : base(stackalloc[] { location }, stackalloc[] { length })
 		{
 			this.pointer = length == 0 ? default : Allocate(location, length);
+		}
+
+		/// <summary>
+		/// Create a <see cref="PureStorage{T}"/> of given <paramref name="pointer"/> without allocation and free
+		/// </summary>
+		/// <param name="pointer">The <see cref="IPointer"/> to create on</param>
+		/// <remarks>Be careful when invoking this constructor since it may cause memory leak</remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public PureStorage(IPointer pointer) : base(stackalloc[] { pointer.Location }, stackalloc[] { pointer.LengthInBytes / Const<T>.SizeT })
+		{
+			this.pointer = new(pointer); this._noFree = true;
+		}
+
+		/// <summary>
+		/// The function that actually dispose this storage, override <see cref="ActualStorage{T}.Dispose(bool)"/>
+		/// </summary>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected override void Dispose(bool invokedByUser)
+		{
+			if (!this._noFree)
+				base.Dispose(invokedByUser);
 		}
 		#endregion
 
@@ -1134,7 +1157,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memoryLocation"/> is not a memory-typed location or <paramref name="streamLocation"/> is not a stream-typed location</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StreamToMemoryCachedStorage(StorageLocation memoryLocation, StorageLocation streamLocation, long maxMemoryCacheSize, long length) :
-			base(stackalloc StorageLocation[] { memoryLocation, streamLocation }, stackalloc long[] { maxMemoryCacheSize, length })
+			base(stackalloc[] { memoryLocation, streamLocation }, stackalloc[] { maxMemoryCacheSize, length })
 		{
 			if (memoryLocation.Type.GetClassification() != LocationTypeExtension.ClassMemory)
 				throw new ArgumentOutOfRangeException(nameof(memoryLocation), memoryLocation, Parameter.InvalidValue);

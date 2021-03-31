@@ -151,11 +151,29 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Cannot append more items to this list since there is no extra space for it. 的本地化字符串。
+        /// </summary>
+        public static string ListCannotAdd {
+            get {
+                return ResourceManager.GetString("ListCannotAdd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The diagonal accessor of this matrix cannot be obtained since the it is not a square matrix. 的本地化字符串。
         /// </summary>
         public static string MatrixSquare {
             get {
                 return ResourceManager.GetString("MatrixSquare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The float &apos;NaN&apos; occured during the calculations. 的本地化字符串。
+        /// </summary>
+        public static string NanOccured {
+            get {
+                return ResourceManager.GetString("NanOccured", resourceCulture);
             }
         }
         

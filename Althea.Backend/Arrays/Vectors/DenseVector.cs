@@ -343,7 +343,7 @@ namespace Althea.Backend.Arrays
 		{
 			// get managed array
 			int length = (int)Math.Min(settings.ArrayLength, actual);
-			Span<T> managed = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<T> managed = length.CheckStackLimitFast<T>() ?? stackalloc T[length];
 			MEM.ToManaged(storage, managed);
 			// to dense vector string
 			string str = managed.ToVectorString(precision: settings.Precision, prefix: prefix);

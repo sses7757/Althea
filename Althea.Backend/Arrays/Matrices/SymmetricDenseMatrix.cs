@@ -728,7 +728,7 @@ namespace Althea.Backend.Arrays
 			string detail = ":" + Environment.NewLine;
 			// get managed array
 			int n = (int)Math.Min(Math.Min(settings.MatrixRow, settings.MatrixColumn), this.NRows);
-			Span<T> managed = (n * n).CheckStackLimit<T>() ?? stackalloc T[n * n];
+			Span<T> managed = (n * n).CheckStackLimitFast<T>() ?? stackalloc T[n * n];
 			MEM.ToManaged2D(this.Storage, this.LeadDim, n, n, managed);
 			// copy
 			if (this.StoredUpper && this.Hermitian)
