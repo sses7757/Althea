@@ -70,7 +70,7 @@ namespace Althea.Backend {
         }
         
         /// <summary>
-        ///   查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since start. 的本地化字符串。
+        ///   查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
         /// </summary>
         internal static string IterationAndTimeInfo {
             get {
@@ -102,6 +102,24 @@ namespace Althea.Backend {
         internal static string NaiveLanczosStart {
             get {
                 return ResourceManager.GetString("NaiveLanczosStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Restarting Lanczos algorithm converged after {0} restarts. 的本地化字符串。
+        /// </summary>
+        internal static string RestartLanczosConverge {
+            get {
+                return ResourceManager.GetString("RestartLanczosConverge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Restarting Lanczos algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
+        /// </summary>
+        internal static string RestartLanczosFail {
+            get {
+                return ResourceManager.GetString("RestartLanczosFail", resourceCulture);
             }
         }
         

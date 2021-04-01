@@ -243,12 +243,12 @@ namespace Althea.Solver
 		/// <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
 		/// <param name="nConverged">THe number of converged eigen-pairs</param>
 		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
-		/// <param name="maxIter">The maximum number of iteration</param>
+		/// <param name="maxIter">The maximum number of iteration (per restart)</param>
 		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
 		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
-		/// <returns><paramref name="output"/>[..preserved_count]</returns>
+		/// <returns>The actual preserved count</returns>
 		/// <remarks>This method will only be invoked internally.</remarks>
-		Span<int> PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true);
+		int PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true);
 	}
 
 	internal sealed class BuiltInPreserveSelector : IPreserveSelector
@@ -260,7 +260,7 @@ namespace Althea.Solver
 			this.Strategy = strategy;
 		}
 
-		Span<int> IPreserveSelector.PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged)
+		int IPreserveSelector.PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged)
 		{
 			int length = estimateEigvals.Length;
 			int indexMax = 0;
@@ -271,18 +271,19 @@ namespace Althea.Solver
 					indexMax = Math.Min(Math.Max(maxIter * 2 / 5, nTarget), length);
 					if (withConverged)
 						indexMax = Math.Max(indexMax, nConverged);
-					return output[..indexMax].FillWithRange(0);
-
+					break;
 				case RestartStrategy.IndexBased:
 					indexMax = Math.Min(nTarget, (int)((maxIter - nConverged) * (0.4 + nTarget / 10.0 / maxIter)));
 					indexMax = Math.Min(indexMax, upperCount);
 					if (withConverged)
 						indexMax = Math.Max(indexMax, nConverged);
-					return output[..].FillWithRange(0);
-
+					break;
 				case RestartStrategy.CurrentResidualBest:
 					if (nTarget >= upperCount)
-						return output[..upperCount].FillWithRange(0);
+					{
+						output[..upperCount].FillWithRange(0);
+						return upperCount;
+					}
 					Span<ComplexDouble> lastRow = length.CheckStackLimitFast<ComplexDouble>() ?? stackalloc ComplexDouble[length];
 					for (int i = 0; i < length; i++)
 					{
@@ -298,14 +299,14 @@ namespace Althea.Solver
 					}
 					if (!withConverged)
 						indexMax -= nConverged;
-					return output[..(indexMax - 1)].FillWithRange(0);
-
+					indexMax--;
+					break;
 				case RestartStrategy.OneStepResidualImprove:
 					indexMax = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
 					if (!withConverged)
 						indexMax -= nConverged;
-					return output[..Math.Min(indexMax, upperCount)].FillWithRange(0);
-
+					indexMax = Math.Min(indexMax, upperCount);
+					break;
 				case RestartStrategy.WholeIterResidualImprove:
 					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
 					double abs0 = estimateEigvals[0].Abs(), gap = estimateEigvals[^1].Abs() - abs0;
@@ -319,19 +320,18 @@ namespace Althea.Solver
 							indexMax = i;
 						}
 					}
-					if (!withConverged)
-						indexMax -= nConverged;
-					return output[..indexMax].FillWithRange(0);
-
+					break;
 				case RestartStrategy.KrylovSchur:
-					int k = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
-					if (k == 1 && maxIter > 3)
-						k = maxIter / 2;
-					return output[..k].FillWithRange(0);
-
+					indexMax = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
+					if (indexMax == 1 && maxIter > 3)
+						indexMax = maxIter / 2;
+					break;
 				default:
 					throw new NotSupportedException();
 			}
+			// return
+			output[..indexMax].FillWithRange(0);
+			return indexMax;
 		}
 	}
 	#endregion
@@ -450,11 +450,6 @@ namespace Althea.Solver
 		public readonly Func<TVec, TVec> MatrixFunction;
 
 		/// <summary>
-		/// The function used to create a new vector of type <typeparamref name="TVec"/>
-		/// </summary>
-		public readonly Func<TVec> NewVectorFunction;
-
-		/// <summary>
 		/// The initial vector as a <typeparamref name="TVec"/>
 		/// </summary>
 		public readonly TVec InitialVector;
@@ -523,6 +518,11 @@ namespace Althea.Solver
 		/// Whether to use the estimated gap in the convergence criteria or use the matrix norm, default true. If the gap can be especially difficult to estimate, this shall be set to false.
 		/// </summary>
 		public readonly bool UseGapEstimation;
+
+		/// <summary>
+		/// Whether to check the <see cref="MatrixFunction"/> with <see cref="InitialVector"/> at first. If true, there will be some performance loss.
+		/// </summary>
+		public readonly bool CheckMatrixFunction;
 		#endregion
 
 		#region create
@@ -538,7 +538,7 @@ namespace Althea.Solver
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, Func<TVec>? newVector = null)
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool check = true)
 		{
 			if (maxIter <= 0)
 				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.Parameter.MustPositive);
@@ -548,7 +548,6 @@ namespace Althea.Solver
 				throw new ArgumentNullException(nameof(initial));
 
 			this.MatrixFunction = matrixFunction;
-			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
 			this.InitialVector = initial;
 			this.OtherVector = null;
 			this.NumberEigenvaluesDesired = 1;
@@ -558,6 +557,7 @@ namespace Althea.Solver
 			this.Tolerance = 0;
 			this.ReorthogonalizeMethod = default;
 			this.UseGapEstimation = default;
+			this.CheckMatrixFunction = check;
 			this.PreserveSelector = new BuiltInPreserveSelector(default);
 
 			this.Eigenvalues = default;
@@ -578,8 +578,8 @@ namespace Althea.Solver
 									   Span<TVec> outputRealEigenvectors, Span<TVec> outputCompEigenvectors,
 									   int nEig = 1, WhichEigenvalues which = WhichEigenvalues.LargestAbsolute,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
-									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull, bool useGap = true,
-									   IPreserveSelector? selector = null, Func<TVec>? newVector = null)
+									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
+									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
 		{
 			if (iterPerRestart < 0)
 				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
@@ -601,7 +601,6 @@ namespace Althea.Solver
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputCompEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
-			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
 			this.InitialVector = initial;
 			this.OtherVector = null;
 			this.NumberEigenvaluesDesired = nEig;
@@ -611,6 +610,7 @@ namespace Althea.Solver
 			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
+			this.CheckMatrixFunction = check;
 			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
 
 			this.Eigenvalues = default;
@@ -629,8 +629,8 @@ namespace Althea.Solver
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
 									   Span<double> outputEigenvalues, Span<TVec> outputEigenvectors,
 									   int nEig = 1, int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
-									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull, bool useGap = true,
-									   IPreserveSelector? selector = null, Func<TVec>? newVector = null)
+									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
+									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
 		{
 			if (iterPerRestart < 0)
 				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
@@ -650,7 +650,6 @@ namespace Althea.Solver
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
-			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
 			this.InitialVector = initial;
 			this.OtherVector = null;
 			this.NumberEigenvaluesDesired = nEig;
@@ -660,6 +659,7 @@ namespace Althea.Solver
 			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
+			this.CheckMatrixFunction = check;
 			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
 
 			this.Eigenvalues = outputEigenvalues;
@@ -676,8 +676,8 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec rightSide, TVec initial,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
-									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull, bool useGap = true,
-									   IPreserveSelector? selector = null, Func<TVec>? newVector = null)
+									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
+									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
 		{
 			if (iterPerRestart < 0)
 				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
@@ -693,7 +693,6 @@ namespace Althea.Solver
 				throw new ArgumentNullException(nameof(rightSide));
 
 			this.MatrixFunction = matrixFunction;
-			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
 			this.InitialVector = initial;
 			this.OtherVector = rightSide;
 			this.NumberEigenvaluesDesired = 1;
@@ -703,6 +702,7 @@ namespace Althea.Solver
 			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
+			this.CheckMatrixFunction = check;
 			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
 
 			this.Eigenvalues = default;
@@ -716,7 +716,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, TVec? other, KrylovSubspaceSolveInfo<TVec, T> old, Func<TVec>? newVector = null)
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, TVec? other, KrylovSubspaceSolveInfo<TVec, T> old)
 		{
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));
@@ -724,7 +724,6 @@ namespace Althea.Solver
 				throw new ArgumentNullException(nameof(initial));
 
 			this.MatrixFunction = matrixFunction;
-			this.NewVectorFunction = newVector ?? initial.NewArrayAlike;
 			this.InitialVector = initial;
 			this.OtherVector = other;
 			this.NumberEigenvaluesDesired = old.NumberEigenvaluesDesired;
@@ -734,6 +733,7 @@ namespace Althea.Solver
 			this.Tolerance = old.Tolerance;
 			this.ReorthogonalizeMethod = old.ReorthogonalizeMethod;
 			this.UseGapEstimation = old.UseGapEstimation;
+			this.CheckMatrixFunction = old.CheckMatrixFunction;
 			this.PreserveSelector = old.PreserveSelector;
 
 			this.Eigenvalues = old.Eigenvalues;

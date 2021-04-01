@@ -4864,13 +4864,348 @@
             Export current settings to the file "Althea.json"
             </summary>
         </member>
-        <member name="M:Althea.Helpers.Settings.CheckStackLimit``1(System.Int32)">
+        <member name="M:Althea.Helpers.Settings.CheckStackLimitFast``1(System.Int32)">
             <summary>
             Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="P:Althea.Helpers.Settings.StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="length">The desired length to allocate</param>
             <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
+        </member>
+        <member name="M:Althea.Helpers.Settings.CheckStackLimit``1(System.Int32,System.Int32@)">
+            <summary>
+            Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="P:Althea.Helpers.Settings.StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="length">The desired length to allocate</param>
+            <param name="size">Output the size of <typeparamref name="T"/></param>
+            <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
+        </member>
+        <member name="T:Althea.Helpers.SpanList`1">
+            <summary>
+            The list-like span which support add, remove whose internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+        </member>
+        <member name="P:Althea.Helpers.SpanList`1.IsEmpty">
+            <summary>
+            Check whether this <see cref="T:Althea.Helpers.SpanList`1"/> is empty or not
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanList`1.Empty">
+            <summary>
+            Get an empty <see cref="T:Althea.Helpers.SpanList`1"/> without underlying <see cref="T:System.Span`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.#ctor(System.Span{`0})">
+            <summary>
+            Create an empty <see cref="T:Althea.Helpers.SpanList`1"/> with the underlying <see cref="T:System.Span`1"/> as the input <paramref name="span"/>
+            </summary>
+            <param name="span">The input underlying <see cref="T:System.Span`1"/></param>
+        </member>
+        <member name="P:Althea.Helpers.SpanList`1.UnderlyingSpan">
+            <summary>
+            Get the underlying <see cref="T:System.Span`1"/> of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanList`1.Item(System.Int32)">
+            <summary>
+            Get the reference of the element at <paramref name="index"/> of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <param name="index">The index of the element to get reference</param>
+            <returns>The reference of the element at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Slice(System.Int32,System.Int32)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.SpanList`1"/> <paramref name="start"/> at a specified index for a specified <paramref name="count"/>
+            </summary>
+            <param name="start">The index at which to begin this slice</param>
+            <param name="count">The desired length for the slice</param>
+            <returns>A <see cref="T:System.Span`1"/> that consists of <paramref name="count"/> elements from the current <see cref="T:Althea.Helpers.SpanList`1"/> starting at <paramref name="start"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="start"/> or <paramref name="count"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.SpanList`1.Count">
+            <summary>
+            Get the number of filled elements of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanList`1.Capacity">
+            <summary>
+            Get the maximum number of elements allowed of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.AsSpan">
+            <summary>
+            Get the equivalent <see cref="T:System.Span`1"/> of the current <see cref="T:Althea.Helpers.SpanList`1"/> (with the same size)
+            </summary>
+            <returns>The equivalent <see cref="T:System.Span`1"/> of the current <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Add(`0)">
+            <summary>
+            Append the given <paramref name="value"/> to this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <param name="value">The value of type <typeparamref name="T"/> to be added</param>
+            <exception cref="T:System.InvalidOperationException">If the <paramref name="value"/> cannot be appended</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.AddRange(System.ReadOnlySpan{`0})">
+            <summary>
+            Append the given <paramref name="values"/> to this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <param name="values">The values as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> to be appended</param>
+            <exception cref="T:System.InvalidOperationException">If the <paramref name="values"/> cannot be appended</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Remove(System.Int32)">
+            <summary>
+            Remove the element at <paramref name="index"/> of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <param name="index">The index of the element to be removed</param>
+            <returns>The removed element</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Clear">
+            <summary>
+            Clear this <see cref="T:Althea.Helpers.SpanList`1"/> and set the size to 0
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Clear(System.Action{`0})">
+            <summary>
+            Clear this <see cref="T:Althea.Helpers.SpanList`1"/> with clear <paramref name="action"/> and set the size to 0
+            </summary>
+            <param name="action">The <see cref="T:System.Action`1"/> used to clear the elements</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.op_Equality(Althea.Helpers.SpanList{`0},Althea.Helpers.SpanList{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.op_Inequality(Althea.Helpers.SpanList{`0},Althea.Helpers.SpanList{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Equals(System.Object)">
+            <summary>
+            Checks whether the given <paramref name="obj"/> is the same as this one
+            </summary>
+            <param name="obj">The given object</param>
+            <returns>Equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.GetHashCode">
+            <summary>
+            Get the hash code of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.GetEnumerator">
+            <summary>
+            Get the enumerator (a <see cref="T:System.Span`1.Enumerator"/>) of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <returns>The enumerator of this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.CopyTo(System.Span{`0})">
+            <summary>
+            Copy the current <see cref="T:Althea.Helpers.SpanList`1"/> to the <paramref name="destination"/> <see cref="T:System.Span`1"/>
+            </summary>
+            <param name="destination">The <see cref="T:System.Span`1"/> to copy to</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.op_Implicit(Althea.Helpers.SpanList{`0})~System.Span{`0}">
+            <summary>
+            Implicitly convert the given <paramref name="list"/> to a <see cref="T:System.Span`1"/>
+            </summary>
+            <param name="list">The <see cref="T:Althea.Helpers.SpanList`1"/> to be converted</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.op_Implicit(Althea.Helpers.SpanList{`0})~System.ReadOnlySpan{`0}">
+            <summary>
+            Implicitly convert the given <paramref name="list"/> to a <see cref="T:System.ReadOnlySpan`1"/>
+            </summary>
+            <param name="list">The <see cref="T:Althea.Helpers.SpanList`1"/> to be converted</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.ToString">
+            <summary>
+            Get the string representation of this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <returns>The string representation of this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.ToArray">
+            <summary>
+            Convert this <see cref="T:Althea.Helpers.SpanList`1"/> to an array of type <typeparamref name="T"/>
+            </summary>
+            <returns>An array of type <typeparamref name="T"/> holding the same values as this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.ToList">
+            <summary>
+            Convert this <see cref="T:Althea.Helpers.SpanList`1"/> to a <see cref="T:System.Collections.Generic.List`1"/> of <typeparamref name="T"/>
+            </summary>
+            <returns>A <see cref="T:System.Collections.Generic.List`1"/> of <typeparamref name="T"/> <typeparamref name="T"/> holding the same values as this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.SpanMatrix`1">
+            <summary>
+            The matrix-like span which is of column major whose internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="T:Althea.Helpers.SpanMatrix`1.Enumerator">
+            <summary>
+            The enumerator for a <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Enumerator.Current">
+            <summary>
+            Get the current
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.Enumerator.MoveNext">
+            <summary>
+            Move to the next element
+            </summary>
+            <returns>Whether there is a next element or not</returns>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Rows">
+            <summary>
+            Get the presenting number of rows of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Cols">
+            <summary>
+            Get the presenting number of columns of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.LeadDim">
+            <summary>
+            Get the leading dimension (the actual number of rows) of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.IsEmpty">
+            <summary>
+            Check whether this <see cref="T:Althea.Helpers.SpanMatrix`1"/> is empty or not
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Empty">
+            <summary>
+            Get an empty <see cref="T:Althea.Helpers.SpanMatrix`1"/> without underlying <see cref="T:System.Span`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.#ctor(System.Span{`0},System.Int32,System.Int32)">
+            <summary>
+            Create an empty <see cref="T:Althea.Helpers.SpanMatrix`1"/> with the underlying <see cref="T:System.Span`1"/> as the input <paramref name="span"/> and the given <paramref name="leadingDim"/>
+            </summary>
+            <param name="span">The input underlying <see cref="T:System.Span`1"/></param>
+            <param name="rows">The number of desired rows. (The number of columns are calculated.)</param>
+            <param name="leadingDim">The leading dimension of <paramref name="span"/>, default 0 means <paramref name="rows"/></param>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Item(System.Int32,System.Int32)">
+            <summary>
+            Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <param name="row">The row index of the element to get reference</param>
+            <param name="col">The column index of the element to get reference</param>
+            <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Item(System.Int32)">
+            <summary>
+            Get the column at <paramref name="columnIndex"/> of this <see cref="T:Althea.Helpers.SpanMatrix`1"/> as a <see cref="T:System.Span`1"/>
+            </summary>
+            <param name="columnIndex">The index of the column to get</param>
+            <returns>The column at <paramref name="columnIndex"/> as a <see cref="T:System.Span`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.Slice(System.Int32,System.Int32)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> staring at a specified <paramref name="column"/> for a specified <paramref name="count"/> of columns
+            </summary>
+            <param name="column">The index of the column at which to begin this slice</param>
+            <param name="count">The desired number of columns for the slice</param>
+            <returns>A <see cref="T:Althea.Helpers.SpanMatrix`1"/> that consists of <paramref name="count"/> columns from the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> starting at the <paramref name="column"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="column"/> or <paramref name="count"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Count">
+            <summary>
+            Get the number of columns of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.SliceRow(System.Int32,System.Int32)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> staring at a specified <paramref name="row"/> for a specified <paramref name="count"/> of rows
+            </summary>
+            <param name="row">The index of the row at which to begin this slice</param>
+            <param name="count">The desired number of columns for the slice</param>
+            <returns>A <see cref="T:Althea.Helpers.SpanMatrix`1"/> that consists of <paramref name="count"/> rows from the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> starting at the <paramref name="row"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="count"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.SliceRow(System.Range)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> with the given <paramref name="range"/> of rows
+            </summary>
+            <param name="range">The range of the rows to slice</param>
+            <returns>A <see cref="T:Althea.Helpers.SpanMatrix`1"/> that consists of rows of <paramref name="range"/> of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="range"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.SubMatrix(System.Range,System.Range)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+            </summary>
+            <param name="rowRange">The range of the rows to slice</param>
+            <param name="colRange">The range of the columns to slice</param>
+            <returns>A <see cref="T:Althea.Helpers.SpanMatrix`1"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rowRange"/> or <paramref name="colRange"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.op_Equality(Althea.Helpers.SpanMatrix{`0},Althea.Helpers.SpanMatrix{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.op_Inequality(Althea.Helpers.SpanMatrix{`0},Althea.Helpers.SpanMatrix{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.Equals(System.Object)">
+            <summary>
+            Checks whether the given <paramref name="obj"/> is the same as this one
+            </summary>
+            <param name="obj">The given object</param>
+            <returns>Equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.GetHashCode">
+            <summary>
+            Get the hash code of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.GetEnumerator">
+            <summary>
+            Get the <see cref="T:Althea.Helpers.SpanMatrix`1.Enumerator"/> of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <returns>The enumerator of this <see cref="T:Althea.Helpers.SpanMatrix`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.CopyRowTo(System.Int32,System.Span{`0})">
+            <summary>
+            Copy a specific <paramref name="row"/> of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:System.Span`1"/>
+            </summary>
+            <param name="row">The index of the row to copy</param>
+            <param name="destination">The <see cref="T:System.Span`1"/> to copy to</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.CopyTo(System.Span{`0})">
+            <summary>
+            Copy the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:System.Span`1"/> column-by-column
+            </summary>
+            <param name="destination">The <see cref="T:System.Span`1"/> to copy to</param>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.ToString">
+            <summary>
+            Get the string representation of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <returns>The string representation of this <see cref="T:Althea.Helpers.SpanMatrix`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.ToArray">
+            <summary>
+            Convert this <see cref="T:Althea.Helpers.SpanMatrix`1"/> to an array of column arrays of type <typeparamref name="T"/>
+            </summary>
+            <returns>An array of column arrays of type <typeparamref name="T"/> holding the same values as this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
         </member>
         <member name="T:Althea.LinearAlgebra.ILinearAlgebraApi">
             <summary>
@@ -10933,9 +11268,19 @@
               查找类似 The given generic type is invalid. 的本地化字符串。
             </summary>
         </member>
+        <member name="P:Althea.Resources.Other.ListCannotAdd">
+            <summary>
+              查找类似 Cannot append more items to this list since there is no extra space for it. 的本地化字符串。
+            </summary>
+        </member>
         <member name="P:Althea.Resources.Other.MatrixSquare">
             <summary>
               查找类似 The diagonal accessor of this matrix cannot be obtained since the it is not a square matrix. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Resources.Other.NanOccured">
+            <summary>
+              查找类似 The float &apos;NaN&apos; occured during the calculations. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Resources.Other.PerfectSquare">
@@ -11290,35 +11635,18 @@
             long number = AbstractApi.Dynamic.CholeskyDecompose(...);
             </code></example>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector``3(``2,``0,``0,``1@,``2)">
+        <member name="M:Althea.Solver.AbstractApi.KroneckerMultiplyVector``3(System.Boolean,``2,``0,``0,``1@,``2)">
             <summary>
-            Compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
-            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+            Compute the product of the Kronecker Multiply or Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> op <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c> where '<c>op</c>' is '⨁' if <paramref name="multiply"/> is false or '⨂' otherwise.
             </summary>
             <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
             <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="multiply">Whether to perform Kronecker Multiply or Kronecker Sum</param>
             <param name="scalar">The scalar to multiply to the multiplication result</param>
             <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
             <param name="rightMatrix">The input right matrix to perform the Kronecker sum</param>
-            <param name="vector">The input / output vector</param>
-            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-        </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector``3(``2,``0,``0,``1@,``2)">
-            <summary>
-            Compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
-            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
-            </summary>
-            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
-            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="scalar">The scalar to multiply to the multiplication result</param>
-            <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
-            <param name="rightMatrix">The input right matrix to perform the Kronecker product</param>
             <param name="vector">The input / output vector</param>
             <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
@@ -11375,35 +11703,18 @@
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerSumMultiplyVector_``3(``2,``0,``0,``1@,``2)">
+        <member name="M:Althea.Solver.AbstractApi.KroneckerMultiplyVector_``3(System.Boolean,``2,``0,``0,``1@,``2)">
             <summary>
-            When implemented by a derived class, compute the product of the Kronecker Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
-            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨁ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
+            When implemented by a derived class, compute the product of the Kronecker Multiply or Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> op <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c> where '<c>op</c>' is '⨁' if <paramref name="multiply"/> is false or '⨂' otherwise.
             </summary>
             <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
             <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="multiply">Whether to perform Kronecker Multiply or Kronecker Sum</param>
             <param name="scalar">The scalar to multiply to the multiplication result</param>
-            <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
-            <param name="rightMatrix">The input right matrix to perform the Kronecker sum</param>
-            <param name="vector">The input / output vector</param>
-            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-        </member>
-        <member name="M:Althea.Solver.AbstractApi.KroneckerProdMultiplyVector_``3(``2,``0,``0,``1@,``2)">
-            <summary>
-            When implemented by a derived class, compute the product of the Kronecker Product of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
-            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> ⨂ <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c>
-            </summary>
-            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.Solver.IMultipliableMatrix`3"/></typeparam>
-            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.Solver.IConvertibleVector`3"/></typeparam>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="scalar">The scalar to multiply to the multiplication result</param>
-            <param name="leftMatrix">The input left matrix to perform the Kronecker product</param>
-            <param name="rightMatrix">The input right matrix to perform the Kronecker product</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker multiply/sum</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker multiply/sum</param>
             <param name="vector">The input / output vector</param>
             <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
@@ -11545,14 +11856,14 @@
             <typeparam name="TVec">The concrete vector type</typeparam>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
-        <member name="P:Althea.Solver.IMultipliableMatrix`3.CanMultiplyInPlace">
+        <member name="P:Althea.Solver.IMultipliableMatrix`3.CanOperateInPlace">
             <summary>
-            When implemented by a derived class, get a <see cref="T:System.Boolean"/> indicating whether this matrix can perform in-place matrix fused-multiply-addition or not
+            When implemented by a derived class, get a <see cref="T:System.Boolean"/> indicating whether this matrix can perform in-place matrix operations or not
             </summary>
         </member>
         <member name="M:Althea.Solver.IMultipliableMatrix`3.InPlaceFusedMultiplyAdd(`0,`0,`2,`2,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <summary>
-            When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanMultiplyInPlace"/> is false.)
+            When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanOperateInPlace"/> is false.)
             </summary>
             <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
             <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
@@ -11561,9 +11872,17 @@
             <param name="opLeft">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
             <param name="opRight">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
         </member>
+        <member name="M:Althea.Solver.IMultipliableMatrix`3.InPlaceAdd(`0,`2,`2)">
+            <summary>
+            When implemented by a derived class, add the <paramref name="other"/> matrix to this matrix in-place. (May be invalid if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanOperateInPlace"/> is false.)
+            </summary>
+            <param name="other">The other matrix to be added as a <typeparamref name="TMat"/></param>
+            <param name="scalarThis">The scalar to multiply to this matrix</param>
+            <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix</param>
+        </member>
         <member name="M:Althea.Solver.IMultipliableMatrix`3.OutOfPlaceFusedMultiplyAdd(`0,`0,`2,`2,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <summary>
-            When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (May be invalid if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanMultiplyInPlace"/> is true.)
+            When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (Shall be valid even if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanOperateInPlace"/> is true.)
             </summary>
             <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
             <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
@@ -11572,6 +11891,25 @@
             <param name="opLeft">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
             <param name="opRight">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
             <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(<paramref name="left"/>) * <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="scalarThis"/> * this</c></returns>
+        </member>
+        <member name="M:Althea.Solver.IMultipliableMatrix`3.OutOfPlaceMultiply(`0,`2,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            When implemented by a derived class, multiply this matrix and the <paramref name="other"/> matrix out-of-place. (Shall be valid even if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanOperateInPlace"/> is true.)
+            </summary>
+            <param name="other">The other matrix to be multiplied as a <typeparamref name="TMat"/></param>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="opLeft">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to this matrix before multiplication</param>
+            <param name="opRight">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be applied to <paramref name="other"/> matrix before multiplication</param>
+            <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(this) * <paramref name="opRight"/>(<paramref name="other"/>)</c></returns>
+        </member>
+        <member name="M:Althea.Solver.IMultipliableMatrix`3.OutOfPlaceAdd(`0,`2,`2)">
+            <summary>
+            When implemented by a derived class, add the <paramref name="other"/> matrix to this matrix out-of-place. (Shall be valid even if <see cref="P:Althea.Solver.IMultipliableMatrix`3.CanOperateInPlace"/> is true.)
+            </summary>
+            <param name="other">The other matrix to be added as a <typeparamref name="TMat"/></param>
+            <param name="scalarThis">The scalar to multiply to this matrix</param>
+            <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix</param>
+            <returns><c><paramref name="scalarThis"/> * this + <paramref name="scalarOther"/> * <paramref name="other"/></c></returns>
         </member>
         <member name="M:Althea.Solver.IMultipliableMatrix`3.ToVector">
             <summary>
@@ -13364,8 +13702,21 @@
             <summary>
             <b>Allocate</b> and create a <see cref="T:Althea.Storage.PureStorage`1"/> of given <see cref="P:Althea.Storage`1.Length"/> on given <see cref="T:Althea.StorageLocation"/> 
             </summary>
-            <param name="location">a <see cref="T:Althea.StorageLocation"/> to represent the memory location</param>
+            <param name="location">The <see cref="T:Althea.StorageLocation"/> representing the memory location</param>
             <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
+        </member>
+        <member name="M:Althea.Storage.PureStorage`1.#ctor(Althea.IPointer)">
+            <summary>
+            Create a <see cref="T:Althea.Storage.PureStorage`1"/> of given <paramref name="pointer"/> without allocation and free
+            </summary>
+            <param name="pointer">The <see cref="T:Althea.IPointer"/> to create on</param>
+            <remarks>Be careful when invoking this constructor since it may cause memory leak</remarks>
+        </member>
+        <member name="M:Althea.Storage.PureStorage`1.Dispose(System.Boolean)">
+            <summary>
+            The function that actually dispose this storage, override <see cref="M:Althea.ActualStorage`1.Dispose(System.Boolean)"/>
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
         </member>
         <member name="P:Althea.Storage.PureStorage`1.Count">
             <summary>

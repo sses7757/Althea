@@ -171,7 +171,7 @@ namespace Althea.Helpers
 				LogSettings = new LogSettings(false);
 				PrintSettings = new PrintSettings(false);
 				ImplementationSettings = new ImplementationSettings(false);
-				StackAllocLimit = 1024;
+				StackAllocLimit = 32768; // 32 KiB
 			}
 
 			[JsonConstructor]
@@ -371,7 +371,7 @@ namespace Althea.Helpers
 				Storage.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Storage);
 				LinearAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraDense);
 				LinearAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraSparse);
-				TensorAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraDense);
+				TensorAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraDense);
 				TensorAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraSparse);
 				Statistics.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Statistics);
 				Solver.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Solver);

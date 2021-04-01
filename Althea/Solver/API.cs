@@ -92,7 +92,7 @@ namespace Althea.Solver
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.NewVectorFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
+		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		public static (double eigenvalue, TVec eigenvector) NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info)
@@ -115,16 +115,17 @@ namespace Althea.Solver
 		}
 
 		/// <summary>
-		/// Perform a restart Krylov subspace algorithm (typically the Lanczos algorithm) to solve a hermitian matrix's lowest several eigenvalues and eigenvectors.
+		/// Perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
 		/// </summary>
 		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
+		/// <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <returns>The number of converged eigen-pairs</returns>
 		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsComplex"/> are not used</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		public static int RestartKrylovSubspaceEigenHermitian<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info)
+		public static int RestartKrylovSubspaceEigen<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
@@ -135,7 +136,7 @@ namespace Althea.Solver
 			{
 				if (node is null)
 					break;
-				success = node.Value.RestartKrylovSubspaceEigenHermitian_(ref info, out result);
+				success = node.Value.RestartKrylovSubspaceEigen_(hermitian, ref info, out result);
 				node = node?.Next;
 			}
 			if (success && node is not null)
@@ -144,46 +145,17 @@ namespace Althea.Solver
 		}
 
 		/// <summary>
-		/// Perform a restart Krylov subspace algorithm (typically the Krylov-Schur algorithm) to solve a non-hermitian (i.e. general) matrix's several extreme eigenvalues and eigenvectors.
+		/// Perform a restart Krylov subspace algorithm (typically the MinRes or PCG or GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
 		/// </summary>
 		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
-		/// <returns>The number of converged eigen-pairs</returns>
-		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.Eigenvalues"/> is not used</remarks>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		public static int RestartKrylovSubspaceEigenGeneral<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
-		{
-			int result = 0;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
-			while (!success)
-			{
-				if (node is null)
-					break;
-				success = node.Value.RestartKrylovSubspaceEigenGeneral_(ref info, out result);
-				node = node?.Next;
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-			return result;
-		}
-
-		/// <summary>
-		/// Perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian (or non-hermitian) matrix.
-		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
-		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-		/// <param name="hermitian">Whether the given matrix is hermitian or not</param>
+		/// <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <returns>The relative error of the output solution</returns>
 		/// <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output solve.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		public static double RestartKrylovSubspaceLinearSolve<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info)
+		public static double RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
@@ -194,7 +166,7 @@ namespace Althea.Solver
 			{
 				if (node is null)
 					break;
-				success = node.Value.RestartKrylovSubspaceLinearSolve_(hermitian, ref info, out result);
+				success = node.Value.RestartKrylovSubspaceLinearSolve_(hermitianOrDefinite, ref info, out result);
 				node = node?.Next;
 			}
 			if (success && node is not null)
@@ -242,50 +214,37 @@ namespace Althea.Solver
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="eigenvalue">The output approximate lowest eigenvalue</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.NewVectorFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
+		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		protected abstract bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos algorithm) to solve a hermitian matrix's lowest several eigenvalues and eigenvectors.
+		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
 		/// </summary>
 		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
+		/// <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="converged">Output the number of converged eigen-pairs</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsComplex"/> are not used</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool RestartKrylovSubspaceEigenHermitian_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
+		protected abstract bool RestartKrylovSubspaceEigen_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Krylov-Schur algorithm) to solve a non-hermitian (i.e. general) matrix's several extreme eigenvalues and eigenvectors.
+		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
 		/// </summary>
 		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
-		/// <param name="converged">Output the number of converged eigen-pairs</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.Eigenvalues"/> is not used</remarks>\
-		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool RestartKrylovSubspaceEigenGeneral_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian (or non-hermitian) matrix.
-		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
-		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-		/// <param name="hermitian">Whether the given matrix is hermitian or not</param>
+		/// <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="relativeError">Output the relative error of the output</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output solve.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError)
+		protected abstract bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged;
 		#endregion

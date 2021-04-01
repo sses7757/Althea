@@ -2,6 +2,7 @@
 
 using Althea.Solver;
 using Althea.NativeTypes;
+using Althea.Helpers;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -25,6 +26,11 @@ namespace Althea.Backend.CSharp.Solver
 		{
 			// do nothing
 		}
+
+		/// <summary>
+		/// Get or set the interval between two <see cref="Log.Write(string, string?, LogLevel)"/> with <see cref="LogLevel.Information"/> when using Krylov subspace algorithms
+		/// </summary>
+		public TimeSpan InfoLogInterval { get; set; } = TimeSpan.FromSeconds(15);
 		#endregion
 
 		#region Kronecker
@@ -82,18 +88,46 @@ namespace Althea.Backend.CSharp.Solver
 		}
 		#endregion
 
-		#region eigen hermitian
-		protected override bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue) => throw new NotImplementedException();
+		#region eigen
+		protected override bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue)
+		{
+			var (val, vec) = LanczosBasedSolver.NaiveLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
+			info.OtherVector = vec;
+			eigenvalue = val;
+			return true;
+		}
 
-		protected override bool RestartKrylovSubspaceEigenHermitian_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged) => throw new NotImplementedException();
-		#endregion
-
-		#region eigen non-hermitian
-		protected override bool RestartKrylovSubspaceEigenGeneral_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged) => throw new NotImplementedException();
+		protected override bool RestartKrylovSubspaceEigen_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
+		{
+			if (hermitian)
+			{
+				converged = LanczosBasedSolver.RestartLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, info.Eigenvalues, info.EigenvectorsReal, this.InfoLogInterval);
+			}
+			else
+			{
+				
+			}
+			return true;
+		}
 		#endregion
 
 		#region linear solve
-		protected override bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError) => throw new NotImplementedException();
+		protected override bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError)
+		{
+			if (!hermitianOrDefinite.HasValue)
+			{
+				
+			}
+			else if (hermitianOrDefinite.Value)
+			{
+				// TODO: write MinRes
+			}
+			else
+			{
+				// TODO: write PCG
+			}
+			return true;
+		}
 		#endregion
 	}
 }
