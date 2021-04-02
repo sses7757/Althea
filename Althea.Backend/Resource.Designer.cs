@@ -88,7 +88,7 @@ namespace Althea.Backend {
         }
         
         /// <summary>
-        ///   查找类似 Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {0}. 的本地化字符串。
+        ///   查找类似 Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {1}. 的本地化字符串。
         /// </summary>
         internal static string NaiveLanczosFinish {
             get {
@@ -97,11 +97,29 @@ namespace Althea.Backend {
         }
         
         /// <summary>
-        ///   查找类似 Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iteration = {1}. 的本地化字符串。
+        ///   查找类似 Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
         /// </summary>
         internal static string NaiveLanczosStart {
             get {
                 return ResourceManager.GetString("NaiveLanczosStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Preconditioned Conjugate Gradient algorithm main calculation finishes, minimum residual = {0}. 的本地化字符串。
+        /// </summary>
+        internal static string PCGFinish {
+            get {
+                return ResourceManager.GetString("PCGFinish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Preconditioned Conjugate Gradient algorithm statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
+        /// </summary>
+        internal static string PCGStart {
+            get {
+                return ResourceManager.GetString("PCGStart", resourceCulture);
             }
         }
         

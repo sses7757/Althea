@@ -92,7 +92,7 @@ namespace Althea.Solver
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
+		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		public static (double eigenvalue, TVec eigenvector) NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info)
@@ -100,18 +100,21 @@ namespace Althea.Solver
 			where T : unmanaged
 		{
 			double eigenvalue = default;
+			TVec? eigenvector = null;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
 			while (!success)
 			{
 				if (node is null)
 					break;
-				success = node.Value.NaiveKrylovSubspaceEigenHermitain_(ref info, out eigenvalue);
+				success = node.Value.NaiveKrylovSubspaceEigenHermitain_(ref info, out eigenvalue, out eigenvector);
 				node = node?.Next;
 			}
-			if (success && node is not null)
+			if (success && node is not null && eigenvector is not null)
 				SetImplementation(RecentAPIs, node.Value);
-			return (eigenvalue, info.OtherVector ?? new());
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+			return (eigenvalue, eigenvector);
 		}
 
 		/// <summary>
@@ -141,6 +144,8 @@ namespace Althea.Solver
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			return result;
 		}
 
@@ -151,27 +156,30 @@ namespace Althea.Solver
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
-		/// <returns>The relative error of the output solution</returns>
-		/// <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output solve.</remarks>
+		/// <returns>The relative error of the output solution and the approximate solution as a <typeparamref name="TVec"/></returns>
+		/// <remarks><paramref name="info"/>'s eigen related fields are all not used.</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		public static double RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info)
+		public static (double relativeError, TVec solve) RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
-			double result = 0;
+			double error = 0;
+			TVec? solve = null;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
 			while (!success)
 			{
 				if (node is null)
 					break;
-				success = node.Value.RestartKrylovSubspaceLinearSolve_(hermitianOrDefinite, ref info, out result);
+				success = node.Value.RestartKrylovSubspaceLinearSolve_(hermitianOrDefinite, ref info, out error, out solve);
 				node = node?.Next;
 			}
-			if (success && node is not null)
+			if (success && node is not null && solve is not null)
 				SetImplementation(RecentAPIs, node.Value);
-			return result;
+			else
+				throw new InvalidOperationException(Resources.Backend.NotAvailable);
+			return (error, solve);
 		}
 		#endregion
 
@@ -213,10 +221,11 @@ namespace Althea.Solver
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="eigenvalue">The output approximate lowest eigenvalue</param>
+		/// <param name="eigenvector">The output approximate lowest eigenvector</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged;
+		protected abstract bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
@@ -241,10 +250,11 @@ namespace Althea.Solver
 		/// <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="relativeError">Output the relative error of the output</param>
+		/// <param name="solve">Output the solve vector as a <typeparamref name="TVec"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output solve.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError)
+		protected abstract bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged;
 		#endregion

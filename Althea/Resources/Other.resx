@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AbnormalOccured" xml:space="preserve">
+    <value>The float 'NaN' or '±Infinity' occured during the calculations.</value>
+  </data>
   <data name="CacheSizeRatioSmall" xml:space="preserve">
     <value>Some of the ratios between the sizes of caches are too small to have proper performance.</value>
   </data>
@@ -152,9 +155,6 @@
   </data>
   <data name="MatrixSquare" xml:space="preserve">
     <value>The diagonal accessor of this matrix cannot be obtained since the it is not a square matrix.</value>
-  </data>
-  <data name="NanOccured" xml:space="preserve">
-    <value>The float 'NaN' occured during the calculations.</value>
   </data>
   <data name="PerfectSquare" xml:space="preserve">
     <value>The size of the target matrix cannot be obtained since the length of array is not a perfect square.</value>

@@ -61,6 +61,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The float &apos;NaN&apos; or &apos;±Infinity&apos; occured during the calculations. 的本地化字符串。
+        /// </summary>
+        public static string AbnormalOccured {
+            get {
+                return ResourceManager.GetString("AbnormalOccured", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Some of the ratios between the sizes of caches are too small to have proper performance. 的本地化字符串。
         /// </summary>
         public static string CacheSizeRatioSmall {
@@ -165,15 +174,6 @@ namespace Althea.Resources {
         public static string MatrixSquare {
             get {
                 return ResourceManager.GetString("MatrixSquare", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The float &apos;NaN&apos; occured during the calculations. 的本地化字符串。
-        /// </summary>
-        public static string NanOccured {
-            get {
-                return ResourceManager.GetString("NanOccured", resourceCulture);
             }
         }
         

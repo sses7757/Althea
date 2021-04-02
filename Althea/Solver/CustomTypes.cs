@@ -441,13 +441,18 @@ namespace Althea.Solver
 	/// </summary>
 	/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-	public ref struct KrylovSubspaceSolveInfo<TVec, T> where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
+	public readonly ref struct KrylovSubspaceSolveInfo<TVec, T> where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
 	{
 		#region fields
 		/// <summary>
 		/// The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/>
 		/// </summary>
 		public readonly Func<TVec, TVec> MatrixFunction;
+
+		/// <summary>
+		/// The function that represents the hermitian positive definite preconditioner's matrix-solve function which returns the result of its inverse multiplying the input vector <typeparamref name="TVec"/>
+		/// </summary>
+		public readonly Func<TVec, TVec>? PreconditionMatrixFunction;
 
 		/// <summary>
 		/// The initial vector as a <typeparamref name="TVec"/>
@@ -457,7 +462,7 @@ namespace Althea.Solver
 		/// <summary>
 		/// The other vector used as a <typeparamref name="TVec"/>
 		/// </summary>
-		public TVec? OtherVector;
+		public readonly TVec? OtherVector;
 
 		/// <summary>
 		/// The tolerance of the convergence, default 0 means <c>machine precision of <typeparamref name="T"/> * 5</c>
@@ -472,22 +477,22 @@ namespace Althea.Solver
 		/// <summary>
 		/// The output converged eigenvalues of <see cref="double"/> if the matrix is hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
 		/// </summary>
-		public Span<double> Eigenvalues;
+		public readonly Span<double> Eigenvalues;
 
 		/// <summary>
 		/// The output converged eigenvalues of <see cref="ComplexDouble"/> if the matrix is not hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
 		/// </summary>
-		public Span<ComplexDouble> EigenvaluesComplex;
+		public readonly Span<ComplexDouble> EigenvaluesComplex;
 
 		/// <summary>
 		/// The output converged eigenvectors' real parts, sorted with <see cref="EigenvaluesComplex"/>
 		/// </summary>
-		public Span<TVec> EigenvectorsReal;
+		public readonly Span<TVec> EigenvectorsReal;
 
 		/// <summary>
 		/// The output converged eigenvectors' complex parts, sorted with <see cref="EigenvaluesComplex"/>. Empty if the matrix is hermitian.
 		/// </summary>
-		public Span<TVec> EigenvectorsComplex;
+		public readonly Span<TVec> EigenvectorsComplex;
 
 		/// <summary>
 		/// Only the top <see cref="NumberEigenvaluesDesired"/> eigen-pairs of <see cref="WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
@@ -548,6 +553,7 @@ namespace Althea.Solver
 				throw new ArgumentNullException(nameof(initial));
 
 			this.MatrixFunction = matrixFunction;
+			this.PreconditionMatrixFunction = null;
 			this.InitialVector = initial;
 			this.OtherVector = null;
 			this.NumberEigenvaluesDesired = 1;
@@ -601,6 +607,7 @@ namespace Althea.Solver
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputCompEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
+			this.PreconditionMatrixFunction = null;
 			this.InitialVector = initial;
 			this.OtherVector = null;
 			this.NumberEigenvaluesDesired = nEig;
@@ -650,6 +657,7 @@ namespace Althea.Solver
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
+			this.PreconditionMatrixFunction = null;
 			this.InitialVector = initial;
 			this.OtherVector = null;
 			this.NumberEigenvaluesDesired = nEig;
@@ -669,12 +677,14 @@ namespace Althea.Solver
 		}
 
 		/// <summary>
-		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given (non-)hermitian matrix solve problem
+		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given (non-)hermitian matrix solve problem.<br/>
+		/// The hermitian positive definite preconditioner <paramref name="M"/> can be null to represent no preconditioning.<br/>
+		/// The solver shall effectively solve the linear system <c>Hˉ¹ * A * (H')ˉ¹ * y == Hˉ¹ * b</c> for <c>y</c> where <c>y = H' * <paramref name="rightSide"/></c> and <c>M = H * H'</c>.
 		/// </summary>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec rightSide, TVec initial,
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec rightSide, TVec initial, Func<TVec, TVec>? M = null,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
 									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
 									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
@@ -693,6 +703,7 @@ namespace Althea.Solver
 				throw new ArgumentNullException(nameof(rightSide));
 
 			this.MatrixFunction = matrixFunction;
+			this.PreconditionMatrixFunction = M;
 			this.InitialVector = initial;
 			this.OtherVector = rightSide;
 			this.NumberEigenvaluesDesired = 1;
@@ -716,7 +727,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, TVec? other, KrylovSubspaceSolveInfo<TVec, T> old)
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, Func<TVec, TVec>? M, TVec initial, TVec? other, ref KrylovSubspaceSolveInfo<TVec, T> old)
 		{
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));
@@ -724,6 +735,7 @@ namespace Althea.Solver
 				throw new ArgumentNullException(nameof(initial));
 
 			this.MatrixFunction = matrixFunction;
+			this.PreconditionMatrixFunction = M ?? old.PreconditionMatrixFunction;
 			this.InitialVector = initial;
 			this.OtherVector = other;
 			this.NumberEigenvaluesDesired = old.NumberEigenvaluesDesired;

@@ -31,6 +31,11 @@ namespace Althea.Backend.CSharp.Solver
 		/// Get or set the interval between two <see cref="Log.Write(string, string?, LogLevel)"/> with <see cref="LogLevel.Information"/> when using Krylov subspace algorithms
 		/// </summary>
 		public TimeSpan InfoLogInterval { get; set; } = TimeSpan.FromSeconds(15);
+
+		/// <summary>
+		/// Get or set the maximum number of stagnation steps allowed for Krylov subspace linear system solvers.
+		/// </summary>
+		public int MaxStagnationSteps { get; set; } = 3;
 		#endregion
 
 		#region Kronecker
@@ -89,11 +94,9 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region eigen
-		protected override bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue)
+		protected override bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector)
 		{
-			var (val, vec) = LanczosBasedSolver.NaiveLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
-			info.OtherVector = vec;
-			eigenvalue = val;
+			(eigenvalue, eigenvector) = LanczosBasedSolver.NaiveLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
 			return true;
 		}
 
@@ -112,8 +115,10 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region linear solve
-		protected override bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError)
+		protected override bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve)
 		{
+			if (info.OtherVector is null)
+				throw new ArgumentNullException(nameof(info), nameof(info.OtherVector));
 			if (!hermitianOrDefinite.HasValue)
 			{
 				
@@ -124,7 +129,7 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			else
 			{
-				// TODO: write PCG
+				solve = LanczosBasedSolver.ConjugateGradient<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps, out relativeError);
 			}
 			return true;
 		}

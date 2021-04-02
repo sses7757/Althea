@@ -127,10 +127,16 @@
     <value>Restarting Lanczos algorithm found that the {0} eigen-pair converges.</value>
   </data>
   <data name="NaiveLanczosFinish" xml:space="preserve">
-    <value>Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {0}.</value>
+    <value>Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {1}.</value>
   </data>
   <data name="NaiveLanczosStart" xml:space="preserve">
-    <value>Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iteration = {1}.</value>
+    <value>Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iterations = {1}.</value>
+  </data>
+  <data name="PCGFinish" xml:space="preserve">
+    <value>Preconditioned Conjugate Gradient algorithm main calculation finishes, minimum residual = {0}.</value>
+  </data>
+  <data name="PCGStart" xml:space="preserve">
+    <value>Preconditioned Conjugate Gradient algorithm statrs with matrix size = {0} and maximum number of iterations = {1}.</value>
   </data>
   <data name="RestartLanczosConverge" xml:space="preserve">
     <value>Restarting Lanczos algorithm converged after {0} restarts.</value>
