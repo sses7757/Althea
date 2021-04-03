@@ -1,5 +1,5 @@
 # Althea
-a linear **A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtendable **A**PIs
+A Linear **A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtendable **A**PIs
 
 It is written in C# (>= 9.0) and mainly focuses on general purposed scientific computations. It is designed to fulfill the high performance, user-friendliness as well as high extendibility at the same time.
 
@@ -13,7 +13,7 @@ It is written in C# (>= 9.0) and mainly focuses on general purposed scientific c
   - `Althea` -- basic definitions such as the abstract runtime API class to be inherited by all APIs in all modules and the abstract storage structures and classes used across the whole library are defined in the base namespce `Althea`
   - `Althea.Storage` -- native storage related structures and classes which provide a unified and easy-to-use interface for accessing and manipulating memory blocks and local/remote files on different devices
   - `Althea.NativeTypes` -- interfaces, implementations and helper methods for native types used to communicate with interfaces of heavy computations which also provides support for possible future real and complex types 
-  - `Althea.Arrays` -- interfaces for vectors, matrices and tensors and their concrete classes
+  - `Althea.Arrays` -- interfaces of vectors, matrices and tensors and their abstracts classes
     - `Vectors`
     - `Matrices`
     - `Tensors`
@@ -27,12 +27,13 @@ It is written in C# (>= 9.0) and mainly focuses on general purposed scientific c
     - `RandomNumberGenerators`
     - `Distributions`
     - T.B.D.
-  - `Althea.Solves` -- interfaces and several implementations for general and interface-based equation and eigen solvers and optimizers, also has unified accessing points
+  - `Althea.Solves` -- interfaces for general and interface-based equation and eigen solvers and optimizers which also has unified accessing points
     - `EquationSolvers`
-    - `Optimizers`
     - `EigenSolvers`
+    - `Optimizers`
   - `Althea.Helpers` -- classes and methods to improve the accessibility of other modules, also has interfaces for device information and their unified accessing points
   - `Althea.Linq` -- `System.Linq` like extend methods for `IReadOnlyList<T>` and `Span<T>` of C#
+  - `Althea.Backend.Arrays` -- default implementations of abstracts classes defined in `Althea.Arrays`
   - `Althea.Backend.CSharp` -- default implementations of storage, linear algebra operations and random number generators using only C# language to make sure the basic functionalities of this library works in case both CUDA and MKL and other custom backends are not available
   - `Althea.Backend.Cuda` -- default implementations of storage, linear and tensor algebra operations and random number generators using CUDA, cuTENSOR (or [CUTT](https://github.com/ap-hynninen/cutt) when cuTENSOR is not available) and custom functions written in CUDA
   - `Althea.Backend.Mkl` -- default implementations of storage, linear and tensor algebra operations and random number generators using MKL, [HPTT](https://github.com/springer13/hptt) and custom functions written in OpenMP
@@ -46,15 +47,12 @@ It is written in C# (>= 9.0) and mainly focuses on general purposed scientific c
   - **All** modules and aspects are designed to support any possible extensions in the future and all the default implementations are written in the same regulations
   - **Each** module and aspect can be changed to custom ones **individually** during **runtime**
 - High Performance (with high-performance implementations such as the default ones)
-  - The unified accessing points are fully cached using C# delegates so that there will be no substantial overhead
+  - The pre-defined unified accessing points are simple so that there will be no substantial overhead. And the dynamic accessing points which may be defined by users afterwards are cached by the dynamic system of DotNet.
 - Thread and Memory Safe
+- Common Language Specification (CLS) compliant (see [CLSCompliantAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.clscompliantattribute?view=net-5.0))
 
 ## License
-This library follows the GNU GPL v3 license
-
-*The **CUTT** follows MIT license. But this library only needs its compilation result.*
-
-*The **HPTT** follows GNU license But this library only needs its compilation result.*
+This library follows the GNU GPL v3 (TBD) license
 
 ## How To Use
 ### Introduction
