@@ -70,6 +70,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 The (complex) number {0} is not close enough to a normal real number. 的本地化字符串。
+        /// </summary>
+        internal static string GenericNotNormalReal {
+            get {
+                return ResourceManager.GetString("GenericNotNormalReal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
         /// </summary>
         internal static string IterationAndTimeInfo {
@@ -102,6 +111,15 @@ namespace Althea.Backend {
         internal static string NaiveLanczosStart {
             get {
                 return ResourceManager.GetString("NaiveLanczosStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The given matrix is not a hermitian-positive-definite matrix. 的本地化字符串。
+        /// </summary>
+        internal static string NotPositiveDefinite {
+            get {
+                return ResourceManager.GetString("NotPositiveDefinite", resourceCulture);
             }
         }
         

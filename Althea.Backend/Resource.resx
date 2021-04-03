@@ -120,6 +120,9 @@
   <data name="CannotCreateDelegate" xml:space="preserve">
     <value>Cannot create the delegate of {0}.</value>
   </data>
+  <data name="GenericNotNormalReal" xml:space="preserve">
+    <value>The (complex) number {0} is not close enough to a normal real number.</value>
+  </data>
   <data name="IterationAndTimeInfo" xml:space="preserve">
     <value>Krylov subspace algorithm: now at iteration {0}, {1} passed since last output.</value>
   </data>
@@ -131,6 +134,9 @@
   </data>
   <data name="NaiveLanczosStart" xml:space="preserve">
     <value>Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iterations = {1}.</value>
+  </data>
+  <data name="NotPositiveDefinite" xml:space="preserve">
+    <value>The given matrix is not a hermitian-positive-definite matrix.</value>
   </data>
   <data name="PCGFinish" xml:space="preserve">
     <value>Preconditioned Conjugate Gradient algorithm main calculation finishes, minimum residual = {0}.</value>

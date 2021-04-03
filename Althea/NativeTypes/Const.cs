@@ -12,14 +12,14 @@ namespace Althea.NativeTypes
 	#region converter class
 	internal static class ConstConvert<T, U> where T : unmanaged where U : unmanaged
 	{
-		private static Converter<T1, T2>? InternalConvert<T1, T2>() where T1 : notnull where T2 : notnull, new()
+		private static (Converter<T, U>, Func<T, U>)? InternalConvert()
 		{
-			if (!typeof(T1).IsPrimitive || !typeof(T2).IsPrimitive)
+			if (!typeof(T).IsPrimitive || !typeof(U).IsPrimitive)
 				return null;
-			DynamicMethod method = new(nameof(InternalConvert), typeof(T2), new[] { typeof(T1) });
+			DynamicMethod method = new(nameof(InternalConvert), typeof(U), new[] { typeof(T) });
 			var IL = method.GetILGenerator();
 			IL.Emit(OpCodes.Ldarg_0);
-			switch (Type.GetTypeCode(typeof(T2)))
+			switch (Type.GetTypeCode(typeof(U)))
 			{
 				case TypeCode.SByte:
 					IL.Emit(OpCodes.Conv_I1);
@@ -56,14 +56,19 @@ namespace Althea.NativeTypes
 					return null;
 			}
 			IL.Emit(OpCodes.Ret);
-			return method.CreateDelegate<Converter<T1, T2>>();
+			return (method.CreateDelegate<Converter<T, U>>(), method.CreateDelegate<Func<T, U>>());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Converter<T, U> GetReflectionConverter()
+		private static void GetReflectionConverter(out Converter<T, U> converter, out Func<T, U> func)
 		{
 			if (typeof(T) == typeof(U))
-				return static v => v is U vv ? vv : new();
+			{
+				static unsafe U Convert(T v) => *(U*)&v;
+				converter = Convert;
+				func = Convert;
+				return;
+			}
 			static bool predicator(MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
 														m.ReturnType == typeof(U) && m.GetParameters().Length == 1 &&
 														m.GetParameters()[0].ParameterType == typeof(T);
@@ -76,16 +81,27 @@ namespace Althea.NativeTypes
 							.Where(predicator)
 							.FirstOrDefault();
 			if (convert is null)
-				return InternalConvert<T, U>() ?? (static v => (U)(dynamic)v);
+			{
+				var res = InternalConvert();
+				if (res.HasValue)
+					(converter, func) = res.Value;
+				else
+					(converter, func) = (static v => (U)(dynamic)v, static v => (U)(dynamic)v);
+			}
 			else
-				return convert.CreateDelegate<Converter<T, U>>();
+			{
+				converter = convert.CreateDelegate<Converter<T, U>>();
+				func = convert.CreateDelegate<Func<T, U>>();
+			}
 		}
 
 		internal static readonly Converter<T, U> ConvertDelegate;
 
+		internal static readonly Func<T, U> ConvertDelegate_;
+
 		static ConstConvert()
 		{
-			ConvertDelegate = GetReflectionConverter();
+			GetReflectionConverter(out ConvertDelegate, out ConvertDelegate_);
 		}
 	}
 	#endregion
@@ -139,6 +155,11 @@ namespace Althea.NativeTypes
 		/// Get the machine precision of <typeparamref name="T"/>
 		/// </summary>
 		public static readonly double MachinePrecision = NativeTypeExtension.GetMachinePrecision<T>();
+
+		/// <summary>
+		/// Get the value of <see cref="MachinePrecision"/>^(1/2)
+		/// </summary>
+		public static readonly double MachinePrecisionHalf = Math.Sqrt(MachinePrecision);
 		#endregion
 
 		#region delegates
@@ -157,6 +178,9 @@ namespace Althea.NativeTypes
 		internal static readonly Converter<double, T> FromDoubleDelegate;
 		internal static readonly Converter<T, long> ToLongDelegate;
 		internal static readonly Converter<long, T> FromLongDelegate;
+
+		internal static readonly Converter<T, double> RealPartDelegate;
+		internal static readonly Converter<T, double> ImagPartDelegate;
 
 		#region private reflection
 		private enum BinaryOp
@@ -249,7 +273,7 @@ namespace Althea.NativeTypes
 				static bool predicatorNonStatic(MethodInfo m) => m.Name == "Pow" || m.Name == "Power" && m.ReturnType == typeof(T) &&
 																 m.GetParameters().Length == 1 &&
 																 m.GetParameters()[0].ParameterType == typeof(T);
-				static bool predicatorStatic(MethodInfo m) => m.Name == $"Pow" || m.Name == "Power" && m.ReturnType == typeof(T) &&
+				static bool predicatorStatic(MethodInfo m) => m.Name == "Pow" || m.Name == "Power" && m.ReturnType == typeof(T) &&
 															  m.GetParameters().Length == 2 &&
 															  m.GetParameters()[0].ParameterType == typeof(T) &&
 															  m.GetParameters()[1].ParameterType == typeof(T);
@@ -265,7 +289,7 @@ namespace Althea.NativeTypes
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Ldarg_1); // parameter
-				IL.Emit(OpCodes.Callvirt, func);
+				IL.Emit(OpCodes.Call, func);
 				IL.Emit(OpCodes.Ret);
 				return method.CreateDelegate<Func<T, T, T>>();
 			}
@@ -275,7 +299,7 @@ namespace Althea.NativeTypes
 		{
 			if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(T) }, THIS, true);
+				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(double) }, THIS, true);
 				var IL = method.GetILGenerator();
 				if (typeof(T) == typeof(double))
 				{
@@ -313,7 +337,7 @@ namespace Althea.NativeTypes
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
 				IL.Emit(OpCodes.Ldarg_1); // parameter
-				IL.Emit(OpCodes.Callvirt, func);
+				IL.Emit(OpCodes.Call, func);
 				IL.Emit(OpCodes.Ret);
 				return method.CreateDelegate<Func<T, double, T>>();
 			}
@@ -360,11 +384,10 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				static bool predicatorNonStatic(MethodInfo m) => m.Name == "Sqrt" || m.Name == "SquareRoot" && m.ReturnType == typeof(T) &&
+				static bool predicatorNonStatic(MethodInfo m) => (m.Name == "Sqrt" || m.Name == "SquareRoot") && m.ReturnType == typeof(T) &&
 																 m.GetParameters().Length == 0;
-				static bool predicatorStatic(MethodInfo m) => m.Name == $"Sqrt" || m.Name == "SquareRoot" && m.ReturnType == typeof(T) &&
-															  m.GetParameters().Length == 1 &&
-															  m.GetParameters()[0].ParameterType == typeof(T);
+				static bool predicatorStatic(MethodInfo m) => (m.Name == $"Sqrt" || m.Name == "SquareRoot") && m.ReturnType == typeof(T) &&
+																m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(T);
 
 				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorNonStatic).FirstOrDefault();
 				func ??= typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(predicatorStatic).FirstOrDefault();
@@ -376,7 +399,7 @@ namespace Althea.NativeTypes
 				DynamicMethod method = new("Sqrt", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
-				IL.Emit(OpCodes.Callvirt, func);
+				IL.Emit(OpCodes.Call, func);
 				IL.Emit(OpCodes.Ret);
 				return method.CreateDelegate<Func<T, T>>();
 			}
@@ -390,9 +413,9 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				static bool predicatorNonStatic(MethodInfo m) => m.Name == "Conj" || m.Name == "Conjugate" && m.ReturnType == typeof(T) &&
+				static bool predicatorNonStatic(MethodInfo m) => (m.Name == "Conj" || m.Name == "Conjugate") && m.ReturnType == typeof(T) &&
 																 m.GetParameters().Length == 0;
-				static bool predicatorStatic(MethodInfo m) => m.Name == $"Conj" || m.Name == "Conjugate" && m.ReturnType == typeof(T) &&
+				static bool predicatorStatic(MethodInfo m) => (m.Name == $"Conj" || m.Name == "Conjugate") && m.ReturnType == typeof(T) &&
 															  m.GetParameters().Length == 1 &&
 															  m.GetParameters()[0].ParameterType == typeof(T);
 
@@ -406,9 +429,35 @@ namespace Althea.NativeTypes
 				DynamicMethod method = new("Conjugate", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0); // the object to call
-				IL.Emit(OpCodes.Callvirt, func);
+				IL.Emit(OpCodes.Call, func);
 				IL.Emit(OpCodes.Ret);
 				return method.CreateDelegate<Func<T, T>>();
+			}
+		}
+
+		private static void ILToDouble(ILGenerator IL, Type realType)
+		{
+			if (realType == typeof(double))
+			{
+				// do nothing
+			}
+			else if (realType.IsPrimitive)
+			{
+				IL.Emit(OpCodes.Conv_R8);
+			}
+			else
+			{
+				var field = typeof(ConstConvert<,>).MakeGenericType(realType, typeof(double)).GetField(nameof(ConstConvert<T, T>.ConvertDelegate), BindingFlags.Static | BindingFlags.NonPublic);
+				if (field is null)
+					throw new FieldAccessException();
+				IL.DeclareLocal(realType);
+				IL.Emit(OpCodes.Stloc_0); // pop the result to a local variable
+				IL.Emit(OpCodes.Ldsfld, field); // load the converter to be invoked
+				IL.Emit(OpCodes.Ldloc_0); // load the result from local variable
+				var invoke = typeof(Converter<,>).MakeGenericType(realType, typeof(double)).GetMethod(nameof(Converter<T, T>.Invoke));
+				if (invoke is null)
+					throw new FieldAccessException();
+				IL.Emit(OpCodes.Callvirt, invoke); // call Delegate.Invoke to convert to double
 			}
 		}
 
@@ -416,13 +465,13 @@ namespace Althea.NativeTypes
 		{
 			if (DataTypeClass == DataTypeClassification.UnsignedInteger)
 			{
-				result1 = static v => ConstConvert<T, double>.ConvertDelegate.Invoke(v);
+				result1 = ConstConvert<T, double>.ConvertDelegate_;
 				result2 = ConstConvert<T, double>.ConvertDelegate;
 				return;
 			}
 			else if (typeof(T).IsPrimitive)
 			{
-				DynamicMethod method = new("Absolute", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
+				DynamicMethod method = new("Absolute", ATTR, CALL, returnType: typeof(double), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Call, typeof(Math).GetMethod(nameof(Math.Abs), new[] { typeof(T) }) ?? throw new NotSupportedException());
@@ -433,18 +482,43 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				static bool predicatorNonStatic(MethodInfo m) => m.Name == "Abs" || m.Name == "Absolute" && m.ReturnType == typeof(double) &&
-																 m.GetParameters().Length == 0;
-				static bool predicatorStatic(MethodInfo m) => m.Name == $"Abs" || m.Name == "Absolute" && m.ReturnType == typeof(double) &&
-															  m.GetParameters().Length == 1 &&
-															  m.GetParameters()[0].ParameterType == typeof(T);
+				Type realType = IsComplex ? typeof(T).GenericTypeArguments[0] : typeof(T);
+				bool predicatorNonStatic(MethodInfo m) => (m.Name == "Abs" || m.Name == "Absolute") &&
+														  (m.ReturnType == typeof(double) || m.ReturnType == realType) &&
+														   m.GetParameters().Length == 0;
+				bool predicatorStatic(MethodInfo m) => (m.Name == "Abs" || m.Name == "Absolute") &&
+													   (m.ReturnType == typeof(double) || m.ReturnType == realType) &&
+														m.GetParameters().Length == 1 &&
+														m.GetParameters()[0].ParameterType == typeof(T);
+				bool predicatorProperty(PropertyInfo m) => (m.Name == "Abs" || m.Name == "Absolute") &&
+														   (m.PropertyType == typeof(double) || m.PropertyType == realType) &&
+															m.CanRead;
+
+				DynamicMethod method = new("Absolute", ATTR, CALL, typeof(double), new[] { typeof(T) }, THIS, true);
+				var IL = method.GetILGenerator();
+				IL.Emit(OpCodes.Ldarg_0); // the object to call
 
 				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorNonStatic).FirstOrDefault();
 				func ??= typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(predicatorStatic).FirstOrDefault();
 				if (func is null)
 				{
-					result1 = static v => ((dynamic)v).Sqrt();
-					result2 = static v => ((dynamic)v).Sqrt();
+					// try property
+					var prop = typeof(T).GetProperties(BindingFlags.Instance).Where(predicatorProperty).FirstOrDefault();
+					if (prop is null)
+					{	// try dynamic
+						result1 = static v => ((dynamic)v).Abs();
+						result2 = static v => ((dynamic)v).Abs();
+						return;
+					}
+					// property get
+					var propGet = prop.GetGetMethod();
+					if (propGet is null)
+						throw new FieldAccessException();
+					IL.Emit(OpCodes.Call, propGet);
+					ILToDouble(IL, realType); // convert the result to double type
+					IL.Emit(OpCodes.Ret);
+					result1 = method.CreateDelegate<Func<T, double>>();
+					result2 = method.CreateDelegate<Converter<T, double>>();
 					return;
 				}
 				if (func.IsStatic)
@@ -453,13 +527,69 @@ namespace Althea.NativeTypes
 					result2 = func.CreateDelegate<Converter<T, double>>();
 				}
 				// object call
-				DynamicMethod method = new("Absolute", ATTR, CALL, typeof(double), new[] { typeof(T) }, THIS, true);
-				var IL = method.GetILGenerator();
-				IL.Emit(OpCodes.Ldarg_0); // the object to call
-				IL.Emit(OpCodes.Callvirt, func);
+				IL.Emit(OpCodes.Call, func);
+				ILToDouble(IL, realType);
 				IL.Emit(OpCodes.Ret);
 				result1 = method.CreateDelegate<Func<T, double>>();
 				result2 = method.CreateDelegate<Converter<T, double>>();
+			}
+		}
+
+		private static Converter<T, double> GetComplexPart(bool realPart)
+		{
+			if (!IsComplex)
+			{
+				return realPart ? ConstConvert<T, double>.ConvertDelegate : static _ => 0.0;
+			}
+			else
+			{
+				Type realType = typeof(T).GenericTypeArguments[0];
+				string name1 = realPart ? "Real" : "Imaginary", name2 = realPart ? "Real" : @"Imag", name3 = realPart ? "Re" : "Im";
+				bool predicatorMethod(MethodInfo m) => (m.Name == name1 || m.Name == name2 || m.Name == name3) &&
+														(m.ReturnType == realType || m.ReturnType == typeof(double)) &&
+														m.GetParameters().Length == 0;
+				bool predicatorProperty(PropertyInfo m) => (m.Name == name1 || m.Name == name2 || m.Name == name3) &&
+															(m.PropertyType == realType || m.PropertyType == typeof(double)) &&
+															m.CanRead;
+				bool predicatorField(FieldInfo m) => (m.Name.Equals(name1, StringComparison.OrdinalIgnoreCase) ||
+													  m.Name.Equals(name2, StringComparison.OrdinalIgnoreCase) ||
+													  m.Name.Equals(name3, StringComparison.OrdinalIgnoreCase)) &&
+													 (m.FieldType == realType || m.FieldType == typeof(double));
+
+				DynamicMethod method = new("GetPart", ATTR, CALL, typeof(double), new[] { typeof(T) }, THIS, true);
+				var IL = method.GetILGenerator();
+				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorMethod).FirstOrDefault();
+				IL.Emit(OpCodes.Ldarg_0); // the object to call
+				if (func is not null)
+				{
+					IL.Emit(OpCodes.Call, func);
+					ILToDouble(IL, realType); // convert the result to double type
+					IL.Emit(OpCodes.Ret);
+					return method.CreateDelegate<Converter<T, double>>();
+				}
+				// else
+				var prop = typeof(T).GetProperties(BindingFlags.Instance).Where(predicatorProperty).FirstOrDefault();
+				if (prop is not null)
+				{
+					var propGet = prop.GetGetMethod();
+					if (propGet is null)
+						throw new FieldAccessException();
+					IL.Emit(OpCodes.Call, propGet);
+					ILToDouble(IL, realType); // convert the result to double type
+					IL.Emit(OpCodes.Ret);
+					return method.CreateDelegate<Converter<T, double>>();
+				}
+				// else
+				var field = typeof(T).GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Where(predicatorField).FirstOrDefault();
+				if (field is not null)
+				{
+					IL.Emit(OpCodes.Ldfld, field);
+					ILToDouble(IL, realType); // convert the result to double type
+					IL.Emit(OpCodes.Ret);
+					return method.CreateDelegate<Converter<T, double>>();
+				}
+				// try dynamic
+				return realPart ? static v => ((dynamic)v).Real : static v => ((dynamic)v).Imag;
 			}
 		}
 		#endregion
@@ -486,6 +616,8 @@ namespace Althea.NativeTypes
 			SqrtDelegate = GetSqrt();
 			ConjugateDelegate = GetConjugate();
 			GetAbsolute(out AbsoluteDelegate, out AbsoluteDelegate_);
+			RealPartDelegate = GetComplexPart(realPart: true);
+			ImagPartDelegate = GetComplexPart(realPart: false);
 		}
 		#endregion
 	}
@@ -748,6 +880,24 @@ namespace Althea.NativeTypes
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
 			return Const<T>.FromLongDelegate.Invoke(a);
 		}
+
+		/// <summary>
+		/// Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="a">The number to get real part</param>
+		/// <returns>The real part as a <see cref="double"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static double GenericRealPart<T>(this T a) where T : unmanaged => Const<T>.RealPartDelegate.Invoke(a);
+
+		/// <summary>
+		/// Get the imaginary part (or 0 if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="a">The number to get imaginary part</param>
+		/// <returns>The imaginary part as a <see cref="double"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static double GenericImagPart<T>(this T a) where T : unmanaged => Const<T>.ImagPartDelegate.Invoke(a);
 		#endregion
 	}
 }

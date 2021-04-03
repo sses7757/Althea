@@ -22,6 +22,46 @@ namespace Althea.Backend.CSharp.Solver
 {
 	internal static class Common
 	{
+		#region from T to double
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool ToDoubleCheck<T>(this T value, out double d) where T : unmanaged
+		{
+			if (Const<T>.IsComplex)
+			{
+				d = value.GenericRealPart();
+				double im = value.GenericImagPart();
+				// check whether the imaginary is small enough
+				return Math.Abs(im / d) <= Const<T>.MachinePrecisionHalf;
+			}
+			else
+			{
+				d = value.ToDouble();
+				return double.IsNormal(d);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static double ToDoubleCheck<T>(this T value) where T : unmanaged
+		{
+			if (Const<T>.IsComplex)
+			{
+				double re = value.GenericRealPart();
+				double im = value.GenericImagPart();
+				// check whether the imaginary is small enough (the absolute value is not affected by it)
+				if (Math.Abs(im / re) > Const<T>.MachinePrecisionHalf)
+					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
+				return re;
+			}
+			else
+			{
+				double d = value.ToDouble();
+				if (!double.IsNormal(d))
+					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
+				return d;
+			}
+		}
+		#endregion
+
 		#region parameters check
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static SpanList<T> ClearList<T>(this SpanList<T> list) where T : IDisposable
@@ -131,7 +171,7 @@ namespace Althea.Backend.CSharp.Solver
 			{
 				var q = qs[i];
 				var dot = q.Dot(r);
-				if (dot.ToDouble() == 0)
+				if (dot.IsZero())
 					continue;
 				weights[i] = weights[i].GenericAdd(dot);
 				r.AddBy(q, dot.GenericNegate());
@@ -153,8 +193,8 @@ namespace Althea.Backend.CSharp.Solver
 			//tex: $\vec r = A \vec q$
 			r = matrixFunction.Invoke(q0);
 			//tex:$\alpha_0 = \vec q^* \vec r$
-			var alpha = q0.Dot(r);
-			α0 = alpha.ToDouble();
+			T alpha = q0.Dot(r);
+			α0 = alpha.ToDoubleCheck();
 			//tex:$\vec r = \vec r - \alpha_0 \vec q_0$
 			r.AddBy(q0, alpha.GenericNegate());
 			//tex: $\beta_0=\|\vec r_0\|$
@@ -192,13 +232,14 @@ namespace Althea.Backend.CSharp.Solver
 					Common.RobustOrthogonalize<TVec, T>(r, info.UnconvergedEigenvectors, w);
 					for (int i = 0; i < w.Length; i++)
 					{
-						info.ResidualScalars[i] = w[i].ToDouble();
+						info.ResidualScalars[i] = w[i].ToDoubleCheck();
 					}
 				}
 			}
 			//tex:$\alpha_0 = \vec q^* \vec r$
-			var alpha = q0.Dot(r);
-			αs.Add(alpha.ToDouble());
+			T alpha = q0.Dot(r);
+			double α = alpha.ToDoubleCheck();
+			αs.Add(α);
 			//tex:$\vec r = \vec r - \alpha_0 \vec q_0$
 			r.AddBy(q0, alpha.GenericNegate());
 			//tex: $\beta_0=\|\vec r_0\|$
@@ -221,7 +262,8 @@ namespace Althea.Backend.CSharp.Solver
 			r = matrixFunction(newq);
 			// a new vector is generated here
 			//tex:$\alpha_j = \vec q^* \vec r$
-			αs.Add(newq.Dot(r).ToDouble());
+			double α = newq.Dot(r).ToDoubleCheck();
+			αs.Add(α);
 			//tex:$\vec r = \vec r - \alpha_j \vec q - \beta_{j-1} \vec v$
 			r.AddBy(newq, (-αs[^1]).FromDouble<T>());
 			r.AddBy(q, (-βs[^1]).FromDouble<T>());
@@ -913,8 +955,9 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 
-		#region preconditioned conjugate gradient
-		internal static TVec ConjugateGradient<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation, out double relativeError)
+		#region linear solve helpers
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static (double relativeError, TVec solve)? CheckLinearSolve<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out double normB, out double realTolerance)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
@@ -939,38 +982,45 @@ namespace Althea.Backend.CSharp.Solver
 			#endregion
 
 			#region shortcut
-			double normB = rightSide.Norm();
+			normB = rightSide.Norm();
+			realTolerance = tolerance * normB;
 			if (normB == 0)
 			{   // all 0 solution
 				TVec solution = rightSide.Clone();
-				relativeError = 0;
-				return solution;
+				return (0, solution);
 			}
-			double realTolerance = tolerance * normB;
+			else
+			{
+				return null;
+			}
 			#endregion
+		}
 
-			#region initialize
-			// log
-			Log.Write(string.Format(Resource.PCGStart, initial.Length, maxIter));
-			Stopwatch stopwatch = Stopwatch.StartNew();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static (double relativeError, TVec solve)? CheckLinearSolveInitial<TVec, T>(Func<TVec, TVec> matrix, TVec initial, TVec rightSide, double normB, double realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual)
+			where TVec : class, IKrylovVector<TVec, T>, new()
+			where T : unmanaged
+		{
+			#region initial vector check
+			x = initial;
 			// Ignore Spelling: \mathbf
 			//tex: $\vec r = \vec b - \mathbf A \vec x_0$
-			TVec r = matrix.Invoke(initial);
-			TVec? x = null;
-			TVec minResidualVec;
-			double minResidual;
-			T ρ = Const<T>.One;
+			r = matrix.Invoke(initial);
 			try
 			{
 				r.Scale(Const<T>.MinusOne); r.AddBy(rightSide, Const<T>.One);
-				double residual = r.Norm(); minResidual = residual;
-				if (residual <= realTolerance)
+				minResidual = r.Norm();
+				if (minResidual <= realTolerance)
 				{
-					relativeError = residual / normB;
-					return initial.Clone();
+					minResidualVec = x;
+					return (minResidual / normB, initial.Clone());
 				}
-				x = initial.Clone();
-				minResidualVec = x;
+				else
+				{
+					x = initial.Clone();
+					minResidualVec = x;
+					return null;
+				}
 			}
 			catch (Exception)
 			{
@@ -978,6 +1028,31 @@ namespace Althea.Backend.CSharp.Solver
 				x?.Dispose();
 				throw;
 			}
+			#endregion
+		}
+		#endregion
+
+		#region preconditioned conjugate gradient
+		internal static (double relativeError, TVec solve) ConjugateGradient<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
+			where TVec : class, IKrylovVector<TVec, T>, new()
+			where T : unmanaged
+		{
+			#region basic
+			var simpleSolution = CheckLinearSolve<TVec, T>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out double normB, out double realTolerance);
+			if (simpleSolution.HasValue)
+				return simpleSolution.Value;
+			#endregion
+
+			#region initialize
+			// log
+			Log.Write(string.Format(Resource.PCGStart, initial.Length, maxIter));
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			// check initial guess
+			simpleSolution = CheckLinearSolveInitial<TVec, T>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual);
+			if (simpleSolution.HasValue)
+				return simpleSolution.Value;
+			// otherwise
+			double ρ = 1;
 			TVec p = r;
 			int stagnations = 0;
 			#endregion
@@ -985,7 +1060,7 @@ namespace Althea.Backend.CSharp.Solver
 			#region main loop
 			try
 			{
-				bool success = true;
+				bool success = false;
 				for (int i = 0; i < maxIter; i++)
 				{
 					#region log output
@@ -1002,22 +1077,20 @@ namespace Althea.Backend.CSharp.Solver
 					TVec z = r;
 					if (preconditioner is not null)
 						z = preconditioner.Invoke(r);
-					T ρOld = ρ;
-					ρ = r.Dot(z);
-					if (ρ.IsZero() || !double.IsNormal(ρ.ToDouble()))
-					{   // failed due to scalar error
-						success = false;
-						break;
-					}
+					double ρOld = ρ;
+					ρ = r.Dot(z).ToDoubleCheck();
+					if (ρ <= 0)
+						throw new ArgumentException(Resource.NotPositiveDefinite, nameof(preconditioner));
 					if (i == 0)
 					{
 						p = z;
 					}
 					else
 					{
-						//tex: $\beta_i = \frac {\vec r_i \cdot \vec z_i} {\vec r_{i - 1} \cdot \vec z_{i - 1}}$
-						T β = ρ.GenericDivide(ρOld);
-						if (β.IsZero() || !double.IsNormal(β.ToDouble()))
+						// Ignore Spelling: \dfrac
+						//tex: $\beta_i = \dfrac {\vec r_i \cdot \vec z_i} {\vec r_{i - 1} \cdot \vec z_{i-1}}$
+						double β = ρ / ρOld;
+						if (β == 0)
 						{   // failed due to scalar error
 							success = false;
 							break;
@@ -1027,24 +1100,16 @@ namespace Althea.Backend.CSharp.Solver
 						p = z;
 						if (p == r)
 							p = p.Clone();
-						p.AddBy(preP, β);
+						p.AddBy(preP, β.FromDouble<T>());
 						// now, p is certainly a new vector
 					}
 					//tex: $\vec q = \mathbf A \vec p_i$
 					TVec q = matrix.Invoke(p);
-					T pDotQ = p.Dot(q);
-					if (pDotQ.IsZero() || !double.IsNormal(pDotQ.ToDouble()))
-					{   // failed due to scalar error
-						success = false;
-						break;
-					}
-					//tex: $\alpha_i = \frac {\vec r_i \cdot \vec z_i} {\vec p_i \cdot \vec q}$
-					T α = ρ.GenericDivide(pDotQ);
-					if (!double.IsNormal(α.ToDouble()))
-					{   // failed due to scalar error
-						success = false;
-						break;
-					}
+					double pDotQ = p.Dot(q).ToDoubleCheck();
+					if (pDotQ <= 0)
+						throw new ArgumentException(Resource.NotPositiveDefinite, nameof(matrix));
+					//tex: $\alpha_i = \dfrac {\vec r_i \cdot \vec z_i} {\vec p_i \cdot \vec q}$
+					double α = ρ / pDotQ;
 					#endregion
 
 					#region check for stagnation
@@ -1056,22 +1121,26 @@ namespace Althea.Backend.CSharp.Solver
 
 					#region prepare next iteration
 					//tex: $\vec x = \vec x + \alpha \vec p_i$
-					x.AddBy(p, α);
+					x.AddBy(p, α.FromDouble<T>());
 					//tex: $\vec r = \vec r - \alpha \vec q$
-					r.AddBy(q, α.GenericNegate());
+					r.AddBy(q, (-α).FromDouble<T>());
 					double normR = r.Norm();
 					#endregion
 
 					#region check for convergence
 					if (normR <= realTolerance)
-					{
+					{	// check residual vector again
 						r.Dispose();
 						r = matrix.Invoke(x);
 						r.Scale(Const<T>.MinusOne);
 						r.AddBy(rightSide, Const<T>.One);
-						success = true;
-						minResidual = r.Norm() / normB;
-						break;
+						double residual = r.Norm();
+						if (residual <= realTolerance)
+						{
+							success = true;
+							minResidual = residual;
+							break;
+						}
 					}
 					if (stagnations >= maxStagnation)
 					{	// failed due to stagnation
@@ -1082,6 +1151,8 @@ namespace Althea.Backend.CSharp.Solver
 					if (normR < minResidual)
 					{
 						minResidual = normR;
+						if (x != minResidualVec)
+							minResidualVec.Dispose();
 						minResidualVec = x.Clone();
 					}
 					#endregion
@@ -1091,7 +1162,7 @@ namespace Althea.Backend.CSharp.Solver
 				if (success)
 				{
 					(minResidualVec, x) = (x, minResidualVec);
-					relativeError = minResidual;
+					minResidual /= normB;
 				}
 				else
 				{
@@ -1102,16 +1173,16 @@ namespace Althea.Backend.CSharp.Solver
 					double normRnow = r.Norm();
 					if (normRnow <= minResidual)
 					{
-						relativeError = normRnow / normB;
+						minResidual = normRnow / normB;
 					}
 					else
 					{
-						relativeError = minResidual / normB;
+						minResidual /= normB;
 						(minResidualVec, x) = (x, minResidualVec);
 					}
 				}
 				Log.Write(string.Format(Resource.PCGFinish, minResidual));
-				return minResidualVec;
+				return (minResidual, minResidualVec);
 				#endregion
 			}
 			#region dispose
@@ -1131,6 +1202,265 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			#endregion
 			#endregion
+		}
+		#endregion
+
+
+		#region preconditioned minimal residual
+		internal static (double relativeError, TVec solve) MininmalResidual<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
+			where TVec : class, IKrylovVector<TVec, T>, new()
+			where T : unmanaged
+		{
+			#region basic
+			var simpleSolution = CheckLinearSolve<TVec, T>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out double normB, out double realTolerance);
+			if (simpleSolution.HasValue)
+				return simpleSolution.Value;
+			#endregion
+
+			#region initialize
+			// log
+			Log.Write(string.Format(Resource.PCGStart, initial.Length, maxIter));
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			// Ignore Spelling: \mathbf
+			// check initial guess
+			simpleSolution = CheckLinearSolveInitial<TVec, T>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out double minResidual);
+			if (simpleSolution.HasValue)
+				return simpleSolution.Value;
+			// otherwise
+			#endregion
+
+			TVec? v = null, vv = null, oldV = null, olderV = null, Am = null, oldAm = null, olderAm = null, m = null, oldM = null, olderM = null;
+			try
+			{
+				#region prepare the first step
+				oldV = r; v = r;
+				if (preconditioner is not null)
+					v = preconditioner.Invoke(r);
+				//tex: $\beta_1 = \vec r \cdot (\mathbf M^{-1} \vec r)$
+				double oldβ = oldV.Dot(v).ToDoubleCheck();
+				if (oldβ <= 0)
+					throw new ArgumentException(Resource.NotPositiveDefinite, nameof(preconditioner));
+				oldβ = Math.Sqrt(oldβ);
+				//tex: preserve $\prod_i{s_i}$
+				double prodSi = oldβ;
+				//tex: $\vec v' = \vec v / \beta_1$
+				vv = v.Clone(); vv.Scale((1 / oldβ).FromDouble<T>());
+				//tex: $\vec v = \mathbf A \vec v'$
+				if (v != r)
+					v.Dispose();
+				v = matrix.Invoke(vv);
+				Am = v.Clone();
+				double α = vv.Dot(v).ToDoubleCheck();
+				v.AddBy(oldV, (α / oldβ).FromDouble<T>());
+
+				#region local re-orthogonalization
+				//tex: $\vec v = \vec v - \dfrac {\vec v' \cdot \vec v} {\vec v' \cdot \vec v'} \vec v'$
+				v.AddBy(vv, vv.Dot(v).GenericDivide(vv.Dot(vv)).GenericNegate());
+				#endregion
+
+				olderV = oldV; oldV = v;
+				if (preconditioner is not null)
+					v = preconditioner.Invoke(oldV);
+				//tex: $\beta^2 = \vec v_{i-1} \cdot (\mathbf M^{-1} \vec v_i)$
+				double β = oldV.Dot(v).ToDoubleCheck();
+				if (β <= 0)
+					throw new ArgumentException(Resource.NotPositiveDefinite, nameof(preconditioner));
+				#endregion
+
+				#region first step
+				β = Math.Sqrt(β);
+				double γbar = α, ε = 0, δbar = β, γ = Math.Sqrt(γbar * γbar + β * β), δ = 0;
+				m = vv;
+				T γInv = (1 / γ).FromDouble<T>();
+				m.Scale(γInv); Am.Scale(γInv);
+				double cs = γbar / γ;
+				double Si = β / γ;
+				x.AddBy(m, (prodSi * cs).FromDouble<T>());
+				double oldProdSi = prodSi; prodSi *= Si;
+
+				double normR;
+				if (preconditioner is not null)
+				{
+					r.AddBy(Am, (-oldProdSi * cs).FromDouble<T>());
+					normR = r.Norm();
+				}
+				else
+				{
+					normR = Math.Abs(prodSi);
+				}
+				// check for convergence after first step
+				if (normR <= realTolerance)
+				{
+					minResidual = normR / normB;
+					solution = x;
+					return (minResidual, solution);
+				}
+
+				int stagnations = 0;
+				#endregion
+
+				#region main loop
+				for (int i = 1; i < maxIter; i++)
+				{
+					#region calculation
+					//tex: $\vec v' = \vec v / \beta$
+					vv = v; v.Scale((1 / β).FromDouble<T>());
+					//tex: $\vec v = \mathbf A \vec v / \beta$
+					v = matrix.Invoke(vv);
+					// change Am
+					olderAm?.Dispose();
+					olderAm = oldAm;
+					oldAm = Am;
+					Am = v;
+					// orthogonalize v (the key component of Lanczos)
+					//tex: $\vec v_i = \vec v_i - t_{i,i-1}\vec v_{i-1} - t_{i,i-2}\vec v_{i-2}$
+					v.AddBy(olderV, (-β / oldβ).FromDouble<T>());
+					α = vv.Dot(v).ToDoubleCheck();
+					v.AddBy(oldV, (-α / β).FromDouble<T>());
+					olderV?.Dispose();
+					olderV = oldV;
+					oldV = v;
+					// apply preconditioner
+					if (preconditioner is not null)
+						v = preconditioner.Invoke(oldV);
+					// change scalars
+					oldβ = β;
+					β = oldV.Dot(v).ToDoubleCheck();
+					β = Math.Sqrt(β);
+					δ = cs * δbar + Si * α;
+					// change m
+					olderM?.Dispose();
+					olderM = oldM;
+					oldM = m;
+					// Ignore Spelling: \varepsilon
+					//tex: $\vec m_i = \vec v' - \delta \vec m_{i-1} - \varepsilon \vec m_{i-2}$
+					m = vv;
+					m.AddBy(oldM, (-δ).FromDouble<T>());
+					if (ε != 0 && olderM is not null)
+						m.AddBy(olderM, (-ε).FromDouble<T>());
+					//tex: $(\vec {m_\mathbf A})_i = (\vec {m_\mathbf A})_i - \delta (\vec {m_\mathbf A})_{i-1} - \varepsilon (\vec {m_\mathbf A})_{i-2}$
+					Am.AddBy(oldAm, (-δ).FromDouble<T>());
+					if (ε != 0 && olderAm is not null)
+						Am.AddBy(olderAm, (-ε).FromDouble<T>());
+					// change other scalars
+					γbar = Si * δbar - cs * α;
+					ε = Si * β;
+					δbar = -cs * β;
+					γ = Math.Sqrt(γbar * γbar + β * β);
+					// scale m, Am, cs and Si
+					γInv = (1 / γ).FromDouble<T>();
+					m.Scale(γInv);
+					Am.Scale(γInv);
+					cs = γbar / γ;
+					Si = β / γ;
+					#endregion
+
+					#region check stagnation
+
+					#endregion
+					/*
+					% Check for stagnation of the method
+					if (snprod*cs == 0) || (abs(snprod*cs)*norm(m) < eps*norm(x))
+						% increment the number of consecutive iterates which are the same
+						stag = stag + 1;
+					else
+						stag = 0;
+					end
+					x = x + (snprod * cs) * m;
+					snprodold = snprod;
+					snprod = snprod * sn;
+					% This recurrence produces CG iterates.
+					% Enable the following statement to see xcg.
+					%xcg = x + snprod * (sn/cs) * m;
+    
+					if existM
+						r = r - snprodold*cs*Am;
+						normr = norm(r);
+					else
+						normr = abs(snprod);
+					end
+					resvec(ii+1,1) = normr;
+					if nargout >= 6
+						% It's possible that this cs value is zero (CG iterate does not exist).
+						if (cs == 0)
+							normrcg = Inf;
+						else
+							rcg = r - snprod*(sn/cs)*Am;
+							normrcg = norm(rcg);
+						end
+						resveccg(ii+2,1) = normrcg;
+					end
+    
+					% check for convergence
+					if (normr <= tolb || stag >= maxstagsteps || moresteps)
+						% double check residual norm is less than tolerance
+						r = b - iterapp('mtimes',afun,atype,afcnstr,x,varargin{:});
+						normr = norm(r);
+						resvec(ii+1,1) = normr;
+						if (normr <= tolb)
+							flag = 0;
+							iter = ii;
+							break
+						else
+							if stag >= maxstagsteps && moresteps == 0
+								stag = 0;
+							end
+							moresteps = moresteps + 1;
+							if moresteps >= maxmsteps
+								if ~warned
+									warning(message('MATLAB:minres:tooSmallTolerance'));
+								end
+								flag = 3;
+								iter = ii;
+								break;
+							end
+						end
+					end
+    
+					if (normr < normrmin)      % update minimal norm quantities
+						normrmin = normr;
+						xmin = x;
+						imin = ii;
+					end
+					*/
+				}
+				#endregion
+			}
+			#region dispose
+			catch (Exception)
+			{
+				solution?.Dispose();
+				throw;
+			}
+			finally
+			{
+				if (r != solution)
+					r?.Dispose();
+				if (x != solution)
+					x?.Dispose();
+				if (v != solution)
+					v?.Dispose();
+				if (vv != solution)
+					vv?.Dispose();
+				if (oldV != solution)
+					oldV?.Dispose();
+				if (olderV != solution)
+					olderV?.Dispose();
+				if (Am != solution)
+					Am?.Dispose();
+				if (oldAm != solution)
+					oldAm?.Dispose();
+				if (olderAm != solution)
+					olderAm?.Dispose();
+				if (m != solution)
+					m?.Dispose();
+				if (oldM != solution)
+					oldM?.Dispose();
+				if (olderM != solution)
+					olderM?.Dispose();
+			}
+			#endregion
+			
 		}
 		#endregion
 	}

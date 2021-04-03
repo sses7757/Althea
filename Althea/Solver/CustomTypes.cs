@@ -500,7 +500,7 @@ namespace Althea.Solver
 		public readonly int NumberEigenvaluesDesired;
 
 		/// <summary>
-		/// The maximum number of restarts, must be positive
+		/// The maximum number of restarts, must be positive. Or the total number of iterations if the implementation solver does not restarts.
 		/// </summary>
 		public readonly int MaxRestarts;
 

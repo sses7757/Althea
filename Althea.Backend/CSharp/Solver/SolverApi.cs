@@ -3,6 +3,7 @@
 using Althea.Solver;
 using Althea.NativeTypes;
 using Althea.Helpers;
+using System.Runtime.CompilerServices;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -36,6 +37,12 @@ namespace Althea.Backend.CSharp.Solver
 		/// Get or set the maximum number of stagnation steps allowed for Krylov subspace linear system solvers.
 		/// </summary>
 		public int MaxStagnationSteps { get; set; } = 3;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool CheckT<T>() where T : unmanaged
+		{
+			return Const<T>.IsIntegralType;
+		}
 		#endregion
 
 		#region Kronecker
@@ -96,12 +103,18 @@ namespace Althea.Backend.CSharp.Solver
 		#region eigen
 		protected override bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector)
 		{
+			(eigenvalue, eigenvector) = (0, new());
+			if (CheckT<T>())
+				return false;
 			(eigenvalue, eigenvector) = LanczosBasedSolver.NaiveLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
 			return true;
 		}
 
 		protected override bool RestartKrylovSubspaceEigen_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
 		{
+			converged = 0;
+			if (CheckT<T>())
+				return false;
 			if (hermitian)
 			{
 				converged = LanczosBasedSolver.RestartLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, info.Eigenvalues, info.EigenvectorsReal, this.InfoLogInterval);
@@ -119,17 +132,20 @@ namespace Althea.Backend.CSharp.Solver
 		{
 			if (info.OtherVector is null)
 				throw new ArgumentNullException(nameof(info), nameof(info.OtherVector));
+			(relativeError, solve) = (1, new());
+			if (CheckT<T>())
+				return false;
 			if (!hermitianOrDefinite.HasValue)
 			{
 				
 			}
 			else if (hermitianOrDefinite.Value)
 			{
-				// TODO: write MinRes
+				(relativeError, solve) = LanczosBasedSolver.MininmalResidual<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
 			}
 			else
 			{
-				solve = LanczosBasedSolver.ConjugateGradient<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps, out relativeError);
+				(relativeError, solve) = LanczosBasedSolver.ConjugateGradient<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
 			}
 			return true;
 		}
