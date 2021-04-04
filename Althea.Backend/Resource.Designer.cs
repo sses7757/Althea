@@ -88,6 +88,33 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 Krylov-Schur algorithm converged after {0} restarts. 的本地化字符串。
+        /// </summary>
+        internal static string KrylovSchurConverge {
+            get {
+                return ResourceManager.GetString("KrylovSchurConverge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Krylov-Schur algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
+        /// </summary>
+        internal static string KrylovSchurFail {
+            get {
+                return ResourceManager.GetString("KrylovSchurFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Krylov-Schur algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+        /// </summary>
+        internal static string KrylovSchurStart {
+            get {
+                return ResourceManager.GetString("KrylovSchurStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Restarting Lanczos algorithm found that the {0} eigen-pair converges. 的本地化字符串。
         /// </summary>
         internal static string LanczosConvergeOnePair {

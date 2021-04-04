@@ -126,6 +126,15 @@
   <data name="IterationAndTimeInfo" xml:space="preserve">
     <value>Krylov subspace algorithm: now at iteration {0}, {1} passed since last output.</value>
   </data>
+  <data name="KrylovSchurConverge" xml:space="preserve">
+    <value>Krylov-Schur algorithm converged after {0} restarts.</value>
+  </data>
+  <data name="KrylovSchurFail" xml:space="preserve">
+    <value>Krylov-Schur algorithm failed to converged after {0} restarts, still {1} eigen-pairs left.</value>
+  </data>
+  <data name="KrylovSchurStart" xml:space="preserve">
+    <value>Krylov-Schur algorithm statrs with matrix size = {0} and maximum number of restarts = {1}.</value>
+  </data>
   <data name="LanczosConvergeOnePair" xml:space="preserve">
     <value>Restarting Lanczos algorithm found that the {0} eigen-pair converges.</value>
   </data>

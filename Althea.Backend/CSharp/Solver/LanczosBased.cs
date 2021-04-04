@@ -61,11 +61,19 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region parameters check
+		internal const int HERM_MAX_ITER = 35, NON_HERM_MAX_ITER = 25;
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static SpanList<T> ClearList<T>(this SpanList<T> list) where T : IDisposable
 		{
 			list.Clear(static elem => elem?.Dispose());
 			return list;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void ClearSpan<T>(this Span<T> span) where T : IDisposable
+		{
+			span.ForEach(static elem => elem?.Dispose());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,9 +113,9 @@ namespace Althea.Backend.CSharp.Solver
 			// estimate iteration number
 			int estimateIter = Math.Min(maxIter <= 0 ? int.MaxValue : maxIter, sqrtSize);
 			if (herm)
-				estimateIter = Math.Min(estimateIter, 35);
+				estimateIter = Math.Min(estimateIter, HERM_MAX_ITER);
 			else
-				estimateIter = Math.Min(estimateIter, 25);
+				estimateIter = Math.Min(estimateIter, NON_HERM_MAX_ITER);
 			if (maxIter <= 0)
 				maxIter = estimateIter;
 		}
@@ -179,7 +187,7 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 	}
 
-	internal static class LanczosBasedSolver
+	internal static class LanczosBased
 	{
 		#region initialize Lanczos
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -291,6 +299,9 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private unsafe static void LanczosTridiagSolve(SpanList<double> αs, SpanList<double> βs, Span<double> eigval, SpanMatrix<double> eigvec, int firstNResidual = 0)
 		{
+			// check NaN
+			if (αs.AsSpan().Any(static a => !double.IsNormal(a)) || βs.AsSpan().Any(static b => !double.IsNormal(b)))
+				throw new ArithmeticException(Resources.Other.AbnormalOccured);
 			// fill matrix
 			int N = αs.Count;
 			if (firstNResidual > 0)
@@ -310,9 +321,6 @@ namespace Althea.Backend.CSharp.Solver
 					eigvec[i, i + 1] = eigvec[i + 1, i] = βs[i];
 				}
 			}
-			// check NaN
-			if (αs.AsSpan().Any(static a => !double.IsNormal(a)) || βs.AsSpan().Any(static b => !double.IsNormal(b)))
-				throw new ArithmeticException(Resources.Other.AbnormalOccured);
 			// tridiagonal solve
 			fixed (double* matPtr = eigvec.UnderlyingSpan, valPtr = eigval)
 			{
@@ -698,7 +706,8 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			finally
 			{
-				r?.Dispose(); initial?.Dispose();
+				r?.Dispose();
+				initial?.Dispose();
 				qs.ClearList();
 			}
 			#endregion
@@ -707,7 +716,7 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region restart lanczos
-		internal static int RestartLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<double> outEigvals, Span<TVec> outEigvecs, TimeSpan interval)
+		internal static int? RestartLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<double> outEigvals, Span<TVec> outEigvecs, TimeSpan interval)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
@@ -716,10 +725,16 @@ namespace Althea.Backend.CSharp.Solver
 				throw new ArgumentNullException(nameof(initial));
 			if (tolerance <= 0)
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.MustPositive);
-
 			// check parameters
 			int smallestK = outEigvals.Length;
-			Common.CheckParas<TVec, T>(matrixFunction, initial, smallestK, ref iterPerRestart, herm: true);
+			if (checkFirst)
+				Common.CheckParas<TVec, T>(matrixFunction, initial, smallestK, ref iterPerRestart, herm: true);
+			else
+				iterPerRestart = Math.Min(iterPerRestart, Common.HERM_MAX_ITER);
+			// check other
+			if (reorthogonalize < ReorthogonalizeMethod.Selective || reorthogonalize > ReorthogonalizeMethod.RobustFull)
+				return null; // not support
+
 			// log start
 			Log.Write(string.Format(Resource.RestartLanczosStart, initial.Length, maxRestarts));
 
@@ -753,7 +768,7 @@ namespace Althea.Backend.CSharp.Solver
 				for (int nRestart = 0; nRestart < maxRestarts; nRestart++)
 				{
 					// calculate
-					var converged = RestartLanczosInner(matrixFunction, iterPerRestart, tolerance, reorthogonalize, useGap, ref restartInfo, eigvals, eigvecs, ref qs, ref alphas, ref betas, out r);
+					var converged = RestartLanczosInner(matrixFunction, iterPerRestart, tolerance, reorthogonalize == ReorthogonalizeMethod.Selective ? null : reorthogonalize == ReorthogonalizeMethod.RobustFull, useGap, ref restartInfo, eigvals, eigvecs, ref qs, ref alphas, ref betas, out r);
 
 					#region if converge
 					Span<double> eigvalsNow = eigvals;
@@ -786,7 +801,7 @@ namespace Althea.Backend.CSharp.Solver
 					#region log output
 					if (stopwatch.Elapsed >= interval)
 					{
-						Log.Write(string.Format(Resource.IterationAndTimeInfo, nRestart * iterPerRestart, stopwatchStart.Elapsed.TotalMinutesString()));
+						Log.Write(string.Format(Resource.IterationAndTimeInfo, (nRestart + 1) * iterPerRestart, stopwatchStart.Elapsed.TotalMinutesString()));
 						stopwatch.Restart();
 					}
 					#endregion
@@ -827,6 +842,7 @@ namespace Althea.Backend.CSharp.Solver
 			#region dispose
 			finally
 			{
+				guess?.Dispose();
 				r?.Dispose();
 				restartInfo.ResidualVec?.Dispose();
 				qs.ClearList();
@@ -837,7 +853,7 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 
-		private static bool RestartLanczosInner<TVec, T>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, ref RestartBasicInfo<TVec, T> restartInfo, Span<double> eigvals, SpanMatrix<double> eigvecs, ref SpanList<TVec> qs, ref SpanList<double> αs, ref SpanList<double> βs, out TVec r)
+		private static bool RestartLanczosInner<TVec, T>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<TVec, T> restartInfo, Span<double> eigvals, SpanMatrix<double> eigvecs, ref SpanList<TVec> qs, ref SpanList<double> αs, ref SpanList<double> βs, out TVec r)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
@@ -877,7 +893,7 @@ namespace Althea.Backend.CSharp.Solver
 				for (j = NRitz + 1; j < nIter; j++)
 				{
 					#region re-orthogonalization
-					if (reorthogonalize == ReorthogonalizeMethod.Selective)
+					if (!robustOrth.HasValue)
 					{
 						string strInfo = tracker.Reorthonalize<TVec, T>(r, qs, restartInfo.ConvergedEigenvectors, thresholdSqrt, thresholdPow);
 						if (!string.IsNullOrWhiteSpace(strInfo))
@@ -888,9 +904,9 @@ namespace Althea.Backend.CSharp.Solver
 							Log.Write($"Re-orthogonalization of previous basis changes β from {pre} to {βs[^1]}.", level: LogLevel.Trace);
 						}
 					}
-					else if (reorthogonalize == ReorthogonalizeMethod.Full || reorthogonalize == ReorthogonalizeMethod.RobustFull)
+					else
 					{
-						Common.RobustOrthogonalize<TVec, T>(r, qs, default, reorthogonalize == ReorthogonalizeMethod.RobustFull);
+						Common.RobustOrthogonalize<TVec, T>(r, qs, default, robustOrth.Value);
 						double pre = βs[^1];
 						βs[^1] = r.Norm();
 						Log.Write($"Re-orthogonalization of previous basis changes β from {pre} to {βs[^1]}.", level: LogLevel.Trace);
@@ -929,7 +945,7 @@ namespace Althea.Backend.CSharp.Solver
 					#endregion
 
 					#region orthogonality check
-					if (reorthogonalize == ReorthogonalizeMethod.Selective)
+					if (!robustOrth.HasValue)
 						tracker.ReorthogonalityUpdate(αs, βs, restartInfo.ResidualScalars, φ);
 					#endregion
 				} // end for main loop

@@ -646,24 +646,53 @@ namespace Althea.Linq
 
 		#region predicate
 		/// <summary>
-		/// Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if all elements of <paramref name="span"/> are zeros
+		/// </summary>
+		/// <param name="span">The span to check</param>
+		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
+		public static bool AllZeros<T>(this Span<T> span) where T : unmanaged
+		{
+			return AllZeros((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// Check if all elements of <paramref name="span"/> are zeros
+		/// </summary>
+		/// <param name="span">The span to check</param>
+		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
+		public static unsafe bool AllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		{
+			int size = Math.Min(span.Length, 8) * sizeof(T);
+			ReadOnlySpan<byte> spanFirst = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref span.Ref()), size);
+			ReadOnlySpan<byte> testBlock = stackalloc byte[size];
+			if (!spanFirst.SequenceEqual(testBlock))
+				return false;
+			int spanLen = span.Length * sizeof(T);
+			if (size == spanLen)
+				return true;
+			spanFirst = MemoryMarshal.CreateReadOnlySpan(ref spanFirst.Ref(), spanLen - size);
+			ReadOnlySpan<byte> spanLast = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.Add(ref spanFirst.Ref(), size), spanLen - size);
+			return spanFirst.SequenceEqual(spanLast);
+			//// similar to C code "memcmp(memoryBlock, memoryBlock + 8, memoryBlockSize - 8)"
+		}
+
+		/// <summary>
+		/// Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return All((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
-		/// Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool All<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			int len = span.Length;
@@ -676,24 +705,22 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
-		/// Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return Any((ReadOnlySpan<T>)span, predicator);
 		}
 
 		/// <summary>
-		/// Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+		/// Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>
 		/// <param name="predicator">The predicator delegate</param>
 		/// <returns>Predicate result</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static bool Any<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			int len = span.Length;
@@ -773,6 +800,39 @@ namespace Althea.Linq
 					return false;
 			}
 			return true;
+		}
+
+		/// <summary>
+		/// Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
+		/// </summary>
+		/// <typeparam name="T">Any struct as the data type</typeparam>
+		/// <param name="span">The span to find in</param>
+		/// <param name="predicate">The <see cref="Predicate{T}"/> used to find the element</param>
+		/// <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
+		public static T FirstOrDefault<T>(this Span<T> span, Predicate<T> predicate) where T : struct
+		{
+			return FirstOrDefault((ReadOnlySpan<T>)span, predicate);
+		}
+
+		/// <summary>
+		/// Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
+		/// </summary>
+		/// <typeparam name="T">Any struct as the data type</typeparam>
+		/// <param name="span">The span to find in</param>
+		/// <param name="predicate">The <see cref="Predicate{T}"/> used to find the element</param>
+		/// <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
+		public static T FirstOrDefault<T>(this ReadOnlySpan<T> span, Predicate<T> predicate) where T : struct
+		{
+			int len = span.Length;
+			if (len == 0)
+				return default;
+			for (int i = 0; i < len; i++)
+			{
+				T val = span[i];
+				if (predicate(val))
+					return val;
+			}
+			return default;
 		}
 		#endregion
 
@@ -1203,6 +1263,43 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="except">The set to be subtracted from <paramref name="set"/></param>
+		/// <param name="set">The set to be subtracted by <paramref name="except"/></param>
+		/// <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
+		public static T FirstOfSetExept<T>(this Span<T> set, ReadOnlySpan<T> except) where T : struct, IEquatable<T>
+		{
+			return FirstOfSetExept((ReadOnlySpan<T>)set, except);
+		}
+
+		/// <summary>
+		/// Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="except">The set to be subtracted from <paramref name="set"/></param>
+		/// <param name="set">The set to be subtracted by <paramref name="except"/></param>
+		/// <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
+		public static T FirstOfSetExept<T>(this ReadOnlySpan<T> set, ReadOnlySpan<T> except) where T : struct, IEquatable<T>
+		{
+			// shortcut
+			if (except.IsEmpty)
+			{
+				return set.IsEmpty ? default : set[0];
+			}
+			// else
+			int len = set.Length;
+			for (int i = 0; i < len; i++)
+			{
+				T val = set[i];
+				if (!except.Contains(val))
+					return val;
+			}
+			return default;
+		}
+
+		/// <summary>
 		/// Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
@@ -1446,6 +1543,34 @@ namespace Althea.Linq
 				span[i] = Const<T>.AddDelegate.Invoke(span[i - 1], step);
 			}
 			return span;
+		}
+
+		/// <summary>
+		/// Act on each element of a span.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The input span to be operated</param>
+		/// <param name="action">The action whose parameter is the element in the span</param>
+		public static void ForEach<T>(this Span<T> span, Action<T> action)
+		{
+			ForEach((ReadOnlySpan<T>)span, action);
+		}
+
+		/// <summary>
+		/// Act on each element of a span.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The input span to be operated</param>
+		/// <param name="action">The action whose parameter is the element in the span</param>
+		public static void ForEach<T>(this ReadOnlySpan<T> span, Action<T> action)
+		{
+			int len = span.Length;
+			if (len <= 0)
+				return;
+			for (int i = 0; i < len; i++)
+			{
+				action(span[i]);
+			}
 		}
 		#endregion
 	}

@@ -125,7 +125,7 @@ namespace Althea.Solver
 		/// <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <returns>The number of converged eigen-pairs</returns>
-		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsComplex"/> are not used</remarks>
+		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsImag"/> are not used</remarks>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		public static int RestartKrylovSubspaceEigen<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info)
@@ -236,7 +236,7 @@ namespace Althea.Solver
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="converged">Output the number of converged eigen-pairs</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsComplex"/> are not used</remarks>
+		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsImag"/> are not used</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		protected abstract bool RestartKrylovSubspaceEigen_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
 			where TVec : class, IKrylovVector<TVec, T>, new()

@@ -106,7 +106,7 @@ namespace Althea.Backend.CSharp.Solver
 			(eigenvalue, eigenvector) = (0, new());
 			if (CheckT<T>())
 				return false;
-			(eigenvalue, eigenvector) = LanczosBasedSolver.NaiveLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
+			(eigenvalue, eigenvector) = LanczosBased.NaiveLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
 			return true;
 		}
 
@@ -115,13 +115,25 @@ namespace Althea.Backend.CSharp.Solver
 			converged = 0;
 			if (CheckT<T>())
 				return false;
+
+			int iter = info.IterationsPerRestart == 0 ? Common.HERM_MAX_ITER : info.IterationsPerRestart;
 			if (hermitian)
 			{
-				converged = LanczosBasedSolver.RestartLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, info.Eigenvalues, info.EigenvectorsReal, this.InfoLogInterval);
+				var eigvals = info.Eigenvalues[..info.NumberEigenvaluesDesired];
+				var ret = LanczosBased.RestartLanczos<TVec, T>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, iter, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, eigvals, info.Eigenvectors, this.InfoLogInterval);
+				if (!ret.HasValue)
+					return false;
+				else
+					converged = ret.Value;
 			}
 			else
 			{
-				
+				var eigvals = info.EigenvaluesComplex[..info.NumberEigenvaluesDesired];
+				var ret = KrylovBased.KrylovSchur<TVec, T>(info.MatrixFunction, info.InitialVector, info.WhichEigenvaluesDesired, info.MaxRestarts, iter, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, eigvals, info.Eigenvectors, info.EigenvectorsImag, this.InfoLogInterval);
+				if (!ret.HasValue)
+					return false;
+				else
+					converged = ret.Value;
 			}
 			return true;
 		}
@@ -141,11 +153,11 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			else if (hermitianOrDefinite.Value)
 			{
-				(relativeError, solve) = LanczosBasedSolver.MinimalResidual<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
+				(relativeError, solve) = LanczosBased.MinimalResidual<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
 			}
 			else
 			{
-				(relativeError, solve) = LanczosBasedSolver.ConjugateGradient<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
+				(relativeError, solve) = LanczosBased.ConjugateGradient<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
 			}
 			return true;
 		}

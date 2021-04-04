@@ -237,6 +237,11 @@ namespace Althea.Solver
 	public interface IPreserveSelector
 	{
 		/// <summary>
+		/// When implemented by a derived class, get the <see cref="RestartStrategy"/> of this selector
+		/// </summary>
+		RestartStrategy Strategy { get; }
+
+		/// <summary>
 		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
 		/// </summary>
 		/// <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
@@ -485,14 +490,14 @@ namespace Althea.Solver
 		public readonly Span<ComplexDouble> EigenvaluesComplex;
 
 		/// <summary>
-		/// The output converged eigenvectors' real parts, sorted with <see cref="EigenvaluesComplex"/>
+		/// The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="MatrixFunction"/> is not hermitian), sorted with <see cref="Eigenvalues"/> or <see cref="EigenvaluesComplex"/>.
 		/// </summary>
-		public readonly Span<TVec> EigenvectorsReal;
+		public readonly Span<TVec> Eigenvectors;
 
 		/// <summary>
-		/// The output converged eigenvectors' complex parts, sorted with <see cref="EigenvaluesComplex"/>. Empty if the matrix is hermitian.
+		/// The output converged eigenvectors' imaginary parts, sorted with <see cref="EigenvaluesComplex"/>. The corresponding element may be null if the eigenvector has no imaginary parts.
 		/// </summary>
-		public readonly Span<TVec> EigenvectorsComplex;
+		public readonly Span<TVec> EigenvectorsImag;
 
 		/// <summary>
 		/// Only the top <see cref="NumberEigenvaluesDesired"/> eigen-pairs of <see cref="WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
@@ -568,8 +573,8 @@ namespace Althea.Solver
 
 			this.Eigenvalues = default;
 			this.EigenvaluesComplex = default;
-			this.EigenvectorsReal = default;
-			this.EigenvectorsComplex = default;
+			this.Eigenvectors = default;
+			this.EigenvectorsImag = default;
 		}
 
 		/// <summary>
@@ -622,8 +627,8 @@ namespace Althea.Solver
 
 			this.Eigenvalues = default;
 			this.EigenvaluesComplex = outputEigenvalues;
-			this.EigenvectorsReal = outputRealEigenvectors;
-			this.EigenvectorsComplex = outputCompEigenvectors;
+			this.Eigenvectors = outputRealEigenvectors;
+			this.EigenvectorsImag = outputCompEigenvectors;
 		}
 
 		/// <summary>
@@ -672,8 +677,8 @@ namespace Althea.Solver
 
 			this.Eigenvalues = outputEigenvalues;
 			this.EigenvaluesComplex = default;
-			this.EigenvectorsReal = outputEigenvectors;
-			this.EigenvectorsComplex = default;
+			this.Eigenvectors = outputEigenvectors;
+			this.EigenvectorsImag = default;
 		}
 
 		/// <summary>
@@ -718,8 +723,8 @@ namespace Althea.Solver
 
 			this.Eigenvalues = default;
 			this.EigenvaluesComplex = default;
-			this.EigenvectorsReal = default;
-			this.EigenvectorsComplex = default;
+			this.Eigenvectors = default;
+			this.EigenvectorsImag = default;
 		}
 
 		/// <summary>
@@ -750,8 +755,8 @@ namespace Althea.Solver
 
 			this.Eigenvalues = old.Eigenvalues;
 			this.EigenvaluesComplex = old.EigenvaluesComplex;
-			this.EigenvectorsReal = old.EigenvectorsReal;
-			this.EigenvectorsComplex = old.EigenvectorsComplex;
+			this.Eigenvectors = old.Eigenvectors;
+			this.EigenvectorsImag = old.EigenvectorsImag;
 		}
 		#endregion
 	}
