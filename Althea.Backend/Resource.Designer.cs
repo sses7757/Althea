@@ -97,6 +97,24 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 Preconditioned Minimal Residual algorithm main calculation finishes, relative error = {0} (desired = {1}). 的本地化字符串。
+        /// </summary>
+        internal static string MinResFinish {
+            get {
+                return ResourceManager.GetString("MinResFinish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Preconditioned Minimal Residual algorithm statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
+        /// </summary>
+        internal static string MinResStart {
+            get {
+                return ResourceManager.GetString("MinResStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {1}. 的本地化字符串。
         /// </summary>
         internal static string NaiveLanczosFinish {
@@ -124,7 +142,7 @@ namespace Althea.Backend {
         }
         
         /// <summary>
-        ///   查找类似 Preconditioned Conjugate Gradient algorithm main calculation finishes, minimum residual = {0}. 的本地化字符串。
+        ///   查找类似 Preconditioned Conjugate Gradient algorithm main calculation finishes, relative error = {0} (desired = {1}). 的本地化字符串。
         /// </summary>
         internal static string PCGFinish {
             get {

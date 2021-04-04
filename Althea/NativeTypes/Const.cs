@@ -143,13 +143,11 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public static readonly T
 			Zero = default,
-			One = 1.0.GenericConvert<double, T>(),
-			Two = 2.0.GenericConvert<double, T>(),
-			MinusOne = (-1.0).GenericConvert<double, T>(),
-			Half = 0.5.GenericConvert<double, T>(),
-			MinusHalf = (-0.5).GenericConvert<double, T>(),
-			E = Math.E.GenericConvert<double, T>(),
-			Pi = Math.PI.GenericConvert<double, T>();
+			One = ConstConvert<double, T>.ConvertDelegate.Invoke(1.0),
+			Two = ConstConvert<double, T>.ConvertDelegate.Invoke(2.0),
+			MinusOne = ConstConvert<double, T>.ConvertDelegate.Invoke(-1.0),
+			Half = ConstConvert<double, T>.ConvertDelegate.Invoke(0.5),
+			MinusHalf = ConstConvert<double, T>.ConvertDelegate.Invoke(-0.5);
 
 		/// <summary>
 		/// Get the machine precision of <typeparamref name="T"/>
@@ -827,10 +825,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T2 GenericConvert<T1, T2>(this T1 obj) where T1 : unmanaged where T2 : unmanaged
 		{
-			if (obj is T2 a)
-				return a;
-			else
-				return ConstConvert<T1, T2>.ConvertDelegate.Invoke(obj);
+			return ConstConvert<T1, T2>.ConvertDelegate.Invoke(obj);
 		}
 
 		/// <summary>

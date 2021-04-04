@@ -465,7 +465,7 @@ namespace Althea.Solver
 		public readonly TVec? OtherVector;
 
 		/// <summary>
-		/// The tolerance of the convergence, default 0 means <c>machine precision of <typeparamref name="T"/> * 5</c>
+		/// The tolerance of the convergence, default 0 means <c>machine_precision_of_<typeparamref name="T"/> ^ 0.9</c>
 		/// </summary>
 		public readonly double Tolerance;
 
@@ -710,7 +710,7 @@ namespace Althea.Solver
 			this.WhichEigenvaluesDesired = default;
 			this.MaxRestarts = maxRestarts;
 			this.IterationsPerRestart = iterPerRestart;
-			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
+			this.Tolerance = tolerance == 0 ? (Math.Pow(Const<T>.MachinePrecision, 0.9)) : tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
 			this.CheckMatrixFunction = check;

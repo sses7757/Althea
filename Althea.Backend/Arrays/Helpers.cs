@@ -33,7 +33,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Althea.Arrays.SparseMatrix<T, TInd> CheckWrapper<T, TInd>(this SparseArrayWrapper<T> matrix, long rows, long cols) where T : unmanaged where TInd : unmanaged
+		internal static Althea.Arrays.BaseSparseMatrix<T, TInd> CheckWrapper<T, TInd>(this SparseArrayWrapper<T> matrix, long rows, long cols) where T : unmanaged where TInd : unmanaged
 		{
 			if (matrix.ValueStorage is null || matrix.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(matrix), matrix.ValueStorage?.Length, Resources.Parameter.ZeroSize);
@@ -61,7 +61,7 @@ namespace Althea.Backend.Arrays
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Althea.Arrays.SparseTensor<T, TInd> CheckWrapper<T, TInd>(this SparseArrayWrapper<T> tensor, ReadOnlySpan<long> size, ReadOnlySpan<char> labels) where T : unmanaged where TInd : unmanaged
+		internal static Althea.Arrays.BaseSparseTensor<T, TInd> CheckWrapper<T, TInd>(this SparseArrayWrapper<T> tensor, ReadOnlySpan<long> size, ReadOnlySpan<char> labels) where T : unmanaged where TInd : unmanaged
 		{
 			if (tensor.ValueStorage is null || tensor.ValueStorage.Length <= 0)
 				throw new ArgumentOutOfRangeException(nameof(tensor), tensor.ValueStorage?.Length, Resources.Parameter.ZeroSize);

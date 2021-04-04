@@ -15,12 +15,12 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public abstract class SparseTensor<T, TInd> : TensorBase<T>, ISparseTensor<T>, ISparseArray<T, TInd>
+	public abstract class BaseSparseTensor<T, TInd> : TensorBase<T>, ISparseTensor<T>, ISparseArray<T, TInd>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
 		#region basic
-		static SparseTensor()
+		static BaseSparseTensor()
 		{
 			if (!Const<TInd>.IsIntegralType)
 				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
@@ -72,7 +72,7 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a <see cref="SparseTensor{T, TInd}"/> with given <paramref name="size"/> and <paramref name="valueArray"/>
+		/// Create a <see cref="BaseSparseTensor{T, TInd}"/> with given <paramref name="size"/> and <paramref name="valueArray"/>
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
@@ -85,7 +85,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, SparseTensorFormat format, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(valueArray, size, labels, stores)
+		protected BaseSparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, SparseTensorFormat format, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(valueArray, size, labels, stores)
 		{
 			if (!format.IsAtomic())
 				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
@@ -109,7 +109,7 @@ namespace Althea.Arrays
 		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
 
 		/// <summary>
-		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="SparseVector{T, TInd}"/>.
+		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="ValueArray{T}.Storage"/> and the index array(s) passed to the constructor of <see cref="BaseSparseVector{T, TInd}"/>.
 		/// </summary>
 		/// <param name="disposing">Dispose managed resources or not</param>
 		protected override void Dispose(bool disposing)
@@ -127,20 +127,20 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, deep clone the sparse tensor, the mutable status will not be copied.
 		/// </summary>
 		/// <returns>The cloned sparse tensor</returns>
-		public override abstract SparseTensor<T, TInd> Clone();
+		public override abstract BaseSparseTensor<T, TInd> Clone();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled.
 		/// </summary>
 		/// <returns>The new sparse tensor alike this one</returns>
-		public override SparseTensor<T, TInd> NewArrayAlike() => this.NewArrayAlike<T, TInd>();
+		public override BaseSparseTensor<T, TInd> NewArrayAlike() => this.NewArrayAlike<T, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <returns>The new sparse tensor alike this one</returns>
-		public override SparseTensor<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
+		public override BaseSparseTensor<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse tensor with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
@@ -149,7 +149,7 @@ namespace Althea.Arrays
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
 		/// <returns>The new sparse tensor alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
-		public abstract SparseTensor<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
+		public abstract BaseSparseTensor<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
 			where TOut : unmanaged
 			where TIndOut : unmanaged;
 
@@ -158,8 +158,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
-		/// <returns>The new <see cref="SparseTensor{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
-		public virtual SparseTensor<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
+		/// <returns>The new <see cref="BaseSparseTensor{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
+		public virtual BaseSparseTensor<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
 			where TOut : unmanaged
 			where TIndOut : unmanaged
 		{
@@ -197,9 +197,9 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="format">The target format, can be anatomic</param>
 		/// <param name="otherInfo">The target sparse tensor's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
-		/// <returns>The converted <see cref="SparseTensor{T, TInd}"/> whose <see cref="Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
+		/// <returns>The converted <see cref="BaseSparseTensor{T, TInd}"/> whose <see cref="Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
 		/// <exception cref="InvalidOperationException">The default implementation <b>always</b> throws this exception since the sparse tensor format conversions usually have high costs.</exception>
-		public virtual SparseTensor<T, TInd> ToFormat(SparseTensorFormat format, IOtherInfo? otherInfo = null) => throw new InvalidOperationException();
+		public virtual BaseSparseTensor<T, TInd> ToFormat(SparseTensorFormat format, IOtherInfo? otherInfo = null) => throw new InvalidOperationException();
 		#endregion
 
 		#region equality

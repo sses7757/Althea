@@ -10,7 +10,7 @@ namespace Althea.Arrays
 	/// The abstract array class for any kind of array. It is the top level abstract of all built-in array classes. It implements the <see cref="IDisposable"/> and <see cref="ICloneable{T}"/> interface.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public abstract class AbstractArray<T> : IDisposable, ICloneable<AbstractArray<T>> where T : unmanaged
+	public abstract class AbstractArray<T> : IDisposable, ICloneable where T : unmanaged
 	{
 		#region properties
 		private readonly long m_length;
@@ -131,6 +131,8 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <returns>The cloned array</returns>
 		public abstract AbstractArray<T> Clone();
+
+		object ICloneable.Clone() => this.Clone();
 
 		/// <summary>
 		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/> by creating a new array of <typeparamref name="TOut"/>.

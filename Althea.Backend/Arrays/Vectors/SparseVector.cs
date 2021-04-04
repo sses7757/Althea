@@ -25,7 +25,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The only supported format is <see cref="SparseVectorFormat.Coordinated"/> and the <see cref="SparseVector{T, TInd}.IndexStorage"/> is sorted. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
-	public class SparseVector<T, TInd> : Althea.Arrays.SparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>, IConvertibleVector<SparseVector<T, TInd>, SparseMatrix<T, TInd>, T>
+	public class SparseVector<T, TInd> : BaseSparseVector<T, TInd>, IKrylovVector<SparseVector<T, TInd>, T>, IConvertibleVector<SparseVector<T, TInd>, SparseMatrix<T, TInd>, T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -91,7 +91,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="index">The position of the element to get / set</param>
 		/// <returns>The element at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		/// <exception cref="InvalidOperationException">If this[<paramref name="index"/>] returns the <see cref="Althea.Arrays.SparseVector{T, TInd}.DefaultValue"/> which cannot be set individually</exception>
+		/// <exception cref="InvalidOperationException">If this[<paramref name="index"/>] returns the <see cref="Althea.Arrays.BaseSparseVector{T, TInd}.DefaultValue"/> which cannot be set individually</exception>
 		public override T this[long index] {
 			get {
 				this.CheckIndex(index);
@@ -305,8 +305,8 @@ namespace Althea.Backend.Arrays
 					throw;
 				}
 			}
-			else if (other is DenseVector<T>)
-				return other.ApplyToClone(d => LAS.VectorSparseAddToDense(Const<T>.One, this, d.Storage));
+			else if (other is DenseVector<T> dn)
+				return dn.ApplyToClone(d => LAS.VectorSparseAddToDense(Const<T>.One, this, d.Storage));
 			else
 				throw new NotSupportedException();
 		}
@@ -407,7 +407,7 @@ namespace Althea.Backend.Arrays
 
 		#region conversion
 		/// <summary>
-		/// Convert this sparse vector to another sparse vector with <see cref="Althea.Arrays.SparseVector{T, TInd}.Format"/> fitting <paramref name="format"/>
+		/// Convert this sparse vector to another sparse vector with <see cref="Althea.Arrays.BaseSparseVector{T, TInd}.Format"/> fitting <paramref name="format"/>
 		/// </summary>
 		/// <param name="format">The target format, can be anatomic</param>
 		/// <returns>Since no format other than <see cref="SparseVectorFormat.Coordinated"/> is supported internally, simply returns this vector or throw exception</returns>
@@ -453,7 +453,7 @@ namespace Althea.Backend.Arrays
 
 		#region protected overrides
 		/// <summary>
-		/// The helper method used in <see cref="Althea.Arrays.SparseVector{T, TInd}.Print(PrintSettings?)"/> to get the first several indices of this sparse vector
+		/// The helper method used in <see cref="Althea.Arrays.BaseSparseVector{T, TInd}.Print(PrintSettings?)"/> to get the first several indices of this sparse vector
 		/// </summary>
 		/// <param name="indices">The <see cref="Span{T}"/> of <see cref="long"/> used to store the indices</param>
 		protected override void GetIndices(Span<long> indices)
@@ -466,7 +466,7 @@ namespace Althea.Backend.Arrays
 			// else
 			Span<TInd> temp = indices.Length.CheckStackLimitFast<TInd>() ?? stackalloc TInd[indices.Length];
 			MEM.ToManaged(this.m_index, temp);
-			temp.CopyTo(indices, static a => a.GenericConvert<TInd, long>());
+			temp.CopyTo(indices, static a => a.ToLong());
 		}
 
 		/// <summary>
@@ -485,7 +485,7 @@ namespace Althea.Backend.Arrays
 		};
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="Althea.Arrays.SparseVector{T, TInd}.DefaultValue"/>.
+		/// Get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="Althea.Arrays.BaseSparseVector{T, TInd}.DefaultValue"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this sparse vector.</returns>
 		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(1)

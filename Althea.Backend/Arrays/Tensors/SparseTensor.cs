@@ -23,7 +23,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public class SparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<SparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
+	public class SparseTensor<T, TInd> : BaseSparseTensor<T, TInd>, IKrylovVector<SparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
 	{
 		#region basic
 		private readonly SparseVector<T, TInd> m_vector;
@@ -595,7 +595,7 @@ namespace Althea.Backend.Arrays
 		};
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="Althea.Arrays.SparseTensor{T, TInd}.DefaultValue"/>.
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="Althea.Arrays.BaseSparseTensor{T, TInd}.DefaultValue"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
 		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)

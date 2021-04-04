@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 using Althea.Arrays;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
-using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Solver;
 
@@ -24,9 +22,9 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
+	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public class SparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
+	public class SparseMatrix<T, TInd> : BaseSparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -459,7 +457,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="x">The row position as a <see cref="long"/></param>
 		/// <param name="y">The column position as a <see cref="long"/></param>
 		/// <returns>The element at position (<paramref name="x"/>, <paramref name="y"/>)</returns>
-		/// <exception cref="InvalidOperationException">If the element at the given position is not stored while the set value is not <see cref="Althea.Arrays.SparseMatrix{T, TInd}.DefaultValue"/></exception>
+		/// <exception cref="InvalidOperationException">If the element at the given position is not stored while the set value is not <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.DefaultValue"/></exception>
 		public override T this[long x, long y] {
 			get {
 				this.CheckIndex(x, y);
@@ -653,13 +651,13 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert this sparse matrix to another sparse matrix with <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/> fitting <paramref name="format"/>
+		/// When implemented by a derived class, convert this sparse matrix to another sparse matrix with <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/> fitting <paramref name="format"/>
 		/// </summary>
 		/// <param name="format">The target format, can be anatomic</param>
 		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
-		/// <returns>The converted <see cref="Althea.Arrays.SparseMatrix{T, TInd}"/> whose <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
+		/// <returns>The converted <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}"/> whose <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
 		/// <exception cref="NotSupportedException">If <paramref name="format"/> is not composed of internally defined values or <paramref name="otherInfo"/> is neither null nor <see cref="BlockedSparseMatrixOtherInfo"/></exception>
-		public override Althea.Arrays.SparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format, IOtherInfo? otherInfo = null)
+		public override Althea.Arrays.BaseSparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format, IOtherInfo? otherInfo = null)
 		{
 			if ((format & this.Format) != 0)
 				return this;
@@ -977,6 +975,12 @@ namespace Althea.Backend.Arrays
 				throw;
 			}
 		}
+
+		void IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceAdd(SparseMatrix<T, TInd> other, T scalarThis, T scalarOther) => throw new NotImplementedException();
+
+		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceMultiply(SparseMatrix<T, TInd> other, T scalar, MatrixOperation opLeft, MatrixOperation opRight) => (SparseMatrix<T, TInd>)this.MultiplyMatrix(scalar, other, opLeft, opRight);
+
+		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceAdd(SparseMatrix<T, TInd> other, T scalarThis, T scalarOther) => (SparseMatrix<T, TInd>)this.AddMatrix(scalarThis, scalarOther, other);
 		#endregion
 
 		#region print

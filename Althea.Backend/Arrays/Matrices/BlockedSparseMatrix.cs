@@ -59,9 +59,9 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	/// <remarks>The <see cref="BlockedSparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="BlockedSparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
+	/// <remarks>The <see cref="BlockedSparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="BlockedSparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public class BlockedSparseMatrix<T, TInd> : Althea.Arrays.SparseMatrix<T, TInd>, IKrylovVector<BlockedSparseMatrix<T, TInd>, T>, IMatrix<T>
+	public class BlockedSparseMatrix<T, TInd> : BaseSparseMatrix<T, TInd>, IKrylovVector<BlockedSparseMatrix<T, TInd>, T>, IMatrix<T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -382,7 +382,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="x">The row position as a <see cref="long"/></param>
 		/// <param name="y">The column position as a <see cref="long"/></param>
 		/// <returns>The element at position (<paramref name="x"/>, <paramref name="y"/>)</returns>
-		/// <exception cref="InvalidOperationException">If the element at the given position is not stored while the set value is not <see cref="Althea.Arrays.SparseMatrix{T, TInd}.DefaultValue"/></exception>
+		/// <exception cref="InvalidOperationException">If the element at the given position is not stored while the set value is not <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.DefaultValue"/></exception>
 		public override T this[long x, long y] {
 			get {
 				this.CheckIndex(x, y);
@@ -490,13 +490,13 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, convert this sparse matrix to another sparse matrix with <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/> fitting <paramref name="format"/>
+		/// When implemented by a derived class, convert this sparse matrix to another sparse matrix with <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/> fitting <paramref name="format"/>
 		/// </summary>
 		/// <param name="format">The target format, can be anatomic</param>
 		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
-		/// <returns>The converted <see cref="Althea.Arrays.SparseMatrix{T, TInd}"/> whose <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
+		/// <returns>The converted <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}"/> whose <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
 		/// <exception cref="NotSupportedException">If <paramref name="format"/> is not composed of internally defined values</exception>
-		public override Althea.Arrays.SparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format, IOtherInfo? otherInfo = null)
+		public override Althea.Arrays.BaseSparseMatrix<T, TInd> ToFormat(SparseMatrixFormat format, IOtherInfo? otherInfo = null)
 		{
 			if ((format & this.Format) != 0)
 				return this;
@@ -899,7 +899,7 @@ namespace Althea.Backend.Arrays
 		protected internal const string BlockColumnMajorName = nameof(BlockColumnMajor);
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="Althea.Arrays.SparseMatrix{T, TInd}.DefaultValue"/>, <see cref="Althea.Arrays.SparseMatrix{T, TInd}.Format"/>, <see cref="BlockNRows"/>, <see cref="BlockNCols"/> and <see cref="BlockColumnMajor"/>.
+		/// Get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.DefaultValue"/>, <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/>, <see cref="BlockNRows"/>, <see cref="BlockNCols"/> and <see cref="BlockColumnMajor"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this sparse matrix</returns>
 		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(5)

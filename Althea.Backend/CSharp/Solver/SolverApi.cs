@@ -141,7 +141,7 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			else if (hermitianOrDefinite.Value)
 			{
-				(relativeError, solve) = LanczosBasedSolver.MininmalResidual<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
+				(relativeError, solve) = LanczosBasedSolver.MinimalResidual<TVec, T>(info.MatrixFunction, info.PreconditionMatrixFunction, info.InitialVector, info.OtherVector, info.MaxRestarts, info.Tolerance, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps);
 			}
 			else
 			{

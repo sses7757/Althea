@@ -167,7 +167,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other vector to perform the dot product</param>
 		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
 		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public override T Dot(VectorBase<T> other, bool conjugateThis = true)
@@ -190,7 +190,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public void AddByVector(VectorBase<T> other, T scalar)
@@ -214,7 +214,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
 		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.SparseVector{T, TIndex}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		public override DenseVector<T> AddVector(VectorBase<T> other, T scalar) => this.ApplyToClone(v => v.AddByVector(other, scalar));
@@ -228,7 +228,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.SparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="ISparseMatrix{T}"/></exception>
+		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
 		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)

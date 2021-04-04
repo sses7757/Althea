@@ -77,7 +77,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public class BlockedSparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<BlockedSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
+	public class BlockedSparseTensor<T, TInd> : BaseSparseTensor<T, TInd>, IKrylovVector<BlockedSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
 	{
 		#region basic
 		private readonly FixedClassBuffer_16<Storage<TInd>> m_originalPosition;
@@ -267,7 +267,7 @@ namespace Althea.Backend.Arrays
 		/// </summary>
 		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix</returns>
-		public unsafe override Althea.Arrays.SparseMatrix<T, TInd> ToMatrix(long rows = 0)
+		public unsafe override Althea.Arrays.BaseSparseMatrix<T, TInd> ToMatrix(long rows = 0)
 		{
 			var sizePtr = stackalloc long[] { rows, 0 };
 			Span<long> size = new(sizePtr, 2);
@@ -373,7 +373,7 @@ namespace Althea.Backend.Arrays
 		/// <returns>The element at <paramref name="indices"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
-		/// <exception cref="InvalidOperationException">If the element at <paramref name="indices"/> is not stored and the setting value is not <see cref="Althea.Arrays.SparseTensor{T, TInd}.DefaultValue"/></exception>
+		/// <exception cref="InvalidOperationException">If the element at <paramref name="indices"/> is not stored and the setting value is not <see cref="Althea.Arrays.BaseSparseTensor{T, TInd}.DefaultValue"/></exception>
 		public override T this[ReadOnlySpan<long> indices] {
 			get {
 				return this.ElementIndexing(indices, null);
@@ -859,7 +859,7 @@ namespace Althea.Backend.Arrays
 		protected internal const string BlockSizeName = nameof(BlockSize);
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="BlockSize"/> and <see cref="Althea.Arrays.SparseTensor{T, TInd}.DefaultValue"/>.
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="BlockSize"/> and <see cref="Althea.Arrays.BaseSparseTensor{T, TInd}.DefaultValue"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
 		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(3)

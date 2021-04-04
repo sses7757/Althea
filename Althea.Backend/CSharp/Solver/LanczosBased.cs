@@ -955,7 +955,19 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 
+
 		#region linear solve helpers
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
+			where TVec : class, IKrylovVector<TVec, T>, new()
+			where T : unmanaged
+		{
+			r?.Dispose();
+			r = A.Invoke(x);
+			r.Scale(Const<T>.MinusOne);
+			r.AddBy(b, Const<T>.One);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static (double relativeError, TVec solve)? CheckLinearSolve<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out double normB, out double realTolerance)
 			where TVec : class, IKrylovVector<TVec, T>, new()
@@ -1004,11 +1016,12 @@ namespace Althea.Backend.CSharp.Solver
 			#region initial vector check
 			x = initial;
 			// Ignore Spelling: \mathbf
-			//tex: $\vec r = \vec b - \mathbf A \vec x_0$
-			r = matrix.Invoke(initial);
+#pragma warning disable CS8625, CS8601
+			r = null;
 			try
 			{
-				r.Scale(Const<T>.MinusOne); r.AddBy(rightSide, Const<T>.One);
+				//tex: $\vec r = \vec b - \mathbf A \vec x_0$
+				RSetToBSubAx<TVec, T>(matrix, ref r, initial, rightSide);
 				minResidual = r.Norm();
 				if (minResidual <= realTolerance)
 				{
@@ -1022,6 +1035,7 @@ namespace Althea.Backend.CSharp.Solver
 					return null;
 				}
 			}
+#pragma warning restore CS8625, CS8601
 			catch (Exception)
 			{
 				r?.Dispose();
@@ -1031,6 +1045,7 @@ namespace Althea.Backend.CSharp.Solver
 			#endregion
 		}
 		#endregion
+
 
 		#region preconditioned conjugate gradient
 		internal static (double relativeError, TVec solve) ConjugateGradient<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
@@ -1048,7 +1063,7 @@ namespace Althea.Backend.CSharp.Solver
 			Log.Write(string.Format(Resource.PCGStart, initial.Length, maxIter));
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			// check initial guess
-			simpleSolution = CheckLinearSolveInitial<TVec, T>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual);
+			simpleSolution = CheckLinearSolveInitial<TVec, T>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out double minResidual);
 			if (simpleSolution.HasValue)
 				return simpleSolution.Value;
 			// otherwise
@@ -1129,11 +1144,8 @@ namespace Althea.Backend.CSharp.Solver
 
 					#region check for convergence
 					if (normR <= realTolerance)
-					{	// check residual vector again
-						r.Dispose();
-						r = matrix.Invoke(x);
-						r.Scale(Const<T>.MinusOne);
-						r.AddBy(rightSide, Const<T>.One);
+					{   // check residual vector again
+						RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
 						double residual = r.Norm();
 						if (residual <= realTolerance)
 						{
@@ -1151,9 +1163,9 @@ namespace Althea.Backend.CSharp.Solver
 					if (normR < minResidual)
 					{
 						minResidual = normR;
-						if (x != minResidualVec)
-							minResidualVec.Dispose();
-						minResidualVec = x.Clone();
+						if (x != solution)
+							solution.Dispose();
+						solution = x.Clone();
 					}
 					#endregion
 				}
@@ -1161,43 +1173,40 @@ namespace Althea.Backend.CSharp.Solver
 				#region return solution of first one with minimal residual
 				if (success)
 				{
-					(minResidualVec, x) = (x, minResidualVec);
+					(solution, x) = (x, solution);
 					minResidual /= normB;
 				}
 				else
 				{
-					r.Dispose();
-					r = matrix.Invoke(minResidualVec);
-					r.Scale(Const<T>.MinusOne);
-					r.AddBy(rightSide, Const<T>.One);
-					double normRnow = r.Norm();
-					if (normRnow <= minResidual)
+					RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
+					double normR = r.Norm();
+					if (normR <= minResidual)
 					{
-						minResidual = normRnow / normB;
+						minResidual = normR / normB;
 					}
 					else
 					{
 						minResidual /= normB;
-						(minResidualVec, x) = (x, minResidualVec);
+						(solution, x) = (x, solution);
 					}
 				}
-				Log.Write(string.Format(Resource.PCGFinish, minResidual));
-				return (minResidual, minResidualVec);
+				Log.Write(string.Format(Resource.PCGFinish, minResidual, tolerance));
+				return (minResidual, solution);
 				#endregion
 			}
 			#region dispose
 			catch (Exception)
 			{
-				minResidualVec?.Dispose();
+				solution?.Dispose();
 				throw;
 			}
 			finally
 			{
-				if (r != minResidualVec)
+				if (r != solution)
 					r?.Dispose();
-				if (x != minResidualVec)
+				if (x != solution)
 					x?.Dispose();
-				if (p != minResidualVec)
+				if (p != solution)
 					p?.Dispose();
 			}
 			#endregion
@@ -1207,7 +1216,7 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region preconditioned minimal residual
-		internal static (double relativeError, TVec solve) MininmalResidual<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
+		internal static (double relativeError, TVec solve) MinimalResidual<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
@@ -1219,7 +1228,7 @@ namespace Althea.Backend.CSharp.Solver
 
 			#region initialize
 			// log
-			Log.Write(string.Format(Resource.PCGStart, initial.Length, maxIter));
+			Log.Write(string.Format(Resource.MinResStart, initial.Length, maxIter));
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			// Ignore Spelling: \mathbf
 			// check initial guess
@@ -1297,11 +1306,21 @@ namespace Althea.Backend.CSharp.Solver
 				}
 
 				int stagnations = 0;
+				bool success = false;
 				#endregion
 
 				#region main loop
 				for (int i = 1; i < maxIter; i++)
 				{
+					#region log output
+					Log.Write($"Preconditioned Minimal Residual algorithm: now at iteration {i}, {stopwatch.Elapsed} passed since last output.", level: LogLevel.Trace);
+					if (stopwatch.Elapsed >= interval)
+					{
+						Log.Write(string.Format(Resource.IterationAndTimeInfo, i, stopwatch.Elapsed.TotalMinutesString()));
+						stopwatch.Restart();
+					}
+					#endregion
+
 					#region calculation
 					//tex: $\vec v' = \vec v / \beta$
 					vv = v; v.Scale((1 / β).FromDouble<T>());
@@ -1356,74 +1375,79 @@ namespace Althea.Backend.CSharp.Solver
 					#endregion
 
 					#region check stagnation
-
+					double prodSiCs = prodSi * cs;
+					if (prodSiCs == 0 || Math.Abs(prodSiCs) * m.Norm() < Const<T>.MachinePrecision * x.Norm())
+						stagnations++;
+					else
+						stagnations = 0;
 					#endregion
-					/*
-					% Check for stagnation of the method
-					if (snprod*cs == 0) || (abs(snprod*cs)*norm(m) < eps*norm(x))
-						% increment the number of consecutive iterates which are the same
-						stag = stag + 1;
+
+					#region update solution x
+					x.AddBy(m, prodSiCs.FromDouble<T>());
+					oldProdSi = prodSi;
+					prodSi *= Si;
+					if (preconditioner is not null)
+					{
+						r.AddBy(Am, (-prodSiCs).FromDouble<T>());
+						normR = r.Norm();
+					}
 					else
-						stag = 0;
-					end
-					x = x + (snprod * cs) * m;
-					snprodold = snprod;
-					snprod = snprod * sn;
-					% This recurrence produces CG iterates.
-					% Enable the following statement to see xcg.
-					%xcg = x + snprod * (sn/cs) * m;
-    
-					if existM
-						r = r - snprodold*cs*Am;
-						normr = norm(r);
-					else
-						normr = abs(snprod);
-					end
-					resvec(ii+1,1) = normr;
-					if nargout >= 6
-						% It's possible that this cs value is zero (CG iterate does not exist).
-						if (cs == 0)
-							normrcg = Inf;
-						else
-							rcg = r - snprod*(sn/cs)*Am;
-							normrcg = norm(rcg);
-						end
-						resveccg(ii+2,1) = normrcg;
-					end
-    
-					% check for convergence
-					if (normr <= tolb || stag >= maxstagsteps || moresteps)
-						% double check residual norm is less than tolerance
-						r = b - iterapp('mtimes',afun,atype,afcnstr,x,varargin{:});
-						normr = norm(r);
-						resvec(ii+1,1) = normr;
-						if (normr <= tolb)
-							flag = 0;
-							iter = ii;
-							break
-						else
-							if stag >= maxstagsteps && moresteps == 0
-								stag = 0;
-							end
-							moresteps = moresteps + 1;
-							if moresteps >= maxmsteps
-								if ~warned
-									warning(message('MATLAB:minres:tooSmallTolerance'));
-								end
-								flag = 3;
-								iter = ii;
-								break;
-							end
-						end
-					end
-    
-					if (normr < normrmin)      % update minimal norm quantities
-						normrmin = normr;
-						xmin = x;
-						imin = ii;
-					end
-					*/
+					{
+						normR = Math.Abs(prodSi);
+					}
+					#endregion
+
+					#region check for convergence
+					if (normR <= realTolerance)
+					{
+						RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
+						normR = r.Norm();
+						if (normR <= realTolerance)
+						{   // actually converges
+							minResidual = normR;
+							success = true;
+							break;
+						}
+					}
+					if (stagnations >= maxStagnation)
+					{
+						success = false;
+						break;
+					}
+					// otherwise
+					if (normR < minResidual)
+					{
+						minResidual = normR;
+						if (solution != x)
+							solution?.Dispose();
+						solution = x;
+					}
+					#endregion
 				}
+				#endregion
+
+				#region return solution of first one with minimal residual
+				if (success)
+				{
+					(solution, x) = (x, solution);
+					minResidual /= normB;
+				}
+				else
+				{
+					RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
+					normR = r.Norm();
+					if (normR <= minResidual)
+					{
+						minResidual = normR / normB;
+					}
+					else
+					{
+						minResidual /= normB;
+						(solution, x) = (x, solution);
+					}
+				}
+				Log.Write(string.Format(Resource.MinResFinish, minResidual, tolerance));
+				return (minResidual, solution);
 				#endregion
 			}
 			#region dispose
