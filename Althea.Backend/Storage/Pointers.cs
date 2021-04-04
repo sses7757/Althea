@@ -131,8 +131,10 @@ namespace Althea.Backend.Storage
 			GC.SuppressFinalize(this);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		string IMainPropertyFormat.StringMain => this.NativeStream.ToString();
+		string IMainPropertyFormat.StringMain {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.NativeStream.ToString();
+		}
 
 		/// <summary>
 		/// Indicates whether the current object is equal to another object of the same type.

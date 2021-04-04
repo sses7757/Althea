@@ -12,17 +12,17 @@ using Althea.TensorAlgebra;
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="TensorBase{T}"/>, but they shall be immutable.
+	/// The abstract tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="BaseTensor{T}"/>, but they shall be immutable.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <remarks>
-	/// Since the <see cref="TensorBase{T}"/> may be reference created quite frequently, storing the size as a C# <see cref="Array"/> is rather expensive.<br/>
+	/// Since the <see cref="BaseTensor{T}"/> may be reference created quite frequently, storing the size as a C# <see cref="Array"/> is rather expensive.<br/>
 	/// Thus the C++ equivalent "<c>struct { long size[16] }</c>" of <see cref="FixedBuffer_128{T}"/> (which is a essentially a <c>fixed long size[16]</c>) is used instead to reduce the GC pressure.<br/>
-	/// Also, the <see cref="TensorBase{T}"/> has no finalizer and if it is composed of <see cref="ReferenceStorage{T}"/> which still has no finalizer, the instance stays in GC generation 0 which is quite fast in deallocation.<br/>
+	/// Also, the <see cref="BaseTensor{T}"/> has no finalizer and if it is composed of <see cref="ReferenceStorage{T}"/> which still has no finalizer, the instance stays in GC generation 0 which is quite fast in deallocation.<br/>
 	/// Therefore, the derived class shall follow the same strategy, such as <see cref="BaseSparseTensor{T, TInd}"/>.
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class TensorBase<T> : ValueArray<T>, ITensor where T : unmanaged
+	public abstract class BaseTensor<T> : ValueArray<T>, ITensor where T : unmanaged
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes
@@ -66,14 +66,14 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Construct a <see cref="TensorBase{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="size"/>
+		/// Construct a <see cref="BaseTensor{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="size"/>
 		/// </summary>
 		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
 		/// <param name="size">The presenting size of the tensor</param>
 		/// <param name="labels">The presenting labels of each dimension of this tensor, an empty one means auto generate as <c>{'a', 'b', ...}</c></param>
 		/// <param name="actualLength">The actual length of the <paramref name="values"/>, default 0 means the length of it</param>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
-		protected TensorBase(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<char> labels, long actualLength = 0) : base(values, size.Prod(), actualLength)
+		protected BaseTensor(Storage<T> values, ReadOnlySpan<long> size, ReadOnlySpan<char> labels, long actualLength = 0) : base(values, size.Prod(), actualLength)
 		{
 			if (size.Length == 0)
 				throw new ArgumentNullException(nameof(size));
@@ -172,7 +172,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
 		/// <returns>The reshaped tensor</returns>
-		public override TensorBase<T> ToTensor(ReadOnlySpan<long> size)
+		public override BaseTensor<T> ToTensor(ReadOnlySpan<long> size)
 		{
 			Span<long> newSize = stackalloc long[size.Length];
 			size.CopyTo(newSize);
@@ -188,7 +188,7 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="newSize">The new size of the tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
 		/// <returns>The reshaped tensor, may be a referenced one of this tensor</returns>
-		public abstract TensorBase<T> TensorReshape(ReadOnlySpan<long> newSize);
+		public abstract BaseTensor<T> TensorReshape(ReadOnlySpan<long> newSize);
 		#endregion
 
 		#region indexing
@@ -331,7 +331,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If the input value is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="ranges"/> and/or value's size is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="ranges"/> is out of range</exception>
-		public TensorBase<T> this[params Range[] ranges] {
+		public BaseTensor<T> this[params Range[] ranges] {
 			get {
 				Span<long> off = stackalloc long[this.Rank];
 				Span<long> len = stackalloc long[this.Rank];
@@ -358,7 +358,7 @@ namespace Althea.Arrays
 		/// <returns>The sub-tensor indicated by <paramref name="offsets"/> and <paramref name="lengths"/>. Shall be a referenced tensor if possible.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		public abstract TensorBase<T> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
+		public abstract BaseTensor<T> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
 
 		/// <summary>
 		/// When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
@@ -369,7 +369,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		public abstract void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite);
+		public abstract void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, BaseTensor<T> overwrite);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
@@ -380,7 +380,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
-		public abstract void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> value);
+		public abstract void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, BaseTensor<T> value);
 		#endregion
 
 		#region first few dimensions indexing
@@ -390,7 +390,7 @@ namespace Althea.Arrays
 		/// <param name="n">The first <paramref name="n"/> dimensions to get/set</param>
 		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
 		/// <returns>The (full) sub-tensor of the first <paramref name="n"/> dimensions</returns>
-		public TensorBase<T> this[byte n, params Index[] restIndices] {
+		public BaseTensor<T> this[byte n, params Index[] restIndices] {
 			get {
 				Span<long> rest = stackalloc long[restIndices.Length];
 				this.CheckFirstDims(n, restIndices, rest);
@@ -475,7 +475,7 @@ namespace Althea.Arrays
 		/// <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
-		public abstract TensorBase<T> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
+		public abstract BaseTensor<T> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
@@ -488,7 +488,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>); or <paramref name="value"/> cannot be used as the set parameter</exception>
-		public abstract void SetFirstDims(int n, ReadOnlySpan<long> restIndices, TensorBase<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
+		public abstract void SetFirstDims(int n, ReadOnlySpan<long> restIndices, BaseTensor<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 		#endregion
 		#endregion
 
@@ -498,20 +498,20 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) to sum, its order will be ignored</param>
 		/// <param name="scalar">The scalar to multiply to the result</param>
-		/// <returns>The reduction result as a new <see cref="TensorBase{T}"/></returns>
+		/// <returns>The reduction result as a new <see cref="BaseTensor{T}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract TensorBase<T> Reduce(TensorOrder order, T scalar);
+		public abstract BaseTensor<T> Reduce(TensorOrder order, T scalar);
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation of this tensor under the given <paramref name="order"/>.
 		/// </summary>
 		/// <param name="order">The given <see cref="TensorOrder"/> to indicate the permutation order</param>
 		/// <param name="scalar">The scalar to multiply to the result</param>
-		/// <returns>The permutation result as a new <see cref="TensorBase{T}"/></returns>
+		/// <returns>The permutation result as a new <see cref="BaseTensor{T}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract TensorBase<T> Permute(TensorOrder order, T scalar);
+		public abstract BaseTensor<T> Permute(TensorOrder order, T scalar);
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of this tensor and the <paramref name="other"/> tensor using their .
@@ -519,11 +519,11 @@ namespace Althea.Arrays
 		/// <param name="other">The other tensor to perform the contraction with</param>
 		/// <param name="scalar">The scalar to multiply to the result</param>
 		/// <param name="outputLabels">The desired output tensor's labels as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>. Default (empty) means simple union of the labels of this tensor and the <paramref name="other"/> tensor.</param>
-		/// <returns>The contraction result as a new <see cref="TensorBase{T}"/></returns>
+		/// <returns>The contraction result as a new <see cref="BaseTensor{T}"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract TensorBase<T> Contract(TensorBase<T> other, T scalar, ReadOnlySpan<char> outputLabels = default);
+		public abstract BaseTensor<T> Contract(BaseTensor<T> other, T scalar, ReadOnlySpan<char> outputLabels = default);
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.
@@ -531,21 +531,21 @@ namespace Althea.Arrays
 		/// <param name="scalarThis">The scalar to multiply to this tensor</param>
 		/// <param name="other">The other tensor to perform the contraction with</param>
 		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> tensor</param>
-		/// <returns>The addition result as a new <see cref="TensorBase{T}"/></returns>
+		/// <returns>The addition result as a new <see cref="BaseTensor{T}"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different size than this one</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
-		public abstract TensorBase<T> AddTensor(T scalarThis, TensorBase<T> other, T scalarOther);
+		public abstract BaseTensor<T> AddTensor(T scalarThis, BaseTensor<T> other, T scalarOther);
 		#endregion
 
 		#region operators
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
+		/// Create a new <see cref="BaseTensor{T}"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
 		/// </summary>
 		/// <param name="tensor">One original tensor as the left operand</param>
 		/// <param name="order">The <see cref="TensorOrder"/> indicating the permutation order</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
-		public static TensorBase<T> operator ^(TensorBase<T> tensor, TensorOrder order)
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
+		public static BaseTensor<T> operator ^(BaseTensor<T> tensor, TensorOrder order)
 		{
 			if (tensor is null || !tensor.IsValid())
 				throw new ArgumentNullException(nameof(tensor));
@@ -554,12 +554,12 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// Create a new <see cref="BaseTensor{T}"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
 		/// </summary>
 		/// <param name="left">One original tensor as the left operand</param>
 		/// <param name="right">One original tensor as the right operand</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the contraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors</returns>
-		public static TensorBase<T> operator *(TensorBase<T> left, TensorBase<T> right)
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the contraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors</returns>
+		public static BaseTensor<T> operator *(BaseTensor<T> left, BaseTensor<T> right)
 		{
 			if (left is null || !left.IsValid())
 				throw new ArgumentNullException(nameof(left));
@@ -570,12 +570,12 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// Create a new <see cref="BaseTensor{T}"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
 		/// </summary>
 		/// <param name="left">One original tensor as the left operand</param>
 		/// <param name="right">One original tensor as the right operand</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
-		public static TensorBase<T> operator +(TensorBase<T> left, TensorBase<T> right)
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+		public static BaseTensor<T> operator +(BaseTensor<T> left, BaseTensor<T> right)
 		{
 			if (left is null || !left.IsValid())
 				throw new ArgumentNullException(nameof(left));
@@ -586,12 +586,12 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// Create a new <see cref="BaseTensor{T}"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
 		/// </summary>
 		/// <param name="left">One original tensor as the left operand</param>
 		/// <param name="right">One original tensor as the right operand</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
-		public static TensorBase<T> operator -(TensorBase<T> left, TensorBase<T> right)
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+		public static BaseTensor<T> operator -(BaseTensor<T> left, BaseTensor<T> right)
 		{
 			if (left is null || !left.IsValid())
 				throw new ArgumentNullException(nameof(left));
@@ -602,12 +602,12 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
 		/// </summary>
 		/// <param name="tensor">The original tensor to multiply</param>
 		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public static TensorBase<T> operator *(TensorBase<T> tensor, T scalar)
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public static BaseTensor<T> operator *(BaseTensor<T> tensor, T scalar)
 		{
 			if (tensor is null || !tensor.IsValid())
 				throw new ArgumentNullException(nameof(tensor));
@@ -616,27 +616,27 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the negation result of the given <paramref name="tensor"/>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the negation result of the given <paramref name="tensor"/>
 		/// </summary>
 		/// <param name="tensor">The original tensor to negate</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the negation result of the given <paramref name="tensor"/></returns>
-		public static TensorBase<T> operator -(TensorBase<T> tensor) => tensor * Const<T>.MinusOne;
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the negation result of the given <paramref name="tensor"/></returns>
+		public static BaseTensor<T> operator -(BaseTensor<T> tensor) => tensor * Const<T>.MinusOne;
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
 		/// </summary>
 		/// <param name="tensor">The original tensor to multiply</param>
 		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public static TensorBase<T> operator *(T scalar, TensorBase<T> tensor) => tensor * scalar;
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public static BaseTensor<T> operator *(T scalar, BaseTensor<T> tensor) => tensor * scalar;
 
 		/// <summary>
-		/// Create a new <see cref="TensorBase{T}"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
 		/// </summary>
 		/// <param name="tensor">The original tensor to be divided</param>
 		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
-		/// <returns>A new <see cref="TensorBase{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public static TensorBase<T> operator /(TensorBase<T> tensor, T scalar) => tensor * scalar.GenericReciprocal();
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public static BaseTensor<T> operator /(BaseTensor<T> tensor, T scalar) => tensor * scalar.GenericReciprocal();
 		#endregion
 
 		#region serialization

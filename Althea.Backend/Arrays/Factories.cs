@@ -186,7 +186,7 @@ namespace Althea.Backend.Arrays
 		internal static char[] GetLabels<T>(IReadOnlyDictionary<string, object> otherInfo) where T : unmanaged
 		{
 			char[] labels;
-			var label = otherInfo[TensorBase<T>.LabelsName];
+			var label = otherInfo[BaseTensor<T>.LabelsName];
 			if (label is char[] c)
 				labels = c;
 			else if (label is string s)

@@ -172,7 +172,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
-		public override void SetSlice(long start, long count, VectorBase<T> value)
+		public override void SetSlice(long start, long count, BaseVector<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
@@ -263,7 +263,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
-		public override T Dot(VectorBase<T> other, bool conjugateThis = true)
+		public override T Dot(BaseVector<T> other, bool conjugateThis = true)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -285,7 +285,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
 		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/></exception>
-		public override VectorBase<T> AddVector(VectorBase<T> other, T scalar)
+		public override BaseVector<T> AddVector(BaseVector<T> other, T scalar)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -321,7 +321,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		public override VectorBase<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+		public override BaseVector<T> AddMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));
@@ -360,7 +360,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
 		/// <exception cref="InvalidOperationException">If this and <paramref name="other"/> have different sparsities thus this operation cannot be done in-place</exception>
-		public void AddByVector(VectorBase<T> other, T scalar)
+		public void AddByVector(BaseVector<T> other, T scalar)
 		{
 			if (other is not SparseVector<T, TInd> sparse)
 				throw new NotSupportedException();

@@ -20,7 +20,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public class SymmetricDenseMatrix<T> : MatrixBase<T>, IKrylovVector<SymmetricDenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T> where T : unmanaged
+	public class SymmetricDenseMatrix<T> : BaseMatrix<T>, IKrylovVector<SymmetricDenseMatrix<T>, T>, IPitchedArray<T>, IDenseMatrix<T> where T : unmanaged
 	{
 		#region basic
 		[FieldOffset(0)]
@@ -112,7 +112,7 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Overwrite this symmetric dense matrix using a given <paramref name="normal"/> dense matrix
 		/// </summary>
-		/// <param name="normal">The normal dense <see cref="MatrixBase{T}"/> used to get </param>
+		/// <param name="normal">The normal dense <see cref="BaseMatrix{T}"/> used to get </param>
 		/// <param name="positiveDefinite">Whether this matrix shall be a positive definite one after exit or simply symmetric / hermitian</param>
 		/// <param name="op">The simple operation to apply to <paramref name="normal"/> before the calculation as a <see cref="MatrixOperation"/></param>
 		/// <remarks><list type="table">
@@ -125,7 +125,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="normal"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="normal"/> is not a square matrix when <paramref name="positiveDefinite"/> is false; or <paramref name="normal"/> has incompatible size</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="normal"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/></exception>
-		public virtual void FromNormal(MatrixBase<T> normal, bool positiveDefinite = false, MatrixOperation op = MatrixOperation.None)
+		public virtual void FromNormal(BaseMatrix<T> normal, bool positiveDefinite = false, MatrixOperation op = MatrixOperation.None)
 		{
 			if (normal is null || !normal.IsValid())
 				throw new ArgumentNullException(nameof(normal));
@@ -172,7 +172,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="countCol">The number of the columns to take</param>
 		/// <returns>The sub-matrix (may be a referenced one) in the region indicated by the ranges</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-		public override MatrixBase<T> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
+		public override BaseMatrix<T> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
 			MatrixSliceWrapper.Create<T>(offsetRow, countRow, offsetCol, countCol, this);
 			if (offsetRow == offsetCol && countRow == countCol)
@@ -192,10 +192,10 @@ namespace Althea.Backend.Arrays
 		/// <param name="countRow">The number of the rows to take</param>
 		/// <param name="offsetCol">The starting offset of the columns to take</param>
 		/// <param name="countCol">The number of the columns to take</param>
-		/// <param name="overwrite">The <see cref="MatrixBase{T}"/> to be overwritten</param>
+		/// <param name="overwrite">The <see cref="BaseMatrix{T}"/> to be overwritten</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> overwrite)
+		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, BaseMatrix<T> overwrite)
 		{
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
@@ -221,11 +221,11 @@ namespace Althea.Backend.Arrays
 		/// <param name="countRow">The number of the rows to take</param>
 		/// <param name="offsetCol">The starting offset of the columns to take</param>
 		/// <param name="countCol">The number of the columns to take</param>
-		/// <param name="value">The <see cref="MatrixBase{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
+		/// <param name="value">The <see cref="BaseMatrix{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="InvalidOperationException">If <paramref name="value"/> is neither a <see cref="SymmetricDenseMatrix{T}"/></exception>
-		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, MatrixBase<T> value)
+		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, BaseMatrix<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
@@ -294,11 +294,11 @@ namespace Althea.Backend.Arrays
 		/// Get the <paramref name="k"/>-th diagonal elements and write the result to <paramref name="overwrite"/>.
 		/// </summary>
 		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="overwrite">The output <see cref="VectorBase{T}"/> which will contain the <paramref name="k"/>-th diagonal elements at exit</param>
+		/// <param name="overwrite">The output <see cref="BaseVector{T}"/> which will contain the <paramref name="k"/>-th diagonal elements at exit</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-		public override void GetDiag(long k, VectorBase<T> overwrite)
+		public override void GetDiag(long k, BaseVector<T> overwrite)
 		{
 			bool swapped = false;
 			if ((this.StoredUpper && k < 0) || (!this.StoredUpper && k > 0))
@@ -314,11 +314,11 @@ namespace Althea.Backend.Arrays
 		/// Set the <paramref name="k"/>-th diagonal elements to <paramref name="value"/>.
 		/// </summary>
 		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-		/// <param name="value">The <paramref name="k"/>-th diagonal elements to set as a <see cref="VectorBase{T}"/></param>
+		/// <param name="value">The <paramref name="k"/>-th diagonal elements to set as a <see cref="BaseVector{T}"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="value"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="ISparseVector{T}"/></exception>
-		public override void SetDiag(long k, VectorBase<T> value)
+		public override void SetDiag(long k, BaseVector<T> value)
 		{
 			bool conj = false;
 			if ((this.StoredUpper && k < 0) || (!this.StoredUpper && k > 0))
@@ -394,7 +394,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="AbstractArray{T}.Length"/>)</c>.</param>
 		/// <returns>The reshaped matrix, may be this matrix itself</returns>
 		/// <exception cref="InvalidOperationException">If the computed new number of rows or columns is 1</exception>
-		public override MatrixBase<T> ToMatrix(long rows = 0)
+		public override BaseMatrix<T> ToMatrix(long rows = 0)
 		{
 			Span<long> newSize = stackalloc long[] { rows, 0 };
 			CheckSize(this, newSize);
@@ -429,19 +429,19 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="MatrixBase{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
+		/// Create a new <see cref="BaseMatrix{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
 		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
-		/// <param name="other">The input right <see cref="MatrixBase{T}"/> to be added</param>
+		/// <param name="other">The input right <see cref="BaseMatrix{T}"/> to be added</param>
 		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
 		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
-		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <returns>A new <see cref="BaseMatrix{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		public override MatrixBase<T> AddMatrix(T scalarThis, T scalarOther, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		public override BaseMatrix<T> AddMatrix(T scalarThis, T scalarOther, BaseMatrix<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			var (m, n) = ((IDenseMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
 			opThis = opThis.Simplify<T>(this.Hermitian);
@@ -474,18 +474,18 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="MatrixBase{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
+		/// Create a new <see cref="BaseMatrix{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalar">The scalar to multiply to the result</param>
-		/// <param name="other">The input right <see cref="MatrixBase{T}"/> to be multiplied</param>
+		/// <param name="other">The input right <see cref="BaseMatrix{T}"/> to be multiplied</param>
 		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
 		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
-		/// <returns>A new <see cref="MatrixBase{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <returns>A new <see cref="BaseMatrix{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		public override MatrixBase<T> MultiplyMatrix(T scalar, MatrixBase<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		public override BaseMatrix<T> MultiplyMatrix(T scalar, BaseMatrix<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			return this.ToNormal().MultiplyMatrix(scalar, other, opThis, opOther);
 		}
@@ -502,7 +502,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentException">If both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the sizes are incompatible; or both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="A"/> is this matrix while <paramref name="opA"/> is not <see cref="MatrixOperation.None"/> or <paramref name="B"/> is this matrix while <paramref name="opB"/> is not <see cref="MatrixOperation.None"/></exception>
 		/// <exception cref="InvalidOperationException">If <paramref name="A"/> and <paramref name="B"/> are not matrices whose sum is symmetric matrix with the same <see cref="Hermitian"/> value as this matrix</exception>
-		public virtual void OverwriteByMatricesSum(MatrixBase<T>? A, MatrixBase<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public virtual void OverwriteByMatricesSum(BaseMatrix<T>? A, BaseMatrix<T>? B, T scalarA = default, T scalarB = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n, nullA, nullB) = ((IDenseMatrix<T>)this).CheckOverwriteBySum(ref A, ref B, scalarA, scalarB, ref opA, ref opB);
 			if (nullA || nullB)
@@ -573,7 +573,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="A"/> or <paramref name="B"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="SymmetricDenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="InvalidOperationException">If <paramref name="A"/> != <paramref name="B"/> or <paramref name="opA"/> != <paramref name="opB"/>^H such that the result cannot be a symmetric matrix with the same <see cref="Hermitian"/> value as this matrix</exception>
-		public virtual void OverwriteByMatricesProduct(T α, MatrixBase<T> A, MatrixBase<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public virtual void OverwriteByMatricesProduct(T α, BaseMatrix<T> A, BaseMatrix<T> B, T β = default, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (_, n, k) = ((IDenseMatrix<T>)this).CheckOverwriteByProduct(α, A, B, ref opA, ref opB);
 			if (A != B)

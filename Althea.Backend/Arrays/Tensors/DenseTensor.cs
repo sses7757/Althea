@@ -23,7 +23,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public class DenseTensor<T> : TensorBase<T>, IPitchedArray<T>, IKrylovVector<DenseTensor<T>, T> where T : unmanaged
+	public class DenseTensor<T> : BaseTensor<T>, IPitchedArray<T>, IKrylovVector<DenseTensor<T>, T> where T : unmanaged
 	{
 		#region basic
 		// previously defined 324 bytes
@@ -48,7 +48,7 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Get the strides (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		/// <remarks>The first element is 1, the last element is the product of <see cref="OuterSize"/> and the <see cref="ReadOnlySpan{T}.Length"/> == <see cref="TensorBase{T}.Rank"/> + 1</remarks>
+		/// <remarks>The first element is 1, the last element is the product of <see cref="OuterSize"/> and the <see cref="ReadOnlySpan{T}.Length"/> == <see cref="BaseTensor{T}.Rank"/> + 1</remarks>
 		public ReadOnlySpan<long> Strides {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => MemoryMarshal.CreateReadOnlySpan(ref this.__overlap, this.Rank + 1);
@@ -350,7 +350,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		public override void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> overwrite)
+		public override void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, BaseTensor<T> overwrite)
 		{
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
@@ -372,7 +372,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
-		public override void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TensorBase<T> value)
+		public override void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, BaseTensor<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
@@ -416,7 +416,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="AbstractArray{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="AbstractArray{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
-		public override void SetFirstDims(int n, ReadOnlySpan<long> restIndices, TensorBase<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		public override void SetFirstDims(int n, ReadOnlySpan<long> restIndices, BaseTensor<T> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
@@ -507,7 +507,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different size than this one</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
-		public override DenseTensor<T> AddTensor(T scalarThis, TensorBase<T> other, T scalarOther)
+		public override DenseTensor<T> AddTensor(T scalarThis, BaseTensor<T> other, T scalarOther)
 		{
 			if (scalarThis.IsZero())
 				throw new ArgumentOutOfRangeException(nameof(scalarThis), scalarThis, Resources.Parameter.CannotZero);
@@ -542,7 +542,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public override DenseTensor<T> Contract(TensorBase<T> other, T scalar, ReadOnlySpan<char> outputLabels = default)
+		public override DenseTensor<T> Contract(BaseTensor<T> other, T scalar, ReadOnlySpan<char> outputLabels = default)
 		{
 			if (scalar.IsZero())
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
@@ -987,7 +987,7 @@ namespace Althea.Backend.Arrays
 		protected internal const string OuterSizeName = nameof(OuterSize);
 
 		/// <summary>
-		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="TensorBase{T}.Labels"/> and <see cref="OuterSize"/>.
+		/// Get other requisite informations for re-constructing the array of that derived class type. Only returns the <see cref="BaseTensor{T}.Labels"/> and <see cref="OuterSize"/>.
 		/// </summary>
 		/// <returns>Other requisite informations used to re-construct this array</returns>
 		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)

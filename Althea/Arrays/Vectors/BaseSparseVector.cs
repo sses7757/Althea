@@ -16,7 +16,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public abstract class BaseSparseVector<T, TInd> : VectorBase<T>, ISparseVector<T>, ISparseArray<T, TInd>
+	public abstract class BaseSparseVector<T, TInd> : BaseVector<T>, ISparseVector<T>, ISparseArray<T, TInd>
 		where T : unmanaged
 		where TInd : unmanaged
 	{

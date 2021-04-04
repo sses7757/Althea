@@ -461,6 +461,300 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="labels"/> is not the same as the <see cref="P:Althea.Arrays.ITensor.Rank"/></exception>
         </member>
+        <member name="T:Althea.Arrays.BaseMatrix`1">
+            <summary>
+            The abstract matrix class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="T:Althea.Arrays.BaseMatrix`1"/>, but they shall be immutable.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.Rank">
+            <summary>
+            Get the rank of this matrix -- 2
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.Size">
+            <summary>
+            Get the size of this matrix ({<see cref="P:Althea.Arrays.BaseMatrix`1.NRows"/>, <see cref="P:Althea.Arrays.BaseMatrix`1.NCols"/>}) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.NRows">
+            <summary>
+            Get the umber of rows of this matrix
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.NCols">
+            <summary>
+            Get the umber of columns of this matrix
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Construct a <see cref="T:Althea.Arrays.BaseMatrix`1"/> with value array <paramref name="values"/> and presenting size <paramref name="rows"/>, <paramref name="cols"/>
+            </summary>
+            <param name="values"></param>
+            <param name="rows">The presenting number of rows of this matrix</param>
+            <param name="cols">The presenting number of columns of this matrix</param>
+            <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.GetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            When implemented by a derived class, get a sub-matrix by the row and column index ranges.
+            </summary>
+            <param name="offsetRow">The starting offset of the row to take</param>
+            <param name="countRow">The number of the rows to take</param>
+            <param name="offsetCol">The starting offset of the columns to take</param>
+            <param name="countCol">The number of the columns to take</param>
+            <returns>The sub-matrix (may be a referenced one) in the region indicated by the ranges</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.GetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64,Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            When implemented by a derived class, get a sub-matrix by the row and column index ranges and copy it to <paramref name="overwrite"/>.
+            </summary>
+            <param name="offsetRow">The starting offset of the row to take</param>
+            <param name="countRow">The number of the rows to take</param>
+            <param name="offsetCol">The starting offset of the columns to take</param>
+            <param name="countCol">The number of the columns to take</param>
+            <param name="overwrite">The <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be overwritten</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.SetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64,Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            When implemented by a derived class, set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
+            </summary>
+            <param name="offsetRow">The starting offset of the row to take</param>
+            <param name="countRow">The number of the rows to take</param>
+            <param name="offsetCol">The starting offset of the columns to take</param>
+            <param name="countCol">The number of the columns to take</param>
+            <param name="value">The <see cref="T:Althea.Arrays.BaseMatrix`1"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.CheckIndex(System.Int64,System.Int64)">
+            <summary>
+            Check the row and column indices
+            </summary>
+            <param name="row">The row index as a <see cref="T:System.Int64"/></param>
+            <param name="col">The column index as a <see cref="T:System.Int64"/></param>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.Item(System.Int64,System.Int64)">
+            <summary>
+            When implemented by a derived class, get or set the element at the given position (<paramref name="x"/>, <paramref name="y"/>)
+            </summary>
+            <param name="x">The row position as a <see cref="T:System.Int64"/></param>
+            <param name="y">The column position as a <see cref="T:System.Int64"/></param>
+            <returns>The element at position (<paramref name="x"/>, <paramref name="y"/>)</returns>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.Item(System.Index,System.Index)">
+            <summary>
+            Get or set the element at the given position (<paramref name="x"/>, <paramref name="y"/>)
+            </summary>
+            <param name="x">The row position as an <see cref="T:System.Index"/></param>
+            <param name="y">The column position as an <see cref="T:System.Index"/></param>
+            <returns>The element at position (<paramref name="x"/>, <paramref name="y"/>)</returns>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.Item(System.Range,System.Range)">
+            <summary>
+            Get or set the sub-matrix indicated by <paramref name="x"/> and <paramref name="y"/>
+            </summary>
+            <param name="x">The range of rows to get/set as a <see cref="T:System.Range"/></param>
+            <param name="y">The range of columns to get/set as a <see cref="T:System.Range"/></param>
+            <returns>The sub-matrix in this range, may be a referenced one</returns>
+        </member>
+        <member name="P:Althea.Arrays.BaseMatrix`1.Diagonal">
+            <summary>
+            Get the diagonal element accessor <see cref="T:Althea.Arrays.MatrixDiagonalAccessor`1"/> that allows you to get and set diagonal values
+            </summary>
+            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.GetDiag(System.Int64)">
+            <summary>
+            When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements.
+            </summary>
+            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
+            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.GetDiag(System.Int64,Althea.Arrays.BaseVector{`0})">
+            <summary>
+            When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements and write the result to <paramref name="overwrite"/>.
+            </summary>
+            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+            <param name="overwrite">The output <see cref="T:Althea.Arrays.BaseVector`1"/> which will contain the <paramref name="k"/>-th diagonal elements at exit</param>
+            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="overwrite"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.SetDiag(System.Int64,Althea.Arrays.BaseVector{`0})">
+            <summary>
+            When implemented by a derived class, set the <paramref name="k"/>-th diagonal elements to <paramref name="value"/>.
+            </summary>
+            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+            <param name="value">The <paramref name="k"/>-th diagonal elements to set as a <see cref="T:Althea.Arrays.BaseVector`1"/></param>
+            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_UnaryNegation(Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
+            </summary>
+            <param name="matrix">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> whose elements will be used</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the negation of <paramref name="matrix"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_Multiply(Althea.Arrays.BaseMatrix{`0},`0)">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+            </summary>
+            <param name="matrix">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> whose elements will be used</param>
+            <param name="scalar">The input scalar used as the multiplier</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_Multiply(`0,Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+            </summary>
+            <param name="matrix">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> whose elements will be used</param>
+            <param name="scalar">The input scalar used as the multiplier</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_Division(Althea.Arrays.BaseMatrix{`0},`0)">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise division result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+            </summary>
+            <param name="matrix">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> whose elements will be used</param>
+            <param name="scalar">The input scalar used as the divider</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_ExclusiveOr(Althea.Arrays.BaseMatrix{`0},Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.
+            </summary>
+            <param name="matrix">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> whose elements will be used</param>
+            <param name="operation">The input <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> used as the operation</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="operation"/>(<paramref name="matrix"/>)</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_Addition(Althea.Arrays.BaseMatrix{`0},Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+            </summary>
+            <param name="left">The input left <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be added</param>
+            <param name="right">The input right <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be added</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="left"/> + <paramref name="right"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_Subtraction(Althea.Arrays.BaseMatrix{`0},Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise subtraction result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+            </summary>
+            <param name="left">The input left <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be subtracted from</param>
+            <param name="right">The input right <see cref="T:Althea.Arrays.BaseMatrix`1"/> to subtract</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="left"/> - <paramref name="right"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If the subtraction cannot be performed due to incompatible sizes</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.op_Multiply(Althea.Arrays.BaseMatrix{`0},Althea.Arrays.BaseMatrix{`0})">
+            <summary>
+            Create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+            </summary>
+            <param name="left">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be multiplied at left</param>
+            <param name="right">The input <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be multiplied at right</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.ToMatrix(System.Int64)">
+            <summary>
+            When implemented by a derived class, reshape this matrix to a matrix with leading dimension = <paramref name="rows"/>
+            </summary>
+            <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="P:Althea.Arrays.AbstractArray`1.Length"/>)</c>.</param>
+            <returns>The reshaped matrix, may be this matrix itself</returns>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.ApplyOperation(Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            When implemented by a derived class, create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
+            </summary>
+            <param name="operation">The input <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> used as the simple operation to be applied</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <paramref name="operation"/>(this)</returns>
+            <exception cref="T:System.NotSupportedException">If the given <paramref name="operation"/> is not supported</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.AddMatrix(`0,`0,Althea.Arrays.BaseMatrix{`0},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            When implemented by a derived class, create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
+            </summary>
+            <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
+            <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
+            <param name="other">The input right <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be added</param>
+            <param name="opThis">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to this matrix before addition</param>
+            <param name="opOther">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
+            <exception cref="T:System.NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
+            <exception cref="T:System.ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+        </member>
+        <member name="M:Althea.Arrays.BaseMatrix`1.MultiplyMatrix(`0,Althea.Arrays.BaseMatrix{`0},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <summary>
+            When implemented by a derived class, create a new <see cref="T:Althea.Arrays.BaseMatrix`1"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
+            </summary>
+            <param name="scalar">The scalar to multiply to the result</param>
+            <param name="other">The input right <see cref="T:Althea.Arrays.BaseMatrix`1"/> to be multiplied</param>
+            <param name="opThis">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to this matrix before addition</param>
+            <param name="opOther">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
+            <returns>A new <see cref="T:Althea.Arrays.BaseMatrix`1"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
+            <exception cref="T:System.NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+            <exception cref="T:System.ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+        </member>
+        <member name="T:Althea.Arrays.MatrixDiagonalAccessor`1">
+            <summary>
+            The wrapper structure used to access diagonal elements of a <see cref="T:Althea.Arrays.BaseMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Arrays.MatrixDiagonalAccessor`1.Item(System.Int64)">
+            <summary>
+            The indexer of getting and setting diagonal or sub-diagonal or super-diagonal elements as a whole
+            </summary>
+            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.op_Equality(Althea.Arrays.MatrixDiagonalAccessor{`0},Althea.Arrays.MatrixDiagonalAccessor{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.op_Inequality(Althea.Arrays.MatrixDiagonalAccessor{`0},Althea.Arrays.MatrixDiagonalAccessor{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.Object.Equals(System.Object)"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.Equals(Althea.Arrays.MatrixDiagonalAccessor{`0})">
+            <summary>
+            Override <see cref="M:System.IEquatable`1.Equals(`0)"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.GetHashCode">
+            <summary>
+            Get the hash code of this structure
+            </summary>
+            <returns>The hash code of this structure</returns>
+        </member>
         <member name="T:Althea.Arrays.BaseSparseMatrix`2">
             <summary>
             The abstract sparse matrix class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the value array storage.
@@ -567,10 +861,10 @@
             When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="T:Althea.Storage`1"/> is <paramref name="denseStorage"/>
             </summary>
             <param name="denseStorage">The <see cref="T:Althea.Storage`1"/> of the dense matrix to overwrite</param>
-            <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="P:Althea.Arrays.MatrixBase`1.NRows"/></param>
+            <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="P:Althea.Arrays.BaseMatrix`1.NRows"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="P:Althea.Arrays.MatrixBase`1.NRows"/></exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="leadDim"/> * <see cref="P:Althea.Arrays.MatrixBase`1.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="P:Althea.Arrays.BaseMatrix`1.NRows"/></exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="leadDim"/> * <see cref="P:Althea.Arrays.BaseMatrix`1.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
         </member>
         <member name="M:Althea.Arrays.BaseSparseMatrix`2.ToFormat(Althea.LinearAlgebra.Sparse.SparseMatrixFormat,Althea.LinearAlgebra.Sparse.IOtherInfo)">
             <summary>
@@ -608,300 +902,6 @@
             When implemented by a derived class, get other requisite informations for re-constructing the sparse matrix of that derived class type. The default implementation returns the <see cref="P:Althea.Arrays.BaseSparseMatrix`2.DefaultValue"/> and <see cref="P:Althea.Arrays.BaseSparseMatrix`2.Format"/>.
             </summary>
             <returns>Other requisite informations used to re-construct this sparse matrix</returns>
-        </member>
-        <member name="T:Althea.Arrays.MatrixBase`1">
-            <summary>
-            The abstract matrix class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="T:Althea.Arrays.MatrixBase`1"/>, but they shall be immutable.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.Rank">
-            <summary>
-            Get the rank of this matrix -- 2
-            </summary>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.Size">
-            <summary>
-            Get the size of this matrix ({<see cref="P:Althea.Arrays.MatrixBase`1.NRows"/>, <see cref="P:Althea.Arrays.MatrixBase`1.NCols"/>}) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
-            </summary>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.NRows">
-            <summary>
-            Get the umber of rows of this matrix
-            </summary>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.NCols">
-            <summary>
-            Get the umber of columns of this matrix
-            </summary>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Construct a <see cref="T:Althea.Arrays.MatrixBase`1"/> with value array <paramref name="values"/> and presenting size <paramref name="rows"/>, <paramref name="cols"/>
-            </summary>
-            <param name="values"></param>
-            <param name="rows">The presenting number of rows of this matrix</param>
-            <param name="cols">The presenting number of columns of this matrix</param>
-            <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.GetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, get a sub-matrix by the row and column index ranges.
-            </summary>
-            <param name="offsetRow">The starting offset of the row to take</param>
-            <param name="countRow">The number of the rows to take</param>
-            <param name="offsetCol">The starting offset of the columns to take</param>
-            <param name="countCol">The number of the columns to take</param>
-            <returns>The sub-matrix (may be a referenced one) in the region indicated by the ranges</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.GetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64,Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            When implemented by a derived class, get a sub-matrix by the row and column index ranges and copy it to <paramref name="overwrite"/>.
-            </summary>
-            <param name="offsetRow">The starting offset of the row to take</param>
-            <param name="countRow">The number of the rows to take</param>
-            <param name="offsetCol">The starting offset of the columns to take</param>
-            <param name="countCol">The number of the columns to take</param>
-            <param name="overwrite">The <see cref="T:Althea.Arrays.MatrixBase`1"/> to be overwritten</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.SetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64,Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            When implemented by a derived class, set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
-            </summary>
-            <param name="offsetRow">The starting offset of the row to take</param>
-            <param name="countRow">The number of the rows to take</param>
-            <param name="offsetCol">The starting offset of the columns to take</param>
-            <param name="countCol">The number of the columns to take</param>
-            <param name="value">The <see cref="T:Althea.Arrays.MatrixBase`1"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.CheckIndex(System.Int64,System.Int64)">
-            <summary>
-            Check the row and column indices
-            </summary>
-            <param name="row">The row index as a <see cref="T:System.Int64"/></param>
-            <param name="col">The column index as a <see cref="T:System.Int64"/></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.Item(System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, get or set the element at the given position (<paramref name="x"/>, <paramref name="y"/>)
-            </summary>
-            <param name="x">The row position as a <see cref="T:System.Int64"/></param>
-            <param name="y">The column position as a <see cref="T:System.Int64"/></param>
-            <returns>The element at position (<paramref name="x"/>, <paramref name="y"/>)</returns>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.Item(System.Index,System.Index)">
-            <summary>
-            Get or set the element at the given position (<paramref name="x"/>, <paramref name="y"/>)
-            </summary>
-            <param name="x">The row position as an <see cref="T:System.Index"/></param>
-            <param name="y">The column position as an <see cref="T:System.Index"/></param>
-            <returns>The element at position (<paramref name="x"/>, <paramref name="y"/>)</returns>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.Item(System.Range,System.Range)">
-            <summary>
-            Get or set the sub-matrix indicated by <paramref name="x"/> and <paramref name="y"/>
-            </summary>
-            <param name="x">The range of rows to get/set as a <see cref="T:System.Range"/></param>
-            <param name="y">The range of columns to get/set as a <see cref="T:System.Range"/></param>
-            <returns>The sub-matrix in this range, may be a referenced one</returns>
-        </member>
-        <member name="P:Althea.Arrays.MatrixBase`1.Diagonal">
-            <summary>
-            Get the diagonal element accessor <see cref="T:Althea.Arrays.MatrixDiagonalAccessor`1"/> that allows you to get and set diagonal values
-            </summary>
-            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.GetDiag(System.Int64)">
-            <summary>
-            When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements.
-            </summary>
-            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
-            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.GetDiag(System.Int64,Althea.Arrays.VectorBase{`0})">
-            <summary>
-            When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements and write the result to <paramref name="overwrite"/>.
-            </summary>
-            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-            <param name="overwrite">The output <see cref="T:Althea.Arrays.VectorBase`1"/> which will contain the <paramref name="k"/>-th diagonal elements at exit</param>
-            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="overwrite"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.SetDiag(System.Int64,Althea.Arrays.VectorBase{`0})">
-            <summary>
-            When implemented by a derived class, set the <paramref name="k"/>-th diagonal elements to <paramref name="value"/>.
-            </summary>
-            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-            <param name="value">The <paramref name="k"/>-th diagonal elements to set as a <see cref="T:Althea.Arrays.VectorBase`1"/></param>
-            <exception cref="T:System.InvalidOperationException">If this matrix is not a square matrix</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_UnaryNegation(Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
-            </summary>
-            <param name="matrix">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> whose elements will be used</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the negation of <paramref name="matrix"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_Multiply(Althea.Arrays.MatrixBase{`0},`0)">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
-            </summary>
-            <param name="matrix">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> whose elements will be used</param>
-            <param name="scalar">The input scalar used as the multiplier</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_Multiply(`0,Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
-            </summary>
-            <param name="matrix">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> whose elements will be used</param>
-            <param name="scalar">The input scalar used as the multiplier</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_Division(Althea.Arrays.MatrixBase{`0},`0)">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise division result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
-            </summary>
-            <param name="matrix">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> whose elements will be used</param>
-            <param name="scalar">The input scalar used as the divider</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_ExclusiveOr(Althea.Arrays.MatrixBase{`0},Althea.LinearAlgebra.MatrixOperation)">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.
-            </summary>
-            <param name="matrix">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> whose elements will be used</param>
-            <param name="operation">The input <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> used as the operation</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="operation"/>(<paramref name="matrix"/>)</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_Addition(Althea.Arrays.MatrixBase{`0},Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
-            </summary>
-            <param name="left">The input left <see cref="T:Althea.Arrays.MatrixBase`1"/> to be added</param>
-            <param name="right">The input right <see cref="T:Althea.Arrays.MatrixBase`1"/> to be added</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="left"/> + <paramref name="right"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_Subtraction(Althea.Arrays.MatrixBase{`0},Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise subtraction result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
-            </summary>
-            <param name="left">The input left <see cref="T:Althea.Arrays.MatrixBase`1"/> to be subtracted from</param>
-            <param name="right">The input right <see cref="T:Althea.Arrays.MatrixBase`1"/> to subtract</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="left"/> - <paramref name="right"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentException">If the subtraction cannot be performed due to incompatible sizes</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.op_Multiply(Althea.Arrays.MatrixBase{`0},Althea.Arrays.MatrixBase{`0})">
-            <summary>
-            Create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
-            </summary>
-            <param name="left">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> to be multiplied at left</param>
-            <param name="right">The input <see cref="T:Althea.Arrays.MatrixBase`1"/> to be multiplied at right</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.ToMatrix(System.Int64)">
-            <summary>
-            When implemented by a derived class, reshape this matrix to a matrix with leading dimension = <paramref name="rows"/>
-            </summary>
-            <param name="rows">The number of rows of the target matrix; if <paramref name="rows"/> ≤ 0, it is assumed that leadDim = <c>sqrt(<see cref="P:Althea.Arrays.AbstractArray`1.Length"/>)</c>.</param>
-            <returns>The reshaped matrix, may be this matrix itself</returns>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.ApplyOperation(Althea.LinearAlgebra.MatrixOperation)">
-            <summary>
-            When implemented by a derived class, create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the simple operation result of this matrix under <paramref name="operation"/>.
-            </summary>
-            <param name="operation">The input <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> used as the simple operation to be applied</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <paramref name="operation"/>(this)</returns>
-            <exception cref="T:System.NotSupportedException">If the given <paramref name="operation"/> is not supported</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.AddMatrix(`0,`0,Althea.Arrays.MatrixBase{`0},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
-            <summary>
-            When implemented by a derived class, create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
-            </summary>
-            <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
-            <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
-            <param name="other">The input right <see cref="T:Althea.Arrays.MatrixBase`1"/> to be added</param>
-            <param name="opThis">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to this matrix before addition</param>
-            <param name="opOther">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
-            <exception cref="T:System.NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
-            <exception cref="T:System.ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixBase`1.MultiplyMatrix(`0,Althea.Arrays.MatrixBase{`0},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
-            <summary>
-            When implemented by a derived class, create a new <see cref="T:Althea.Arrays.MatrixBase`1"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
-            </summary>
-            <param name="scalar">The scalar to multiply to the result</param>
-            <param name="other">The input right <see cref="T:Althea.Arrays.MatrixBase`1"/> to be multiplied</param>
-            <param name="opThis">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to this matrix before addition</param>
-            <param name="opOther">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
-            <returns>A new <see cref="T:Althea.Arrays.MatrixBase`1"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
-            <exception cref="T:System.NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-            <exception cref="T:System.ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
-        </member>
-        <member name="T:Althea.Arrays.MatrixDiagonalAccessor`1">
-            <summary>
-            The wrapper structure used to access diagonal elements of a <see cref="T:Althea.Arrays.MatrixBase`1"/>
-            </summary>
-        </member>
-        <member name="P:Althea.Arrays.MatrixDiagonalAccessor`1.Item(System.Int64)">
-            <summary>
-            The indexer of getting and setting diagonal or sub-diagonal or super-diagonal elements as a whole
-            </summary>
-            <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.op_Equality(Althea.Arrays.MatrixDiagonalAccessor{`0},Althea.Arrays.MatrixDiagonalAccessor{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.op_Inequality(Althea.Arrays.MatrixDiagonalAccessor{`0},Althea.Arrays.MatrixDiagonalAccessor{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.Object.Equals(System.Object)"/>
-            </summary>
-        </member>
-        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.Equals(Althea.Arrays.MatrixDiagonalAccessor{`0})">
-            <summary>
-            Override <see cref="M:System.IEquatable`1.Equals(`0)"/>
-            </summary>
-        </member>
-        <member name="M:Althea.Arrays.MatrixDiagonalAccessor`1.GetHashCode">
-            <summary>
-            Get the hash code of this structure
-            </summary>
-            <returns>The hash code of this structure</returns>
         </member>
         <member name="T:Althea.Arrays.BaseSparseTensor`2">
             <summary>
@@ -1010,9 +1010,9 @@
             When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="T:Althea.Storage`1"/> is <paramref name="denseStorage"/>
             </summary>
             <param name="denseStorage">The <see cref="T:Althea.Storage`1"/> of the dense tensor to overwrite</param>
-            <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="P:Althea.Arrays.TensorBase`1.Size"/> of this one</param>
+            <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="P:Althea.Arrays.BaseTensor`1.Size"/> of this one</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="P:Althea.Arrays.TensorBase`1.Size"/></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="P:Althea.Arrays.BaseTensor`1.Size"/></exception>
             <exception cref="T:System.ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="P:Althea.Storage`1.Length">Length</see></exception>
         </member>
         <member name="M:Althea.Arrays.BaseSparseTensor`2.ToFormat(Althea.TensorAlgebra.Sparse.SparseTensorFormat,Althea.LinearAlgebra.Sparse.IOtherInfo)">
@@ -1053,37 +1053,37 @@
             </summary>
             <returns>Other requisite informations used to re-construct this sparse tensor</returns>
         </member>
-        <member name="T:Althea.Arrays.TensorBase`1">
+        <member name="T:Althea.Arrays.BaseTensor`1">
             <summary>
-            The abstract tensor class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="T:Althea.Arrays.TensorBase`1"/>, but they shall be immutable.
+            The abstract tensor class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="T:Althea.Arrays.BaseTensor`1"/>, but they shall be immutable.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <remarks>
-            Since the <see cref="T:Althea.Arrays.TensorBase`1"/> may be reference created quite frequently, storing the size as a C# <see cref="T:System.Array"/> is rather expensive.<br/>
+            Since the <see cref="T:Althea.Arrays.BaseTensor`1"/> may be reference created quite frequently, storing the size as a C# <see cref="T:System.Array"/> is rather expensive.<br/>
             Thus the C++ equivalent "<c>struct { long size[16] }</c>" of <see cref="T:Althea.Helpers.FixedBuffer_128`1"/> (which is a essentially a <c>fixed long size[16]</c>) is used instead to reduce the GC pressure.<br/>
-            Also, the <see cref="T:Althea.Arrays.TensorBase`1"/> has no finalizer and if it is composed of <see cref="T:Althea.ReferenceStorage`1"/> which still has no finalizer, the instance stays in GC generation 0 which is quite fast in deallocation.<br/>
+            Also, the <see cref="T:Althea.Arrays.BaseTensor`1"/> has no finalizer and if it is composed of <see cref="T:Althea.ReferenceStorage`1"/> which still has no finalizer, the instance stays in GC generation 0 which is quite fast in deallocation.<br/>
             Therefore, the derived class shall follow the same strategy, such as <see cref="T:Althea.Arrays.BaseSparseTensor`2"/>.
             </remarks>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Rank">
+        <member name="P:Althea.Arrays.BaseTensor`1.Rank">
             <summary>
             Get the rank of this tensor as a <see cref="T:System.Int32"/>
             </summary>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Size">
+        <member name="P:Althea.Arrays.BaseTensor`1.Size">
             <summary>
             Get the size of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
             </summary>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.SizeProd">
+        <member name="P:Althea.Arrays.BaseTensor`1.SizeProd">
             <summary>
             Get the (both end inclusive) accumulated product of the <see cref="P:Althea.Arrays.AbstractArray`1.Size"/> of this tensor
             </summary>
-            <remarks>The first element is 1, the last element is <see cref="P:Althea.Arrays.AbstractArray`1.Length"/> and the size == <see cref="P:Althea.Arrays.TensorBase`1.Rank"/> + 1</remarks>
+            <remarks>The first element is 1, the last element is <see cref="P:Althea.Arrays.AbstractArray`1.Length"/> and the size == <see cref="P:Althea.Arrays.BaseTensor`1.Rank"/> + 1</remarks>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Char},System.Int64)">
+        <member name="M:Althea.Arrays.BaseTensor`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Char},System.Int64)">
             <summary>
-            Construct a <see cref="T:Althea.Arrays.TensorBase`1"/> by preallocated <paramref name="values"/> and the given <paramref name="size"/>
+            Construct a <see cref="T:Althea.Arrays.BaseTensor`1"/> by preallocated <paramref name="values"/> and the given <paramref name="size"/>
             </summary>
             <param name="values">The preallocated <see cref="T:Althea.Storage`1"/> of the value array</param>
             <param name="size">The presenting size of the tensor</param>
@@ -1091,13 +1091,13 @@
             <param name="actualLength">The actual length of the <paramref name="values"/>, default 0 means the length of it</param>
             <exception cref="T:System.ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Labels">
+        <member name="P:Althea.Arrays.BaseTensor`1.Labels">
             <summary>
             Get or set the label array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/> used to mark each index of this tensor
             </summary>
             <exception cref="T:System.ArgumentException">If the setting value's length is not the same as the <see cref="P:Althea.Arrays.AbstractArray`1.Rank"/></exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.GetLabel(System.Int32)">
+        <member name="M:Althea.Arrays.BaseTensor`1.GetLabel(System.Int32)">
             <summary>
             Get the label at rank <paramref name="index"/>
             </summary>
@@ -1105,7 +1105,7 @@
             <returns>The <see cref="T:System.Char"/> label at <paramref name="index"/></returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="P:Althea.Arrays.AbstractArray`1.Rank"/></exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.SetLabel(System.Int32,System.Char)">
+        <member name="M:Althea.Arrays.BaseTensor`1.SetLabel(System.Int32,System.Char)">
             <summary>
             Set the label at rank <paramref name="index"/> to <paramref name="value"/>
             </summary>
@@ -1113,7 +1113,7 @@
             <param name="value">The <see cref="T:System.Char"/> label at <paramref name="index"/> to set</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="P:Althea.Arrays.AbstractArray`1.Rank"/></exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.SetLabels(System.Char[])">
+        <member name="M:Althea.Arrays.BaseTensor`1.SetLabels(System.Char[])">
             <summary>
             Set the label(s) used to mark each index of this tensor
             </summary>
@@ -1121,21 +1121,21 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="labels"/> is not the same as the <see cref="P:Althea.Arrays.AbstractArray`1.Rank"/></exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.ToTensor(System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.ToTensor(System.ReadOnlySpan{System.Int64})">
             <summary>
             Reshape the array to a tensor with dimensionality = <paramref name="size"/>.
             </summary>
             <param name="size">The new size/dimensionality with at most one or zero uncertain dimension indicated by a non-positive number.</param>
             <returns>The reshaped tensor</returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.TensorReshape(System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.TensorReshape(System.ReadOnlySpan{System.Int64})">
             <summary>
             When implemented by a derived class, reshape this tensor to another tensor with the given <paramref name="newSize"/> 
             </summary>
             <param name="newSize">The new size of the tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/></param>
             <returns>The reshaped tensor, may be a referenced one of this tensor</returns>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Item(System.Index[])">
+        <member name="P:Althea.Arrays.BaseTensor`1.Item(System.Index[])">
             <summary>
             The basic indexed getter and setter of this tensor
             </summary>
@@ -1144,7 +1144,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Item(System.ReadOnlySpan{System.Int64})">
+        <member name="P:Althea.Arrays.BaseTensor`1.Item(System.ReadOnlySpan{System.Int64})">
             <summary>
             When implemented by a derived class, provide the basic indexed getter and setter of this tensor
             </summary>
@@ -1153,7 +1153,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.CheckIndex(System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.CheckIndex(System.ReadOnlySpan{System.Int64})">
             <summary>
             Check whether the given <paramref name="indices"/> is out of range of this tensor
             </summary>
@@ -1162,7 +1162,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.CheckIndex(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.CheckIndex(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
             Check whether the given <paramref name="indices"/> is out of range of this tensor
             </summary>
@@ -1172,7 +1172,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.CheckRange(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.CheckRange(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
             Check whether the given ranges indicated by <paramref name="offsets"/> and <paramref name="lengths"/> are out of range of this tensor
             </summary>
@@ -1182,7 +1182,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.CheckRange(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.CheckRange(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
             Check whether the given ranges indicated by <paramref name="offsets"/> and <paramref name="lengths"/> are out of range of this tensor
             </summary>
@@ -1193,7 +1193,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Item(System.Range[])">
+        <member name="P:Althea.Arrays.BaseTensor`1.Item(System.Range[])">
             <summary>
             Get or set a sub-tensor (of same rank) indicated by the given <paramref name="ranges"/>
             </summary>
@@ -1202,7 +1202,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="ranges"/> and/or value's size is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="ranges"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.GetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.GetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
             When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/>
             </summary>
@@ -1212,7 +1212,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.GetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.GetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.Arrays.BaseTensor{`0})">
             <summary>
             When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>
             </summary>
@@ -1223,7 +1223,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.SetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.SetSlice(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.Arrays.BaseTensor{`0})">
             <summary>
             When implemented by a derived class, set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>
             </summary>
@@ -1234,7 +1234,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is not the same as the rank</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="value"/>'s size is out of range</exception>
         </member>
-        <member name="P:Althea.Arrays.TensorBase`1.Item(System.Byte,System.Index[])">
+        <member name="P:Althea.Arrays.BaseTensor`1.Item(System.Byte,System.Index[])">
             <summary>
             Get or set the (full) sub-tensor of rank <paramref name="n"/> located by the given <paramref name="restIndices"/> of length <c>(<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</c>.
             </summary>
@@ -1242,7 +1242,7 @@
             <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
             <returns>The (full) sub-tensor of the first <paramref name="n"/> dimensions</returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.CheckFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.Span{System.Int64},System.Span{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.CheckFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.Span{System.Int64},System.Span{System.Int64})">
             <summary>
             Check whether the given first-few-dimension(s) taking indicated by <paramref name="n"/>, <paramref name="restIndices"/>, <paramref name="offsets"/> and <paramref name="lengths"/> are valid and put the overall offsets and lengths to <paramref name="allOffsets"/> and <paramref name="allLengths"/>.
             </summary>
@@ -1256,7 +1256,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.GetFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.GetFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
             When implemented by a derived class, get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</c>.
             </summary>
@@ -1268,7 +1268,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.SetFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},Althea.Arrays.TensorBase{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.Arrays.BaseTensor`1.SetFirstDims(System.Int32,System.ReadOnlySpan{System.Int64},Althea.Arrays.BaseTensor{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64})">
             <summary>
             When implemented by a derived class, set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
             </summary>
@@ -1281,121 +1281,121 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="P:Althea.Arrays.AbstractArray`1.Rank">rank</see> - <paramref name="n"/>); or <paramref name="value"/> cannot be used as the set parameter</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.Reduce(Althea.TensorAlgebra.TensorOrder,`0)">
+        <member name="M:Althea.Arrays.BaseTensor`1.Reduce(Althea.TensorAlgebra.TensorOrder,`0)">
             <summary>
             When implemented by a derived class, compute the tensor reduction (self partial summation) of this tensor under the given <paramref name="order"/>.
             </summary>
             <param name="order">The given <see cref="T:Althea.TensorAlgebra.TensorOrder"/> to indicate which part(s) of dimension(s) to sum, its order will be ignored</param>
             <param name="scalar">The scalar to multiply to the result</param>
-            <returns>The reduction result as a new <see cref="T:Althea.Arrays.TensorBase`1"/></returns>
+            <returns>The reduction result as a new <see cref="T:Althea.Arrays.BaseTensor`1"/></returns>
             <exception cref="T:System.ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.Permute(Althea.TensorAlgebra.TensorOrder,`0)">
+        <member name="M:Althea.Arrays.BaseTensor`1.Permute(Althea.TensorAlgebra.TensorOrder,`0)">
             <summary>
             When implemented by a derived class, compute the tensor permutation of this tensor under the given <paramref name="order"/>.
             </summary>
             <param name="order">The given <see cref="T:Althea.TensorAlgebra.TensorOrder"/> to indicate the permutation order</param>
             <param name="scalar">The scalar to multiply to the result</param>
-            <returns>The permutation result as a new <see cref="T:Althea.Arrays.TensorBase`1"/></returns>
+            <returns>The permutation result as a new <see cref="T:Althea.Arrays.BaseTensor`1"/></returns>
             <exception cref="T:System.ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.Contract(Althea.Arrays.TensorBase{`0},`0,System.ReadOnlySpan{System.Char})">
+        <member name="M:Althea.Arrays.BaseTensor`1.Contract(Althea.Arrays.BaseTensor{`0},`0,System.ReadOnlySpan{System.Char})">
             <summary>
             When implemented by a derived class, compute the tensor contraction of this tensor and the <paramref name="other"/> tensor using their .
             </summary>
             <param name="other">The other tensor to perform the contraction with</param>
             <param name="scalar">The scalar to multiply to the result</param>
             <param name="outputLabels">The desired output tensor's labels as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/>. Default (empty) means simple union of the labels of this tensor and the <paramref name="other"/> tensor.</param>
-            <returns>The contraction result as a new <see cref="T:Althea.Arrays.TensorBase`1"/></returns>
+            <returns>The contraction result as a new <see cref="T:Althea.Arrays.BaseTensor`1"/></returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="other"/>'s labels indicate that it cannot contract with this tensor</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.AddTensor(`0,Althea.Arrays.TensorBase{`0},`0)">
+        <member name="M:Althea.Arrays.BaseTensor`1.AddTensor(`0,Althea.Arrays.BaseTensor{`0},`0)">
             <summary>
             When implemented by a derived class, compute the tensor point-wise addition of this tensor and the <paramref name="other"/> tensor.
             </summary>
             <param name="scalarThis">The scalar to multiply to this tensor</param>
             <param name="other">The other tensor to perform the contraction with</param>
             <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> tensor</param>
-            <returns>The addition result as a new <see cref="T:Althea.Arrays.TensorBase`1"/></returns>
+            <returns>The addition result as a new <see cref="T:Althea.Arrays.BaseTensor`1"/></returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="other"/> has different size than this one</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_ExclusiveOr(Althea.Arrays.TensorBase{`0},Althea.TensorAlgebra.TensorOrder)">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_ExclusiveOr(Althea.Arrays.BaseTensor{`0},Althea.TensorAlgebra.TensorOrder)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
             </summary>
             <param name="tensor">One original tensor as the left operand</param>
             <param name="order">The <see cref="T:Althea.TensorAlgebra.TensorOrder"/> indicating the permutation order</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_Multiply(Althea.Arrays.TensorBase{`0},Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_Multiply(Althea.Arrays.BaseTensor{`0},Althea.Arrays.BaseTensor{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
             </summary>
             <param name="left">One original tensor as the left operand</param>
             <param name="right">One original tensor as the right operand</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the contraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors</returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the contraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors</returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_Addition(Althea.Arrays.TensorBase{`0},Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_Addition(Althea.Arrays.BaseTensor{`0},Althea.Arrays.BaseTensor{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
             </summary>
             <param name="left">One original tensor as the left operand</param>
             <param name="right">One original tensor as the right operand</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_Subtraction(Althea.Arrays.TensorBase{`0},Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_Subtraction(Althea.Arrays.BaseTensor{`0},Althea.Arrays.BaseTensor{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
             </summary>
             <param name="left">One original tensor as the left operand</param>
             <param name="right">One original tensor as the right operand</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_Multiply(Althea.Arrays.TensorBase{`0},`0)">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_Multiply(Althea.Arrays.BaseTensor{`0},`0)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
             </summary>
             <param name="tensor">The original tensor to multiply</param>
             <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_UnaryNegation(Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_UnaryNegation(Althea.Arrays.BaseTensor{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the negation result of the given <paramref name="tensor"/>
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the negation result of the given <paramref name="tensor"/>
             </summary>
             <param name="tensor">The original tensor to negate</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the negation result of the given <paramref name="tensor"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the negation result of the given <paramref name="tensor"/></returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_Multiply(`0,Althea.Arrays.TensorBase{`0})">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_Multiply(`0,Althea.Arrays.BaseTensor{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
             </summary>
             <param name="tensor">The original tensor to multiply</param>
             <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.op_Division(Althea.Arrays.TensorBase{`0},`0)">
+        <member name="M:Althea.Arrays.BaseTensor`1.op_Division(Althea.Arrays.BaseTensor{`0},`0)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+            Create a new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
             </summary>
             <param name="tensor">The original tensor to be divided</param>
             <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
-            <returns>A new <see cref="T:Althea.Arrays.TensorBase`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseTensor`1"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
         </member>
-        <member name="F:Althea.Arrays.TensorBase`1.LabelsName">
+        <member name="F:Althea.Arrays.BaseTensor`1.LabelsName">
             <summary>
-            The presenting name of the <see cref="P:Althea.Arrays.TensorBase`1.Labels"/>
+            The presenting name of the <see cref="P:Althea.Arrays.BaseTensor`1.Labels"/>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.TensorBase`1.GetMetaData">
+        <member name="M:Althea.Arrays.BaseTensor`1.GetMetaData">
             <summary>
-            When implemented by a derived class, get other requisite informations for re-constructing the array of that derived class type. The default implementation simply returns the <see cref="P:Althea.Arrays.TensorBase`1.Labels"/>.
+            When implemented by a derived class, get other requisite informations for re-constructing the array of that derived class type. The default implementation simply returns the <see cref="P:Althea.Arrays.BaseTensor`1.Labels"/>.
             </summary>
             <returns>Other requisite informations used to re-construct this array</returns>
         </member>
@@ -1850,49 +1850,49 @@
             </summary>
             <returns>Other requisite informations used to re-construct this sparse vector.</returns>
         </member>
-        <member name="T:Althea.Arrays.VectorBase`1">
+        <member name="T:Althea.Arrays.BaseVector`1">
             <summary>
-            The abstract vector class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="T:Althea.Arrays.VectorBase`1"/>, but they shall be immutable.
+            The abstract vector class with the only mutable <see cref="P:Althea.Arrays.ValueArray`1.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="T:Althea.Arrays.BaseVector`1"/>, but they shall be immutable.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
-        <member name="P:Althea.Arrays.VectorBase`1.Rank">
+        <member name="P:Althea.Arrays.BaseVector`1.Rank">
             <summary>
             Get the rank of this vector -- 1
             </summary>
         </member>
-        <member name="P:Althea.Arrays.VectorBase`1.Size">
+        <member name="P:Althea.Arrays.BaseVector`1.Size">
             <summary>
             Get the size of this vector ({<see cref="P:Althea.Arrays.AbstractArray`1.Length"/>}) as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64)">
+        <member name="M:Althea.Arrays.BaseVector`1.#ctor(Althea.Storage{`0},System.Int64,System.Int64)">
             <summary>
-            Construct a <see cref="T:Althea.Arrays.VectorBase`1"/> by preallocated <paramref name="values"/> and the given <paramref name="length"/>
+            Construct a <see cref="T:Althea.Arrays.BaseVector`1"/> by preallocated <paramref name="values"/> and the given <paramref name="length"/>
             </summary>
             <param name="values">The preallocated <see cref="T:Althea.Storage`1"/> of the value array</param>
             <param name="length">The presenting size of the vector</param>
             <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.ToVector">
+        <member name="M:Althea.Arrays.BaseVector`1.ToVector">
             <summary>
             Reshape this array to a vector. Returns this vector directly.
             </summary>
             <returns> Returns this vector directly.</returns>
         </member>
-        <member name="P:Althea.Arrays.VectorBase`1.Count">
+        <member name="P:Althea.Arrays.BaseVector`1.Count">
             <summary>
             Provide legacy support of C# duck type for <c>this[<see cref="T:System.Index"/>]</c> and <c>this[<see cref="T:System.Range"/>]</c>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.CheckIndex(System.Int64)">
+        <member name="M:Althea.Arrays.BaseVector`1.CheckIndex(System.Int64)">
             <summary>
             Check whether the given <paramref name="index"/> is out of range of this vector
             </summary>
             <param name="index">The index to be checked</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.CheckRange(System.Int64,System.Int64)">
+        <member name="M:Althea.Arrays.BaseVector`1.CheckRange(System.Int64,System.Int64)">
             <summary>
             Check whether the given range indicated by <paramref name="offset"/> and <paramref name="length"/> is out of range of this vector
             </summary>
@@ -1900,7 +1900,7 @@
             <param name="length">The length to be checked</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> and/or <paramref name="length"/> is out of range</exception>
         </member>
-        <member name="P:Althea.Arrays.VectorBase`1.Item(System.Int64)">
+        <member name="P:Althea.Arrays.BaseVector`1.Item(System.Int64)">
             <summary>
             When implemented by a derived class, provide the basic indexed getter and setter of this vector
             </summary>
@@ -1908,12 +1908,12 @@
             <returns>The element at <paramref name="index"/></returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
         </member>
-        <member name="P:Althea.Arrays.VectorBase`1.Item(System.Int32)">
+        <member name="P:Althea.Arrays.BaseVector`1.Item(System.Int32)">
             <summary>
-            Provide legacy support of <see cref="P:Althea.Arrays.VectorBase`1.Item(System.Int64)"/> and C# duck type for <c>this[<see cref="T:System.Index"/>]</c>
+            Provide legacy support of <see cref="P:Althea.Arrays.BaseVector`1.Item(System.Int64)"/> and C# duck type for <c>this[<see cref="T:System.Index"/>]</c>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.GetSlice(System.Int64,System.Int64)">
+        <member name="M:Althea.Arrays.BaseVector`1.GetSlice(System.Int64,System.Int64)">
             <summary>
             When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>
             </summary>
@@ -1922,7 +1922,7 @@
             <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>. Shall be a referenced vector if possible.</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.SetSlice(System.Int64,System.Int64,Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.SetSlice(System.Int64,System.Int64,Althea.Arrays.BaseVector{`0})">
             <summary>
             When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
             </summary>
@@ -1933,12 +1933,12 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.Slice(System.Int32,System.Int32)">
+        <member name="M:Althea.Arrays.BaseVector`1.Slice(System.Int32,System.Int32)">
             <summary>
             Provide legacy support of C# duck type for <c>this[<see cref="T:System.Range"/>]</c>
             </summary>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.Dot(Althea.Arrays.VectorBase{`0},System.Boolean)">
+        <member name="M:Althea.Arrays.BaseVector`1.Dot(Althea.Arrays.BaseVector{`0},System.Boolean)">
             <summary>
             When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
             </summary>
@@ -1946,7 +1946,7 @@
             <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
             <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.AddVector(Althea.Arrays.VectorBase{`0},`0)">
+        <member name="M:Althea.Arrays.BaseVector`1.AddVector(Althea.Arrays.BaseVector{`0},`0)">
             <summary>
             When implemented by a derived class, compute the addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
             </summary>
@@ -1954,7 +1954,7 @@
             <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
             <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.AddMatrixMultiplyVector(Althea.Arrays.MatrixBase{`0},Althea.Arrays.VectorBase{`0},`0,`0,Althea.LinearAlgebra.MatrixOperation)">
+        <member name="M:Althea.Arrays.BaseVector`1.AddMatrixMultiplyVector(Althea.Arrays.BaseMatrix{`0},Althea.Arrays.BaseVector{`0},`0,`0,Althea.LinearAlgebra.MatrixOperation)">
             <summary>
             When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).
             </summary>
@@ -1965,15 +1965,15 @@
             <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/></param>
             <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_ExclusiveOr(Althea.Arrays.VectorBase{`0},System.Double)">
+        <member name="M:Althea.Arrays.BaseVector`1.op_ExclusiveOr(Althea.Arrays.BaseVector{`0},System.Double)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the point-wise exponentiation result of the given <paramref name="vector"/> and <paramref name="power"/>.
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the point-wise exponentiation result of the given <paramref name="vector"/> and <paramref name="power"/>.
             </summary>
             <param name="vector">The original vector whose elements are the bases</param>
             <param name="power">The power acting as the exponent of type <see cref="T:System.Double"/></param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the point-wise exponentiate result of the given <paramref name="vector"/> and <paramref name="power"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the point-wise exponentiate result of the given <paramref name="vector"/> and <paramref name="power"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Multiply(Althea.Arrays.VectorBase{`0},Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Multiply(Althea.Arrays.BaseVector{`0},Althea.Arrays.BaseVector{`0})">
             <summary>
             Compute the dot (inner) product result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
             </summary>
@@ -1981,68 +1981,68 @@
             <param name="right">One original vector as the right operand</param>
             <returns>A <typeparamref name="T"/> which is the dot (inner) product result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Addition(Althea.Arrays.VectorBase{`0},Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Addition(Althea.Arrays.BaseVector{`0},Althea.Arrays.BaseVector{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
             </summary>
             <param name="left">One original vector as the left operand</param>
             <param name="right">One original vector as the right operand</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Subtraction(Althea.Arrays.VectorBase{`0},Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Subtraction(Althea.Arrays.BaseVector{`0},Althea.Arrays.BaseVector{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
             </summary>
             <param name="left">One original vector as the left operand</param>
             <param name="right">One original vector as the right operand</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Multiply(Althea.Arrays.VectorBase{`0},`0)">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Multiply(Althea.Arrays.BaseVector{`0},`0)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
             </summary>
             <param name="vector">The original vector to multiply</param>
             <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_UnaryNegation(Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_UnaryNegation(Althea.Arrays.BaseVector{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the negation result of the given <paramref name="vector"/>
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the negation result of the given <paramref name="vector"/>
             </summary>
             <param name="vector">The original vector to negate</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the negation result of the given <paramref name="vector"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the negation result of the given <paramref name="vector"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Multiply(`0,Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Multiply(`0,Althea.Arrays.BaseVector{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
             </summary>
             <param name="vector">The original vector to multiply</param>
             <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Division(Althea.Arrays.VectorBase{`0},`0)">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Division(Althea.Arrays.BaseVector{`0},`0)">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the division result of the given <paramref name="vector"/> and <paramref name="scalar"/>
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the division result of the given <paramref name="vector"/> and <paramref name="scalar"/>
             </summary>
             <param name="vector">The original vector to be divided</param>
             <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Multiply(Althea.Arrays.MatrixBase{`0},Althea.Arrays.VectorBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Multiply(Althea.Arrays.BaseMatrix{`0},Althea.Arrays.BaseVector{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/>.
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/>.
             </summary>
             <param name="vector">The input vector to be multiplied at the right side</param>
             <param name="matrix">The input matrix to be multiplied at the left side</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/></returns>
         </member>
-        <member name="M:Althea.Arrays.VectorBase`1.op_Multiply(Althea.Arrays.VectorBase{`0},Althea.Arrays.MatrixBase{`0})">
+        <member name="M:Althea.Arrays.BaseVector`1.op_Multiply(Althea.Arrays.BaseVector{`0},Althea.Arrays.BaseMatrix{`0})">
             <summary>
-            Create a new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/>.
+            Create a new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/>.
             </summary>
             <param name="vector">The input vector to be multiplied at the left side</param>
             <param name="matrix">The input matrix to be multiplied at the right side</param>
-            <returns>A new <see cref="T:Althea.Arrays.VectorBase`1"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/></returns>
+            <returns>A new <see cref="T:Althea.Arrays.BaseVector`1"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/></returns>
         </member>
         <member name="T:Althea.AbstractRuntimeApi">
             <summary>
@@ -10525,16 +10525,6 @@
             Generic type constant
             </summary>
         </member>
-        <member name="F:Althea.NativeTypes.Const`1.E">
-            <summary>
-            Generic type constant
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.Const`1.Pi">
-            <summary>
-            Generic type constant
-            </summary>
-        </member>
         <member name="F:Althea.NativeTypes.Const`1.MachinePrecision">
             <summary>
             Get the machine precision of <typeparamref name="T"/>
@@ -14630,11 +14620,11 @@
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
             <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Arrays.TensorBase{`0},Althea.TensorAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Arrays.BaseTensor{`0},Althea.TensorAlgebra.UnaryOperation,`0)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with a given dense <paramref name="tensor"/>
             </summary>
-            <param name="tensor">The given dense <see cref="T:Althea.Arrays.TensorBase`1"/></param>
+            <param name="tensor">The given dense <see cref="T:Althea.Arrays.BaseTensor`1"/></param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
             <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default 0 will be replaced by 1.</param>
             <exception cref="T:System.ArgumentException">If <paramref name="tensor"/> is a <see cref="T:Althea.Arrays.ISparseArray`1"/></exception>

@@ -18,7 +18,7 @@ namespace Althea.Backend.Arrays
 	/// The concrete dense vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public sealed class DenseVector<T> : VectorBase<T>, IKrylovVector<DenseVector<T>, T>, IConvertibleVector<DenseVector<T>, DenseMatrix<T>, T> where T : unmanaged
+	public sealed class DenseVector<T> : BaseVector<T>, IKrylovVector<DenseVector<T>, T>, IConvertibleVector<DenseVector<T>, DenseMatrix<T>, T> where T : unmanaged
 	{
 		#region create and dispose
 		/// <summary>
@@ -73,7 +73,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
-		public override void SetSlice(long start, long count, VectorBase<T> value)
+		public override void SetSlice(long start, long count, BaseVector<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
@@ -170,7 +170,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
-		public override T Dot(VectorBase<T> other, bool conjugateThis = true)
+		public override T Dot(BaseVector<T> other, bool conjugateThis = true)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -193,7 +193,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
-		public void AddByVector(VectorBase<T> other, T scalar)
+		public void AddByVector(BaseVector<T> other, T scalar)
 		{
 			if (other is null || !other.IsValid())
 				throw new ArgumentNullException(nameof(other));
@@ -217,7 +217,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="other"/> has different length than this</exception>
-		public override DenseVector<T> AddVector(VectorBase<T> other, T scalar) => this.ApplyToClone(v => v.AddByVector(other, scalar));
+		public override DenseVector<T> AddVector(BaseVector<T> other, T scalar) => this.ApplyToClone(v => v.AddByVector(other, scalar));
 
 		/// <summary>
 		/// When implemented by a derived class, add the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) to this vector (scaled by <paramref name="β"/>) in-place.
@@ -231,7 +231,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
-		public void AddByMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+		public void AddByMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));
@@ -298,7 +298,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		public override DenseVector<T> AddMatrixMultiplyVector(MatrixBase<T> matrix, VectorBase<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
+		public override DenseVector<T> AddMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
 		#endregion
 
 		#region IKrylovVector

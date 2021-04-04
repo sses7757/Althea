@@ -15,7 +15,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
-	public abstract class BaseSparseTensor<T, TInd> : TensorBase<T>, ISparseTensor<T>, ISparseArray<T, TInd>
+	public abstract class BaseSparseTensor<T, TInd> : BaseTensor<T>, ISparseTensor<T>, ISparseArray<T, TInd>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -186,9 +186,9 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, convert this sparse tensor to a dense tensor whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense tensor to overwrite</param>
-		/// <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="TensorBase{T}.Size"/> of this one</param>
+		/// <param name="outerSize">The outer size of the target dense tensor, default empty means the same as <see cref="BaseTensor{T}.Size"/> of this one</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="TensorBase{T}.Size"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is less than <see cref="BaseTensor{T}.Size"/></exception>
 		/// <exception cref="ArgumentException">If product(<paramref name="outerSize"/>) &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
 		public abstract void ToDense(Storage<T> denseStorage, ReadOnlySpan<long> outerSize = default);
 
