@@ -15,29 +15,29 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The complex interface for any possible real data type
 	/// </summary>
-	/// <typeparam name="T">The data type of corresponding real number, usually an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
+	/// <typeparam name="T">The data type of corresponding real number, usually a primitive type or an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
 	public interface IComplex<T> : IFormattable where T : unmanaged
 	{
 		/// <summary>
-		/// Get the real part
+		/// Get the real part of this complex
 		/// </summary>
 		T Real { get; }
 
 		/// <summary>
-		/// Get the imaginary part
+		/// Get the imaginary part of this complex
 		/// </summary>
 		T Imag { get; }
 
 		/// <summary>
 		/// Compute the absolute value of this complex
 		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
+		/// <returns>The absolute value of this complex as a <typeparamref name="T"/></returns>
 		T Abs();
 
 		/// <summary>
 		/// Compute the argument of this complex
 		/// </summary>
-		/// <returns>The argument of this complex</returns>
+		/// <returns>The argument of this complex as a <typeparamref name="T"/></returns>
 		T Arg();
 	}
 	#endregion

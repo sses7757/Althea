@@ -159,7 +159,7 @@ namespace Althea.NativeTypes
 			bool isComplex = type.GenericTypeArguments.Length == 1;
 			try
 			{
-				isComplex = isComplex && typeof(IComplex<float>).MakeGenericType(type.GenericTypeArguments).IsAssignableFrom(type);
+				isComplex = isComplex && typeof(IComplex<>).MakeGenericType(type.GenericTypeArguments).IsAssignableFrom(type);
 				return isComplex;
 			}
 			catch (Exception)

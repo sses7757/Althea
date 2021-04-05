@@ -587,10 +587,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
 		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int IndexOf<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return IndexOf((ReadOnlySpan<T>)span, predicator);
@@ -599,10 +599,10 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
 		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int IndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			int len = span.Length;
@@ -615,12 +615,45 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="EqualityComparer{T}"/> used to compare elements</param>
+		/// <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
+		public static int IndexOf<T>(this Span<T> span, T value, EqualityComparer<T>? comparer)
+		{
+			return IndexOf((ReadOnlySpan<T>)span, value, comparer);
+		}
+
+		/// <summary>
+		/// Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="EqualityComparer{T}"/> used to compare elements</param>
+		/// <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
+		public static int IndexOf<T>(this ReadOnlySpan<T> span, T value, EqualityComparer<T>? comparer)
+		{
+			comparer ??= EqualityComparer<T>.Default;
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (comparer.Equals(span[i], value))
+					return i;
+			}
+			return -1;
+		}
+
+		/// <summary>
 		/// Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
 		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int LastIndexOf<T>(this Span<T> span, Predicate<T> predicator)
 		{
 			return LastIndexOf((ReadOnlySpan<T>)span, predicator);
@@ -629,15 +662,47 @@ namespace Althea.Linq
 		/// <summary>
 		/// Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
 		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="span">The span to find in</param>
 		/// <param name="predicator">The predicator to check occurrence</param>
 		/// <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-		/// <remarks>The extend method of <paramref name="span"/></remarks>
 		public static int LastIndexOf<T>(this ReadOnlySpan<T> span, Predicate<T> predicator)
 		{
 			for (int i = span.Length - 1; i >= 0; i--)
 			{
 				if (predicator(span[i]))
+					return i;
+			}
+			return -1;
+		}
+
+		/// <summary>
+		/// Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="EqualityComparer{T}"/> used to compare elements</param>
+		/// <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
+		public static int LastIndexOf<T>(this Span<T> span, T value, EqualityComparer<T>? comparer)
+		{
+			return LastIndexOf((ReadOnlySpan<T>)span, value, comparer);
+		}
+
+		/// <summary>
+		/// Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="span">The span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <param name="comparer">The <see cref="EqualityComparer{T}"/> used to compare elements</param>
+		/// <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
+		public static int LastIndexOf<T>(this ReadOnlySpan<T> span, T value, EqualityComparer<T>? comparer)
+		{
+			comparer ??= EqualityComparer<T>.Default;
+			for (int i = span.Length - 1; i >= 0; i--)
+			{
+				if (comparer.Equals(span[i], value))
 					return i;
 			}
 			return -1;
@@ -1141,7 +1206,7 @@ namespace Althea.Linq
 			if (span.Length <= 1)
 				return true;
 			int len = span.Length;
-			Span<T> temp = len.CheckStackLimitFast<T>() ?? stackalloc T[len];
+			Span<T> temp = len.CheckStackLimit<T>() ?? stackalloc T[len];
 			var slice = temp.Slice(0, 0);
 			int now = 0;
 			for (int i = 0; i < len; i++)

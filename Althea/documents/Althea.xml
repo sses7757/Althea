@@ -4864,21 +4864,23 @@
             Export current settings to the file "Althea.json"
             </summary>
         </member>
-        <member name="M:Althea.Helpers.Settings.CheckStackLimitFast``1(System.Int32)">
+        <member name="M:Althea.Helpers.Settings.CheckStackLimit``1(System.Int32)">
             <summary>
-            Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="P:Althea.Helpers.Settings.StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
+            Check whether the given <paramref name="length"/> and an unmanaged type <typeparamref name="T"/> fits the <see cref="P:Althea.Helpers.Settings.StackAllocLimit"/> or not.<br/>
+            If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
             </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T">The data type</typeparam>
             <param name="length">The desired length to allocate</param>
             <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
         </member>
         <member name="M:Althea.Helpers.Settings.CheckStackLimit``1(System.Int32,System.Int32@)">
             <summary>
-            Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="P:Althea.Helpers.Settings.StackAllocLimit"/> and create an array of <typeparamref name="T"/> if not. (Otherwise, you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.)
+            Check whether the given <paramref name="length"/> and an unmanaged type <typeparamref name="T"/> fits the <see cref="P:Althea.Helpers.Settings.StackAllocLimit"/> or not.<br/>
+            If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
             </summary>
             <typeparam name="T">The data type</typeparam>
             <param name="length">The desired length to allocate</param>
-            <param name="size">Output the size of <typeparamref name="T"/></param>
+            <param name="sizeT">Output the size of <typeparamref name="T"/></param>
             <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
         </member>
         <member name="T:Althea.Helpers.SpanList`1">
@@ -9451,41 +9453,51 @@
             <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
             <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
+        <member name="M:Althea.Linq.SpanLinq.AllZeros``1(System.Span{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are zeros
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.AllZeros``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are zeros
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
         <member name="M:Althea.Linq.SpanLinq.All``1(System.Span{``0},System.Predicate{``0})">
             <summary>
-            Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.All``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
-            Check if all elements of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Any``1(System.Span{``0},System.Predicate{``0})">
             <summary>
-            Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.Any``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
-            Check if any element of <paramref name="span"/> <c>The e</c>, <c><paramref name="predicator"/>(e) == true</c>
+            Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
             </summary>
             <param name="span">The span to predicate</param>
             <param name="predicator">The predicator delegate</param>
             <returns>Predicate result</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.SequenceEqual``2(System.Span{``0},System.ReadOnlySpan{``1},Althea.Linq.EqualComparer{``0,``1})">
             <summary>
@@ -9524,6 +9536,24 @@
             <param name="span">The span to compare</param>
             <param name="other">The other span to compare</param>
             <returns>Sequentially larger or equals or not</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.FirstOrDefault``1(System.Span{``0},System.Predicate{``0})">
+            <summary>
+            Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
+            </summary>
+            <typeparam name="T">Any struct as the data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
+            <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.FirstOrDefault``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
+            <summary>
+            Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
+            </summary>
+            <typeparam name="T">Any struct as the data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
+            <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.Span{``0})">
             <summary>
@@ -9756,6 +9786,24 @@
             <returns><paramref name="output"/>[..real_length]</returns>
             <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
         </member>
+        <member name="M:Althea.Linq.SpanLinq.FirstOfSetExept``1(System.Span{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set to be subtracted from <paramref name="set"/></param>
+            <param name="set">The set to be subtracted by <paramref name="except"/></param>
+            <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.FirstOfSetExept``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set to be subtracted from <paramref name="set"/></param>
+            <param name="set">The set to be subtracted by <paramref name="except"/></param>
+            <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
+        </member>
         <member name="M:Althea.Linq.SpanLinq.SetIntersect``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
             <summary>
             Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
@@ -9875,33 +9923,49 @@
             <param name="step">The step of the range, default 0 will be replaced by 1</param>
             <returns>The input <paramref name="span"/></returns>
         </member>
+        <member name="M:Althea.Linq.SpanLinq.ForEach``1(System.Span{``0},System.Action{``0})">
+            <summary>
+            Act on each element of a span.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The input span to be operated</param>
+            <param name="action">The action whose parameter is the element in the span</param>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.ForEach``1(System.ReadOnlySpan{``0},System.Action{``0})">
+            <summary>
+            Act on each element of a span.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The input span to be operated</param>
+            <param name="action">The action whose parameter is the element in the span</param>
+        </member>
         <member name="T:Althea.NativeTypes.IComplex`1">
             <summary>
             The complex interface for any possible real data type
             </summary>
-            <typeparam name="T">The data type of corresponding real number, usually an unmanaged struct that implements <see cref="T:Althea.NativeTypes.ICustomNativeType`1"/></typeparam>
+            <typeparam name="T">The data type of corresponding real number, usually a primitive type or an unmanaged struct that implements <see cref="T:Althea.NativeTypes.ICustomNativeType`1"/></typeparam>
         </member>
         <member name="P:Althea.NativeTypes.IComplex`1.Real">
             <summary>
-            Get the real part
+            Get the real part of this complex
             </summary>
         </member>
         <member name="P:Althea.NativeTypes.IComplex`1.Imag">
             <summary>
-            Get the imaginary part
+            Get the imaginary part of this complex
             </summary>
         </member>
         <member name="M:Althea.NativeTypes.IComplex`1.Abs">
             <summary>
             Compute the absolute value of this complex
             </summary>
-            <returns>The absolute value of this complex</returns>
+            <returns>The absolute value of this complex as a <typeparamref name="T"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.IComplex`1.Arg">
             <summary>
             Compute the argument of this complex
             </summary>
-            <returns>The argument of this complex</returns>
+            <returns>The argument of this complex as a <typeparamref name="T"/></returns>
         </member>
         <member name="T:Althea.NativeTypes.ComplexDouble">
             <summary>
@@ -10697,6 +10761,48 @@
             <typeparam name="T">The data type</typeparam>
             <param name="a">The number to get imaginary part</param>
             <returns>The imaginary part as a <see cref="T:System.Double"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GenericRealPart``2(``0)">
+            <summary>
+            Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The input data type</typeparam>
+            <typeparam name="U">The output data type</typeparam>
+            <param name="a">The number to get real part</param>
+            <returns>The real part as a <typeparamref name="U"/> or 0 if <typeparamref name="U"/> is not a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GenericImagPart``2(``0)">
+            <summary>
+            Get the imaginary part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The input data type</typeparam>
+            <typeparam name="U">The output data type</typeparam>
+            <param name="a">The number to get real part</param>
+            <returns>The imaginary part as a <typeparamref name="U"/> or 0 if <typeparamref name="U"/> is not a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetGenericConverter``2">
+            <summary>
+            Get the generic converter from type <typeparamref name="T"/> to type <typeparamref name="U"/>
+            </summary>
+            <typeparam name="T">The input data type</typeparam>
+            <typeparam name="U">The output data type</typeparam>
+            <returns>The generic converter from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetRealPartGetter``2">
+            <summary>
+            Get the generic complex type <typeparamref name="T"/>'s real part getter whose output is of type <typeparamref name="U"/>
+            </summary>
+            <typeparam name="T">The input data type</typeparam>
+            <typeparam name="U">The output data type</typeparam>
+            <returns>The generic complex real part getter from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetImagPartGetter``2">
+            <summary>
+            Get the generic complex type <typeparamref name="T"/>'s imaginary part getter whose output is of type <typeparamref name="U"/>
+            </summary>
+            <typeparam name="T">The input data type</typeparam>
+            <typeparam name="U">The output data type</typeparam>
+            <returns>The generic complex imaginary part getter from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
         </member>
         <member name="T:Althea.NativeTypes.DataTypeClassification">
             <summary>
@@ -11704,7 +11810,7 @@
             <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
             <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <returns>The number of converged eigen-pairs</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex"/> are not used</remarks>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsImag"/> are not used</remarks>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
@@ -11763,7 +11869,7 @@
             <param name="info">The <see cref="T:Althea.Solver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <param name="converged">Output the number of converged eigen-pairs</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex"/> are not used</remarks>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsImag"/> are not used</remarks>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.Solver.AbstractApi.RestartKrylovSubspaceLinearSolve_``2(System.Nullable{System.Boolean},Althea.Solver.KrylovSubspaceSolveInfo{``0,``1}@,System.Double@,``0@)">
@@ -11946,6 +12052,11 @@
             The interface for a user-defined (or a built in) restart strategy
             </summary>
         </member>
+        <member name="P:Althea.Solver.IPreserveSelector.Strategy">
+            <summary>
+            When implemented by a derived class, get the <see cref="T:Althea.Solver.RestartStrategy"/> of this selector
+            </summary>
+        </member>
         <member name="M:Althea.Solver.IPreserveSelector.PreserveSelect(System.Span{Althea.NativeTypes.ComplexDouble},System.Span{Althea.NativeTypes.ComplexDouble},System.Int32,System.Int32,System.Int32,System.Span{System.Int32},System.Boolean)">
             <summary>
             When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
@@ -12109,14 +12220,14 @@
             The output converged eigenvalues of <see cref="T:Althea.NativeTypes.ComplexDouble"/> if the matrix is not hermitian, sorted by the given order of <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
             </summary>
         </member>
-        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsReal">
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvectors">
             <summary>
-            The output converged eigenvectors' real parts, sorted with <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>
+            The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.MatrixFunction"/> is not hermitian), sorted with <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> or <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>.
             </summary>
         </member>
-        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsComplex">
+        <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvectorsImag">
             <summary>
-            The output converged eigenvectors' complex parts, sorted with <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>. Empty if the matrix is hermitian.
+            The output converged eigenvectors' imaginary parts, sorted with <see cref="F:Althea.Solver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>. The corresponding element may be null if the eigenvector has no imaginary parts.
             </summary>
         </member>
         <member name="F:Althea.Solver.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired">

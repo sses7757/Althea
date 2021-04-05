@@ -69,7 +69,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <list type="bullet">
 		/// <item><see cref="EigenSpecialMatrixGeneral{T, TComplex}(SolveVectorMode, long, Storage{TComplex}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long)"/></item>
 		/// <item><see cref="EigenGeneralMatrixGeneral{T, TComplex}(GeneralEigenType, SolveVectorMode, long, Storage{TComplex}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long, Storage{T}, long)"/></item>
-		/// <item><see cref="SchurDecomposition{T, TComplex}(SolveVectorMode, long, Storage{T}, long, Storage{T}?, long, Storage{TComplex})"/></item>
+		/// <item><see cref="SchurDecomposition{T}(SolveVectorMode, long, Storage{T}, long, Storage{T}?, long, Storage{ComplexDouble})"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -417,10 +417,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// Compute the Schur decomposition of given matrix <paramref name="A"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the input/output data type</typeparam>
-		/// <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <param name="jobu">The <see cref="SolveVectorMode"/> to indicate whether to calculate Schur vectors or not. Any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/>.</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular matrix at exit</param>
+		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="jobu"/> is <see cref="SolveVectorMode.NoVector"/>.</param>
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
@@ -428,9 +427,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The actual number of eigenvalues returned</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static long SchurDecomposition<T, TComplex>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, Storage<TComplex>? orderVal = null) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>
+		public static long SchurDecomposition<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, Storage<ComplexDouble>? orderVal = null) where T : unmanaged
 		{
 			bool Local_Supported(AbstractApi api)
 			{
@@ -634,10 +632,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// compute the Schur decomposition of given matrix <paramref name="A"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the input/output data type</typeparam>
-		/// <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <param name="jobu">The <see cref="SolveVectorMode"/> to indicate whether to calculate Schur vectors or not. Any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/>.</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular matrix at exit</param>
+		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="jobu"/> is <see cref="SolveVectorMode.NoVector"/>.</param>
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
@@ -646,9 +643,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract bool SchurDecomposition_<T, TComplex>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<TComplex>? orderVal = null) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
+		public abstract bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null) where T : unmanaged;
 		#endregion
 		#endregion
 	}

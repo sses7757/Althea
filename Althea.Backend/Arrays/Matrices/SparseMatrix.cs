@@ -1034,10 +1034,10 @@ namespace Althea.Backend.Arrays
 			string detail = ":" + Environment.NewLine;
 			// get managed arrays
 			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
-			Span<T> values = length.CheckStackLimitFast<T>() ?? stackalloc T[length];
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
 			MEM.ToManaged(this.Storage, values);
-			Span<long> row = length.CheckStackLimitFast<long>() ?? stackalloc long[length];
-			Span<long> col = length.CheckStackLimitFast<long>() ?? stackalloc long[length];
+			Span<long> row = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			Span<long> col = length.CheckStackLimit<long>() ?? stackalloc long[length];
 			this.GetIndices(row, col);
 			// to matrix string
 			detail += values.ToSparseMatrixString(row, col, precision: settings.Precision);

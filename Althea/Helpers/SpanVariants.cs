@@ -39,7 +39,7 @@ namespace Althea.Helpers
 	#endregion
 
 	/// <summary>
-	/// The list-like span which support add, remove whose internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>
+	/// The list-like span that supports addition and removal. Its internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>.
 	/// </summary>
 	/// <typeparam name="T">The data type</typeparam>
 	[DebuggerTypeProxy(typeof(SpanListDebugView<>))]
@@ -175,7 +175,7 @@ namespace Althea.Helpers
 		/// <returns>The removed element</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe T Remove(int index)
+		public unsafe T RemoveAt(int index)
 		{
 			if (index < 0 || index >= this._size)
 				throw new ArgumentOutOfRangeException(nameof(index));
@@ -198,6 +198,63 @@ namespace Althea.Helpers
 			temp.CopyTo(this._span);
 			// return
 			return value;
+		}
+
+		/// <summary>
+		/// Remove the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>
+		/// </summary>
+		/// <param name="val">The value to be removed</param>
+		/// <returns>True if <paramref name="val"/> is present in this <see cref="SpanList{T}"/> and the removal succeeded, false otherwise</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Remove(T val)
+		{
+			int find = this.IndexOf(val);
+			if (find >= 0)
+			{
+				this.RemoveAt(find);
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Find the index of the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>
+		/// </summary>
+		/// <param name="val">The value to find</param>
+		/// <returns>The index of the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>; or -1 if not found.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe int IndexOf(T val)
+		{
+			// this implementation is similar to System.Array.IndexOf
+			if (this._size == 0)
+				return -1;
+			int sizeT = Unsafe.SizeOf<T>();
+			if (sizeT == 1)
+			{
+				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref this._span[0]), this._size);
+				return span.IndexOf(Unsafe.As<T, byte>(ref val));
+			}
+			if (sizeT == 2)
+			{
+				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, char>(ref this._span[0]), this._size);
+				return span.IndexOf(Unsafe.As<T, char>(ref val));
+			}
+			if (sizeT == 4)
+			{
+				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, int>(ref this._span[0]), this._size);
+				return span.IndexOf(Unsafe.As<T, int>(ref val));
+			}
+			if (sizeT == 8)
+			{
+				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, long>(ref this._span[0]), this._size);
+				return span.IndexOf(Unsafe.As<T, long>(ref val));
+			}
+			if (sizeT == 16)
+			{
+				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, (long, long)>(ref this._span[0]), this._size);
+				return span.IndexOf(Unsafe.As<T, (long, long)>(ref val));
+			}
+			return this.AsSpan().IndexOf(val, EqualityComparer<T>.Default);
 		}
 
 		/// <summary>
@@ -349,9 +406,9 @@ namespace Althea.Helpers
 
 
 	/// <summary>
-	/// The matrix-like span which is of column major whose internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>
+	/// The matrix-like span of column major whose internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>.
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
+	/// <typeparam name="T">The data type</typeparam>
 	[DebuggerTypeProxy(typeof(SpanMatrixDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
 	public readonly ref struct SpanMatrix<T> where T : notnull
@@ -652,6 +709,8 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void CopyRowTo(int row, Span<T> destination)
 		{
+			if (this.IsEmpty)
+				return;
 			if (row < 0 || row >= this._rows)
 				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
 			if (destination.Length < this._cols)
@@ -664,6 +723,29 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
+		/// Overwrite a specific <paramref name="row"/> of the current <see cref="SpanMatrix{T}"/> by the values of <paramref name="destination"/> <see cref="ReadOnlySpan{T}"/>
+		/// </summary>
+		/// <param name="row">The index of the row to be overwritten</param>
+		/// <param name="destination">The <see cref="Span{T}"/> to copy from</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void SetRowFrom(int row, ReadOnlySpan<T> destination)
+		{
+			if (this.IsEmpty)
+				return;
+			if (row < 0 || row >= this._rows)
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+			if (destination.Length < this._cols)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+
+			for (int i = 0; i < this._cols; i++)
+			{
+				this._span[row + i * this._leadDim] = destination[i];
+			}
+		}
+
+		/// <summary>
 		/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/> column-by-column
 		/// </summary>
 		/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
@@ -671,6 +753,8 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void CopyTo(Span<T> destination)
 		{
+			if (this.IsEmpty)
+				return;
 			if (this._leadDim == this._rows)
 			{
 				this._span.CopyTo(destination);
@@ -695,6 +779,8 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void CopyTo<TOut>(Span<TOut> destination, Converter<T, TOut> converter)
 		{
+			if (this.IsEmpty)
+				return;
 			if (this._leadDim == this._rows)
 			{
 				this._span.CopyTo(destination, converter);
@@ -726,19 +812,49 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly T[][] ToArray()
 		{
-			if (this._leadDim == 0)
-			{
+			if (this.IsEmpty)
 				return Array.Empty<T[]>();
-			}
+
+			uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
 			T[][] array = new T[this._cols][];
 			for (int i = 0; i < this._cols; i++)
 			{
 				T[] column = new T[this._rows];
 				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
 								 ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
-								 (uint)this._rows);
+								 size);
 			}
 			return array;
+		}
+
+		/// <summary>
+		/// Copy the values from the given <paramref name="array"/> of column arrays of type <typeparamref name="T"/> to this <see cref="SpanMatrix{T}"/>
+		/// </summary>
+		/// <param name="array">The array of column arrays of type <typeparamref name="T"/> to be copied from</param>
+		/// <exception cref="ArgumentNullException">If any of <paramref name="array"/> or itself is null</exception>
+		/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is not the same as this one</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void FromArray(T[][] array)
+		{
+			if (this.IsEmpty)
+				return;
+			if (array is null)
+				throw new ArgumentNullException(nameof(array));
+			if (array.Length != this._cols)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(array));
+
+			uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
+			for (int i = 0; i < this._cols; i++)
+			{
+				T[] column = array[i];
+				if (column is null || column.Length == 0)
+					throw new ArgumentNullException(nameof(array));
+				if (column.Length != this._rows)
+					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(array));
+				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
+								 ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
+								 size);
+			}
 		}
 		#endregion
 	}

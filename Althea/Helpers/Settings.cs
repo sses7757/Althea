@@ -438,13 +438,13 @@ namespace Althea.Helpers
 		/// Check whether the given <paramref name="length"/> and an unmanaged type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> or not.<br/>
 		/// If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="length">The desired length to allocate</param>
 		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T[]? CheckStackLimitFast<T>(this int length) where T : unmanaged
+		public static T[]? CheckStackLimit<T>(this int length) where T : notnull
 		{
-			if (length * Const<T>.SizeT > StackAllocLimit)
+			if (length * Unsafe.SizeOf<T>() > StackAllocLimit)
 				return new T[length];
 			else
 				return null;
@@ -452,17 +452,17 @@ namespace Althea.Helpers
 
 		/// <summary>
 		/// Check whether the given <paramref name="length"/> and an unmanaged type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> or not.<br/>
-		/// If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> (or <c>(stackalloc <see cref="IntPtr"/>[<paramref name="length"/>]).<see cref="Linq.SpanLinq.AsClassType{T}(Span{IntPtr})">AsClassType</see>()</c> if <typeparamref name="T"/> is a class type) yourself.
+		/// If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="length">The desired length to allocate</param>
-		/// <param name="size">Output the size of <typeparamref name="T"/></param>
+		/// <param name="sizeT">Output the size of <typeparamref name="T"/></param>
 		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T[]? CheckStackLimit<T>(this int length, out int size) where T : notnull
+		public static T[]? CheckStackLimit<T>(this int length, out int sizeT) where T : notnull
 		{
-			size = Marshal.SizeOf<T>();
-			if (length * size > StackAllocLimit)
+			sizeT = Unsafe.SizeOf<T>();
+			if (length * sizeT > StackAllocLimit)
 				return new T[length];
 			else
 				return null;

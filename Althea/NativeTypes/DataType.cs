@@ -193,6 +193,7 @@ namespace Althea.NativeTypes
 		/// <param name="type">The <see cref="DataTypeClassification"/> the constructed <see cref="DataType"/> is a floating point type</param>
 		/// <param name="size">The size in bytes of the constructed <see cref="DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
 		/// <returns>The constructed <see cref="DataType"/> or the default value if <paramref name="type"/> is not supported</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType MakeDataType(bool complex, DataTypeClassification type, int size)
 		{
 			if (type <= 0)
@@ -208,20 +209,27 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a real type.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsReal(this DataType dataType) => (dataType & DataType.Complex) == 0;
 
 		/// <summary>
-		/// Check if <paramref name="dataType"/> is a float type.
+		/// Check if <paramref name="dataType"/> is an integer type.
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
-		/// <returns>True if <paramref name="dataType"/> is a float type.</returns>
-		public static bool IsFloat(this DataType dataType) => ((int)dataType & TypeMask) == (TypeFloatPoint_IEEE754 >> TypeMaskStart);
+		/// <returns>True if <paramref name="dataType"/> is an integer type.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsInteger(this DataType dataType)
+		{
+			int t = ((int)dataType & TypeMask) << TypeMaskStart;
+			return t == TypeSignedInteger || t == TypeUnsignedInteger;
+		}
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is a signed integer type.
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a signed integer type.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSignedInteger(this DataType dataType) => ((int)dataType & TypeMask) == (TypeSignedInteger >> TypeMaskStart);
 
 		/// <summary>
@@ -229,6 +237,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is an unsigned integer type.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsUnsignedInteger(this DataType dataType) => ((int)dataType & TypeMask) == (TypeUnsignedInteger >> TypeMaskStart);
 
 		/// <summary>
@@ -236,6 +245,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to get</param>
 		/// <returns>The number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Bytes(this DataType dataType) => ((int)dataType & ByteMask) >> ByteMaskStart;
 
 		/// <summary>
@@ -243,6 +253,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="type">input <see cref="DataType"/></param>
 		/// <returns>the corresponding real type</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType RealCorrespond(this DataType type)
 		{
 			if (type.IsReal())
@@ -256,6 +267,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="type">input <see cref="DataType"/></param>
 		/// <returns>the corresponding complex type</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType ComplexCorrespond(this DataType type)
 		{
 			if (!type.IsReal())
@@ -271,7 +283,7 @@ namespace Althea.NativeTypes
 		/// <returns>The string representation of <paramref name="dataType"/></returns>
 		public static string GetStringRepr(this DataType dataType)
 		{
-			return (dataType.IsReal() ? "Real" : "Complex") + $" Byte-{dataType.Bytes()} " + (dataType.IsFloat() ? "Float" : "Integer");
+			return (dataType.IsReal() ? "Real" : "Complex") + $" Byte-{dataType.Bytes()} " + (dataType.IsInteger() ? "Integer" : "Float");
 		}
 		#endregion
 

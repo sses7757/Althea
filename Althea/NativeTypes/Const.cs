@@ -12,15 +12,15 @@ namespace Althea.NativeTypes
 	#region converter class
 	internal static class ConstConvert<T, U> where T : unmanaged where U : unmanaged
 	{
-		private static void ILToU(ILGenerator IL, Type realType)
+		private static void ILConvert(ILGenerator IL, Type from, Type target)
 		{
-			if (realType == typeof(U))
+			if (from == target)
 			{
 				// do nothing
 			}
-			else if (realType.IsPrimitive && typeof(U).IsPrimitive)
+			else if (from.IsPrimitive && target.IsPrimitive)
 			{
-				switch (Type.GetTypeCode(typeof(U)))
+				switch (Type.GetTypeCode(target))
 				{
 					case TypeCode.SByte:
 						IL.Emit(OpCodes.Conv_I1);
@@ -59,17 +59,17 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				var field = typeof(ConstConvert<,>).MakeGenericType(realType, typeof(U)).GetField(nameof(ConstConvert<T, T>.ConvertDelegate), BindingFlags.Static | BindingFlags.NonPublic);
+				var field = typeof(ConstConvert<,>).MakeGenericType(from, target).GetField(nameof(ConstConvert<T, T>.ConvertDelegate), BindingFlags.Static | BindingFlags.NonPublic);
 				if (field is null)
 					throw new FieldAccessException();
-				IL.DeclareLocal(realType);
+				IL.DeclareLocal(from);
 				IL.Emit(OpCodes.Stloc_0); // pop the result to a local variable
 				IL.Emit(OpCodes.Ldsfld, field); // load the converter to be invoked
 				IL.Emit(OpCodes.Ldloc_0); // load the result from local variable
-				var invoke = typeof(Converter<,>).MakeGenericType(realType, typeof(U)).GetMethod(nameof(Converter<T, T>.Invoke));
+				var invoke = typeof(Converter<,>).MakeGenericType(from, target).GetMethod(nameof(Converter<T, T>.Invoke));
 				if (invoke is null)
 					throw new FieldAccessException();
-				IL.Emit(OpCodes.Callvirt, invoke); // call Delegate.Invoke to convert to U
+				IL.Emit(OpCodes.Callvirt, invoke); // call Delegate.Invoke to convert to target type
 			}
 		}
 
@@ -80,18 +80,40 @@ namespace Althea.NativeTypes
 			DynamicMethod method = new(nameof(InternalConvert), typeof(U), new[] { typeof(T) });
 			var IL = method.GetILGenerator();
 			IL.Emit(OpCodes.Ldarg_0);
-			ILToU(IL, typeof(T));
+			ILConvert(IL, typeof(T), typeof(U));
 			IL.Emit(OpCodes.Ret);
 			return (method.CreateDelegate<Converter<T, U>>(), method.CreateDelegate<Func<T, U>>());
+		}
+
+		private static unsafe U DirectConvert(T v) => *(U*)&v;
+
+		private static unsafe U DirectConvertComp2Comp<TT, UU>(T v) where TT : unmanaged where UU : unmanaged
+		{
+			U result = default;
+			*(UU*)&result = ConstConvert<TT, UU>.ConvertDelegate.Invoke(*(TT*)&v);
+			*(1 + (UU*)&result) = ConstConvert<TT, UU>.ConvertDelegate.Invoke(*(1 + (TT*)&v));
+			return result;
+		}
+
+		private static unsafe U DirectConvertReal2Comp(T v)
+		{
+			U result = default;
+			*(T*)&result = v;
+			return result;
+		}
+		private static unsafe U DirectConvertReal2Comp2<UU>(T v) where UU : unmanaged
+		{
+			U result = default;
+			*(UU*)&result = ConstConvert<T, UU>.ConvertDelegate.Invoke(v);
+			return result;
 		}
 
 		private static void GetReflectionConverter(out Converter<T, U> converter, out Func<T, U> func)
 		{
 			if (typeof(T) == typeof(U))
 			{
-				static unsafe U Convert(T v) => *(U*)&v;
-				converter = Convert;
-				func = Convert;
+				converter = DirectConvert;
+				func = DirectConvert;
 				return;
 			}
 			static bool predicator(MethodInfo m) => (m.Name == "op_Explicit" || m.Name == "op_Implicit") &&
@@ -122,24 +144,65 @@ namespace Althea.NativeTypes
 
 		private static void GetReflectionConverterComplex(out Converter<T, U> converter, out Func<T, U> func)
 		{
-			if (!NativeTypeExtension.IsComplex<T>() || !NativeTypeExtension.IsComplex<U>())
-			{
-				(converter, func) = (static v => (U)(dynamic)v, static v => (U)(dynamic)v);
-				return;
+			// T != U
+			bool isComp1 = NativeTypeExtension.IsComplex<T>(), isComp2 = NativeTypeExtension.IsComplex<U>();
+			if (isComp1 && isComp2)
+			{	// complex to complex
+				Type c1 = typeof(T), c2 = typeof(U), r1 = typeof(T).GenericTypeArguments[0], r2 = typeof(U).GenericTypeArguments[0];
+				if (r1 == r2)
+				{
+					converter = DirectConvert;
+					func = DirectConvert;
+					return;
+				}
+				// else
+				var method = typeof(ConstConvert<T, U>).GetMethod(nameof(DirectConvertComp2Comp), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(r1, r2);
+				if (method is null)
+					throw new MethodAccessException();
+				converter = method.CreateDelegate<Converter<T, U>>();
+				func = method.CreateDelegate<Func<T, U>>();
 			}
-			// TODO
-
+			else if (isComp1 && !isComp2)
+			{   // complex to real
+				(converter, func) = GetComplexPart(realPart: true);
+			}
+			else if (!isComp1 && isComp2)
+			{   // real to complex
+				if (typeof(T) == typeof(U).GenericTypeArguments[0])
+				{
+					var method = typeof(ConstConvert<T, U>).GetMethod(nameof(DirectConvertReal2Comp), BindingFlags.NonPublic | BindingFlags.Static);
+					if (method is null)
+						throw new MethodAccessException();
+					converter = method.CreateDelegate<Converter<T, U>>();
+					func = method.CreateDelegate<Func<T, U>>();
+				}
+				else
+				{
+					var method = typeof(ConstConvert<T, U>).GetMethod(nameof(DirectConvertReal2Comp2), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(U).GenericTypeArguments[0]);
+					if (method is null)
+						throw new MethodAccessException();
+					converter = method.CreateDelegate<Converter<T, U>>();
+					func = method.CreateDelegate<Func<T, U>>();
+				}
+			}
+			else
+			{	// real to real, can only try dynamic
+				converter = static v => (U)(dynamic)v;
+				func = static v => (U)(dynamic)v;
+			}
 		}
 
-		private static Converter<T, U> GetComplexPart(bool realPart)
+		private static U GetDefault(T _) => default;
+
+		private static (Converter<T, U>, Func<T, U>) GetComplexPart(bool realPart)
 		{
 			if (NativeTypeExtension.IsComplex<U>())
 			{	// U is complex, do nothing
-				return static _ => default;
+				return (GetDefault, GetDefault);
 			}
 			if (!NativeTypeExtension.IsComplex<T>())
 			{	// T is not complex, directly return
-				return realPart ? ConstConvert<T, U>.ConvertDelegate : static _ => default;
+				return realPart ? (ConvertDelegate, ConvertDelegate_) : (GetDefault, GetDefault);
 			}
 			else
 			{
@@ -158,38 +221,50 @@ namespace Althea.NativeTypes
 
 				DynamicMethod method = new("GetPart", typeof(U), new[] { typeof(T) });
 				var IL = method.GetILGenerator();
-				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorMethod).FirstOrDefault();
-				IL.Emit(OpCodes.Ldarg_0); // the object to call
-				if (func is not null)
-				{
-					IL.Emit(OpCodes.Call, func);
-					ILToU(IL, realType); // convert the result to U type
-					IL.Emit(OpCodes.Ret);
-					return method.CreateDelegate<Converter<T, U>>();
-				}
-				// else
-				var prop = typeof(T).GetProperties(BindingFlags.Instance).Where(predicatorProperty).FirstOrDefault();
+				var prop = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(predicatorProperty).FirstOrDefault();
 				if (prop is not null)
 				{
+					IL.Emit(OpCodes.Ldarg_0); // the object to call
 					var propGet = prop.GetGetMethod();
 					if (propGet is null)
 						throw new FieldAccessException();
 					IL.Emit(OpCodes.Call, propGet);
-					ILToU(IL, realType); // convert the result to U type
+					ILConvert(IL, realType, typeof(U)); // convert the result to U type
 					IL.Emit(OpCodes.Ret);
-					return method.CreateDelegate<Converter<T, U>>();
+					return (method.CreateDelegate<Converter<T, U>>(), method.CreateDelegate<Func<T, U>>());
 				}
 				// else
-				var field = typeof(T).GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Where(predicatorField).FirstOrDefault();
+				var field = typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(predicatorField).FirstOrDefault();
 				if (field is not null)
 				{
+					IL.Emit(OpCodes.Ldarg_0); // the object to call
 					IL.Emit(OpCodes.Ldfld, field);
-					ILToU(IL, realType); // convert the result to U type
+					ILConvert(IL, realType, typeof(U)); // convert the result to U type
 					IL.Emit(OpCodes.Ret);
-					return method.CreateDelegate<Converter<T, U>>();
+					return (method.CreateDelegate<Converter<T, U>>(), method.CreateDelegate<Func<T, U>>());
 				}
-				// try dynamic
-				return realPart ? static v => ((dynamic)v).Real : static v => ((dynamic)v).Imag;
+				// else
+				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorMethod).FirstOrDefault();
+				if (func is not null)
+				{
+					IL.Emit(OpCodes.Ldarg_0); // the object to call
+					IL.Emit(OpCodes.Call, func);
+					ILConvert(IL, realType, typeof(U)); // convert the result to U type
+					IL.Emit(OpCodes.Ret);
+					return (method.CreateDelegate<Converter<T, U>>(), method.CreateDelegate<Func<T, U>>());
+				}
+				// try direct address get
+				IL.Emit(OpCodes.Ldarga_S, 0); // load the address of input value of type T
+				IL.Emit(OpCodes.Conv_U); // convert the address to 'size_t' of C
+				if (!realPart)
+				{	// add offset to get the address of complex part
+					IL.Emit(OpCodes.Sizeof, realType);
+					IL.Emit(OpCodes.Add);
+				}
+				IL.Emit(OpCodes.Ldobj, realType); // load the specified part
+				ILConvert(IL, realType, typeof(U)); // convert to U
+				IL.Emit(OpCodes.Ret);
+				return (method.CreateDelegate<Converter<T, U>>(), method.CreateDelegate<Func<T, U>>());
 			}
 		}
 
@@ -203,8 +278,8 @@ namespace Althea.NativeTypes
 		static ConstConvert()
 		{
 			GetReflectionConverter(out ConvertDelegate, out ConvertDelegate_);
-			GetRealPartDelegate = GetComplexPart(realPart: true);
-			GetImagPartDelegate = GetComplexPart(realPart: false);
+			GetRealPartDelegate = GetComplexPart(realPart: true).Item1;
+			GetImagPartDelegate = GetComplexPart(realPart: false).Item1;
 		}
 	}
 	#endregion

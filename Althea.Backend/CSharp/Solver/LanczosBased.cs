@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Reflection;
 
 using Althea.Backend.Storage;
 using Althea.Helpers;
@@ -185,6 +186,32 @@ namespace Althea.Backend.CSharp.Solver
 			return;
 		}
 		#endregion
+
+		#region set delegate
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void SetDelegate<TApi, TDelegate>(this TApi? pre, TApi? now, string name, ref Delegate? @delegate) where TApi : AbstractRuntimeApi where TDelegate : Delegate
+		{
+			if (@delegate is not null)
+				return;
+			try
+			{
+				if (pre is not null && pre != now)
+				{	// set implementation back
+					typeof(TApi).GetMethod("SetImplementation", BindingFlags.Static | BindingFlags.NonPublic)?.Invoke(null, new object[] { pre.GetType() });
+				}
+				if (now is not null)
+				{	// create delegate
+					@delegate = now.GetType().GetMethod(name + "_", BindingFlags.NonPublic)?.CreateDelegate<TDelegate>();
+					if (@delegate is null)
+						throw new MethodAccessException();
+				}
+			}
+			catch (Exception)
+			{
+				Log.Write(string.Format(Resource.CannotCreateDelegate, nameof(LAD) + "." + nameof(LAD.EigenSpecialMatrixHermitian)), level: LogLevel.Warning);
+			}
+		}
+		#endregion
 	}
 
 	internal static class LanczosBased
@@ -331,22 +358,9 @@ namespace Althea.Backend.CSharp.Solver
 					LAD? pre = LAD.Current;
 					LAD.EigenSpecialMatrixHermitian(SolveVectorMode.Vector, N, valsOut, tridiag, eigvec.LeadDim);
 					LAD? now = LAD.Current;
-					if (pre is not null && pre != now)
-					{
-						Settings.DenseLinearAlgebraImplementation = pre.GetType();
-					}
-					if (now is not null)
-					{
-						try
-						{
-							TridiagSolve = typeof(LAD).GetMethod(nameof(LAD.EigenSpecialMatrixHermitian) + "_", System.Reflection.BindingFlags.NonPublic)?
-													  .CreateDelegate<EigensolveDelegate>();
-						}
-						catch (Exception)
-						{
-							Log.Write(string.Format(Resource.CannotCreateDelegate, nameof(LAD) + "." + nameof(LAD.EigenSpecialMatrixHermitian)), level: LogLevel.Warning);
-						}
-					}
+					Delegate? d = null;
+					pre.SetDelegate<LAD, EigensolveDelegate>(now, nameof(LAD.EigenSpecialMatrixHermitian), ref d);
+					TridiagSolve = (EigensolveDelegate)d;
 				}
 				else
 				{
@@ -594,7 +608,7 @@ namespace Althea.Backend.CSharp.Solver
 		private static Span<int> PreserveSelect(IPreserveSelector selector, Span<double> eigvals, SpanMatrix<double> eigvecs, int converged, int target, int iters, Span<int> result)
 		{
 			Span<ComplexDouble> values = stackalloc ComplexDouble[eigvals.Length];
-			Span<ComplexDouble> vectors = eigvecs.PresentingLength.CheckStackLimitFast<ComplexDouble>() ?? stackalloc ComplexDouble[eigvecs.PresentingLength];
+			Span<ComplexDouble> vectors = eigvecs.PresentingLength.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[eigvecs.PresentingLength];
 			eigvals.CopyTo(values, static v => v);
 			eigvecs.CopyTo(vectors, static v => v);
 			int count = selector.PreserveSelect(values, vectors, converged, target, iters, result, withConverged: false);
@@ -647,10 +661,10 @@ namespace Althea.Backend.CSharp.Solver
 			// new inner stop watch and get outer stopwatch
 			var stopwatch = Stopwatch.StartNew();
 			// transformation matrix Q which will be disposed after return or exception automatically
-			Span<IntPtr> tempQ = maxIter.CheckStackLimitFast<IntPtr>() ?? stackalloc IntPtr[maxIter];
+			Span<IntPtr> tempQ = maxIter.CheckStackLimit<IntPtr>() ?? stackalloc IntPtr[maxIter];
 			var qs = new SpanList<TVec>(tempQ.AsClassType<TVec>());
-			var αs = new SpanList<double>(maxIter.CheckStackLimitFast<double>() ?? stackalloc double[maxIter]);
-			var βs = new SpanList<double>(maxIter.CheckStackLimitFast<double>() ?? stackalloc double[maxIter]);
+			var αs = new SpanList<double>(maxIter.CheckStackLimit<double>() ?? stackalloc double[maxIter]);
+			var βs = new SpanList<double>(maxIter.CheckStackLimit<double>() ?? stackalloc double[maxIter]);
 			// intermediate vector
 			TVec? r = null;
 			#endregion
@@ -693,8 +707,8 @@ namespace Althea.Backend.CSharp.Solver
 				Log.Write(string.Format(Resource.NaiveLanczosFinish, αs[^1], βs[^1]));
 
 				int n = qs.Count;
-				Span<double> eigenvalues = n.CheckStackLimitFast<double>() ?? stackalloc double[n];
-				Span<double> eigvec = (n * n).CheckStackLimitFast<double>() ?? stackalloc double[n * n];
+				Span<double> eigenvalues = n.CheckStackLimit<double>() ?? stackalloc double[n];
+				Span<double> eigvec = (n * n).CheckStackLimit<double>() ?? stackalloc double[n * n];
 				SpanMatrix<double> eigenvectors = new(eigvec, n);
 				LanczosTridiagSolve(αs, βs, eigenvalues, eigenvectors);
 				#endregion
@@ -747,7 +761,7 @@ namespace Althea.Backend.CSharp.Solver
 			Span<IntPtr> tempQ = stackalloc IntPtr[iterPerRestart];
 			var qs = new SpanList<TVec>(tempQ.AsClassType<TVec>());
 			Span<double> eigvals = stackalloc double[iterPerRestart];
-			Span<double> eigvecSpan = (iterPerRestart * iterPerRestart).CheckStackLimitFast<double>() ?? stackalloc double[iterPerRestart * iterPerRestart];
+			Span<double> eigvecSpan = (iterPerRestart * iterPerRestart).CheckStackLimit<double>() ?? stackalloc double[iterPerRestart * iterPerRestart];
 			SpanMatrix<double> eigvecs = new(eigvecSpan, iterPerRestart);
 
 			Span<double> tempHolder1 = stackalloc double[iterPerRestart], tempHolder2 = stackalloc double[iterPerRestart];

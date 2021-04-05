@@ -464,7 +464,7 @@ namespace Althea.Backend.Arrays
 				return;
 			}
 			// else
-			Span<TInd> temp = indices.Length.CheckStackLimitFast<TInd>() ?? stackalloc TInd[indices.Length];
+			Span<TInd> temp = indices.Length.CheckStackLimit<TInd>() ?? stackalloc TInd[indices.Length];
 			MEM.ToManaged(this.m_index, temp);
 			temp.CopyTo(indices, static a => a.ToLong());
 		}
