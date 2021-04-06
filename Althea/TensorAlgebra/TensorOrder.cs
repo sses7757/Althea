@@ -344,102 +344,102 @@ namespace Althea.TensorAlgebra
 		#region converters
 		#region repetitive int tuple converters
 		/// <summary>
-		/// Implicitly convert from span. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="span">The general span to indicate the permutation order</param>
 		public static implicit operator TensorOrder(Span<int> span) => new(span);
 
 		/// <summary>
-		/// Implicitly convert from span. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="span">The general span to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ReadOnlySpan<int> span) => new(span);
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int> tuple) => new(stackalloc int[2].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int> tuple) => new(stackalloc int[3].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int> tuple) => new(stackalloc int[4].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int> tuple) => new(stackalloc int[5].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int> tuple) => new(stackalloc int[6].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int> tuple) => new(stackalloc int[7].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int, int> tuple) => new(stackalloc int[8].FromStruct(tuple));
 		#endregion
 
 		#region repetitive char tuple converters
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
+		/// </summary>
+		/// <param name="span">The general span to indicate the permutation order</param>
+		public static implicit operator TensorOrder(Span<char> span) => new(span);
+
+		/// <summary>
+		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
+		/// </summary>
+		/// <param name="span">The general span to indicate the permutation order</param>
+		public static implicit operator TensorOrder(ReadOnlySpan<char> span) => new(span);
+
+		/// <summary>
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char> tuple) => new(stackalloc char[2].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char> tuple) => new(stackalloc char[3].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char> tuple) => new(stackalloc char[4].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char> tuple) => new(stackalloc char[5].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char> tuple) => new(stackalloc char[6].FromStruct(tuple));
 
 		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
+		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
 		/// </summary>
 		/// <param name="tuple">The general tuple to indicate the permutation order</param>
 		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char> tuple) => new(stackalloc char[7].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, char> tuple) => new(stackalloc char[8].FromStruct(tuple));
 		#endregion
 
 		#region repetitive int and range tuple converters

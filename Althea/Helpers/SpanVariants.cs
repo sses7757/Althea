@@ -561,6 +561,20 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
+		/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="SpanMatrix{T}"/>
+		/// </summary>
+		/// <param name="row">The row index of the element to get reference</param>
+		/// <param name="col">The column index of the element to get reference</param>
+		/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+		public readonly ref T this[Index row, Index col] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get {
+				return ref this[row.GetOffset(this._rows), col.GetOffset(this._cols)];
+			}
+		}
+
+		/// <summary>
 		/// Get the column at <paramref name="columnIndex"/> of this <see cref="SpanMatrix{T}"/> as a <see cref="Span{T}"/>
 		/// </summary>
 		/// <param name="columnIndex">The index of the column to get</param>
@@ -630,7 +644,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+		/// Forms a referenced sub-matrix of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
 		/// </summary>
 		/// <param name="rowRange">The range of the rows to slice</param>
 		/// <param name="colRange">The range of the columns to slice</param>
@@ -643,6 +657,17 @@ namespace Althea.Helpers
 			var rowSlice = this.SliceRow(off, len);
 			(off, len) = colRange.GetOffsetAndLength(this._cols);
 			return rowSlice.Slice(off, len);
+		}
+
+		/// <summary>
+		/// Get the referenced sub-matrix of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+		/// </summary>
+		/// <param name="rowRange">The range of the rows to slice</param>
+		/// <param name="colRange">The range of the columns to slice</param>
+		/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="SpanMatrix{T}"/></returns>
+		public readonly SpanMatrix<T> this[Range rowRange, Range colRange] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.SubMatrix(rowRange, colRange);
 		}
 		#endregion
 
@@ -757,7 +782,7 @@ namespace Althea.Helpers
 				return;
 			if (this._leadDim == this._rows)
 			{
-				this._span.CopyTo(destination);
+				this._span[..(this._rows * this._cols)].CopyTo(destination);
 				return;
 			}
 			// otherwise
@@ -766,6 +791,31 @@ namespace Althea.Helpers
 			for (int i = 0; i < this._cols; i++)
 			{
 				var dst = destination[(i * this._rows)..];
+				this._span[(i * this._leadDim)..(i * this._leadDim + this._rows)].CopyTo(dst);
+			}
+		}
+
+		/// <summary>
+		/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="SpanMatrix{T}"/> column-by-column
+		/// </summary>
+		/// <param name="destination">The <see cref="SpanMatrix{T}"/> to copy to</param>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is of different size</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void CopyTo(SpanMatrix<T> destination)
+		{
+			if (this.IsEmpty)
+				return;
+			if (destination._rows != this._rows || destination._cols != this._cols)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+			if (this._leadDim == this._rows && destination._leadDim == destination._rows)
+			{
+				this._span[..(this._rows * this._cols)].CopyTo(destination._span);
+				return;
+			}
+			// otherwise
+			for (int i = 0; i < this._cols; i++)
+			{
+				var dst = destination._span[(i * destination._leadDim)..];
 				this._span[(i * this._leadDim)..(i * this._leadDim + this._rows)].CopyTo(dst);
 			}
 		}

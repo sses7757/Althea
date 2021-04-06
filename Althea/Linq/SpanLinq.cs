@@ -1637,6 +1637,25 @@ namespace Althea.Linq
 				action(span[i]);
 			}
 		}
+
+		/// <summary>
+		/// Scale the values in <paramref name="span"/> by <paramref name="scalar"/> in-place
+		/// </summary>
+		/// <typeparam name="T">Any supported (<see cref="NativeTypeExtension.IsSupported{T}()"/>) unmanaged struct as the data type</typeparam>
+		/// <param name="span">The span to be scaled in-place</param>
+		/// <param name="scalar">The scalar to multiply to each element in <paramref name="span"/></param>
+		public static void Scale<T>(this Span<T> span, T scalar) where T : unmanaged
+		{
+			int len = span.Length;
+			if (len <= 0)
+				return;
+			if (scalar.IsZero())
+				span.Clear();
+			for (int i = 0; i < len; i++)
+			{
+				span[i] = Const<T>.MultiplyDelegate(span[i], scalar);
+			}
+		}
 		#endregion
 	}
 }

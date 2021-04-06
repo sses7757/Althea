@@ -319,7 +319,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-		/// <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of the two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> otherwise</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -352,7 +352,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideX"/>))</c> elements</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -390,7 +390,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
@@ -421,7 +421,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
@@ -453,12 +453,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</param>
-		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -487,12 +487,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
 		/// <param name="n">The number of columns of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-		/// <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -521,10 +521,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
@@ -537,6 +537,37 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
 				success = node.Value.RankKUpdate_(fillUpper, op, conjA, n, k, α, A, lda, β, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Solve the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>
+		/// <c><paramref name="op"/>(<paramref name="A"/>) * x == <paramref name="α"/> * <paramref name="B"/></c> if <paramref name="leftA"/> is true, or <c>x * <paramref name="op"/>(<paramref name="A"/>) == <paramref name="α"/> * <paramref name="B"/></c> otherwise.
+		/// </summary>
+		/// <param name="leftA">Whether the matrix <paramref name="A"/> is at left side or right side</param>
+		/// <param name="fillUpper">Whether the matrix <paramref name="A"/>'s upper or lower triangle is filled</param>
+		/// <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+		/// <param name="m">The number of rows and columns of <paramref name="A"/> and number of rows of <paramref name="B"/></param>
+		/// <param name="n">The number of columns of <paramref name="B"/>, i.e., the number of linear systems to be solved</param>
+		/// <param name="α">The scalar to multiply to <paramref name="B"/></param>
+		/// <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="B">The input/output right-hand-side matrix. Overwritten by the solutions at exit.</param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		public static void TriangularMatrixSolve<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
+				success = node.Value.TriangularMatrixSolve_(leftA, fillUpper, unitDiag, op, m, n, α, A, lda, B, ldb);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -646,7 +677,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-		/// <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of the two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements if <paramref name="op"/>==<see cref="MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> otherwise</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -667,7 +698,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="α">The scalar used for multiplication</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideX"/>))</c> elements</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -693,7 +724,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
@@ -712,7 +743,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
@@ -732,12 +763,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</param>
-		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -754,12 +785,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
 		/// <param name="n">The number of columns of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-		/// <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+		/// <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -776,14 +807,33 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
 		protected abstract bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, solves the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>
+		/// <c><paramref name="op"/>(<paramref name="A"/>) * x == <paramref name="α"/> * <paramref name="B"/></c> if <paramref name="leftA"/> is true, or <c>x * <paramref name="op"/>(<paramref name="A"/>) == <paramref name="α"/> * <paramref name="B"/></c> otherwise.
+		/// </summary>
+		/// <param name="leftA">Whether the matrix <paramref name="A"/> is at left side or right side</param>
+		/// <param name="fillUpper">Whether the matrix <paramref name="A"/>'s upper or lower triangle is filled</param>
+		/// <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+		/// <param name="m">The number of rows and columns of <paramref name="A"/> and number of rows of <paramref name="B"/></param>
+		/// <param name="n">The number of columns of <paramref name="B"/>, i.e., the number of linear systems to be solved</param>
+		/// <param name="α">The scalar to multiply to <paramref name="B"/></param>
+		/// <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="B">The input/output right-hand-side matrix. Overwritten by the solutions at exit.</param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		protected abstract bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
 		#endregion
 		#endregion
 	}

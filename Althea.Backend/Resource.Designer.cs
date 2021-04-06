@@ -79,6 +79,33 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 Generalized Minimal Residual algorithm converged after {0} restarts. 的本地化字符串。
+        /// </summary>
+        internal static string GMRESConverge {
+            get {
+                return ResourceManager.GetString("GMRESConverge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Generalized Minimal Residual algorithm failed to converged after {0} restarts, current residual = {1}. 的本地化字符串。
+        /// </summary>
+        internal static string GMRESFail {
+            get {
+                return ResourceManager.GetString("GMRESFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+        /// </summary>
+        internal static string GMRESStart {
+            get {
+                return ResourceManager.GetString("GMRESStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
         /// </summary>
         internal static string IterationAndTimeInfo {
@@ -210,6 +237,24 @@ namespace Althea.Backend {
         internal static string RestartLanczosStart {
             get {
                 return ResourceManager.GetString("RestartLanczosStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Restarting with only one preserved Ritz pair may never improve the result. 的本地化字符串。
+        /// </summary>
+        internal static string RestartWarn1 {
+            get {
+                return ResourceManager.GetString("RestartWarn1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Restarting while preserving more than half Ritz pairs may not improve the result. 的本地化字符串。
+        /// </summary>
+        internal static string RestartWarn2 {
+            get {
+                return ResourceManager.GetString("RestartWarn2", resourceCulture);
             }
         }
         

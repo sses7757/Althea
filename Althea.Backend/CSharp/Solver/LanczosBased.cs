@@ -124,9 +124,10 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region gap
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static double GetGap(double beta, double tol, ReadOnlySpan<ComplexDouble> vals, ReadOnlySpan<ComplexDouble> vecsLastRow, int target = 0, ReadOnlySpan<int> conjugatePairs = default)
+		internal static double GetGap(double beta, double tol, ReadOnlySpan<ComplexDouble> vals, ReadOnlySpan<ComplexDouble> vecsLastRow, int target = 0, ReadOnlySpan<int> conjugatePairs = default, double normA = 0)
 		{
-			double normA = vals.Max(static v => v.Abs());
+			if (normA == 0)
+				normA = vals.Max(static v => v.Abs());
 			double normTol = 2 * normA * Math.Sqrt(tol); // 2 for error upper bound, 1 for average
 			var targetVal = vals[target];
 			var targetSji = vecsLastRow[target];
@@ -211,6 +212,47 @@ namespace Althea.Backend.CSharp.Solver
 				Log.Write(string.Format(Resource.CannotCreateDelegate, nameof(LAD) + "." + nameof(LAD.EigenSpecialMatrixHermitian)), level: LogLevel.Warning);
 			}
 		}
+		#endregion
+
+		#region linear solve helper
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static TVec RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, TVec x, TVec b)
+			where TVec : class, IKrylovVector<TVec, T>, new()
+			where T : unmanaged
+		{
+			TVec r = A.Invoke(x);
+			try
+			{
+				r.Scale(Const<T>.MinusOne);
+				r.AddBy(b, Const<T>.One);
+				return r;
+			}
+			catch (Exception)
+			{
+				r?.Dispose();
+				throw;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
+			where TVec : class, IKrylovVector<TVec, T>, new()
+			where T : unmanaged
+		{
+			r?.Dispose();
+			r = A.Invoke(x);
+			try
+			{
+				r.Scale(Const<T>.MinusOne);
+				r.AddBy(b, Const<T>.One);
+			}
+			catch (Exception)
+			{
+				r?.Dispose();
+				throw;
+			}
+		}
+
 		#endregion
 	}
 
@@ -360,7 +402,8 @@ namespace Althea.Backend.CSharp.Solver
 					LAD? now = LAD.Current;
 					Delegate? d = null;
 					pre.SetDelegate<LAD, EigensolveDelegate>(now, nameof(LAD.EigenSpecialMatrixHermitian), ref d);
-					TridiagSolve = (EigensolveDelegate)d;
+					if (d is EigensolveDelegate dd)
+						TridiagSolve = dd;
 				}
 				else
 				{
@@ -986,17 +1029,6 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region linear solve helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
-		{
-			r?.Dispose();
-			r = A.Invoke(x);
-			r.Scale(Const<T>.MinusOne);
-			r.AddBy(b, Const<T>.One);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static (double relativeError, TVec solve)? CheckLinearSolve<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out double normB, out double realTolerance)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
@@ -1037,19 +1069,20 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static (double relativeError, TVec solve)? CheckLinearSolveInitial<TVec, T>(Func<TVec, TVec> matrix, TVec initial, TVec rightSide, double normB, double realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual)
+		private static (double relativeError, TVec solve)? CheckLinearSolveInitial<TVec, T>(Func<TVec, TVec> matrix, TVec initial, TVec b, double normB, double realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged
 		{
 			#region initial vector check
 			x = initial;
 			// Ignore Spelling: \mathbf
-#pragma warning disable CS8625, CS8601
+#pragma warning disable CS8625
 			r = null;
+#pragma warning restore CS8625
 			try
 			{
 				//tex: $\vec r = \vec b - \mathbf A \vec x_0$
-				RSetToBSubAx<TVec, T>(matrix, ref r, initial, rightSide);
+				r = Common.RSetToBSubAx<TVec, T>(matrix, initial, b);
 				minResidual = r.Norm();
 				if (minResidual <= realTolerance)
 				{
@@ -1063,7 +1096,6 @@ namespace Althea.Backend.CSharp.Solver
 					return null;
 				}
 			}
-#pragma warning restore CS8625, CS8601
 			catch (Exception)
 			{
 				r?.Dispose();
@@ -1173,7 +1205,7 @@ namespace Althea.Backend.CSharp.Solver
 					#region check for convergence
 					if (normR <= realTolerance)
 					{   // check residual vector again
-						RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
+						Common.RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
 						double residual = r.Norm();
 						if (residual <= realTolerance)
 						{
@@ -1206,7 +1238,7 @@ namespace Althea.Backend.CSharp.Solver
 				}
 				else
 				{
-					RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
+					Common.RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
 					double normR = r.Norm();
 					if (normR <= minResidual)
 					{
@@ -1428,7 +1460,7 @@ namespace Althea.Backend.CSharp.Solver
 					#region check for convergence
 					if (normR <= realTolerance)
 					{
-						RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
+						Common.RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
 						normR = r.Norm();
 						if (normR <= realTolerance)
 						{   // actually converges
@@ -1462,7 +1494,7 @@ namespace Althea.Backend.CSharp.Solver
 				}
 				else
 				{
-					RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
+					Common.RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
 					normR = r.Norm();
 					if (normR <= minResidual)
 					{

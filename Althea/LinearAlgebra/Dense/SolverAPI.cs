@@ -89,6 +89,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
 		/// <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -125,6 +126,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -162,6 +164,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComplex"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
 		/// <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -223,6 +226,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -283,6 +287,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
 		/// <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
 		/// <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="SVDStore.Overwrite"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
@@ -337,6 +342,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void LuDecomposition<T>(long n, Storage<T> A, long lda) where T : unmanaged
@@ -364,6 +370,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public static void LinearSolve<T>(long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged
@@ -383,31 +390,30 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region other decompositions
 		/// <summary>
-		/// Compute the QR factorization the given matrix <paramref name="A"/>.
+		/// compute the QR factorization the given matrix <paramref name="A"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="full">Whether to perform full factorization or not</param>
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/>. <br/>
-		/// If <paramref name="m"/> ≥ <paramref name="n"/> and <paramref name="full"/> is false, all of it will be overwritten by the unitary matrix at exit;<br/>
-		/// If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true, <paramref name="A"/>'s underlying array must actually contains at least <paramref name="m"/> columns for the overwriting to succeed;<br/>
-		/// Otherwise, only the top-left <paramref name="m"/>×<paramref name="m"/> matrix will be overwritten.</param>
+		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
-		/// <param name="ldt">The leading dimension of <paramref name="tri"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
+		/// <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+		/// <param name="ldq">The leading dimension of <paramref name="Q"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static void QRDecomposition<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> tri, long ldt) where T : unmanaged
+		/// <remarks>This method combined with the <see cref="TriangularMatrixSolve{T}"/><br/>can be used to solve least square problems (minimization of <c>||<paramref name="A"/> * x - b||</c>) by solve the triangular linear system of <c>x</c>: <c>R * x == c</c>, where <c>R</c> is <paramref name="A"/> at exit and <c>c = <paramref name="Q"/>ᴴ * b</c></remarks>
+		public static void QRDecomposition<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq) where T : unmanaged
 		{
-			CombinationOfLocations location1 = A.LocationDescription, location2 = tri.LocationDescription;
+			CombinationOfLocations location1 = A.LocationDescription, location2 = Q.LocationDescription;
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
-				success = node.Value.QRDecomposition_(full, m, n, A, lda, tri, ldt);
+				success = node.Value.QRDecomposition_(full, m, n, A, lda, Q, ldq);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -425,6 +431,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
 		/// <param name="orderVal">The eigenvalues in this array will be selected to at the top left of Schur form. Default null means no particular order is preferred.</param>
 		/// <returns>The actual number of eigenvalues returned</returns>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -615,18 +622,15 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="full">Whether to perform full factorization or not</param>
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/>. <br/>
-		/// If <paramref name="m"/> ≥ <paramref name="n"/> and <paramref name="full"/> is false, all of it will be overwritten by the unitary matrix at exit;<br/>
-		/// If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true, <paramref name="A"/>'s underlying array must actually contains at least <paramref name="m"/> columns for the overwriting to succeed;<br/>
-		/// Otherwise, only the top-left <paramref name="m"/>×<paramref name="m"/> matrix will be overwritten.</param>
+		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
-		/// <param name="ldt">The leading dimension of <paramref name="tri"/></param>
+		/// <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+		/// <param name="ldq">The leading dimension of <paramref name="Q"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected abstract bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> tri, long ldt) where T : unmanaged;
+		protected abstract bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq) where T : unmanaged;
 
 		/// <summary>
 		/// compute the Schur decomposition of given matrix <paramref name="A"/>.
