@@ -1,11 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
-using Althea.NativeTypes;
 
 
 namespace Althea.Helpers
@@ -72,7 +69,7 @@ namespace Althea.Helpers
 		{
 			public bool DisposeNotCurrentImplementation;
 
-			public Type Storage, LinearAlgebraDense, LinearAlgebraSparse, TensorAlgebraDense, TensorAlgebraSparse, Statistics, Solver;
+			public Type Storage, LinearAlgebraDense, LinearAlgebraSparse, TensorAlgebraDense, TensorAlgebraSparse, Random, Solver;
 
 			internal ImplementationSettings(bool _)
 			{
@@ -83,7 +80,7 @@ namespace Althea.Helpers
 				LinearAlgebraSparse = impls.SparseLinearAlgebraImplementation;
 				TensorAlgebraDense = impls.DenseTensorAlgebraImplementation;
 				TensorAlgebraSparse = impls.SparseTensorAlgebraImplementation;
-				Statistics = impls.StatisticsImplementation;
+				Random = impls.RandomImplementation;
 				Solver = impls.SolverImplementation;
 			}
 
@@ -139,11 +136,11 @@ namespace Althea.Helpers
 
 				try
 				{
-					Statistics = Type.GetType(statistics) ?? impls.StatisticsImplementation;
+					Random = Type.GetType(statistics) ?? impls.RandomImplementation;
 				}
 				catch (Exception)
 				{
-					Statistics = impls.StatisticsImplementation;
+					Random = impls.RandomImplementation;
 				}
 
 				try
@@ -306,9 +303,9 @@ namespace Althea.Helpers
 		/// Which statistics implementation to use
 		/// </summary>
 		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type StatisticsImplementation {
-			get => singletonSettings.ImplementationSettings.Statistics;
-			set => singletonSettings.ImplementationSettings.Statistics = Statistics.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		public static Type RandomImplementation {
+			get => singletonSettings.ImplementationSettings.Random;
+			set => singletonSettings.ImplementationSettings.Random = Random.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
 		}
 
 		/// <summary>
@@ -327,17 +324,24 @@ namespace Althea.Helpers
 		/// <return>Success or not. Some implementation may still be changed even if this returns false.</return>
 		public static bool SetBackend(ISetBackend backend)
 		{
-			if (!backend.Available)
+			if (backend is null || !backend.Available)
 				return false;
 			try
 			{
-				StorageImplementation = backend.StorageImplementation;
-				DenseLinearAlgebraImplementation = backend.DenseLinearAlgebraImplementation;
-				SparseLinearAlgebraImplementation = backend.SparseLinearAlgebraImplementation;
-				DenseTensorAlgebraImplementation = backend.DenseTensorAlgebraImplementation;
-				SparseTensorAlgebraImplementation = backend.SparseTensorAlgebraImplementation;
-				StatisticsImplementation = backend.StatisticsImplementation;
-				SolverImplementation = backend.SolverImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t1 && t1.IsAssignableTo(typeof(Storage.AbstractApi)))
+					StorageImplementation = backend.StorageImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t2 && t2.IsAssignableTo(typeof(LinearAlgebra.Dense.AbstractApi)))
+					DenseLinearAlgebraImplementation = backend.DenseLinearAlgebraImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t3 && t3.IsAssignableTo(typeof(LinearAlgebra.Sparse.AbstractApi)))
+					SparseLinearAlgebraImplementation = backend.SparseLinearAlgebraImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t4 && t4.IsAssignableTo(typeof(TensorAlgebra.Dense.AbstractApi)))
+					DenseTensorAlgebraImplementation = backend.DenseTensorAlgebraImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t5 && t5.IsAssignableTo(typeof(TensorAlgebra.Sparse.AbstractApi)))
+					SparseTensorAlgebraImplementation = backend.SparseTensorAlgebraImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t6 && t6.IsAssignableTo(typeof(Random.AbstractApi)))
+					RandomImplementation = backend.RandomImplementation;
+				if (backend.StorageImplementation is { IsAbstract: false } t7 && t7.IsAssignableTo(typeof(Solver.AbstractApi)))
+					SolverImplementation = backend.SolverImplementation;
 				return true;
 			}
 			catch (Exception)
@@ -374,7 +378,7 @@ namespace Althea.Helpers
 				LinearAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraSparse);
 				TensorAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraDense);
 				TensorAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraSparse);
-				Statistics.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Statistics);
+				Random.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Random);
 				Solver.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Solver);
 				return true;
 			}

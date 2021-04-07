@@ -219,11 +219,11 @@
       <FileName>Solver\API.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Althea.Statistics.AbstractApi" Collapsed="true">
+  <Class Name="Althea.Random.AbstractApi" Collapsed="true">
     <Position X="30.5" Y="17" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAIAABAAAAAQAAABAACAAAAAAAAgAAAAAARgAIAEAAA=</HashCode>
-      <FileName>Statistics\API.cs</FileName>
+      <FileName>Random\API.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Struct Name="Althea.StorageLocation" Collapsed="true" BaseTypeListCollapsed="true">

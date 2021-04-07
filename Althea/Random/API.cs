@@ -6,10 +6,10 @@ using Althea.NativeTypes;
 using Althea.Linq;
 
 
-namespace Althea.Statistics
+namespace Althea.Random
 {
 	/// <summary>
-	/// The abstract class for runtime statistics API routines 
+	/// The abstract class for runtime random API routines 
 	/// </summary>
 	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{

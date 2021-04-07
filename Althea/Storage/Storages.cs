@@ -133,7 +133,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract storage class as a base class for all <see cref="Storage{T}"/> classes with <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>. Inherits <see cref="ActualStorage{T}"/>.
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <remarks>This abstract class does not actually allocate storages on the given locations.</remarks>
 	public abstract class PureOrMixedStorage<T> : ActualStorage<T>, IPureOrMixedStorage where T : unmanaged
 	{
 		#region basic
@@ -188,7 +189,7 @@ namespace Althea.Storage
 		/// <returns>A <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
 		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
+		public override ReferenceStorage<TOut> As<TOut>()
 		{
 			long newLength = CheckCast<TOut>(this.Length);
 			return new PureOrMixedReferenceStorage<TOut>(this, newLength: newLength);
@@ -206,8 +207,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// The storage class that references to a <see cref="PureOrMixedStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public sealed class PureOrMixedReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public class PureOrMixedReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
 	{
 		#region basic
 		private readonly int start, end;
@@ -375,8 +376,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// Represents a storage of a contiguous memory block on a certain memory location, implements <see cref="PureOrMixedStorage{T}"/>
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public sealed class PureStorage<T> : PureOrMixedStorage<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public class PureStorage<T> : PureOrMixedStorage<T> where T : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -393,8 +394,6 @@ namespace Althea.Storage
 
 		private readonly PointerSegment pointer;
 
-		private readonly bool _noFree = false;
-
 		/// <summary>
 		/// <b>Allocate</b> and create a <see cref="PureStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
 		/// </summary>
@@ -404,27 +403,6 @@ namespace Althea.Storage
 		public PureStorage(StorageLocation location, long length) : base(stackalloc[] { location }, stackalloc[] { length })
 		{
 			this.pointer = length == 0 ? default : Allocate(location, length);
-		}
-
-		/// <summary>
-		/// Create a <see cref="PureStorage{T}"/> of given <paramref name="pointer"/> without allocation and free
-		/// </summary>
-		/// <param name="pointer">The <see cref="IPointer"/> to create on</param>
-		/// <remarks>Be careful when invoking this constructor since it may cause memory leak</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PureStorage(IPointer pointer) : base(stackalloc[] { pointer.Location }, stackalloc[] { pointer.LengthInBytes / Const<T>.SizeT })
-		{
-			this.pointer = new(pointer); this._noFree = true;
-		}
-
-		/// <summary>
-		/// The function that actually dispose this storage, override <see cref="ActualStorage{T}.Dispose(bool)"/>
-		/// </summary>
-		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
-		protected override void Dispose(bool invokedByUser)
-		{
-			if (!this._noFree)
-				base.Dispose(invokedByUser);
 		}
 		#endregion
 
@@ -473,6 +451,19 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
+		/// Convert this <see cref="PureReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// </summary>
+		/// <typeparam name="TOut">The output data type</typeparam>
+		/// <returns>A <see cref="PureReferenceStorage{TOut}"/></returns>
+		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override PureReferenceStorage<TOut> As<TOut>()
+		{
+			long newLength = CheckCast<TOut>(this.Length);
+			return new PureReferenceStorage<TOut>(this, newLength: newLength);
+		}
+
+		/// <summary>
 		/// Make a <see cref="PureReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
 		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
@@ -491,9 +482,9 @@ namespace Althea.Storage
 	/// <summary>
 	/// The storage class that references to a <see cref="PureStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <remarks>Although the <see cref="PureOrMixedReferenceStorage{T}"/> covers the usage of this class, this class is specially separated to improve performance.</remarks>
-	public sealed class PureReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
+	public class PureReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
 	{
 		#region basic
 		private readonly PointerSegment refPointer;
@@ -599,8 +590,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// Represents a storage of several contiguous memory blocks on different memory locations with fixed sizes, implements <see cref="ActualStorage{T}"/>
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public sealed class MixedStorage<T> : PureOrMixedStorage<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public class MixedStorage<T> : PureOrMixedStorage<T> where T : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -780,7 +771,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// An abstract class which represents a storage of several contiguous memory blocks on different memory locations with variable sizes purposed to cache memories of higher performance. Inherits <see cref="ActualStorage{T}"/>.
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public abstract class CachedStorage<T> : ActualStorage<T>, ICachedStorage where T : unmanaged
 	{
 		#region basic
@@ -964,8 +955,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// The storage class that references to a <see cref="CachedStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
-	public sealed class CachedReferenceStorage<T> : ReferenceStorage<T>, IReferenceStorage, ICachedStorage where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public class CachedReferenceStorage<T> : ReferenceStorage<T>, IReferenceStorage, ICachedStorage where T : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -1129,8 +1120,8 @@ namespace Althea.Storage
 	/// <summary>
 	/// The storage class that caches a stream storage to a memory storage, implements <see cref="CachedStorage{T}"/>
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public sealed class StreamToMemoryCachedStorage<T> : CachedStorage<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	public class StreamToMemoryCachedStorage<T> : CachedStorage<T> where T : unmanaged
 	{
 		#region basic
 		/// <summary>
@@ -1332,11 +1323,11 @@ namespace Althea.Storage
 
 	#region factory
 	internal delegate IStorage CreateDelegate(CombinationType type, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
-	
+
 	/// <summary>
 	/// The storage factory for creating concrete storage classes. This is a simple factory pattern.
 	/// </summary>
-	/// <typeparam name="T">any unmanaged data type</typeparam>
+	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public static class StorageFactory<T> where T : unmanaged
 	{
 		#region basic

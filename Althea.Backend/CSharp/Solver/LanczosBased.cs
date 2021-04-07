@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Reflection;
 
 using Althea.Backend.Storage;
 using Althea.Helpers;
@@ -393,8 +393,8 @@ namespace Althea.Backend.CSharp.Solver
 			// tridiagonal solve
 			fixed (double* matPtr = eigvec.UnderlyingSpan, valPtr = eigval)
 			{
-				var tridiag = new PureStorage<double>(MemoryPointer.Create<double>(new(matPtr), eigvec.LeadDim * N));
-				var valsOut = new PureStorage<double>(MemoryPointer.Create<double>(new(valPtr), N));
+				var tridiag = new ManagedPureStorage<double>(matPtr, eigvec.LeadDim * N);
+				var valsOut = new ManagedPureStorage<double>(valPtr, N);
 				if (TridiagSolve is null)
 				{
 					LAD? pre = LAD.Current;

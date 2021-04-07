@@ -47,7 +47,7 @@
     // Which tensor algebra implementation to use
     "TensorAlgebra": null, //"TTGT.HpTT.HPTensor (CUTensor), TTGT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
     // Which statistics implementation to use
-    "Statistics": null,
+    "Random": null,
     // Which general solver implementation to use
     "Solver": null
   }

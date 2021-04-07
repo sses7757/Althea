@@ -292,6 +292,14 @@ namespace Althea.NativeTypes
 	{
 		#region constants with simple initialization
 		/// <summary>
+		///  Get a <see cref="bool"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="Althea"/>.
+		/// </summary>
+		public static readonly bool IsPreDefined = NativeTypeExtension.IsSupported<T>() &&
+													((typeof(T).IsPrimitive && typeof(T) != typeof(bool)) ||
+													 typeof(T) == typeof(ComplexDouble) ||
+													(IsComplex && typeof(T) == typeof(Complex<>).MakeGenericType(typeof(T).GenericTypeArguments[0])));
+
+		/// <summary>
 		/// Get the <see cref="NativeTypes.DataType"/> of type <typeparamref name="T"/>
 		/// </summary>
 		public static readonly DataType DataType = DataTypeExtension.ToDataType<T>();

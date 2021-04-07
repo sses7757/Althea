@@ -149,8 +149,8 @@ namespace Althea.Backend.CSharp.Solver
 				return false;
 			if (!hermitianOrDefinite.HasValue)
 			{
-				var val = KrylovBased.GeneralMinimalResidual<TVec, T>(info.MatrixFunction, info.OtherVector, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.CheckMatrixFunction, out solve, out relativeError, this.InfoLogInterval, this.MaxStagnationSteps);
-				return val.HasValue;
+				var success = KrylovBased.GeneralMinimalResidual<TVec, T>(info.MatrixFunction, info.OtherVector, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.CheckMatrixFunction, out solve, out relativeError, this.InfoLogInterval, this.MaxStagnationSteps);
+				return success;
 			}
 			else if (hermitianOrDefinite.Value)
 			{

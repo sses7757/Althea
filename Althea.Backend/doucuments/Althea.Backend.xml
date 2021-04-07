@@ -3474,9 +3474,39 @@
               查找类似 The (complex) number {0} is not close enough to a normal real number. 的本地化字符串。
             </summary>
         </member>
+        <member name="P:Althea.Backend.Resource.GMRESConverge">
+            <summary>
+              查找类似 Generalized Minimal Residual algorithm converged after {0} restarts. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.GMRESFail">
+            <summary>
+              查找类似 Generalized Minimal Residual algorithm failed to converged after {0} restarts, current residual = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.GMRESStart">
+            <summary>
+              查找类似 Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+            </summary>
+        </member>
         <member name="P:Althea.Backend.Resource.IterationAndTimeInfo">
             <summary>
               查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.KrylovSchurConverge">
+            <summary>
+              查找类似 Krylov-Schur algorithm converged after {0} restarts. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.KrylovSchurFail">
+            <summary>
+              查找类似 Krylov-Schur algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.KrylovSchurStart">
+            <summary>
+              查找类似 Krylov-Schur algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Backend.Resource.LanczosConvergeOnePair">
@@ -3532,6 +3562,16 @@
         <member name="P:Althea.Backend.Resource.RestartLanczosStart">
             <summary>
               查找类似 Restarting Lanczos algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.RestartWarn1">
+            <summary>
+              查找类似 Restarting with only one preserved Ritz pair may never improve the result. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.RestartWarn2">
+            <summary>
+              查找类似 Restarting while preserving more than half Ritz pairs may not improve the result. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Backend.Resource.TooMuchEigenvaluesRequired">

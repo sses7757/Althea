@@ -14,6 +14,48 @@ using Althea.Storage;
 
 namespace Althea.Backend.Storage
 {
+	#region internal usage
+	internal sealed class ManagedPureStorage<T> : PureOrMixedStorage<T> where T : unmanaged
+	{
+		private readonly PointerSegment pointerSegment;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe ManagedPureStorage(void* pointer, long length) : base(stackalloc StorageLocation[] { new(LocationType.CpuRam, 0) }, stackalloc[] { length })
+		{
+			this.pointerSegment = new(MemoryPointer.Create<T>((IntPtr)pointer, length));
+		}
+
+		// no disposition
+		protected override void Dispose(bool invokedByUser) { }
+
+		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => index == 0 ? this.pointerSegment : throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+		}
+
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
+
+		public override bool Equals(Storage<T>? obj) => obj is ManagedPureStorage<T> m && ((MemoryPointer)this.pointerSegment.Pointer).Pointer == ((MemoryPointer)m.pointerSegment.Pointer).Pointer;
+
+		public override bool IsValid() => this.pointerSegment.LengthInBytes > 0;
+
+		public override bool IsOffsetValid(long offset, long newLength = 0) => offset >= 0 && newLength >= 0 && offset + newLength < this.pointerSegment.LengthInBytes;
+
+		public override ActualStorage<T> CreateAlike() => throw new InvalidOperationException();
+
+		public override ActualStorage<TOut> CreateAlike<TOut>() => throw new InvalidOperationException();
+
+		public override ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0) => throw new InvalidOperationException();
+
+		public override ReferenceStorage<TOut> As<TOut>() => throw new InvalidOperationException();
+
+		public override ActualStorage<T> Clone() => throw new InvalidOperationException();
+	}
+	#endregion
+
 	/// <summary>
 	/// An implementation of <see cref="IMemoryPointer"/>. This is implemented as a class to prevent boxing and unboxing.
 	/// </summary>

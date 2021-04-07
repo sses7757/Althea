@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 using Althea.Linq;
 using Althea.Helpers;
-
+using System.Collections;
 
 namespace Althea
 {
@@ -458,7 +458,7 @@ namespace Althea
 		#region dynamic method invocation
 		private readonly struct TypeHandle : IEquatable<TypeHandle>
 		{
-			private readonly RuntimeTypeHandle handle;
+			internal readonly RuntimeTypeHandle handle;
 
 			private TypeHandle(RuntimeTypeHandle handle) => this.handle = handle;
 
@@ -476,7 +476,7 @@ namespace Althea
 		/// <summary>
 		/// The structure used to store the extra methods' information
 		/// </summary>
-		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>
+		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>, IReadOnlyList<RuntimeTypeHandle>
 		{
 			private readonly FixedBuffer_64<TypeHandle> inputTypes;
 
@@ -492,7 +492,7 @@ namespace Althea
 				if (string.IsNullOrWhiteSpace(name))
 					throw new ArgumentNullException(nameof(name));
 				this.inputTypes = default;
-				if (inputTypes.Length > this.inputTypes.Count / 8)
+				if (inputTypes.Length > this.inputTypes.Count)
 					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(inputTypes));
 
 				this.name = name;
@@ -501,6 +501,59 @@ namespace Althea
 					this.inputTypes[i] = inputTypes[i];
 				}
 			}
+
+			#region list
+			/// <summary>
+			/// Get the method name as a <see cref="string"/>
+			/// </summary>
+			public string Name {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.name;
+			}
+
+			/// <summary>
+			/// Get the number of input arguments of this <see cref="ExtraMethodInfo"/>
+			/// </summary>
+			public int Count {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get {
+					int find = this.inputTypes.AsSpan().IndexOf(static t => t.Equals(default));
+					return find < 0 ? this.inputTypes.Count : find;
+				}
+			}
+
+			/// <summary>
+			/// Get the <paramref name="index"/>-th input argument's <see cref="RuntimeTypeHandle"/> of this <see cref="ExtraMethodInfo"/>
+			/// </summary>
+			/// <param name="index">The index of the input argument</param>
+			/// <returns>The <paramref name="index"/>-th input argument's <see cref="RuntimeTypeHandle"/></returns>
+			/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+			public RuntimeTypeHandle this[int index] {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get {
+					if (index < 0 || index >= this.inputTypes.Count)
+						throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					return this.inputTypes[index].handle;
+				}
+			}
+
+			/// <summary>
+			/// Get the enumerator of this <see cref="ExtraMethodInfo"/>
+			/// </summary>
+			/// <returns>The enumerator of this <see cref="ExtraMethodInfo"/></returns>
+			public IEnumerator<RuntimeTypeHandle> GetEnumerator()
+			{
+				for (int i = 0; i < this.inputTypes.Count; i++)
+				{
+					var t = this.inputTypes[i];
+					if (t.Equals(default))
+						break;
+					yield return t.handle;
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+			#endregion
 
 			/// <summary>
 			/// Indicates whether the current object is equal to another object of the same type.

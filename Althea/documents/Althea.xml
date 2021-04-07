@@ -2359,9 +2359,9 @@
             The implementation type of <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>
             </summary>
         </member>
-        <member name="P:Althea.ISetBackend.StatisticsImplementation">
+        <member name="P:Althea.ISetBackend.RandomImplementation">
             <summary>
-            The implementation type of <see cref="T:Althea.Statistics.AbstractApi"/>
+            The implementation type of <see cref="T:Althea.Random.AbstractApi"/>
             </summary>
         </member>
         <member name="P:Althea.ISetBackend.SolverImplementation">
@@ -4827,7 +4827,7 @@
             </summary>
             <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
         </member>
-        <member name="P:Althea.Helpers.Settings.StatisticsImplementation">
+        <member name="P:Althea.Helpers.Settings.RandomImplementation">
             <summary>
             Which statistics implementation to use
             </summary>
@@ -4885,7 +4885,7 @@
         </member>
         <member name="T:Althea.Helpers.SpanList`1">
             <summary>
-            The list-like span which support add, remove whose internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>
+            The list-like span that supports addition and removal. Its internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>.
             </summary>
             <typeparam name="T">The data type</typeparam>
         </member>
@@ -4957,13 +4957,27 @@
             <param name="values">The values as a <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> to be appended</param>
             <exception cref="T:System.InvalidOperationException">If the <paramref name="values"/> cannot be appended</exception>
         </member>
-        <member name="M:Althea.Helpers.SpanList`1.Remove(System.Int32)">
+        <member name="M:Althea.Helpers.SpanList`1.RemoveAt(System.Int32)">
             <summary>
             Remove the element at <paramref name="index"/> of this <see cref="T:Althea.Helpers.SpanList`1"/>
             </summary>
             <param name="index">The index of the element to be removed</param>
             <returns>The removed element</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.Remove(`0)">
+            <summary>
+            Remove the first occurrence of <paramref name="val"/> in this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <param name="val">The value to be removed</param>
+            <returns>True if <paramref name="val"/> is present in this <see cref="T:Althea.Helpers.SpanList`1"/> and the removal succeeded, false otherwise</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanList`1.IndexOf(`0)">
+            <summary>
+            Find the index of the first occurrence of <paramref name="val"/> in this <see cref="T:Althea.Helpers.SpanList`1"/>
+            </summary>
+            <param name="val">The value to find</param>
+            <returns>The index of the first occurrence of <paramref name="val"/> in this <see cref="T:Althea.Helpers.SpanList`1"/>; or -1 if not found.</returns>
         </member>
         <member name="M:Althea.Helpers.SpanList`1.Clear">
             <summary>
@@ -5043,9 +5057,9 @@
         </member>
         <member name="T:Althea.Helpers.SpanMatrix`1">
             <summary>
-            The matrix-like span which is of column major whose internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>
+            The matrix-like span of column major whose internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>.
             </summary>
-            <typeparam name="T"></typeparam>
+            <typeparam name="T">The data type</typeparam>
         </member>
         <member name="T:Althea.Helpers.SpanMatrix`1.Enumerator">
             <summary>
@@ -5115,6 +5129,15 @@
             <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
         </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Item(System.Index,System.Index)">
+            <summary>
+            Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <param name="row">The row index of the element to get reference</param>
+            <param name="col">The column index of the element to get reference</param>
+            <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+        </member>
         <member name="P:Althea.Helpers.SpanMatrix`1.Item(System.Int32)">
             <summary>
             Get the column at <paramref name="columnIndex"/> of this <see cref="T:Althea.Helpers.SpanMatrix`1"/> as a <see cref="T:System.Span`1"/>
@@ -5155,12 +5178,20 @@
         </member>
         <member name="M:Althea.Helpers.SpanMatrix`1.SubMatrix(System.Range,System.Range)">
             <summary>
-            Forms a slice out of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+            Forms a referenced sub-matrix of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
             </summary>
             <param name="rowRange">The range of the rows to slice</param>
             <param name="colRange">The range of the columns to slice</param>
             <returns>A <see cref="T:Althea.Helpers.SpanMatrix`1"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/></returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rowRange"/> or <paramref name="colRange"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.Item(System.Range,System.Range)">
+            <summary>
+            Get the referenced sub-matrix of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+            </summary>
+            <param name="rowRange">The range of the rows to slice</param>
+            <param name="colRange">The range of the columns to slice</param>
+            <returns>A <see cref="T:Althea.Helpers.SpanMatrix`1"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/></returns>
         </member>
         <member name="M:Althea.Helpers.SpanMatrix`1.op_Equality(Althea.Helpers.SpanMatrix{`0},Althea.Helpers.SpanMatrix{`0})">
             <summary>
@@ -5200,12 +5231,28 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
         </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.SetRowFrom(System.Int32,System.ReadOnlySpan{`0})">
+            <summary>
+            Overwrite a specific <paramref name="row"/> of the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> by the values of <paramref name="destination"/> <see cref="T:System.ReadOnlySpan`1"/>
+            </summary>
+            <param name="row">The index of the row to be overwritten</param>
+            <param name="destination">The <see cref="T:System.Span`1"/> to copy from</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
         <member name="M:Althea.Helpers.SpanMatrix`1.CopyTo(System.Span{`0})">
             <summary>
             Copy the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:System.Span`1"/> column-by-column
             </summary>
             <param name="destination">The <see cref="T:System.Span`1"/> to copy to</param>
             <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.CopyTo(Althea.Helpers.SpanMatrix{`0})">
+            <summary>
+            Copy the current <see cref="T:Althea.Helpers.SpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:Althea.Helpers.SpanMatrix`1"/> column-by-column
+            </summary>
+            <param name="destination">The <see cref="T:Althea.Helpers.SpanMatrix`1"/> to copy to</param>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is of different size</exception>
         </member>
         <member name="M:Althea.Helpers.SpanMatrix`1.CopyTo``1(System.Span{``0},System.Converter{`0,``0})">
             <summary>
@@ -5226,6 +5273,14 @@
             Convert this <see cref="T:Althea.Helpers.SpanMatrix`1"/> to an array of column arrays of type <typeparamref name="T"/>
             </summary>
             <returns>An array of column arrays of type <typeparamref name="T"/> holding the same values as this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanMatrix`1.FromArray(`0[][])">
+            <summary>
+            Copy the values from the given <paramref name="array"/> of column arrays of type <typeparamref name="T"/> to this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <param name="array">The array of column arrays of type <typeparamref name="T"/> to be copied from</param>
+            <exception cref="T:System.ArgumentNullException">If any of <paramref name="array"/> or itself is null</exception>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is not the same as this one</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.ILinearAlgebraApi">
             <summary>
@@ -5784,7 +5839,7 @@
             <param name="m">The number of rows of matrix <paramref name="A"/></param>
             <param name="n">The number of columns of matrix <paramref name="A"/></param>
             <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-            <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of the two-dimensional array used to store matrix <paramref name="A"/></param>
             <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements if <paramref name="op"/>==<see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> otherwise</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -5805,7 +5860,7 @@
             <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="α">The scalar used for multiplication</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideX"/>))</c> elements</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -5831,7 +5886,7 @@
             <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-            <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
@@ -5850,7 +5905,7 @@
             <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
@@ -5868,12 +5923,12 @@
             <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
             <param name="k">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
             <param name="α">The scalar to be multiplied to <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</param>
-            <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+            <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
             <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
             <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
-            <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -5890,12 +5945,12 @@
             <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
             <param name="n">The number of columns of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
             <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-            <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+            <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-            <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -5912,13 +5967,32 @@
             <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
             <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
             <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
+            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixSolve``1(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
+            <summary>
+            Solve the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>
+            <c><paramref name="op"/>(<paramref name="A"/>) * x == <paramref name="α"/> * <paramref name="B"/></c> if <paramref name="leftA"/> is true, or <c>x * <paramref name="op"/>(<paramref name="A"/>) == <paramref name="α"/> * <paramref name="B"/></c> otherwise.
+            </summary>
+            <param name="leftA">Whether the matrix <paramref name="A"/> is at left side or right side</param>
+            <param name="fillUpper">Whether the matrix <paramref name="A"/>'s upper or lower triangle is filled</param>
+            <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+            <param name="m">The number of rows and columns of <paramref name="A"/> and number of rows of <paramref name="B"/></param>
+            <param name="n">The number of columns of <paramref name="B"/>, i.e., the number of linear systems to be solved</param>
+            <param name="α">The scalar to multiply to <paramref name="B"/></param>
+            <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <param name="B">The input/output right-hand-side matrix. Overwritten by the solutions at exit.</param>
+            <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.AbsoluteValueArgMax_``1(Althea.Storage{``0},System.Int32,System.Int64@)">
             <summary>
@@ -6018,7 +6092,7 @@
             <param name="m">The number of rows of matrix <paramref name="A"/></param>
             <param name="n">The number of columns of matrix <paramref name="A"/></param>
             <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-            <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="A">The input array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of the two-dimensional array used to store matrix <paramref name="A"/></param>
             <param name="x">The vector of length at least <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements if <paramref name="op"/>==<see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*<paramref name="strideX"/>)</c> otherwise</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -6039,7 +6113,7 @@
             <param name="hermA">Whether <paramref name="A"/> is a hermitian or a symmetric matrix</param>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="α">The scalar used for multiplication</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="strideX"/>))</c> elements</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -6065,7 +6139,7 @@
             <param name="y">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-            <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="A">The input and output array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
@@ -6084,7 +6158,7 @@
             <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
@@ -6102,12 +6176,12 @@
             <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
             <param name="k">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
             <param name="α">The scalar to be multiplied to <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</param>
-            <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+            <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
             <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
             <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
-            <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -6124,12 +6198,12 @@
             <param name="m">The number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
             <param name="n">The number of columns of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
             <param name="α">The scalar to be multiplied to <paramref name="A"/></param>
-            <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
+            <param name="A">The symmetric/Hermitian matrix of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="leftA"/> is true, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-            <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
+            <param name="C">The array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -6146,13 +6220,32 @@
             <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
             <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
             <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
+            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixSolve_``1(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, solves the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>
+            <c><paramref name="op"/>(<paramref name="A"/>) * x == <paramref name="α"/> * <paramref name="B"/></c> if <paramref name="leftA"/> is true, or <c>x * <paramref name="op"/>(<paramref name="A"/>) == <paramref name="α"/> * <paramref name="B"/></c> otherwise.
+            </summary>
+            <param name="leftA">Whether the matrix <paramref name="A"/> is at left side or right side</param>
+            <param name="fillUpper">Whether the matrix <paramref name="A"/>'s upper or lower triangle is filled</param>
+            <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+            <param name="m">The number of rows and columns of <paramref name="A"/> and number of rows of <paramref name="B"/></param>
+            <param name="n">The number of columns of <paramref name="B"/>, i.e., the number of linear systems to be solved</param>
+            <param name="α">The scalar to multiply to <paramref name="B"/></param>
+            <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <param name="B">The input/output right-hand-side matrix. Overwritten by the solutions at exit.</param>
+            <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.IsSupportedMatrixUnary(Althea.CombinationOfLocations)">
             <summary>
@@ -6724,7 +6817,7 @@
             <list type="bullet">
             <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixGeneral``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
             <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
-            <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1})"/></item>
+            <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition``1(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{Althea.NativeTypes.ComplexDouble})"/></item>
             <item>etc.</item>
             </list>
             </remarks>
@@ -6740,6 +6833,7 @@
             <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
             <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6758,6 +6852,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6777,6 +6872,7 @@
             <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComplex"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
             <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
             <param name="lda">leading dimension of <paramref name="A"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6799,6 +6895,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -6820,6 +6917,7 @@
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
             <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
             <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
@@ -6833,6 +6931,7 @@
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -6848,45 +6947,44 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            Compute the QR factorization the given matrix <paramref name="A"/>.
+            compute the QR factorization the given matrix <paramref name="A"/>.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="full">Whether to perform full factorization or not</param>
             <param name="m">The number of rows of matrix <paramref name="A"/></param>
             <param name="n">The number of columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/>. <br/>
-            If <paramref name="m"/> ≥ <paramref name="n"/> and <paramref name="full"/> is false, all of it will be overwritten by the unitary matrix at exit;<br/>
-            If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true, <paramref name="A"/>'s underlying array must actually contains at least <paramref name="m"/> columns for the overwriting to succeed;<br/>
-            Otherwise, only the top-left <paramref name="m"/>×<paramref name="m"/> matrix will be overwritten.</param>
+            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
-            <param name="ldt">The leading dimension of <paramref name="tri"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
+            <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+            <remarks>This method combined with the <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixSolve``1(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/><br/>can be used to solve least square problems (minimization of <c>||<paramref name="A"/> * x - b||</c>) by solve the triangular linear system of <c>x</c>: <c>R * x == c</c>, where <c>R</c> is <paramref name="A"/> at exit and <c>c = <paramref name="Q"/>ᴴ * b</c></remarks>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1})">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition``1(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{Althea.NativeTypes.ComplexDouble})">
             <summary>
             Compute the Schur decomposition of given matrix <paramref name="A"/>.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input/output data type</typeparam>
-            <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
             <param name="jobu">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not. Any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/>.</param>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular matrix at exit</param>
+            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="jobu"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>.</param>
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
             <param name="orderVal">The eigenvalues in this array will be selected to at the top left of Schur form. Default null means no particular order is preferred.</param>
             <returns>The actual number of eigenvalues returned</returns>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixHermitian_``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64)">
@@ -7026,27 +7124,23 @@
             <param name="full">Whether to perform full factorization or not</param>
             <param name="m">The number of rows of matrix <paramref name="A"/></param>
             <param name="n">The number of columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/>. <br/>
-            If <paramref name="m"/> ≥ <paramref name="n"/> and <paramref name="full"/> is false, all of it will be overwritten by the unitary matrix at exit;<br/>
-            If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true, <paramref name="A"/>'s underlying array must actually contains at least <paramref name="m"/> columns for the overwriting to succeed;<br/>
-            Otherwise, only the top-left <paramref name="m"/>×<paramref name="m"/> matrix will be overwritten.</param>
+            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="tri">The preallocated output triangular matrix of leading dimension <paramref name="ldt"/> and size min(<paramref name="m"/>, <paramref name="n"/>) × <paramref name="n"/></param>
-            <param name="ldt">The leading dimension of <paramref name="tri"/></param>
+            <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="tri"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="m"/> &gt; <paramref name="n"/> and <paramref name="full"/> is true while <paramref name="A"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition_``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,System.Int64@,Althea.Storage{``1})">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition_``1(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,System.Int64@,Althea.Storage{Althea.NativeTypes.ComplexDouble})">
             <summary>
             compute the Schur decomposition of given matrix <paramref name="A"/>.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input/output data type</typeparam>
-            <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
             <param name="jobu">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not. Any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/>.</param>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular matrix at exit</param>
+            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="jobu"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>.</param>
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
@@ -7055,7 +7149,6 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Sparse.AbstractApi">
@@ -9421,37 +9514,77 @@
             <summary>
             Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
             </summary>
+            <typeparam name="T">The data type</typeparam>
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
             Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
             </summary>
+            <typeparam name="T">The data type</typeparam>
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.Span{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.Span{``0},System.Predicate{``0})">
             <summary>
             Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
             </summary>
+            <typeparam name="T">The data type</typeparam>
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
             <summary>
             Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
             </summary>
+            <typeparam name="T">The data type</typeparam>
             <param name="span">The span to find in</param>
             <param name="predicator">The predicator to check occurrence</param>
             <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-            <remarks>The extend method of <paramref name="span"/></remarks>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.Span{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.AllZeros``1(System.Span{``0})">
             <summary>
@@ -9938,6 +10071,14 @@
             <typeparam name="T">The data type</typeparam>
             <param name="span">The input span to be operated</param>
             <param name="action">The action whose parameter is the element in the span</param>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Scale``1(System.Span{``0},``0)">
+            <summary>
+            Scale the values in <paramref name="span"/> by <paramref name="scalar"/> in-place
+            </summary>
+            <typeparam name="T">Any supported (<see cref="M:Althea.NativeTypes.NativeTypeExtension.IsSupported``1"/>) unmanaged struct as the data type</typeparam>
+            <param name="span">The span to be scaled in-place</param>
+            <param name="scalar">The scalar to multiply to each element in <paramref name="span"/></param>
         </member>
         <member name="T:Althea.NativeTypes.IComplex`1">
             <summary>
@@ -10534,6 +10675,11 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
+        <member name="F:Althea.NativeTypes.Const`1.IsPreDefined">
+            <summary>
+             Get a <see cref="T:System.Boolean"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="N:Althea"/>.
+            </summary>
+        </member>
         <member name="F:Althea.NativeTypes.Const`1.DataType">
             <summary>
             Get the <see cref="T:Althea.NativeTypes.DataType"/> of type <typeparamref name="T"/>
@@ -11017,12 +11163,12 @@
             <param name="dataType">The <see cref="T:Althea.NativeTypes.DataType"/> to check</param>
             <returns>True if <paramref name="dataType"/> is a real type.</returns>
         </member>
-        <member name="M:Althea.NativeTypes.DataTypeExtension.IsFloat(Althea.NativeTypes.DataType)">
+        <member name="M:Althea.NativeTypes.DataTypeExtension.IsInteger(Althea.NativeTypes.DataType)">
             <summary>
-            Check if <paramref name="dataType"/> is a float type.
+            Check if <paramref name="dataType"/> is an integer type.
             </summary>
             <param name="dataType">The <see cref="T:Althea.NativeTypes.DataType"/> to check</param>
-            <returns>True if <paramref name="dataType"/> is a float type.</returns>
+            <returns>True if <paramref name="dataType"/> is an integer type.</returns>
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.IsSignedInteger(Althea.NativeTypes.DataType)">
             <summary>
@@ -11214,6 +11360,327 @@
             </summary>
             <typeparam name="T">The type to check</typeparam>
             <returns>The machine precision of <typeparamref name="T"/></returns>
+        </member>
+        <member name="T:Althea.Random.AbstractApi">
+            <summary>
+            The abstract class for runtime random API routines 
+            </summary>
+        </member>
+        <member name="P:Althea.Random.AbstractApi.Current">
+            <summary>
+            Get the current using <see cref="T:Althea.Random.AbstractApi"/>.
+            </summary>
+            <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="P:Althea.Random.AbstractApi.Dynamic">
+            <summary>
+            Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
+            </summary>
+            <remarks>
+            Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
+            Since there are internal caching for <see cref="M:System.Dynamic.DynamicObject.TryInvokeMember(System.Dynamic.InvokeMemberBinder,System.Object[],System.Object@)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
+            </remarks>
+            <example><code>
+            long number = AbstractApi.Dynamic.CholeskyDecompose(...);
+            </code></example>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.IsSupportedUnary(Althea.CombinationOfLocations)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/> is supported by unary operations of this implementation or not.
+            </summary>
+            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <returns>Whether unary operations on <paramref name="location1"/> is supported by this <see cref="T:Althea.Random.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.IsSupportedBinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by binary operations of this implementation or not.
+            </summary>
+            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="T:Althea.Random.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.IsSupportedTrinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by trinary operations of this implementation or not.
+            </summary>
+            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <param name="location3">The third given <see cref="T:Althea.CombinationOfLocations"/></param>
+            <returns>Whether trinary operations on <paramref name="location1"/>, <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="T:Althea.Random.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.IsSupportedNary(System.ReadOnlySpan{Althea.CombinationOfLocations})">
+            <summary>
+            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by N-ary operations of this implementation or not.
+            </summary>
+            <param name="locations">The given <see cref="T:Althea.CombinationOfLocations"/>s</param>
+            <returns>Whether N-ary operations on <paramref name="locations"/> are supported by this <see cref="T:Althea.Random.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.GetDefaultDistribution``1">
+            <summary>
+            Get the default one-dimensional <see cref="T:Althea.Random.IRandomDistribution"/> -- a <see cref="T:Althea.Random.UniformDistribution`1"/> on [0, 1) if <typeparamref name="T"/> is a floating-point type, otherwise a <see cref="T:Althea.Random.RandomBitsDistribution`1"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <returns>The default one-dimensional <see cref="T:Althea.Random.IRandomDistribution"/></returns>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom``1(Althea.Storage{``0},Althea.Random.IRandomDistribution)">
+            <summary>
+            Fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="storage">The <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank-1. Default null means <see cref="M:Althea.Random.AbstractApi.GetDefaultDistribution``1"/>.</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom``2(Althea.Storage{``0},Althea.Storage{``1},Althea.Random.IRandomDistribution)">
+            <summary>
+            Fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
+            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank-2</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-2 or its data types are not <typeparamref name="T1"/> and <typeparamref name="T2"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom``3(Althea.Storage{``0},Althea.Storage{``1},Althea.Storage{``2},Althea.Random.IRandomDistribution)">
+            <summary>
+            Fill the given <paramref name="storage1"/>, <paramref name="storage2"/> and <paramref name="storage3"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T3">Any unmanaged struct as the data type</typeparam>
+            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="storage3">The third <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank-3</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-3 or its data types are not <typeparamref name="T1"/>, <typeparamref name="T2"/> and <typeparamref name="T3"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom(Althea.Random.IRandomDistribution,Althea.IStorage[])">
+            <summary>
+            Fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank equaling the length of <paramref name="storages"/></param>
+            <param name="storages">The array of <see cref="T:Althea.IStorage"/>s to be filled with random numbers</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom_``1(Althea.Storage{``0},Althea.Random.IRandomDistribution)">
+            <summary>
+            When implemented by a derived class, fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="storage">The <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank-1</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom_``2(Althea.Storage{``0},Althea.Storage{``1},Althea.Random.IRandomDistribution)">
+            <summary>
+            When implemented by a derived class, fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
+            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank-2</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-2 or its data types are not <typeparamref name="T1"/> and <typeparamref name="T2"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom_``3(Althea.Storage{``0},Althea.Storage{``1},Althea.Storage{``2},Althea.Random.IRandomDistribution)">
+            <summary>
+            When implemented by a derived class, fill the given <paramref name="storage1"/>, <paramref name="storage2"/> and <paramref name="storage3"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="T3">Any unmanaged struct as the data type</typeparam>
+            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="storage3">The third <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank-3</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-3 or its data types are not <typeparamref name="T1"/>, <typeparamref name="T2"/> and <typeparamref name="T3"/></exception>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.FillWithRandom_(Althea.Random.IRandomDistribution,Althea.IStorage[])">
+            <summary>
+            When implemented by a derived class, fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
+            </summary>
+            <param name="distribution">The <see cref="T:Althea.Random.IRandomDistribution"/> indicating which distribution to use, must be of rank equaling the length of <paramref name="storages"/></param>
+            <param name="storages">The array of <see cref="T:Althea.IStorage"/>s to be filled with random numbers</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
+        </member>
+        <member name="T:Althea.Random.IRandomDistribution">
+            <summary>
+            The interface for the meta-data of a random number generator which generates random numbers from a certain random distribution.<br/>
+            The inherited <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> indicates the data type(s) of random variable(s) of this distribution.
+            </summary>
+        </member>
+        <member name="P:Althea.Random.IRandomDistribution.RandomSeed">
+            <summary>
+            When implemented by a derived class, get the random seed of this <see cref="T:Althea.Random.IRandomDistribution"/>. Null means let the internal implementation determine.
+            </summary>
+        </member>
+        <member name="M:Althea.Random.IRandomDistribution.ToString">
+            <summary>
+            When implemented by a derived class, get the string representation of this <see cref="T:Althea.Random.IRandomDistribution"/>
+            </summary>
+            <returns>The string representation of this <see cref="T:Althea.Random.IRandomDistribution"/></returns>
+        </member>
+        <member name="T:Althea.Random.UniformDistribution`1">
+            <summary>
+            The class for a one-dimensional uniform distribution
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.RandomSeed">
+            <summary>
+            Get the random seed of this uniform distribution, null means let the internal implementation determine
+            </summary>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.LowerBound">
+            <summary>
+            Get the inclusive lower bound of this one-dimensional uniform distribution
+            </summary>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.UpperBound">
+            <summary>
+            Get the exclusive upper bound of this one-dimensional uniform distribution
+            </summary>
+        </member>
+        <member name="M:Althea.Random.UniformDistribution`1.#ctor(`0,`0,System.Nullable{System.Int64})">
+            <summary>
+            Create a new <see cref="T:Althea.Random.UniformDistribution`1"/> with the given <paramref name="lower"/> and <paramref name="upper"/> bounds and the random <paramref name="seed"/>
+            </summary>
+            <param name="upper">The inclusive lower bound of this one-dimensional uniform distribution</param>
+            <param name="lower">The exclusive upper bound of this one-dimensional uniform distribution</param>
+            <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+        </member>
+        <member name="M:Althea.Random.UniformDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a new <see cref="T:Althea.Random.UniformDistribution`1"/> with the given random <paramref name="seed"/> and lower and upper bond equaling to 0 and 1 respectively.
+            </summary>
+            <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.Count">
+            <summary>
+            Get the number of random variables of this uniform distribution
+            </summary>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.Item(System.Int32)">
+            <summary>
+            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
+            </summary>
+            <param name="index">The index of the random variable</param>
+            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Random.UniformDistribution`1.GetEnumerator">
+            <summary>
+            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
+            </summary>
+            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
+        </member>
+        <member name="M:Althea.Random.UniformDistribution`1.ToString">
+            <summary>
+            Get the string representation of this uniform distribution 
+            </summary>
+            <returns>The string representation of this uniform distribution</returns>
+        </member>
+        <member name="T:Althea.Random.RandomBitsDistribution`1">
+            <summary>
+            The class for a one-dimensional distribution that randomizes each bit
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+        </member>
+        <member name="P:Althea.Random.RandomBitsDistribution`1.RandomSeed">
+            <summary>
+            Get the random seed of this uniform distribution, null means let the internal implementation determine
+            </summary>
+        </member>
+        <member name="M:Althea.Random.RandomBitsDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a new <see cref="T:Althea.Random.UniformDistribution`1"/> with the given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+        </member>
+        <member name="P:Althea.Random.RandomBitsDistribution`1.Count">
+            <summary>
+            Get the number of random variables of this uniform distribution
+            </summary>
+        </member>
+        <member name="P:Althea.Random.RandomBitsDistribution`1.Item(System.Int32)">
+            <summary>
+            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
+            </summary>
+            <param name="index">The index of the random variable</param>
+            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Random.RandomBitsDistribution`1.GetEnumerator">
+            <summary>
+            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
+            </summary>
+            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
+        </member>
+        <member name="M:Althea.Random.RandomBitsDistribution`1.ToString">
+            <summary>
+            Get the string representation of this uniform distribution 
+            </summary>
+            <returns>The string representation of this uniform distribution</returns>
+        </member>
+        <member name="T:Althea.Random.SimpleJointRandomDistribution">
+            <summary>
+            The class for a multi-variate random distribution as a simple joint of several <see cref="T:Althea.Random.IRandomDistribution"/>s whose random seed is simply the sum of all children <see cref="P:Althea.Random.IRandomDistribution.RandomSeed"/>s.
+            </summary>
+        </member>
+        <member name="M:Althea.Random.SimpleJointRandomDistribution.#ctor(Althea.Random.IRandomDistribution[])">
+            <summary>
+            Create a new <see cref="T:Althea.Random.SimpleJointRandomDistribution"/> from the given <paramref name="distributions"/>
+            </summary>
+            <param name="distributions">The list of <see cref="T:Althea.Random.IRandomDistribution"/> used to create a <see cref="T:Althea.Random.SimpleJointRandomDistribution"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="distributions"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If any of <paramref name="distributions"/> has rank larger than 1</exception>
+        </member>
+        <member name="P:Althea.Random.SimpleJointRandomDistribution.RandomSeed">
+            <summary>
+            Get the random seed of this joint distribution, null means let the internal implementation determine
+            </summary>
+        </member>
+        <member name="P:Althea.Random.SimpleJointRandomDistribution.Count">
+            <summary>
+            Get the number of random variables of this joint distribution
+            </summary>
+        </member>
+        <member name="P:Althea.Random.SimpleJointRandomDistribution.Item(System.Int32)">
+            <summary>
+            Get the <see cref="T:Althea.Random.IRandomDistribution"/> of the random distribution at <paramref name="index"/>
+            </summary>
+            <param name="index">The index of the random distribution</param>
+            <returns>The <see cref="T:Althea.Random.IRandomDistribution"/> of the random distribution at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Random.SimpleJointRandomDistribution.GetEnumerator">
+            <summary>
+            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
+            </summary>
+            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
+        </member>
+        <member name="M:Althea.Random.SimpleJointRandomDistribution.ToString">
+            <summary>
+            Get the string representation of this joint distribution 
+            </summary>
+            <returns>The string representation of this joint distribution</returns>
         </member>
         <member name="T:Althea.Resources.Backend">
             <summary>
@@ -12308,321 +12775,6 @@
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
         </member>
-        <member name="T:Althea.Statistics.AbstractApi">
-            <summary>
-            The abstract class for runtime statistics API routines 
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.AbstractApi.Current">
-            <summary>
-            Get the current using <see cref="T:Althea.Statistics.AbstractApi"/>.
-            </summary>
-            <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
-        </member>
-        <member name="P:Althea.Statistics.AbstractApi.Dynamic">
-            <summary>
-            Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
-            </summary>
-            <remarks>
-            Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
-            Since there are internal caching for <see cref="M:System.Dynamic.DynamicObject.TryInvokeMember(System.Dynamic.InvokeMemberBinder,System.Object[],System.Object@)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
-            </remarks>
-            <example><code>
-            long number = AbstractApi.Dynamic.CholeskyDecompose(...);
-            </code></example>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.IsSupportedUnary(Althea.CombinationOfLocations)">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/> is supported by unary operations of this implementation or not.
-            </summary>
-            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <returns>Whether unary operations on <paramref name="location1"/> is supported by this <see cref="T:Althea.Statistics.AbstractApi"/>.</returns>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.IsSupportedBinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by binary operations of this implementation or not.
-            </summary>
-            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="T:Althea.Statistics.AbstractApi"/>.</returns>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.IsSupportedTrinary(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.CombinationOfLocations)">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by trinary operations of this implementation or not.
-            </summary>
-            <param name="location1">The first given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <param name="location2">The second given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <param name="location3">The third given <see cref="T:Althea.CombinationOfLocations"/></param>
-            <returns>Whether trinary operations on <paramref name="location1"/>, <paramref name="location2"/> and <paramref name="location3"/> are supported by this <see cref="T:Althea.Statistics.AbstractApi"/>.</returns>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.IsSupportedNary(System.ReadOnlySpan{Althea.CombinationOfLocations})">
-            <summary>
-            When implemented by a derived class, check if the given <see cref="T:Althea.CombinationOfLocations"/>s are supported by N-ary operations of this implementation or not.
-            </summary>
-            <param name="locations">The given <see cref="T:Althea.CombinationOfLocations"/>s</param>
-            <returns>Whether N-ary operations on <paramref name="locations"/> are supported by this <see cref="T:Althea.Statistics.AbstractApi"/>.</returns>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.GetDefaultDistribution``1">
-            <summary>
-            Get the default one-dimensional <see cref="T:Althea.Statistics.IRandomDistribution"/> -- a <see cref="T:Althea.Statistics.UniformDistribution`1"/> on [0, 1) if <typeparamref name="T"/> is a floating-point type, otherwise a <see cref="T:Althea.Statistics.RandomBitsDistribution`1"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <returns>The default one-dimensional <see cref="T:Althea.Statistics.IRandomDistribution"/></returns>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom``1(Althea.Storage{``0},Althea.Statistics.IRandomDistribution)">
-            <summary>
-            Fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="storage">The <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank-1. Default null means <see cref="M:Althea.Statistics.AbstractApi.GetDefaultDistribution``1"/>.</param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom``2(Althea.Storage{``0},Althea.Storage{``1},Althea.Statistics.IRandomDistribution)">
-            <summary>
-            Fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
-            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank-2</param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-2 or its data types are not <typeparamref name="T1"/> and <typeparamref name="T2"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom``3(Althea.Storage{``0},Althea.Storage{``1},Althea.Storage{``2},Althea.Statistics.IRandomDistribution)">
-            <summary>
-            Fill the given <paramref name="storage1"/>, <paramref name="storage2"/> and <paramref name="storage3"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="T3">Any unmanaged struct as the data type</typeparam>
-            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="storage3">The third <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank-3</param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-3 or its data types are not <typeparamref name="T1"/>, <typeparamref name="T2"/> and <typeparamref name="T3"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom(Althea.Statistics.IRandomDistribution,Althea.IStorage[])">
-            <summary>
-            Fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank equaling the length of <paramref name="storages"/></param>
-            <param name="storages">The array of <see cref="T:Althea.IStorage"/>s to be filled with random numbers</param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom_``1(Althea.Storage{``0},Althea.Statistics.IRandomDistribution)">
-            <summary>
-            When implemented by a derived class, fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="storage">The <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank-1</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom_``2(Althea.Storage{``0},Althea.Storage{``1},Althea.Statistics.IRandomDistribution)">
-            <summary>
-            When implemented by a derived class, fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
-            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank-2</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-2 or its data types are not <typeparamref name="T1"/> and <typeparamref name="T2"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom_``3(Althea.Storage{``0},Althea.Storage{``1},Althea.Storage{``2},Althea.Statistics.IRandomDistribution)">
-            <summary>
-            When implemented by a derived class, fill the given <paramref name="storage1"/>, <paramref name="storage2"/> and <paramref name="storage3"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
-            <typeparam name="T3">Any unmanaged struct as the data type</typeparam>
-            <param name="storage1">The first <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="storage2">The second <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="storage3">The third <see cref="T:Althea.Storage`1"/> to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank-3</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-3 or its data types are not <typeparamref name="T1"/>, <typeparamref name="T2"/> and <typeparamref name="T3"/></exception>
-        </member>
-        <member name="M:Althea.Statistics.AbstractApi.FillWithRandom_(Althea.Statistics.IRandomDistribution,Althea.IStorage[])">
-            <summary>
-            When implemented by a derived class, fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <param name="distribution">The <see cref="T:Althea.Statistics.IRandomDistribution"/> indicating which distribution to use, must be of rank equaling the length of <paramref name="storages"/></param>
-            <param name="storages">The array of <see cref="T:Althea.IStorage"/>s to be filled with random numbers</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
-        </member>
-        <member name="T:Althea.Statistics.IRandomDistribution">
-            <summary>
-            The interface for the meta-data of a random number generator which generates random numbers from random distributions.<br/>
-            The inherited <see cref="T:System.Collections.Generic.IReadOnlyList`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> indicates the data type(s) of random variable(s) of this distribution.
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.IRandomDistribution.RandomSeed">
-            <summary>
-            When implemented by a derived class, get the random seed of this <see cref="T:Althea.Statistics.IRandomDistribution"/>
-            </summary>
-        </member>
-        <member name="M:Althea.Statistics.IRandomDistribution.ToString">
-            <summary>
-            When implemented by a derived class, get the string representation of this <see cref="T:Althea.Statistics.IRandomDistribution"/>
-            </summary>
-            <returns>The string representation of this <see cref="T:Althea.Statistics.IRandomDistribution"/></returns>
-        </member>
-        <member name="T:Althea.Statistics.UniformDistribution`1">
-            <summary>
-            The class for a one-dimensional uniform distribution
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Statistics.UniformDistribution`1.RandomSeed">
-            <summary>
-            Get the random seed of this uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.UniformDistribution`1.LowerBound">
-            <summary>
-            Get the inclusive lower bound of this one-dimensional uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.UniformDistribution`1.UpperBound">
-            <summary>
-            Get the exclusive upper bound of this one-dimensional uniform distribution
-            </summary>
-        </member>
-        <member name="M:Althea.Statistics.UniformDistribution`1.#ctor(`0,`0,System.Int64)">
-            <summary>
-            Create a new <see cref="T:Althea.Statistics.UniformDistribution`1"/> with the given <paramref name="lower"/> and <paramref name="upper"/> bounds and the random <paramref name="seed"/>
-            </summary>
-            <param name="upper">The inclusive lower bound of this one-dimensional uniform distribution</param>
-            <param name="lower">The exclusive upper bound of this one-dimensional uniform distribution</param>
-            <param name="seed">The random seed of this uniform distribution, default 0 means <see cref="M:System.Random.Next"/></param>
-        </member>
-        <member name="P:Althea.Statistics.UniformDistribution`1.Count">
-            <summary>
-            Get the number of random variables of this uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.UniformDistribution`1.Item(System.Int32)">
-            <summary>
-            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
-            </summary>
-            <param name="index">The index of the random variable</param>
-            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Statistics.UniformDistribution`1.GetEnumerator">
-            <summary>
-            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
-            </summary>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
-        </member>
-        <member name="M:Althea.Statistics.UniformDistribution`1.ToString">
-            <summary>
-            Get the string representation of this uniform distribution 
-            </summary>
-            <returns>The string representation of this uniform distribution</returns>
-        </member>
-        <member name="T:Althea.Statistics.RandomBitsDistribution`1">
-            <summary>
-            The class for a one-dimensional distribution that randomizes each bit
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Statistics.RandomBitsDistribution`1.RandomSeed">
-            <summary>
-            Get the random seed of this uniform distribution
-            </summary>
-        </member>
-        <member name="M:Althea.Statistics.RandomBitsDistribution`1.#ctor(System.Int64)">
-            <summary>
-            Create a new <see cref="T:Althea.Statistics.UniformDistribution`1"/> with the given random <paramref name="seed"/>
-            </summary>
-            <param name="seed">The random seed of this uniform distribution, default 0 means <see cref="M:System.Random.Next"/></param>
-        </member>
-        <member name="P:Althea.Statistics.RandomBitsDistribution`1.Count">
-            <summary>
-            Get the number of random variables of this uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.RandomBitsDistribution`1.Item(System.Int32)">
-            <summary>
-            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
-            </summary>
-            <param name="index">The index of the random variable</param>
-            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Statistics.RandomBitsDistribution`1.GetEnumerator">
-            <summary>
-            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
-            </summary>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
-        </member>
-        <member name="M:Althea.Statistics.RandomBitsDistribution`1.ToString">
-            <summary>
-            Get the string representation of this uniform distribution 
-            </summary>
-            <returns>The string representation of this uniform distribution</returns>
-        </member>
-        <member name="T:Althea.Statistics.SimpleJointRandomDistribution">
-            <summary>
-            The class for a multi-variate random distribution as a simple joint of several <see cref="T:Althea.Statistics.IRandomDistribution"/>s whose random seed is simply the sum of all children <see cref="P:Althea.Statistics.IRandomDistribution.RandomSeed"/>s.
-            </summary>
-        </member>
-        <member name="M:Althea.Statistics.SimpleJointRandomDistribution.#ctor(Althea.Statistics.IRandomDistribution[])">
-            <summary>
-            Create a new <see cref="T:Althea.Statistics.SimpleJointRandomDistribution"/> from the given <paramref name="distributions"/>
-            </summary>
-            <param name="distributions">The list of <see cref="T:Althea.Statistics.IRandomDistribution"/> used to create a <see cref="T:Althea.Statistics.SimpleJointRandomDistribution"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="distributions"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentException">If any of <paramref name="distributions"/> has rank larger than 1</exception>
-        </member>
-        <member name="P:Althea.Statistics.SimpleJointRandomDistribution.Item(System.Int32)">
-            <summary>
-            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
-            </summary>
-            <param name="index">The index of the random variable</param>
-            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Statistics.SimpleJointRandomDistribution.RandomSeed">
-            <summary>
-            Get the random seed of this joint distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Statistics.SimpleJointRandomDistribution.Count">
-            <summary>
-            Get the number of random variables of this joint distribution
-            </summary>
-        </member>
-        <member name="M:Althea.Statistics.SimpleJointRandomDistribution.GetEnumerator">
-            <summary>
-            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
-            </summary>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
-        </member>
-        <member name="M:Althea.Statistics.SimpleJointRandomDistribution.ToString">
-            <summary>
-            Get the string representation of this joint distribution 
-            </summary>
-            <returns>The string representation of this joint distribution</returns>
-        </member>
         <member name="T:Althea.Storage.PureMixedAndCachedStorageExtension">
             <summary>
             The extension methods for <see cref="T:Althea.Storage.IPureOrMixedStorage"/> and <see cref="T:Althea.Storage.ICachedStorage"/>
@@ -13701,7 +13853,8 @@
             <summary>
             The abstract storage class as a base class for all <see cref="T:Althea.Storage`1"/> classes with <see cref="P:Althea.Storage`1.LocationDescription"/>.<see cref="P:Althea.CombinationOfLocations.Type">Type</see> == <see cref="F:Althea.CombinationType.PureOrMixed"/>. Inherits <see cref="T:Althea.ActualStorage`1"/>.
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <remarks>This abstract class does not actually allocate storages on the given locations.</remarks>
         </member>
         <member name="P:Althea.Storage.PureOrMixedStorage`1.LocationDescription">
             <summary>
@@ -13745,7 +13898,7 @@
             <summary>
             The storage class that references to a <see cref="T:Althea.Storage.PureOrMixedStorage`1"/>, implements <see cref="T:Althea.ReferenceStorage`1"/>
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="P:Althea.Storage.PureOrMixedReferenceStorage`1.Count">
             <summary>
@@ -13815,7 +13968,7 @@
             <summary>
             Represents a storage of a contiguous memory block on a certain memory location, implements <see cref="T:Althea.Storage.PureOrMixedStorage`1"/>
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="M:Althea.Storage.PureStorage`1.IsSupported(Althea.CombinationType,System.ReadOnlySpan{Althea.StorageLocation})">
             <summary>
@@ -13831,19 +13984,6 @@
             </summary>
             <param name="location">The <see cref="T:Althea.StorageLocation"/> representing the memory location</param>
             <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
-        </member>
-        <member name="M:Althea.Storage.PureStorage`1.#ctor(Althea.IPointer)">
-            <summary>
-            Create a <see cref="T:Althea.Storage.PureStorage`1"/> of given <paramref name="pointer"/> without allocation and free
-            </summary>
-            <param name="pointer">The <see cref="T:Althea.IPointer"/> to create on</param>
-            <remarks>Be careful when invoking this constructor since it may cause memory leak</remarks>
-        </member>
-        <member name="M:Althea.Storage.PureStorage`1.Dispose(System.Boolean)">
-            <summary>
-            The function that actually dispose this storage, override <see cref="M:Althea.ActualStorage`1.Dispose(System.Boolean)"/>
-            </summary>
-            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
         </member>
         <member name="P:Althea.Storage.PureStorage`1.Count">
             <summary>
@@ -13864,6 +14004,14 @@
             </summary>
             <returns>A new <see cref="T:Althea.Storage.PureStorage`1"/> that is a copy of the current instance</returns>
         </member>
+        <member name="M:Althea.Storage.PureStorage`1.As``1">
+            <summary>
+            Convert this <see cref="T:Althea.Storage.PureReferenceStorage`1"/> to another one with different data type <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type</typeparam>
+            <returns>A <see cref="T:Althea.Storage.PureReferenceStorage`1"/></returns>
+            <exception cref="T:System.InvalidCastException">if <see cref="P:Althea.IStorage.LengthInBytes"/> cannot be divided by <see cref="F:Althea.NativeTypes.Const`1.SizeT"/></exception>
+        </member>
         <member name="M:Althea.Storage.PureStorage`1.MakeReference(System.Int64,System.Int64)">
             <summary>
             Make a <see cref="T:Althea.Storage.PureReferenceStorage`1"/> with the starting pointer moving <paramref name="offset"/> and <see cref="P:Althea.Storage`1.Length"/> changing to <paramref name="newLength"/>.
@@ -13877,7 +14025,7 @@
             <summary>
             The storage class that references to a <see cref="T:Althea.Storage.PureStorage`1"/>, implements <see cref="T:Althea.ReferenceStorage`1"/>
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <remarks>Although the <see cref="T:Althea.Storage.PureOrMixedReferenceStorage`1"/> covers the usage of this class, this class is specially separated to improve performance.</remarks>
         </member>
         <member name="P:Althea.Storage.PureReferenceStorage`1.Count">
@@ -13936,7 +14084,7 @@
             <summary>
             Represents a storage of several contiguous memory blocks on different memory locations with fixed sizes, implements <see cref="T:Althea.ActualStorage`1"/>
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="M:Althea.Storage.MixedStorage`1.IsSupported(Althea.CombinationType,System.ReadOnlySpan{Althea.StorageLocation})">
             <summary>
@@ -14039,7 +14187,7 @@
             <summary>
             An abstract class which represents a storage of several contiguous memory blocks on different memory locations with variable sizes purposed to cache memories of higher performance. Inherits <see cref="T:Althea.ActualStorage`1"/>.
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="P:Althea.Storage.CachedStorage`1.LocationDescription">
             <summary>
@@ -14150,7 +14298,7 @@
             <summary>
             The storage class that references to a <see cref="T:Althea.Storage.CachedStorage`1"/>, implements <see cref="T:Althea.ReferenceStorage`1"/>
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="P:Althea.Storage.CachedReferenceStorage`1.TopCacheSizeInBytes">
             <summary>
@@ -14247,7 +14395,7 @@
             <summary>
             The storage class that caches a stream storage to a memory storage, implements <see cref="T:Althea.Storage.CachedStorage`1"/>
             </summary>
-            <typeparam name="T"></typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="M:Althea.Storage.StreamToMemoryCachedStorage`1.IsSupported(Althea.CombinationType,System.ReadOnlySpan{Althea.StorageLocation})">
             <summary>
@@ -14296,7 +14444,7 @@
             <summary>
             The storage factory for creating concrete storage classes. This is a simple factory pattern.
             </summary>
-            <typeparam name="T">any unmanaged data type</typeparam>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
         <member name="T:Althea.Storage.StorageFactory`1.CreateDelegate">
             <summary>
@@ -15348,97 +15496,97 @@
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.Span{System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="span">The general span to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ReadOnlySpan{System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="span">The general span to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Int32})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
-        <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})~Althea.TensorAlgebra.TensorOrder">
+        <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.Span{System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
-            <param name="tuple">The general tuple to indicate the permutation order</param>
+            <param name="span">The general span to indicate the permutation order</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ReadOnlySpan{System.Char})~Althea.TensorAlgebra.TensorOrder">
+            <summary>
+            Implicitly convert from span. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
+            </summary>
+            <param name="span">The general span to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char,System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char,System.Char,System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char,System.Char,System.Char,System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>
         <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char,System.Char,System.Char,System.Char,System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
             <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
-            </summary>
-            <param name="tuple">The general tuple to indicate the permutation order</param>
-        </member>
-        <member name="M:Althea.TensorAlgebra.TensorOrder.op_Implicit(System.ValueTuple{System.Char,System.Char,System.Char,System.Char,System.Char,System.Char,System.Char,System.Char})~Althea.TensorAlgebra.TensorOrder">
-            <summary>
-            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.Runtime.CompilerServices.ITuple)"/> for more detail.
+            Implicitly convert from tuple. See <see cref="M:Althea.TensorAlgebra.TensorOrder.#ctor(System.ReadOnlySpan{System.Char})"/> for more detail.
             </summary>
             <param name="tuple">The general tuple to indicate the permutation order</param>
         </member>

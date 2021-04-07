@@ -973,16 +973,16 @@ namespace Althea.Linq
 		#endregion
 
 		#region randoms
-		private static readonly Random random = new();
+		private static readonly System.Random random = new();
 
 		/// <summary>
 		/// Random shuffle the <paramref name="list"/> by random generator <paramref name="rand"/>
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="list">The list to be shuffled</param>
-		/// <param name="rand">random generator <see cref="Random"/>, default null means internal one</param>
+		/// <param name="rand">random generator <see cref="System.Random"/>, default null means internal one</param>
 		/// <returns>the new shuffled list</returns>
-		public static IReadOnlyList<T> Shuffle<T>(this IReadOnlyList<T> list, Random? rand = null)
+		public static IReadOnlyList<T> Shuffle<T>(this IReadOnlyList<T> list, System.Random? rand = null)
 		{
 			if (list is null)
 				throw new ArgumentNullException(nameof(list));

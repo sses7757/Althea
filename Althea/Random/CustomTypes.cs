@@ -7,19 +7,19 @@ using Althea.Helpers;
 using Althea.NativeTypes;
 
 
-namespace Althea.Statistics
+namespace Althea.Random
 {
 	#region interface
 	/// <summary>
-	/// The interface for the meta-data of a random number generator which generates random numbers from random distributions.<br/>
+	/// The interface for the meta-data of a random number generator which generates random numbers from a certain random distribution.<br/>
 	/// The inherited <see cref="IReadOnlyList{T}"/> of <see cref="DataType"/> indicates the data type(s) of random variable(s) of this distribution.
 	/// </summary>
 	public interface IRandomDistribution : IReadOnlyList<DataType>
 	{
 		/// <summary>
-		/// When implemented by a derived class, get the random seed of this <see cref="IRandomDistribution"/>
+		/// When implemented by a derived class, get the random seed of this <see cref="IRandomDistribution"/>. Null means let the internal implementation determine.
 		/// </summary>
-		long RandomSeed { get; }
+		long? RandomSeed { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the string representation of this <see cref="IRandomDistribution"/>
@@ -34,12 +34,12 @@ namespace Althea.Statistics
 	/// The class for a one-dimensional uniform distribution
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public sealed class UniformDistribution<T> : IRandomDistribution, IMainPropertyFormat where T : unmanaged
+	public class UniformDistribution<T> : IRandomDistribution, IMainPropertyFormat where T : unmanaged
 	{
 		/// <summary>
-		/// Get the random seed of this uniform distribution
+		/// Get the random seed of this uniform distribution, null means let the internal implementation determine
 		/// </summary>
-		public long RandomSeed { get; }
+		public long? RandomSeed { get; }
 
 		/// <summary>
 		/// Get the inclusive lower bound of this one-dimensional uniform distribution
@@ -56,10 +56,19 @@ namespace Althea.Statistics
 		/// </summary>
 		/// <param name="upper">The inclusive lower bound of this one-dimensional uniform distribution</param>
 		/// <param name="lower">The exclusive upper bound of this one-dimensional uniform distribution</param>
-		/// <param name="seed">The random seed of this uniform distribution, default 0 means <see cref="Random.Next()"/></param>
-		public UniformDistribution(T upper, T lower = default, long seed = 0)
+		/// <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+		public UniformDistribution(T upper, T lower = default, long? seed = null)
 		{
-			this.UpperBound = upper; this.LowerBound = lower; this.RandomSeed = seed == 0 ? new Random().Next() : seed;
+			this.UpperBound = upper; this.LowerBound = lower; this.RandomSeed = seed;
+		}
+
+		/// <summary>
+		/// Create a new <see cref="UniformDistribution{T}"/> with the given random <paramref name="seed"/> and lower and upper bond equaling to 0 and 1 respectively.
+		/// </summary>
+		/// <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+		public UniformDistribution(long? seed = null)
+		{
+			this.UpperBound = Const<T>.One; this.LowerBound = Const<T>.Zero; this.RandomSeed = seed;
 		}
 
 		/// <summary>
@@ -122,25 +131,25 @@ namespace Althea.Statistics
 	}
 	#endregion
 
-	#region random bytes
+	#region random bits
 	/// <summary>
 	/// The class for a one-dimensional distribution that randomizes each bit
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public sealed class RandomBitsDistribution<T> : IRandomDistribution, IMainPropertyFormat where T : unmanaged
+	public class RandomBitsDistribution<T> : IRandomDistribution, IMainPropertyFormat where T : unmanaged
 	{
 		/// <summary>
-		/// Get the random seed of this uniform distribution
+		/// Get the random seed of this uniform distribution, null means let the internal implementation determine
 		/// </summary>
-		public long RandomSeed { get; }
+		public long? RandomSeed { get; }
 
 		/// <summary>
 		/// Create a new <see cref="UniformDistribution{T}"/> with the given random <paramref name="seed"/>
 		/// </summary>
-		/// <param name="seed">The random seed of this uniform distribution, default 0 means <see cref="Random.Next()"/></param>
-		public RandomBitsDistribution(long seed = 0)
+		/// <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+		public RandomBitsDistribution(long? seed = null)
 		{
-			this.RandomSeed = seed == 0 ? new Random().Next() : seed;
+			this.RandomSeed = seed;
 		}
 
 		/// <summary>
@@ -205,9 +214,9 @@ namespace Althea.Statistics
 	/// <summary>
 	/// The class for a multi-variate random distribution as a simple joint of several <see cref="IRandomDistribution"/>s whose random seed is simply the sum of all children <see cref="IRandomDistribution.RandomSeed"/>s.
 	/// </summary>
-	public sealed class SimpleJointRandomDistribution : IRandomDistribution, IReadOnlyList<IRandomDistribution>
+	public class SimpleJointRandomDistribution : IRandomDistribution, IReadOnlyList<IRandomDistribution>
 	{
-		private readonly long m_seed;
+		private readonly long? m_seed;
 
 		private readonly FixedClassBuffer_16<IRandomDistribution> m_distributions;
 
@@ -232,21 +241,17 @@ namespace Althea.Statistics
 				var dist = distributions[i];
 				if (dist.Count != 1)
 					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distributions));
-				this.m_seed = unchecked(this.m_seed + dist.RandomSeed);
+				this.m_seed = unchecked(this.m_seed + dist.RandomSeed ?? 0);
 				if (dist is SimpleJointRandomDistribution joint)
 					this.m_distributions[i] = joint.m_distributions[0];
 				else
 					this.m_distributions[i] = dist;
 			}
+			if (this.m_seed == 0)
+				this.m_seed = null;
 		}
 
-		/// <summary>
-		/// Get the <see cref="DataType"/> of the random variable at <paramref name="index"/>
-		/// </summary>
-		/// <param name="index">The index of the random variable</param>
-		/// <returns>The <see cref="DataType"/> of the random variable at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public DataType this[int index] {
+		DataType IReadOnlyList<DataType>.this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => index < 0 || index >= this.m_count ?
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) :
@@ -254,9 +259,9 @@ namespace Althea.Statistics
 		}
 
 		/// <summary>
-		/// Get the random seed of this joint distribution
+		/// Get the random seed of this joint distribution, null means let the internal implementation determine
 		/// </summary>
-		public long RandomSeed {
+		public long? RandomSeed {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_seed;
 		}
@@ -269,7 +274,13 @@ namespace Althea.Statistics
 			get => this.m_count;
 		}
 
-		IRandomDistribution IReadOnlyList<IRandomDistribution>.this[int index] {
+		/// <summary>
+		/// Get the <see cref="IRandomDistribution"/> of the random distribution at <paramref name="index"/>
+		/// </summary>
+		/// <param name="index">The index of the random distribution</param>
+		/// <returns>The <see cref="IRandomDistribution"/> of the random distribution at <paramref name="index"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+		public IRandomDistribution this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => index < 0 || index >= this.m_count ?
 					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) :

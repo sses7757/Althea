@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Arrays;
 using Althea.Backend.Storage;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -51,10 +50,10 @@ namespace Althea.Backend.CSharp.Solver
 			fixed (ComplexDouble* ptrHc = Hc, ptrUSchur = USchur)
 			fixed (ComplexDouble* ptrVals = orderedVals, ptrVecs = orderedVecs.UnderlyingSpan)
 			{
-				var matHc = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrHc), H.PresentingLength));
-				var matU = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrUSchur), H.PresentingLength));
-				var vecVal = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrVals), n));
-				var matVec = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrVecs), H.PresentingLength));
+				var matHc = new ManagedPureStorage<ComplexDouble>(ptrHc, H.PresentingLength);
+				var matU = new ManagedPureStorage<ComplexDouble>(ptrUSchur, H.PresentingLength);
+				var vecVal = new ManagedPureStorage<ComplexDouble>(ptrVals, n);
+				var matVec = new ManagedPureStorage<ComplexDouble>(ptrVecs, H.PresentingLength);
 				//tex:$\mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
 				if (EigenSolve is null)
 				{
@@ -132,8 +131,8 @@ namespace Althea.Backend.CSharp.Solver
 			Span<T> USchur = lenH.CheckStackLimit<T>() ?? stackalloc T[lenH];
 			fixed (T* ptrHc = Hc, ptrUSchur = USchur)
 			{
-				var matHc = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrHc), lenH));
-				var matUSchur = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrUSchur), lenH));
+				var matHc = new ManagedPureStorage<T>(ptrHc, lenH);
+				var matUSchur = new ManagedPureStorage<T>(ptrUSchur, lenH);
 				//tex:$\mathbf H \overset{\text{Schur (no ordering)}}{\longrightarrow} \mathbf H_c \mathbf U$
 				var type = typeof(T).TypeHandle;
 				if (!SchurSolve.ContainsKey(type))
@@ -308,9 +307,9 @@ namespace Althea.Backend.CSharp.Solver
 			fixed (T* ptrX = X, ptrH = H.UnderlyingSpan)
 			fixed (ComplexDouble* ptrVals = preserveVals)
 			{
-				var matH = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrH), lenH));
-				var matX = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrX), lenH));
-				var orderVal = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrVals), preserveVals.Length));
+				var matH = new ManagedPureStorage<T>(ptrH, lenH);
+				var matX = new ManagedPureStorage<T>(ptrX, lenH);
+				var orderVal = new ManagedPureStorage<ComplexDouble>(ptrVals, preserveVals.Length);
 				var type = typeof(T).TypeHandle;
 				if (SchurSolve.ContainsKey(type))
 				{
@@ -386,8 +385,8 @@ namespace Althea.Backend.CSharp.Solver
 			fixed (byte* ptrH = newH)
 			fixed (ComplexDouble* ptrVals = eigenvalues)
 			{
-				var matH = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrH), n * n));
-				var vecE = new PureStorage<ComplexDouble>(MemoryPointer.Create<ComplexDouble>(new(ptrH), n));
+				var matH = new ManagedPureStorage<ComplexDouble>(ptrH, n * n);
+				var vecE = new ManagedPureStorage<ComplexDouble>(ptrH, n);
 				if (EigenSolve is not null)
 				{
 					EigenSolve.Invoke(SolveVectorMode.NoVector, n, vecE, null, 0, null, 0, matH, n);
@@ -406,8 +405,8 @@ namespace Althea.Backend.CSharp.Solver
 			var type = typeof(T).TypeHandle;
 			fixed (T* ptrU = U, ptrR = R.UnderlyingSpan)
 			{
-				var matR = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrR), n1 * n));
-				var matU = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrU), n1 * n1));
+				var matR = new ManagedPureStorage<T>(ptrR, n1 * n);
+				var matU = new ManagedPureStorage<T>(ptrU, n1 * n1);
 				if (!QRSolve.ContainsKey(type))
 				{
 					LAD? pre = LAD.Current;
@@ -434,8 +433,8 @@ namespace Althea.Backend.CSharp.Solver
 				new SpanMatrix<T>(U[..(n * n1)], n1).CopyRowTo(0, y);
 				fixed (T* ptrR = R.UnderlyingSpan, ptrY = y)
 				{
-					var matR = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrR), n1 * n));
-					var vecY = new PureStorage<T>(MemoryPointer.Create<T>(new(ptrY), n));
+					var matR = new ManagedPureStorage<T>(ptrR, n1 * n);
+					var vecY = new ManagedPureStorage<T>(ptrY, n);
 					if (!TriangularSolve.ContainsKey(type))
 					{
 						LAD? pre = LAD.Current;

@@ -20,7 +20,7 @@ namespace Althea.Backend.CSharp
 
 		Type ISetBackend.SparseTensorAlgebraImplementation => throw new NotImplementedException();
 
-		Type ISetBackend.StatisticsImplementation => throw new NotImplementedException();
+		Type ISetBackend.StatisticsImplementation => typeof(Random.RandomApi);
 
 		Type ISetBackend.SolverImplementation => typeof(Solver.SolverApi);
 	}

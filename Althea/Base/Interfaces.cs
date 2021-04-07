@@ -118,9 +118,9 @@ namespace Althea
 		Type SparseTensorAlgebraImplementation { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="Althea.Statistics.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.Random.AbstractApi"/>
 		/// </summary>
-		Type StatisticsImplementation { get; }
+		Type RandomImplementation { get; }
 
 		/// <summary>
 		/// The implementation type of <see cref="Althea.Solver.AbstractApi"/>
