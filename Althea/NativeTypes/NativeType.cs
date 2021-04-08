@@ -207,7 +207,7 @@ namespace Althea.NativeTypes
 	{
 		#region predicator
 		/// <summary>
-		/// Check whether the two given generic-typed numbers are bit-wise equal
+		/// Check whether the two given generic-typed numbers are the same. If there is not pre-defined equality comparison of <typeparamref name="T"/>, a bit-wise comparison will be used.
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="a">The first input number</param>
@@ -216,7 +216,11 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static bool IsEqual<T>(this T a, T b) where T : unmanaged
 		{
-			return new ReadOnlySpan<byte>(&a, sizeof(T)).SequenceEqual(new ReadOnlySpan<byte>(&b, sizeof(T)));
+			if (Const<T>.EqualityDelegate is null)
+			{
+				return new ReadOnlySpan<byte>(&a, sizeof(T)).SequenceEqual(new ReadOnlySpan<byte>(&b, sizeof(T)));
+			}
+			return Const<T>.EqualityDelegate.Invoke(a, b);
 			////byte* aa = (byte*)&a, bb = (byte*)&b;
 			////int n = sizeof(T);
 			////for (int i = 0; i < n; i++)

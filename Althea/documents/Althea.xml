@@ -2209,6 +2209,30 @@
             <param name="name">The name of the method</param>
             <param name="inputTypes">The input types as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.RuntimeTypeHandle"/>s</param>
         </member>
+        <member name="P:Althea.AbstractRuntimeApi.ExtraMethodInfo.Name">
+            <summary>
+            Get the method name as a <see cref="T:System.String"/>
+            </summary>
+        </member>
+        <member name="P:Althea.AbstractRuntimeApi.ExtraMethodInfo.Count">
+            <summary>
+            Get the number of input arguments of this <see cref="T:Althea.AbstractRuntimeApi.ExtraMethodInfo"/>
+            </summary>
+        </member>
+        <member name="P:Althea.AbstractRuntimeApi.ExtraMethodInfo.Item(System.Int32)">
+            <summary>
+            Get the <paramref name="index"/>-th input argument's <see cref="T:System.RuntimeTypeHandle"/> of this <see cref="T:Althea.AbstractRuntimeApi.ExtraMethodInfo"/>
+            </summary>
+            <param name="index">The index of the input argument</param>
+            <returns>The <paramref name="index"/>-th input argument's <see cref="T:System.RuntimeTypeHandle"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.AbstractRuntimeApi.ExtraMethodInfo.GetEnumerator">
+            <summary>
+            Get the enumerator of this <see cref="T:Althea.AbstractRuntimeApi.ExtraMethodInfo"/>
+            </summary>
+            <returns>The enumerator of this <see cref="T:Althea.AbstractRuntimeApi.ExtraMethodInfo"/></returns>
+        </member>
         <member name="M:Althea.AbstractRuntimeApi.ExtraMethodInfo.Equals(Althea.AbstractRuntimeApi.ExtraMethodInfo)">
             <summary>
             Indicates whether the current object is equal to another object of the same type.
@@ -10849,6 +10873,90 @@
             <returns>The absolute value of <paramref name="a"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GenericLargerThan``1(``0,``0)">
+            <summary>
+            Check whether the given generic number <paramref name="a"/> is larger than the generic number <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The left input number to be compared</param>
+            <param name="b">The right input number to be compared</param>
+            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &gt; <paramref name="b"/>; false otherwise.</returns>
+            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GenericLessThan``1(``0,``0)">
+            <summary>
+            Check whether the given generic number <paramref name="a"/> is less than the generic number <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The left input number to be compared</param>
+            <param name="b">The right input number to be compared</param>
+            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &lt; <paramref name="b"/>; false otherwise.</returns>
+            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GenericLargerThanOrEqual``1(``0,``0)">
+            <summary>
+            Check whether the given generic number <paramref name="a"/> is larger than or equals to the generic number <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The left input number to be compared</param>
+            <param name="b">The right input number to be compared</param>
+            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≥ <paramref name="b"/>; false otherwise.</returns>
+            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GenericLessThanOrEqual``1(``0,``0)">
+            <summary>
+            Check whether the given generic number <paramref name="a"/> is less than or equals to the generic number <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The left input number to be compared</param>
+            <param name="b">The right input number to be compared</param>
+            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≤ <paramref name="b"/>; false otherwise.</returns>
+            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
+        <member name="T:Althea.NativeTypes.ConstExtension.CompareOperation">
+            <summary>
+            The enum for generic number binary compare operations
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.Equality">
+            <summary>
+            Equality comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.Inequality">
+            <summary>
+            Inequality comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.GreaterThan">
+            <summary>
+            Greater than comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.LessThan">
+            <summary>
+            Less than comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.GreaterThanOrEqual">
+            <summary>
+            Greater than or equals to comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.LessThanOrEqual">
+            <summary>
+            Less than or equals to comparison
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetComparison``1(Althea.NativeTypes.ConstExtension.CompareOperation)">
+            <summary>
+            Get the compare operation delegate of the given <paramref name="operation"/> as a <see cref="T:System.Func`3"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="operation">The given <see cref="T:Althea.NativeTypes.ConstExtension.CompareOperation"/></param>
+            <returns>The delegate used to compare the generic numbers of type <typeparamref name="T"/> if type <typeparamref name="T"/> has pre-defined <paramref name="operation"/>; otherwise, null.</returns>
+            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GenericConvert``2(``0)">
             <summary>
             Generically convert <paramref name="obj"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators or by utilizing default primitive type converters.
@@ -11286,7 +11394,7 @@
         </member>
         <member name="M:Althea.NativeTypes.NativeTypeExtension.IsEqual``1(``0,``0)">
             <summary>
-            Check whether the two given generic-typed numbers are bit-wise equal
+            Check whether the two given generic-typed numbers are the same. If there is not pre-defined equality comparison of <typeparamref name="T"/>, a bit-wise comparison will be used.
             </summary>
             <typeparam name="T">The supported data type</typeparam>
             <param name="a">The first input number</param>

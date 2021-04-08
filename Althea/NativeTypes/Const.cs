@@ -295,9 +295,10 @@ namespace Althea.NativeTypes
 		///  Get a <see cref="bool"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="Althea"/>.
 		/// </summary>
 		public static readonly bool IsPreDefined = NativeTypeExtension.IsSupported<T>() &&
-													((typeof(T).IsPrimitive && typeof(T) != typeof(bool)) ||
+													((typeof(T).IsPrimitive && typeof(T) != typeof(bool) && typeof(T) != typeof(char)) ||
 													 typeof(T) == typeof(ComplexDouble) ||
-													(IsComplex && typeof(T) == typeof(Complex<>).MakeGenericType(typeof(T).GenericTypeArguments[0])));
+														(NativeTypeExtension.IsComplex<T>() &&
+														 typeof(T) == typeof(Complex<>).MakeGenericType(typeof(T).GenericTypeArguments[0])));
 
 		/// <summary>
 		/// Get the <see cref="NativeTypes.DataType"/> of type <typeparamref name="T"/>
@@ -358,6 +359,8 @@ namespace Althea.NativeTypes
 		internal static readonly Func<T, double, T> PowerDelegate1;
 		internal static readonly Func<T, T, T> PowerDelegate2;
 
+		internal static readonly Func<T, T, bool>? EqualityDelegate, InequalityDelegate, GreaterThanDelegate, LessThanDelegate, GreaterThanOrEqualDelegate, LessThanOrEqualDelegate;
+
 		internal static readonly Converter<T, double> ToDoubleDelegate;
 		internal static readonly Converter<double, T> FromDoubleDelegate;
 		internal static readonly Converter<T, long> ToLongDelegate;
@@ -372,14 +375,21 @@ namespace Althea.NativeTypes
 			Addition,
 			Subtraction,
 			Multiply,
-			Division
+			Division,
+
+			Equality,
+			Inequality,
+			GreaterThan,
+			LessThan,
+			GreaterThanOrEqual,
+			LessThanOrEqual,
 		}
 
 		private const MethodAttributes ATTR = MethodAttributes.Public | MethodAttributes.Static;
 		private const CallingConventions CALL = CallingConventions.Standard;
 		private static readonly Module THIS = typeof(Const<T>).Module;
 
-		private static Func<T, T, T> GetBinary(BinaryOp op)
+		private static Func<T, T, T> GetBinarySelf(BinaryOp op)
 		{
 			if (typeof(T).IsPrimitive)
 			{
@@ -427,6 +437,58 @@ namespace Althea.NativeTypes
 					};
 				}
 				return func.CreateDelegate<Func<T, T, T>>();
+			}
+		}
+
+		private static Func<T, T, bool>? GetBinaryBool(BinaryOp op)
+		{
+			if (typeof(T).IsPrimitive)
+			{
+				DynamicMethod method = new(op.ToString(), ATTR, CALL, typeof(bool), new[] { typeof(T), typeof(T) }, THIS, true);
+				var IL = method.GetILGenerator();
+				IL.Emit(OpCodes.Ldarg_0);
+				IL.Emit(OpCodes.Ldarg_1);
+				switch (op)
+				{
+					case Const<T>.BinaryOp.Equality:
+						IL.Emit(OpCodes.Ceq);
+						break;
+					case Const<T>.BinaryOp.Inequality:
+						IL.Emit(OpCodes.Ceq);
+						IL.Emit(OpCodes.Ldc_I4_0);
+						IL.Emit(OpCodes.Ceq);
+						break;
+					case Const<T>.BinaryOp.GreaterThan:
+						IL.Emit(OpCodes.Cgt);
+						break;
+					case Const<T>.BinaryOp.LessThan:
+						IL.Emit(OpCodes.Clt);
+						break;
+					case Const<T>.BinaryOp.GreaterThanOrEqual:
+						IL.Emit(OpCodes.Clt_Un);
+						IL.Emit(OpCodes.Ldc_I4_0);
+						IL.Emit(OpCodes.Ceq);
+						break;
+					case Const<T>.BinaryOp.LessThanOrEqual:
+						IL.Emit(OpCodes.Cgt_Un);
+						IL.Emit(OpCodes.Ldc_I4_0);
+						IL.Emit(OpCodes.Ceq);
+						break;
+					default:
+						return null;
+				}
+				IL.Emit(OpCodes.Ret);
+				return method.CreateDelegate<Func<T, T, bool>>();
+			}
+			else
+			{
+				bool predicator(MethodInfo m) => m.Name == $"op_{op}" && m.ReturnType == typeof(bool) &&
+												 m.GetParameters().Length == 2 &&
+												 m.GetParameters()[0].ParameterType == typeof(T) &&
+												 m.GetParameters()[1].ParameterType == typeof(T);
+
+				var func = typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Where(predicator).FirstOrDefault();
+				return func?.CreateDelegate<Func<T, T, bool>>();
 			}
 		}
 
@@ -730,12 +792,19 @@ namespace Althea.NativeTypes
 			ToLongDelegate = ConstConvert<T, long>.ConvertDelegate;
 			FromLongDelegate = ConstConvert<long, T>.ConvertDelegate;
 			// binary arithmetics
-			AddDelegate = GetBinary(BinaryOp.Addition);
-			SubtractDelegate = GetBinary(BinaryOp.Subtraction);
-			MultiplyDelegate = GetBinary(BinaryOp.Multiply);
-			DivideDelegate = GetBinary(BinaryOp.Division);
+			AddDelegate = GetBinarySelf(BinaryOp.Addition);
+			SubtractDelegate = GetBinarySelf(BinaryOp.Subtraction);
+			MultiplyDelegate = GetBinarySelf(BinaryOp.Multiply);
+			DivideDelegate = GetBinarySelf(BinaryOp.Division);
 			PowerDelegate1 = GetPower1();
 			PowerDelegate2 = GetPower2();
+			// binary compare
+			EqualityDelegate = GetBinaryBool(BinaryOp.Equality);
+			InequalityDelegate = GetBinaryBool(BinaryOp.Inequality);
+			GreaterThanDelegate = GetBinaryBool(BinaryOp.GreaterThan);
+			LessThanDelegate = GetBinaryBool(BinaryOp.LessThan);
+			GreaterThanOrEqualDelegate = GetBinaryBool(BinaryOp.GreaterThanOrEqual);
+			LessThanOrEqualDelegate = GetBinaryBool(BinaryOp.LessThanOrEqual);
 			// unary arithmetics
 			ReciprocalDelegate = static v => DivideDelegate.Invoke(One, v);
 			NegateDelegate = GetNegate();
@@ -939,6 +1008,115 @@ namespace Althea.NativeTypes
 			if (a.IsOne())
 				return 1;
 			return Const<T>.AbsoluteDelegate.Invoke(a);
+		}
+
+		/// <summary>
+		/// Check whether the given generic number <paramref name="a"/> is larger than the generic number <paramref name="b"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The left input number to be compared</param>
+		/// <param name="b">The right input number to be compared</param>
+		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &gt; <paramref name="b"/>; false otherwise.</returns>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GenericLargerThan<T>(this T a, T b) where T : unmanaged
+		{
+			return Const<T>.GreaterThanDelegate?.Invoke(a, b) ?? false;
+		}
+
+		/// <summary>
+		/// Check whether the given generic number <paramref name="a"/> is less than the generic number <paramref name="b"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The left input number to be compared</param>
+		/// <param name="b">The right input number to be compared</param>
+		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &lt; <paramref name="b"/>; false otherwise.</returns>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GenericLessThan<T>(this T a, T b) where T : unmanaged
+		{
+			return Const<T>.LessThanDelegate?.Invoke(a, b) ?? false;
+		}
+
+		/// <summary>
+		/// Check whether the given generic number <paramref name="a"/> is larger than or equals to the generic number <paramref name="b"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The left input number to be compared</param>
+		/// <param name="b">The right input number to be compared</param>
+		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≥ <paramref name="b"/>; false otherwise.</returns>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GenericLargerThanOrEqual<T>(this T a, T b) where T : unmanaged
+		{
+			return Const<T>.GreaterThanOrEqualDelegate?.Invoke(a, b) ?? false;
+		}
+
+		/// <summary>
+		/// Check whether the given generic number <paramref name="a"/> is less than or equals to the generic number <paramref name="b"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="a">The left input number to be compared</param>
+		/// <param name="b">The right input number to be compared</param>
+		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≤ <paramref name="b"/>; false otherwise.</returns>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GenericLessThanOrEqual<T>(this T a, T b) where T : unmanaged
+		{
+			return Const<T>.LessThanOrEqualDelegate?.Invoke(a, b) ?? false;
+		}
+
+		/// <summary>
+		/// The enum for generic number binary compare operations
+		/// </summary>
+		public enum CompareOperation
+		{
+			/// <summary>
+			/// Equality comparison
+			/// </summary>
+			Equality,
+			/// <summary>
+			/// Inequality comparison
+			/// </summary>
+			Inequality,
+			/// <summary>
+			/// Greater than comparison
+			/// </summary>
+			GreaterThan,
+			/// <summary>
+			/// Less than comparison
+			/// </summary>
+			LessThan,
+			/// <summary>
+			/// Greater than or equals to comparison
+			/// </summary>
+			GreaterThanOrEqual,
+			/// <summary>
+			/// Less than or equals to comparison
+			/// </summary>
+			LessThanOrEqual,
+		}
+
+		/// <summary>
+		/// Get the compare operation delegate of the given <paramref name="operation"/> as a <see cref="Func{T1, T2, TResult}"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <param name="operation">The given <see cref="CompareOperation"/></param>
+		/// <returns>The delegate used to compare the generic numbers of type <typeparamref name="T"/> if type <typeparamref name="T"/> has pre-defined <paramref name="operation"/>; otherwise, null.</returns>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Func<T, T, bool>? GetComparison<T>(this CompareOperation operation) where T : unmanaged
+		{
+			return operation switch
+			{
+				CompareOperation.Equality => Const<T>.EqualityDelegate,
+				CompareOperation.Inequality => Const<T>.InequalityDelegate,
+				CompareOperation.GreaterThan => Const<T>.GreaterThanDelegate,
+				CompareOperation.LessThan => Const<T>.LessThanDelegate,
+				CompareOperation.GreaterThanOrEqual => Const<T>.GreaterThanOrEqualDelegate,
+				CompareOperation.LessThanOrEqual => Const<T>.LessThanOrEqualDelegate,
+				_ => null,
+			};
 		}
 		#endregion
 
