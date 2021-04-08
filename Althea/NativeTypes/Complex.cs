@@ -358,11 +358,16 @@ namespace Althea.NativeTypes
 			return new ComplexDouble(acbd / squareAbsY, bcad / squareAbsY);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static double DoubleAbs(ComplexDouble a)
+		private static double DoubleSquareAbs(ComplexDouble a)
 		{
 			double x = a.real, y = a.imag;
-			double squareAbsY = x * x + y * y;
-			return Math.Sqrt(squareAbsY);
+			double squareAbs = x * x + y * y;
+			return squareAbs;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static double DoubleAbs(ComplexDouble a)
+		{
+			return Math.Sqrt(DoubleSquareAbs(a));
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static double DoubleArg(ComplexDouble a)
@@ -516,6 +521,16 @@ namespace Althea.NativeTypes
 		public double Abs()
 		{
 			return DoubleAbs(this);
+		}
+
+		/// <summary>
+		/// Square of complex absolute value of this complex
+		/// </summary>
+		/// <returns>The absolute value of this complex</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public double SquareAbs()
+		{
+			return DoubleSquareAbs(this);
 		}
 
 		/// <summary>
@@ -978,6 +993,16 @@ namespace Althea.NativeTypes
 		public T Abs()
 		{
 			return _fromDouble(((ComplexDouble)this).Abs());
+		}
+
+		/// <summary>
+		/// Square of complex absolute value of this complex
+		/// </summary>
+		/// <returns>The absolute value of this complex</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SquareAbs()
+		{
+			return _fromDouble(((ComplexDouble)this).SquareAbs());
 		}
 
 		/// <summary>

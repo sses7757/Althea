@@ -10321,6 +10321,12 @@
             </summary>
             <returns>The absolute value of this complex</returns>
         </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.SquareAbs">
+            <summary>
+            Square of complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex</returns>
+        </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.Arg">
             <summary>
             Compute the argument of this complex
@@ -10608,6 +10614,12 @@
             </summary>
             <returns>The absolute value of this complex</returns>
         </member>
+        <member name="M:Althea.NativeTypes.Complex`1.SquareAbs">
+            <summary>
+            Square of complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex</returns>
+        </member>
         <member name="M:Althea.NativeTypes.Complex`1.Arg">
             <summary>
             Compute the argument of this complex
@@ -10873,6 +10885,14 @@
             <returns>The absolute value of <paramref name="a"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetAbsoluteGetter``1">
+            <summary>
+            Get the delegate that retrieves the absolute value as a <see cref="T:System.Double"/> of the input argument of type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <returns>The delegate that retrieves the absolute value as a <see cref="T:System.Double"/> of the input argument of type <typeparamref name="T"/></returns>
+            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GenericLargerThan``1(``0,``0)">
             <summary>
             Check whether the given generic number <paramref name="a"/> is larger than the generic number <paramref name="b"/>
@@ -10948,7 +10968,7 @@
             Less than or equals to comparison
             </summary>
         </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GetComparison``1(Althea.NativeTypes.ConstExtension.CompareOperation)">
+        <member name="M:Althea.NativeTypes.ConstExtension.GetComparer``1(Althea.NativeTypes.ConstExtension.CompareOperation)">
             <summary>
             Get the compare operation delegate of the given <paramref name="operation"/> as a <see cref="T:System.Func`3"/>
             </summary>

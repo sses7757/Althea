@@ -70,6 +70,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 Cannot compare complex numbers of type {0}. 的本地化字符串。
+        /// </summary>
+        internal static string CompareComplex {
+            get {
+                return ResourceManager.GetString("CompareComplex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The (complex) number {0} is not close enough to a normal real number. 的本地化字符串。
         /// </summary>
         internal static string GenericNotNormalReal {

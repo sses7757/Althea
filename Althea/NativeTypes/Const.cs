@@ -1011,6 +1011,17 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
+		/// Get the delegate that retrieves the absolute value as a <see cref="double"/> of the input argument of type <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <returns>The delegate that retrieves the absolute value as a <see cref="double"/> of the input argument of type <typeparamref name="T"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		public static Func<T, double> GetAbsoluteGetter<T>() where T : unmanaged
+		{
+			return Const<T>.AbsoluteDelegate;
+		}
+
+		/// <summary>
 		/// Check whether the given generic number <paramref name="a"/> is larger than the generic number <paramref name="b"/>
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
@@ -1105,7 +1116,7 @@ namespace Althea.NativeTypes
 		/// <returns>The delegate used to compare the generic numbers of type <typeparamref name="T"/> if type <typeparamref name="T"/> has pre-defined <paramref name="operation"/>; otherwise, null.</returns>
 		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Func<T, T, bool>? GetComparison<T>(this CompareOperation operation) where T : unmanaged
+		public static Func<T, T, bool>? GetComparer<T>(this CompareOperation operation) where T : unmanaged
 		{
 			return operation switch
 			{

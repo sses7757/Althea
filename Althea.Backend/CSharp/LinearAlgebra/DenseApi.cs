@@ -9,6 +9,7 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.Linq;
 using Althea.NativeTypes;
+using Althea.Helpers;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra
@@ -104,6 +105,53 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		{
 			return Unsafe.ReadUnaligned<Vector256<T>>(ref Unsafe.As<U, byte>(ref r));
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Vector256<float> ComplexSquareAbs(ref Complex<float> p)
+		{
+			Vector256<float> current1 = LoadVector256<float, Complex<float>>(ref p);
+			Vector256<float> current2 = LoadVector256<float, Complex<float>>(ref Unsafe.Add(ref p, Vector256<float>.Count));
+			current1 = Avx.Multiply(current1, current1);
+			current2 = Avx.Multiply(current2, current2);
+			Vector256<float> squares = Avx.HorizontalAdd(current1, current2);
+			return squares;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Vector256<double> ComplexSquareAbs(ref ComplexDouble p)
+		{
+			Vector256<double> current1 = LoadVector256<double, ComplexDouble>(ref p);
+			Vector256<double> current2 = LoadVector256<double, ComplexDouble>(ref Unsafe.Add(ref p, Vector256<double>.Count));
+			current1 = Avx.Multiply(current1, current1);
+			current2 = Avx.Multiply(current2, current2);
+			Vector256<double> squares = Avx.HorizontalAdd(current1, current2);
+			return squares;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Vector256<float> ComplexAbs(ref Complex<float> p)
+		{
+			Vector256<float> squares = ComplexSquareAbs(ref p);
+			return Avx.Sqrt(squares);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Vector256<double> ComplexAbs(ref ComplexDouble p)
+		{
+			Vector256<double> squares = ComplexSquareAbs(ref p);
+			return Avx.Sqrt(squares);
+		}
+		/*
+		// This is for complex multiply
+		Vector256<float> realParts, imagParts;
+		realParts = Avx.UnpackLow(current1, current2); // vunpcklpd       ymm2, ymm0, ymm1
+		imagParts = Avx.UnpackHigh(current1, current2);// vunpcklpd       ymm3, ymm0, ymm1
+		current1 = Avx.Multiply(realParts, realParts); // vmulpd          ymm0, ymm2, ymm2
+		current2 = Avx.Multiply(imagParts, imagParts); // vmulpd          ymm1, ymm3, ymm3
+
+		vfmsub231pd     ymm1, ymm2, ymm2   # real*real - imag*imag
+		vaddpd          ymm0, ymm0, ymm0   # imag+imag = 2*imag
+		vmulpd          ymm0, ymm2, ymm0   # 2*imag * real
+		vunpcklpd       ymm2, ymm1, ymm0
+		vunpckhpd       ymm0, ymm1, ymm0
+		*/
 		#endregion
 
 		#region static
@@ -112,6 +160,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		// Therefore the difference between Vector<T> and AVX assembly codes are almost the same,
 		// and their performance difference is less than 3% (basically comes from the unoptimized final operations)
 		// Both of them outperforms the scalar implementation for around 3 times (this number shall be 4 without any loop-related operation).
+
 
 		#region vector argument (absolute) min / max
 		//// Test == int, uint, long, ulong   for   AbsMax, AbsMin, Max, Min
@@ -328,28 +377,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Vector256<int> extremeIndices = indices;
 			Vector256<int> increment = new Vector<int>(Vector256<int>.Count).AsVector256();
 			// loop
-			while (lengthLeft >= Vector256<int>.Count)
+			while (lengthLeft >= Vector256<float>.Count) // Vector256<Complex<float>>.Count * 2
 			{
 				indices = Avx2.Add(indices, increment);
-				Vector256<float> current1 = LoadVector256<float, Complex<float>>(ref a[offset]);
-				Vector256<float> current2 = LoadVector256<float, Complex<float>>(ref a[offset + Vector256<float>.Count]);
-				current1 = Avx.Multiply(current1, current1);
-				current2 = Avx.Multiply(current2, current2);
-				Vector256<float> squares = Avx.HorizontalAdd(current1, current2);
-				/*
-				// This is for complex multiply
-				Vector256<float> realParts, imagParts;
-				realParts = Avx.UnpackLow(current1, current2); // vunpcklpd       ymm2, ymm0, ymm1
-				imagParts = Avx.UnpackHigh(current1, current2);// vunpcklpd       ymm3, ymm0, ymm1
-				current1 = Avx.Multiply(realParts, realParts); // vmulpd          ymm0, ymm2, ymm2
-				current2 = Avx.Multiply(imagParts, imagParts); // vmulpd          ymm1, ymm3, ymm3
-
-				vfmsub231pd     ymm1, ymm2, ymm2   # real*real - imag*imag
-				vaddpd          ymm0, ymm0, ymm0   # imag+imag = 2*imag
-				vmulpd          ymm0, ymm2, ymm0   # 2*imag * real
-				vunpcklpd       ymm2, ymm1, ymm0
-				vunpckhpd       ymm0, ymm1, ymm0
-				*/
+				Vector256<float> squares = ComplexSquareAbs(ref a[offset]);
 				Vector256<float> compare;
 				if (doMax)
 				{   // abs max
@@ -362,12 +393,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					extremes = Avx.Max(squares, extremes);
 				}
 				extremeIndices = Avx2.BlendVariable(indices, extremeIndices, compare.AsInt32());
-				lengthLeft -= Vector<float>.Count;
-				offset += Vector<float>.Count;
+				lengthLeft -= Vector256<float>.Count;
+				offset += Vector256<float>.Count;
 			}
 			// reduce main
 			float extreme = ((float*)&extremes)[0]; int extremeIndex = ((int*)&extremeIndices)[0];
-			for (int i = 1; i < Vector<float>.Count; i++)
+			for (int i = 1; i < Vector256<float>.Count; i++)
 			{
 				float v = ((float*)&extremes)[i];
 				if (doMax && v > extreme)
@@ -384,7 +415,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				for (; offset < length; offset++)
 				{
-					float v = ((float*)px)[offset];
+					var cv = (Complex<float>*)px + offset;
+					float r = cv->Real, i = cv->Imag;
+					float v = r * r + i * i;
 					if (doMax && v > extreme)
 					{
 						extreme = v; extremeIndex = offset;
@@ -402,7 +435,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe long VectorMinMaxCompexDouble<Test>(void* px, int length)
 		{
-			Span<Complex<double>> a = new(px, length);
+			Span<ComplexDouble> a = new(px, length);
 			bool doMax = typeof(Test) == typeof(int);
 			// initialize
 			int lengthLeft = length, offset = 0;
@@ -412,14 +445,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Vector256<long> extremeIndices = indices;
 			Vector256<long> increment = new Vector<long>(Vector256<long>.Count).AsVector256();
 			// loop
-			while (lengthLeft >= Vector256<long>.Count)
+			while (lengthLeft >= Vector256<double>.Count) // Vector256<Complex<double>>.Count * 2
 			{
 				indices = Avx2.Add(indices, increment);
-				Vector256<double> current1 = LoadVector256<double, Complex<double>>(ref a[offset]);
-				Vector256<double> current2 = LoadVector256<double, Complex<double>>(ref a[offset + Vector256<double>.Count]);
-				current1 = Avx.Multiply(current1, current1);
-				current2 = Avx.Multiply(current2, current2);
-				Vector256<double> squares = Avx.HorizontalAdd(current1, current2);
+				Vector256<double> squares = ComplexSquareAbs(ref a[offset]);
 				Vector256<double> compare;
 				if (doMax)
 				{   // abs max
@@ -432,12 +461,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					extremes = Avx.Max(squares, extremes);
 				}
 				extremeIndices = Avx2.BlendVariable(indices, extremeIndices, compare.AsInt64());
-				lengthLeft -= Vector<double>.Count;
-				offset += Vector<double>.Count;
+				lengthLeft -= Vector256<double>.Count;
+				offset += Vector256<double>.Count;
 			}
 			// reduce main
 			double extreme = ((double*)&extremes)[0]; long extremeIndex = ((long*)&extremeIndices)[0];
-			for (int i = 1; i < Vector<double>.Count; i++)
+			for (int i = 1; i < Vector256<double>.Count; i++)
 			{
 				double v = ((double*)&extremes)[i];
 				if (doMax && v > extreme)
@@ -454,7 +483,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				for (; offset < length; offset++)
 				{
-					double v = ((double*)px)[offset];
+					double v = ((ComplexDouble*)px)[offset].SquareAbs();
 					if (doMax && v > extreme)
 					{
 						extreme = v; extremeIndex = offset;
@@ -470,15 +499,88 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		//// Test == int, uint, long, ulong   for   AbsMax, AbsMin, Max, Min
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool VectorMinMaxManaged<Test>(void* px, int length, out long index)
+		private static unsafe bool VectorMinMaxManaged<T, Test>(void* px, int length, out long index) where T : unmanaged
 		{
+			index = -1;
+			bool doMax = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
+			bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
+			T* x = (T*)px;
+			if (doAbs)
+			{
+				Func<T, double> abs = ConstExtension.GetAbsoluteGetter<T>();
+				double extreme;
+				// some frequent type speedups
+				if (typeof(T) == typeof(int))
+					extreme = Math.Abs(((int*)x)[0]);
+				if (typeof(T) == typeof(long))
+					extreme = Math.Abs(((long*)x)[0]);
+				if (typeof(T) == typeof(float))
+					extreme = Math.Abs(((float*)x)[0]);
+				if (typeof(T) == typeof(double))
+					extreme = Math.Abs(((double*)x)[0]);
+				if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
+					extreme = ((ComplexDouble*)x)[0].Abs();
+				else
+					extreme = abs(x[0]);
+				int extremeIndex = 0;
+				for (int i = 1; i < length; i++)
+				{
+					double v;
+					// some frequent type speedups
+					if (typeof(T) == typeof(int))
+						v = Math.Abs(((int*)x)[i]);
+					if (typeof(T) == typeof(long))
+						v = Math.Abs(((long*)x)[i]);
+					if (typeof(T) == typeof(float))
+						v = Math.Abs(((float*)x)[i]);
+					if (typeof(T) == typeof(double))
+						v = Math.Abs(((double*)x)[i]);
+					if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
+						v = ((ComplexDouble*)x)[i].Abs();
+					else
+						v = abs(x[i]);
+					if (v > extreme)
+					{
+						extreme = v; extremeIndex = i;
+					}
+				}
+				index = extremeIndex;
+			}
+			else
+			{
+				Func<T, T, bool>? compare;
+				if (doMax)
+					compare = ConstExtension.CompareOperation.GreaterThan.GetComparer<T>();
+				else
+					compare = ConstExtension.CompareOperation.LessThan.GetComparer<T>();
+				if (compare is null)
+					return false; // not support
 
+				T extreme = x[0]; int extremeIndex = 0;
+				for (int i = 1; i < length; i++)
+				{
+					T v = x[i];
+					// some frequent type speedups, complex is not possible here
+					if ((typeof(T) == typeof(int) && ((int*)&px)[i] > *(int*)&extreme) ||
+						(typeof(T) == typeof(long) && ((long*)&px)[i] > *(long*)&extreme) ||
+						(typeof(T) == typeof(float) && ((float*)&px)[i] > *(float*)&extreme) ||
+						(typeof(T) == typeof(double) && ((double*)&px)[i] > *(double*)&extreme) ||
+						compare(v, extreme))
+					{
+						extreme = v; extremeIndex = i;
+					}
+				}
+				index = extremeIndex;
+			}
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool AbsoluteValueArgMax<T>(Storage<T> x, out long index) where T : unmanaged
+		internal protected static unsafe bool ArgMinMax<T, Test>(Storage<T> x, out long index) where T : unmanaged
 		{
 			index = -1;
+			if ((typeof(Test) == typeof(long) || typeof(Test) == typeof(ulong)) && Const<T>.IsComplex)
+				throw new InvalidOperationException(string.Format(Resource.CompareComplex, typeof(T).GetGenericString()));
 			if (!GetSpan(x, out void* px, out int length))
 				return false;
 			if (length == 0)
@@ -488,47 +590,66 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				index = 0; return true;
 			}
 			if (!Vector.IsHardwareAccelerated)
-				return VectorMinMaxManaged<int>(px, length, out index);
+				return VectorMinMaxManaged<T, Test>(px, length, out index);
 			if ((sizeof(T) <= sizeof(byte) && length > sbyte.MaxValue) || (sizeof(T) <= sizeof(short) && length > short.MaxValue))
-				return VectorMinMaxManaged<int>(px, length, out index);
+				return VectorMinMaxManaged<T, Test>(px, length, out index);
 
 			if (Const<T>.IsComplex)
 			{
 				if (Const<T>.IsIntegralType || !Avx2.IsSupported)
-					return VectorMinMaxManaged<int>(px, length, out index);
+					return VectorMinMaxManaged<T, Test>(px, length, out index);
 				if (typeof(T) == typeof(float))
 				{
-					index = VectorMinMaxCompexFloat<int>(px, length);
+					index = VectorMinMaxCompexFloat<Test>(px, length);
 				}
 				else // double
 				{
-					index = VectorMinMaxCompexDouble<int>(px, length);
+					index = VectorMinMaxCompexDouble<Test>(px, length);
 				}
 			}
 			else
 			{
 				if (typeof(T) == typeof(float))
 				{
-					index = VectorMinMaxReal<float, int, int>(px, length);
+					index = VectorMinMaxReal<float, int, Test>(px, length);
 				}
 				else if (typeof(T) == typeof(double))
 				{
-					index = VectorMinMaxReal<double, long, int>(px, length);
+					index = VectorMinMaxReal<double, long, Test>(px, length);
 				}
 				else
 				{   // integral type
-					index = VectorMinMaxReal<T, T, int>(px, length);
+					index = VectorMinMaxReal<T, T, Test>(px, length);
 				}
 			}
 			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool AbsoluteValueArgMin<T>(Storage<T> x, out long index) where T : unmanaged
+		internal protected static bool AbsoluteValueArgMax<T>(Storage<T> x, out long index) where T : unmanaged
 		{
+			return ArgMinMax<T, int>(x, out index);
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal protected static unsafe bool AbsoluteValueArgMin<T>(Storage<T> x, out long index) where T : unmanaged
+		{
+			return ArgMinMax<T, uint>(x, out index);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal protected static unsafe bool ArgMax<T>(Storage<T> x, out long index) where T : unmanaged
+		{
+			return ArgMinMax<T, long>(x, out index);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal protected static unsafe bool ArgMin<T>(Storage<T> x, out long index) where T : unmanaged
+		{
+			return ArgMinMax<T, ulong>(x, out index);
 		}
 		#endregion
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal protected static bool AbsoluteValueSum<T>(Storage<T> x, out double sum) where T : unmanaged
@@ -715,6 +836,31 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 							_ => false,
 						};
 					}
+				}
+			}
+			else if ((methodInfo.Name == nameof(ArgMax) || methodInfo.Name == nameof(ArgMin)) && inputParams.Length == 1)
+			{
+				if (inputParams[0] is IStorage s && s.GetType() is { IsGenericType: true } ts)
+				{
+					var t = ts.GenericTypeArguments[0];
+					bool max = methodInfo.Name == nameof(ArgMax);
+					long result = -1;
+					// invoke method
+					return Type.GetTypeCode(t) switch
+					{
+						TypeCode.Char => max ? ArgMax((Storage<char>)s, out result) : ArgMin((Storage<char>)s, out result),
+						TypeCode.SByte => max ? ArgMax((Storage<sbyte>)s, out result) : ArgMin((Storage<sbyte>)s, out result),
+						TypeCode.Byte => max ? ArgMax((Storage<byte>)s, out result) : ArgMin((Storage<byte>)s, out result),
+						TypeCode.Int16 => max ? ArgMax((Storage<short>)s, out result) : ArgMin((Storage<short>)s, out result),
+						TypeCode.UInt16 => max ? ArgMax((Storage<ushort>)s, out result) : ArgMin((Storage<ushort>)s, out result),
+						TypeCode.Int32 => max ? ArgMax((Storage<int>)s, out result) : ArgMin((Storage<int>)s, out result),
+						TypeCode.UInt32 => max ? ArgMax((Storage<uint>)s, out result) : ArgMin((Storage<uint>)s, out result),
+						TypeCode.Int64 => max ? ArgMax((Storage<long>)s, out result) : ArgMin((Storage<long>)s, out result),
+						TypeCode.UInt64 => max ? ArgMax((Storage<ulong>)s, out result) : ArgMin((Storage<ulong>)s, out result),
+						TypeCode.Single => max ? ArgMax((Storage<float>)s, out result) : ArgMin((Storage<float>)s, out result),
+						TypeCode.Double => max ? ArgMax((Storage<double>)s, out result) : ArgMin((Storage<double>)s, out result),
+						_ => false,
+					};
 				}
 			}
 			return false;
