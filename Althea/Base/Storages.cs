@@ -839,7 +839,14 @@ namespace Althea
 		/// When implemented by a derived class, create a referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage
 		/// </summary>
 		/// <returns>A referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage</returns>
-		Storage<byte> AsByteStorage();
+		ReferenceStorage<byte> AsByteStorage();
+
+		/// <summary>
+		/// When implemented by a derived class, create a referenced <see cref="Storage{T}"/> of type <typeparamref name="T"/> over this storage
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <returns>A referenced <see cref="Storage{T}"/> of <typeparamref name="T"/> over this storage</returns>
+		ReferenceStorage<T> As<T>() where T : unmanaged;
 	}
 
 	/// <summary>
@@ -1121,7 +1128,7 @@ namespace Althea
 		/// </summary>
 		/// <returns>A referenced <see cref="Storage{T}"/> of <see cref="byte"/> over this storage</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Storage<byte> AsByteStorage() => this.As<byte>();
+		public ReferenceStorage<byte> AsByteStorage() => this.As<byte>();
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <see cref="Storage{T}"/> is valid or not. The default implementation checks the <see cref="Disposed"/>, <see cref="Count"/> and the <see cref="ICheckValid.IsValid"/> of each pointer.

@@ -119,19 +119,19 @@ namespace Althea.Backend.CSharp.Random
 						LAD.PointWiseAddScalar(pD, 1, *(double*)&offset);
 						break;
 					case DataType.RealInt8:
-						LAD.PointWiseModular(new ManagedPureStorage<byte>(p, len), *(byte*)&scale);
+						LAD.PointWiseModulo(new ManagedPureStorage<byte>(p, len), *(byte*)&scale);
 						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
 						break;
 					case DataType.RealInt16:
-						LAD.PointWiseModular(new ManagedPureStorage<ushort>(p, len), *(ushort*)&scale);
+						LAD.PointWiseModulo(new ManagedPureStorage<ushort>(p, len), *(ushort*)&scale);
 						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
 						break;
 					case DataType.RealInt32:
-						LAD.PointWiseModular(new ManagedPureStorage<uint>(p, len), *(uint*)&scale);
+						LAD.PointWiseModulo(new ManagedPureStorage<uint>(p, len), *(uint*)&scale);
 						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
 						break;
 					case DataType.RealInt64:
-						LAD.PointWiseModular(new ManagedPureStorage<ulong>(p, len), *(ulong*)&scale);
+						LAD.PointWiseModulo(new ManagedPureStorage<ulong>(p, len), *(ulong*)&scale);
 						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
 						break;
 					case DataType.RealUInt8:
@@ -139,7 +139,7 @@ namespace Althea.Backend.CSharp.Random
 					case DataType.RealUInt32:
 					case DataType.RealUInt64:
 						var pU = new ManagedPureStorage<T>(p, len);
-						LAD.PointWiseModular(pU, scale);
+						LAD.PointWiseModulo(pU, scale);
 						LAD.PointWiseAddScalar(pU, offset);
 						break;
 					default:

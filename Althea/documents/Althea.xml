@@ -2903,6 +2903,13 @@
             </summary>
             <returns>A referenced <see cref="T:Althea.Storage`1"/> of <see cref="T:System.Byte"/> over this storage</returns>
         </member>
+        <member name="M:Althea.IStorage.As``1">
+            <summary>
+            When implemented by a derived class, create a referenced <see cref="T:Althea.Storage`1"/> of type <typeparamref name="T"/> over this storage
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <returns>A referenced <see cref="T:Althea.Storage`1"/> of <typeparamref name="T"/> over this storage</returns>
+        </member>
         <member name="T:Althea.IReferenceStorage">
             <summary>
             The interface for a referenced storage of <see cref="T:Althea.IStorage"/>
@@ -8980,62 +8987,6 @@
             <param name="hashCodeConverter">The converter used to get the hash code of each element</param>
             <returns>the hash code of <paramref name="set"/></returns>
         </member>
-        <member name="M:Althea.Linq.ArrayLinq.FormComplexArray``1(``0[])">
-            <summary>
-            Convert a 1D <typeparamref name="T"/> array to <see cref="T:Althea.NativeTypes.Complex`1"/> array by taking two consecutive real values to form one complex value.
-            </summary>
-            <typeparam name="T">The real type</typeparam>
-            <param name="input">input array of type <typeparamref name="T"/></param>
-            <returns>a new <see cref="T:Althea.NativeTypes.Complex`1"/> array made out of <paramref name="input"/></returns>
-            <remarks>extend method of <paramref name="input"/></remarks>
-        </member>
-        <member name="M:Althea.Linq.ArrayLinq.ToComplexArray``1(``0[])">
-            <summary>
-            Convert a 1D <typeparamref name="T"/> array to <see cref="T:Althea.NativeTypes.Complex`1"/> array by creating complex values with only real parts.
-            </summary>
-            <typeparam name="T">The real type</typeparam>
-            <param name="input">input array of type <typeparamref name="T"/></param>
-            <returns>a new <see cref="T:Althea.NativeTypes.Complex`1"/> array made out of <paramref name="input"/></returns>
-            <remarks>extend method of <paramref name="input"/></remarks>
-        </member>
-        <member name="M:Althea.Linq.ArrayLinq.Prod``1(System.Collections.Generic.IReadOnlyList{Althea.NativeTypes.Complex{``0}})">
-            <summary>
-            Complex list product
-            </summary>
-            <param name="list"></param>
-            <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-            <remarks>extend method of <paramref name="list"/></remarks>
-        </member>
-        <member name="M:Althea.Linq.ArrayLinq.Sum``1(System.Collections.Generic.IReadOnlyList{Althea.NativeTypes.Complex{``0}})">
-            <summary>
-            Complex list summation
-            </summary>
-            <param name="list"></param>
-            <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-            <remarks>extend method of <paramref name="list"/></remarks>
-        </member>
-        <member name="M:Althea.Linq.ArrayLinq.Sum``2(System.Collections.Generic.IReadOnlyList{``1},System.Converter{``1,Althea.NativeTypes.Complex{``0}})">
-            <summary>
-            Complex list summation by <paramref name="selector"/>
-            </summary>
-            <typeparam name="T">The complex type's real type</typeparam>
-            <typeparam name="TFrom">The conversion from type</typeparam>
-            <param name="list"></param>
-            <param name="selector">The selector to apply to each element</param>
-            <returns>Summation result, 0 if <paramref name="list"/> is null</returns>
-            <remarks>extend method of <paramref name="list"/></remarks>
-        </member>
-        <member name="M:Althea.Linq.ArrayLinq.Prod``2(System.Collections.Generic.IReadOnlyList{``1},System.Converter{``1,Althea.NativeTypes.Complex{``0}})">
-            <summary>
-            Complex list product by <paramref name="selector"/>
-            </summary>
-            <typeparam name="T">The complex type's real type</typeparam>
-            <typeparam name="TFrom">The conversion from type</typeparam>
-            <param name="list"></param>
-            <param name="selector">The selector to apply to each element</param>
-            <returns>Product result, 0 if <paramref name="list"/> is null</returns>
-            <remarks>extend method of <paramref name="list"/></remarks>
-        </member>
         <member name="T:Althea.Linq.IImmutableSet`1">
             <summary>
             The interface for immutable set
@@ -10196,32 +10147,38 @@
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.Int32)~Althea.NativeTypes.ComplexDouble">
             <summary>
-            Convert from int
+            Implicitly convert a int to a <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
             <param name="a">a int</param>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.Double)~Althea.NativeTypes.ComplexDouble">
             <summary>
-            Convert from double
+            Implicitly convert a double to a <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
             <param name="a">a double</param>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Althea.NativeTypes.ComplexDouble">
             <summary>
-            Convert from int tuple
+            Implicitly convert a int tuple to a <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
             <param name="a">a int tuple</param>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.op_Implicit(System.ValueTuple{System.Double,System.Double})~Althea.NativeTypes.ComplexDouble">
             <summary>
-            Convert from double tuple
+            Implicitly convert a double tuple to a <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
             <param name="a">a double tuple</param>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.op_Explicit(Althea.NativeTypes.ComplexDouble)~System.Double">
             <summary>
-            Convert to <see cref="T:System.Double"/> by getting absolute value
+            Explicitly convert a <see cref="T:Althea.NativeTypes.ComplexDouble"/> to a <see cref="T:System.Double"/> by getting its absolute value
             </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.op_Explicit(Althea.NativeTypes.ComplexDouble)~Althea.NativeTypes.ComplexSingle">
+            <summary>
+            Explicitly convert a <see cref="T:Althea.NativeTypes.ComplexDouble"/> to a <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="a">The input <see cref="T:Althea.NativeTypes.ComplexDouble"/> to be converted</param>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.op_Equality(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
             <summary>
@@ -10412,13 +10369,298 @@
             <param name="format">The format to use</param>
             <param name="formatProvider">The provider to use to format the value</param>
         </member>
+        <member name="T:Althea.NativeTypes.ComplexSingle">
+            <summary>
+            The single precision float complex type
+            </summary>
+        </member>
+        <member name="P:Althea.NativeTypes.ComplexSingle.Real">
+            <summary>
+            Get the real part
+            </summary>
+        </member>
+        <member name="P:Althea.NativeTypes.ComplexSingle.Imag">
+            <summary>
+            Get the imaginary part
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.#ctor(System.Single,System.Single)">
+            <summary>
+            Construct a <see cref="T:Althea.NativeTypes.ComplexSingle"/> from real and imaginary parts
+            </summary>
+            <param name="re">The real part</param>
+            <param name="im">The imaginary part, default value is 0</param>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexSingle.Zero">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexSingle"/> 0
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexSingle.One">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexSingle"/> 1
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexSingle.MinusOne">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexSingle"/> -1
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexSingle.ImOne">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexSingle"/> i
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.ComplexSingle.MinusImOne">
+            <summary>
+            <see cref="T:Althea.NativeTypes.ComplexSingle"/> -1
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.TryParse(System.String,Althea.NativeTypes.ComplexSingle@)">
+            <summary>
+            Try to parse a <see cref="T:System.String"/> to a new <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="s">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+            <param name="complex">The output <see cref="T:Althea.NativeTypes.ComplexSingle"/></param>
+            <returns>success or not</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Parse(System.String)">
+            <summary>
+            Parse a <see cref="T:System.String"/> to a <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+            <returns>The parsed <see cref="T:Althea.NativeTypes.ComplexSingle"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Implicit(System.Int32)~Althea.NativeTypes.ComplexSingle">
+            <summary>
+            Implicitly convert a int to a <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="a">a int</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Implicit(System.Single)~Althea.NativeTypes.ComplexSingle">
+            <summary>
+            Implicitly convert a float to a <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="a">a float</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Althea.NativeTypes.ComplexSingle">
+            <summary>
+            Implicitly convert a int tuple to a <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="a">a int tuple</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Implicit(System.ValueTuple{System.Single,System.Single})~Althea.NativeTypes.ComplexSingle">
+            <summary>
+            Implicitly convert a float tuple to a <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="a">a float tuple</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Explicit(Althea.NativeTypes.ComplexSingle)~System.Single">
+            <summary>
+            Convert to <see cref="T:System.Single"/> by getting absolute value
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Implicit(Althea.NativeTypes.ComplexSingle)~Althea.NativeTypes.ComplexDouble">
+            <summary>
+            Implicitly convert a <see cref="T:Althea.NativeTypes.ComplexSingle"/> to a <see cref="T:Althea.NativeTypes.ComplexDouble"/>
+            </summary>
+            <param name="a">The input <see cref="T:Althea.NativeTypes.ComplexSingle"/> to be converted</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Equality(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Inequality(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Equals(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Equality operator
+            </summary>
+            <param name="other">The other <see cref="T:Althea.NativeTypes.ComplexSingle"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.GetHashCode">
+            <summary>
+            Override <see cref="M:System.Object.GetHashCode"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.Object.Equals(System.Object)"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_UnaryNegation(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex negate
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Addition(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex add
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Subtraction(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex subtract
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Addition(Althea.NativeTypes.ComplexSingle,System.Single)">
+            <summary>
+            Complex add real
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Addition(System.Single,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex add real
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Subtraction(Althea.NativeTypes.ComplexSingle,System.Single)">
+            <summary>
+            Complex subtract real
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Subtraction(System.Single,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Real subtract complex
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Multiply(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex multiply
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Division(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex division, guards against intermediate underflow and overflow by scaling
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Multiply(Althea.NativeTypes.ComplexSingle,System.Single)">
+            <summary>
+            Complex multiply real number
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Multiply(System.Single,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex multiply real number
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Division(Althea.NativeTypes.ComplexSingle,System.Single)">
+            <summary>
+            Complex divide real number
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.op_Division(System.Single,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Real number divide complex 
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Abs">
+            <summary>
+            Complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.SquareAbs">
+            <summary>
+            Square of complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Arg">
+            <summary>
+            Compute the argument of this complex
+            </summary>
+            <returns>The argument of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Conjugate">
+            <summary>
+            Complex conjugate
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Exp">
+            <summary>
+            Complex exponential (of base <c>e</c>)
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Log">
+            <summary>
+            Complex logarithm (of base <c>e</c>)
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Pow(System.Single)">
+            <summary>
+            Complex number power
+            </summary>
+            <param name="p">The power of real type</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Pow(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Complex  number power
+            </summary>
+            <param name="p">The power of complex type <see cref="T:Althea.NativeTypes.ComplexSingle"/></param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Sqrt">
+            <summary>
+            Get the complex square root of this complex
+            </summary>
+            <returns>The complex square root of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Add(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place add <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="another">another value to be added</param>
+            <returns>The addition result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Subtract(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place subtract <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="another">another value to be subtracted</param>
+            <returns>The subtraction result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Multiply(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place multiply <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="another">another value to be multiplied</param>
+            <returns>The multiplication result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.Divide(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place divide <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
+            </summary>
+            <param name="another">another value to be divided</param>
+            <returns>The division result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.ToString">
+            <summary>
+            Override <see cref="M:System.Object.ToString"/>
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.ToString(System.String)">
+            <summary>
+            String representation of this complex number
+            </summary>
+            <param name="format">format of output</param>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.ToString(System.String,System.IFormatProvider)">
+            <summary>
+            Implementation of <see cref="M:System.IFormattable.ToString(System.String,System.IFormatProvider)"/> that formats the value of the current instance using the specified format.
+            </summary>
+            <param name="format">The format to use</param>
+            <param name="formatProvider">The provider to use to format the value</param>
+        </member>
         <member name="T:Althea.NativeTypes.Complex`1">
             <summary>
             The general complex type for built-in types
             </summary>
             <typeparam name="T">The data type of corresponding real number</typeparam>
-            <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
-            I do not recommend one to use any data type conversions or arithmetic operations in heavy load like loop over a <c><see cref="T:Althea.NativeTypes.Complex`1"/>[]</c> even though the dynamic functions will be optimized by the JIT to have performance way better than boxing and unboxing <typeparamref name="T"/>, they may still perform a lot worse than operations with compile-time-known <typeparamref name="T"/>.</remarks>
+            <remarks>This is an <c>unmanaged</c> type since C# 8.0.</remarks>
         </member>
         <member name="P:Althea.NativeTypes.Complex`1.Real">
             <summary>
@@ -10781,6 +11023,96 @@
             Get the value of <see cref="F:Althea.NativeTypes.Const`1.MachinePrecision"/>^(1/2)
             </summary>
         </member>
+        <member name="T:Althea.NativeTypes.CompareOperation">
+            <summary>
+            The enum for generic number binary compare operations
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.CompareOperation.Equality">
+            <summary>
+            Equality comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.CompareOperation.Inequality">
+            <summary>
+            Inequality comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.CompareOperation.GreaterThan">
+            <summary>
+            Greater than comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.CompareOperation.LessThan">
+            <summary>
+            Less than comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.CompareOperation.GreaterThanOrEqual">
+            <summary>
+            Greater than or equals to comparison
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.CompareOperation.LessThanOrEqual">
+            <summary>
+            Less than or equals to comparison
+            </summary>
+        </member>
+        <member name="T:Althea.NativeTypes.BinaryArithmeticOperation">
+            <summary>
+            The enum for generic number binary arithmetic operations
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.BinaryArithmeticOperation.Addition">
+            <summary>
+            Add the left and right operands
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.BinaryArithmeticOperation.Subtraction">
+            <summary>
+            Subtract the left operand by the right operand
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.BinaryArithmeticOperation.Multiply">
+            <summary>
+            Multiply the left and right operands
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.BinaryArithmeticOperation.Division">
+            <summary>
+            Divide the left operand by the right operand
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.BinaryArithmeticOperation.Exponentiation">
+            <summary>
+            Compute the power of the left and right operands with the left one as the base
+            </summary>
+        </member>
+        <member name="T:Althea.NativeTypes.UnaryArithmeticOperation">
+            <summary>
+            The enum for generic number unary arithmetic operations
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.UnaryArithmeticOperation.Negation">
+            <summary>
+            Negate the operand
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.UnaryArithmeticOperation.Reciprocal">
+            <summary>
+            Reciprocate the operand
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.UnaryArithmeticOperation.SquareRoot">
+            <summary>
+            Get the square root of the operand
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.UnaryArithmeticOperation.Conjugate">
+            <summary>
+            Get the complex conjugate of the operand
+            </summary>
+        </member>
         <member name="T:Althea.NativeTypes.ConstExtension">
             <summary>
             The static class for extension methods utilizing <see cref="T:Althea.NativeTypes.Const`1"/>
@@ -10837,6 +11169,22 @@
             <param name="a">The input left number</param>
             <param name="b">The input right number</param>
             <returns>The division of <paramref name="a"/> and <paramref name="b"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetArithmeticOperation``1(Althea.NativeTypes.BinaryArithmeticOperation)">
+            <summary>
+            Get the delegate that performs the given <see cref="T:Althea.NativeTypes.BinaryArithmeticOperation"/> to the two input arguments of type <typeparamref name="T"/> and return the result as a <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <returns>The delegate that performs the given <paramref name="operation"/></returns>
+            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.ConstExtension.GetArithmeticOperation``1(Althea.NativeTypes.UnaryArithmeticOperation)">
+            <summary>
+            Get the delegate that performs the given <see cref="T:Althea.NativeTypes.UnaryArithmeticOperation"/> to the one input argument of type <typeparamref name="T"/> and return the result as a <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <returns>The delegate that performs the given <paramref name="operation"/></returns>
+            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GenericSqrt``1(``0)">
             <summary>
@@ -10933,47 +11281,12 @@
             <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≤ <paramref name="b"/>; false otherwise.</returns>
             <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
         </member>
-        <member name="T:Althea.NativeTypes.ConstExtension.CompareOperation">
-            <summary>
-            The enum for generic number binary compare operations
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.Equality">
-            <summary>
-            Equality comparison
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.Inequality">
-            <summary>
-            Inequality comparison
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.GreaterThan">
-            <summary>
-            Greater than comparison
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.LessThan">
-            <summary>
-            Less than comparison
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.GreaterThanOrEqual">
-            <summary>
-            Greater than or equals to comparison
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.ConstExtension.CompareOperation.LessThanOrEqual">
-            <summary>
-            Less than or equals to comparison
-            </summary>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GetComparer``1(Althea.NativeTypes.ConstExtension.CompareOperation)">
+        <member name="M:Althea.NativeTypes.ConstExtension.GetComparer``1(Althea.NativeTypes.CompareOperation)">
             <summary>
             Get the compare operation delegate of the given <paramref name="operation"/> as a <see cref="T:System.Func`3"/>
             </summary>
             <typeparam name="T">A supported data type</typeparam>
-            <param name="operation">The given <see cref="T:Althea.NativeTypes.ConstExtension.CompareOperation"/></param>
+            <param name="operation">The given <see cref="T:Althea.NativeTypes.CompareOperation"/></param>
             <returns>The delegate used to compare the generic numbers of type <typeparamref name="T"/> if type <typeparamref name="T"/> has pre-defined <paramref name="operation"/>; otherwise, null.</returns>
             <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
         </member>

@@ -296,7 +296,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public static readonly bool IsPreDefined = NativeTypeExtension.IsSupported<T>() &&
 													((typeof(T).IsPrimitive && typeof(T) != typeof(bool) && typeof(T) != typeof(char)) ||
-													 typeof(T) == typeof(ComplexDouble) ||
+													 typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(ComplexSingle) ||
 														(NativeTypeExtension.IsComplex<T>() &&
 														 typeof(T) == typeof(Complex<>).MakeGenericType(typeof(T).GenericTypeArguments[0])));
 
@@ -370,26 +370,11 @@ namespace Althea.NativeTypes
 		internal static readonly Converter<T, double> ImagPartDelegate;
 
 		#region private reflection
-		private enum BinaryOp
-		{
-			Addition,
-			Subtraction,
-			Multiply,
-			Division,
-
-			Equality,
-			Inequality,
-			GreaterThan,
-			LessThan,
-			GreaterThanOrEqual,
-			LessThanOrEqual,
-		}
-
 		private const MethodAttributes ATTR = MethodAttributes.Public | MethodAttributes.Static;
 		private const CallingConventions CALL = CallingConventions.Standard;
 		private static readonly Module THIS = typeof(Const<T>).Module;
 
-		private static Func<T, T, T> GetBinarySelf(BinaryOp op)
+		private static Func<T, T, T> GetBinarySelf(BinaryArithmeticOperation op)
 		{
 			if (typeof(T).IsPrimitive)
 			{
@@ -399,16 +384,16 @@ namespace Althea.NativeTypes
 				IL.Emit(OpCodes.Ldarg_1);
 				switch (op)
 				{
-					case Const<T>.BinaryOp.Addition:
+					case BinaryArithmeticOperation.Addition:
 						IL.Emit(OpCodes.Add);
 						break;
-					case Const<T>.BinaryOp.Subtraction:
+					case BinaryArithmeticOperation.Subtraction:
 						IL.Emit(OpCodes.Sub);
 						break;
-					case Const<T>.BinaryOp.Multiply:
+					case BinaryArithmeticOperation.Multiply:
 						IL.Emit(OpCodes.Mul);
 						break;
-					case Const<T>.BinaryOp.Division:
+					case BinaryArithmeticOperation.Division:
 						IL.Emit(OpCodes.Div);
 						break;
 					default:
@@ -429,10 +414,10 @@ namespace Althea.NativeTypes
 				{
 					return op switch
 					{
-						Const<T>.BinaryOp.Addition => static (a, b) => (dynamic)a + b,
-						Const<T>.BinaryOp.Subtraction => static (a, b) => (dynamic)a - b,
-						Const<T>.BinaryOp.Multiply => static (a, b) => (dynamic)a * b,
-						Const<T>.BinaryOp.Division => static (a, b) => (dynamic)a / b,
+						BinaryArithmeticOperation.Addition => static (a, b) => (dynamic)a + b,
+						BinaryArithmeticOperation.Subtraction => static (a, b) => (dynamic)a - b,
+						BinaryArithmeticOperation.Multiply => static (a, b) => (dynamic)a * b,
+						BinaryArithmeticOperation.Division => static (a, b) => (dynamic)a / b,
 						_ => throw new ArgumentOutOfRangeException(nameof(op)),
 					};
 				}
@@ -440,7 +425,7 @@ namespace Althea.NativeTypes
 			}
 		}
 
-		private static Func<T, T, bool>? GetBinaryBool(BinaryOp op)
+		private static Func<T, T, bool>? GetBinaryBool(CompareOperation op)
 		{
 			if (typeof(T).IsPrimitive)
 			{
@@ -450,26 +435,26 @@ namespace Althea.NativeTypes
 				IL.Emit(OpCodes.Ldarg_1);
 				switch (op)
 				{
-					case Const<T>.BinaryOp.Equality:
+					case CompareOperation.Equality:
 						IL.Emit(OpCodes.Ceq);
 						break;
-					case Const<T>.BinaryOp.Inequality:
+					case CompareOperation.Inequality:
 						IL.Emit(OpCodes.Ceq);
 						IL.Emit(OpCodes.Ldc_I4_0);
 						IL.Emit(OpCodes.Ceq);
 						break;
-					case Const<T>.BinaryOp.GreaterThan:
+					case CompareOperation.GreaterThan:
 						IL.Emit(OpCodes.Cgt);
 						break;
-					case Const<T>.BinaryOp.LessThan:
+					case CompareOperation.LessThan:
 						IL.Emit(OpCodes.Clt);
 						break;
-					case Const<T>.BinaryOp.GreaterThanOrEqual:
+					case CompareOperation.GreaterThanOrEqual:
 						IL.Emit(OpCodes.Clt_Un);
 						IL.Emit(OpCodes.Ldc_I4_0);
 						IL.Emit(OpCodes.Ceq);
 						break;
-					case Const<T>.BinaryOp.LessThanOrEqual:
+					case CompareOperation.LessThanOrEqual:
 						IL.Emit(OpCodes.Cgt_Un);
 						IL.Emit(OpCodes.Ldc_I4_0);
 						IL.Emit(OpCodes.Ceq);
@@ -792,19 +777,19 @@ namespace Althea.NativeTypes
 			ToLongDelegate = ConstConvert<T, long>.ConvertDelegate;
 			FromLongDelegate = ConstConvert<long, T>.ConvertDelegate;
 			// binary arithmetics
-			AddDelegate = GetBinarySelf(BinaryOp.Addition);
-			SubtractDelegate = GetBinarySelf(BinaryOp.Subtraction);
-			MultiplyDelegate = GetBinarySelf(BinaryOp.Multiply);
-			DivideDelegate = GetBinarySelf(BinaryOp.Division);
+			AddDelegate = GetBinarySelf(BinaryArithmeticOperation.Addition);
+			SubtractDelegate = GetBinarySelf(BinaryArithmeticOperation.Subtraction);
+			MultiplyDelegate = GetBinarySelf(BinaryArithmeticOperation.Multiply);
+			DivideDelegate = GetBinarySelf(BinaryArithmeticOperation.Division);
 			PowerDelegate1 = GetPower1();
 			PowerDelegate2 = GetPower2();
 			// binary compare
-			EqualityDelegate = GetBinaryBool(BinaryOp.Equality);
-			InequalityDelegate = GetBinaryBool(BinaryOp.Inequality);
-			GreaterThanDelegate = GetBinaryBool(BinaryOp.GreaterThan);
-			LessThanDelegate = GetBinaryBool(BinaryOp.LessThan);
-			GreaterThanOrEqualDelegate = GetBinaryBool(BinaryOp.GreaterThanOrEqual);
-			LessThanOrEqualDelegate = GetBinaryBool(BinaryOp.LessThanOrEqual);
+			EqualityDelegate = GetBinaryBool(CompareOperation.Equality);
+			InequalityDelegate = GetBinaryBool(CompareOperation.Inequality);
+			GreaterThanDelegate = GetBinaryBool(CompareOperation.GreaterThan);
+			LessThanDelegate = GetBinaryBool(CompareOperation.LessThan);
+			GreaterThanOrEqualDelegate = GetBinaryBool(CompareOperation.GreaterThanOrEqual);
+			LessThanOrEqualDelegate = GetBinaryBool(CompareOperation.LessThanOrEqual);
 			// unary arithmetics
 			ReciprocalDelegate = static v => DivideDelegate.Invoke(One, v);
 			NegateDelegate = GetNegate();
@@ -817,6 +802,88 @@ namespace Althea.NativeTypes
 		#endregion
 	}
 
+	#region operations
+	/// <summary>
+	/// The enum for generic number binary compare operations
+	/// </summary>
+	public enum CompareOperation
+	{
+		/// <summary>
+		/// Equality comparison
+		/// </summary>
+		Equality,
+		/// <summary>
+		/// Inequality comparison
+		/// </summary>
+		Inequality,
+		/// <summary>
+		/// Greater than comparison
+		/// </summary>
+		GreaterThan,
+		/// <summary>
+		/// Less than comparison
+		/// </summary>
+		LessThan,
+		/// <summary>
+		/// Greater than or equals to comparison
+		/// </summary>
+		GreaterThanOrEqual,
+		/// <summary>
+		/// Less than or equals to comparison
+		/// </summary>
+		LessThanOrEqual,
+	}
+
+	/// <summary>
+	/// The enum for generic number binary arithmetic operations
+	/// </summary>
+	public enum BinaryArithmeticOperation
+	{
+		/// <summary>
+		/// Add the left and right operands
+		/// </summary>
+		Addition,
+		/// <summary>
+		/// Subtract the left operand by the right operand
+		/// </summary>
+		Subtraction,
+		/// <summary>
+		/// Multiply the left and right operands
+		/// </summary>
+		Multiply,
+		/// <summary>
+		/// Divide the left operand by the right operand
+		/// </summary>
+		Division,
+		/// <summary>
+		/// Compute the power of the left and right operands with the left one as the base
+		/// </summary>
+		Exponentiation,
+	}
+
+	/// <summary>
+	/// The enum for generic number unary arithmetic operations
+	/// </summary>
+	public enum UnaryArithmeticOperation
+	{
+		/// <summary>
+		/// Negate the operand
+		/// </summary>
+		Negation,
+		/// <summary>
+		/// Reciprocate the operand
+		/// </summary>
+		Reciprocal,
+		/// <summary>
+		/// Get the square root of the operand
+		/// </summary>
+		SquareRoot,
+		/// <summary>
+		/// Get the complex conjugate of the operand
+		/// </summary>
+		Conjugate,
+	}
+	#endregion
 
 	/// <summary>
 	/// The static class for extension methods utilizing <see cref="Const{T}"/>
@@ -924,6 +991,43 @@ namespace Althea.NativeTypes
 			if (b.IsOne())
 				return a;
 			return Const<T>.DivideDelegate.Invoke(a, b);
+		}
+
+		/// <summary>
+		/// Get the delegate that performs the given <see cref="BinaryArithmeticOperation"/> to the two input arguments of type <typeparamref name="T"/> and return the result as a <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <returns>The delegate that performs the given <paramref name="operation"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		public static Func<T, T, T> GetArithmeticOperation<T>(this BinaryArithmeticOperation operation) where T : unmanaged
+		{
+			return operation switch
+			{
+				BinaryArithmeticOperation.Addition => Const<T>.AddDelegate,
+				BinaryArithmeticOperation.Subtraction => Const<T>.SubtractDelegate,
+				BinaryArithmeticOperation.Multiply => Const<T>.MultiplyDelegate,
+				BinaryArithmeticOperation.Division => Const<T>.DivideDelegate,
+				BinaryArithmeticOperation.Exponentiation => Const<T>.PowerDelegate2,
+				_ => throw new NotSupportedException(),
+			};
+		}
+
+		/// <summary>
+		/// Get the delegate that performs the given <see cref="UnaryArithmeticOperation"/> to the one input argument of type <typeparamref name="T"/> and return the result as a <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <returns>The delegate that performs the given <paramref name="operation"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		public static Func<T, T> GetArithmeticOperation<T>(this UnaryArithmeticOperation operation) where T : unmanaged
+		{
+			return operation switch
+			{
+				UnaryArithmeticOperation.Negation => Const<T>.NegateDelegate,
+				UnaryArithmeticOperation.Reciprocal => Const<T>.ReciprocalDelegate,
+				UnaryArithmeticOperation.SquareRoot => Const<T>.SqrtDelegate,
+				UnaryArithmeticOperation.Conjugate => Const<T>.ConjugateDelegate,
+				_ => throw new NotSupportedException(),
+			};
 		}
 
 		/// <summary>
@@ -1075,37 +1179,6 @@ namespace Althea.NativeTypes
 		public static bool GenericLessThanOrEqual<T>(this T a, T b) where T : unmanaged
 		{
 			return Const<T>.LessThanOrEqualDelegate?.Invoke(a, b) ?? false;
-		}
-
-		/// <summary>
-		/// The enum for generic number binary compare operations
-		/// </summary>
-		public enum CompareOperation
-		{
-			/// <summary>
-			/// Equality comparison
-			/// </summary>
-			Equality,
-			/// <summary>
-			/// Inequality comparison
-			/// </summary>
-			Inequality,
-			/// <summary>
-			/// Greater than comparison
-			/// </summary>
-			GreaterThan,
-			/// <summary>
-			/// Less than comparison
-			/// </summary>
-			LessThan,
-			/// <summary>
-			/// Greater than or equals to comparison
-			/// </summary>
-			GreaterThanOrEqual,
-			/// <summary>
-			/// Less than or equals to comparison
-			/// </summary>
-			LessThanOrEqual,
 		}
 
 		/// <summary>
