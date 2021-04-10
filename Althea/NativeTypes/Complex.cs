@@ -349,24 +349,92 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexDouble DoubleMul(ComplexDouble a, ComplexDouble b)
 		{
-			double real = a.real * b.real - a.imag * b.imag;
-			double imag = a.real * b.imag + a.imag * b.real;
+			double real = Math.FusedMultiplyAdd(a.real, b.real, -a.imag * b.imag); // vfmsub213sd
+			double imag = Math.FusedMultiplyAdd(a.real, b.imag, a.imag * b.real); // vfmadd213sd
 			return new ComplexDouble(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexDouble DoubleDiv(ComplexDouble x, ComplexDouble y)
 		{
 			double squareAbsY = DoubleSquareAbs(y);
-			double acbd = x.real * y.real + x.imag * y.imag;
-			double bcad = x.imag * y.real - x.real * y.imag;
+			double acbd = Math.FusedMultiplyAdd(x.real, y.real, x.imag * y.imag); // vfmadd213sd
+			double bcad = Math.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag); // vfmsub213sd
 			return new ComplexDouble(acbd / squareAbsY, bcad / squareAbsY);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleRealDiv(double x, ComplexDouble y)
+		{
+			double squareAbsY = DoubleSquareAbs(y);
+			return new ComplexDouble(x * y.real / squareAbsY, -x * y.imag / squareAbsY);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static double DoubleSquareAbs(ComplexDouble a)
 		{
-			double x = a.real, y = a.imag;
-			double squareAbs = x * x + y * y;
+			double squareAbs = Math.FusedMultiplyAdd(a.real, a.real, a.imag * a.imag); // vfmadd213sd
 			return squareAbs;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleAddSquareAbs(ComplexDouble a, ComplexDouble b)
+		{
+			// a.r += b.r*b.r + b.i*b.i
+			double real = Math.FusedMultiplyAdd(b.real, b.real, a.real);
+			real = Math.FusedMultiplyAdd(b.imag, b.imag, real);
+			// totally 2 FMA (naive is 1*FMA + 1*MUL + 1*ADD)
+			return new(real, a.imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleMulConjA(ComplexDouble a, ComplexDouble b)
+		{
+			double real = Math.FusedMultiplyAdd(a.real, b.real, a.imag * b.imag); // vfmadd213sd
+			double imag = Math.FusedMultiplyAdd(a.real, b.imag, -a.imag * b.real); // vfmsub213sd
+			return new ComplexDouble(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleFMA(ComplexDouble a, ComplexDouble b, ComplexDouble c)
+		{
+			// a.r * b.r - (a.i * b.i - c.r)
+			double temp1 = Math.FusedMultiplyAdd(a.imag, b.imag, -c.real);
+			double real = Math.FusedMultiplyAdd(a.real, b.real, -temp1);
+			// a.r * b.i + (a.i * b.r + c.i)
+			double temp2 = Math.FusedMultiplyAdd(a.imag, b.real, c.real);
+			double imag = Math.FusedMultiplyAdd(a.real, b.imag, temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new ComplexDouble(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleFMAConjA(ComplexDouble a, ComplexDouble b, ComplexDouble c)
+		{
+			// a.r * b.r + (a.i * b.i + c.r)
+			double temp1 = Math.FusedMultiplyAdd(a.imag, b.imag, c.real);
+			double real = Math.FusedMultiplyAdd(a.real, b.real, temp1);
+			// a.r * b.i - (a.i * b.r - c.i)
+			double temp2 = Math.FusedMultiplyAdd(a.imag, b.real, -c.real);
+			double imag = Math.FusedMultiplyAdd(a.real, b.imag, -temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new ComplexDouble(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleFMS(ComplexDouble a, ComplexDouble b, ComplexDouble c)
+		{
+			// a.r * b.r - (a.i * b.i + c.r)
+			double temp1 = Math.FusedMultiplyAdd(a.imag, b.imag, c.real);
+			double real = Math.FusedMultiplyAdd(a.real, b.real, -temp1);
+			// a.r * b.i + (a.i * b.r - c.i)
+			double temp2 = Math.FusedMultiplyAdd(a.imag, b.real, -c.real);
+			double imag = Math.FusedMultiplyAdd(a.real, b.imag, temp2);
+			return new ComplexDouble(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexDouble DoubleFMSConjA(ComplexDouble a, ComplexDouble b, ComplexDouble c)
+		{
+			// a.r * b.r + (a.i * b.i - c.r)
+			double temp1 = Math.FusedMultiplyAdd(a.imag, b.imag, -c.real);
+			double real = Math.FusedMultiplyAdd(a.real, b.real, temp1);
+			// a.r * b.i - (a.i * b.r + c.i)
+			double temp2 = Math.FusedMultiplyAdd(a.imag, b.real, c.real);
+			double imag = Math.FusedMultiplyAdd(a.real, b.imag, -temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new ComplexDouble(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static double DoubleAbs(ComplexDouble a)
@@ -389,7 +457,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexDouble DoubleLog(ComplexDouble c)
 		{
-			double real = 0.5 * Math.Log(c.real * c.real + c.imag * c.imag);
+			double real = 0.5F * Math.Log(DoubleAbs(c));
 			double imag = Math.Atan2(c.imag, c.real);
 			return new ComplexDouble(real, imag);
 		}
@@ -435,7 +503,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexDouble DoubleSqrt(ComplexDouble c)
 		{
-			double arg = 0.5 * DoubleArg(c);
+			double arg = 0.5F * DoubleArg(c);
 			double scale = Math.Sqrt(DoubleAbs(c));
 			double real = Math.Cos(arg);
 			double imag = Math.Sin(arg);
@@ -515,7 +583,7 @@ namespace Althea.NativeTypes
 		/// Real number divide complex 
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator /(double b, ComplexDouble a) => new ComplexDouble(b) / a;
+		public static ComplexDouble operator /(double a, ComplexDouble b) => DoubleRealDiv(a, b);
 
 		/// <summary>
 		/// Complex absolute value of this complex
@@ -606,7 +674,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Out-of-place add <paramref name="another"/> value of <see cref="ComplexDouble"/>
 		/// </summary>
-		/// <param name="another">another value to be added</param>
+		/// <param name="another">Another <see cref="ComplexDouble"/> to be added</param>
 		/// <returns>The addition result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexDouble Add(ComplexDouble another) => this + another;
@@ -614,7 +682,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Out-of-place subtract <paramref name="another"/> value of <see cref="ComplexDouble"/>
 		/// </summary>
-		/// <param name="another">another value to be subtracted</param>
+		/// <param name="another">Another <see cref="ComplexDouble"/> to be subtracted</param>
 		/// <returns>The subtraction result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexDouble Subtract(ComplexDouble another) => this - another;
@@ -622,18 +690,69 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexDouble"/>
 		/// </summary>
-		/// <param name="another">another value to be multiplied</param>
+		/// <param name="another">Another <see cref="ComplexDouble"/> to be multiplied</param>
 		/// <returns>The multiplication result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexDouble Multiply(ComplexDouble another) => this * another;
-
 		/// <summary>
 		/// Out-of-place divide <paramref name="another"/> value of <see cref="ComplexDouble"/>
 		/// </summary>
-		/// <param name="another">another value to be divided</param>
+		/// <param name="another">Another <see cref="ComplexDouble"/> to be divided</param>
 		/// <returns>The division result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexDouble Divide(ComplexDouble another) => this / another;
+
+		/// <summary>
+		/// Out-of-place add the square of the absolute value of <paramref name="another"/> <see cref="ComplexDouble"/> to this complex
+		/// </summary>
+		/// <param name="another">Another <see cref="ComplexDouble"/> whose absolute value's square is to be added</param>
+		/// <returns>The addition result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexDouble AddSquareAbs(ComplexDouble another) => DoubleAddSquareAbs(this, another);
+
+		/// <summary>
+		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexDouble"/> after conjugating this complex
+		/// </summary>
+		/// <param name="another">Another <see cref="ComplexDouble"/> to be multiplied</param>
+		/// <returns>The conjugate multiplication result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexDouble ConjugateMultiply(ComplexDouble another) => DoubleMulConjA(this, another);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/> and <paramref name="b"/> to this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexDouble"/> value to be multiplied</param>
+		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
+		/// <returns>The fused multiplication addition (FMA) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexDouble AddProduct(ComplexDouble a, ComplexDouble b) => DoubleFMA(a, b, this);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexDouble"/> value to be conjugated and multiplied</param>
+		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
+		/// <returns>The fused multiplication addition (FMA) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexDouble AddConjugateProduct(ComplexDouble a, ComplexDouble b) => DoubleFMAConjA(a, b, this);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/> and <paramref name="b"/> to the negation of this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexDouble"/> value to be multiplied</param>
+		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
+		/// <returns>The fused multiplication subtraction (FMS) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexDouble NegateAddProduct(ComplexDouble a, ComplexDouble b) => DoubleFMS(a, b, this);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to the negation of this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexDouble"/> value to be conjugated and multiplied</param>
+		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
+		/// <returns>The fused multiplication subtraction (FMS) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexDouble NegateAddConjugateProduct(ComplexDouble a, ComplexDouble b) => DoubleFMSConjA(a, b, this);
 		#endregion
 
 		#region string representation
@@ -878,24 +997,92 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexSingle SingleMul(ComplexSingle a, ComplexSingle b)
 		{
-			float real = a.real * b.real - a.imag * b.imag;
-			float imag = a.real * b.imag + a.imag * b.real;
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, -a.imag * b.imag); // vfmsub213ss
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag,  a.imag * b.real); // vfmadd213ss
 			return new ComplexSingle(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexSingle SingleDiv(ComplexSingle x, ComplexSingle y)
 		{
 			float squareAbsY = SingleSquareAbs(y);
-			float acbd = x.real * y.real + x.imag * y.imag;
-			float bcad = x.imag * y.real - x.real * y.imag;
+			float acbd = MathF.FusedMultiplyAdd(x.real, y.real,  x.imag * y.imag); // vfmadd213ss
+			float bcad = MathF.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag); // vfmsub213ss
 			return new ComplexSingle(acbd / squareAbsY, bcad / squareAbsY);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleRealDiv(float x, ComplexSingle y)
+		{
+			float squareAbsY = SingleSquareAbs(y);
+			return new ComplexSingle(x * y.real / squareAbsY, -x * y.imag / squareAbsY);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static float SingleSquareAbs(ComplexSingle a)
 		{
-			float x = a.real, y = a.imag;
-			float squareAbs = x * x + y * y;
+			float squareAbs = MathF.FusedMultiplyAdd(a.real, a.real, a.imag * a.imag); // vfmadd213ss
 			return squareAbs;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleAddSquareAbs(ComplexSingle a, ComplexSingle b)
+		{
+			// a.r += b.r*b.r + b.i*b.i
+			float real = MathF.FusedMultiplyAdd(b.real, b.real, a.real);
+			real = MathF.FusedMultiplyAdd(b.imag, b.imag, real);
+			// totally 2 FMA (naive is 1*FMA + 1*MUL + 1*ADD)
+			return new(real, a.imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleMulConjA(ComplexSingle a, ComplexSingle b)
+		{
+			float real = MathF.FusedMultiplyAdd(a.real, b.real,  a.imag * b.imag); // vfmadd213ss
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -a.imag * b.real); // vfmsub213ss
+			return new ComplexSingle(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleFMA(ComplexSingle a, ComplexSingle b, ComplexSingle c)
+		{
+			// a.r * b.r - (a.i * b.i - c.r)
+			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, -c.real);
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, -temp1);
+			// a.r * b.i + (a.i * b.r + c.i)
+			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, c.real);
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new ComplexSingle(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleFMAConjA(ComplexSingle a, ComplexSingle b, ComplexSingle c)
+		{
+			// a.r * b.r + (a.i * b.i + c.r)
+			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, c.real);
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, temp1);
+			// a.r * b.i - (a.i * b.r - c.i)
+			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, -c.real);
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new ComplexSingle(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleFMS(ComplexSingle a, ComplexSingle b, ComplexSingle c)
+		{
+			// a.r * b.r - (a.i * b.i + c.r)
+			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, c.real);
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, -temp1);
+			// a.r * b.i + (a.i * b.r - c.i)
+			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, -c.real);
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, temp2);
+			return new ComplexSingle(real, imag);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ComplexSingle SingleFMSConjA(ComplexSingle a, ComplexSingle b, ComplexSingle c)
+		{
+			// a.r * b.r + (a.i * b.i - c.r)
+			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, -c.real);
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, temp1);
+			// a.r * b.i - (a.i * b.r + c.i)
+			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, c.real);
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new ComplexSingle(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static float SingleAbs(ComplexSingle a)
@@ -918,7 +1105,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexSingle SingleLog(ComplexSingle c)
 		{
-			float real = 0.5F * MathF.Log(c.real * c.real + c.imag * c.imag);
+			float real = 0.5F * MathF.Log(SingleAbs(c));
 			float imag = MathF.Atan2(c.imag, c.real);
 			return new ComplexSingle(real, imag);
 		}
@@ -1044,7 +1231,7 @@ namespace Althea.NativeTypes
 		/// Real number divide complex 
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator /(float b, ComplexSingle a) => new ComplexSingle(b) / a;
+		public static ComplexSingle operator /(float a, ComplexSingle b) => SingleRealDiv(a, b);
 
 		/// <summary>
 		/// Complex absolute value of this complex
@@ -1135,7 +1322,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Out-of-place add <paramref name="another"/> value of <see cref="ComplexSingle"/>
 		/// </summary>
-		/// <param name="another">another value to be added</param>
+		/// <param name="another">Another <see cref="ComplexSingle"/> to be added</param>
 		/// <returns>The addition result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexSingle Add(ComplexSingle another) => this + another;
@@ -1143,7 +1330,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Out-of-place subtract <paramref name="another"/> value of <see cref="ComplexSingle"/>
 		/// </summary>
-		/// <param name="another">another value to be subtracted</param>
+		/// <param name="another">Another <see cref="ComplexSingle"/> to be subtracted</param>
 		/// <returns>The subtraction result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexSingle Subtract(ComplexSingle another) => this - another;
@@ -1151,18 +1338,69 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexSingle"/>
 		/// </summary>
-		/// <param name="another">another value to be multiplied</param>
+		/// <param name="another">Another <see cref="ComplexSingle"/> to be multiplied</param>
 		/// <returns>The multiplication result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexSingle Multiply(ComplexSingle another) => this * another;
-
 		/// <summary>
 		/// Out-of-place divide <paramref name="another"/> value of <see cref="ComplexSingle"/>
 		/// </summary>
-		/// <param name="another">another value to be divided</param>
+		/// <param name="another">Another <see cref="ComplexSingle"/> to be divided</param>
 		/// <returns>The division result</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComplexSingle Divide(ComplexSingle another) => this / another;
+
+		/// <summary>
+		/// Out-of-place add the square of the absolute value of <paramref name="another"/> <see cref="ComplexSingle"/> to this complex
+		/// </summary>
+		/// <param name="another">Another <see cref="ComplexSingle"/> whose absolute value's square is to be added</param>
+		/// <returns>The addition result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexSingle AddSquareAbs(ComplexSingle another) => SingleAddSquareAbs(this, another);
+
+		/// <summary>
+		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexSingle"/> after conjugating this complex
+		/// </summary>
+		/// <param name="another">Another <see cref="ComplexSingle"/> to be multiplied</param>
+		/// <returns>The conjugate multiplication result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexSingle ConjugateMultiply(ComplexSingle another) => SingleMulConjA(this, another);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/> and <paramref name="b"/> to this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexSingle"/> value to be multiplied</param>
+		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
+		/// <returns>The fused multiplication addition (FMA) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexSingle AddProduct(ComplexSingle a, ComplexSingle b) => SingleFMA(a, b, this);
+		
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexSingle"/> value to be conjugated and multiplied</param>
+		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
+		/// <returns>The fused multiplication addition (FMA) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexSingle AddConjugateProduct(ComplexSingle a, ComplexSingle b) => SingleFMAConjA(a, b, this);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/> and <paramref name="b"/> to the negation of this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexSingle"/> value to be multiplied</param>
+		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
+		/// <returns>The fused multiplication subtraction (FMS) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexSingle NegateAddProduct(ComplexSingle a, ComplexSingle b) => SingleFMS(a, b, this);
+
+		/// <summary>
+		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to the negation of this complex
+		/// </summary>
+		/// <param name="a">The first <see cref="ComplexSingle"/> value to be conjugated and multiplied</param>
+		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
+		/// <returns>The fused multiplication subtraction (FMS) result</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComplexSingle NegateAddConjugateProduct(ComplexSingle a, ComplexSingle b) => SingleFMSConjA(a, b, this);
 		#endregion
 
 		#region string representation
@@ -1202,10 +1440,11 @@ namespace Althea.NativeTypes
 
 	#region generic complex type
 	/// <summary>
-	/// The general complex type for built-in types
+	/// The general complex type for any real numeric number type including <see cref="float"/> and <see cref="double"/>
 	/// </summary>
 	/// <typeparam name="T">The data type of corresponding real number</typeparam>
-	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.</remarks>
+	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
+	/// If <typeparamref name="T"/> is <see cref="float"/> or <see cref="double"/>, the corresponding <see cref="ComplexSingle"/> or <see cref="ComplexDouble"/> is recommended since their operations are much faster.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Complex<T> : IComplex<T>, ICustomNativeType<Complex<T>>, IEquatable<Complex<T>> where T : unmanaged
 	{

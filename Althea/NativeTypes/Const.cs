@@ -999,6 +999,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">A supported data type</typeparam>
 		/// <returns>The delegate that performs the given <paramref name="operation"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Func<T, T, T> GetArithmeticOperation<T>(this BinaryArithmeticOperation operation) where T : unmanaged
 		{
 			return operation switch
@@ -1018,6 +1019,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">A supported data type</typeparam>
 		/// <returns>The delegate that performs the given <paramref name="operation"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Func<T, T> GetArithmeticOperation<T>(this UnaryArithmeticOperation operation) where T : unmanaged
 		{
 			return operation switch
@@ -1028,6 +1030,18 @@ namespace Althea.NativeTypes
 				UnaryArithmeticOperation.Conjugate => Const<T>.ConjugateDelegate,
 				_ => throw new NotSupportedException(),
 			};
+		}
+
+		/// <summary>
+		/// Get the delegate that exponentiate the two input arguments of type <typeparamref name="T"/> and <see cref="double"/> and return the result as a <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">A supported data type</typeparam>
+		/// <returns>The delegate that performs the exponentiate of <typeparamref name="T"/> and <see cref="double"/></returns>
+		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Func<T, double, T> GetRealPowerOperation<T>() where T : unmanaged
+		{
+			return Const<T>.PowerDelegate1;
 		}
 
 		/// <summary>
