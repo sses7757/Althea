@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
-using Althea.Helpers;
 using Althea.Linq;
 
 
@@ -892,108 +891,6 @@ namespace Althea.NativeTypes
 	{
 		#region generic type arithmetics
 		/// <summary>
-		/// Generic type number reciprocal.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The reciprocal of the <paramref name="a"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericReciprocal<T>(this T a) where T : unmanaged
-		{
-			if (a.IsZero())
-				throw new DivideByZeroException();
-			if (a.IsOne())
-				return a;
-			return Const<T>.ReciprocalDelegate.Invoke(a);
-		}
-
-		/// <summary>
-		/// Generic type number negation.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The negation of the <paramref name="a"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericNegate<T>(this T a) where T : unmanaged
-		{
-			if (a.IsZero())
-				return default;
-			return Const<T>.NegateDelegate.Invoke(a);
-		}
-
-		/// <summary>
-		/// Generic type numbers addition.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input left number</param>
-		/// <param name="b">The input right number</param>
-		/// <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericAdd<T>(this T a, T b) where T : unmanaged
-		{
-			if (a.IsZero())
-				return b;
-			if (b.IsZero())
-				return a;
-			return Const<T>.AddDelegate.Invoke(a, b);
-		}
-
-		/// <summary>
-		/// Generic type numbers subtraction.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input left number</param>
-		/// <param name="b">The input right number</param>
-		/// <returns>The subtraction of <paramref name="a"/> and <paramref name="b"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericMinus<T>(this T a, T b) where T : unmanaged
-		{
-			if (a.IsZero())
-				return b;
-			if (b.IsZero())
-				return a;
-			return Const<T>.SubtractDelegate.Invoke(a, b);
-		}
-
-		/// <summary>
-		/// Generic type numbers multiplication.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input left number</param>
-		/// <param name="b">The input right number</param>
-		/// <returns>The product of <paramref name="a"/> and <paramref name="b"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericMultiply<T>(this T a, T b) where T : unmanaged
-		{
-			if (a.IsZero() || b.IsZero())
-				return default;
-			if (a.IsOne())
-				return b;
-			if (b.IsOne())
-				return a;
-			return Const<T>.MultiplyDelegate.Invoke(a, b);
-		}
-
-		/// <summary>
-		/// Generic type numbers division.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input left number</param>
-		/// <param name="b">The input right number</param>
-		/// <returns>The division of <paramref name="a"/> and <paramref name="b"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericDivide<T>(this T a, T b) where T : unmanaged
-		{
-			if (a.IsZero() || b.IsZero())
-				return default;
-			if (a.IsOne())
-				return b;
-			if (b.IsOne())
-				return a;
-			return Const<T>.DivideDelegate.Invoke(a, b);
-		}
-
-		/// <summary>
 		/// Get the delegate that performs the given <see cref="BinaryArithmeticOperation"/> to the two input arguments of type <typeparamref name="T"/> and return the result as a <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
@@ -1045,90 +942,6 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
-		/// Generic type number square root.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The square root of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericSqrt<T>(this T a) where T : unmanaged
-		{
-			if (a.IsZero() || a.IsOne())
-				return a;
-			return Const<T>.SqrtDelegate.Invoke(a);
-		}
-
-		/// <summary>
-		/// Generic type number conjugation.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The complex conjugate of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericConjugate<T>(this T a) where T : unmanaged
-		{
-			if (a.IsZero() || a.IsOne())
-				return a;
-			return Const<T>.ConjugateDelegate.Invoke(a);
-		}
-
-		/// <summary>
-		/// Generic type number power.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <param name="power">The power as a <see cref="double"/></param>
-		/// <returns>The complex conjugate of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericPower<T>(this T a, double power) where T : unmanaged
-		{
-			if (power == 0)
-				return Const<T>.One;
-			if (power == 1 || a.IsZero() || a.IsOne())
-				return a;
-			return Const<T>.PowerDelegate1.Invoke(a, power);
-		}
-
-
-		/// <summary>
-		/// Generic type number power.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <param name="power">The power as a <typeparamref name="T"/></param>
-		/// <returns>The complex conjugate of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GenericPower<T>(this T a, T power) where T : unmanaged
-		{
-			if (power.IsZero())
-				return Const<T>.One;
-			if (power.IsZero() || a.IsZero() || a.IsOne())
-				return a;
-			return Const<T>.PowerDelegate2.Invoke(a, power);
-		}
-
-		/// <summary>
-		/// Generic type number absolute value.
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The input number</param>
-		/// <returns>The absolute value of <paramref name="a"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double GenericAbsolute<T>(this T a) where T : unmanaged
-		{
-			if (a.IsZero())
-				return 0;
-			if (a.IsOne())
-				return 1;
-			return Const<T>.AbsoluteDelegate.Invoke(a);
-		}
-
-		/// <summary>
 		/// Get the delegate that retrieves the absolute value as a <see cref="double"/> of the input argument of type <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">A supported data type</typeparam>
@@ -1137,62 +950,6 @@ namespace Althea.NativeTypes
 		public static Func<T, double> GetAbsoluteGetter<T>() where T : unmanaged
 		{
 			return Const<T>.AbsoluteDelegate;
-		}
-
-		/// <summary>
-		/// Check whether the given generic number <paramref name="a"/> is larger than the generic number <paramref name="b"/>
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The left input number to be compared</param>
-		/// <param name="b">The right input number to be compared</param>
-		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &gt; <paramref name="b"/>; false otherwise.</returns>
-		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool GenericLargerThan<T>(this T a, T b) where T : unmanaged
-		{
-			return Const<T>.GreaterThanDelegate?.Invoke(a, b) ?? false;
-		}
-
-		/// <summary>
-		/// Check whether the given generic number <paramref name="a"/> is less than the generic number <paramref name="b"/>
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The left input number to be compared</param>
-		/// <param name="b">The right input number to be compared</param>
-		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &lt; <paramref name="b"/>; false otherwise.</returns>
-		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool GenericLessThan<T>(this T a, T b) where T : unmanaged
-		{
-			return Const<T>.LessThanDelegate?.Invoke(a, b) ?? false;
-		}
-
-		/// <summary>
-		/// Check whether the given generic number <paramref name="a"/> is larger than or equals to the generic number <paramref name="b"/>
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The left input number to be compared</param>
-		/// <param name="b">The right input number to be compared</param>
-		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≥ <paramref name="b"/>; false otherwise.</returns>
-		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool GenericLargerThanOrEqual<T>(this T a, T b) where T : unmanaged
-		{
-			return Const<T>.GreaterThanOrEqualDelegate?.Invoke(a, b) ?? false;
-		}
-
-		/// <summary>
-		/// Check whether the given generic number <paramref name="a"/> is less than or equals to the generic number <paramref name="b"/>
-		/// </summary>
-		/// <typeparam name="T">A supported data type</typeparam>
-		/// <param name="a">The left input number to be compared</param>
-		/// <param name="b">The right input number to be compared</param>
-		/// <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≤ <paramref name="b"/>; false otherwise.</returns>
-		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool GenericLessThanOrEqual<T>(this T a, T b) where T : unmanaged
-		{
-			return Const<T>.LessThanOrEqualDelegate?.Invoke(a, b) ?? false;
 		}
 
 		/// <summary>
@@ -1218,112 +975,13 @@ namespace Althea.NativeTypes
 		}
 		#endregion
 
-		#region generic type conversions
+		#region generic type converters
 		/// <summary>
-		/// Generically convert <paramref name="obj"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators or by utilizing default primitive type converters.
-		/// </summary>
-		/// <typeparam name="T1">The input type</typeparam>
-		/// <typeparam name="T2">The output type</typeparam>
-		/// <param name="obj">The input object to be converted</param>
-		/// <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T2 GenericConvert<T1, T2>(this T1 obj) where T1 : unmanaged where T2 : unmanaged
-		{
-			return ConstConvert<T1, T2>.ConvertDelegate.Invoke(obj);
-		}
-
-		/// <summary>
-		/// Generic numeric value converter from any type to <see cref="double"/>.
-		/// </summary>
-		/// <typeparam name="T">The convert source type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as a <see cref="double"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double ToDouble<T>(this T a) where T : unmanaged => Const<T>.ToDoubleDelegate.Invoke(a);
-
-		/// <summary>
-		/// Generic numeric value converter from <see cref="double"/> to any type.
-		/// </summary>
-		/// <typeparam name="T">The convert target type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as <typeparamref name="T"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T FromDouble<T>(this double a) where T : unmanaged => Const<T>.FromDoubleDelegate.Invoke(a);
-
-		/// <summary>
-		/// Generic numeric value converter from any integral type to <see cref="long"/>.
-		/// </summary>
-		/// <typeparam name="T">The convert source type, must be an integral type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as a <see cref="long"/></returns>
-		/// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long ToLong<T>(this T a) where T : unmanaged
-		{
-			if (!Const<T>.IsIntegralType)
-				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
-			return Const<T>.ToLongDelegate.Invoke(a);
-		}
-
-		/// <summary>
-		/// Generic numeric value converter from <see cref="long"/> to any integral type.
-		/// </summary>
-		/// <typeparam name="T">The convert target type, must be an integral type</typeparam>
-		/// <param name="a">The number to convert</param>
-		/// <returns>The converted number as <typeparamref name="T"/></returns>
-		/// <exception cref="InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T FromLong<T>(this long a) where T : unmanaged
-		{
-			if (!Const<T>.IsIntegralType)
-				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
-			return Const<T>.FromLongDelegate.Invoke(a);
-		}
-
-		/// <summary>
-		/// Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="a">The number to get real part</param>
-		/// <returns>The real part as a <see cref="double"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double GenericRealPart<T>(this T a) where T : unmanaged => Const<T>.RealPartDelegate.Invoke(a);
-
-		/// <summary>
-		/// Get the imaginary part (or 0 if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="a">The number to get imaginary part</param>
-		/// <returns>The imaginary part as a <see cref="double"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double GenericImagPart<T>(this T a) where T : unmanaged => Const<T>.ImagPartDelegate.Invoke(a);
-
-		/// <summary>
-		/// Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+		/// Get the generic converter that convert the input of type <typeparamref name="T"/> to type <typeparamref name="U"/>
 		/// </summary>
 		/// <typeparam name="T">The input data type</typeparam>
 		/// <typeparam name="U">The output data type</typeparam>
-		/// <param name="a">The number to get real part</param>
-		/// <returns>The real part as a <typeparamref name="U"/> or 0 if <typeparamref name="U"/> is not a real type</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static U GenericRealPart<T, U>(this T a) where T : unmanaged where U : unmanaged => ConstConvert<T, U>.GetRealPartDelegate.Invoke(a);
-
-		/// <summary>
-		/// Get the imaginary part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-		/// </summary>
-		/// <typeparam name="T">The input data type</typeparam>
-		/// <typeparam name="U">The output data type</typeparam>
-		/// <param name="a">The number to get real part</param>
-		/// <returns>The imaginary part as a <typeparamref name="U"/> or 0 if <typeparamref name="U"/> is not a real type</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static U GenericImagPart<T, U>(this T a) where T : unmanaged where U : unmanaged => ConstConvert<T, U>.GetRealPartDelegate.Invoke(a);
-
-		/// <summary>
-		/// Get the generic converter from type <typeparamref name="T"/> to type <typeparamref name="U"/>
-		/// </summary>
-		/// <typeparam name="T">The input data type</typeparam>
-		/// <typeparam name="U">The output data type</typeparam>
-		/// <returns>The generic converter from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
+		/// <returns>The <see cref="Converter{TInput, TOutput}"/> from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Converter<T, U> GetGenericConverter<T, U>() where T : unmanaged where U : unmanaged => ConstConvert<T, U>.ConvertDelegate;
 

@@ -636,7 +636,7 @@ namespace Althea.Arrays
 		/// <param name="tensor">The original tensor to be divided</param>
 		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
 		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public static BaseTensor<T> operator /(BaseTensor<T> tensor, T scalar) => tensor * scalar.GenericReciprocal();
+		public static BaseTensor<T> operator /(BaseTensor<T> tensor, T scalar) => tensor * scalar.NativeReciprocal();
 		#endregion
 
 		#region serialization

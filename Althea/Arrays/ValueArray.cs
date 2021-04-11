@@ -454,7 +454,7 @@ namespace Althea.Arrays
 				LAD.PointWiseAddScalar(this.Storage, 1, value);
 				if (this is ISparseArray<T> sparse && !value.IsZero())
 				{
-					sparse.DefaultValue = sparse.DefaultValue.GenericAdd(value);
+					sparse.DefaultValue = sparse.DefaultValue.NativeAdd(value);
 				}
 			}
 			else
@@ -475,7 +475,7 @@ namespace Althea.Arrays
 				LAD.Scale(this.Storage, 1, value);
 				if (this is ISparseArray<T> sparse && !value.IsOne())
 				{
-					sparse.DefaultValue = sparse.DefaultValue.GenericMultiply(value);
+					sparse.DefaultValue = sparse.DefaultValue.NativeMultiply(value);
 				}
 			}
 			else
@@ -495,7 +495,7 @@ namespace Althea.Arrays
 				LAD.PointWiseConjugate(this.Storage, 1);
 				if (this is ISparseArray<T> sparse)
 				{
-					sparse.DefaultValue = sparse.DefaultValue.GenericConjugate();
+					sparse.DefaultValue = sparse.DefaultValue.NativeConjugate();
 				}
 			}
 			else
@@ -516,7 +516,7 @@ namespace Althea.Arrays
 				LAD.PointWisePower(this.Storage, 1, power);
 				if (this is ISparseArray<T> sparse && power != 1)
 				{
-					sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+					sparse.DefaultValue = sparse.DefaultValue.NativePower(power);
 				}
 			}
 			else
@@ -537,7 +537,7 @@ namespace Althea.Arrays
 				LAD.PointWisePower(this.Storage, 1, power);
 				if (this is ISparseArray<T> sparse && !power.IsOne())
 				{
-					sparse.DefaultValue = sparse.DefaultValue.GenericPower(power);
+					sparse.DefaultValue = sparse.DefaultValue.NativePower(power);
 				}
 			}
 			else
@@ -1032,7 +1032,7 @@ namespace Althea.Arrays
 			if (!value.IsZero())
 			{
 				using var clone = array.Storage.Clone();
-				LAD.PointWiseAddScalar(clone, 1, value.GenericNegate());
+				LAD.PointWiseAddScalar(clone, 1, value.NativeNegate());
 				index = LAD.AbsoluteValueArgMax(clone, 1);
 			}
 			else

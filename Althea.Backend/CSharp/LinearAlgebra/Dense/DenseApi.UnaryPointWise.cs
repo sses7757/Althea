@@ -15,16 +15,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 	public partial class DenseApi : AbstractApi
 	{
-		private enum AddScalar { }
-		private enum MultiplyScalar { }
-		private enum Modulo { }
-		private enum PowerT { }
-		private enum PowerDouble { }
-		private enum Truncate { }
-		private enum Conjugate { }
-		private enum Sqrt { }
-		private enum Square { }
-		private enum Reciprocal { }
+		private struct U_AddScalar { }
+		private struct U_MultiplyScalar { }
+		private struct U_Modulo { }
+		private struct U_PowerT { }
+		private struct U_PowerDouble { }
+		private struct U_Truncate { }
+		private struct U_Conjugate { }
+		private struct U_Sqrt { }
+		private struct U_Square { }
+		private struct U_Reciprocal { }
 		private enum Modify
 		{
 			AddScalar,
@@ -101,219 +101,105 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		private static unsafe void VectorModifyManaged<T, U, Op>(T* x, int length, U scalar) where T : unmanaged where U : unmanaged
 		{
 			Modify op;
-			if (typeof(Op) == typeof(AddScalar))
+			if (typeof(Op) == typeof(U_AddScalar))
 				op = Modify.AddScalar;
-			else if (typeof(Op) == typeof(MultiplyScalar))
+			else if (typeof(Op) == typeof(U_MultiplyScalar))
 				op = Modify.MultiplyScalar;
-			else if (typeof(Op) == typeof(Modulo))
+			else if (typeof(Op) == typeof(U_Modulo))
 				op = Modify.Modulo;
-			else if (typeof(Op) == typeof(PowerT))
+			else if (typeof(Op) == typeof(U_PowerT))
 				op = Modify.PowerT;
-			else if (typeof(Op) == typeof(PowerDouble))
+			else if (typeof(Op) == typeof(U_PowerDouble))
 				op = Modify.PowerDouble;
-			else if (typeof(Op) == typeof(Truncate))
+			else if (typeof(Op) == typeof(U_Truncate))
 				op = Modify.Truncate;
-			else if (typeof(Op) == typeof(Sqrt))
+			else if (typeof(Op) == typeof(U_Sqrt))
 				op = Modify.Sqrt;
-			else if (typeof(Op) == typeof(Square))
+			else if (typeof(Op) == typeof(U_Square))
 				op = Modify.Square;
-			else if (typeof(Op) == typeof(Reciprocal))
+			else if (typeof(Op) == typeof(U_Reciprocal))
 				op = Modify.Reciprocal;
 			else
 				op = Modify.Conjugate;
-#pragma warning disable CS8600, CS8602
-			Func<T, T, T> opT = op switch
-			{
-				Modify.AddScalar => BinaryArithmeticOperation.Addition.GetArithmeticOperation<T>(),
-				Modify.MultiplyScalar => BinaryArithmeticOperation.Multiply.GetArithmeticOperation<T>(),
-				Modify.Modulo => OtherOp<T>.ModuloDelegate,
-				Modify.PowerT => BinaryArithmeticOperation.Exponentiation.GetArithmeticOperation<T>(),
-				_ => null,
-			};
-			Func<T, double, T> opD = op switch
-			{
-				Modify.PowerDouble => ConstExtension.GetRealPowerOperation<T>(),
-				Modify.Truncate => OtherOp<T>.TruncateDelegate,
-				_ => null,
-			};
-			Func<T, T>? uOp = op switch
-			{
-				Modify.Sqrt => UnaryArithmeticOperation.SquareRoot.GetArithmeticOperation<T>(),
-				Modify.Square => static v => BinaryArithmeticOperation.Multiply.GetArithmeticOperation<T>().Invoke(v, v),
-				Modify.Reciprocal => UnaryArithmeticOperation.Reciprocal.GetArithmeticOperation<T>(),
-				Modify.Conjugate => UnaryArithmeticOperation.Conjugate.GetArithmeticOperation<T>(),
-				_ => null,
-			};
+			Func<T, T, T> mod = OtherOp<T>.ModuloDelegate;
+			Func<T, double, T> trunc = OtherOp<T>.TruncateDelegate;
 
 			// JIT shall in-line / eliminate all switches and type conditions as if they do not exist
 			for (int i = 0; i < length; i++)
 			{
-				T a = x[i];
-				if (typeof(T) == typeof(uint))
+				if (op == Modify.Modulo)
 				{
-					uint v = op switch
-					{
-						Modify.AddScalar => (*(uint*)&a) + (*(uint*)&scalar),
-						Modify.MultiplyScalar => (*(uint*)&a) * (*(uint*)&scalar),
-						Modify.Modulo => (*(uint*)&a) % (*(uint*)&scalar),
-						Modify.PowerT => (uint)Math.Pow(*(uint*)&a, *(uint*)&scalar),
-						Modify.PowerDouble => (uint)Math.Pow(*(uint*)&a, *(double*)&scalar),
-						Modify.Truncate => (*(uint*)&a) > (*(double*)&scalar) ? (*(uint*)&a) : 0,
-						Modify.Sqrt => (uint)Math.Sqrt(*(uint*)&a),
-						Modify.Square => (*(uint*)&a) * (*(uint*)&a),
-						Modify.Reciprocal => 1 / (*(uint*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
+					T a = x[i];
+					if (typeof(T) == typeof(uint))
+					{ uint v = (*(uint*)&a) % (*(uint*)&scalar); x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(ulong))
+					{ ulong v = (*(ulong*)&a) % (*(ulong*)&scalar); x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(int))
+					{ int v = (*(int*)&a) % (*(int*)&scalar); x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(long))
+					{ long v = (*(long*)&a) % (*(long*)&scalar); x[i] = *(T*)&v; }
+					else
+						x[i] = mod(a, *(T*)&scalar);
 				}
-				if (typeof(T) == typeof(ulong))
+				else if (op == Modify.Truncate)
 				{
-					ulong v = op switch
-					{
-						Modify.AddScalar => (*(ulong*)&a) + (*(ulong*)&scalar),
-						Modify.MultiplyScalar => (*(ulong*)&a) * (*(ulong*)&scalar),
-						Modify.Modulo => (*(ulong*)&a) % (*(ulong*)&scalar),
-						Modify.PowerT => (ulong)Math.Pow(*(ulong*)&a, *(ulong*)&scalar),
-						Modify.PowerDouble => (ulong)Math.Pow(*(ulong*)&a, *(double*)&scalar),
-						Modify.Truncate => (*(ulong*)&a) > (*(double*)&scalar) ? (*(ulong*)&a) : 0,
-						Modify.Sqrt => (ulong)Math.Sqrt(*(ulong*)&a),
-						Modify.Square => (*(ulong*)&a) * (*(ulong*)&a),
-						Modify.Reciprocal => 1 / (*(ulong*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
-				}
-				if (typeof(T) == typeof(int))
-				{
-					int v = op switch
-					{
-						Modify.AddScalar => (*(int*)&a) + (*(int*)&scalar),
-						Modify.MultiplyScalar => (*(int*)&a) * (*(int*)&scalar),
-						Modify.Modulo => (*(int*)&a) % (*(int*)&scalar),
-						Modify.PowerT => (int)Math.Pow(*(int*)&a, *(int*)&scalar),
-						Modify.PowerDouble => (int)Math.Pow(*(int*)&a, *(double*)&scalar),
-						Modify.Truncate => (*(int*)&a) > (*(double*)&scalar) ? (*(int*)&a) : 0,
-						Modify.Sqrt => (int)Math.Sqrt(*(int*)&a),
-						Modify.Square => (*(int*)&a) * (*(int*)&a),
-						Modify.Reciprocal => 1 / (*(int*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
-				}
-				if (typeof(T) == typeof(long))
-				{
-					long v = op switch
-					{
-						Modify.AddScalar => (*(long*)&a) + (*(long*)&scalar),
-						Modify.MultiplyScalar => (*(long*)&a) * (*(long*)&scalar),
-						Modify.Modulo => (*(long*)&a) % (*(long*)&scalar),
-						Modify.PowerT => (long)Math.Pow(*(long*)&a, *(long*)&scalar),
-						Modify.PowerDouble => (long)Math.Pow(*(long*)&a, *(double*)&scalar),
-						Modify.Truncate => (*(long*)&a) > (*(double*)&scalar) ? (*(long*)&a) : 0,
-						Modify.Sqrt => (long)Math.Sqrt(*(long*)&a),
-						Modify.Square => (*(long*)&a) * (*(long*)&a),
-						Modify.Reciprocal => 1 / (*(long*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
-				}
-				if (typeof(T) == typeof(float))
-				{
-					float v = op switch
-					{
-						Modify.AddScalar => (*(float*)&a) + (*(float*)&scalar),
-						Modify.MultiplyScalar => (*(float*)&a) * (*(float*)&scalar),
-						Modify.PowerT => MathF.Pow(*(float*)&a, *(float*)&scalar),
-						Modify.PowerDouble => MathF.Pow(*(float*)&a, (float)(*(double*)&scalar)),
-						Modify.Truncate => (*(float*)&a) > (*(double*)&scalar) ? (*(float*)&a) : 0,
-						Modify.Sqrt => MathF.Sqrt(*(float*)&a),
-						Modify.Square => (*(float*)&a) * (*(float*)&a),
-						Modify.Reciprocal => 1 / (*(float*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
-				}
-				if (typeof(T) == typeof(double))
-				{
-					double v = op switch
-					{
-						Modify.AddScalar => (*(double*)&a) + (*(double*)&scalar),
-						Modify.MultiplyScalar => (*(double*)&a) * (*(double*)&scalar),
-						Modify.PowerT or Modify.PowerDouble => Math.Pow(*(double*)&a, *(double*)&scalar),
-						Modify.Truncate => (*(double*)&a) > (*(double*)&scalar) ? (*(double*)&a) : 0,
-						Modify.Sqrt => Math.Sqrt(*(double*)&a),
-						Modify.Square => (*(double*)&a) * (*(double*)&a),
-						Modify.Reciprocal => 1 / (*(double*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
-				}
-				if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
-				{
-					ComplexSingle v = op switch
-					{
-						Modify.AddScalar => (*(ComplexSingle*)&a) + (*(ComplexSingle*)&scalar),
-						Modify.MultiplyScalar => (*(ComplexSingle*)&a) * (*(ComplexSingle*)&scalar),
-						Modify.PowerT => (*(ComplexSingle*)&a).Pow(*(ComplexSingle*)&scalar),
-						Modify.PowerDouble => (*(ComplexSingle*)&a).Pow((float)(*(double*)&scalar)),
-						Modify.Truncate => (*(ComplexSingle*)&a).Abs() > (*(double*)&scalar) ? (*(ComplexSingle*)&a) : 0,
-						Modify.Conjugate => (*(ComplexSingle*)&a).Conjugate(),
-						Modify.Sqrt => (*(ComplexSingle*)&a).Sqrt(),
-						Modify.Square => (*(ComplexSingle*)&a) * (*(ComplexSingle*)&a),
-						Modify.Reciprocal => 1 / (*(ComplexSingle*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
-				}
-				if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
-				{
-					ComplexDouble v = op switch
-					{
-						Modify.AddScalar => (*(ComplexDouble*)&a) + (*(ComplexDouble*)&scalar),
-						Modify.MultiplyScalar => (*(ComplexDouble*)&a) * (*(ComplexDouble*)&scalar),
-						Modify.PowerT => (*(ComplexDouble*)&a).Pow(*(ComplexDouble*)&scalar),
-						Modify.PowerDouble => (*(ComplexDouble*)&a).Pow(*(double*)&scalar),
-						Modify.Truncate => (*(ComplexDouble*)&a).Abs() > (*(double*)&scalar) ? (*(ComplexDouble*)&a) : 0,
-						Modify.Conjugate => (*(ComplexDouble*)&a).Conjugate(),
-						Modify.Sqrt => (*(ComplexDouble*)&a).Sqrt(),
-						Modify.Square => (*(ComplexDouble*)&a) * (*(ComplexDouble*)&a),
-						Modify.Reciprocal => 1 / (*(ComplexDouble*)&a),
-						_ => default,
-					};
-					x[i] = *(T*)&v;
+					T a = x[i];
+					double scalarD = *(double*)&scalar, scalarDS = scalarD * scalarD;
+					if (typeof(T) == typeof(uint))
+					{ uint v = (*(uint*)&a) > scalarD ? (*(uint*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(ulong))
+					{ ulong v = (*(ulong*)&a) > scalarD ? (*(ulong*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(double))
+					{ int v = (*(int*)&a) > scalarD ? (*(int*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(long))
+					{ long v = (*(long*)&a) > scalarD ? (*(long*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(float))
+					{ float v = (*(float*)&a) > scalarD ? (*(float*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(double))
+					{ double v = (*(double*)&a) > scalarD ? (*(double*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
+					{ ComplexSingle v = (*(ComplexSingle*)&a).SquareAbs() > scalarDS ? (*(ComplexSingle*)&a) : 0; x[i] = *(T*)&v; }
+					else if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(ComplexDouble))
+					{ ComplexDouble v = (*(ComplexDouble*)&a).SquareAbs() > scalarDS ? (*(ComplexDouble*)&a) : 0; x[i] = *(T*)&v; }
+					else
+						x[i] = trunc(a, *(double*)&scalar);
 				}
 				else
 				{
 					x[i] = op switch
 					{
-						Modify.AddScalar or Modify.MultiplyScalar or Modify.Modulo or Modify.PowerT => opT(a, *(T*)&scalar),
-						Modify.PowerDouble or Modify.Truncate => opD(a, *(double*)&scalar),
-						Modify.Conjugate or Modify.Sqrt or Modify.Square or Modify.Reciprocal => uOp(a),
+						Modify.AddScalar => x[i].NativeAdd(*(T*)&scalar),
+						Modify.MultiplyScalar => x[i].NativeMultiply(*(T*)&scalar),
+						Modify.PowerT => x[i].NativePower(*(T*)&scalar),
+						Modify.PowerDouble => x[i].NativePower(*(double*)&scalar),
+						Modify.Conjugate => x[i].NativeConjugate(),
+						Modify.Sqrt => x[i].NativeSqrt(),
+						Modify.Square => x[i].NativeMultiply(x[i]),
+						Modify.Reciprocal => x[i].NativeReciprocal(),
 						_ => default,
 					};
 				}
 			}
-#pragma warning restore CS8600, CS8602
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void VectorModifyReal<T, U, Op>(T* x, int length, U scalar) where T : unmanaged where U : unmanaged
 		{
-			T scalarT = scalar.GenericConvert<U, T>();
+			T scalarT = scalar.NativeConvert<U, T>();
 			Modify op;
-			if (typeof(Op) == typeof(AddScalar))
+			if (typeof(Op) == typeof(U_AddScalar))
 				op = Modify.AddScalar;
-			else if (typeof(Op) == typeof(MultiplyScalar))
+			else if (typeof(Op) == typeof(U_MultiplyScalar))
 				op = Modify.MultiplyScalar;
-			else if (typeof(Op) == typeof(Modulo))
+			else if (typeof(Op) == typeof(U_Modulo))
 				op = Modify.Modulo;
-			else if (typeof(Op) == typeof(Truncate))
+			else if (typeof(Op) == typeof(U_Truncate))
 				op = Modify.Truncate;
-			else if (typeof(Op) == typeof(Sqrt))
+			else if (typeof(Op) == typeof(U_Sqrt))
 				op = Modify.Sqrt;
-			else if (typeof(Op) == typeof(Square))
+			else if (typeof(Op) == typeof(U_Square))
 				op = Modify.Square;
-			else if (typeof(Op) == typeof(Reciprocal))
+			else if (typeof(Op) == typeof(U_Reciprocal))
 				op = Modify.Reciprocal;
 			else // not possible here
 				op = Modify.Conjugate;
@@ -361,28 +247,28 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorModifyManaged<T, U, PowerDouble>(x + offset, lengthLeft, scalar);
+				VectorModifyManaged<T, U, U_PowerDouble>(x + offset, lengthLeft, scalar);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void VectorModifyCompexSingle<U, Op>(ComplexSingle* x, int length, U scalar) where U : unmanaged
 		{
-			ComplexSingle scalarT = scalar.GenericConvert<U, ComplexSingle>();
+			ComplexSingle scalarT = scalar.NativeConvert<U, ComplexSingle>();
 			Modify op;
-			if (typeof(Op) == typeof(AddScalar))
+			if (typeof(Op) == typeof(U_AddScalar))
 				op = Modify.AddScalar;
-			else if (typeof(Op) == typeof(MultiplyScalar))
+			else if (typeof(Op) == typeof(U_MultiplyScalar))
 				op = Modify.MultiplyScalar;
-			else if (typeof(Op) == typeof(Modulo))
+			else if (typeof(Op) == typeof(U_Modulo))
 				op = Modify.Modulo; // not possible here
-			else if (typeof(Op) == typeof(Sqrt))
+			else if (typeof(Op) == typeof(U_Sqrt))
 				op = Modify.Sqrt;
-			else if (typeof(Op) == typeof(Square))
+			else if (typeof(Op) == typeof(U_Square))
 				op = Modify.Square;
-			else if (typeof(Op) == typeof(Truncate))
+			else if (typeof(Op) == typeof(U_Truncate))
 				op = Modify.Truncate;
-			else if (typeof(Op) == typeof(Reciprocal))
+			else if (typeof(Op) == typeof(U_Reciprocal))
 				op = Modify.Reciprocal;
 			else
 				op = Modify.Conjugate;
@@ -439,7 +325,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				}
 			}
 			else
-			{	// TODO: the extra 6 shuffles may lead to performance worse than scalar implementation, test it
+			{
 				Vector256<float> zeros = Vector<float>.Zero.AsVector256();
 				Vector256<float> scalarSquares = default;
 				Span<float> _temp = new(&scalarSquares, Vector256<float>.Count / 2);
@@ -451,24 +337,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					Vector256<float> current1 = LoadVector256<float>(x + offset);
 					// {a[4].r, a[4].i, ..., a[7].i}
 					Vector256<float> current2 = LoadVector256<float>(x + offset + Vector256<float>.Count / 2);
-					// {abs(a[0]), abs(a[1]), ..., abs(a[7])}
-					Vector256<float> currentAbs = ComplexSquareAbs(current1, current2);
-					// {abs(a[0]) > threshold, abs(a[1]) > threshold, ..., abs(a[7]) > threshold}
+					// abs(a[{0, 1, 4, 5, 2, 3, 6, 7}])
+					Vector256<float> currentAbs = ComplexSquareAbsNoOrder(current1, current2);
+					// abs(a[{0, 1, 4, 5, 2, 3, 6, 7}]) > threshold
 					Vector256<float> compare = Avx.CompareNotGreaterThan(currentAbs, scalarSquares);
 					// has "Not" since AVX compare is reversed
 
-					// {abs(a[0]) > threshold, abs(a[0]) > threshold, abs(a[2]) > threshold, abs(a[2]) > threshold,...}
-					Vector256<float> compare1 = Avx.DuplicateEvenIndexed(compare);
-					// {abs(a[1]) > threshold, abs(a[1]) > threshold, abs(a[3]) > threshold, abs(a[3]) > threshold,...}
-					Vector256<float> compare2 = Avx.DuplicateOddIndexed(compare);
-					// {00, 11, 44, 55}
-					Vector256<double> temp1 = Avx.UnpackLow(compare1.AsDouble(), compare2.AsDouble());
-					// {22, 33, 66, 77}
-					Vector256<double> temp2 = Avx.UnpackHigh(compare1.AsDouble(), compare2.AsDouble());
-					// {0, 0, 1, 1, 2, 2, 3, 3}
-					compare1 = Avx.Permute2x128(temp1, temp2, 0b00_10_00_00).AsSingle();
-					// {4, 4, 5, 5, 6, 6, 7, 7}
-					compare2 = Avx.Permute2x128(temp1, temp2, 0b00_11_00_01).AsSingle();
+					// abs(a[{0, 0, 1, 1, 2, 2, 3, 3}]) > threshold
+					Vector256<float> compare1 = Avx.UnpackLow(compare, compare);
+					// abs(a[{4, 4, 5, 5, 6, 6, 7, 7}]) > threshold
+					Vector256<float> compare2 = Avx.UnpackHigh(compare, compare);
 					current1 = Avx.BlendVariable(current1, zeros, compare1);
 					current2 = Avx.BlendVariable(current2, zeros, compare2);
 
@@ -488,21 +366,21 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void VectorModifyCompexDouble<U, Op>(ComplexDouble* x, int length, U scalar) where U : unmanaged
 		{
-			ComplexDouble scalarT = scalar.GenericConvert<U, ComplexDouble>();
+			ComplexDouble scalarT = scalar.NativeConvert<U, ComplexDouble>();
 			Modify op;
-			if (typeof(Op) == typeof(AddScalar))
+			if (typeof(Op) == typeof(U_AddScalar))
 				op = Modify.AddScalar;
-			else if (typeof(Op) == typeof(MultiplyScalar))
+			else if (typeof(Op) == typeof(U_MultiplyScalar))
 				op = Modify.MultiplyScalar;
-			else if (typeof(Op) == typeof(Modulo))
+			else if (typeof(Op) == typeof(U_Modulo))
 				op = Modify.Modulo; // not possible here
-			else if (typeof(Op) == typeof(Sqrt))
+			else if (typeof(Op) == typeof(U_Sqrt))
 				op = Modify.Sqrt;
-			else if (typeof(Op) == typeof(Square))
+			else if (typeof(Op) == typeof(U_Square))
 				op = Modify.Square;
-			else if (typeof(Op) == typeof(Truncate))
+			else if (typeof(Op) == typeof(U_Truncate))
 				op = Modify.Truncate;
-			else if (typeof(Op) == typeof(Reciprocal))
+			else if (typeof(Op) == typeof(U_Reciprocal))
 				op = Modify.Reciprocal;
 			else
 				op = Modify.Conjugate;
@@ -572,14 +450,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					Vector256<double> current1 = LoadVector256<double>(x + offset);
 					// {a[2].r, a[2].i, ..., a[3].i}
 					Vector256<double> current2 = LoadVector256<double>(x + offset + Vector256<double>.Count / 2);
-					// {abs(a[0]), abs(a[1]), ..., abs(a[3])}
-					Vector256<double> currentAbs = ComplexSquareAbs(current1, current2);
-					// {abs(a[0]) > threshold, abs(a[1]) > threshold, ..., abs(a[3]) > threshold}
+					// abs(a[{0, 2, 1, 3}])
+					Vector256<double> currentAbs = ComplexSquareAbsNoOrder(current1, current2);
+					// abs(a[{0, 2, 1, 3}]) > threshold
 					Vector256<double> compare = Avx.CompareNotGreaterThan(currentAbs, scalarSquares);
 					// has "Not" since AVX compare is reversed
-					// {abs(a[0]) > threshold, abs(a[0]) > threshold, ..., abs(a[1]) > threshold}
+					// {0, 0, 1, 1}
 					Vector256<double> compare1 = Avx.UnpackLow(compare, compare);
-					// {abs(a[2]) > threshold, abs(a[2]) > threshold, ..., abs(a[3]) > threshold}
+					// {2, 2, 3, 3}
 					Vector256<double> compare2 = Avx.UnpackHigh(compare, compare);
 					current1 = Avx.BlendVariable(current1, zeros, compare1);
 					current2 = Avx.BlendVariable(current1, zeros, compare2);
@@ -636,7 +514,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal protected static bool PointWiseAddScalar<T>(Storage<T> x, T scalr) where T : unmanaged
 		{
-			return VectorModify<T, T, AddScalar>(x, scalr);
+			return VectorModify<T, T, U_AddScalar>(x, scalr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -644,14 +522,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		{
 			if (Const<T>.IsComplex || !Const<T>.IsIntegralType)
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
-			return VectorModify<T, T, Modulo>(x, mod);
+			return VectorModify<T, T, U_Modulo>(x, mod);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal protected static bool PointWiseConjugate<T>(Storage<T> x) where T : unmanaged
 		{
 			if (Const<T>.IsComplex)
-				return VectorModify<T, T, Conjugate>(x, default);
+				return VectorModify<T, T, U_Conjugate>(x, default);
 			else
 				return true;
 		}
@@ -672,15 +550,15 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				}
 			}
 			else if (p == 0.5)
-				return VectorModify<T, double, Sqrt>(x, p);
+				return VectorModify<T, double, U_Sqrt>(x, p);
 			else if (p == 2)
-				return VectorModify<T, double, Square>(x, p);
+				return VectorModify<T, double, U_Square>(x, p);
 			else if (p == 1)
 				return true;
 			else if (p == -1)
-				return VectorModify<T, double, Reciprocal>(x, p);
+				return VectorModify<T, double, U_Reciprocal>(x, p);
 			else
-				return VectorModify<T, double, PowerDouble>(x, p);
+				return VectorModify<T, double, U_PowerDouble>(x, p);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -699,27 +577,27 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				}
 			}
 			else if (!Const<T>.IsIntegralType && p.IsEqual(Const<T>.Half))
-				return VectorModify<T, T, Sqrt>(x, p);
+				return VectorModify<T, T, U_Sqrt>(x, p);
 			else if (p.IsEqual(Const<T>.Two))
-				return VectorModify<T, T, Square>(x, p);
+				return VectorModify<T, T, U_Square>(x, p);
 			else if (p.IsOne())
 				return true;
 			else if (p.IsEqual(Const<T>.MinusOne))
-				return VectorModify<T, T, Reciprocal>(x, p);
+				return VectorModify<T, T, U_Reciprocal>(x, p);
 			else
-				return VectorModify<T, T, PowerT>(x, p);
+				return VectorModify<T, T, U_PowerT>(x, p);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal protected static bool Scale<T>(Storage<T> x, T scalar) where T : unmanaged
 		{
-			return VectorModify<T, T, MultiplyScalar>(x, scalar);
+			return VectorModify<T, T, U_MultiplyScalar>(x, scalar);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal new static bool TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged
 		{
-			return VectorModify<T, double, Truncate>(x, threshold);
+			return VectorModify<T, double, U_Truncate>(x, threshold);
 		}
 	}
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释

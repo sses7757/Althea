@@ -209,7 +209,7 @@ namespace Althea.Backend.Arrays
 			Span<IntPtr> temp = stackalloc IntPtr[this.Rank];
 			var outIndex = temp.AsClassType<ActualStorage<TIndOut>>();
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(outIndex, copyValues: false);
-			return new BlockedSparseTensor<TOut, TIndOut>(this.Size, this.BlockSize, value, temp.AsClassType<Storage<TIndOut>>(), this.Labels, this.DefaultValue.GenericConvert<T, TOut>());
+			return new BlockedSparseTensor<TOut, TIndOut>(this.Size, this.BlockSize, value, temp.AsClassType<Storage<TIndOut>>(), this.Labels, this.DefaultValue.NativeConvert<T, TOut>());
 		}
 		#endregion
 

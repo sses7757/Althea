@@ -270,7 +270,7 @@ namespace Althea.Arrays
 		/// <param name="vector">The original vector to be divided</param>
 		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
 		/// <returns>A new <see cref="BaseVector{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public static BaseVector<T> operator /(BaseVector<T> vector, T scalar) => vector * scalar.GenericReciprocal();
+		public static BaseVector<T> operator /(BaseVector<T> vector, T scalar) => vector * scalar.NativeReciprocal();
 
 		/// <summary>
 		/// Create a new <see cref="BaseVector{T}"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/>.

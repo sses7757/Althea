@@ -433,7 +433,7 @@ namespace Althea.Linq
 				result[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(span[i], result[i]);
+					result[i + 1] = span[i].NativeAdd(result[i]);
 				}
 				return result;
 			}
@@ -443,15 +443,15 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(span[i], result[i]);
+					result[i + 1] = span[i].NativeAdd(result[i]);
 				}
 			}
 			else
 			{
-				result[0] = Const<T>.AddDelegate.Invoke(init, span[0]);
+				result[0] = init.NativeAdd(span[0]);
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = Const<T>.AddDelegate.Invoke(span[i], result[i - 1]);
+					result[i] = span[i].NativeAdd(result[i - 1]);
 				}
 			}
 			return result[..span.Length];
@@ -480,7 +480,7 @@ namespace Althea.Linq
 				result[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(span[i], result[i]);
+					result[i + 1] = span[i].NativeMultiply(result[i]);
 				}
 				return result;
 			}
@@ -490,15 +490,15 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(span[i], result[i]);
+					result[i + 1] = span[i].NativeMultiply(result[i]);
 				}
 			}
 			else
 			{
-				result[0] = Const<T>.MultiplyDelegate.Invoke(init, span[0]);
+				result[0] = init.NativeMultiply(span[0]);
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = Const<T>.MultiplyDelegate.Invoke(span[i], result[i - 1]);
+					result[i] = span[i].NativeMultiply(result[i - 1]);
 				}
 			}
 			return result[..span.Length];
@@ -518,7 +518,7 @@ namespace Althea.Linq
 			T result = span[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.AddDelegate.Invoke(span[i], result);
+				result = span[i].NativeAdd(result);
 			}
 			return result;
 		}
@@ -537,7 +537,7 @@ namespace Althea.Linq
 			T result = span[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.MultiplyDelegate.Invoke(span[i], result);
+				result = span[i].NativeMultiply(result);
 			}
 			return result;
 		}
@@ -557,7 +557,7 @@ namespace Althea.Linq
 			T result = selector.Invoke(span[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.AddDelegate.Invoke(selector.Invoke(span[i]), result);
+				result = selector.Invoke(span[i]).NativeAdd(result);
 			}
 			return result;
 		}
@@ -577,7 +577,7 @@ namespace Althea.Linq
 			T result = selector.Invoke(span[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(span[i]), result);
+				result = selector.Invoke(span[i]).NativeMultiply(result);
 			}
 			return result;
 		}
@@ -1599,71 +1599,19 @@ namespace Althea.Linq
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
-			if (step.IsZero())
-				step = Const<T>.One;
-
 			span[0] = start;
-			for (int i = 1; i < span.Length; i++)
+			if (step.IsZero())
 			{
-				// JIT shall optimize the branches and type converts to some code as if they do not exist
-				if (typeof(T) == typeof(byte))
+				for (int i = 1; i < span.Length; i++)
 				{
-					byte v = (byte)(Unsafe.As<T, byte>(ref span[i - 1]) + Unsafe.As<T, byte>(ref step));
-					span[i] = Unsafe.As<byte, T>(ref v);
+					span[i] = span[i - 1].NativeIncrement();
 				}
-				else if (typeof(T) == typeof(sbyte))
+			}
+			else
+			{
+				for (int i = 1; i < span.Length; i++)
 				{
-					sbyte v = (sbyte)(Unsafe.As<T, sbyte>(ref span[i - 1]) + Unsafe.As<T, sbyte>(ref step));
-					span[i] = Unsafe.As<sbyte, T>(ref v);
-				}
-				else if (typeof(T) == typeof(short))
-				{
-					short v = (short)(Unsafe.As<T, short>(ref span[i - 1]) + Unsafe.As<T, short>(ref step));
-					span[i] = Unsafe.As<short, T>(ref v);
-				}
-				else if (typeof(T) == typeof(ushort))
-				{
-					ushort v = (ushort)(Unsafe.As<T, ushort>(ref span[i - 1]) + Unsafe.As<T, ushort>(ref step));
-					span[i] = Unsafe.As<ushort, T>(ref v);
-				}
-				else if (typeof(T) == typeof(char))
-				{
-					char v = (char)(Unsafe.As<T, char>(ref span[i - 1]) + Unsafe.As<T, char>(ref step));
-					span[i] = Unsafe.As<char, T>(ref v);
-				}
-				else if (typeof(T) == typeof(int))
-				{
-					int v = (int)(Unsafe.As<T, int>(ref span[i - 1]) + Unsafe.As<T, int>(ref step));
-					span[i] = Unsafe.As<int, T>(ref v);
-				}
-				else if (typeof(T) == typeof(uint))
-				{
-					uint v = (uint)(Unsafe.As<T, uint>(ref span[i - 1]) + Unsafe.As<T, uint>(ref step));
-					span[i] = Unsafe.As<uint, T>(ref v);
-				}
-				else if (typeof(T) == typeof(long))
-				{
-					long v = (long)(Unsafe.As<T, long>(ref span[i - 1]) + Unsafe.As<T, long>(ref step));
-					span[i] = Unsafe.As<long, T>(ref v);
-				}
-				else if (typeof(T) == typeof(ulong))
-				{
-					ulong v = (ulong)(Unsafe.As<T, ulong>(ref span[i - 1]) + Unsafe.As<T, ulong>(ref step));
-					span[i] = Unsafe.As<ulong, T>(ref v);
-				}
-				else if (typeof(T) == typeof(float))
-				{
-					float v = (float)(Unsafe.As<T, float>(ref span[i - 1]) + Unsafe.As<T, float>(ref step));
-					span[i] = Unsafe.As<float, T>(ref v);
-				}
-				else if (typeof(T) == typeof(double))
-				{
-					double v = (double)(Unsafe.As<T, double>(ref span[i - 1]) + Unsafe.As<T, double>(ref step));
-					span[i] = Unsafe.As<double, T>(ref v);
-				}
-				else
-				{
-					span[i] = Const<T>.AddDelegate.Invoke(span[i - 1], step);
+					span[i] = span[i - 1].NativeAdd(step);
 				}
 			}
 			return span;
@@ -1712,7 +1660,7 @@ namespace Althea.Linq
 				span.Clear();
 			for (int i = 0; i < len; i++)
 			{
-				span[i] = Const<T>.MultiplyDelegate(span[i], scalar);
+				span[i] = span[i].NativeMultiply(scalar);
 			}
 		}
 		#endregion

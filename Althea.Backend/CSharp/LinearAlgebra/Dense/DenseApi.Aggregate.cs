@@ -22,40 +22,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
 			if (doAbs)
 			{
-				Func<T, double> abs = ConstExtension.GetAbsoluteGetter<T>();
 				aggregateAbs = doSum ? 0 : 1;
 				for (int i = 0; i < length; i++)
 				{
-					double v;
-					// some frequent type speedups
-					if (typeof(T) == typeof(byte))
-						v = ((byte*)x)[i];
-					if (typeof(T) == typeof(ushort))
-						v = ((ushort*)x)[i];
-					if (typeof(T) == typeof(char))
-						v = ((char*)x)[i];
-					if (typeof(T) == typeof(uint))
-						v = ((uint*)x)[i];
-					if (typeof(T) == typeof(ulong))
-						v = ((ulong*)x)[i];
-					if (typeof(T) == typeof(sbyte))
-						v = Math.Abs(((sbyte*)x)[i]);
-					if (typeof(T) == typeof(short))
-						v = Math.Abs(((short*)x)[i]);
-					if (typeof(T) == typeof(int))
-						v = Math.Abs(((int*)x)[i]);
-					if (typeof(T) == typeof(long))
-						v = Math.Abs(((long*)x)[i]);
-					if (typeof(T) == typeof(float))
-						v = MathF.Abs(((float*)x)[i]);
-					if (typeof(T) == typeof(double))
-						v = Math.Abs(((double*)x)[i]);
-					if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
-						v = ((ComplexSingle*)x)[i].Abs();
-					if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
-						v = ((ComplexDouble*)x)[i].Abs();
-					else
-						v = abs(x[i]);
+					double v = x[i].NativeAbsolute();
 					if (doSum)
 						aggregateAbs += v;
 					else
@@ -64,8 +34,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
-				Func<T, T, T> op = doSum ? BinaryArithmeticOperation.Addition.GetArithmeticOperation<T>() : BinaryArithmeticOperation.Multiply.GetArithmeticOperation<T>();
-
 				T result = doSum ? default : Const<T>.One;
 				for (int i = 0; i < length; i++)
 				{
@@ -73,93 +41,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					// some frequent type speedups
 					if (doSum)
 					{
-						if (typeof(T) == typeof(uint))
-						{
-							var vv = *(uint*)&result + *(uint*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(ulong))
-						{
-							var vv = *(ulong*)&result + *(ulong*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(int))
-						{
-							var vv = *(int*)&result + *(int*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(long))
-						{
-							var vv = *(long*)&result + *(long*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(float))
-						{
-							var vv = *(float*)&result + *(float*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(double))
-						{
-							var vv = *(double*)&result + *(double*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
-						{
-							var vv = *(ComplexSingle*)&result + *(ComplexSingle*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
-						{
-							var vv = *(ComplexDouble*)&result + *(ComplexDouble*)&v;
-							result = *(T*)&vv;
-						}
-						else
-							result = op(result, v);
+						result = result.NativeAdd(v);
 					}
 					else
 					{
-						if (typeof(T) == typeof(uint))
-						{
-							var vv = *(uint*)&result * *(uint*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(ulong))
-						{
-							var vv = *(ulong*)&result * *(ulong*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(int))
-						{
-							var vv = *(int*)&result * *(int*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(long))
-						{
-							var vv = *(long*)&result * *(long*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(float))
-						{
-							var vv = *(float*)&result * *(float*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(double))
-						{
-							var vv = *(double*)&result * *(double*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
-						{
-							var vv = *(ComplexSingle*)&result * *(ComplexSingle*)&v;
-							result = *(T*)&vv;
-						}
-						if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
-						{
-							var vv = *(ComplexDouble*)&result * *(ComplexDouble*)&v;
-							result = *(T*)&vv;
-						}
-						else
-							result = op(result, v);
+						result = result.NativeMultiply(v);
 					}
 				}
 			}
@@ -207,13 +93,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
-				Func<T, T, T> mul = BinaryArithmeticOperation.Multiply.GetArithmeticOperation<T>();
 				T result = aggregate[0];
 				for (int i = 1; i < Vector<T>.Count; i++)
 				{
-					result = mul(result, aggregate[i]);
+					result = result.NativeMultiply(aggregate[i]);
 				}
-				aggregateNoAbs = mul(result, aggregateNoAbs);
+				aggregateNoAbs = result.NativeMultiply(aggregateNoAbs);
 			}
 		}
 
@@ -226,14 +111,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (doAbs)
 			{
 				// initialize
-				Vector256<float> aggregate = ComplexSquareAbs(x);
+				Vector256<float> aggregate = ComplexSquareAbsNoOrder(x);
 				if (doSum)
 					aggregate = Avx.Sqrt(aggregate);
 				// loop
 				int lengthLeft = length - Vector256<float>.Count, offset = Vector256<float>.Count;
 				while (lengthLeft >= Vector256<float>.Count) // Vector256<ComplexSingle>.Count * 2
 				{
-					Vector256<float> squares = ComplexSquareAbs(x + offset);
+					Vector256<float> squares = ComplexSquareAbsNoOrder(x + offset);
 					if (doSum)
 					{
 						squares = Avx.Sqrt(squares);
@@ -359,14 +244,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (doAbs)
 			{
 				// initialize
-				Vector256<double> aggregate = ComplexSquareAbs(x);
+				Vector256<double> aggregate = ComplexSquareAbsNoOrder(x);
 				if (doSum)
 					aggregate = Avx.Sqrt(aggregate);
 				// loop
 				int lengthLeft = length - Vector256<double>.Count, offset = Vector256<double>.Count;
 				while (lengthLeft >= Vector256<double>.Count) // Vector256<ComplexDouble>.Count * 2
 				{
-					Vector256<double> squares = ComplexSquareAbs(x + offset);
+					Vector256<double> squares = ComplexSquareAbsNoOrder(x + offset);
 					if (doSum)
 					{
 						squares = Avx.Sqrt(squares);
@@ -562,51 +447,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			bool doDot = typeof(Dot) == typeof(bool);
 			bool doCon = typeof(Conj) == typeof(bool);
 
-			Func<T, T, T> multiply = BinaryArithmeticOperation.Multiply.GetArithmeticOperation<T>();
-			Func<T, T, T> add = BinaryArithmeticOperation.Addition.GetArithmeticOperation<T>();
-			Func<T, T> conj = UnaryArithmeticOperation.Conjugate.GetArithmeticOperation<T>();
-
 			for (int i = 0; i < length; i++)
 			{
 				T a = x[i], b;
-				if (doDot)
-					b = y[i];
-				if (typeof(T) == typeof(uint))
-				{
-					uint vv;
-					if (doDot)
-						vv = (*(uint*)&result) + (*(uint*)&a) * (*(uint*)&b);
-					else
-						vv = (*(uint*)&result) + (*(uint*)&a) * (*(uint*)&a);
-					result = *(T*)&vv;
-				}
-				if (typeof(T) == typeof(ulong))
-				{
-					ulong vv;
-					if (doDot)
-						vv = (*(ulong*)&result) + (*(ulong*)&a) * (*(ulong*)&b);
-					else
-						vv = (*(ulong*)&result) + (*(ulong*)&a) * (*(ulong*)&a);
-					result = *(T*)&vv;
-				}
-				if (typeof(T) == typeof(int))
-				{
-					int vv;
-					if (doDot)
-						vv = (*(int*)&result) + (*(int*)&a) * (*(int*)&b);
-					else
-						vv = (*(int*)&result) + (*(int*)&a) * (*(int*)&a);
-					result = *(T*)&vv;
-				}
-				if (typeof(T) == typeof(long))
-				{
-					long vv;
-					if (doDot)
-						vv = (*(long*)&result) + (*(long*)&a) * (*(long*)&b);
-					else
-						vv = (*(long*)&result) + (*(long*)&a) * (*(long*)&a);
-					result = *(T*)&vv;
-				}
+				// float type FMA acceleration
 				if (typeof(T) == typeof(float))
 				{
 					float vv;
@@ -615,6 +459,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					else
 						vv = MathF.FusedMultiplyAdd(*(float*)&a, *(float*)&a, *(float*)&result);
 					result = *(T*)&vv;
+					continue;
 				}
 				if (typeof(T) == typeof(double))
 				{
@@ -624,6 +469,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					else
 						vv = Math.FusedMultiplyAdd(*(double*)&a, *(double*)&a, *(double*)&result);
 					result = *(T*)&vv;
+					continue;
 				}
 				if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
 				{
@@ -632,11 +478,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						vv = (*(ComplexSingle*)&result).AddConjugateProduct(*(ComplexSingle*)&a, *(ComplexSingle*)&b);
 					else if (doDot && !doCon)
 						vv = (*(ComplexSingle*)&result).AddProduct(*(ComplexSingle*)&a, *(ComplexSingle*)&b);
-					else if (!doDot && doCon)
-						vv = (*(ComplexSingle*)&result).AddSquareAbs(*(ComplexSingle*)&a);
 					else
-						vv = (*(ComplexSingle*)&result).AddProduct(*(ComplexSingle*)&a, *(ComplexSingle*)&a);
+						vv = (*(ComplexSingle*)&result).AddSquareAbs(*(ComplexSingle*)&a);
 					result = *(T*)&vv;
+					continue;
 				}
 				if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
 				{
@@ -645,23 +490,23 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						vv = (*(ComplexDouble*)&result).AddConjugateProduct(*(ComplexDouble*)&a, *(ComplexDouble*)&b);
 					else if (doDot && !doCon)
 						vv = (*(ComplexDouble*)&result).AddProduct(*(ComplexDouble*)&a, *(ComplexDouble*)&b);
-					else if (!doDot && doCon)
-						vv = (*(ComplexDouble*)&result).AddSquareAbs(*(ComplexDouble*)&a);
 					else
-						vv = (*(ComplexDouble*)&result).AddProduct(*(ComplexDouble*)&a, *(ComplexDouble*)&a);
+						vv = (*(ComplexDouble*)&result).AddSquareAbs(*(ComplexDouble*)&a);
 					result = *(T*)&vv;
+					continue;
+				}
+				// normal case
+				if (doDot)
+				{
+					b = y[i];
+					if (doCon)
+						result = result.NativeAdd(a.NativeConjugate().NativeMultiply(b));
+					else
+						result = result.NativeAdd(a.NativeMultiply(b));
 				}
 				else
 				{
-					b = y[i];
-					if (doDot && doCon)
-						result = add(result, multiply(conj(a), b));
-					else if (doDot && !doCon)
-						result = add(result, multiply(a, b));
-					else if (!doDot && doCon)
-						result = add(result, multiply(conj(a), a));
-					else
-						result = add(result, multiply(a, a));
+					result = result.NativeAdd(a.NativeMultiply(a));
 				}
 			}
 			return result;
@@ -719,7 +564,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// this implementation has some performance loss, same reason as above
 			T dotMain = Vector.Dot(sum, Vector<T>.One);
 			// return
-			return dotMain.GenericAdd(dotLeft);
+			return dotMain.NativeAdd(dotLeft);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -731,12 +576,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (!doDot)
 			{
 				// initialize
-				Vector256<float> aggregate = ComplexSquareAbs(x);
+				Vector256<float> aggregate = ComplexSquareAbsNoOrder(x);
 				// loop
 				int lengthLeft = length - Vector256<float>.Count, offset = Vector256<float>.Count;
 				while (lengthLeft >= Vector256<float>.Count) // Vector256<ComplexSingle>.Count * 2
 				{
-					Vector256<float> squares = ComplexSquareAbs(x + offset);
+					Vector256<float> squares = ComplexSquareAbsNoOrder(x + offset);
 					aggregate = Avx.Add(aggregate, squares);
 					lengthLeft -= Vector256<float>.Count;
 					offset += Vector256<float>.Count;
@@ -802,12 +647,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (!doDot)
 			{
 				// initialize
-				Vector256<double> aggregate = ComplexSquareAbs(x);
+				Vector256<double> aggregate = ComplexSquareAbsNoOrder(x);
 				// loop
 				int lengthLeft = length - Vector256<double>.Count, offset = Vector256<double>.Count;
 				while (lengthLeft >= Vector256<double>.Count) // Vector256<ComplexDouble>.Count * 2
 				{
-					Vector256<double> squares = ComplexSquareAbs(x + offset);
+					Vector256<double> squares = ComplexSquareAbsNoOrder(x + offset);
 					aggregate = Avx.Add(aggregate, squares);
 					lengthLeft -= Vector256<double>.Count;
 					offset += Vector256<double>.Count;
@@ -935,13 +780,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 		#endregion
 
+
 		#region partial sum product
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void VectorParSumProdManaged<T, Sum, HasPre>(T* x, T* y, int length) where T : unmanaged
 		{
 			bool doSum = typeof(Sum) == typeof(bool);
 			bool hasPre = typeof(HasPre) == typeof(bool);
-			Func<T, T, T> op = doSum ? BinaryArithmeticOperation.Addition.GetArithmeticOperation<T>() : BinaryArithmeticOperation.Multiply.GetArithmeticOperation<T>();
 
 			T result;
 			if (hasPre)
@@ -954,388 +799,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				// some frequent type speedups
 				if (doSum)
 				{
-					if (typeof(T) == typeof(uint))
-					{
-						var vv = *(uint*)&result + *(uint*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(ulong))
-					{
-						var vv = *(ulong*)&result + *(ulong*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(int))
-					{
-						var vv = *(int*)&result + *(int*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(long))
-					{
-						var vv = *(long*)&result + *(long*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(float))
-					{
-						var vv = *(float*)&result + *(float*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(double))
-					{
-						var vv = *(double*)&result + *(double*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
-					{
-						var vv = *(ComplexSingle*)&result + *(ComplexSingle*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
-					{
-						var vv = *(ComplexDouble*)&result + *(ComplexDouble*)&v;
-						result = *(T*)&vv;
-					}
-					else
-						result = op(result, v);
+					y[i] = result.NativeAdd(v);
 				}
 				else
 				{
-					if (typeof(T) == typeof(uint))
-					{
-						var vv = *(uint*)&result * *(uint*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(ulong))
-					{
-						var vv = *(ulong*)&result * *(ulong*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(int))
-					{
-						var vv = *(int*)&result * *(int*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(long))
-					{
-						var vv = *(long*)&result * *(long*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(float))
-					{
-						var vv = *(float*)&result * *(float*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(double))
-					{
-						var vv = *(double*)&result * *(double*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(ComplexSingle) || typeof(T) == typeof(Complex<float>))
-					{
-						var vv = *(ComplexSingle*)&result * *(ComplexSingle*)&v;
-						result = *(T*)&vv;
-					}
-					if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
-					{
-						var vv = *(ComplexDouble*)&result * *(ComplexDouble*)&v;
-						result = *(T*)&vv;
-					}
-					else
-						result = op(result, v);
+					y[i] = result.NativeMultiply(v);
 				}
-				y[i] = result;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorParSumProdReal<T, Sum>(T* x, T* y, int length) where T : unmanaged
-		{
-			bool doSum = typeof(Sum) == typeof(bool);
-			// initial
-			Vector<T> aggregate = Vector<T>.Zero;
-			// loop
-			int lengthLeft = length, offset = 0;
-			while (lengthLeft >= Vector<T>.Count)
-			{
-				Vector<T> current = LoadVector(x + offset);
-				if (doSum)
-					aggregate += current;
-				else
-					aggregate *= current;
-				// TODO
-				StoreVector(aggregate, y + offset);
-				lengthLeft -= Vector<T>.Count;
-				offset += Vector<T>.Count;
-			}
-			// reduce left
-			if (lengthLeft > 0)
-			{
-				VectorParSumProdManaged<T, Sum, bool>(x + offset, y + offset, lengthLeft);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorParSumProdCompexSingle<Sum>(ComplexSingle* x, ComplexSingle* y, int length)
-		{
-			aggregateNoAbs = default; aggregateAbs = 0;
-			bool doSum = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
-			bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
-			if (doAbs)
-			{
-				// initialize
-				Vector256<float> aggregate = ComplexSquareAbs(x);
-				if (doSum)
-					aggregate = Avx.Sqrt(aggregate);
-				// loop
-				int lengthLeft = length - Vector256<float>.Count, offset = Vector256<float>.Count;
-				while (lengthLeft >= Vector256<float>.Count) // Vector256<ComplexSingle>.Count * 2
-				{
-					Vector256<float> squares = ComplexSquareAbs(x + offset);
-					if (doSum)
-					{
-						squares = Avx.Sqrt(squares);
-						aggregate = Avx.Add(aggregate, squares);
-					}
-					else
-					{
-						aggregate = Avx.Multiply(aggregate, squares);
-					}
-					lengthLeft -= Vector256<float>.Count;
-					offset += Vector256<float>.Count;
-				}
-				// reduce main
-				float result = ((float*)&aggregate)[0];
-				for (int i = 1; i < Vector256<float>.Count; i++)
-				{
-					float v = ((float*)&aggregate)[i];
-					if (doSum)
-					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
-					}
-				}
-				if (!doSum)
-				{   // sqrt
-					result = MathF.Sqrt(result);
-				}
-				// reduce left
-				if (lengthLeft > 0)
-				{
-					for (; offset < length; offset++)
-					{
-						float v = x[offset].Abs();
-						if (doSum)
-						{
-							result += v;
-						}
-						else
-						{
-							result *= v;
-						}
-					}
-				}
-				aggregateAbs = result;
-			}
-			else
-			{
-				// initialize
-				Vector256<float> aggregate1 = LoadVector256<float>(x), aggregate2 = LoadVector256<float>(x + Vector256<float>.Count / 2);
-				// loop
-				int lengthLeft = length - Vector256<float>.Count, offset = Vector256<float>.Count;
-				while (lengthLeft >= Vector256<float>.Count) // Vector256<ComplexSingle>.Count * 2
-				{
-					Vector256<float> current1 = LoadVector256<float>(x + offset);
-					Vector256<float> current2 = LoadVector256<float>(x + offset + Vector256<float>.Count / 2);
-					if (doSum)
-					{
-						aggregate1 = Avx.Add(aggregate1, current1);
-						aggregate2 = Avx.Add(aggregate2, current2);
-					}
-					else
-					{   // TODO: improve performance by using 'aggregate1 = reals' and 'aggregate2 = imaginaries'
-						ComplexMultiply<byte>(aggregate1, aggregate2, current1, current2, out aggregate1, out aggregate2);
-					}
-					lengthLeft -= Vector256<float>.Count;
-					offset += Vector256<float>.Count;
-				}
-				// reduce main
-				ComplexSingle result = ((ComplexSingle*)&aggregate1)[0];
-				for (int i = 1; i < Vector256<float>.Count / 2; i++)
-				{
-					ComplexSingle v = ((ComplexSingle*)&aggregate1)[i];
-					if (doSum)
-					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
-					}
-				}
-				for (int i = 0; i < Vector256<float>.Count / 2; i++)
-				{
-					ComplexSingle v = ((ComplexSingle*)&aggregate2)[i];
-					if (doSum)
-					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
-					}
-				}
-				// reduce left
-				if (lengthLeft > 0)
-				{
-					for (; offset < length; offset++)
-					{
-						ComplexSingle v = x[offset];
-						if (doSum)
-						{
-							result += v;
-						}
-						else
-						{
-							result *= v;
-						}
-					}
-				}
-				aggregateNoAbs = result;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorParSumProdCompexDouble<Sum>(ComplexDouble* x, ComplexDouble* y, int length)
-		{
-			aggregateNoAbs = default; aggregateAbs = 0;
-			bool doSum = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
-			bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
-			if (doAbs)
-			{
-				// initialize
-				Vector256<double> aggregate = ComplexSquareAbs(x);
-				if (doSum)
-					aggregate = Avx.Sqrt(aggregate);
-				// loop
-				int lengthLeft = length - Vector256<double>.Count, offset = Vector256<double>.Count;
-				while (lengthLeft >= Vector256<double>.Count) // Vector256<ComplexDouble>.Count * 2
-				{
-					Vector256<double> squares = ComplexSquareAbs(x + offset);
-					if (doSum)
-					{
-						squares = Avx.Sqrt(squares);
-						aggregate = Avx.Add(aggregate, squares);
-					}
-					else
-					{
-						aggregate = Avx.Multiply(aggregate, squares);
-					}
-					lengthLeft -= Vector256<double>.Count;
-					offset += Vector256<double>.Count;
-				}
-				// reduce main
-				double result = ((double*)&aggregate)[0];
-				for (int i = 1; i < Vector256<double>.Count; i++)
-				{
-					double v = ((double*)&aggregate)[i];
-					if (doSum)
-					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
-					}
-				}
-				if (!doSum)
-				{   // sqrt
-					result = Math.Sqrt(result);
-				}
-				// reduce left
-				if (lengthLeft > 0)
-				{
-					for (; offset < length; offset++)
-					{
-						double v = x[offset].Abs();
-						if (doSum)
-						{
-							result += v;
-						}
-						else
-						{
-							result *= v;
-						}
-					}
-				}
-				aggregateAbs = result;
-			}
-			else
-			{
-				// initialize
-				Vector256<double> aggregate1 = LoadVector256<double>(x), aggregate2 = LoadVector256<double>(x + Vector256<double>.Count / 2);
-				// loop
-				int lengthLeft = length - Vector256<double>.Count, offset = Vector256<double>.Count;
-				while (lengthLeft >= Vector256<double>.Count) // Vector256<ComplexDouble>.Count * 2
-				{
-					Vector256<double> current1 = LoadVector256<double>(x + offset);
-					Vector256<double> current2 = LoadVector256<double>(x + offset + Vector256<double>.Count / 2);
-					if (doSum)
-					{
-						aggregate1 = Avx.Add(aggregate1, current1);
-						aggregate2 = Avx.Add(aggregate2, current2);
-					}
-					else
-					{   // TODO: improve performance by using 'aggregate1 = reals' and 'aggregate2 = imaginaries'
-						ComplexMultiply<byte>(aggregate1, aggregate2, current1, current2, out aggregate1, out aggregate2);
-					}
-					lengthLeft -= Vector256<double>.Count;
-					offset += Vector256<double>.Count;
-				}
-				// reduce main
-				ComplexDouble result = ((ComplexDouble*)&aggregate1)[0];
-				for (int i = 1; i < Vector256<double>.Count / 2; i++)
-				{
-					ComplexDouble v = ((ComplexDouble*)&aggregate1)[i];
-					if (doSum)
-					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
-					}
-				}
-				for (int i = 0; i < Vector256<double>.Count / 2; i++)
-				{
-					ComplexDouble v = ((ComplexDouble*)&aggregate2)[i];
-					if (doSum)
-					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
-					}
-				}
-				// reduce left
-				if (lengthLeft > 0)
-				{
-					for (; offset < length; offset++)
-					{
-						ComplexDouble v = x[offset];
-						if (doSum)
-						{
-							result += v;
-						}
-						else
-						{
-							result *= v;
-						}
-					}
-				}
-				aggregateNoAbs = result;
 			}
 		}
 
@@ -1368,29 +837,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				py++; length--;
 			}
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4)) // no SIMD or too short
-			{
-				VectorParSumProdManaged<T, Sum, byte>(px, py, length);
-			}
-			else if (Const<T>.IsComplex)
-			{
-				if (Const<T>.IsIntegralType || !Avx.IsSupported) // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-				{
-					VectorParSumProdManaged<T, Sum, byte>(px, py, length);
-				}
-				else if (typeof(T) == typeof(float))
-				{
-					VectorParSumProdCompexSingle<Sum>((ComplexSingle*)px, (ComplexSingle*)py, length);
-				}
-				else // double
-				{
-					VectorParSumProdCompexDouble<Sum>((ComplexDouble*)px, (ComplexDouble*)py, length);
-				}
-			}
-			else
-			{
-				VectorParSumProdReal<T, Sum>(px, py, length);
-			}
+			VectorParSumProdManaged<T, Sum, byte>(px, py, length);
 			return true;
 		}
 

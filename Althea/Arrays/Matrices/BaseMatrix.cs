@@ -276,7 +276,7 @@ namespace Althea.Arrays
 		/// <param name="scalar">The input scalar used as the divider</param>
 		/// <returns>A new <see cref="BaseMatrix{T}"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public static BaseMatrix<T> operator /(BaseMatrix<T> matrix, T scalar) => matrix * scalar.GenericReciprocal();
+		public static BaseMatrix<T> operator /(BaseMatrix<T> matrix, T scalar) => matrix * scalar.NativeReciprocal();
 
 		/// <summary>
 		/// Create a new <see cref="BaseMatrix{T}"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.

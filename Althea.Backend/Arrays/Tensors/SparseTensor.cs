@@ -118,7 +118,7 @@ namespace Althea.Backend.Arrays
 			var outIndex = ActualStorage<TIndOut>.Empty;
 			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(span, copyValues: false);
-			return new SparseTensor<TOut, TIndOut>(this.Size, value, outIndex, this.Labels, this.DefaultValue.GenericConvert<T, TOut>());
+			return new SparseTensor<TOut, TIndOut>(this.Size, value, outIndex, this.Labels, this.DefaultValue.NativeConvert<T, TOut>());
 		}
 		#endregion
 

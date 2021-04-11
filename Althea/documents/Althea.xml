@@ -10327,29 +10327,75 @@
             <summary>
             Out-of-place add <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
-            <param name="another">another value to be added</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexDouble"/> to be added</param>
             <returns>The addition result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.Subtract(Althea.NativeTypes.ComplexDouble)">
             <summary>
             Out-of-place subtract <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
-            <param name="another">another value to be subtracted</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexDouble"/> to be subtracted</param>
             <returns>The subtraction result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.Multiply(Althea.NativeTypes.ComplexDouble)">
             <summary>
             Out-of-place multiply <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
-            <param name="another">another value to be multiplied</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexDouble"/> to be multiplied</param>
             <returns>The multiplication result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.Divide(Althea.NativeTypes.ComplexDouble)">
             <summary>
             Out-of-place divide <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/>
             </summary>
-            <param name="another">another value to be divided</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexDouble"/> to be divided</param>
             <returns>The division result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.AddSquareAbs(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place add the square of the absolute value of <paramref name="another"/> <see cref="T:Althea.NativeTypes.ComplexDouble"/> to this complex
+            </summary>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexDouble"/> whose absolute value's square is to be added</param>
+            <returns>The addition result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.ConjugateMultiply(Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place multiply <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexDouble"/> after conjugating this complex
+            </summary>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexDouble"/> to be multiplied</param>
+            <returns>The conjugate multiplication result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.AddProduct(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexDouble"/>s <paramref name="a"/> and <paramref name="b"/> to this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be multiplied</param>
+            <returns>The fused multiplication addition (FMA) result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.AddConjugateProduct(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexDouble"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be conjugated and multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be multiplied</param>
+            <returns>The fused multiplication addition (FMA) result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.NegateAddProduct(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexDouble"/>s <paramref name="a"/> and <paramref name="b"/> to the negation of this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be multiplied</param>
+            <returns>The fused multiplication subtraction (FMS) result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexDouble.NegateAddConjugateProduct(Althea.NativeTypes.ComplexDouble,Althea.NativeTypes.ComplexDouble)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexDouble"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to the negation of this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be conjugated and multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexDouble"/> value to be multiplied</param>
+            <returns>The fused multiplication subtraction (FMS) result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexDouble.ToString">
             <summary>
@@ -10613,29 +10659,75 @@
             <summary>
             Out-of-place add <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
             </summary>
-            <param name="another">another value to be added</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexSingle"/> to be added</param>
             <returns>The addition result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexSingle.Subtract(Althea.NativeTypes.ComplexSingle)">
             <summary>
             Out-of-place subtract <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
             </summary>
-            <param name="another">another value to be subtracted</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexSingle"/> to be subtracted</param>
             <returns>The subtraction result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexSingle.Multiply(Althea.NativeTypes.ComplexSingle)">
             <summary>
             Out-of-place multiply <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
             </summary>
-            <param name="another">another value to be multiplied</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexSingle"/> to be multiplied</param>
             <returns>The multiplication result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexSingle.Divide(Althea.NativeTypes.ComplexSingle)">
             <summary>
             Out-of-place divide <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/>
             </summary>
-            <param name="another">another value to be divided</param>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexSingle"/> to be divided</param>
             <returns>The division result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.AddSquareAbs(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place add the square of the absolute value of <paramref name="another"/> <see cref="T:Althea.NativeTypes.ComplexSingle"/> to this complex
+            </summary>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexSingle"/> whose absolute value's square is to be added</param>
+            <returns>The addition result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.ConjugateMultiply(Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place multiply <paramref name="another"/> value of <see cref="T:Althea.NativeTypes.ComplexSingle"/> after conjugating this complex
+            </summary>
+            <param name="another">Another <see cref="T:Althea.NativeTypes.ComplexSingle"/> to be multiplied</param>
+            <returns>The conjugate multiplication result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.AddProduct(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexSingle"/>s <paramref name="a"/> and <paramref name="b"/> to this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be multiplied</param>
+            <returns>The fused multiplication addition (FMA) result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.AddConjugateProduct(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexSingle"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be conjugated and multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be multiplied</param>
+            <returns>The fused multiplication addition (FMA) result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.NegateAddProduct(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexSingle"/>s <paramref name="a"/> and <paramref name="b"/> to the negation of this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be multiplied</param>
+            <returns>The fused multiplication subtraction (FMS) result</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexSingle.NegateAddConjugateProduct(Althea.NativeTypes.ComplexSingle,Althea.NativeTypes.ComplexSingle)">
+            <summary>
+            Out-of-place add the product result of <see cref="T:Althea.NativeTypes.ComplexSingle"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to the negation of this complex
+            </summary>
+            <param name="a">The first <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be conjugated and multiplied</param>
+            <param name="b">The second <see cref="T:Althea.NativeTypes.ComplexSingle"/> value to be multiplied</param>
+            <returns>The fused multiplication subtraction (FMS) result</returns>
         </member>
         <member name="M:Althea.NativeTypes.ComplexSingle.ToString">
             <summary>
@@ -10657,10 +10749,11 @@
         </member>
         <member name="T:Althea.NativeTypes.Complex`1">
             <summary>
-            The general complex type for built-in types
+            The general complex type for any real numeric number type including <see cref="T:System.Single"/> and <see cref="T:System.Double"/>
             </summary>
             <typeparam name="T">The data type of corresponding real number</typeparam>
-            <remarks>This is an <c>unmanaged</c> type since C# 8.0.</remarks>
+            <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
+            If <typeparamref name="T"/> is <see cref="T:System.Single"/> or <see cref="T:System.Double"/>, the corresponding <see cref="T:Althea.NativeTypes.ComplexSingle"/> or <see cref="T:Althea.NativeTypes.ComplexDouble"/> is recommended since their operations are much faster.</remarks>
         </member>
         <member name="P:Althea.NativeTypes.Complex`1.Real">
             <summary>
@@ -10855,6 +10948,18 @@
             Complex absolute value of this complex
             </summary>
             <returns>The absolute value of this complex</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.AbsSingle">
+            <summary>
+            Complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex as a <see cref="T:System.Single"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.AbsDouble">
+            <summary>
+            Complex absolute value of this complex
+            </summary>
+            <returns>The absolute value of this complex as a <see cref="T:System.Double"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.Complex`1.SquareAbs">
             <summary>
@@ -11118,58 +11223,6 @@
             The static class for extension methods utilizing <see cref="T:Althea.NativeTypes.Const`1"/>
             </summary>
         </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericReciprocal``1(``0)">
-            <summary>
-            Generic type number reciprocal.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <returns>The reciprocal of the <paramref name="a"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericNegate``1(``0)">
-            <summary>
-            Generic type number negation.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <returns>The negation of the <paramref name="a"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericAdd``1(``0,``0)">
-            <summary>
-            Generic type numbers addition.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input left number</param>
-            <param name="b">The input right number</param>
-            <returns>The sum of <paramref name="a"/> and <paramref name="b"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericMinus``1(``0,``0)">
-            <summary>
-            Generic type numbers subtraction.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input left number</param>
-            <param name="b">The input right number</param>
-            <returns>The subtraction of <paramref name="a"/> and <paramref name="b"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericMultiply``1(``0,``0)">
-            <summary>
-            Generic type numbers multiplication.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input left number</param>
-            <param name="b">The input right number</param>
-            <returns>The product of <paramref name="a"/> and <paramref name="b"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericDivide``1(``0,``0)">
-            <summary>
-            Generic type numbers division.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input left number</param>
-            <param name="b">The input right number</param>
-            <returns>The division of <paramref name="a"/> and <paramref name="b"/></returns>
-        </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GetArithmeticOperation``1(Althea.NativeTypes.BinaryArithmeticOperation)">
             <summary>
             Get the delegate that performs the given <see cref="T:Althea.NativeTypes.BinaryArithmeticOperation"/> to the two input arguments of type <typeparamref name="T"/> and return the result as a <typeparamref name="T"/>
@@ -11186,51 +11239,12 @@
             <returns>The delegate that performs the given <paramref name="operation"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericSqrt``1(``0)">
+        <member name="M:Althea.NativeTypes.ConstExtension.GetRealPowerOperation``1">
             <summary>
-            Generic type number square root.
+            Get the delegate that exponentiate the two input arguments of type <typeparamref name="T"/> and <see cref="T:System.Double"/> and return the result as a <typeparamref name="T"/>
             </summary>
             <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <returns>The square root of <paramref name="a"/></returns>
-            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericConjugate``1(``0)">
-            <summary>
-            Generic type number conjugation.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <returns>The complex conjugate of <paramref name="a"/></returns>
-            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericPower``1(``0,System.Double)">
-            <summary>
-            Generic type number power.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <param name="power">The power as a <see cref="T:System.Double"/></param>
-            <returns>The complex conjugate of <paramref name="a"/></returns>
-            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericPower``1(``0,``0)">
-            <summary>
-            Generic type number power.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <param name="power">The power as a <typeparamref name="T"/></param>
-            <returns>The complex conjugate of <paramref name="a"/></returns>
-            <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericAbsolute``1(``0)">
-            <summary>
-            Generic type number absolute value.
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The input number</param>
-            <returns>The absolute value of <paramref name="a"/></returns>
+            <returns>The delegate that performs the exponentiate of <typeparamref name="T"/> and <see cref="T:System.Double"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GetAbsoluteGetter``1">
@@ -11241,46 +11255,6 @@
             <returns>The delegate that retrieves the absolute value as a <see cref="T:System.Double"/> of the input argument of type <typeparamref name="T"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
         </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericLargerThan``1(``0,``0)">
-            <summary>
-            Check whether the given generic number <paramref name="a"/> is larger than the generic number <paramref name="b"/>
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The left input number to be compared</param>
-            <param name="b">The right input number to be compared</param>
-            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &gt; <paramref name="b"/>; false otherwise.</returns>
-            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericLessThan``1(``0,``0)">
-            <summary>
-            Check whether the given generic number <paramref name="a"/> is less than the generic number <paramref name="b"/>
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The left input number to be compared</param>
-            <param name="b">The right input number to be compared</param>
-            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> &lt; <paramref name="b"/>; false otherwise.</returns>
-            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericLargerThanOrEqual``1(``0,``0)">
-            <summary>
-            Check whether the given generic number <paramref name="a"/> is larger than or equals to the generic number <paramref name="b"/>
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The left input number to be compared</param>
-            <param name="b">The right input number to be compared</param>
-            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≥ <paramref name="b"/>; false otherwise.</returns>
-            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericLessThanOrEqual``1(``0,``0)">
-            <summary>
-            Check whether the given generic number <paramref name="a"/> is less than or equals to the generic number <paramref name="b"/>
-            </summary>
-            <typeparam name="T">A supported data type</typeparam>
-            <param name="a">The left input number to be compared</param>
-            <param name="b">The right input number to be compared</param>
-            <returns>True if type <typeparamref name="T"/> has pre-defined larger-than operator and <paramref name="a"/> ≤ <paramref name="b"/>; false otherwise.</returns>
-            <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-        </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GetComparer``1(Althea.NativeTypes.CompareOperation)">
             <summary>
             Get the compare operation delegate of the given <paramref name="operation"/> as a <see cref="T:System.Func`3"/>
@@ -11290,90 +11264,13 @@
             <returns>The delegate used to compare the generic numbers of type <typeparamref name="T"/> if type <typeparamref name="T"/> has pre-defined <paramref name="operation"/>; otherwise, null.</returns>
             <exception cref="T:System.NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
         </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericConvert``2(``0)">
-            <summary>
-            Generically convert <paramref name="obj"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by finding possible explicit or implicit conversion operators or by utilizing default primitive type converters.
-            </summary>
-            <typeparam name="T1">The input type</typeparam>
-            <typeparam name="T2">The output type</typeparam>
-            <param name="obj">The input object to be converted</param>
-            <returns>The <typeparamref name="T2"/> object converted by explicit or implicit operators</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.ToDouble``1(``0)">
-            <summary>
-            Generic numeric value converter from any type to <see cref="T:System.Double"/>.
-            </summary>
-            <typeparam name="T">The convert source type</typeparam>
-            <param name="a">The number to convert</param>
-            <returns>The converted number as a <see cref="T:System.Double"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.FromDouble``1(System.Double)">
-            <summary>
-            Generic numeric value converter from <see cref="T:System.Double"/> to any type.
-            </summary>
-            <typeparam name="T">The convert target type</typeparam>
-            <param name="a">The number to convert</param>
-            <returns>The converted number as <typeparamref name="T"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.ToLong``1(``0)">
-            <summary>
-            Generic numeric value converter from any integral type to <see cref="T:System.Int64"/>.
-            </summary>
-            <typeparam name="T">The convert source type, must be an integral type</typeparam>
-            <param name="a">The number to convert</param>
-            <returns>The converted number as a <see cref="T:System.Int64"/></returns>
-            <exception cref="T:System.InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.FromLong``1(System.Int64)">
-            <summary>
-            Generic numeric value converter from <see cref="T:System.Int64"/> to any integral type.
-            </summary>
-            <typeparam name="T">The convert target type, must be an integral type</typeparam>
-            <param name="a">The number to convert</param>
-            <returns>The converted number as <typeparamref name="T"/></returns>
-            <exception cref="T:System.InvalidCastException">If <typeparamref name="T"/> is not an integral type</exception>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericRealPart``1(``0)">
-            <summary>
-            Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="a">The number to get real part</param>
-            <returns>The real part as a <see cref="T:System.Double"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericImagPart``1(``0)">
-            <summary>
-            Get the imaginary part (or 0 if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="a">The number to get imaginary part</param>
-            <returns>The imaginary part as a <see cref="T:System.Double"/></returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericRealPart``2(``0)">
-            <summary>
-            Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-            </summary>
-            <typeparam name="T">The input data type</typeparam>
-            <typeparam name="U">The output data type</typeparam>
-            <param name="a">The number to get real part</param>
-            <returns>The real part as a <typeparamref name="U"/> or 0 if <typeparamref name="U"/> is not a real type</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.ConstExtension.GenericImagPart``2(``0)">
-            <summary>
-            Get the imaginary part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
-            </summary>
-            <typeparam name="T">The input data type</typeparam>
-            <typeparam name="U">The output data type</typeparam>
-            <param name="a">The number to get real part</param>
-            <returns>The imaginary part as a <typeparamref name="U"/> or 0 if <typeparamref name="U"/> is not a real type</returns>
-        </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GetGenericConverter``2">
             <summary>
-            Get the generic converter from type <typeparamref name="T"/> to type <typeparamref name="U"/>
+            Get the generic converter that convert the input of type <typeparamref name="T"/> to type <typeparamref name="U"/>
             </summary>
             <typeparam name="T">The input data type</typeparam>
             <typeparam name="U">The output data type</typeparam>
-            <returns>The generic converter from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
+            <returns>The <see cref="T:System.Converter`2"/> from type <typeparamref name="T"/> to type <typeparamref name="U"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.ConstExtension.GetRealPartGetter``2">
             <summary>
@@ -11725,31 +11622,6 @@
             </summary>
             <remarks>Data type supported by this framework must be "native", i.e., it must be an <b>unmanaged</b> type which is either primitive or implementing <see cref="T:Althea.NativeTypes.ICustomNativeType`1"/>.</remarks>
         </member>
-        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsEqual``1(``0,``0)">
-            <summary>
-            Check whether the two given generic-typed numbers are the same. If there is not pre-defined equality comparison of <typeparamref name="T"/>, a bit-wise comparison will be used.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="a">The first input number</param>
-            <param name="b">The second input number</param>
-            <returns><c><paramref name="a"/> == <paramref name="b"/></c> or not</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsZero``1(``0)">
-            <summary>
-            Check whether the given generic-typed number bit-wisely equals to 0
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="a">The input number to check</param>
-            <returns><c><paramref name="a"/> == 0</c> or not</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsOne``1(``0)">
-            <summary>
-            Check whether the given generic-typed number bit-wisely equals to 1 (of type <typeparamref name="T"/>)
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="a">The input number to check</param>
-            <returns><c><paramref name="a"/> == 1</c> or not</returns>
-        </member>
         <member name="M:Althea.NativeTypes.NativeTypeExtension.TryParseNativeType``1(System.String,``0@)">
             <summary>
             Try to parse a <see cref="T:System.String"/> to a native type (including types that implements <see cref="T:Althea.NativeTypes.ICustomNativeType`1"/>)
@@ -11801,6 +11673,230 @@
             </summary>
             <typeparam name="T">The type to check</typeparam>
             <returns>The machine precision of <typeparamref name="T"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeNegate``1(``0)">
+            <summary>
+            Negate the given generic number <paramref name="value"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="value">The generic number to be negated</param>
+            <returns><c>-<paramref name="value"/></c> if <typeparamref name="T"/> is signed type; or <paramref name="value"/> otherwise.</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeReciprocal``1(``0)">
+            <summary>
+            Reciprocate the given generic number <paramref name="value"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="value">The generic number to be reciprocated</param>
+            <returns><c>1 / <paramref name="value"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeIncrement``1(``0)">
+            <summary>
+            Increase the given generic number <paramref name="value"/> by 1
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="value">The generic number to be added by 1</param>
+            <returns><c><paramref name="value"/> + 1</c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeAdd``1(``0,``0)">
+            <summary>
+            Try to natively add the given generic number <paramref name="a"/> and <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The left generic number to be added</param>
+            <param name="b">The right generic number to be added</param>
+            <returns><c><paramref name="a"/> + <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeSub``1(``0,``0)">
+            <summary>
+            Try to natively subtract the given generic number <paramref name="a"/> by <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be subtracted by <paramref name="b"/></param>
+            <param name="b">The generic number to subtract from <paramref name="a"/></param>
+            <returns><c><paramref name="a"/> - <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeMultiply``1(``0,``0)">
+            <summary>
+            Try to natively multiply the given generic number <paramref name="a"/> and <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The left generic number to be multiplied</param>
+            <param name="b">The right generic number to be multiplied</param>
+            <returns><c><paramref name="a"/> * <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeDivide``1(``0,``0)">
+            <summary>
+            Try to natively divide the given generic number <paramref name="a"/> by <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be divided by <paramref name="b"/></param>
+            <param name="b">The generic number to divide <paramref name="a"/></param>
+            <returns><c><paramref name="a"/> / <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeSqrt``1(``0)">
+            <summary>
+            Try to natively find the square root of the given generic number <paramref name="a"/> 
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to get square root</param>
+            <returns>The square root of <paramref name="a"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativePower``1(``0,System.Double)">
+            <summary>
+            Try to natively exponentiate the given generic number <paramref name="basis"/> by the given <paramref name="power"/> of type <see cref="T:System.Double"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="basis">The generic number to be exponentiated as the base</param>
+            <param name="power">The <see cref="T:System.Double"/> to be exponentiated as the exponent</param>
+            <returns><c><paramref name="basis"/> ^ <paramref name="power"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativePower``1(``0,``0)">
+            <summary>
+            Try to natively exponentiate the given generic number <paramref name="basis"/> by the given <paramref name="power"/> of type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="basis">The generic number to be exponentiated as the base</param>
+            <param name="power">The generic number to be exponentiated as the exponent</param>
+            <returns><c><paramref name="basis"/> ^ <paramref name="power"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsZero``1(``0)">
+            <summary>
+            Check whether the given generic-typed number bit-wisely equals to 0
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="a">The input number to check</param>
+            <returns><c><paramref name="a"/> == 0</c> or not</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsOne``1(``0)">
+            <summary>
+            Check whether the given generic-typed number bit-wisely equals to 1 (of type <typeparamref name="T"/>)
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="a">The input number to check</param>
+            <returns><c><paramref name="a"/> == 1</c> or not</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.IsEqual``1(``0,``0)">
+            <summary>
+            Try to natively compare whether the given generic numbers <paramref name="a"/> == <paramref name="b"/>. If there is no pre-defined equality comparer, their bit-wise equality will be returned.
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be compared at left</param>
+            <param name="b">The generic number to be compared at right</param>
+            <returns><c><paramref name="a"/> == <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeGreaterThan``1(``0,``0)">
+            <summary>
+            Try to natively compare the given real-typed generic numbers <paramref name="a"/> &gt; <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be compared at left</param>
+            <param name="b">The generic number to be compared at right</param>
+            <returns><c><paramref name="a"/> &gt; <paramref name="b"/></c> or false if <typeparamref name="T"/> is not a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeGreaterThanOrEqual``1(``0,``0)">
+            <summary>
+            Try to natively compare the given real-typed generic numbers <paramref name="a"/> ≥ <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be compared at left</param>
+            <param name="b">The generic number to be compared at right</param>
+            <returns><c><paramref name="a"/> ≥ <paramref name="b"/></c> or false if <typeparamref name="T"/> is not a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeLessThan``1(``0,``0)">
+            <summary>
+            Try to natively compare the given real-typed generic numbers <paramref name="a"/> &lt; <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be compared at left</param>
+            <param name="b">The generic number to be compared at right</param>
+            <returns><c><paramref name="a"/> &lt; <paramref name="b"/></c> or false if <typeparamref name="T"/> is not a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeLessThanOrEqual``1(``0,``0)">
+            <summary>
+            Try to natively compare the given real-typed generic numbers <paramref name="a"/> ≤ <paramref name="b"/>
+            </summary>
+            <typeparam name="T">A supported data type</typeparam>
+            <param name="a">The generic number to be compared at left</param>
+            <param name="b">The generic number to be compared at right</param>
+            <returns><c><paramref name="a"/> ≤ <paramref name="b"/></c> or false if <typeparamref name="T"/> is not a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeConvert``2(``0)">
+            <summary>
+            Generically convert the input number <paramref name="a"/> of type <typeparamref name="T1"/> to type <typeparamref name="T2"/> by using loaded explicit or implicit conversion operators or by utilizing default primitive or pre-defined types' converters.
+            </summary>
+            <typeparam name="T1">The input data type</typeparam>
+            <typeparam name="T2">The output data type</typeparam>
+            <param name="a">The generic number of type <typeparamref name="T1"/> to be converted</param>
+            <returns><c>(<typeparamref name="T2"/>)a</c> if <typeparamref name="T1"/> is a real type;<br/>
+            or <c>new <typeparamref name="T2"/>((<typeparamref name="T2"/>.T)a.Real, (<typeparamref name="T2"/>.T)a.Imag)</c> if both <typeparamref name="T1"/> and <typeparamref name="T2"/> are complex types;<br/>
+            or <c>(<typeparamref name="T2"/>)<paramref name="a"/>.Abs()</c> if <typeparamref name="T1"/> is a complex type and <typeparamref name="T2"/> is a real type</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.ToDouble``1(``0)">
+            <summary>
+            Generically convert the input number <paramref name="a"/> of type <typeparamref name="T"/> to <see cref="T:System.Double"/>.
+            </summary>
+            <typeparam name="T">The convert source type</typeparam>
+            <param name="a">The number to be converted to <see cref="T:System.Double"/></param>
+            <returns>The converted number as a <see cref="T:System.Double"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.FromDouble``1(System.Double)">
+            <summary>
+            Generically convert the input number <paramref name="a"/> of type <see cref="T:System.Double"/> to type <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The convert target type</typeparam>
+            <param name="a">The number to be converted to <typeparamref name="T"/></param>
+            <returns>The converted number as a <typeparamref name="T"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.ToLong``1(``0)">
+            <summary>
+            Generically convert the input number <paramref name="a"/> of type <typeparamref name="T"/> to <see cref="T:System.Int64"/>.
+            </summary>
+            <typeparam name="T">The convert source type</typeparam>
+            <param name="a">The number to be converted to <see cref="T:System.Int64"/></param>
+            <returns>The converted number as a <see cref="T:System.Int64"/></returns>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.FromLong``1(System.Int64)">
+            <summary>
+            Generically convert the input number <paramref name="a"/> of type <see cref="T:System.Int64"/> to type <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The convert target type</typeparam>
+            <param name="a">The number to be converted to <typeparamref name="T"/></param>
+            <returns>The converted number as a <typeparamref name="T"/></returns>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeRealPart``1(``0)">
+            <summary>
+            Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="a">The number to get real part</param>
+            <returns>The real part of <paramref name="a"/> as a <see cref="T:System.Double"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeImagPart``1(``0)">
+            <summary>
+            Get the imaginary part (or 0 if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="a">The number to get real part</param>
+            <returns>The imaginary part of <paramref name="a"/> as a <see cref="T:System.Double"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeConjugate``1(``0)">
+            <summary>
+            Get the complex conjugate (or 0 if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="a">The number to be conjugated</param>
+            <returns>The complex conjugate of <paramref name="a"/> as a <typeparamref name="T"/></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.NativeAbsolute``1(``0)">
+            <summary>
+            Get the real part (or itself if it is not a complex) of the given generic numeric value <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="a">The number to get real part</param>
+            <returns>The real part of <paramref name="a"/> as a <see cref="T:System.Double"/></returns>
         </member>
         <member name="T:Althea.Random.AbstractApi">
             <summary>

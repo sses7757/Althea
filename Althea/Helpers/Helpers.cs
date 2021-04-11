@@ -1147,7 +1147,7 @@ namespace Althea.Helpers
 			{
 				for (long i = 0; i < rows; i++)
 					for (long j = 0; j < i; j++)
-						if (!arr[i, j].Equals(arr[j, i].GenericConjugate()))
+						if (!arr[i, j].Equals(arr[j, i].NativeConjugate()))
 							return false;
 			}
 			else

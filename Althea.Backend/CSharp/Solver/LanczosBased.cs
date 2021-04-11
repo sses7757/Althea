@@ -27,8 +27,8 @@ namespace Althea.Backend.CSharp.Solver
 		{
 			if (Const<T>.IsComplex)
 			{
-				d = value.GenericRealPart();
-				double im = value.GenericImagPart();
+				d = value.NativeRealPart();
+				double im = value.NativeImagPart();
 				// check whether the imaginary is small enough
 				return Math.Abs(im / d) <= Const<T>.MachinePrecisionHalf;
 			}
@@ -44,8 +44,8 @@ namespace Althea.Backend.CSharp.Solver
 		{
 			if (Const<T>.IsComplex)
 			{
-				double re = value.GenericRealPart();
-				double im = value.GenericImagPart();
+				double re = value.NativeRealPart();
+				double im = value.NativeImagPart();
 				// check whether the imaginary is small enough (the absolute value is not affected by it)
 				if (Math.Abs(im / re) > Const<T>.MachinePrecisionHalf)
 					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
@@ -169,7 +169,7 @@ namespace Althea.Backend.CSharp.Solver
 			{
 				var q = qs[i];
 				weights[i] = q.Dot(r);
-				r.AddBy(q, weights[i].GenericNegate());
+				r.AddBy(q, weights[i].NativeNegate());
 			}
 			if (!robust || len <= 4)
 				return;
@@ -181,8 +181,8 @@ namespace Althea.Backend.CSharp.Solver
 				var dot = q.Dot(r);
 				if (dot.IsZero())
 					continue;
-				weights[i] = weights[i].GenericAdd(dot);
-				r.AddBy(q, dot.GenericNegate());
+				weights[i] = weights[i].NativeAdd(dot);
+				r.AddBy(q, dot.NativeNegate());
 			}
 			return;
 		}
@@ -271,7 +271,7 @@ namespace Althea.Backend.CSharp.Solver
 			T alpha = q0.Dot(r);
 			α0 = alpha.ToDoubleCheck();
 			//tex:$\vec r = \vec r - \alpha_0 \vec q_0$
-			r.AddBy(q0, alpha.GenericNegate());
+			r.AddBy(q0, alpha.NativeNegate());
 			//tex: $\beta_0=\|\vec r_0\|$
 			β0 = r.Norm();
 		}
@@ -316,7 +316,7 @@ namespace Althea.Backend.CSharp.Solver
 			double α = alpha.ToDoubleCheck();
 			αs.Add(α);
 			//tex:$\vec r = \vec r - \alpha_0 \vec q_0$
-			r.AddBy(q0, alpha.GenericNegate());
+			r.AddBy(q0, alpha.NativeNegate());
 			//tex: $\beta_0=\|\vec r_0\|$
 			βs.Add(r.Norm());
 		}
@@ -511,7 +511,7 @@ namespace Althea.Backend.CSharp.Solver
 							stringBuilder.Append(", ");
 #endif
 							var q = qs[i];
-							r.AddBy(q, q.Dot(r).GenericNegate());
+							r.AddBy(q, q.Dot(r).NativeNegate());
 							this.now[j] = this.explicitValue;
 						}
 					}
@@ -531,7 +531,7 @@ namespace Althea.Backend.CSharp.Solver
 							stringBuilder.Append(", ");
 #endif
 							var q = qs[k - this.convergedCount];
-							r.AddBy(q, q.Dot(r).GenericNegate());
+							r.AddBy(q, q.Dot(r).NativeNegate());
 							this.now[k] = this.explicitValue;
 						}
 					}
@@ -545,7 +545,7 @@ namespace Althea.Backend.CSharp.Solver
 							stringBuilder.Append(", ");
 #endif
 							var q = converged[k];
-							r.AddBy(q, q.Dot(r).GenericNegate());
+							r.AddBy(q, q.Dot(r).NativeNegate());
 							this.now[k] = this.explicitValue;
 						}
 					}
@@ -1188,7 +1188,7 @@ namespace Althea.Backend.CSharp.Solver
 					#endregion
 
 					#region check for stagnation
-					if (p.Norm() * α.GenericAbsolute() < Const<T>.MachinePrecision * x.Norm())
+					if (p.Norm() * α.NativeAbsolute() < Const<T>.MachinePrecision * x.Norm())
 						stagnations++;
 					else
 						stagnations = 0;
@@ -1324,7 +1324,7 @@ namespace Althea.Backend.CSharp.Solver
 
 				#region local re-orthogonalization
 				//tex: $\vec v = \vec v - \dfrac {\vec v' \cdot \vec v} {\vec v' \cdot \vec v'} \vec v'$
-				v.AddBy(vv, vv.Dot(v).GenericDivide(vv.Dot(vv)).GenericNegate());
+				v.AddBy(vv, vv.Dot(v).NativeDivide(vv.Dot(vv)).NativeNegate());
 				#endregion
 
 				olderV = oldV; oldV = v;

@@ -180,7 +180,7 @@ namespace Althea.Backend.Arrays
 			if (other is DenseVector<T>)
 				return LAD.Dot(conjugateThis, this.Storage, 1, other.Storage, 1);
 			else if (other is ISparseVector<T> sparse)
-				return LAS.VectorSparseDotDense(conjugateThis, sparse, this.Storage).GenericConjugate();
+				return LAS.VectorSparseDotDense(conjugateThis, sparse, this.Storage).NativeConjugate();
 			else
 				throw new NotSupportedException();
 		}

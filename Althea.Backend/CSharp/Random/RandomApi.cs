@@ -74,10 +74,10 @@ namespace Althea.Backend.CSharp.Random
 			pointer = p.Pointer; length = (int)p.LengthInBytes;
 			if (distribution is UniformDistribution<T> u)
 			{
-				offset = u.LowerBound; scale = u.UpperBound.GenericMinus(offset);
+				offset = u.LowerBound; scale = u.UpperBound.NativeSub(offset);
 				if (Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754)
 				{
-					scale = scale.GenericMultiply(typeof(T) == typeof(double) ? ReciprocalD.FromDouble<T>() : ReciprocalS.GenericConvert<float, T>());
+					scale = scale.NativeMultiply(typeof(T) == typeof(double) ? ReciprocalD.FromDouble<T>() : ReciprocalS.NativeConvert<float, T>());
 				}
 			}
 			return true;

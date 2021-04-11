@@ -254,7 +254,7 @@ namespace Althea.Backend.Arrays
 				}
 				T value = MEM.ToManaged(this.Storage + (y * this.LeadDim + x));
 				if (this.Hermitian && swapped)
-					return value.GenericConjugate();
+					return value.NativeConjugate();
 				else
 					return value;
 			}
@@ -263,7 +263,7 @@ namespace Althea.Backend.Arrays
 				{
 					(x, y) = (y, x);
 					if (this.Hermitian)
-						value = value.GenericConjugate();
+						value = value.NativeConjugate();
 				}
 				MEM.FromManaged(this.Storage + (y * this.LeadDim + x), value);
 			}
@@ -737,7 +737,7 @@ namespace Althea.Backend.Arrays
 				{
 					for (int j = i + 1; j < n; j++)
 					{
-						managed[i * n + j] = managed[i + j * n].GenericConjugate();
+						managed[i * n + j] = managed[i + j * n].NativeConjugate();
 					}
 				}
 			}
@@ -757,7 +757,7 @@ namespace Althea.Backend.Arrays
 				{
 					for (int j = i + 1; j < n; j++)
 					{
-						managed[i + j * n] = managed[i * n + j].GenericConjugate();
+						managed[i + j * n] = managed[i * n + j].NativeConjugate();
 					}
 				}
 			}

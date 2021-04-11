@@ -122,7 +122,7 @@ namespace Althea.Backend.Arrays
 				index = index.Clone();
 				try
 				{
-					LAD.PointWiseAddScalar(index, 1, start.GenericNegate());
+					LAD.PointWiseAddScalar(index, 1, start.NativeNegate());
 				}
 				catch (Exception)
 				{
@@ -401,7 +401,7 @@ namespace Althea.Backend.Arrays
 			var outIndex = ActualStorage<TIndOut>.Empty;
 			var span = MemoryMarshal.CreateSpan(ref outIndex, 1);
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(span, copyValues: false);
-			return new SparseVector<TOut, TIndOut>(this.Length, value, outIndex, this.DefaultValue.GenericConvert<T, TOut>());
+			return new SparseVector<TOut, TIndOut>(this.Length, value, outIndex, this.DefaultValue.NativeConvert<T, TOut>());
 		}
 		#endregion
 

@@ -880,7 +880,7 @@ namespace Althea.Backend.Arrays
 				T dot = LAD.Dot(true, columnA, 1, columnB, 1);
 				dotSquare += (dynamic)dot * dot;
 			}
-			return ((T)dotSquare).GenericSqrt();
+			return ((T)dotSquare).NativeSqrt();
 		}
 
 		void IKrylovVector<DenseMatrix<T>, T>.AddBy(DenseMatrix<T> other, T scalar) => this.OverwriteByMatricesSum(this, other, Const<T>.One, scalar);

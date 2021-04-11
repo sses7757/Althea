@@ -127,52 +127,71 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Unsafe.WriteUnaligned(r, v);
 		}
 
-		// TODO: HorizontalAdd order
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Vector256<float> ComplexSquareAbs(Vector256<float> current1, Vector256<float> current2)
+		private static Vector256<float> ComplexSquareAbsNoOrder(Vector256<float> current1, Vector256<float> current2)
 		{
 			current1 = Avx.Multiply(current1, current1);
 			current2 = Avx.Multiply(current2, current2);
 			Vector256<float> squares = Avx.HorizontalAdd(current1, current2);
 			return squares;
+			// abs of {0, 1, 4, 5, 2, 3, 6, 7}-th complex
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Vector256<double> ComplexSquareAbs(Vector256<double> current1, Vector256<double> current2)
+		private static Vector256<double> ComplexSquareAbsNoOrder(Vector256<double> current1, Vector256<double> current2)
 		{
 			current1 = Avx.Multiply(current1, current1);
 			current2 = Avx.Multiply(current2, current2);
 			Vector256<double> squares = Avx.HorizontalAdd(current1, current2);
 			return squares;
+			// abs of {0, 2, 1, 3}-th complex
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector256<float> ComplexSquareAbs(ComplexSingle* p)
+		private static unsafe Vector256<float> ComplexSquareAbsNoOrder(ComplexSingle* p)
 		{
 			Vector256<float> current1 = LoadVector256<float>(p);
 			Vector256<float> current2 = LoadVector256<float>(p + Vector256<float>.Count / 2);
-			return ComplexSquareAbs(current1, current2);
+			return ComplexSquareAbsNoOrder(current1, current2);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector256<double> ComplexSquareAbs(ComplexDouble* p)
+		private static unsafe Vector256<double> ComplexSquareAbsNoOrder(ComplexDouble* p)
 		{
 			Vector256<double> current1 = LoadVector256<double>(p);
 			Vector256<double> current2 = LoadVector256<double>(p + Vector256<double>.Count / 2);
-			return ComplexSquareAbs(current1, current2);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector256<float> ComplexAbs(ComplexSingle* p)
-		{
-			Vector256<float> squares = ComplexSquareAbs(p);
-			return Avx.Sqrt(squares);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector256<double> ComplexAbs(ComplexDouble* p)
-		{
-			Vector256<double> squares = ComplexSquareAbs(p);
-			return Avx.Sqrt(squares);
+			return ComplexSquareAbsNoOrder(current1, current2);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ComplexUnpack(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> realA, out Vector256<float> imagA, out Vector256<float> realB, out Vector256<float> imagB)
+		private static Vector256<float> ComplexSquareAbsOrder(Vector256<float> current1, Vector256<float> current2)
+		{
+			Vector256<float> squares = ComplexSquareAbsNoOrder(current1, current2);
+			squares = Avx2.Permute4x64(squares.AsDouble(), 0b11_01_10_00).AsSingle();
+			return squares;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Vector256<double> ComplexSquareAbsOrder(Vector256<double> current1, Vector256<double> current2)
+		{
+			Vector256<double> squares = ComplexSquareAbsNoOrder(current1, current2);
+			squares = Avx2.Permute4x64(squares, 0b11_01_10_00);
+			return squares;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe Vector256<float> ComplexSquareAbsOrder(ComplexSingle* p)
+		{
+			Vector256<float> current1 = LoadVector256<float>(p);
+			Vector256<float> current2 = LoadVector256<float>(p + Vector256<float>.Count / 2);
+			return ComplexSquareAbsOrder(current1, current2);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe Vector256<double> ComplexSquareAbsOrder(ComplexDouble* p)
+		{
+			Vector256<double> current1 = LoadVector256<double>(p);
+			Vector256<double> current2 = LoadVector256<double>(p + Vector256<double>.Count / 2);
+			return ComplexSquareAbsOrder(current1, current2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ComplexUnpack(Vector256<float> a0, Vector256<float> a1, out Vector256<float> realA, out Vector256<float> imagA)
 		{
 			// {a[0].r, a[4].r, a[0].i, a[4].i, a[2].r, a[6].r, a[2].i, a[6].i}
 			Vector256<float> tempA0 = Avx.UnpackLow(a0, a1);
@@ -182,28 +201,26 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			realA = Avx.UnpackLow(tempA0, tempA1);
 			// {a[0].i, a[1].i, a[4].i, a[5].i, a[2].i, a[3].i, a[6].i, a[7].i}
 			imagA = Avx.UnpackHigh(tempA0, tempA1);
-
-			// {b[0].r, b[4].r, b[0].i, b[4].i, b[2].r, b[6].r, b[2].i, b[6].i}
-			Vector256<float> tempB0 = Avx.UnpackLow(b0, b1);
-			// {b[1].r, b[5].r, b[1].i, b[5].i, b[3].r, b[7].r, b[3].i, b[7].i}
-			Vector256<float> tempB1 = Avx.UnpackHigh(b0, b1);
-			// {b[0].r, b[1].r, b[4].r, b[5].r, b[2].r, b[3].r, b[6].r, b[7].r}
-			realB = Avx.UnpackLow(tempB0, tempB1);
-			// {b[0].i, b[1].i, b[4].i, b[5].i, b[2].i, b[3].i, b[6].i, b[7].i}
-			imagB = Avx.UnpackHigh(tempB0, tempB1);
 		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ComplexUnpack(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, out Vector256<double> realA, out Vector256<double> imagA, out Vector256<double> realB, out Vector256<double> imagB)
+		private static void ComplexUnpack(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> realA, out Vector256<float> imagA, out Vector256<float> realB, out Vector256<float> imagB)
+		{
+			ComplexUnpack(a0, a1, out realA, out imagA);
+			ComplexUnpack(b0, b1, out realB, out imagB);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ComplexUnpack(Vector256<double> a0, Vector256<double> a1, out Vector256<double> realA, out Vector256<double> imagA)
 		{
 			// {a[0].r, a[2].r, a[1].r, a[3].r}
 			realA = Avx.UnpackLow(a0, a1);
 			// {a[0].i, a[2].i, a[1].i, a[3].i}
 			imagA = Avx.UnpackHigh(a0, a1);
-			// {b[0].r, b[2].r, b[1].r, b[3].r}
-			realB = Avx.UnpackLow(b0, b1);
-			// {b[0].i, b[2].i, b[1].i, b[3].i}
-			imagB = Avx.UnpackHigh(b0, b1);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ComplexUnpack(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, out Vector256<double> realA, out Vector256<double> imagA, out Vector256<double> realB, out Vector256<double> imagB)
+		{
+			ComplexUnpack(a0, a1, out realA, out imagA);
+			ComplexUnpack(b0, b1, out realB, out imagB);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -227,11 +244,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		//	and implement special APIs for that type of storage.
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ComplexMultiplyAdd<Conj>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, ref Vector256<float> realC, ref Vector256<float> imagC)
+		private static void UnpackComplexMultiplyAdd<Conj>(Vector256<float> realA, Vector256<float> imagA, Vector256<float> realB, Vector256<float> imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
 		{
 			bool conj = typeof(Conj) == typeof(bool);
-			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
-			
 			// multiply
 			// the branch shall be eliminated by JIT
 			if (Fma.IsSupported)
@@ -274,11 +289,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ComplexMultiplyAdd<Conj>(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, ref Vector256<double> realC, ref Vector256<double> imagC)
+		private static void UnpackComplexMultiplyAdd<Conj>(Vector256<double> realA, Vector256<double> imagA, Vector256<double> realB, Vector256<double> imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
 		{
 			bool conj = typeof(Conj) == typeof(bool);
-			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
-
 			// multiply
 			// the branch shall be eliminated by JIT
 			if (Fma.IsSupported)
@@ -319,6 +332,18 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					imagC = Avx.Subtract(imagC, AiBr);
 				}
 			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ComplexMultiplyAdd<Conj>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, ref Vector256<float> realC, ref Vector256<float> imagC)
+		{
+			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
+			UnpackComplexMultiplyAdd<Conj>(realA, imagA, realB, imagB, ref realC, ref imagC);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ComplexMultiplyAdd<Conj>(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, ref Vector256<double> realC, ref Vector256<double> imagC)
+		{
+			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
+			UnpackComplexMultiplyAdd<Conj>(realA, imagA, realB, imagB, ref realC, ref imagC);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ComplexMultiply<Conj>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> c0, out Vector256<float> c1)

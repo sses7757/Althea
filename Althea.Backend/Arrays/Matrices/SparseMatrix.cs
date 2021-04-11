@@ -162,17 +162,17 @@ namespace Althea.Backend.Arrays
 		{
 			var outIndex = new FixedClassBuffer_2<ActualStorage<TIndOut>>();
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(outIndex.AsSpan(), copyValues: false);
-			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>());
+			return new SparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.NativeConvert<T, TOut>());
 		}
 		#endregion
 
 		#region indexer helpers
 		#region common
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long ToLong(TInd i) => i.GenericConvert<TInd, long>();
+		private static long ToLong(TInd i) => i.NativeConvert<TInd, long>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static TInd ToInd(long i) => i.GenericConvert<long, TInd>();
+		private static TInd ToInd(long i) => i.NativeConvert<long, TInd>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long[] ToManaged(Storage<TInd> storage)
@@ -231,7 +231,7 @@ namespace Althea.Backend.Arrays
 			column = column.MakeReference(offset, length);
 			if (!y1.IsZero())
 			{
-				column = column.ApplyToClone(c => LAD.PointWiseAddScalar(c, 1, y1.GenericNegate()));
+				column = column.ApplyToClone(c => LAD.PointWiseAddScalar(c, 1, y1.NativeNegate()));
 			}
 		}
 
@@ -272,7 +272,7 @@ namespace Althea.Backend.Arrays
 						MEM.MemoryCopy(valueArray[i], outValues.MakeReference(offset));
 						offset += MEM.MemoryCopy(indexArray[i], outColumn.MakeReference(offset));
 					}
-					LAD.PointWiseAddScalar(outColumn, 1, y1.GenericNegate());
+					LAD.PointWiseAddScalar(outColumn, 1, y1.NativeNegate());
 					values = outValues; column = outColumn;
 				}
 				catch (Exception)

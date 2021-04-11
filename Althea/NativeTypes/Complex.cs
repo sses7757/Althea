@@ -39,7 +39,8 @@ namespace Althea.NativeTypes
 	}
 	#endregion
 
-	#region double complex type
+
+	#region single and double complex types
 	/// <summary>
 	/// The double precision float complex type
 	/// </summary>
@@ -1438,6 +1439,7 @@ namespace Althea.NativeTypes
 	}
 	#endregion
 
+
 	#region generic complex type
 	/// <summary>
 	/// The general complex type for any real numeric number type including <see cref="float"/> and <see cref="double"/>
@@ -1494,24 +1496,6 @@ namespace Althea.NativeTypes
 			if (Const<T>.DataTypeClass < DataTypeClassification.FloatPoint_IEEE754)
 				throw new InvalidOperationException(Support.DataType);
 		}
-
-		private static unsafe readonly int _sizeT = sizeof(T);
-
-		private static readonly bool _doubleIsT = typeof(T) == typeof(double);
-
-		private static readonly Converter<T, double> _toDouble = Const<T>.ToDoubleDelegate;
-
-		private static readonly Converter<double, T> _fromDouble = Const<T>.FromDoubleDelegate;
-
-		private static readonly Func<T, T> _negate = Const<T>.NegateDelegate;
-
-		private static readonly Func<T, T, T> _add = Const<T>.AddDelegate;
-
-		private static readonly Func<T, T, T> _sub = Const<T>.SubtractDelegate;
-
-		private static readonly Func<T, T, T> _mul = Const<T>.MultiplyDelegate;
-
-		private static readonly Func<T, T, T> _div = Const<T>.DivideDelegate;
 		#endregion
 
 		#region constant values
@@ -1579,7 +1563,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="a">a int</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator Complex<T>(int a) => new(a.GenericConvert<int, T>());
+		public static implicit operator Complex<T>(int a) => new(a.NativeConvert<int, T>());
 		/// <summary>
 		/// Convert from T
 		/// </summary>
@@ -1591,7 +1575,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="a">a int tuple</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator Complex<T>((int r, int i) a) => new(a.r.GenericConvert<int, T>(), a.i.GenericConvert<int, T>());
+		public static implicit operator Complex<T>((int r, int i) a) => new(a.r.NativeConvert<int, T>(), a.i.NativeConvert<int, T>());
 		/// <summary>
 		/// Convert from T tuple
 		/// </summary>
@@ -1605,10 +1589,12 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe explicit operator ComplexDouble(Complex<T> v)
 		{
-			if (_doubleIsT)
+			if (typeof(T) == typeof(float))
+				return *(ComplexSingle*)&v;
+			else if (typeof(T) == typeof(double))
 				return *(ComplexDouble*)&v;
 			else
-				return new(_toDouble(v.real), _toDouble(v.imag));
+				return new(v.real.ToDouble(), v.imag.ToDouble());
 		}
 
 		/// <summary>
@@ -1617,10 +1603,10 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe explicit operator Complex<T>(ComplexDouble v)
 		{
-			if (_doubleIsT)
+			if (typeof(T) == typeof(double))
 				return *(Complex<T>*)&v;
 			else
-				return new(_fromDouble(v.Real), _fromDouble(v.Imag));
+				return new(v.Real.FromDouble<T>(), v.Imag.FromDouble<T>());
 		}
 
 		/// <summary>
@@ -1687,83 +1673,183 @@ namespace Althea.NativeTypes
 		/// Complex negate
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a) => new(_negate(a.real), _negate(a.imag));
+		public static Complex<T> operator -(Complex<T> a) => new(a.real.NativeNegate(), a.imag.NativeNegate());
 		/// <summary>
 		/// Complex add
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(_add(a.real, b.real), _add(a.imag, b.imag));
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real.NativeAdd(b.real), a.imag.NativeAdd(b.imag));
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(_sub(a.real, b.real), _sub(a.imag, b.imag));
+		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real.NativeSub(b.real), a.imag.NativeSub(b.imag));
 		/// <summary>
 		/// Complex add real
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(Complex<T> a, T b) => new(_add(a.real, b), a.imag);
+		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real.NativeAdd(b), a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(T b, Complex<T> a) => new(_add(a.real, b), a.imag);
+		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real.NativeAdd(b), a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a, T b) => new(_sub(a.real, b), a.imag);
+		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real.NativeSub(b), a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(T b, Complex<T> a) => new(_sub(b, a.real), _negate(a.imag));
+		public static Complex<T> operator -(T b, Complex<T> a) => new(b.NativeSub(a.real), a.imag.NativeNegate());
 
 		/// <summary>
 		/// Complex multiply
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(Complex<T> a, Complex<T> b)
+		public static unsafe Complex<T> operator *(Complex<T> a, Complex<T> b)
 		{
-			return (Complex<T>)((ComplexDouble)a * (ComplexDouble)b);
+			if (typeof(T) == typeof(float))
+			{
+				ComplexSingle v = (*(ComplexSingle*)&a) * (*(ComplexSingle*)&b);
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				ComplexDouble v = (*(ComplexDouble*)&a) * (*(ComplexDouble*)&b);
+				return *(Complex<T>*)&v;
+			}
+			// else
+			T real = a.real.NativeMultiply(b.real);
+			T temp = a.imag.NativeMultiply(b.imag);
+			real = real.NativeSub(temp);
+			T imag = a.real.NativeMultiply(b.imag);
+			temp = a.imag.NativeMultiply(b.real);
+			imag = imag.NativeAdd(temp);
+			return new Complex<T>(real, imag);
 		}
+
 		/// <summary>
 		/// Complex division, guards against intermediate underflow and overflow by scaling
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator /(Complex<T> a, Complex<T> b)
+		public static unsafe Complex<T> operator /(Complex<T> a, Complex<T> b)
 		{
+			if (typeof(T) == typeof(float))
+			{
+				ComplexSingle v = (*(ComplexSingle*)&a) / (*(ComplexSingle*)&b);
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				ComplexDouble v = (*(ComplexSingle*)&a) * (*(ComplexSingle*)&b);
+				return *(Complex<T>*)&v;
+			}
+			// else
 			return (Complex<T>)((ComplexDouble)a / (ComplexDouble)b);
 		}
+
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(Complex<T> a, T b) => new(_mul(a.real, b), _mul(a.imag, b));
+		public static Complex<T> operator *(Complex<T> a, T b) => new(a.real.NativeMultiply(b), a.imag.NativeMultiply(b));
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(T b, Complex<T> a) => new(_mul(a.real, b), _mul(a.imag, b));
+		public static Complex<T> operator *(T b, Complex<T> a) => new(a.real.NativeMultiply(b), a.imag.NativeMultiply(b));
 		/// <summary>
 		/// Complex divide real number
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator /(Complex<T> a, T b) => new(_div(a.real, b), _div(a.imag, b));
+		public static Complex<T> operator /(Complex<T> a, T b) => new(a.real.NativeDivide(b), a.imag.NativeDivide(b));
+
 		/// <summary>
 		/// Real number divide complex 
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator /(T b, Complex<T> a) => new Complex<T>(b) / a;
+		public static unsafe Complex<T> operator /(T a, Complex<T> b)
+		{
+			if (typeof(T) == typeof(float))
+			{
+				ComplexSingle v = (*(float*)&a) / (*(ComplexSingle*)&b);
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				ComplexDouble v = (*(double*)&a) * (*(ComplexDouble*)&b);
+				return *(Complex<T>*)&v;
+			}
+			// else
+			return (Complex<T>)(a.ToDouble() / (ComplexDouble)b);
+		}
 
 		/// <summary>
 		/// Complex absolute value of this complex
 		/// </summary>
 		/// <returns>The absolute value of this complex</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Abs()
+		public unsafe T Abs()
 		{
-			return _fromDouble(((ComplexDouble)this).Abs());
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				float v = (*(ComplexSingle*)&p).Abs();
+				return *(T*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				double v = (*(ComplexDouble*)&p).Abs();
+				return *(T*)&v;
+			}
+			// else
+			return ((ComplexDouble)this).Abs().FromDouble<T>();
+		}
+
+		/// <summary>
+		/// Complex absolute value of this complex
+		/// </summary>
+		/// <returns>The absolute value of this complex as a <see cref="float"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe double AbsSingle()
+		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				return (*(ComplexSingle*)&p).Abs();
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				return (float)(*(ComplexDouble*)&p).Abs();
+			}
+			// else
+			return (float)((ComplexDouble)this).Abs();
+		}
+
+		/// <summary>
+		/// Complex absolute value of this complex
+		/// </summary>
+		/// <returns>The absolute value of this complex as a <see cref="double"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe double AbsDouble()
+		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				return (*(ComplexSingle*)&p).Abs();
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				return (*(ComplexDouble*)&p).Abs();
+			}
+			// else
+			return ((ComplexDouble)this).Abs();
 		}
 
 		/// <summary>
@@ -1771,9 +1857,22 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <returns>The absolute value of this complex</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T SquareAbs()
+		public unsafe T SquareAbs()
 		{
-			return _fromDouble(((ComplexDouble)this).SquareAbs());
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				float v = (*(ComplexSingle*)&p).SquareAbs();
+				return *(T*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				double v = (*(ComplexDouble*)&p).SquareAbs();
+				return *(T*)&v;
+			}
+			// else
+			return ((ComplexDouble)this).SquareAbs().FromDouble<T>();
 		}
 
 		/// <summary>
@@ -1781,24 +1880,49 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <returns>The argument of this complex</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Arg()
+		public unsafe T Arg()
 		{
-			return _fromDouble(((ComplexDouble)this).Arg());
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				float v = (*(ComplexSingle*)&p).Arg();
+				return *(T*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				double v = (*(ComplexDouble*)&p).Arg();
+				return *(T*)&v;
+			}
+			// else
+			return ((ComplexDouble)this).Arg().FromDouble<T>();
 		}
 
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Conjugate() => new(this.real, _negate(this.imag));
-
+		public Complex<T> Conjugate() => new(this.real, this.imag.NativeNegate());
 
 		/// <summary>
 		/// Complex exponential (of base <c>e</c>)
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Exp()
+		public unsafe Complex<T> Exp()
 		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				ComplexSingle v = (*(ComplexSingle*)&p).Exp();
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				ComplexDouble v = (*(ComplexDouble*)&p).Exp();
+				return *(Complex<T>*)&v;
+			}
+			// else
 			var doubleResult = ((ComplexDouble)this).Exp();
 			return (Complex<T>)doubleResult;
 		}
@@ -1807,8 +1931,21 @@ namespace Althea.NativeTypes
 		/// Complex logarithm (of base <c>e</c>)
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Log()
+		public unsafe Complex<T> Log()
 		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> p = this;
+				ComplexSingle v = (*(ComplexSingle*)&p).Log();
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> p = this;
+				ComplexDouble v = (*(ComplexDouble*)&p).Log();
+				return *(Complex<T>*)&v;
+			}
+			// else
 			return (Complex<T>)((ComplexDouble)this).Log();
 		}
 
@@ -1817,18 +1954,63 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="p">The power of real type <typeparamref name="T"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Pow(T p)
+		public unsafe Complex<T> Pow(T p)
 		{
-			return (Complex<T>)((ComplexDouble)this).Pow(_toDouble(p));
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> a = this;
+				ComplexSingle v = (*(ComplexSingle*)&a).Pow(*(float*)&p);
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> a = this;
+				ComplexDouble v = (*(ComplexDouble*)&a).Pow(*(double*)&p);
+				return *(Complex<T>*)&v;
+			}
+			// else
+			return (Complex<T>)((ComplexDouble)this).Pow(p.ToDouble());
 		}
+
+		internal unsafe Complex<T> PowDouble(double p)
+		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> a = this;
+				ComplexSingle v = (*(ComplexSingle*)&a).Pow((float)p);
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> a = this;
+				ComplexDouble v = (*(ComplexDouble*)&a).Pow(p);
+				return *(Complex<T>*)&v;
+			}
+			// else
+			return (Complex<T>)((ComplexDouble)this).Pow(p);
+		}
+
 
 		/// <summary>
 		/// Complex  number power
 		/// </summary>
 		/// <param name="p">The power of complex type <see cref="Complex{T}"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Pow(Complex<T> p)
+		public unsafe Complex<T> Pow(Complex<T> p)
 		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> a = this;
+				ComplexSingle v = (*(ComplexSingle*)&a).Pow(*(ComplexSingle*)&p);
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> a = this;
+				ComplexDouble v = (*(ComplexDouble*)&a).Pow(*(ComplexDouble*)&p);
+				return *(Complex<T>*)&v;
+			}
+			// else
 			return (Complex<T>)((ComplexDouble)this).Pow((ComplexDouble)p);
 		}
 
@@ -1837,8 +2019,21 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <returns>The complex square root of this complex</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Sqrt()
+		public unsafe Complex<T> Sqrt()
 		{
+			if (typeof(T) == typeof(float))
+			{
+				Complex<T> a = this;
+				ComplexSingle v = (*(ComplexSingle*)&a).Sqrt();
+				return *(Complex<T>*)&v;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				Complex<T> a = this;
+				ComplexDouble v = (*(ComplexDouble*)&a).Sqrt();
+				return *(Complex<T>*)&v;
+			}
+			// else
 			return (Complex<T>)((ComplexDouble)this).Sqrt();
 		}
 

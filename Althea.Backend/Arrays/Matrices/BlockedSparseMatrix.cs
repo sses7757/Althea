@@ -252,16 +252,16 @@ namespace Althea.Backend.Arrays
 		{
 			var outIndex = new FixedClassBuffer_2<ActualStorage<TIndOut>>();
 			var value = ((ISparseArray<T, TInd>)this).CreateArraysAlike<TOut, TIndOut>(outIndex.AsSpan(), copyValues: false);
-			return new BlockedSparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, this.m_blockRows, this.m_blockCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.GenericConvert<T, TOut>(), 0, this.m_blockColumnMajor);
+			return new BlockedSparseMatrix<TOut, TIndOut>(this.NRows, this.NCols, this.m_blockRows, this.m_blockCols, value, outIndex[0], outIndex[1], this.Format, this.DefaultValue.NativeConvert<T, TOut>(), 0, this.m_blockColumnMajor);
 		}
 		#endregion
 
 		#region indexer helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long ToLong(TInd i) => i.GenericConvert<TInd, long>();
+		private static long ToLong(TInd i) => i.NativeConvert<TInd, long>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static TInd ToInd(long i) => i.GenericConvert<long, TInd>();
+		private static TInd ToInd(long i) => i.NativeConvert<long, TInd>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private T ElementIndex(long x, long y, Storage<TInd> sorted, Storage<TInd> other, T value, bool compressed, bool get)
