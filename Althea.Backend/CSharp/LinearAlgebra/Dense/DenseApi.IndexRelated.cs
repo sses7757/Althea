@@ -299,7 +299,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				if (Const<T>.IsIntegralType || !Avx2.IsSupported)
 					return VectorArgMinMaxManaged<T, Test>(px, length, out index);
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 				{
 					index = VectorArgMinMaxCompexSingle<Test>((ComplexSingle*)px, length);
 				}
@@ -574,7 +574,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				if (Const<T>.IsIntegralType || !Avx2.IsSupported)
 					return VectorMinMaxManaged<T, Test>(px, length, out extreme);
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 				{
 					var temp = VectorAbsMinMaxCompexSingle<Test>((ComplexSingle*)px, length);
 					extreme = *(T*)&temp;

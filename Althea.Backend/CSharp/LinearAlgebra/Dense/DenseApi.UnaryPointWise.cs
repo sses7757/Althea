@@ -495,7 +495,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				{	// no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 					VectorModifyManaged<T, U, Op>(px, length, scalar);
 				}
-				else if (typeof(T) == typeof(float))
+				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 				{
 					VectorModifyCompexSingle<U, Op>((ComplexSingle*)px, length, scalar);
 				}

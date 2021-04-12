@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 using Althea.Solver;
 using Althea.NativeTypes;
 using Althea.Helpers;
-using System.Runtime.CompilerServices;
+using Althea.LinearAlgebra;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -62,7 +63,7 @@ namespace Althea.Backend.CSharp.Solver
 			using var V = vector.ToMatrix(rightMatrix.NRows);
 			if (multiply)
 			{
-				using var V_At = V.OutOfPlaceMultiply(leftMatrix, Const<T>.One, opRight: LinearAlgebra.MatrixOperation.Transpose);
+				using var V_At = V.OutOfPlaceMultiply(leftMatrix, Const<T>.One, opRight: MatrixOperation.Transpose);
 				if (vector.Length == leftMatrix.NRows * rightMatrix.NRows && V.CanOperateInPlace)
 				{
 					V.InPlaceFusedMultiplyAdd(rightMatrix, V_At, scalar, scalarVector);
@@ -81,7 +82,7 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			else
 			{
-				using var V_At = V.OutOfPlaceMultiply(leftMatrix, Const<T>.One, opRight: LinearAlgebra.MatrixOperation.Transpose);
+				using var V_At = V.OutOfPlaceMultiply(leftMatrix, Const<T>.One, opRight: MatrixOperation.Transpose);
 				if (V_At.CanOperateInPlace)
 				{
 					V_At.InPlaceFusedMultiplyAdd(rightMatrix, V, Const<T>.One, Const<T>.One);

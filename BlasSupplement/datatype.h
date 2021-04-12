@@ -10,6 +10,8 @@ namespace Datatype
 // check if this compiler has defined a real long double
 #if LDBL_MANT_DIG != DBL_MANT_DIG
 #define HAS_LDBL
+#else
+#undef HAS_LDBL
 #endif
 
 #pragma region data type enum
@@ -28,11 +30,11 @@ namespace Datatype
 		Complex = 1 << 0,
 
 		/// <summary>
-		/// The type mask (from 1st bit to 2nd bit), cannot be used separately.<br/>
+		/// The type mask (from 1st bit to 7nd bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type used.<br/>
 		/// See <see cref="TypeFloat"/>, <see cref="TypeSignedInteger"/>, <see cref="TypeUnsignedInteger"/>.
 		/// </summary>
-		TypeMask = 0b0110,
+		TypeMask = 0xfe,
 		/// <summary>
 		/// The start bit of <see cref="TypeMask"/>.
 		/// </summary>
@@ -53,14 +55,14 @@ namespace Datatype
 		TypeUnsignedInteger = 3 << TypeMaskStart,
 
 		/// <summary>
-		/// The number of bytes mask (from 4th bit to 7th bit), cannot be used separately.<br/>
+		/// The number of bytes mask (from 8th bit to 15th bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="ByteMask"/>) &gt;&gt; <see cref="ByteMaskStart"/> = </c> the bytes used (only half of <see cref="Complex"/>'s bytes shall be counted).
 		/// </summary>
-		ByteMask = 0b11110000,
+		ByteMask = 0xff00,
 		/// <summary>
 		/// The start bit of <see cref="ByteMask"/>.
 		/// </summary>
-		ByteMaskStart = 4,
+		ByteMaskStart = 8,
 
 		// actual bytes
 		/// <summary>
@@ -169,11 +171,11 @@ namespace Datatype
 		/// <summary>
 		/// <see cref="long double"/> = <see cref="Real"/> + <see cref="TypeFloat"/> + <see cref="Byte8"/>
 		/// </summary>
-		RealLongDouble = floatTypeOfSize(sizeof(long double), false),
+		RealLongDouble = make_floatType(sizeof(long double), false),
 		/// <summary>
 		/// <see cref="long double"/> = <see cref="Complex"/> + <see cref="TypeFloat"/> + <see cref="Byte8"/>
 		/// </summary>
-		ComplexLongDouble = floatTypeOfSize(sizeof(long double), false),
+		ComplexLongDouble = make_floatType(sizeof(long double), true),
 #endif
 	};
 
@@ -210,7 +212,7 @@ namespace Datatype
 	}
 
 	// generate a float type of given size
-	inline static constexpr DataType make_floatType(const int size, const bool complex)
+	inline static constexpr DataType makeFloatType(const int size, const bool complex)
 	{
 		return (DataType)(DataType::TypeFloat | (size << DataType::ByteMaskStart) | (complex ? DataType::Complex : DataType::Real));
 	}

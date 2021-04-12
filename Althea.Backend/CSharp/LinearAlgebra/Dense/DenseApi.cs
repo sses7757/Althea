@@ -106,6 +106,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return Unsafe.ReadUnaligned<Vector<T>>(r);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe Vector<T> LoadVector<T>(void* r) where T : unmanaged
+		{
+			return Unsafe.ReadUnaligned<Vector<T>>(r);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe Vector256<T> LoadVector256<T>(T* r) where T : unmanaged
 		{
 			return Unsafe.ReadUnaligned<Vector256<T>>(r);
@@ -114,6 +119,32 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		private static unsafe Vector256<T> LoadVector256<T>(void* r) where T : unmanaged
 		{
 			return Unsafe.ReadUnaligned<Vector256<T>>(r);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe void LoadVector<T>(T* r, out Vector<T> v1, out Vector<T> v2) where T : unmanaged
+		{
+			v1 = Unsafe.ReadUnaligned<Vector<T>>(r);
+			v2 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe void LoadVector<T>(T* r, out Vector<T> v1, out Vector<T> v2, out Vector<T> v3, out Vector<T> v4) where T : unmanaged
+		{
+			v1 = Unsafe.ReadUnaligned<Vector<T>>(r);
+			v2 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count);
+			v3 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 2);
+			v4 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 3);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe void LoadVector<T>(T* r, out Vector<T> v1, out Vector<T> v2, out Vector<T> v3, out Vector<T> v4, out Vector<T> v5, out Vector<T> v6, out Vector<T> v7, out Vector<T> v8) where T : unmanaged
+		{
+			v1 = Unsafe.ReadUnaligned<Vector<T>>(r);
+			v2 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count);
+			v3 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 2);
+			v4 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 3);
+			v5 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 4);
+			v6 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 5);
+			v7 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 6);
+			v8 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 7);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,8 +157,33 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		{
 			Unsafe.WriteUnaligned(r, v);
 		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe void StoreVector<T>(Vector<T> v1, Vector<T> v2, T* r) where T : unmanaged
+		{
+			Unsafe.WriteUnaligned(r, v1); Unsafe.WriteUnaligned(r + Vector<T>.Count, v2);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, T* r) where T : unmanaged
+		{
+			Unsafe.WriteUnaligned(r, v1);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 1, v2);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 2, v3);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 3, v4);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, Vector<T> v5, Vector<T> v6, Vector<T> v7, Vector<T> v8, T* r) where T : unmanaged
+		{
+			Unsafe.WriteUnaligned(r, v1);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 1, v2);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 2, v3);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 3, v4);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 4, v1);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 5, v2);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 6, v3);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 7, v4);
+		}
 
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Vector256<float> ComplexSquareAbsNoOrder(Vector256<float> current1, Vector256<float> current2)
 		{

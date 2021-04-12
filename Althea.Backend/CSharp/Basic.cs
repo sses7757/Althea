@@ -12,16 +12,18 @@ namespace Althea.Backend.CSharp
 
 		Type ISetBackend.StorageImplementation => typeof(Storage.StorageApi);
 
-		Type ISetBackend.DenseLinearAlgebraImplementation => throw new NotImplementedException();
+		Type ISetBackend.DenseLinearAlgebraImplementation => typeof(LinearAlgebra.DenseApi);
 
-		Type ISetBackend.SparseLinearAlgebraImplementation => throw new NotImplementedException();
+		Type ISetBackend.SparseLinearAlgebraImplementation => typeof(LinearAlgebra.SparseApi);
 
-		Type ISetBackend.DenseTensorAlgebraImplementation => throw new NotImplementedException();
+#pragma warning disable CS8603
+		Type ISetBackend.DenseTensorAlgebraImplementation => null;
 
-		Type ISetBackend.SparseTensorAlgebraImplementation => throw new NotImplementedException();
+		Type ISetBackend.SparseTensorAlgebraImplementation => null;
+#pragma warning restore CS8603
 
-		Type ISetBackend.StatisticsImplementation => typeof(Random.RandomApi);
-
+		Type ISetBackend.RandomImplementation => typeof(Random.RandomApi);
+		
 		Type ISetBackend.SolverImplementation => typeof(Solver.SolverApi);
 	}
 }

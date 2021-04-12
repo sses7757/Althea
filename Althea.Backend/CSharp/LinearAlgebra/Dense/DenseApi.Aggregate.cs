@@ -395,7 +395,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				if (Const<T>.IsIntegralType || !Avx.IsSupported) // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 					return VectorAbsSumProdManaged<T, Test>(px, length, out aggregateNoAbs, out aggregateAbs);
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 				{
 					VectorAbsSumProdCompexSingle<Test>((ComplexSingle*)px, length, out var temp, out aggregateAbs);
 					aggregateNoAbs = *(T*)&temp;
@@ -521,31 +521,38 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			int lengthLeft = length, offset = 0;
 			while (lengthLeft >= Vector<T>.Count)
 			{
-				if (Fma.IsSupported && Vector<byte>.Count == Vector256<byte>.Count && typeof(T) == typeof(double))
+				Vector<T> a = LoadVector(x + offset), b = LoadVector(y + offset);
+				if (!doDot)
+					b = a;
+				if (typeof(T) == typeof(float) && Fma.IsSupported)
 				{
-					Vector256<double> temp;
-					if (doDot)
-						temp = Fma.MultiplyAdd(LoadVector256<double>(x + offset), LoadVector256<double>(y + offset), sum.AsVector256().AsDouble());
-					else
-						temp = Fma.MultiplyAdd(LoadVector256<double>(x + offset), LoadVector256<double>(x + offset), sum.AsVector256().AsDouble());
-					sum = *(Vector<T>*)&temp;
+					if (Vector<T>.Count == Vector256<T>.Count)
+					{
+						sum = Fma.MultiplyAdd(a.AsVector256().AsSingle(), b.AsVector256().AsSingle(), sum.AsVector256().AsSingle()).As<float, T>().AsVector();
+						goto CONTINUE;
+					}
+					else if(Vector<T>.Count == Vector128<T>.Count)
+					{
+						sum = Fma.MultiplyAdd(a.AsVector128().AsSingle(), b.AsVector128().AsSingle(), sum.AsVector128().AsSingle()).As<float, T>().AsVector();
+						goto CONTINUE;
+					}
 				}
-				else if (Fma.IsSupported && Vector<byte>.Count == Vector256<byte>.Count && typeof(T) == typeof(float))
+				if (typeof(T) == typeof(double) && Fma.IsSupported)
 				{
-					Vector256<float> temp;
-					if (doDot)
-						temp = Fma.MultiplyAdd(LoadVector256<float>(x + offset), LoadVector256<float>(y + offset), sum.AsVector256().AsSingle());
-					else
-						temp = Fma.MultiplyAdd(LoadVector256<float>(x + offset), LoadVector256<float>(x + offset), sum.AsVector256().AsSingle());
-					sum = *(Vector<T>*)&temp;
+					if (Vector<T>.Count == Vector256<T>.Count)
+					{
+						sum = Fma.MultiplyAdd(a.AsVector256().AsDouble(), b.AsVector256().AsDouble(), sum.AsVector256().AsDouble()).As<double, T>().AsVector();
+						goto CONTINUE;
+					}
+					else if (Vector<T>.Count == Vector128<T>.Count)
+					{
+						sum = Fma.MultiplyAdd(a.AsVector128().AsDouble(), b.AsVector128().AsDouble(), sum.AsVector128().AsDouble()).As<double, T>().AsVector();
+						goto CONTINUE;
+					}
 				}
-				else
-				{
-					if (doDot)
-						sum += LoadVector(x + offset) * LoadVector(y + offset);
-					else
-						sum += LoadVector(x + offset) * LoadVector(x + offset);
-				}
+				// no FMA
+				sum += a * b;
+			CONTINUE:
 				lengthLeft -= Vector<T>.Count;
 				offset += Vector<T>.Count;
 			}
@@ -735,7 +742,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (Const<T>.IsComplex)
 			{
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 				{
 					var xx = (ComplexSingle*)px; var yy = (ComplexSingle*)py;
 					ComplexSingle temp;

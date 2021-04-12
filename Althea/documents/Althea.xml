@@ -11857,6 +11857,15 @@
             <returns>The converted number as a <see cref="T:System.Int64"/></returns>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
         </member>
+        <member name="M:Althea.NativeTypes.NativeTypeExtension.ToInt``1(``0)">
+            <summary>
+            Generically convert the input number <paramref name="a"/> of type <typeparamref name="T"/> to <see cref="T:System.Int32"/>.
+            </summary>
+            <typeparam name="T">The convert source type</typeparam>
+            <param name="a">The number to be converted to <see cref="T:System.Int32"/></param>
+            <returns>The converted number as a <see cref="T:System.Int32"/></returns>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
+        </member>
         <member name="M:Althea.NativeTypes.NativeTypeExtension.FromLong``1(System.Int64)">
             <summary>
             Generically convert the input number <paramref name="a"/> of type <see cref="T:System.Int64"/> to type <typeparamref name="T"/>.

@@ -2422,6 +2422,20 @@
             The class used to set C# back-end implementations, inherits <see cref="T:Althea.ISetBackend"/>
             </summary>
         </member>
+        <member name="T:Althea.Backend.CSharp.LinearAlgebra.DenseApi">
+            <summary>
+            The C# back-end of <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/> that utilizes <see cref="N:System.Runtime.Intrinsics"/> and <see cref="T:System.Numerics.Vector`1"/>.<br/>
+            Only supports storages on CPU memory of primitive and pre-defined types and single-threaded vector operations.
+            </summary>
+            <remarks>Vector operations of real types and <see cref="T:Althea.NativeTypes.ComplexSingle"/> and <see cref="T:Althea.NativeTypes.ComplexDouble"/> (and <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Single"/> and <see cref="T:System.Double"/>) are accelerated if possible while other types utilize scalar operations.</remarks>
+        </member>
+        <member name="T:Althea.Backend.CSharp.Random.RandomApi">
+            <summary>
+            The C# back-end of <see cref="T:Althea.Random.AbstractApi"/> that utilizes <see cref="T:System.Random"/>.<br/>
+            Only supports storages on CPU memory of primitive and pre-defined types.<br/>
+            Only supports the <see cref="T:Althea.Random.UniformDistribution`1"/> and <see cref="T:Althea.Random.RandomBitsDistribution`1"/> or their <see cref="T:Althea.Random.SimpleJointRandomDistribution"/> with dimension ≤ 3.
+            </summary>
+        </member>
         <member name="T:Althea.Backend.CSharp.Solver.SolverApi">
             <summary>
             The C# back-end of <see cref="T:Althea.Solver.AbstractApi"/> that utilizes other APIs and thus has no specific supporting storage locations
@@ -3467,6 +3481,11 @@
         <member name="P:Althea.Backend.Resource.CannotCreateDelegate">
             <summary>
               查找类似 Cannot create the delegate of {0}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.CompareComplex">
+            <summary>
+              查找类似 Cannot compare complex numbers of type {0}. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Backend.Resource.GenericNotNormalReal">
