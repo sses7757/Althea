@@ -12,7 +12,6 @@ using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Solver;
-using Althea.Storage;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 
@@ -35,7 +34,7 @@ namespace Althea.Backend.CSharp.Solver
 			else
 			{
 				d = value.ToDouble();
-				return double.IsNormal(d);
+				return double.IsFinite(d);
 			}
 		}
 
@@ -54,7 +53,7 @@ namespace Althea.Backend.CSharp.Solver
 			else
 			{
 				double d = value.ToDouble();
-				if (!double.IsNormal(d))
+				if (!double.IsFinite(d))
 					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
 				return d;
 			}
@@ -369,7 +368,7 @@ namespace Althea.Backend.CSharp.Solver
 		private unsafe static void LanczosTridiagSolve(SpanList<double> αs, SpanList<double> βs, Span<double> eigval, SpanMatrix<double> eigvec, int firstNResidual = 0)
 		{
 			// check NaN
-			if (αs.AsSpan().Any(static a => !double.IsNormal(a)) || βs.AsSpan().Any(static b => !double.IsNormal(b)))
+			if (αs.AsSpan().Any(static a => !double.IsFinite(a)) || βs.AsSpan().Any(static b => !double.IsFinite(b)))
 				throw new ArithmeticException(Resources.Other.AbnormalOccured);
 			// fill matrix
 			int N = αs.Count;

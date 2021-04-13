@@ -3,6 +3,21 @@
 
 ////#include "C:\Program Files\NVIDIA GPU Computing Toolkit\cuTENSOR\v1.2\include\cutensor.h"
 
+#pragma region test
+////#include "cuda_fp16.hpp"
+////#include "cuda_fp16.h"
+////#include "cuda_bf16.h"
+////#include "cuda_bf16.hpp"
+////void GetHalf()
+////{
+////	__half a = __float2half(0.5f);
+////	__half b = __double2half(0.5);
+////	nv_bfloat16 c = __float2bfloat16(0.5f);
+////}
+#pragma endregion
+
+
+
 #pragma region get GPU properties
 #ifndef CPU
 DLLEXP
@@ -17,7 +32,6 @@ cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
 #endif // !CPU
 
 #pragma endregion
-
 
 
 #pragma region element-wise multiply and divide

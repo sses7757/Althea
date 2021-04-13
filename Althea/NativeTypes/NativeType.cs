@@ -7,6 +7,286 @@ using Althea.Helpers;
 
 namespace Althea.NativeTypes
 {
+	#region half float arithmetics
+	internal static class HalfFloatExtension
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe bool IsNegative(this Half a)
+		{
+			return (*(short*)&a) < 0;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe sbyte ExpPart(this Half a)
+		{
+			return (sbyte)((*(ushort*)&a & 0x7C00) >> 10);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe ushort FracPart(this Half a)
+		{
+			return (ushort)(*(ushort*)&a & 0x3FFu);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Half FromParts(ushort frac, sbyte exp, bool neg)
+		{
+			var v = (ushort)(((neg ? 1 : 0) << 15) + (exp << 10) + frac);
+			return *(Half*)&v;
+		}
+
+		private static readonly Half One = FromParts(0, BIAS, neg: false);
+
+		private const byte BITS_MANTISSA = 10;
+		private const byte BITS_EXPONENT = 5;
+
+		private const sbyte MAX_EXPONENT_VALUE = 31; // 2^5 - 1
+		private const sbyte BIAS = MAX_EXPONENT_VALUE / 2;
+
+		private const sbyte MAX_EXPONENT = BIAS;
+		private const sbyte MIN_EXPONENT = -BIAS;
+
+		/// <summary>
+		/// Unary negate the given <see cref="Half"/> float value <paramref name="v"/>
+		/// </summary>
+		/// <param name="v">The given <see cref="Half"/> float value</param>
+		/// <returns><c>-<paramref name="v"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Half Negate(this Half v)
+		{
+			ushort vv = (ushort)(*(ushort*)&v ^ 0x8000u);
+			return *(Half*)&vv;
+		}
+
+		/// <summary>
+		/// Unary reciprocate the given <see cref="Half"/> float value <paramref name="v"/>
+		/// </summary>
+		/// <param name="v">The given <see cref="Half"/> float value</param>
+		/// <returns><c>1 / <paramref name="v"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Half Reciprocal(this Half v)
+		{
+			return (Half)(1.0f / (float)v);
+		}
+
+		/// <summary>
+		/// Get the square root of the given <see cref="Half"/> float value <paramref name="v"/>
+		/// </summary>
+		/// <param name="v">The given <see cref="Half"/> float value</param>
+		/// <returns><c>√<paramref name="v"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Half Sqrt(this Half v)
+		{
+			return (Half)MathF.Sqrt((float)v);
+		}
+
+		/// <summary>
+		/// Unary increase the given <see cref="Half"/> float value <paramref name="v"/> by 1
+		/// </summary>
+		/// <param name="v">The given <see cref="Half"/> float value</param>
+		/// <returns><c>1 + <paramref name="v"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Half Inc(this Half v)
+		{
+			return Add(v, One);
+		}
+
+		/// <summary>
+		/// Binary add the given <see cref="Half"/> float value <paramref name="a"/> and <paramref name="b"/>
+		/// </summary>
+		/// <param name="a">The first given <see cref="Half"/> float value</param>
+		/// <param name="b">The second given <see cref="Half"/> float value</param>
+		/// <returns><c><paramref name="a"/> + <paramref name="b"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Half Add(this Half a, Half b)
+		{
+#if DEBUG
+			sbyte expA = a.ExpPart(), expB = b.ExpPart();
+			ushort fracA = a.FracPart(), fracB = b.FracPart();
+			bool negA = a.IsNegative(), negB = b.IsNegative();
+			// abnormal input
+			if (expA == MAX_EXPONENT_VALUE)
+			{
+				// if a of the components is NaN the result becomes NaN, too.
+				if (0 != fracA || Half.IsNaN(b))
+					return Half.NaN;
+				// otherwise this must be infinity
+				return negA == negB ? Half.PositiveInfinity : Half.NegativeInfinity;
+			}
+			else if (expB == MAX_EXPONENT_VALUE)
+			{
+				if (Half.IsNaN(a) || 0 != fracB)
+					return Half.NaN;
+				return negA == negB ? Half.PositiveInfinity : Half.NegativeInfinity;
+			}
+
+			// normal input
+			bool resultNeg;
+			int m1, m2, temp;
+			// compute the difference between the two exponents, shifts with negative numbers are undefined, thus we need two code paths
+			int expDiff = expA - expB;
+			if (0 == expDiff)
+			{
+				// the exponents are equal, thus we must just add the hidden bit
+				temp = expB;
+
+				if (0 == expA)
+					m1 = fracA;
+				else
+					m1 = ((int)fracA) | (1 << BITS_MANTISSA);
+
+				if (0 == expB)
+					m2 = fracB;
+				else
+					m2 = ((int)fracB) | (1 << BITS_MANTISSA);
+			}
+			else
+			{
+				if (expDiff < 0)
+				{
+					expDiff = -expDiff;
+					expA = b.ExpPart(); expB = a.ExpPart();
+					fracA = b.FracPart(); fracB = a.FracPart();
+					negA = b.IsNegative(); negB = a.IsNegative();
+				}
+
+				m1 = ((int)fracA) | (1 << BITS_MANTISSA);
+
+				if (0 == expB)
+					m2 = fracB;
+				else
+					m2 = ((int)fracB) | (1 << BITS_MANTISSA);
+
+				if (expDiff < ((sizeof(long) << 3) - (BITS_MANTISSA + 1)))
+				{
+					m1 <<= expDiff;
+					temp = fracB;
+				}
+				else
+				{
+					if (0 != expB)
+					{
+						// arithmetic underflow
+						if (expDiff > BITS_MANTISSA)
+							return FromParts(0, 0, false);
+						else
+						{
+							m2 >>= expDiff;
+						}
+					}
+					temp = expA;
+				}
+			}
+
+			// convert from sign-bit to b's complement representation
+			if (negA) m1 = -m1;
+			if (negB) m2 = -m2;
+			m1 += m2;
+			if (m1 < 0)
+			{
+				resultNeg = true;
+				m1 = -m1;
+			}
+			else
+			{
+				resultNeg = false;
+			}
+			// and re-normalize the result to fit in a half
+			if (0 == m1)
+				return FromParts(0, 0, false);
+
+			m2 = m1.ReverseBits();
+			expDiff = m2 - BITS_MANTISSA;
+			temp += expDiff;
+			if (expDiff >= MAX_EXPONENT_VALUE)
+			{
+				// arithmetic overflow. return INF and keep the sign
+				return FromParts(0, MAX_EXPONENT_VALUE, resultNeg);
+			}
+			else if (temp <= 0)
+			{
+				// Ignore Spelling: denorm
+				// this maps to a denorm
+				m1 <<= (-expDiff - 1);
+				temp = 0;
+			}
+			else
+			{
+				// rebuild the normalized representation, take care of the hidden bit
+				if (expDiff < 0)
+					m1 <<= (-expDiff);
+				else
+					m1 >>= expDiff; // m1 >= 0
+			}
+			return FromParts((ushort)m1, (sbyte)temp, resultNeg);
+#else
+			return (Half)((float)a + (float)b);
+#endif
+		}
+
+		/// <summary>
+		/// Binary subtract the given <see cref="Half"/> float value <paramref name="a"/> by <paramref name="b"/>
+		/// </summary>
+		/// <param name="a">The first given <see cref="Half"/> float value</param>
+		/// <param name="b">The second given <see cref="Half"/> float value</param>
+		/// <returns><c><paramref name="a"/> - <paramref name="b"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Half Sub(this Half a, Half b)
+		{
+			ushort neg = (ushort)(*(ushort*)&b ^ 0x8000u);
+			return Add(a, *(Half*)&neg);
+		}
+
+		/// <summary>
+		/// Binary multiply the given <see cref="Half"/> float value <paramref name="a"/> and <paramref name="b"/>
+		/// </summary>
+		/// <param name="a">The first given <see cref="Half"/> float value</param>
+		/// <param name="b">The second given <see cref="Half"/> float value</param>
+		/// <returns><c><paramref name="a"/> * <paramref name="b"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Half Mul(this Half a, Half b)
+		{
+			return (Half)((float)a * (float)b);
+		}
+
+		/// <summary>
+		/// Binary divide the given <see cref="Half"/> float value <paramref name="a"/> by <paramref name="b"/>
+		/// </summary>
+		/// <param name="a">The first given <see cref="Half"/> float value</param>
+		/// <param name="b">The second given <see cref="Half"/> float value</param>
+		/// <returns><c><paramref name="a"/> / <paramref name="b"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Half Div(this Half a, Half b)
+		{
+			return (Half)((float)a / (float)b);
+		}
+
+		/// <summary>
+		/// Binary exponentiate the given <see cref="Half"/> float value <paramref name="a"/> by <paramref name="b"/>
+		/// </summary>
+		/// <param name="a">The first given <see cref="Half"/> float value</param>
+		/// <param name="b">The second given <see cref="Half"/> float value</param>
+		/// <returns><c><paramref name="a"/> ^ <paramref name="b"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Half Pow(this Half a, Half b)
+		{
+			return (Half)MathF.Pow((float)a, (float)b);
+		}
+
+		/// <summary>
+		/// Binary add exponentiate given <see cref="Half"/> float value <paramref name="a"/> by a <see cref="double"/> <paramref name="b"/>
+		/// </summary>
+		/// <param name="a">The first given <see cref="Half"/> float value</param>
+		/// <param name="b">The second given <see cref="double"/></param>
+		/// <returns><c><paramref name="a"/> ^ <paramref name="b"/></c></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Half Pow(this Half a, double b)
+		{
+			return (Half)Math.Pow((double)a, b);
+		}
+
+		public static Half FromParts(int v, sbyte expRes, bool negV) => throw new NotImplementedException();
+	}
+	#endregion
+
 	#region custom native type interface
 	/// <summary>
 	/// The interface for custom native types such as <c>long double</c> in C++ on some platforms.
@@ -54,7 +334,6 @@ namespace Althea.NativeTypes
 		/// The machine precision of <typeparamref name="T"/>
 		/// </summary>
 		public static double MachinePrecision => default(T).MachinePrecision_Internal();
-
 	}
 	#endregion
 
@@ -222,7 +501,7 @@ namespace Althea.NativeTypes
 				T? res = default(T) switch
 				{
 					// built-in float types
-					float or double => double.Parse(str).FromDouble<T>(),
+					float or double or Half => double.Parse(str).FromDouble<T>(),
 					// built-in integer types
 					sbyte or short or int or long => long.Parse(str).FromLong<T>(),
 					byte or ushort or uint or ulong => long.Parse(str).FromLong<T>(),
@@ -242,7 +521,7 @@ namespace Althea.NativeTypes
 			}
 			// other case
 			var parseResult = Cacher<T>.ParseDelegate?.Invoke(str);
-			if (parseResult == null)
+			if (parseResult is null)
 			{
 				result = default;
 				return false;
@@ -280,12 +559,12 @@ namespace Althea.NativeTypes
 			return default(T) switch
 			{
 				// built-in float types
-				float or double => false,
+				float or double or Half => false,
 				// built-in integer types
 				sbyte or short or int or long => false,
 				byte or ushort or uint or ulong => false,
 				// built-in complex float types
-				IComplex<float> or IComplex<double> => true,
+				IComplex<float> or IComplex<double> or IComplex<Half> => true,
 				// built-in complex integer types
 				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => true,
 				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => true,
@@ -307,12 +586,12 @@ namespace Althea.NativeTypes
 			return value switch
 			{
 				// built-in float types
-				float or double => true,
+				float or double or Half => true,
 				// built-in integer types
 				sbyte or short or int or long => true,
 				byte or ushort or uint or ulong => true,
 				// built-in complex float types
-				IComplex<float> or IComplex<double> => true,
+				IComplex<float> or IComplex<double> or IComplex<Half> => true,
 				// built-in complex integer types
 				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => true,
 				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => true,
@@ -340,12 +619,12 @@ namespace Althea.NativeTypes
 			return default(T) switch
 			{
 				// built-in float types
-				float or double => DataTypeClassification.FloatPoint_IEEE754,
+				float or double or Half => DataTypeClassification.FloatPoint_IEEE754,
 				// built-in integer types
 				sbyte or short or int or long => DataTypeClassification.SignedInteger,
 				byte or ushort or uint or ulong => DataTypeClassification.UnsignedInteger,
 				// built-in complex float types
-				IComplex<float> or IComplex<double> => DataTypeClassification.FloatPoint_IEEE754,
+				IComplex<float> or IComplex<double> or IComplex<Half> => DataTypeClassification.FloatPoint_IEEE754,
 				// built-in complex integer types
 				IComplex<sbyte> or IComplex<short> or IComplex<int> or IComplex<long> => DataTypeClassification.SignedInteger,
 				IComplex<byte> or IComplex<ushort> or IComplex<int> or IComplex<long> => DataTypeClassification.FloatPoint_IEEE754,
@@ -368,6 +647,7 @@ namespace Althea.NativeTypes
 				// built-in float types
 				float or IComplex<float> => 1.1920928955078125E-07,
 				double or IComplex<double> => 2.220446049250313E-16D,
+				Half or IComplex<Half> => 0.0009765625,
 				// built-in integer types
 				sbyte or short or int or long => 1,
 				byte or ushort or uint or ulong => 1,
@@ -419,6 +699,11 @@ namespace Althea.NativeTypes
 				long v = -(*(long*)&value);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Negate(*(Half*)&value);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = -(*(float*)&value);
@@ -449,6 +734,11 @@ namespace Althea.NativeTypes
 				Complex<long> v = -(*(Complex<long>*)&value);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = -(*(Complex<Half>*)&value);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 			{
 				ComplexSingle v = -(*(ComplexSingle*)&value);
@@ -461,7 +751,7 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				return Const<T>.AddDelegate.Invoke(value, Const<T>.One);
+				return Const<T>.NegateDelegate.Invoke(value);
 			}
 		}
 
@@ -535,6 +825,11 @@ namespace Althea.NativeTypes
 				long v = 1 / (*(long*)&value);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Reciprocal(*(Half*)&value);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = 1 / (*(float*)&value);
@@ -563,6 +858,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<long>))
 			{
 				Complex<long> v = 1 / (*(Complex<long>*)&value);
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = 1 / (*(Complex<Half>*)&value);
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -631,6 +931,11 @@ namespace Althea.NativeTypes
 				ulong v = (*(ulong*)&value) + 1;
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Inc(*(Half*)&value);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = (*(float*)&value) + 1;
@@ -679,6 +984,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<ulong>))
 			{
 				Complex<ulong> v = (*(Complex<ulong>*)&value) + 1;
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&value) + 1;
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -753,6 +1063,11 @@ namespace Althea.NativeTypes
 				float v = (*(float*)&a) + (*(float*)&b);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Add(*(Half*)&a, *(Half*)&b);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(double))
 			{
 				double v = (*(double*)&a) + (*(double*)&b);
@@ -801,6 +1116,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<ulong>))
 			{
 				Complex<ulong> v = (*(Complex<ulong>*)&a) + (*(Complex<ulong>*)&b);
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&a) + (*(Complex<Half>*)&b);
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -870,6 +1190,11 @@ namespace Althea.NativeTypes
 				ulong v = (*(ulong*)&a) - (*(ulong*)&b);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Sub(*(Half*)&a, *(Half*)&b);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = (*(float*)&a) - (*(float*)&b);
@@ -923,6 +1248,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<ulong>))
 			{
 				Complex<ulong> v = (*(Complex<ulong>*)&a) - (*(Complex<ulong>*)&b);
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&a) - (*(Complex<Half>*)&b);
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -992,6 +1322,11 @@ namespace Althea.NativeTypes
 				ulong v = (*(ulong*)&a) * (*(ulong*)&b);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Mul(*(Half*)&a, *(Half*)&b);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = (*(float*)&a) * (*(float*)&b);
@@ -1047,6 +1382,11 @@ namespace Althea.NativeTypes
 				Complex<ulong> v = (*(Complex<ulong>*)&a) * (*(Complex<ulong>*)&b);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&a) * (*(Complex<Half>*)&b);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 			{
 				ComplexSingle v = (*(ComplexSingle*)&a) * (*(ComplexSingle*)&b);
@@ -1059,7 +1399,7 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				return Const<T>.AddDelegate.Invoke(a, b);
+				return Const<T>.MultiplyDelegate.Invoke(a, b);
 			}
 		}
 
@@ -1112,6 +1452,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(ulong))
 			{
 				ulong v = (*(ulong*)&a) / (*(ulong*)&b);
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Div(*(Half*)&a, *(Half*)&b);
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(float))
@@ -1169,6 +1514,11 @@ namespace Althea.NativeTypes
 				Complex<ulong> v = (*(Complex<ulong>*)&a) / (*(Complex<ulong>*)&b);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&a) / (*(Complex<Half>*)&b);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
 			{
 				ComplexSingle v = (*(ComplexSingle*)&a) / (*(ComplexSingle*)&b);
@@ -1181,7 +1531,7 @@ namespace Althea.NativeTypes
 			}
 			else
 			{
-				return Const<T>.AddDelegate.Invoke(a, b);
+				return Const<T>.DivideDelegate.Invoke(a, b);
 			}
 		}
 
@@ -1256,6 +1606,11 @@ namespace Althea.NativeTypes
 				long v = (long)Math.Sqrt(*(long*)&a);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Sqrt(*(Half*)&a);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = MathF.Sqrt(*(float*)&a);
@@ -1284,6 +1639,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<long>))
 			{
 				Complex<long> v = (*(Complex<long>*)&a).Sqrt();
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&a).Sqrt();
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -1386,6 +1746,11 @@ namespace Althea.NativeTypes
 				double v = Math.Pow(*(double*)&basis, power);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Pow(*(Half*)&basis, power);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(Complex<sbyte>))
 			{
 				Complex<sbyte> v = (*(Complex<sbyte>*)&basis).PowDouble(power);
@@ -1404,6 +1769,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<long>))
 			{
 				Complex<long> v = (*(Complex<long>*)&basis).PowDouble(power);
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&basis).PowDouble(power);
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -1496,6 +1866,11 @@ namespace Althea.NativeTypes
 				long v = (long)Math.Pow(*(long*)&basis, *(long*)&power);
 				return *(T*)&v;
 			}
+			else if (typeof(T) == typeof(Half))
+			{
+				Half v = HalfFloatExtension.Pow(*(Half*)&basis, *(Half*)&power);
+				return *(T*)&v;
+			}
 			else if (typeof(T) == typeof(float))
 			{
 				float v = MathF.Sqrt(*(float*)&basis);
@@ -1524,6 +1899,11 @@ namespace Althea.NativeTypes
 			else if (typeof(T) == typeof(Complex<long>))
 			{
 				Complex<long> v = (*(Complex<long>*)&basis).Pow(*(Complex<long>*)&power);
+				return *(T*)&v;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				Complex<Half> v = (*(Complex<Half>*)&basis).Pow(*(Complex<Half>*)&power);
 				return *(T*)&v;
 			}
 			else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle))
@@ -1580,6 +1960,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return (*(short*)&a) == (*(short*)&b);
 			if (typeof(T) == typeof(int)) return (*(int*)&a) == (*(int*)&b);
 			if (typeof(T) == typeof(long)) return (*(long*)&a) == (*(long*)&b);
+			if (typeof(T) == typeof(Half)) return (*(Half*)&a) == (*(Half*)&b);
 			if (typeof(T) == typeof(float)) return (*(float*)&a) == (*(float*)&b);
 			if (typeof(T) == typeof(double)) return (*(double*)&a) == (*(double*)&b);
 			if (typeof(T) == typeof(Complex<sbyte>)) return (*(Complex<sbyte>*)&a) == (*(Complex<sbyte>*)&b);
@@ -1590,6 +1971,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(Complex<short>)) return (*(Complex<short>*)&a) == (*(Complex<short>*)&b);
 			if (typeof(T) == typeof(Complex<int>)) return (*(Complex<int>*)&a) == (*(Complex<int>*)&b);
 			if (typeof(T) == typeof(Complex<long>)) return (*(Complex<long>*)&a) == (*(Complex<long>*)&b);
+			if (typeof(T) == typeof(Complex<Half>)) return (*(Complex<Half>*)&a) == (*(Complex<Half>*)&b);
 			if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle)) return (*(ComplexSingle*)&a) == (*(ComplexSingle*)&b);
 			if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(ComplexDouble)) return (*(ComplexDouble*)&a) == (*(ComplexDouble*)&b);
 			if (typeof(T) == typeof(ComplexSingle)) return (*(ComplexSingle*)&a) == (*(ComplexSingle*)&b);
@@ -1616,6 +1998,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return (*(short*)&a) > (*(short*)&b);
 			if (typeof(T) == typeof(int)) return (*(int*)&a) > (*(int*)&b);
 			if (typeof(T) == typeof(long)) return (*(long*)&a) > (*(long*)&b);
+			if (typeof(T) == typeof(Half)) return (*(Half*)&a) > (*(Half*)&b);
 			if (typeof(T) == typeof(float)) return (*(float*)&a) > (*(float*)&b);
 			if (typeof(T) == typeof(double)) return (*(double*)&a) > (*(double*)&b);
 			// else
@@ -1640,6 +2023,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return (*(short*)&a) >= (*(short*)&b);
 			if (typeof(T) == typeof(int)) return (*(int*)&a) >= (*(int*)&b);
 			if (typeof(T) == typeof(long)) return (*(long*)&a) >= (*(long*)&b);
+			if (typeof(T) == typeof(Half)) return (*(Half*)&a) >= (*(Half*)&b);
 			if (typeof(T) == typeof(float)) return (*(float*)&a) >= (*(float*)&b);
 			if (typeof(T) == typeof(double)) return (*(double*)&a) >= (*(double*)&b);
 			// else
@@ -1664,6 +2048,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return (*(short*)&a) < (*(short*)&b);
 			if (typeof(T) == typeof(int)) return (*(int*)&a) < (*(int*)&b);
 			if (typeof(T) == typeof(long)) return (*(long*)&a) < (*(long*)&b);
+			if (typeof(T) == typeof(Half)) return (*(Half*)&a) < (*(Half*)&b);
 			if (typeof(T) == typeof(float)) return (*(float*)&a) < (*(float*)&b);
 			if (typeof(T) == typeof(double)) return (*(double*)&a) < (*(double*)&b);
 			// else
@@ -1688,6 +2073,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return (*(short*)&a) <= (*(short*)&b);
 			if (typeof(T) == typeof(int)) return (*(int*)&a) <= (*(int*)&b);
 			if (typeof(T) == typeof(long)) return (*(long*)&a) <= (*(long*)&b);
+			if (typeof(T) == typeof(Half)) return (*(Half*)&a) <= (*(Half*)&b);
 			if (typeof(T) == typeof(float)) return (*(float*)&a) <= (*(float*)&b);
 			if (typeof(T) == typeof(double)) return (*(double*)&a) <= (*(double*)&b);
 			// else
@@ -1731,6 +2117,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1741,6 +2128,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1755,6 +2143,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1765,6 +2154,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1779,6 +2169,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1789,6 +2180,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1803,6 +2195,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1813,6 +2206,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1827,6 +2221,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1837,6 +2232,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1851,6 +2247,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1861,6 +2258,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1875,6 +2273,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1885,6 +2284,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1899,6 +2299,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1909,6 +2310,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1923,6 +2325,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1933,6 +2336,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1947,6 +2351,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1957,6 +2362,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1971,6 +2377,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = (sbyte)b; return *(T2*)&v; }
@@ -1981,6 +2388,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = (short)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = (long)b; return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = (Half)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle)) { ComplexSingle v = (float)b; return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble)) { ComplexDouble v = (double)b; return *(T2*)&v; }
 			}
@@ -1996,6 +2404,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2006,6 +2415,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2022,6 +2432,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2032,6 +2443,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2048,6 +2460,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2058,6 +2471,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2074,6 +2488,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2084,6 +2499,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2100,6 +2516,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2110,6 +2527,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2126,6 +2544,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2136,6 +2555,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2152,6 +2572,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2162,6 +2583,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2178,6 +2600,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.AbsDouble(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.AbsSingle(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.AbsDouble(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2188,6 +2611,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2204,6 +2628,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.Abs(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2214,6 +2639,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2230,6 +2656,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(short)) { short v = (short)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(int)) { int v = (int)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(long)) { long v = (long)b.Abs(); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Half)) { Half v = (Half)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(float)) { float v = (float)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(double)) { double v = (double)b.Abs(); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<sbyte>)) { Complex<sbyte> v = new((sbyte)b.Real, (sbyte)b.Imag); return *(T2*)&v; }
@@ -2240,6 +2667,7 @@ namespace Althea.NativeTypes
 				if (typeof(T2) == typeof(Complex<short>)) { Complex<short> v = new((short)b.Real, (short)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<int>)) { Complex<int> v = new((int)b.Real, (int)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<long>)) { Complex<long> v = new((long)b.Real, (long)b.Imag); return *(T2*)&v; }
+				if (typeof(T2) == typeof(Complex<Half>)) { Complex<Half> v = new((Half)b.Real, (Half)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<float>) || typeof(T2) == typeof(ComplexSingle))
 				{ ComplexSingle v = new((float)b.Real, (float)b.Imag); return *(T2*)&v; }
 				if (typeof(T2) == typeof(Complex<double>) || typeof(T2) == typeof(ComplexDouble))
@@ -2315,6 +2743,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return (double)(*(short*)&a);
 			if (typeof(T) == typeof(int)) return (double)(*(int*)&a);
 			if (typeof(T) == typeof(long)) return (double)(*(long*)&a);
+			if (typeof(T) == typeof(Half)) return (double)(*(Half*)&a);
 			if (typeof(T) == typeof(float)) return (double)(*(float*)&a);
 			if (typeof(T) == typeof(double)) return (double)(*(double*)&a);
 			if (typeof(T) == typeof(Complex<sbyte>)) return (double)(*(Complex<sbyte>*)&a).Real;
@@ -2325,6 +2754,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(Complex<short>)) return (double)(*(Complex<short>*)&a).Real;
 			if (typeof(T) == typeof(Complex<int>)) return (double)(*(Complex<int>*)&a).Real;
 			if (typeof(T) == typeof(Complex<long>)) return (double)(*(Complex<long>*)&a).Real;
+			if (typeof(T) == typeof(Complex<Half>)) return (double)(*(Complex<Half>*)&a).Real;
 			if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle)) return (double)(*(ComplexSingle*)&a).Real;
 			if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(ComplexDouble)) return (double)(*(ComplexDouble*)&a).Real;
 			// else
@@ -2352,6 +2782,7 @@ namespace Althea.NativeTypes
 				typeof(T) == typeof(short) ||
 				typeof(T) == typeof(int) ||
 				typeof(T) == typeof(long) ||
+				typeof(T) == typeof(Half) ||
 				typeof(T) == typeof(float) ||
 				typeof(T) == typeof(double))
 				return 0;
@@ -2363,6 +2794,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(Complex<short>)) return (double)(*(Complex<short>*)&a).Imag;
 			if (typeof(T) == typeof(Complex<int>)) return (double)(*(Complex<int>*)&a).Imag;
 			if (typeof(T) == typeof(Complex<long>)) return (double)(*(Complex<long>*)&a).Imag;
+			if (typeof(T) == typeof(Complex<Half>)) return (double)(*(Complex<Half>*)&a).Real;
 			if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle)) return (double)(*(ComplexSingle*)&a).Imag;
 			if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(ComplexDouble)) return (double)(*(ComplexDouble*)&a).Imag;
 			// else
@@ -2390,6 +2822,7 @@ namespace Althea.NativeTypes
 				typeof(T) == typeof(short) ||
 				typeof(T) == typeof(int) ||
 				typeof(T) == typeof(long) ||
+				typeof(T) == typeof(Half) ||
 				typeof(T) == typeof(float) ||
 				typeof(T) == typeof(double))
 				return a;
@@ -2401,6 +2834,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(Complex<short>)) { var v = (*(Complex<short>*)&a).Conjugate(); return *(T*)&v; }
 			if (typeof(T) == typeof(Complex<int>)) { var v = (*(Complex<int>*)&a).Conjugate(); return *(T*)&v; }
 			if (typeof(T) == typeof(Complex<long>)) { var v = (*(Complex<long>*)&a).Conjugate(); return *(T*)&v; }
+			if (typeof(T) == typeof(Complex<Half>)) { var v = (*(Complex<Half>*)&a).Conjugate(); return *(T*)&v; }
 			if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle)) { var v = (*(ComplexSingle*)&a).Conjugate(); return *(T*)&v; }
 			if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(ComplexDouble)) { var v = (*(ComplexDouble*)&a).Conjugate(); return *(T*)&v; }
 			// else
@@ -2427,6 +2861,7 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(short)) return Math.Abs(*(short*)&a);
 			if (typeof(T) == typeof(int)) return Math.Abs(*(int*)&a);
 			if (typeof(T) == typeof(long)) return Math.Abs(*(long*)&a);
+			if (typeof(T) == typeof(Half)) return Math.Abs((double)(*(Half*)&a));
 			if (typeof(T) == typeof(float)) return Math.Abs(*(float*)&a);
 			if (typeof(T) == typeof(double)) return Math.Abs(*(double*)&a);
 			if (typeof(T) == typeof(Complex<sbyte>)) return (*(Complex<sbyte>*)&a).AbsDouble();
@@ -2437,10 +2872,11 @@ namespace Althea.NativeTypes
 			if (typeof(T) == typeof(Complex<short>)) return (*(Complex<short>*)&a).AbsDouble();
 			if (typeof(T) == typeof(Complex<int>)) return (*(Complex<int>*)&a).AbsDouble();
 			if (typeof(T) == typeof(Complex<long>)) return (*(Complex<long>*)&a).AbsDouble();
+			if (typeof(T) == typeof(Complex<Half>)) return (*(Complex<Half>*)&a).AbsDouble();
 			if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(ComplexSingle)) return (*(ComplexSingle*)&a).Abs();
 			if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(ComplexDouble)) return (*(ComplexDouble*)&a).Abs();
 			// else
-			return Const<T>.RealPartDelegate.Invoke(a);
+			return Const<T>.AbsoluteDelegate.Invoke(a);
 		}
 		#endregion
 		#endregion

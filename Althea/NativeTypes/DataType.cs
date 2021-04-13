@@ -29,100 +29,99 @@ namespace Althea.NativeTypes
 	/// </summary>
 	public enum DataType : int
 	{
-		/// <summary>
-		/// The right-most bit that represents the real base type, equals to zero, cannot be used separately.
-		/// </summary>
-		Real = 0,
-		/// <summary>
-		/// The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
-		/// </summary>
-		Complex = 1 << 0,
-
 		// concrete types
 		/// <summary>
-		/// <see cref="float"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="Half"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
-		RealSingle = Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
+		RealHalf = DataTypeExtension.Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="double"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="float"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		RealDouble = Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
+		RealSingle = DataTypeExtension.Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="Complex{Single}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="double"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		ComplexSingle = Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
+		RealDouble = DataTypeExtension.Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
 		/// <summary>
-		/// <see cref="Complex{Double}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
-		ComplexDouble = Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
+		ComplexHalf = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte2,
+		/// <summary>
+		/// <see cref="ComplexSingle"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// </summary>
+		ComplexSingle = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
+		/// <summary>
+		/// <see cref="ComplexDouble"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// </summary>
+		ComplexDouble = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
 
 		/// <summary>
-		/// <see cref="sbyte"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="sbyte"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
 		/// </summary>
-		RealInt8 = Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
+		RealInt8 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
 		/// <summary>
-		/// <see cref="short"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="short"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
-		RealInt16 = Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
+		RealInt16 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="int"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="int"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		RealInt32 = Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
+		RealInt32 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="long"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="long"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		RealInt64 = Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
+		RealInt64 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
 
 		/// <summary>
-		/// <see cref="byte"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="byte"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
 		/// </summary>
-		RealUInt8 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
+		RealUInt8 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
 		/// <summary>
-		/// <see cref="ushort"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="ushort"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
-		RealUInt16 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
+		RealUInt16 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="int"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="int"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		RealUInt32 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
+		RealUInt32 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="long"/> = <see cref="Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="long"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		RealUInt64 = Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
+		RealUInt64 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
 
 		/// <summary>
-		/// <see cref="Complex{SByte}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="Complex{T}"/> of <see cref="sbyte"/>  = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
 		/// </summary>
-		ComplexInt8 = Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
+		ComplexInt8 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
 		/// <summary>
-		/// <see cref="Complex{Int16}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="Complex{T}"/> of <see cref="short"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
-		ComplexInt16 = Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
+		ComplexInt16 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="Complex{Int32}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="Complex{T}"/> of <see cref="int"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		ComplexInt32 = Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
+		ComplexInt32 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="Complex{Int64}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="Complex{T}"/> of <see cref="long"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		ComplexInt64 = Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
+		ComplexInt64 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
 
 		/// <summary>
-		/// <see cref="Complex{Byte}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="Complex{T}"/> of <see cref="byte"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
 		/// </summary>
-		ComplexUInt8 = Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
+		ComplexUInt8 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
 		/// <summary>
-		/// <see cref="Complex{UInt16}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="Complex{T}"/> of <see cref="ushort"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
-		ComplexUInt16 = Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
+		ComplexUInt16 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="Complex{UInt32}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="Complex{T}"/> of <see cref="uint"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
-		ComplexUInt32 = Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
+		ComplexUInt32 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="Complex{UInt64}"/> = <see cref="Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="Complex{T}"/> of <see cref="ulong"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
-		ComplexUInt64 = Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
+		ComplexUInt64 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
 	}
 	#endregion
 
@@ -134,6 +133,15 @@ namespace Althea.NativeTypes
 	public static class DataTypeExtension
 	{
 		#region constants
+		/// <summary>
+		/// The right-most bit that represents the real base type, equals to zero, cannot be used separately.
+		/// </summary>
+		public const int Real = 0;
+		/// <summary>
+		/// The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
+		/// </summary>
+		public const int Complex = 1;
+
 		/// <summary>
 		/// The type mask (from 1st bit to 7th bit), cannot be used separately.<br/>
 		/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type classification as a <see cref="DataTypeClassification"/>.
@@ -199,9 +207,9 @@ namespace Althea.NativeTypes
 			if (type <= 0)
 				return default;
 			if (complex)
-				return DataType.Complex | (DataType)((short)type << TypeMaskStart) | (DataType)((size / 2) << ByteMaskStart);
+				return (DataType)Complex | (DataType)((short)type << TypeMaskStart) | (DataType)((size / 2) << ByteMaskStart);
 			else
-				return DataType.Real | (DataType)((short)type << TypeMaskStart) | (DataType)(size << ByteMaskStart);
+				return (DataType)Real | (DataType)((short)type << TypeMaskStart) | (DataType)(size << ByteMaskStart);
 		}
 
 		/// <summary>
@@ -210,7 +218,7 @@ namespace Althea.NativeTypes
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a real type.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsReal(this DataType dataType) => (dataType & DataType.Complex) == 0;
+		public static bool IsReal(this DataType dataType) => ((int)dataType & Complex) == 0;
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is an integer type.

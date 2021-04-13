@@ -6,7 +6,7 @@ using Althea.NativeTypes;
 namespace Althea.Backend.Cuda
 {
 	/// <summary>
-	/// The <see cref="CudaDataType"/> type is an enum to specify the data precision. It is used when the data reference does not carry the type itself (e.g <see cref="IntPtr"/> alone).
+	/// The <see cref="CudaDataType"/> enum specifies the data type used by CUDA.
 	/// </summary>
 	public enum CudaDataType
 	{
@@ -19,27 +19,27 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		RealFloat64 = 1,
 		/// <summary>
-		/// 16 bit real, also known as 'half', mostly unsupported
+		/// 16 bit real <see cref="Half"/>
 		/// </summary>
 		RealFloat16 = 2,
 		/// <summary>
-		/// 8 bit signed integer <see cref="sbyte"/>, mostly unsupported
+		/// 8 bit signed integer <see cref="sbyte"/>
 		/// </summary>
 		RealInt8 = 3,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="float"/>
+		/// <see cref="Complex{T}"/> of <see cref="float"/> or <see cref="ComplexSingle"/>
 		/// </summary>
 		ComplexFloat32 = 4,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="double"/>
+		/// <see cref="Complex{T}"/> of <see cref="double"/> or <see cref="ComplexDouble"/>
 		/// </summary>
 		ComplexFloat64 = 5,
 		/// <summary>
-		/// complex of two 16 bit reals, mostly unsupported
+		/// <see cref="Complex{T}"/> of <see cref="Half"/>
 		/// </summary>
 		ComplexFloat16 = 6,
 		/// <summary>
-		/// complex made of two <see cref="sbyte"/>s
+		/// <see cref="Complex{T}"/> of <see cref="sbyte"/>
 		/// </summary>
 		ComplexInt8 = 7,
 		/// <summary>
@@ -47,7 +47,7 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		RealUInt8 = 8,
 		/// <summary>
-		/// complex made of two <see cref="byte"/>s
+		/// <see cref="Complex{T}"/> of <see cref="byte"/>
 		/// </summary>
 		ComplexUInt8 = 9,
 		/// <summary>
@@ -55,7 +55,7 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		RealInt32 = 10,
 		/// <summary>
-		/// complex made of two <see cref="int"/>s
+		/// <see cref="Complex{T}"/> of <see cref="int"/>
 		/// </summary>
 		ComplexInt32 = 11,
 		/// <summary>
@@ -63,9 +63,108 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		RealUInt32 = 12,
 		/// <summary>
-		/// complex made of two <see cref="int"/>s
+		/// <see cref="Complex{T}"/> of <see cref="int"/>
 		/// </summary>
-		ComplexUInt32 = 13
+		ComplexUInt32 = 13,
+		/// <summary>
+		/// 16 bit real <see cref="BrainHalf"/>
+		/// </summary>
+		RealBrainFloat16 = 14,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of <see cref="BrainHalf"/>
+		/// </summary>
+		ComplexBrainFloat16 = 15,
+		/// <summary>
+		/// 4 bit signed integer, not supported in this assembly
+		/// </summary>
+		RealInt4 = 16,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of 4 bit signed integer, not supported in this assembly
+		/// </summary>
+		ComplexInt4 = 17,
+		/// <summary>
+		/// 4 bit unsigned integer, not supported in this assembly
+		/// </summary>
+		RealUInt4 = 18,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of 4 bit unsigned integer, not supported in this assembly
+		/// </summary>
+		ComplexUInt4 = 19,
+		/// <summary>
+		/// 16 bit signed integer <see cref="short"/>
+		/// </summary>
+		RealInt16 = 20,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of <see cref="short"/>
+		/// </summary>
+		ComplexInt16 = 21,
+		/// <summary>
+		/// 16 bit unsigned integer <see cref="ushort"/> (or <see cref="char"/>)
+		/// </summary>
+		RealUInt16 = 22,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of <see cref="ushort"/> (or <see cref="char"/>)
+		/// </summary>
+		ComplexUInt16 = 23,
+		/// <summary>
+		/// 64 bit signed integer <see cref="long"/>
+		/// </summary>
+		RealInt64 = 24,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of <see cref="long"/>
+		/// </summary>
+		ComplexInt64 = 25,
+		/// <summary>
+		/// 64 bit unsigned integer <see cref="ulong"/>
+		/// </summary>
+		RealUInt64 = 26,
+		/// <summary>
+		/// <see cref="Complex{T}"/> of <see cref="ulong"/>
+		/// </summary>
+		ComplexUInt64 = 27,
+	}
+
+	/// <summary>
+	/// The static class for extension methods for <see cref="CudaDataType"/>
+	/// </summary>
+	public static class CudaDataTypeExtension
+	{
+		/// <summary>
+		/// Convert the given <see cref="DataType"/> to a <see cref="CudaDataType"/>
+		/// </summary>
+		/// <param name="type">The given <see cref="DataType"/> to be converted</param>
+		/// <returns>The converted <see cref="CudaDataType"/>, or -1 if there is not correspondence</returns>
+		public static CudaDataType ToCudaDataType(this DataType type)
+		{
+			return type switch
+			{
+				DataType.RealHalf => CudaDataType.RealFloat16,
+				DataType.RealSingle => CudaDataType.RealFloat32,
+				DataType.RealDouble => CudaDataType.RealFloat64,
+				DataType.ComplexHalf => CudaDataType.ComplexFloat16,
+				DataType.ComplexSingle => CudaDataType.ComplexFloat32,
+				DataType.ComplexDouble => CudaDataType.ComplexFloat64,
+				DataType.RealInt8 => CudaDataType.RealInt8,
+				DataType.RealInt16 => CudaDataType.RealInt16,
+				DataType.RealInt32 => CudaDataType.RealInt32,
+				DataType.RealInt64 => CudaDataType.RealInt64,
+				DataType.RealUInt8 => CudaDataType.RealUInt8,
+				DataType.RealUInt16 => CudaDataType.RealUInt16,
+				DataType.RealUInt32 => CudaDataType.RealUInt32,
+				DataType.RealUInt64 => CudaDataType.RealUInt64,
+				DataType.ComplexInt8 => CudaDataType.ComplexInt8,
+				DataType.ComplexInt16 => CudaDataType.ComplexInt16,
+				DataType.ComplexInt32 => CudaDataType.ComplexInt32,
+				DataType.ComplexInt64 => CudaDataType.ComplexInt64,
+				DataType.ComplexUInt8 => CudaDataType.ComplexUInt8,
+				DataType.ComplexUInt16 => CudaDataType.ComplexUInt16,
+				DataType.ComplexUInt32 => CudaDataType.ComplexUInt32,
+				DataType.ComplexUInt64 => CudaDataType.ComplexUInt64,
+				BrainFloatConst.RealBrainFloat16 => CudaDataType.RealBrainFloat16,
+				BrainFloatConst.ComplexBrainFloat16 => CudaDataType.ComplexBrainFloat16,
+				_ => (CudaDataType)(-1),
+			};
+		}
 	}
 
 	/// <summary>
@@ -101,7 +200,7 @@ namespace Althea.Backend.Cuda
 	public enum CudaError
 	{
 		/// <summary>
-		/// No errors
+		/// No error
 		/// </summary>
 		Success = 0,
 

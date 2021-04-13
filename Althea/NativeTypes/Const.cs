@@ -56,7 +56,31 @@ namespace Althea.NativeTypes
 						return;
 				}
 			}
-			else
+			else if (from == typeof(Half))
+			{
+				var toFloat = typeof(Half).GetMethods(BindingFlags.Static | BindingFlags.Public)
+										  .Where(static m => m.Name == "op_Explicit" &&
+														m.GetParameters()[0].ParameterType == typeof(Half) &&
+														m.ReturnType == typeof(float))
+										  .FirstOrDefault();
+				if (toFloat is null)
+					throw new MethodAccessException();
+				IL.Emit(OpCodes.Call, toFloat);
+				ILConvert(IL, typeof(float), target);
+			}
+			else if (target == typeof(Half))
+			{
+				var fromFloat = typeof(Half).GetMethods(BindingFlags.Static | BindingFlags.Public)
+											.Where(static m => m.Name == "op_Explicit" &&
+														m.GetParameters()[0].ParameterType == typeof(float) &&
+														m.ReturnType == typeof(Half))
+											.FirstOrDefault();
+				if (fromFloat is null)
+					throw new MethodAccessException();
+				ILConvert(IL, from, typeof(float));
+				IL.Emit(OpCodes.Call, fromFloat);
+			}
+			else if (from != typeof(T) || target != typeof(U))
 			{
 				var field = typeof(ConstConvert<,>).MakeGenericType(from, target).GetField(nameof(ConstConvert<T, T>.ConvertDelegate), BindingFlags.Static | BindingFlags.NonPublic);
 				if (field is null)
@@ -373,7 +397,7 @@ namespace Althea.NativeTypes
 		private const CallingConventions CALL = CallingConventions.Standard;
 		private static readonly Module THIS = typeof(Const<T>).Module;
 
-		private static Func<T, T, T> GetBinarySelf(BinaryArithmeticOperation op)
+		private static unsafe Func<T, T, T> GetBinarySelf(BinaryArithmeticOperation op)
 		{
 			if (typeof(T).IsPrimitive)
 			{
@@ -411,6 +435,17 @@ namespace Althea.NativeTypes
 				var func = typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Where(predicator).FirstOrDefault();
 				if (func is null)
 				{
+					if (typeof(T) == typeof(Half))
+					{
+						return op switch
+						{
+							BinaryArithmeticOperation.Addition => static (a, b) => { var v = HalfFloatExtension.Add(*(Half*)&a, *(Half*)&b); return *(T*)&v; },
+							BinaryArithmeticOperation.Subtraction => static (a, b) => { var v = HalfFloatExtension.Sub(*(Half*)&a, *(Half*)&b); return *(T*)&v; },
+							BinaryArithmeticOperation.Multiply => static (a, b) => { var v = HalfFloatExtension.Mul(*(Half*)&a, *(Half*)&b); return *(T*)&v; },
+							BinaryArithmeticOperation.Division => static (a, b) => { var v = HalfFloatExtension.Div(*(Half*)&a, *(Half*)&b); return *(T*)&v; },
+							_ => throw new ArgumentOutOfRangeException(nameof(op)),
+						};
+					}
 					return op switch
 					{
 						BinaryArithmeticOperation.Addition => static (a, b) => (dynamic)a + b,
@@ -511,9 +546,16 @@ namespace Althea.NativeTypes
 				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorNonStatic).FirstOrDefault();
 				func ??= typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(predicatorStatic).FirstOrDefault();
 				if (func is null)
-					return static (a, p) => ((dynamic)a).Pow(p);
+				{
+					if (NativeTypeExtension.IsComplex<T>())
+						return static (a, p) => ((dynamic)a).Pow(p);
+					else
+						return static (a, p) => Math.Pow(a.ToDouble(), p.ToDouble()).FromDouble<T>();
+				}
 				if (func.IsStatic)
+				{
 					return func.CreateDelegate<Func<T, T, T>>();
+				}
 				// object call
 				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
@@ -559,9 +601,16 @@ namespace Althea.NativeTypes
 				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorNonStatic).FirstOrDefault();
 				func ??= typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(predicatorStatic).FirstOrDefault();
 				if (func is null)
-					return static (a, p) => ((dynamic)a).Pow(p);
+				{
+					if (NativeTypeExtension.IsComplex<T>())
+						return static (a, p) => ((dynamic)a).Pow(p);
+					else
+						return static (a, p) => Math.Pow(a.ToDouble(), p).FromDouble<T>();
+				}
 				if (func.IsStatic)
+				{
 					return func.CreateDelegate<Func<T, double, T>>();
+				}
 				// object call
 				DynamicMethod method = new("Power", ATTR, CALL, typeof(T), new[] { typeof(T), typeof(double) }, THIS, true);
 				var IL = method.GetILGenerator();
@@ -573,8 +622,12 @@ namespace Althea.NativeTypes
 			}
 		}
 
-		private static Func<T, T> GetNegate()
+		private static unsafe Func<T, T> GetNegate()
 		{
+			if (NativeTypeExtension.GetClassification<T>() == DataTypeClassification.UnsignedInteger)
+			{
+				return static v => v;
+			}
 			if (typeof(T).IsPrimitive)
 			{
 				DynamicMethod method = new("Negation", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
@@ -593,13 +646,15 @@ namespace Althea.NativeTypes
 				var func = typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Where(predicator).FirstOrDefault();
 				if (func is null)
 				{
+					if (typeof(T) == typeof(Half))
+						return static v => { var vv = HalfFloatExtension.Negate(*(Half*)&v); return *(T*)&vv; };
 					return static v => -(dynamic)v;
 				}
 				return func.CreateDelegate<Func<T, T>>();
 			}
 		}
 
-		private static Func<T, T> GetSqrt()
+		private static unsafe Func<T, T> GetSqrt()
 		{
 			if (typeof(T).IsPrimitive)
 			{
@@ -622,9 +677,15 @@ namespace Althea.NativeTypes
 				var func = typeof(T).GetMethods(BindingFlags.Public).Where(predicatorNonStatic).FirstOrDefault();
 				func ??= typeof(T).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(predicatorStatic).FirstOrDefault();
 				if (func is null)
+				{
+					if (typeof(T) == typeof(Half))
+						return static v => { var vv = HalfFloatExtension.Sqrt(*(Half*)&v); return *(T*)&vv; };
 					return static v => ((dynamic)v).Sqrt();
+				}
 				if (func.IsStatic)
+				{
 					return func.CreateDelegate<Func<T, T>>();
+				}
 				// object call
 				DynamicMethod method = new("Sqrt", ATTR, CALL, typeof(T), new[] { typeof(T) }, THIS, true);
 				var IL = method.GetILGenerator();
@@ -637,7 +698,7 @@ namespace Althea.NativeTypes
 
 		private static Func<T, T> GetConjugate()
 		{
-			if (typeof(T).IsPrimitive || !IsComplex)
+			if (typeof(T).IsPrimitive || !NativeTypeExtension.IsComplex<T>())
 			{
 				return static v => v;
 			}
@@ -691,7 +752,7 @@ namespace Althea.NativeTypes
 			}
 		}
 
-		private static void GetAbsolute(out Func<T, double> result1, out Converter<T, double> result2)
+		private static unsafe void GetAbsolute(out Func<T, double> result1, out Converter<T, double> result2)
 		{
 			if (DataTypeClass == DataTypeClassification.UnsignedInteger)
 			{
@@ -736,6 +797,12 @@ namespace Althea.NativeTypes
 					var prop = typeof(T).GetProperties(BindingFlags.Instance).Where(predicatorProperty).FirstOrDefault();
 					if (prop is null)
 					{	// try dynamic
+						if (typeof(T) == typeof(Half))
+						{
+							result1 = static v => Math.Abs((double)(*(Half*)&v));
+							result2 = static v => Math.Abs((double)(*(Half*)&v));
+							return;
+						}
 						result1 = static v => ((dynamic)v).Abs();
 						result2 = static v => ((dynamic)v).Abs();
 						return;

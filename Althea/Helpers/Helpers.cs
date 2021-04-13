@@ -126,6 +126,41 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
+		/// Reverse the bits of <paramref name="a"/>
+		/// </summary>
+		/// <param name="a">The <see cref="int"/> whose bits shall be reversed</param>
+		/// <returns>The <paramref name="a"/> after reversing bits</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ReverseBits(this int a)
+		{
+			uint n = unchecked((uint)a);
+			n = (n >> 1) & 0x55555555u | (n << 1) & 0xaaaaaaaau;
+			n = (n >> 2) & 0x33333333u | (n << 2) & 0xccccccccu;
+			n = (n >> 4) & 0x0f0f0f0fu | (n << 4) & 0xf0f0f0f0u;
+			n = (n >> 8) & 0x00ff00ffu | (n << 8) & 0xff00ff00u;
+			n = (n >> 16) & 0x0000ffffu | (n << 16) & 0xffff0000u;
+			return unchecked((int)n);
+		}
+
+		/// <summary>
+		/// Reverse the bits of <paramref name="a"/>
+		/// </summary>
+		/// <param name="a">The <see cref="long"/> whose bits shall be reversed</param>
+		/// <returns>The <paramref name="a"/> after reversing bits</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ReverseBits(this long a)
+		{
+			ulong n = unchecked((ulong)a);
+			n = (n >> 1) & 0x5555555555555555ul | (n << 1) & 0xaaaaaaaaaaaaaaaaul;
+			n = (n >> 2) & 0x3333333333333333ul | (n << 2) & 0xccccccccccccccccul;
+			n = (n >> 4) & 0x0f0f0f0f0f0f0f0ful | (n << 4) & 0xf0f0f0f0f0f0f0f0ul;
+			n = (n >> 8) & 0x00ff00ff00ff00fful | (n << 8) & 0xff00ff00ff00ff00ul;
+			n = (n >> 16) & 0x0000ffff0000fffful | (n << 16) & 0xffff0000ffff0000ul;
+			n = (n >> 32) & 0xffffffff00000000ul | (n << 32) & 0xffffffff00000000ul;
+			return unchecked((long)n);
+		}
+
+		/// <summary>
 		/// Is the input integer a perfect square or not.
 		/// </summary>
 		/// <param name="input">The input integer</param>
