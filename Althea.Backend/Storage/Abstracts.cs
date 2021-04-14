@@ -109,13 +109,14 @@ namespace Althea.Backend.Storage
 		/// When implemented by a derived class, <b>statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
 		/// </summary>
 		/// <remarks>When implemented by a derived class, if this property returns null or empty list, <see cref="NullReferenceException"/> may be thrown</remarks>
-		public abstract IReadOnlyList<StorageLocation> SupportedTransfers { get; }
+		protected abstract IReadOnlyList<StorageLocation> SupportedTransfers { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, <b>statically</b> get a <see cref="bool"/> indicating whether data transfer with given <paramref name="location"/> is supported by this <see cref="Stream"/>. The default implementation utilizes the <see cref="SupportedTransfers"/>.
 		/// </summary>
 		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
 		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public virtual bool IsSupported(StorageLocation location) => this.SupportedTransfers.Contains(location);
 
 		/// <summary>

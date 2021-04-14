@@ -129,6 +129,9 @@
   <data name="Location" xml:space="preserve">
     <value>Ohter location(s) is/are not supported yet.</value>
   </data>
+  <data name="OperationSystem" xml:space="preserve">
+    <value>This operation does not support the current operating system.</value>
+  </data>
   <data name="OtherArray" xml:space="preserve">
     <value>Not dense neither sparse array(s) is/are not supported yet.</value>
   </data>

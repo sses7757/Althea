@@ -18,22 +18,6 @@
 
 
 
-#pragma region get GPU properties
-#ifndef CPU
-DLLEXP
-cudaError getDeviceComputeCapability(int deviceID, int& major, int& minor)
-{
-	cudaDeviceProp prop;
-	cudaError err;
-	err = cudaGetDeviceProperties(&prop, deviceID);
-	major = prop.major; minor = prop.minor;
-	return err;
-}
-#endif // !CPU
-
-#pragma endregion
-
-
 #pragma region element-wise multiply and divide
 template<typename T>
 inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const size_t N, const unsigned int stride, bool multiply)

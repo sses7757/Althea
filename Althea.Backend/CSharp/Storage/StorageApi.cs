@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -32,14 +33,40 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override void Dispose(bool disposeManaged)
 		{
-			// do nothing
+			foreach (var item in allocatedStreams)
+			{
+				item?.Dispose();
+			}
 		}
+
+		private readonly List<IStreamPointer?> allocatedStreams = new();
+
+		private string fileFolder = Path.GetTempPath();
 
 		/// <summary>
 		/// Get or set the folder to put the temporary files, default is <see cref="Path.GetTempPath"/>
 		/// </summary>
-		/// <remarks>If you set an invalid value, there may be exception thrown</remarks>
-		public string TempFileFolder { get; set; } = Path.GetTempPath();
+		/// <exception cref="ArgumentException">If the folder to set is not an existing folder</exception>
+		/// <exception cref="UnauthorizedAccessException">If the program does not have permission to write to the folder</exception>
+		/// <exception cref="IOException">Other I/O exceptions</exception>
+		public string TempFileFolder {
+			get => this.fileFolder;
+			set {
+				if (!Directory.Exists(value))
+					throw new ArgumentException(Parameter.InvalidValue, nameof(value));
+				string testFile = Path.Combine(value, Path.GetRandomFileName());
+				try
+				{
+					File.WriteAllText(testFile, " ");
+				}
+				finally
+				{
+					if (File.Exists(testFile))
+						File.Delete(testFile);
+				}
+				this.fileFolder = value;
+			}
+		}
 
 		/// <summary>
 		/// Get or set the host and folder to put the temporary files using TCP, default null means that this <see cref="StorageApi"/> does not support TCP storage location
@@ -113,10 +140,13 @@ namespace Althea.Backend.CSharp.Storage
 				}
 				else
 				{
-					result = default; return false;
+					result = default;
+					return false;
 				}
+				this.allocatedStreams.Add((IStreamPointer)pointer);
 			}
-			result = new PointerSegment(pointer); return true;
+			result = new PointerSegment(pointer);
+			return true;
 		}
 
 		protected override bool Free_(PointerSegment pointer, out bool valid)
@@ -138,6 +168,7 @@ namespace Althea.Backend.CSharp.Storage
 			else if (sp is not null)
 			{
 				sp.Dispose();
+				this.allocatedStreams[this.allocatedStreams.IndexOf(sp)] = null;
 			}
 			valid = true; return true;
 		}

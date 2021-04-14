@@ -209,9 +209,9 @@ namespace Althea.Backend.Storage
 
 
 	/// <summary>
-	/// An implementation of <see cref="Stream"/> for files.
+	/// An implementation of <see cref="Stream"/> for local files.
 	/// </summary>
-	public sealed class FileStream : Stream
+	public class FileStream : Stream
 	{
 		#region basic
 		private readonly System.IO.FileStream stream;
@@ -221,27 +221,36 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Stream.Length"/></exception>
 		public override long Position {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.stream.Position;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set => this.stream.Seek(value, SeekOrigin.Begin);
 		}
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not, always return true.
 		/// </summary>
-		public override bool CanTransferWithManaged => true;
+		public override bool CanTransferWithManaged {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => true;
+		}
 
 		private static readonly StorageLocation supportedLocation = new(LocationType.CpuRam, 0);
 
 		/// <summary>
 		/// <b>Statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
 		/// </summary>
-		public override IReadOnlyList<StorageLocation> SupportedTransfers { get; } = new[] { supportedLocation };
+		protected override IReadOnlyList<StorageLocation> SupportedTransfers {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+		} = new[] { supportedLocation };
 
 		/// <summary>
 		/// <b>Statically</b> get a <see cref="bool"/> indicating whether data transfer with given <paramref name="location"/> is supported by this <see cref="Stream"/>. The default implementation utilizes the <see cref="SupportedTransfers"/>.
 		/// </summary>
 		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
 		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool IsSupported(StorageLocation location) => location == supportedLocation;
 
 		/// <summary>
@@ -544,7 +553,7 @@ namespace Althea.Backend.Storage
 	/// <summary>
 	/// An implementation of <see cref="Stream"/> for TCP links.
 	/// </summary>
-	public sealed class TcpStream : Stream
+	public class TcpStream : Stream
 	{
 		#region basic
 		private readonly NetworkStream stream;
@@ -555,31 +564,46 @@ namespace Althea.Backend.Storage
 
 		private readonly TcpProtocol protocol;
 
-		private string RemotePath => this.uri.AbsolutePath;
+		private string RemotePath {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.uri.AbsolutePath;
+		}
 
 		/// <summary>
 		/// Get or set the position (offset) in bytes of this <see cref="TcpStream"/>
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Stream.Length"/></exception>
-		public override long Position { get; set; } = 0;
+		public override long Position {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set;
+		} = 0;
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this <see cref="Stream"/> can transfer data with managed C# memory directly or not, always return true.
 		/// </summary>
-		public override bool CanTransferWithManaged => true;
+		public override bool CanTransferWithManaged {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => true;
+		}
 
 		private static readonly StorageLocation supportedLocation = new(LocationType.CpuRam, 0);
 
 		/// <summary>
 		/// <b>Statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
 		/// </summary>
-		public override IReadOnlyList<StorageLocation> SupportedTransfers { get; } = new[] { supportedLocation };
+		protected override IReadOnlyList<StorageLocation> SupportedTransfers {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+		} = new[] { supportedLocation };
 
 		/// <summary>
 		/// <b>Statically</b> get a <see cref="bool"/> indicating whether data transfer with given <paramref name="location"/> is supported by this <see cref="Stream"/>. The default implementation utilizes the <see cref="SupportedTransfers"/>.
 		/// </summary>
 		/// <param name="location">The given <see cref="StorageLocation"/> to check transfer supporting</param>
 		/// <returns>Whether data transfer with <paramref name="location"/> is supported or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool IsSupported(StorageLocation location) => location == supportedLocation;
 
 		private readonly byte[] returnCache;

@@ -2039,7 +2039,7 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, create a local file at <paramref name="path"/> with <paramref name="lengthInBytes"/>
+		/// When implemented by a derived class, create a local file at <paramref name="path"/> with <paramref name="lengthInBytes"/>. The created file shall not be managed by the underlying implementation (it shall not be deleted when disposing the implementation).
 		/// </summary>
 		/// <param name="path">The file path and name of the file to create</param>
 		/// <param name="lengthInBytes">The length which is going to be written into</param>

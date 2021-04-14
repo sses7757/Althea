@@ -97,6 +97,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 This operation does not support the current operating system. 的本地化字符串。
+        /// </summary>
+        public static string OperationSystem {
+            get {
+                return ResourceManager.GetString("OperationSystem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Not dense neither sparse array(s) is/are not supported yet. 的本地化字符串。
         /// </summary>
         public static string OtherArray {
