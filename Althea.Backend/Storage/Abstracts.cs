@@ -205,10 +205,12 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public virtual void SetValues<T>(T value, long length) where T : unmanaged
 		{
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			if (this.Disposed)
 				throw new ObjectDisposedException(this.GetType().FullName);
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
+			if (this.Position + length > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 
 			int bufferSize = BufferSizeInBytes<T>() / Const<T>.SizeT;
 			if (this.CanTransferWithManaged)
@@ -255,7 +257,7 @@ namespace Althea.Backend.Storage
 			this.Flush();
 		}
 
-		private static readonly Dictionary<ImmutableTwoElementSet<Type>, StorageLocation> cache_double_location = new();
+		private static readonly Dictionary<ImmutableTwoElementSet<RuntimeTypeHandle>, StorageLocation> cache_double_location = new();
 
 		/// <summary>
 		/// When overridden in a derived class, copy some data from this <see cref="Stream"/> to <paramref name="other"/> <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
@@ -293,7 +295,7 @@ namespace Althea.Backend.Storage
 			else
 			{
 				// get StorageLocation cache
-				var key = new ImmutableTwoElementSet<Type>(this.GetType(), other.GetType());
+				var key = new ImmutableTwoElementSet<RuntimeTypeHandle>(this.GetType().TypeHandle, other.GetType().TypeHandle);
 				StorageLocation value;
 				if (cache_double_location.ContainsKey(key))
 				{

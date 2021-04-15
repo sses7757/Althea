@@ -18,11 +18,26 @@ using static Althea.Backend.Storage.ConcretePointersExtension;
 namespace Althea.Backend.CSharp.Storage
 {
 	/// <summary>
-	/// The C# back-end of <see cref="AbstractApi"/> that support storage locations of CPU and file and (possible) TCP.
+	/// The C# back-end of <see cref="AbstractApi"/> that supports storage locations of CPU and file and (possible) TCP.
 	/// </summary>
 	public class StorageApi : AbstractApi
 	{
 		#region basic
+		/// <summary>
+		/// The memory pointers allocated by <see cref="Marshal.AllocHGlobal(int)"/>
+		/// </summary>
+		protected internal static readonly LinkedList<IntPtr> AllocatedHGlobals = new();
+
+		/// <summary>
+		/// The <see cref="StreamPointer"/>s allocated by <see cref="Allocate_(StorageLocation, long, out PointerSegment)"/>
+		/// </summary>
+		protected internal static readonly LinkedList<IStreamPointer> AllocatedStreams = new();
+
+		/// <summary>
+		/// A default <see cref="StorageApi"/> that only supports storage locations of CPU and local file
+		/// </summary>
+		protected internal static readonly StorageApi Default = new();
+
 		/// <summary>
 		/// The default constructor used by reflection
 		/// </summary>
@@ -33,13 +48,8 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override void Dispose(bool disposeManaged)
 		{
-			foreach (var item in allocatedStreams)
-			{
-				item?.Dispose();
-			}
+			// do nothing
 		}
-
-		private readonly List<IStreamPointer?> allocatedStreams = new();
 
 		private string fileFolder = Path.GetTempPath();
 
@@ -50,7 +60,9 @@ namespace Althea.Backend.CSharp.Storage
 		/// <exception cref="UnauthorizedAccessException">If the program does not have permission to write to the folder</exception>
 		/// <exception cref="IOException">Other I/O exceptions</exception>
 		public string TempFileFolder {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.fileFolder;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (!Directory.Exists(value))
 					throw new ArgumentException(Parameter.InvalidValue, nameof(value));
@@ -68,39 +80,41 @@ namespace Althea.Backend.CSharp.Storage
 			}
 		}
 
-		/// <summary>
-		/// Get or set the host and folder to put the temporary files using TCP, default null means that this <see cref="StorageApi"/> does not support TCP storage location
-		/// </summary>
-		/// <remarks>If you set an invalid value, there may be exception thrown</remarks>
-		public Uri? TempTcpFolder { get; set; } = null;
-		#endregion
-
-		#region private
-		private static readonly CombinationOfLocations[] NoTCPUnary
-			= GenerateUnaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone });
-		private static readonly CombinationOfLocations[] WithTCPUnary
-			= GenerateUnaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone, TcpAlone });
-
-		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] NoTCPBinary
-			= GenerateBinaryLoactions(stackalloc StorageLocation[]{ CpuAlone, FileAlone });
-		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] WithTCBinary
-			= GenerateBinaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone, TcpAlone });
+		private Uri TempFileUri {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get {
+				string file = Path.Combine(this.TempFileFolder, Guid.NewGuid().ToString());
+				return new(Uri.UriSchemeFile + Uri.SchemeDelimiter + file);
+			}
+		}
 		#endregion
 
 		#region support
-		protected override bool IsSupportedUnary(CombinationOfLocations location) => this.TempTcpFolder is null ? NoTCPUnary.Contains(location) : WithTCPUnary.Contains(location);
+		private static readonly CombinationOfLocations[] Unary
+			= GenerateUnaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone });
 
-		protected override bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2) => this.TempTcpFolder is null ? NoTCPBinary.Contains((location1, location2)) : WithTCBinary.Contains((location1, location2));
+		private static readonly ImmutableTwoElementSet<CombinationOfLocations>[] Binary
+			= GenerateBinaryLoactions(stackalloc StorageLocation[] { CpuAlone, FileAlone });
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool IsSupportedUnary(CombinationOfLocations location) => Unary.Contains(location);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2) => Binary.Contains((location1, location2));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool CanTransferWithManaged(CombinationOfLocations location) => this.IsSupportedUnary(location);
 		#endregion
 
 		#region properties
-		public override bool IsSupportedLocation(StorageLocation location) => location == CpuAlone || location == FileAlone || (this.TempTcpFolder is not null && location == TcpAlone);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool IsSupportedLocation(StorageLocation location) => location == CpuAlone || location == FileAlone;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (int major, int minor) DriverVersion(StorageLocation location) => default;
 
 		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
 			var memoryInfo = GC.GetGCMemoryInfo();
@@ -123,27 +137,20 @@ namespace Althea.Backend.CSharp.Storage
 			{
 				var ptr = Marshal.AllocHGlobal(checked((int)length));
 				pointer = new MemoryPointer(ptr, length, location);
+				AllocatedHGlobals.AddLast(ptr);
 			}
-			else
+			else // FileAlone
 			{
 				if (location == FileAlone)
 				{
-					string file = Path.Combine(this.TempFileFolder, Guid.NewGuid().ToString());
-					Uri uri = new(Uri.UriSchemeFile + Uri.SchemeDelimiter + file);
-					pointer = new StreamPointer(new Backend.Storage.FileStream(uri, length), location);
-				}
-				else if (this.TempTcpFolder is not null) // TCP
-				{
-					var builder = new UriBuilder(this.TempTcpFolder);
-					builder.Path = Path.Combine(builder.Path, Guid.NewGuid().ToString());
-					pointer = new StreamPointer(new TcpStream(builder.Uri, length, Backend.Storage.Tcp.DefaultTcpMethods.DefaultTcpProtocol), location);
+					pointer = new StreamPointer(new Backend.Storage.FileStream(this.TempFileUri, length), location);
 				}
 				else
 				{
 					result = default;
 					return false;
 				}
-				this.allocatedStreams.Add((IStreamPointer)pointer);
+				AllocatedStreams.AddLast((IStreamPointer)pointer);
 			}
 			result = new PointerSegment(pointer);
 			return true;
@@ -151,7 +158,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool Free_(PointerSegment pointer, out bool valid)
 		{
-			var offset = pointer.GetPointerOffset(out IMemoryPointer? mp, out IStreamPointer? sp, @throw: false);
+			var offset = pointer.GetPointerOffsetManaged(out IMemoryPointer? mp, out IStreamPointer? sp, @throw: false);
 			if (offset == INVALID)
 			{
 				valid = false; return true;
@@ -164,18 +171,19 @@ namespace Althea.Backend.CSharp.Storage
 			if (mp is not null)
 			{
 				Marshal.FreeHGlobal(mp.Pointer);
+				AllocatedHGlobals.Remove(mp.Pointer);
 			}
 			else if (sp is not null)
 			{
 				sp.Dispose();
-				this.allocatedStreams[this.allocatedStreams.IndexOf(sp)] = null;
+				AllocatedStreams.Remove(sp);
 			}
 			valid = true; return true;
 		}
 
 		protected unsafe override bool FillWithValue_(PointerSegment pointer, byte value)
 		{
-			var offset = pointer.GetPointerOffset(out IMemoryPointer? mp, out IStreamPointer? sp);
+			var offset = pointer.GetPointerOffsetManaged(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (offset == NOT_SUPPORT)
 				return false;
 
@@ -193,7 +201,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool FillWithValue_<T>(PointerSegment pointer, T value)
 		{
-			var offset = pointer.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			var offset = pointer.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (offset == NOT_SUPPORT)
 				return false;
 
@@ -213,8 +221,8 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool MemoryCopy_(PointerSegment source, PointerSegment destination, out long copied)
 		{
-			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
-			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			long srcOff = source.GetPointerOffsetManaged(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
+			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
 			{
 				copied = 0; return false;
@@ -269,8 +277,8 @@ namespace Althea.Backend.CSharp.Storage
 				return this.MemoryCopy_(source.AsLength(height * width), destination.AsLength(height * width), out _);
 			}
 			// normal cases
-			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
-			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			long srcOff = source.GetPointerOffsetManaged(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
+			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
 				return false;
 
@@ -335,8 +343,8 @@ namespace Althea.Backend.CSharp.Storage
 			}
 			// other cases
 			long copyLength = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
-			long srcOff = source.GetPointerOffset(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
-			long dstOff = destination.GetPointerOffset(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
+			long srcOff = source.GetPointerOffsetManaged(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
+			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
 			{
 				copied = 0; return false;
@@ -395,7 +403,7 @@ namespace Althea.Backend.CSharp.Storage
 		protected override bool ToManaged_<T>(PointerSegment source, out T result)
 		{
 			result = default;
-			long offset = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			long offset = source.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (offset == NOT_SUPPORT)
 				return false;
 
@@ -418,7 +426,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool FromManaged_<T>(PointerSegment destination, T value)
 		{
-			long offset = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			long offset = destination.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (offset == NOT_SUPPORT)
 				return false;
 
@@ -468,7 +476,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool ToManaged_<T>(PointerSegment source, Span<T> destination, out long copied)
 		{
-			long offset = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			long offset = source.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (offset == NOT_SUPPORT)
 			{
 				copied = 0; return false;
@@ -481,7 +489,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		protected override bool FromManaged_<T>(PointerSegment destination, ReadOnlySpan<T> values, out long copied)
 		{
-			long offset = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			long offset = destination.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (offset == NOT_SUPPORT)
 			{
 				copied = 0; return false;
@@ -503,7 +511,7 @@ namespace Althea.Backend.CSharp.Storage
 			if (height > leadDim || height > destinationLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 
-			long start = source.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			long start = source.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (start == NOT_SUPPORT)
 				return false;
 
@@ -541,7 +549,7 @@ namespace Althea.Backend.CSharp.Storage
 			if (height > leadDim || height > valuesLeadDim)
 				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
 
-			long start = destination.GetPointerOffset<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
+			long start = destination.GetPointerOffsetManaged<T>(out IMemoryPointer? mp, out IStreamPointer? sp);
 			if (start == NOT_SUPPORT)
 				return false;
 

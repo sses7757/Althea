@@ -123,6 +123,9 @@
   <data name="CompareComplex" xml:space="preserve">
     <value>Cannot compare complex numbers of type {0}.</value>
   </data>
+  <data name="CuFileFS" xml:space="preserve">
+    <value>File system error occurred during CuFile read/write.</value>
+  </data>
   <data name="GenericNotNormalReal" xml:space="preserve">
     <value>The (complex) number {0} is not close enough to a normal real number.</value>
   </data>

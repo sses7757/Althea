@@ -79,6 +79,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 File system error occurred during CuFile read/write. 的本地化字符串。
+        /// </summary>
+        internal static string CuFileFS {
+            get {
+                return ResourceManager.GetString("CuFileFS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The (complex) number {0} is not close enough to a normal real number. 的本地化字符串。
         /// </summary>
         internal static string GenericNotNormalReal {

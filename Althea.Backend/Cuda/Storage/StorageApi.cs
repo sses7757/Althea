@@ -1,32 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.IO;
+using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
+using Althea.Resources;
 using Althea.Storage;
+
+using static Althea.Backend.Storage.ConcretePointersExtension;
 
 
 namespace Althea.Backend.Cuda.Storage
 {
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 	/// <summary>
-	/// The CUDA back-end of the <see cref="AbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABI is found.
+	/// The CUDA back-end of the <see cref="AbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
 	/// </summary>
 	public class StorageApi : AbstractApi
 	{
 		#region basic
 		/// <summary>
+		/// The <see cref="CudaFileStream"/>s allocated by <see cref="Allocate_(StorageLocation, long, out PointerSegment)"/>
+		/// </summary>
+		protected internal static readonly LinkedList<CudaFileStream> AllocatedCudaFiles = new();
+
+		/// <summary>
+		/// A default <see cref="StorageApi"/> that only supports storage locations of GPU and transfer with CPU memory
+		/// </summary>
+		protected internal static readonly StorageApi Default = new(false);
+
+		/// <summary>
 		/// Create a <see cref="StorageApi"/> with given meta data
 		/// </summary>
 		/// <param name="supportCuFile">Whether this class supports GPUDirect® Storage or not</param>
-		/// <param name="deviceComputeCapabilities">The devices' compute capabilities</param>
-		protected internal StorageApi(bool supportCuFile, IReadOnlyDictionary<int, (int, int)> deviceComputeCapabilities)
+		/// <remarks>If the invocation of <see cref="NativeMethods.cuFileDriverOpen"/> failed, the caller must invoke that method when available later</remarks>
+		protected internal StorageApi(bool supportCuFile)
 		{
 			this.CudaFileSupported = supportCuFile;
-			this.DeviceComputeCapability = deviceComputeCapabilities;
 			if (supportCuFile)
 			{
-				NativeMethods.cuFileDriverOpen();
+				try
+				{
+					NativeMethods.cuFileDriverOpen();
+				}
+				catch (Exception) { }
 			}
 		}
 		
@@ -35,26 +52,14 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		public StorageApi()
 		{
-			int c = 0;
-			NativeMethods.cudaGetDeviceCount(ref c);
-			var dict = new Dictionary<int, (int, int)>(c);
-			for (int i = 0; i < c; i++)
-			{
-				dict.Add(i, GetDeviceComputeCapability(i));
-			}
-			this.DeviceComputeCapability = dict;
-
 			try
 			{
-				var status = NativeMethods.cuFileDriverOpen();
-				if (status.IsSuccess)
-					this.CudaFileSupported = true;
-				else
-					this.CudaFileSupported = false;
+				this.CudaFileSupported = NativeMethods.cuFileDriverOpen().IsSuccess;
 			}
 			catch (Exception)
-			{	// the library is not found or other errors
+			{
 				this.CudaFileSupported = false;
+				throw;
 			}
 		}
 
@@ -62,25 +67,52 @@ namespace Althea.Backend.Cuda.Storage
 		{
 			if (this.CudaFileSupported)
 			{
-				foreach (var item in this.allocatedCudaFiles)
-				{
-					item?.Dispose();
-				}
 				NativeMethods.cuFileDriverClose();
 			}
 		}
-
-		private readonly List<CudaFileStream?> allocatedCudaFiles = new();
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether the GPUDirect® Storage is supported by this instance when initializing it.
 		/// </summary>
 		public bool CudaFileSupported { get; }
 
+
+		private string fileFolder = Path.GetTempPath();
+
 		/// <summary>
-		/// Get the devices' compute capabilities of this instance when initializing it.
+		/// Get or set the folder to put the temporary files, default is <see cref="Path.GetTempPath"/>
 		/// </summary>
-		public IReadOnlyDictionary<int, (int major, int minor)> DeviceComputeCapability { get; }
+		/// <exception cref="ArgumentException">If the folder to set is not an existing folder</exception>
+		/// <exception cref="UnauthorizedAccessException">If the program does not have permission to write to the folder</exception>
+		/// <exception cref="IOException">Other I/O exceptions</exception>
+		public string TempFileFolder {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.fileFolder;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set {
+				if (!Directory.Exists(value))
+					throw new ArgumentException(Parameter.InvalidValue, nameof(value));
+				string testFile = Path.Combine(value, Path.GetRandomFileName());
+				try
+				{
+					File.WriteAllText(testFile, " ");
+				}
+				finally
+				{
+					if (File.Exists(testFile))
+						File.Delete(testFile);
+				}
+				this.fileFolder = value;
+			}
+		}
+
+		private Uri TempFileUri {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get {
+				string file = Path.Combine(this.TempFileFolder, Guid.NewGuid().ToString());
+				return new(Uri.UriSchemeFile + Uri.SchemeDelimiter + file);
+			}
+		}
 		#endregion
 
 		#region driver info
@@ -89,6 +121,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="deviceID">The CDUA device ID</param>
 		/// <returns>The major and minor compute capability of the <paramref name="deviceID"/>; or both 0 if an error occurred</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (int major, int minor) GetDeviceComputeCapability(int deviceID)
 		{
 			CudaDeviceProperty prop = default;
@@ -99,24 +132,31 @@ namespace Althea.Backend.Cuda.Storage
 				return default;
 		}
 
+		private static int _currentDevice = -1;
+
 		/// <summary>
-		/// Statically get or set the current CUDA device
+		/// Statically get or set the current CUDA device, or -1 if it cannot be obtained.
 		/// </summary>
+		/// <exception cref="StatusException">If an <see cref="CudaError"/> returned during setting the device</exception>
 		public static int CurrentDeviceID {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
-				int d = 0;
-				var err = NativeMethods.cudaGetDevice(ref d);
-				return err == CudaError.Success ? d : -1;
+				if (_currentDevice < 0)
+				{
+					int d = 0;
+					var err = NativeMethods.cudaGetDevice(ref d);
+					_currentDevice = err == CudaError.Success ? d : -1;
+				}
+				return _currentDevice;
 			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
-				int d = 0;
-				var err = NativeMethods.cudaGetDevice(ref d);
-				if (d != value)
-					err = NativeMethods.cudaSetDevice(value);
-					// TODO: conditional throw
+				NativeMethods.cudaSetDevice(value).Check();
+				_currentDevice = value;
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (int major, int minor) DriverVersion(StorageLocation location)
 		{
 			if (location.Type != LocationType.GpuRam)
@@ -130,6 +170,7 @@ namespace Althea.Backend.Cuda.Storage
 			return err == CudaError.Success ? (ver / 1000, (ver % 1000) / 10) : default;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
 			if (location.Type != LocationType.GpuRam)
@@ -145,27 +186,88 @@ namespace Althea.Backend.Cuda.Storage
 		#endregion
 
 		#region support
-		public override bool IsSupportedLocation(StorageLocation location) => throw new NotImplementedException();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool IsSupportedLocation(StorageLocation location) => (location.Type == LocationType.GpuRam && location.LocationDetail == CurrentDeviceID) || (this.CudaFileSupported && location == FileAlone);
 
-		protected override bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2) => throw new NotImplementedException();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool IsSupportedLocation(CombinationOfLocations location)
+		{
+			if (location.Count != 1)
+				return false;
+			var t = location[0];
+			return this.IsSupportedLocation(t);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool IsSupportedLocationCopy(CombinationOfLocations location)
+		{
+			if (location.Count != 1)
+				return false;
+			var t = location[0];
+			return t.Type == LocationType.CpuRam || this.IsSupportedLocation(t);
+		}
 
-		protected override bool IsSupportedUnary(CombinationOfLocations location) => throw new NotImplementedException();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2)
+			=> this.IsSupportedLocationCopy(location1) && this.IsSupportedLocationCopy(location2);
 
-		protected override bool CanTransferWithManaged(CombinationOfLocations location) => throw new NotImplementedException();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool IsSupportedUnary(CombinationOfLocations location) => this.IsSupportedLocation(location);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool CanTransferWithManaged(CombinationOfLocations location) => false;
 		#endregion
 
-		#region allocate free
-		protected override bool Allocate_(StorageLocation location, long length, out PointerSegment result) => throw new NotImplementedException();
+		#region allocate and free
+		protected override bool Allocate_(StorageLocation location, long length, out PointerSegment result)
+		{
+			result = default;
+			if (!this.IsSupportedLocation(location))
+				return false; // not supported
+			if (location.Type == LocationType.GpuRam)
+			{
+				IntPtr ptr = default;
+				var err = NativeMethods.cudaMalloc(ref ptr, length);
+				if (err == CudaError.ErrorOutOfMemory)
+					throw new OutOfMemoryException();
+				err.Check();
+				result = new(new MemoryPointer(ptr, length, location));
+			}
+			else
+			{
+				result = new(new StreamPointer(new CudaFileStream(this.TempFileUri, length), location));
+			}
+			return true;
+		}
 
-		protected override bool Free_(PointerSegment pointer, out bool valid) => throw new NotImplementedException();
+		protected override bool Free_(PointerSegment pointer, out bool valid)
+		{
+			valid = false;
+			if (!this.IsSupportedLocation(pointer.Location))
+				return false;
+			long offset = pointer.GetPointerOffsetCuda(out var mp, out var sp, @throw: false);
+			if (offset != 0)
+				return false;
+			valid = true;
+			if (mp is not null)
+				return NativeMethods.cudaFree(mp.Pointer) == CudaError.Success;
+			if (sp is not null)
+				sp.Dispose();
+			return true;
+		}
 
-		protected override PointerSegment AllocateFileAt(string path, long lengthInBytes) => throw new NotImplementedException();
+		protected override PointerSegment AllocateFileAt(string path, long lengthInBytes)
+		{
+			return new(new StreamPointer(new CudaFileStream(new(path), lengthInBytes), new(LocationType.GpuRam, CurrentDeviceID));
+		}
 		#endregion
 
 		#region fill
 		protected override bool FillWithValue_(PointerSegment pointer, byte value) => throw new NotImplementedException();
 
 		protected override bool FillWithValue_<T>(PointerSegment pointer, T value) => throw new NotImplementedException();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static new bool FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged => Default.FillWithValue_(pointer, value);
 		#endregion
 
 		#region copy

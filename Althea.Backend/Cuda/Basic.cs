@@ -8,7 +8,26 @@ namespace Althea.Backend.Cuda
 	/// </summary>
 	public sealed class CudaImplementations : ISetBackend
 	{
-		bool ISetBackend.Available => true;
+		/// <summary>
+		/// The default constructor
+		/// </summary>
+		public CudaImplementations()
+		{
+			try
+			{
+				this.Available = Storage.NativeMethods.cudaDeviceSynchronize() == CudaError.Success;
+			}
+			catch (Exception)
+			{
+				this.Available = false;
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether CUA is available when initializing this instance
+		/// </summary>
+		public bool Available { get; }
 
 		Type ISetBackend.StorageImplementation => typeof(Storage.StorageApi);
 

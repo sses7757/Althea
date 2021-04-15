@@ -115,7 +115,7 @@ namespace Althea.Backend.CSharp.Random
 					case DataType.RealDouble:
 						var pD = new ManagedPureStorage<double>(p, len);
 						LAD.PointWiseCast(new ManagedPureStorage<ulong>(p, len), pD);
-						LAD.Scale(pD, 1, *(double*)&scale);
+						LAD.Scale(pD, *(double*)&scale);
 						LAD.PointWiseAddScalar(pD, 1, *(double*)&offset);
 						break;
 					case DataType.RealInt8:
@@ -150,6 +150,11 @@ namespace Althea.Backend.CSharp.Random
 
 		protected override bool FillWithRandom_<T>(Storage<T> storage, IRandomDistribution distribution)
 		{
+			return FillWithRandom(storage, distribution);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected internal static new bool FillWithRandom<T>(Storage<T> storage, IRandomDistribution distribution) where T : unmanaged
+		{
 			if (!Check(storage, distribution, out var p, out int length, out T offset, out T scale))
 				return false; // not support
 			Generate(p, length, offset, scale);
@@ -157,6 +162,11 @@ namespace Althea.Backend.CSharp.Random
 		}
 
 		protected override bool FillWithRandom_<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution)
+		{
+			return FillWithRandom(storage1, storage2, distribution);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected internal static new bool FillWithRandom<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution) where T1 : unmanaged where T2 : unmanaged
 		{
 			if (distribution is null)
 				throw new ArgumentNullException(nameof(distribution));
@@ -175,6 +185,11 @@ namespace Althea.Backend.CSharp.Random
 		}
 
 		protected override bool FillWithRandom_<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution)
+		{
+			return FillWithRandom(storage1, storage2, storage3, distribution);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected internal static new bool FillWithRandom<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution) where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 		{
 			if (distribution is null)
 				throw new ArgumentNullException(nameof(distribution));
@@ -196,6 +211,11 @@ namespace Althea.Backend.CSharp.Random
 		}
 
 		protected override bool FillWithRandom_(IRandomDistribution distribution, params IStorage[] storages)
+		{
+			return FillWithRandom(distribution, storages);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected internal static new bool FillWithRandom(IRandomDistribution distribution, params IStorage[] storages)
 		{
 			return false; // not support
 		}
