@@ -142,7 +142,7 @@ inline void vectorFillWith(void* av, const void* valv, const size_t N, const uns
 }
 
 DLLEXP
-void fillVal(const Datatype::DataType type, void* a, const void* val, const size_t N, const unsigned int stride)
+void vecFillVal(const Datatype::DataType type, void* a, const void* val, const size_t N, const unsigned int stride)
 {
 	AUTO_ALLTYPE_FUNC(vectorFillWith, type, void, a, val, N, stride);
 }
@@ -182,6 +182,42 @@ void vecConj(const Datatype::DataType type, void* a, const size_t N, const unsig
 #pragma endregion
 
 
+#pragma region strided copy
+template <typename T>
+inline void vectorStridedCopy(const void* srcv, void* dstv, const size_t N, const unsigned int strideSrc, const unsigned int strideDst)
+{
+	const T* src = (const T*)srcv;
+	T* dst = (T*)dstv;
+	if (strideSrc == 1 && strideDst == 1)
+	{
+		thrust::copy_n(THRUST_PAR, src, N, dst);
+	}
+	else if (strideSrc == 1 && strideDst != 1)
+	{
+		auto stridedDst = make_strided_range(dst, N, strideDst);
+		thrust::copy(THRUST_PAR, src, src + N, stridedDst.begin());
+	}
+	else if (strideSrc != 1 && strideDst == 1)
+	{
+		auto stridedSrc = make_strided_range(src, N, strideSrc);
+		thrust::copy(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst);
+	}
+	else
+	{
+		auto stridedSrc = make_strided_range(src, N, strideSrc);
+		auto stridedDst = make_strided_range(dst, N, strideDst);
+		thrust::copy(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin());
+	}
+}
+
+DLLEXP
+void vecStridedCopy(const Datatype::DataType type, const void* src, void* dst, const size_t N, const unsigned int strideSrc, const unsigned int strideDst)
+{
+	AUTO_ALLTYPE_FUNC(vectorStridedCopy, type, void, src, dst, N, strideSrc, strideDst);
+}
+#pragma endregion
+
+
 #pragma region data type cast
 template <typename RealIn, typename RealOut>
 struct realTypeConvert_functor
@@ -217,7 +253,7 @@ struct complexToRealPart_functor
 };
 
 template <typename RealIn, typename RealOut>
-inline void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
+inline void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, const unsigned int stride, bool toRealByAbs)
 {
 	const BlasSupp::complex<RealIn>* src = (const BlasSupp::complex<RealIn>*)srcv;
 	RealOut* dst = (RealOut*)dstv;
@@ -273,30 +309,13 @@ inline void vectorRealConvert(const void* srcv, void* dstv, const size_t N, cons
 	}
 }
 
-template <typename T>
-inline void vectorStridedCopy(const void* srcv, void* dstv, const size_t N, const unsigned int stride)
-{
-	const T* src = (const T*)srcv;
-	T* dst = (T*)dstv;
-	if (stride == 1)
-	{
-		thrust::copy_n(THRUST_PAR, src, N, dst);
-	}
-	else
-	{
-		auto strideSrc = make_strided_range(src, N, stride);
-		auto strideDst = make_strided_range(dst, N, stride);
-		thrust::copy(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin());
-	}
-}
-
 DLLEXP
 void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType dstType, const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs)
 {
 	// copy if no data conversion
 	if (srcType == dstType)
 	{
-		AUTO_ALLTYPE_FUNC(vectorStridedCopy, srcType, void, src, dst, N, stride);
+		AUTO_ALLTYPE_FUNC(vectorStridedCopy, srcType, void, src, dst, N, stride, stride);
 		// return is inside the auto generated switch
 	}
 
@@ -495,6 +514,7 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 			// the imaginary parts
 			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), srcInc, dstInc, N * 2, stride * 2, true);
 		}
+		return;
 	}
 
 	// calculate

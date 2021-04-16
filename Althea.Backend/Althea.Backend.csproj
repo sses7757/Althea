@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Cuda\BlasSupplementCUDA.dll">
+    <None Update="Cuda\SupplementCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Mkl\BlasSupplementOMP.dll">

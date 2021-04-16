@@ -217,6 +217,14 @@ namespace Althea.Backend.Storage
 		protected readonly System.IO.FileStream stream;
 
 		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether user can write data to this <see cref="Stream"/>.
+		/// </summary>
+		public override bool CanWrite {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.stream.CanWrite;
+		}
+
+		/// <summary>
 		/// Get or set the position (offset) in bytes of this <see cref="FileStream"/>
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">If the value to be set is not less than <see cref="Stream.Length"/></exception>
@@ -320,11 +328,46 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <exception cref="IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public override void Flush()
 		{
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
+			if (!this.stream.CanWrite)
+				throw new UnauthorizedAccessException();
 			this.stream.Flush();
+		}
+
+		/// <summary>
+		/// Check the parameters of <see cref="ToMemory(PointerSegment)"/>
+		/// </summary>
+		/// <returns>The <see cref="PointerSegment.Pointer"/> as a <see cref="IMemoryPointer"/></returns>
+		protected IMemoryPointer ToMemoryCheck(PointerSegment memory)
+		{
+			if (!memory.IsValid())
+				throw new ArgumentNullException(nameof(memory));
+			if (this.IsSupported(memory.Location))
+				throw new NotSupportedException(Support.Location);
+			if (memory.Pointer is not IMemoryPointer mp)
+				throw new NotSupportedException(Support.Location);
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if (memory.LengthInBytes + this.Position > this.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(memory));
+			return mp;
+		}
+
+		/// <summary>
+		/// Check the parameters of <see cref="ToManged{T}(Span{T})"/>
+		/// </summary>
+		protected void ToMangedCheck<T>(Span<T> managed) where T : unmanaged
+		{
+			if (!this.CanTransferWithManaged)
+				throw new NotSupportedException(Support.Location);
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if ((long)managed.Length * Const<T>.SizeT + this.Position > this.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
 		}
 
 		/// <summary>
@@ -333,19 +376,13 @@ namespace Althea.Backend.Storage
 		/// <param name="memory">The <see cref="PointerSegment"/> to write to</param>
 		/// <remarks>When finished, the <see cref="Position"/> shall be advanced by the number of bytes read.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="memory"/> is not valid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="memory"/>.<see cref="PointerSegment.LengthInBytes">Length</see> exceeds the boundary of this <see cref="Stream"/></exception>
 		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
 		/// <exception cref="IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void ToMemory(PointerSegment memory)
 		{
-			if (!memory.IsValid())
-				throw new ArgumentNullException(nameof(memory));
-			if (this.IsSupported(memory.Location))
-				throw new NotSupportedException(Support.Location);
-			if (memory.Pointer is not IMemoryPointer mp)
-				throw new NotSupportedException(Support.Location);
-			// other checks in ToManged
+			var mp = ToMemoryCheck(memory);
 			this.ToManged(mp.AsSpan<byte>(memory));
 		}
 
@@ -361,14 +398,44 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void ToManged<T>(Span<T> managed)
 		{
-			////if (!this.CanTransferWithManaged)
-			////	throw new NotSupportedException(Support.Location);
+			ToMangedCheck(managed);
+			this.stream.Read(managed.UncheckAs<T, byte>());
+		}
+
+		/// <summary>
+		/// Check the parameters of <see cref="FromMemory(PointerSegment)"/>
+		/// </summary>
+		/// <returns>The <see cref="PointerSegment.Pointer"/> as a <see cref="IMemoryPointer"/></returns>
+		protected IMemoryPointer FromMemoryCheck(PointerSegment memory)
+		{
+			if (this.Disposed)
+				throw new ObjectDisposedException(nameof(FileStream));
+			if (!this.stream.CanWrite)
+				throw new UnauthorizedAccessException(Resource.CannotWrite);
+			if (!memory.IsValid())
+				throw new ArgumentNullException(nameof(memory));
+			if (this.IsSupported(memory.Location))
+				throw new NotSupportedException(Support.Location);
+			if (memory.Pointer is not IMemoryPointer mp)
+				throw new NotSupportedException(Support.Location);
+			if (memory.LengthInBytes + this.Position > this.Length)
+				throw new ArgumentException(Parameter.WrongSize, nameof(memory));
+			return mp;
+		}
+
+		/// <summary>
+		/// Check the parameters of <see cref="FromManged{T}(ReadOnlySpan{T})"/>
+		/// </summary>
+		protected void FromManagedCheck<T>(ReadOnlySpan<T> managed) where T : unmanaged
+		{
+			if (!this.CanTransferWithManaged)
+				throw new NotSupportedException(Support.Location);
+			if (!this.stream.CanWrite)
+				throw new UnauthorizedAccessException();
 			if (this.Disposed)
 				throw new ObjectDisposedException(nameof(FileStream));
 			if ((long)managed.Length * Const<T>.SizeT + this.Position > this.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
-
-			this.stream.Read(managed.UncheckAs<T, byte>());
 		}
 
 		/// <summary>
@@ -381,15 +448,10 @@ namespace Althea.Backend.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
 		/// <exception cref="IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public override void FromMemory(PointerSegment memory)
 		{
-			if (!memory.IsValid())
-				throw new ArgumentNullException(nameof(memory));
-			if (this.IsSupported(memory.Location))
-				throw new NotSupportedException(Support.Location);
-			if (memory.Pointer is not IMemoryPointer mp)
-				throw new NotSupportedException(Support.Location);
-			// other checks in FromManged
+			var mp = FromMemoryCheck(memory);
 			this.FromManged<byte>(mp.AsSpan<byte>(memory));
 		}
 
@@ -403,15 +465,10 @@ namespace Althea.Backend.Storage
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public override void FromManged<T>(ReadOnlySpan<T> managed)
 		{
-			////if (!this.CanTransferWithManaged)
-			////	throw new NotSupportedException(Support.Location);
-			if (this.Disposed)
-				throw new ObjectDisposedException(nameof(FileStream));
-			if ((long)managed.Length * Const<T>.SizeT + this.Position > this.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(managed));
-
+			FromManagedCheck(managed);
 			this.stream.Write(managed.UncheckAs<T, byte>());
 		}
 		#endregion
@@ -421,6 +478,7 @@ namespace Althea.Backend.Storage
 	#region extension methods
 	internal static class ConcretePointersExtension
 	{
+		#region extension
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static unsafe T* UnmangedPointer<T>(this IMemoryPointer p, long offset = 0) where T : unmanaged => (T*)p.Pointer.ToPointer() + offset;
 
@@ -433,12 +491,20 @@ namespace Althea.Backend.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static Span<T> AsSpan<T>(this IMemoryPointer p, PointerSegment pointerSegment) where T : unmanaged => p.AsSpan<T>(checked(pointerSegment.OffsetInBytes / Const<T>.SizeT), checked((int)(pointerSegment.LengthInBytes / Const<T>.SizeT)));
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe PointerSegment AsPointerSegment<T>(this Span<T> span, T* pointer) where T : unmanaged => new(MemoryPointer.Create<T>((IntPtr)pointer, span.Length));
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe PointerSegment AsPointerSegment<T>(this ReadOnlySpan<T> span, T* pointer) where T : unmanaged => new(MemoryPointer.Create<T>((IntPtr)pointer, span.Length));
+		#endregion
 
+
+		#region cast
 		public static readonly StorageLocation CpuAlone = new(LocationType.CpuRam, 0);
 		public static readonly StorageLocation FileAlone = new(LocationType.Uri, (int)UriScheme.File);
 
 		public const long INVALID = -1, NOT_SUPPORT = -2;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long GetPointerOffsetManaged<T>(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) where
 			T : unmanaged
 		{
@@ -466,9 +532,11 @@ namespace Althea.Backend.Storage
 			return pointer.OffsetInBytes / Const<T>.SizeT;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long GetPointerOffsetManaged(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) => GetPointerOffsetManaged<byte>(pointer, out memoryPointer, out streamPointer, @throw);
 
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long GetPointerOffsetCuda<T>(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) where
 			T : unmanaged
 		{
@@ -481,11 +549,12 @@ namespace Althea.Backend.Storage
 				return INVALID;
 			}
 			// cast
-			if (pointer.Location.Type == LocationType.GpuRam && pointer.Pointer is IMemoryPointer mp)
+			var loc = pointer.Location; var ptr = pointer.Pointer; var locType = loc.Type;
+			if (((locType == LocationType.CpuRam) || (locType == LocationType.GpuRam && loc.LocationDetail == Cuda.Storage.StorageApi.CurrentDeviceID)) && ptr is IMemoryPointer mp)
 			{
 				memoryPointer = mp;
 			}
-			else if (pointer.Location == FileAlone && pointer.Pointer is IStreamPointer { NativeStream: Cuda.Storage.CudaFileStream } sp)
+			else if (loc == FileAlone && ptr is IStreamPointer { NativeStream: Cuda.Storage.CudaFileStream } sp)
 			{
 				streamPointer = sp;
 			}
@@ -496,7 +565,94 @@ namespace Althea.Backend.Storage
 			return pointer.OffsetInBytes / Const<T>.SizeT;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long GetPointerOffsetCuda(this PointerSegment pointer, out IMemoryPointer? memoryPointer, out IStreamPointer? streamPointer, bool @throw = true) => GetPointerOffsetManaged<byte>(pointer, out memoryPointer, out streamPointer, @throw);
+		#endregion
+
+
+		#region copy
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void StreamAndMemoryCopy(long srcOff, long dstOff, long copy, PointerSegment source, PointerSegment destination, IMemoryPointer? srcMP, IStreamPointer? srcSP, IMemoryPointer? dstMP, IStreamPointer? dstSP)
+		{
+			if (srcMP is not null && dstSP is not null)
+			{
+				dstSP.NativeStream.Position = dstOff;
+				dstSP.NativeStream.FromMemory(source.AsLength(copy));
+			}
+			else if (srcSP is not null && dstMP is not null)
+			{
+				srcSP.NativeStream.Position = srcOff;
+				srcSP.NativeStream.ToMemory(destination.AsLength(copy));
+			}
+			else if (srcSP is not null && dstSP is not null)
+			{
+				srcSP.NativeStream.Position = srcOff;
+				dstSP.NativeStream.Position = dstOff;
+				srcSP.NativeStream.CopyTo(dstSP.NativeStream, copy);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Copy2DCheck(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
+		{
+			if (sourceLD == 0)
+				throw new ArgumentOutOfRangeException(nameof(sourceLD), sourceLD, Parameter.MustPositive);
+			if (destinationLD == 0)
+				throw new ArgumentOutOfRangeException(nameof(destinationLD), destinationLD, Parameter.MustPositive);
+			if (width == 0)
+				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
+			if (height == 0)
+				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
+			if (height > sourceLD || height > destinationLD)
+				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
+			if (sourceLD * width > source.LengthInBytes)
+				throw new ArgumentException(Parameter.WrongSize, nameof(source));
+			if (destinationLD * width > destination.LengthInBytes)
+				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void StreamAndMemoryCopy2D(long srcLD, long dstLD, long height, long width, long srcOff, long dstOff, PointerSegment source, PointerSegment destination, IMemoryPointer? srcMP, IStreamPointer? srcSP, IMemoryPointer? dstMP, IStreamPointer? dstSP)
+		{
+			long end = source.OffsetInBytes + srcLD * width;
+			if (srcMP is not null && dstSP is not null)
+			{
+				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
+				{
+					dstSP.NativeStream.Position = dstOff;
+					dstSP.NativeStream.FromMemory(source.MoveBy(srcOff, height));
+				}
+			}
+			else if (srcSP is not null && dstMP is not null)
+			{
+				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
+				{
+					srcSP.NativeStream.Position = srcOff;
+					srcSP.NativeStream.ToMemory(destination.MoveBy(dstOff, height));
+				}
+			}
+			else if (srcSP is not null && dstSP is not null)
+			{
+				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
+				{
+					srcSP.NativeStream.Position = srcOff;
+					dstSP.NativeStream.Position = dstOff;
+					srcSP.NativeStream.CopyTo(dstSP.NativeStream, height);
+				}
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static (long srcLen, long dstLen) StridedCopyCheck<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination) where T : unmanaged
+		{
+			long srcLen = source.LengthInBytes / Const<T>.SizeT, dstLen = destination.LengthInBytes / Const<T>.SizeT;
+			if (incrementSource <= 0 || incrementSource >= srcLen)
+				throw new ArgumentOutOfRangeException(nameof(incrementSource), incrementSource, Parameter.InvalidValue);
+			if (incrementDestination <= 0 || incrementDestination >= dstLen)
+				throw new ArgumentOutOfRangeException(nameof(incrementDestination), incrementDestination, Parameter.InvalidValue);
+			return (srcLen, dstLen);
+		}
+		#endregion
 	}
 	#endregion
 }

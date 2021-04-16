@@ -219,58 +219,33 @@ namespace Althea.Backend.CSharp.Storage
 			return true;
 		}
 
-		protected override bool MemoryCopy_(PointerSegment source, PointerSegment destination, out long copied)
+		protected override bool MemoryCopy_(PointerSegment source, PointerSegment destination, out long actualCopied)
 		{
 			long srcOff = source.GetPointerOffsetManaged(out IMemoryPointer? srcMP, out IStreamPointer? srcSP);
 			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
 			{
-				copied = 0; return false;
+				actualCopied = 0; return false;
 			}
 
-			uint copyLength = checked((uint)Math.Min(source.LengthInBytes, destination.LengthInBytes));
+			actualCopied = checked(Math.Min(source.LengthInBytes, destination.LengthInBytes));
 			if (srcMP is not null && dstMP is not null)
 			{
 				unsafe
 				{
-					Unsafe.CopyBlock(srcMP.NativePointer(srcOff), dstMP.NativePointer(dstOff), copyLength);
+					Unsafe.CopyBlockUnaligned(srcMP.NativePointer(srcOff), dstMP.NativePointer(dstOff), checked((uint)actualCopied));
 				}
 			}
-			else if (srcMP is not null && dstSP is not null)
+			else
 			{
-				dstSP.NativeStream.Position = dstOff;
-				dstSP.NativeStream.FromMemory(source);
+				StreamAndMemoryCopy(srcOff, dstOff, actualCopied, source, destination, srcMP, srcSP, dstMP, dstSP);
 			}
-			else if (srcSP is not null && dstMP is not null)
-			{
-				srcSP.NativeStream.Position = srcOff;
-				srcSP.NativeStream.ToMemory(destination);
-			}
-			else if (srcSP is not null && dstSP is not null)
-			{
-				srcSP.NativeStream.Position = srcOff;
-				dstSP.NativeStream.Position = dstOff;
-				srcSP.NativeStream.CopyTo(dstSP.NativeStream, source.LengthInBytes);
-			}
-			copied = copyLength; return true;
+			return true;
 		}
 
 		protected override bool MemoryCopy2D_(PointerSegment source, long sourceLD, PointerSegment destination, long destinationLD, long height, long width)
 		{
-			if (sourceLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(sourceLD), sourceLD, Parameter.MustPositive);
-			if (destinationLD == 0)
-				throw new ArgumentOutOfRangeException(nameof(destinationLD), destinationLD, Parameter.MustPositive);
-			if (width == 0)
-				throw new ArgumentOutOfRangeException(nameof(width), width, Parameter.MustPositive);
-			if (height == 0)
-				throw new ArgumentOutOfRangeException(nameof(height), height, Parameter.MustPositive);
-			if (height > sourceLD || height > destinationLD)
-				throw new ArgumentException(Parameter.InvalidValue, nameof(height));
-			if (sourceLD * width > source.LengthInBytes)
-				throw new ArgumentException(Parameter.WrongSize, nameof(source));
-			if (destinationLD * width > destination.LengthInBytes)
-				throw new ArgumentException(Parameter.WrongSize, nameof(destination));
+			Copy2DCheck(source, sourceLD, destination, destinationLD, height, width);
 			// shortcut
 			if (sourceLD == destinationLD && sourceLD == height)
 			{
@@ -281,7 +256,6 @@ namespace Althea.Backend.CSharp.Storage
 			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out IStreamPointer? dstSP);
 			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT)
 				return false;
-
 			if (srcMP is not null && dstMP is not null)
 			{
 				uint hh = checked((uint)height);
@@ -292,50 +266,20 @@ namespace Althea.Backend.CSharp.Storage
 					byte* dstPtr = (byte*)dstMP.NativePointer(dstOff);
 					for (; srcPtr < endPtr; srcPtr += sourceLD, dstPtr += destinationLD)
 					{
-						Unsafe.CopyBlock(dstPtr, srcPtr, hh);
+						Unsafe.CopyBlockUnaligned(dstPtr, srcPtr, hh);
 					}
 				}
-				return true;
 			}
-			long end = source.OffsetInBytes + sourceLD * width;
-			long srcLD = sourceLD, dstLD = destinationLD;
-			int h = checked((int)height);
-			if (srcMP is not null && dstSP is not null)
+			else
 			{
-				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
-				{
-					dstSP.NativeStream.Position = dstOff;
-					dstSP.NativeStream.FromManged<byte>(srcMP.AsSpan<byte>(srcOff, h));
-				}
-			}
-			else if (srcSP is not null && dstMP is not null)
-			{
-				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
-				{
-					srcSP.NativeStream.Position = srcOff;
-					srcSP.NativeStream.ToManged(dstMP.AsSpan<byte>(dstOff, h));
-				}
-			}
-			else if (srcSP is not null && dstSP is not null)
-			{
-				for (; srcOff < end; srcOff += srcLD, dstOff += dstLD)
-				{
-					srcSP.NativeStream.Position = srcOff;
-					dstSP.NativeStream.Position = dstOff;
-					srcSP.NativeStream.CopyTo(dstSP.NativeStream, height);
-				}
+				StreamAndMemoryCopy2D(sourceLD, destinationLD, height, width, srcOff, dstOff, source, destination, srcMP, srcSP, dstMP, dstSP);
 			}
 			return true;
 		}
 
 		protected override bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long copied)
 		{
-			long srcLen = source.LengthInBytes / Const<T>.SizeT, dstLen = destination.LengthInBytes / Const<T>.SizeT;
-			if (incrementSource <= 0 || incrementSource >= srcLen)
-				throw new ArgumentOutOfRangeException(nameof(incrementSource), incrementSource, Parameter.InvalidValue);
-			if (incrementDestination <= 0 || incrementDestination >= dstLen)
-				throw new ArgumentOutOfRangeException(nameof(incrementDestination), incrementDestination, Parameter.InvalidValue);
-
+			var (srcLen, dstLen) = StridedCopyCheck<T>(source, incrementSource, destination, incrementDestination);
 			// shortcut
 			if (incrementSource == 1 && incrementDestination == 1)
 			{

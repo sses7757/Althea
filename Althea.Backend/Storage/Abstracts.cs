@@ -45,7 +45,7 @@ namespace Althea.Backend.Storage
 	}
 
 	/// <summary>
-	/// The abstract class for any possible stream storage
+	/// The abstract class for any possible stream storage that can read, seek (and possibly write)
 	/// </summary>
 	public abstract class Stream : IDisposable, ICheckValid
 	{
@@ -106,6 +106,11 @@ namespace Althea.Backend.Storage
 		public abstract bool CanTransferWithManaged { get; }
 
 		/// <summary>
+		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether user can write data to this <see cref="Stream"/>.
+		/// </summary>
+		public abstract bool CanWrite { get; }
+
+		/// <summary>
 		/// When implemented by a derived class, <b>statically</b> get the supported data transfer locations represented by <see cref="StorageLocation"/>s of this <see cref="Stream"/>
 		/// </summary>
 		/// <remarks>When implemented by a derived class, if this property returns null or empty list, <see cref="NullReferenceException"/> may be thrown</remarks>
@@ -132,6 +137,7 @@ namespace Althea.Backend.Storage
 		/// </summary>
 		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public abstract void Flush();
 
 		/// <summary>
@@ -168,6 +174,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
 		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public abstract void FromMemory(PointerSegment memory);
 
 		/// <summary>
@@ -180,6 +187,7 @@ namespace Althea.Backend.Storage
 		/// <exception cref="NotSupportedException">If <see cref="CanTransferWithManaged"/> is false</exception>
 		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public abstract void FromManged<T>(ReadOnlySpan<T> managed) where T : unmanaged;
 		#endregion
 
@@ -195,6 +203,25 @@ namespace Althea.Backend.Storage
 		private static readonly Dictionary<Type, StorageLocation> cache_single_location = new();
 
 		/// <summary>
+		/// Check the parameters of <see cref="SetValues{T}(T, long)"/>
+		/// </summary>
+		/// <returns><paramref name="length"/> * size of <typeparamref name="T"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected long SetValuesCheck<T>(long length) where T : unmanaged
+		{
+			if (this.Disposed)
+				throw new ObjectDisposedException(this.GetType().FullName);
+			if (!this.CanWrite)
+				throw new UnauthorizedAccessException(string.Format(Resource.CannotWrite, this.GetType().GetGenericString()));
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
+			length *= Const<T>.SizeT;
+			if (this.Position + length > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			return length;
+		}
+
+		/// <summary>
 		/// When overridden in a derived class, fill some values of this <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
 		/// </summary>
 		/// <typeparam name="T">any unmanaged data type</typeparam>
@@ -203,14 +230,10 @@ namespace Althea.Backend.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public virtual void SetValues<T>(T value, long length) where T : unmanaged
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			SetValuesCheck<T>(length);
 
 			int bufferSize = BufferSizeInBytes<T>() / Const<T>.SizeT;
 			if (this.CanTransferWithManaged)
@@ -260,6 +283,26 @@ namespace Althea.Backend.Storage
 		private static readonly Dictionary<ImmutableTwoElementSet<RuntimeTypeHandle>, StorageLocation> cache_double_location = new();
 
 		/// <summary>
+		/// Check the parameters of <see cref="CopyTo(Stream, long)"/>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected void CopyToCheck(Stream other, long length)
+		{
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
+			if (this.Disposed)
+				throw new ObjectDisposedException(this.GetType().FullName);
+			if (other.Disposed)
+				throw new ObjectDisposedException(other.GetType().FullName);
+			if (!other.CanWrite)
+				throw new UnauthorizedAccessException(string.Format(Resource.CannotWrite, other.GetType().GetGenericString()));
+			if (this.Position + length > this.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			if (other.Position + length > other.Length)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+		}
+
+		/// <summary>
 		/// When overridden in a derived class, copy some data from this <see cref="Stream"/> to <paramref name="other"/> <see cref="Stream"/> of given <paramref name="length"/>. The default implementation tries to use the managed buffer or buffer allocated on the found first intersection of both <see cref="SupportedTransfers"/>.
 		/// </summary>
 		/// <param name="other">The other <see cref="Stream"/> to copy to</param>
@@ -268,16 +311,10 @@ namespace Althea.Backend.Storage
 		/// <exception cref="NotSupportedException">If there are not common supported data transfers between this and <paramref name="other"/></exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this or <paramref name="other"/> is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If the <paramref name="other"/> <see cref="Stream"/> was created read-only</exception>
 		public virtual void CopyTo(Stream other, long length)
 		{
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
-			if (other.Position + length > other.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			CopyToCheck(other, length);
 
 			int bufferSize = BufferSizeInBytes<byte>();
 			if (this.CanTransferWithManaged && other.CanTransferWithManaged)

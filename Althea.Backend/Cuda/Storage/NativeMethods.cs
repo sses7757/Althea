@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Althea.NativeTypes;
 
 namespace Althea.Backend.Cuda.Storage
 {
@@ -19,6 +20,11 @@ namespace Althea.Backend.Cuda.Storage
 		/// The cuFile library name
 		/// </summary>
 		public const string CUFILE_API_DLL_NAME = @"cufile";
+
+		/// <summary>
+		/// The custom CUDA library name
+		/// </summary>
+		public const string CUSTOM_API_DLL_NAME = @"SupplementCUDA";
 
 		#region device utilities
 		/// <summary>
@@ -263,6 +269,35 @@ namespace Althea.Backend.Cuda.Storage
 		/// <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="CudaFileOpError"/> value.</returns>
 		[DllImport(CUFILE_API_DLL_NAME)]
 		internal static extern long cuFileWrite(CudaFileHandle fileHandle, IntPtr devPtr, long size, long fileOffset, long devPtrOffset);
+		#endregion
+
+		#region custom
+		/// <summary>
+		/// Fill the GPU <paramref name="array"/> with given <paramref name="value"/> of <paramref name="type"/>
+		/// </summary>
+		/// <param name="type">The data type of the GPU array and value</param>
+		/// <param name="array">The GPU array to be filled</param>
+		/// <param name="value">The pointer to the value of <paramref name="type"/> to be filled</param>
+		/// <param name="N">The number of elements of <paramref name="array"/>, in <paramref name="type"/></param>
+		/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
+		/// <remarks>Strided filling reduce the performance greatly.</remarks>
+		[DllImport(CUSTOM_API_DLL_NAME)]
+		//[NativeMethodBoundary]
+		internal static extern void vecFillVal(DataType type, IntPtr array, ref byte value, long N, int stride);
+
+		/// <summary>
+		/// Strided copy the <paramref name="src"/> GPU array to the <paramref name="dst"/> GPU array
+		/// </summary>
+		/// <param name="type">The data type of the GPU array and value</param>
+		/// <param name="src">The source GPU array to copy from</param>
+		/// <param name="dst">The destination GPU array to copy to</param>
+		/// <param name="N">The number of elements to copy, counted in <paramref name="type"/></param>
+		/// <param name="strideSrc">The stride between two consecutive elements to be copied in <paramref name="src"/></param>
+		/// <param name="strideDst">The stride between two consecutive elements to be overwritten in <paramref name="dst"/></param>
+		/// <remarks>Strided copying reduce the performance greatly.</remarks>
+		[DllImport(CUSTOM_API_DLL_NAME)]
+		//[NativeMethodBoundary]
+		internal static extern void vecStridedCopy(DataType type, IntPtr src, IntPtr dst, long N, int strideSrc, int strideDst);
 		#endregion
 	}
 }

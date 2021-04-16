@@ -1530,34 +1530,29 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		protected virtual bool FillWithValue_<T>(Storage<T> storage, T value) where T : unmanaged
 		{
+			if (value.IsZero() || Const<T>.SizeT == sizeof(byte))
+			{
+				unsafe { return FillWithValue_(storage, *(byte*)&value); }
+			}
+
 			storage.Cast(out IPureOrMixedStorage? mixed, out ICachedStorage? cached);
 			if (!this.IsSupportedUnary(storage.LocationDescription))
 				return false;
 			if (mixed is not null)
 			{
-				if (value.IsZero())
-					for (int i = 0; i < storage.Count; i++)
-						this.FillWithValue_(storage[i], value);
-				else
-					for (int i = 0; i < storage.Count; i++)
-						this.FillWithValue_(storage[i], (byte)0);
+				for (int i = 0; i < storage.Count; i++)
+					this.FillWithValue_(storage[i], value);
 			}
 			else if (cached is not null)
 			{
 				if (cached.LengthInBytes <= cached.GetRealLength() * ICachedStorage.CacheSizeRatio)
 				{
 					cached.Flush();
-					if (value.IsZero())
-						this.FillWithValue_(cached[0], (byte)0);
-					else
-						this.FillWithValue_(cached[0], value);
+					this.FillWithValue_(cached[0], value);
 				}
 				else
 				{
-					if (value.IsZero())
-						cached.ApplyUnaryFunction(this.FillWithValue_, 0, cached.LengthInBytes, auxiliary: (byte)0, copyFunc: this.MemoryCopy_);
-					else
-						cached.ApplyUnaryFunction(this.FillWithValue_, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy_);
+					cached.ApplyUnaryFunction(this.FillWithValue_, 0, cached.LengthInBytes, auxiliary: value, copyFunc: this.MemoryCopy_);
 				}
 			}
 			return true;

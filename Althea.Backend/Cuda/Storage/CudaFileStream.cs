@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
 using Althea.Resources;
-using Althea.Storage;
 
 
 namespace Althea.Backend.Cuda.Storage
@@ -149,8 +148,6 @@ namespace Althea.Backend.Cuda.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Flush()
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(nameof(FileStream));
 			// do nothing
 		}
 
@@ -166,14 +163,8 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		public override void ToMemory(PointerSegment memory)
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (!memory.IsValid())
-				throw new ArgumentNullException(nameof(memory));
-			if (this.IsSupported(memory.Location))
-				throw new NotSupportedException(Support.Location);
-			if (memory.Pointer is not IMemoryPointer mp)
-				throw new NotSupportedException(Support.Location);
+			var mp = this.ToMemoryCheck(memory);
+
 			long size = memory.LengthInBytes, offset = memory.OffsetInBytes;
 			if (size + this.Position > this.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(memory));
@@ -185,7 +176,6 @@ namespace Althea.Backend.Cuda.Storage
 					offset = 0;
 				}
 			NativeMethods.cuFileRead(this.handle, p, size, this.Position, offset).Check();
-			this.Position += size;
 		}
 
 		/// <summary>
@@ -208,19 +198,12 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="memory"/>.<see cref="PointerSegment.Location">Location</see> is not supported</exception>
 		/// <exception cref="System.IO.IOException">If a general I/O error occurred</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public override void FromMemory(PointerSegment memory)
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (!memory.IsValid())
-				throw new ArgumentNullException(nameof(memory));
-			if (this.IsSupported(memory.Location))
-				throw new NotSupportedException(Support.Location);
-			if (memory.Pointer is not IMemoryPointer mp)
-				throw new NotSupportedException(Support.Location);
+			var mp = FromMemoryCheck(memory);
+
 			long size = memory.LengthInBytes, offset = memory.OffsetInBytes;
-			if (size + this.Position > this.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(memory));
 			IntPtr p = mp.Pointer;
 			if (p != this.gpuMem)
 				unsafe
@@ -229,7 +212,6 @@ namespace Althea.Backend.Cuda.Storage
 					offset = 0;
 				}
 			NativeMethods.cuFileWrite(this.handle, p, size, this.Position, offset).Check();
-			this.Position += size;
 		}
 
 		/// <summary>
@@ -252,18 +234,12 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="NotSupportedException">If <paramref name="other"/> is not a <see cref="CudaFileStream"/></exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this or <paramref name="other"/> is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If the <paramref name="other"/> <see cref="Stream"/> was created read-only</exception>
 		public override void CopyTo(Stream other, long length)
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
+			this.CopyToCheck(other, length);
 			if (other is not CudaFileStream cf)
 				throw new NotSupportedException(Support.DataType);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
-			if (cf.Position + length > other.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
 
 			int bufferSize = BufferSizeInBytes<byte>();
 			IntPtr buf = default;
@@ -312,18 +288,10 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> or <paramref name="bufferSize"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this or <paramref name="other"/> is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If the <paramref name="other"/> <see cref="Stream"/> was created read-only</exception>
 		public virtual void CopyTo(CudaFileStream other, long length, IntPtr buffer, long bufferSize, bool doRegister)
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			if (bufferSize <= 0)
-				throw new ArgumentOutOfRangeException(nameof(bufferSize), bufferSize, Parameter.MustPositive);
-			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
-			if (other.Position + length > other.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			this.CopyToCheck(other, length);
 
 			if (length <= bufferSize)
 			{   // do not register
@@ -363,14 +331,10 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public override void SetValues<T>(T value, long length)
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			length = this.SetValuesCheck<T>(length);
 
 			int bufferSize = BufferSizeInBytes<byte>();
 			IntPtr buf = default;
@@ -420,14 +384,10 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> exceeds any of the boundaries</exception>
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
+		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
 		public void SetValues<T>(T value, long length, IntPtr buffer, long bufferSize, bool doRegister) where T : unmanaged
 		{
-			if (this.Disposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-			if (length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
-			if (this.Position + length > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+			length = this.SetValuesCheck<T>(length);
 
 			PointerSegment ptr = new(new MemoryPointer(buffer, bufferSize, new(LocationType.GpuRam, 0)));
 			StorageApi.FillWithValue(ptr, value);

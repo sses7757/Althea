@@ -70,6 +70,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 Writing data to unwritable {0} is not allowed. 的本地化字符串。
+        /// </summary>
+        internal static string CannotWrite {
+            get {
+                return ResourceManager.GetString("CannotWrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cannot compare complex numbers of type {0}. 的本地化字符串。
         /// </summary>
         internal static string CompareComplex {
