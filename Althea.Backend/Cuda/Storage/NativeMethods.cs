@@ -73,7 +73,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="runtimeVersion">The version is returned as (1000 major + 10 minor). For example, CUDA 9.2 would be represented by 9020.</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaRuntimeGetVersion(ref int runtimeVersion);
 
 		/// <summary>
@@ -82,7 +81,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="property">The output <see cref="CudaDeviceProperty"/></param>
 		/// <param name="device">The index of the CUDA device</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaGetDeviceProperties(ref CudaDeviceProperty property, int device);
 		#endregion
 
@@ -92,7 +90,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="devPtr">the pointer to the array to free</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaFree(IntPtr devPtr);
 
 		/// <summary>
@@ -100,7 +97,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="ptr">the pointer to the array to free</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaFreeHost(IntPtr ptr);
 
 		/// <summary>
@@ -109,7 +105,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="pHost">the returned host array pointer</param>
 		/// <param name="size">the array size in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMallocHost(ref IntPtr pHost, long size);
 
 		/// <summary>
@@ -118,7 +113,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="pDev">the returned device array pointer</param>
 		/// <param name="size">the array size in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMalloc(ref IntPtr pDev, long size);
 
 		/// <summary>
@@ -129,7 +123,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="count">length in bytes</param>
 		/// <param name="kind">copy kind <see cref="MemoryCopyKind"/></param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMemcpy(IntPtr dst, IntPtr src, long count, MemoryCopyKind kind);
 
 		/// <summary>
@@ -143,7 +136,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="width">width to copy, in real size rather than bytes</param>
 		/// <param name="kind">copy kind of <see cref="MemoryCopyKind"/></param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMemcpy2D(IntPtr dst, long destLD, IntPtr src, long srcLD, long height, long width, MemoryCopyKind kind);
 
 		/// <summary>
@@ -153,7 +145,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="value">Value to set for each byte of specified memory</param>
 		/// <param name="count">Size in bytes to set</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaError cudaMemset(IntPtr devPtr, int value, long count);
 		#endregion
 
@@ -162,14 +153,12 @@ namespace Althea.Backend.Cuda.Storage
 		/// Initialize the cuFile infrastructure
 		/// </summary>
 		[DllImport(CUFILE_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaFileError cuFileDriverOpen();
 
 		/// <summary>
 		/// Finalize the cuFile system
 		/// </summary>
 		[DllImport(CUFILE_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaFileError cuFileDriverClose();
 
 		/// <summary>
@@ -177,7 +166,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="prop">The output <see cref="CudaFileDriverProperty"/></param>
 		[DllImport(CUFILE_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern CudaFileError cuFileGetDriverProperties(ref CudaFileDriverProperty prop);
 
 		/// <summary>
@@ -282,7 +270,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
 		/// <remarks>Strided filling reduce the performance greatly.</remarks>
 		[DllImport(CUSTOM_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern void vecFillVal(DataType type, IntPtr array, ref byte value, long N, int stride);
 
 		/// <summary>
@@ -296,7 +283,6 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="strideDst">The stride between two consecutive elements to be overwritten in <paramref name="dst"/></param>
 		/// <remarks>Strided copying reduce the performance greatly.</remarks>
 		[DllImport(CUSTOM_API_DLL_NAME)]
-		//[NativeMethodBoundary]
 		internal static extern void vecStridedCopy(DataType type, IntPtr src, IntPtr dst, long N, int strideSrc, int strideDst);
 		#endregion
 	}

@@ -31,16 +31,16 @@ namespace Althea.Backend.Cuda
 
 		Type ISetBackend.StorageImplementation => typeof(Storage.StorageApi);
 
-		Type ISetBackend.DenseLinearAlgebraImplementation => typeof(LinearAlgebra.DenseApi);
+		Type ISetBackend.DenseLinearAlgebraImplementation => typeof(LinearAlgebra.Dense.DenseApi);
 
-		Type ISetBackend.SparseLinearAlgebraImplementation => typeof(LinearAlgebra.SparseApi);
+		Type ISetBackend.SparseLinearAlgebraImplementation => typeof(int/*LinearAlgebra.Sparse.SparseApi*/);
 
-		Type ISetBackend.DenseTensorAlgebraImplementation => typeof(TensorAlgebra.DenseApi);
+		Type ISetBackend.DenseTensorAlgebraImplementation => typeof(int/*TensorAlgebra.DenseApi*/);
 
-		Type ISetBackend.SparseTensorAlgebraImplementation => typeof(TensorAlgebra.DenseApi);
+		Type ISetBackend.SparseTensorAlgebraImplementation => typeof(int/*TensorAlgebra.DenseApi*/);
 
-		Type ISetBackend.RandomImplementation => typeof(Random.RandomApi);
+		Type ISetBackend.RandomImplementation => typeof(int/*Random.RandomApi*/);
 
-		Type ISetBackend.SolverImplementation => typeof(Solver.SolverApi);
+		Type ISetBackend.SolverImplementation => typeof(int/*Solver.SolverApi*/);
 	}
 }

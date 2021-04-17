@@ -8,6 +8,35 @@ using Althea.Helpers;
 
 namespace Althea.Backend.Cuda.Storage
 {
+	#region copy
+	/// <summary>
+	/// Memory copy enum
+	/// </summary>
+	internal enum MemoryCopyKind
+	{
+		/// <summary>
+		/// host to host
+		/// </summary>
+		HostToHost = 0,
+		/// <summary>
+		/// host to device
+		/// </summary>
+		HostToDevice = 1,
+		/// <summary>
+		/// device to host
+		/// </summary>
+		DeviceToHost = 2,
+		/// <summary>
+		/// device to device
+		/// </summary>
+		DeviceToDevice = 3,
+		/// <summary>
+		/// Direction of the transfer is inferred from the pointer values. Requires unified virtual addressing
+		/// </summary>
+		Default = 4
+	}
+	#endregion
+
 	#region CDUA device property
 	// Ignore Spelling: mipmapped Cubemap
 	/// <summary>

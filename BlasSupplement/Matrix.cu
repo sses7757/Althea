@@ -85,7 +85,7 @@ size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
 	return nnz;
 }
 
-DLLEXP ERROR_RETURN CSRGetNerCal(const int* buffer, size_t nnz, int* nerOut)
+DLLEXP ERROR_RETURN CSRGetNerCal(const int* buffer, const size_t nnz, int* nerOut)
 {
 #ifdef CPU
 	memcpy(nerOut, buffer, sizeof(int) * nnz);
@@ -151,9 +151,9 @@ struct kronecker_functor
 
 template<typename T>
 inline void matricesKronecker(
-	const void* Av, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-	const void* Bv, const unsigned int ldB, const unsigned int rowsB, const unsigned int colsB,
-	void* destv, const unsigned int ldD, const void* alphav, const void* betav)
+	const void* Av, const size_t ldA, const size_t rowsA, const size_t colsA,
+	const void* Bv, const size_t ldB, const size_t rowsB, const size_t colsB,
+	void* destv, const size_t ldD, const void* alphav, const void* betav)
 {
 	// cast
 	const T* A = (const T*)Av;
@@ -165,7 +165,7 @@ inline void matricesKronecker(
 	const unsigned int rowsD = rowsA * rowsB;
 	const unsigned int colsD = colsA * colsB;
 
-#define KRON_CODE(bool1, bool2, bool3) thrust::for_each_n(THRUST_PAR, count_iter, (size_t)rowsD * colsD, kronecker_functor<T, bool1, bool2, bool3>(alpha, beta, ldA, ldB, colsB, ldD, rowsD, A, B, D))
+#define KRON_CODE(bool1, bool2, bool3) thrust::for_each_n(THRUST_PAR, count_iter, rowsD * colsD, kronecker_functor<T, bool1, bool2, bool3>(alpha, beta, ldA, ldB, colsB, ldD, rowsD, A, B, D))
 
 	if (rowsD == ldD)
 	{
@@ -193,25 +193,25 @@ inline void matricesKronecker(
 
 DLLEXP
 void matKron(const Datatype::DataType type,
-	const void* A, const unsigned int ldA, const unsigned int rowsA, const unsigned int colsA,
-	const void* B, const unsigned int ldB, const unsigned int rowsB, const unsigned int colsB,
-	void* dest, const unsigned int ldD, const void* alpha, const void* beta)
+	const void* A, const size_t ldA, const size_t rowsA, const size_t colsA,
+	const void* B, const size_t ldB, const size_t rowsB, const size_t colsB,
+	void* dest, const size_t ldD, const void* alpha, const void* beta)
 {
 	AUTO_ALLTYPE_FUNC(matricesKronecker, type, void, A, ldA, rowsA, colsA, B, ldB, rowsB, colsB, dest, ldD, alpha, beta);
 }
 #pragma endregion
 
 
-#pragma region make matrix Hermitian by copying its upper part to its lower part
-template <typename T, bool largerLeadDim>
-struct makeHerm_functor
+#pragma region make matrix Hermitian by copying its upper part to/from its lower part
+template <typename T, bool upper>
+struct makeHerm_functor2
 {
-	const size_t ld, rows;
+	const size_t ld;
 	T* A;
 
 	// used for compute the actual row and column position
-	double onePlus2NHalf, onePlus2NSquare;
-	size_t TwoNMinusOne;
+	const double onePlus2NHalf, onePlus2NSquare;
+	const size_t TwoNMinusOne;
 	// Ignore Spelling: lfloor
 	//tex:Since for number of rows $n$, column index $c$ and iteration index $i$: $$\sum_{i=0}^c (n - i) = \frac12 (1 + c)(2n - c)$$
 	//We have $$c = \left\lfloor \frac{1}{2} \left( 2n+1 - \sqrt{(2 n+1)^2-8 i} \right) \right\rfloor = \left\lfloor \frac{1}{2} (1+2 n) \left(1-\sqrt{1-\frac{8 i}{(1+2 n)^2}}\right)\right\rfloor$$
@@ -220,58 +220,169 @@ struct makeHerm_functor
 	//The row index is then:
 	//$$r = \frac12(c^2-2 c n+c+2 i-2) = i - 1 - \frac12 c (2n - 1 - c)$$
 
-	makeHerm_functor(const size_t ld, const size_t rows, T* A) :
-		ld(ld), rows(rows), A(A)
-	{
-		const size_t onePlus2N = 2 * ld + 1;
-		TwoNMinusOne = onePlus2N - 2;
-		onePlus2NHalf = onePlus2N * 0.5;
-		onePlus2NSquare = onePlus2N * onePlus2N;
-	}
+	makeHerm_functor2(const size_t ld, T* A) :
+		ld(ld), A(A),
+		TwoNMinusOne(2 * ld - 1),
+		onePlus2NHalf(0.5 * (2 * ld + 1)),
+		onePlus2NSquare((2 * ld + 1) * (double)(2 * ld + 1))
+	{}
 
 	__host__ __device__ void operator()(const size_t ind) const
 	{
 		// get offset
 		const size_t col = (size_t)(onePlus2NHalf * (1.0 - std::sqrt(1.0 - 8 * ind / onePlus2NSquare)));
 		const size_t row = ind - 1 - (col * (TwoNMinusOne - col)) / 2;
-		const size_t offset = row + col * ld, offsetUpper = col + row * ld;
+		const size_t offsetLower = row + col * ld, offsetUpper = col + row * ld;
 		// copy
 		if constexpr (std::is_scalar<T>::value)
 		{
-			A[offset] = A[offsetUpper];
-			return;
+			if constexpr (upper)
+				A[offsetLower] = A[offsetUpper];
+			else
+				A[offsetUpper] = A[offsetLower];
 		}
 		else
 		{
 			if (row == col)
 			{
-				A[offset] = T(A[offset].real());
+				A[offsetLower] = T(A[offsetLower].real());
 			}
 			else
 			{
-				A[offset] = std::conj(A[offsetUpper]);
+				if constexpr (upper)
+					A[offsetLower] = std::conj(A[offsetUpper]);
+				else
+					A[offsetUpper] = std::conj(A[offsetLower]);
 			}
 		}
 	}
 };
 
+template <typename T, bool upper>
+struct makeHerm_functor
+{
+	const size_t ld, rows;
+	T* A;
+
+	makeHerm_functor(const size_t ld, const size_t rows, T* A) :
+		ld(ld), rows(rows), A(A)
+	{}
+
+	__host__ __device__ void operator()(const size_t ind) const
+	{
+		// get offset
+		const lldiv_t div = std::lldiv(ind, rows);
+		const size_t row = div.rem, col = div.quot;
+		const size_t offsetLower = row + col * ld, offsetUpper = col + row * ld;
+		// copy
+		if constexpr (upper)
+		{
+			if (row > col)
+				return;
+		}
+		else
+		{
+			if (row < col)
+				return;
+		}
+		if constexpr (std::is_scalar<T>::value)
+		{
+			if constexpr (upper)
+				A[offsetLower] = A[offsetUpper];
+			else
+				A[offsetUpper] = A[offsetLower];
+		}
+		else
+		{
+			if (row == col)
+			{
+				A[offsetLower] = T(A[offsetLower].real());
+			}
+			else
+			{
+				if constexpr (upper)
+					A[offsetLower] = std::conj(A[offsetUpper]);
+				else
+					A[offsetUpper] = std::conj(A[offsetLower]);
+			}
+		}
+	}
+};
+
+template <typename T, bool clearLower>
+struct clearPart_functor
+{
+	const size_t ld, rows;
+	T* A;
+
+	clearPart_functor(const size_t ld, const size_t rows, T* A) :
+		ld(ld), rows(rows), A(A)
+	{}
+
+	__host__ __device__ void operator()(const size_t ind) const
+	{
+		// get offset
+		const lldiv_t div = std::lldiv(ind, rows);
+		const size_t row = div.rem, col = div.quot;
+		// set
+		if constexpr (clearLower)
+		{
+			if (row >= col)
+				return;
+		}
+		else
+		{
+			if (row <= col)
+				return;
+		}
+		A[row + col * ld] = T();
+	}
+};
+
 template<typename T>
-void matrixMakeHermitian(void* Av, const unsigned int ld, const unsigned int rows)
+void matrixMakeHermitian2(void* Av, const size_t ld, const size_t rows, const bool upperStored)
 {
 	T* A = (T*)Av;
-	const size_t Nrows = (size_t)rows;
-#define MAKE_HERM_CODE(bool1) thrust::for_each_n(THRUST_PAR, count_iter, (Nrows * (Nrows + 1)) / 2, makeHerm_functor<T, bool1>(ld, Nrows, A))
-	if (ld == rows)
-		MAKE_HERM_CODE(false);
-	else
+#define MAKE_HERM_CODE(bool1) thrust::for_each_n(THRUST_PAR, count_iter, (rows * (rows + 1)) / 2, makeHerm_functor2<T, bool1>(ld, A))
+	if (upperStored)
 		MAKE_HERM_CODE(true);
+	else
+		MAKE_HERM_CODE(false);
 }
 
+template<typename T>
+void matrixMakeHermitian(void* Av, const size_t ld, const size_t rows, const bool upperStored)
+{
+	T* A = (T*)Av;
+#define MAKE_HERM_CODE(bool1) thrust::for_each_n(THRUST_PAR, count_iter, rows * rows, makeHerm_functor<T, bool1>(ld, rows, A))
+	if (upperStored)
+		MAKE_HERM_CODE(true);
+	else
+		MAKE_HERM_CODE(false);
+}
+
+template<typename T>
+void matrixClearTriangular(void* Av, const size_t ld, const size_t rows, const bool clearLower)
+{
+	T* A = (T*)Av;
+
+#define MAKE_HERM_CODE(bool1) thrust::for_each_n(THRUST_PAR, count_iter, rows * rows, clearPart_functor<T, bool1>(ld, rows, A))
+	if (clearLower)
+		MAKE_HERM_CODE(true);
+	else
+		MAKE_HERM_CODE(false);
+}
 
 DLLEXP
-void matMakeHerm(const Datatype::DataType type, void* A, const unsigned int ld, const unsigned int rows)
+void matMakeHerm(const Datatype::DataType type, void* A, const size_t ld, const size_t rows, const bool upperStored)
 {
-	AUTO_SIGNED_TYPE_FUNC(matrixMakeHermitian, type, void, A, ld, rows);
+	AUTO_SIGNED_TYPE_FUNC(matrixMakeHermitian, type, void, A, ld, rows, upperStored);
+}
+
+DLLEXP
+void matTriClear(const Datatype::DataType type, void* A, const size_t ld, const size_t rows, const bool clearLower)
+{
+	AUTO_SIGNED_TYPE_FUNC(matrixClearTriangular, type, void, A, ld, rows, clearLower);
 }
 #pragma endregion
 

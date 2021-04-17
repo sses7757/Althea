@@ -414,7 +414,7 @@ namespace Althea.Helpers
 		/// <returns>the string representation</returns>
 		public static string TotalMinutesString(this TimeSpan span, string restFormat = @"ss\.ff")
 		{
-			return $"{(int)span.TotalMinutes}:{span.ToString(restFormat, Resource.Culture)}s";
+			return $"{(int)span.TotalMinutes}:{span.ToString(restFormat)}s";
 		}
 
 		/// <summary>
@@ -425,7 +425,7 @@ namespace Althea.Helpers
 		/// <returns>the string representation</returns>
 		public static string TotalHoursString(this TimeSpan span, string restFormat = @"mm:ss\.ff")
 		{
-			return $"{(int)span.TotalHours}:{span.ToString(restFormat, Resource.Culture)}s";
+			return $"{(int)span.TotalHours}:{span.ToString(restFormat)}s";
 		}
 		#endregion
 
@@ -649,13 +649,13 @@ namespace Althea.Helpers
 
 		private static string GetNumberStringReal<T>(this T input, string format, int precision) where T : unmanaged, IFormattable
 		{
-			return input.GetNumberString(format, Resource.Culture, precision);
+			return input.GetNumberString(format, Print.Culture, precision);
 		}
 
 		private static string GetNumberStringComplex<T>(this Complex<T> input, string format, int precision) where T : unmanaged, IFormattable
 		{
-			string r = input.Real.GetNumberString(format, Resource.Culture, precision);
-			string i = input.Imag.GetNumberString(format, Resource.Culture, precision);
+			string r = input.Real.GetNumberString(format, Print.Culture, precision);
+			string i = input.Imag.GetNumberString(format, Print.Culture, precision);
 			return $"({r},{i})";
 		}
 
@@ -682,13 +682,13 @@ namespace Althea.Helpers
 
 		private static string GetNumberStringRealNoFormat<T>(this T input, string format, int precision) where T : unmanaged
 		{
-			return input.GetNumberStringNoFormat(format, Resource.Culture, precision);
+			return input.GetNumberStringNoFormat(format, Print.Culture, precision);
 		}
 
 		private static string GetNumberStringComplexNoFormat<T>(this Complex<T> input, string format, int precision) where T : unmanaged
 		{
-			string r = input.Real.GetNumberStringNoFormat(format, Resource.Culture, precision);
-			string i = input.Imag.GetNumberStringNoFormat(format, Resource.Culture, precision);
+			string r = input.Real.GetNumberStringNoFormat(format, Print.Culture, precision);
+			string i = input.Imag.GetNumberStringNoFormat(format, Print.Culture, precision);
 			return $"({r},{i})";
 		}
 

@@ -2046,11 +2046,11 @@
         </member>
         <member name="T:Althea.AbstractRuntimeApi">
             <summary>
-            The base abstract class for all runtime API classes defined in and out of this assembly
+            The base abstract class for all runtime API classes defined in and out of this assembly.<br/>
+            The derived concrete class(es) shall be able to serialized and deserialized by <see cref="T:System.Text.Json.JsonSerializer"/> (typically through indicating <see cref="T:System.Text.Json.Serialization.JsonConstructorAttribute"/> and implementing <see cref="P:Althea.AbstractRuntimeApi.CurrentConverter"/>).
             </summary>
             <remarks>
-            Typically, the <b>caller</b> are responsible for checking the input parameters of these methods.<br/>
-            Typically, the inherited concrete classes shall perform lazy initializations if possible, because the instances created by default constructors may be held by the abstract API classes for a long time such that they can find the suitable candidates easily.
+            Typically, the <b>callers</b> are responsible for checking the input parameters of all the defined API methods.
             </remarks>
         </member>
         <member name="M:Althea.AbstractRuntimeApi.Initialize``1(System.Collections.Generic.LinkedListNode{``0})">
@@ -2064,7 +2064,7 @@
             <summary>
             Set the current implementation in <paramref name="recents"/> (the first node) to a given <paramref name="implementation"/>
             </summary>
-            <typeparam name="T">any API abstract class which implements <see cref="T:Althea.AbstractRuntimeApi"/></typeparam>
+            <typeparam name="T">Any API abstract class which implements <see cref="T:Althea.AbstractRuntimeApi"/></typeparam>
             <param name="recents">The <see cref="T:System.Collections.Generic.LinkedList`1"/> of recent APIs to operate on</param>
             <param name="implementation">The implementation indicated by a <see cref="T:System.Type"/></param>
             <returns>Success or not</returns>
@@ -2073,7 +2073,7 @@
             <summary>
             Set the current implementation in <paramref name="recents"/> (the first node) to a given <paramref name="implementation"/>
             </summary>
-            <typeparam name="T">any API abstract class which implements <see cref="T:Althea.AbstractRuntimeApi"/></typeparam>
+            <typeparam name="T">Any API abstract class which implements <see cref="T:Althea.AbstractRuntimeApi"/></typeparam>
             <param name="recents">The <see cref="T:System.Collections.Generic.LinkedList`1"/> of recent APIs to operate on</param>
             <param name="implementation">The implementation indicated by a <typeparamref name="T"/></param>
         </member>
@@ -2137,7 +2137,7 @@
             <summary>
             Select the most recent implementation in <paramref name="recents"/> which fits the given predicate <paramref name="validApi"/>
             </summary>
-            <typeparam name="T">any API abstract class which implements <see cref="T:Althea.AbstractRuntimeApi"/></typeparam>
+            <typeparam name="T">Any API abstract class which implements <see cref="T:Althea.AbstractRuntimeApi"/></typeparam>
             <param name="recents">The <see cref="T:System.Collections.Generic.LinkedList`1"/> of recent APIs to select in.</param>
             <param name="validApi">A <see cref="T:System.Predicate`1"/> used to check other validness of the candidate implementations</param>
             <param name="from">The starting <see cref="T:System.Collections.Generic.LinkedListNode`1"/> to begin searching, default null means search from the first of <paramref name="recents"/></param>
@@ -2196,6 +2196,11 @@
             When implemented by a derived class, actually the release all unmanaged resources held by this runtime API.
             </summary>
             <param name="disposeManaged"></param>
+        </member>
+        <member name="P:Althea.AbstractRuntimeApi.CurrentConverter">
+            <summary>
+            When implemented by a derived class, get the <see cref="T:System.Text.Json.Serialization.JsonConverter`1"/> used to serialize it (deserialization is done via default of <see cref="T:System.Text.Json.JsonSerializer"/> or <see cref="T:System.Text.Json.Serialization.JsonConstructorAttribute"/>). The default implementation simply returns null.
+            </summary>
         </member>
         <member name="T:Althea.AbstractRuntimeApi.ExtraMethodInfo">
             <summary>
@@ -3660,6 +3665,266 @@
             <param name="value">The value to find</param>
             <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
         </member>
+        <member name="T:Althea.Helpers.FixedBuffer_12`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 12
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_12`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_12`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_12`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.Equals(Althea.Helpers.FixedBuffer_12{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_12`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.op_Equality(Althea.Helpers.FixedBuffer_12{`0},Althea.Helpers.FixedBuffer_12{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.op_Inequality(Althea.Helpers.FixedBuffer_12{`0},Althea.Helpers.FixedBuffer_12{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_8`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 8
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_8`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_8`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_8`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.Equals(Althea.Helpers.FixedBuffer_8{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_8`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.op_Equality(Althea.Helpers.FixedBuffer_8{`0},Althea.Helpers.FixedBuffer_8{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.op_Inequality(Althea.Helpers.FixedBuffer_8{`0},Althea.Helpers.FixedBuffer_8{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/></returns>
+        </member>
         <member name="T:Althea.Helpers.FixedBuffer_16`1">
             <summary>
             The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 16
@@ -4180,6 +4445,136 @@
             </summary>
             <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/></returns>
         </member>
+        <member name="T:Althea.Helpers.FixedBuffer_256`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 256
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_256`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_256`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_256`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.Equals(Althea.Helpers.FixedBuffer_256{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_256`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.op_Equality(Althea.Helpers.FixedBuffer_256{`0},Althea.Helpers.FixedBuffer_256{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.op_Inequality(Althea.Helpers.FixedBuffer_256{`0},Althea.Helpers.FixedBuffer_256{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/></returns>
+        </member>
         <member name="T:Althea.Helpers.ReflectionHelper">
             <summary>
             A static class that contains helper functions using reflections
@@ -4214,6 +4609,20 @@
             <param name="a">The input number</param>
             <returns>the ordinal representation string</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int32)">
+            <summary>
+            Reverse the bits of <paramref name="a"/>
+            </summary>
+            <param name="a">The <see cref="T:System.Int32"/> whose bits shall be reversed</param>
+            <returns>The <paramref name="a"/> after reversing bits</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int64)">
+            <summary>
+            Reverse the bits of <paramref name="a"/>
+            </summary>
+            <param name="a">The <see cref="T:System.Int64"/> whose bits shall be reversed</param>
+            <returns>The <paramref name="a"/> after reversing bits</returns>
         </member>
         <member name="M:Althea.Helpers.ExtensionHelper.IsPerfectSquare(System.Int64)">
             <summary>
@@ -4827,48 +5236,6 @@
             If the value is true while 'UseRecentImplementation' is true, there may be creations and dispositions of implementation classes.<br/>
             If the value is false and some implementation classes maintains large memory blocks (such as handle of cuBLAS), they will be maintained so that there will be some memory loss.
             </summary>
-        </member>
-        <member name="P:Althea.Helpers.Settings.StorageImplementation">
-            <summary>
-            Which memory / storage implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
-        </member>
-        <member name="P:Althea.Helpers.Settings.DenseLinearAlgebraImplementation">
-            <summary>
-            Which dense linear algebra implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
-        </member>
-        <member name="P:Althea.Helpers.Settings.SparseLinearAlgebraImplementation">
-            <summary>
-            Which sparse linear algebra implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
-        </member>
-        <member name="P:Althea.Helpers.Settings.DenseTensorAlgebraImplementation">
-            <summary>
-            Which dense tensor algebra implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
-        </member>
-        <member name="P:Althea.Helpers.Settings.SparseTensorAlgebraImplementation">
-            <summary>
-            Which sparse tensor algebra implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
-        </member>
-        <member name="P:Althea.Helpers.Settings.RandomImplementation">
-            <summary>
-            Which statistics implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
-        </member>
-        <member name="P:Althea.Helpers.Settings.SolverImplementation">
-            <summary>
-            Which general solver implementation to use
-            </summary>
-            <exception cref="T:System.NotSupportedException">If the input value cannot be set to the current implementation</exception>
         </member>
         <member name="M:Althea.Helpers.Settings.SetBackend(Althea.ISetBackend)">
             <summary>
@@ -5669,9 +6036,23 @@
         </member>
         <member name="P:Althea.LinearAlgebra.Dense.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SetImplementation(Althea.LinearAlgebra.Dense.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.IsSupportedVectorUnary(Althea.CombinationOfLocations)">
             <summary>
@@ -6848,7 +7229,6 @@
             <list type="bullet">
             <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixGeneral``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
             <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
-            <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition``1(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{Althea.NativeTypes.ComplexDouble})"/></item>
             <item>etc.</item>
             </list>
             </remarks>
@@ -7192,9 +7572,23 @@
         </member>
         <member name="P:Althea.LinearAlgebra.Sparse.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.AbstractApi.SetImplementation(Althea.LinearAlgebra.Sparse.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.LinearAlgebra.Sparse.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="P:Althea.LinearAlgebra.Sparse.AbstractApi.Dynamic">
             <summary>
@@ -11313,119 +11707,129 @@
             The general data types defined by flags and masks.
             </summary>
         </member>
-        <member name="F:Althea.NativeTypes.DataType.Real">
+        <member name="F:Althea.NativeTypes.DataType.RealHalf">
             <summary>
-            The right-most bit that represents the real base type, equals to zero, cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataType.Complex">
-            <summary>
-            The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
+            <see cref="T:System.Half"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealSingle">
             <summary>
-            <see cref="T:System.Single"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:System.Single"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealDouble">
             <summary>
-            <see cref="T:System.Double"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:System.Double"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataType.ComplexHalf">
+            <summary>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Half"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexSingle">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="F:Althea.NativeTypes.DataType.ComplexSingle"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexDouble">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="F:Althea.NativeTypes.DataType.ComplexDouble"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt8">
             <summary>
-            <see cref="T:System.SByte"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:System.SByte"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt16">
             <summary>
-            <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt32">
             <summary>
-            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt64">
             <summary>
-            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt8">
             <summary>
-            <see cref="T:System.Byte"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:System.Byte"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt16">
             <summary>
-            <see cref="T:System.UInt16"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:System.UInt16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt32">
             <summary>
-            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt64">
             <summary>
-            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataType.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt8">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.SByte"/>  = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt16">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt32">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt64">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt8">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Byte"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt16">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.UInt16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt32">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.UInt32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt64">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> = <see cref="F:Althea.NativeTypes.DataType.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.UInt64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
             </summary>
         </member>
         <member name="T:Althea.NativeTypes.DataTypeExtension">
             <summary>
             The extension methods for <see cref="T:Althea.NativeTypes.DataType"/>
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeExtension.Real">
+            <summary>
+            The right-most bit that represents the real base type, equals to zero, cannot be used separately.
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeExtension.Complex">
+            <summary>
+            The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataTypeExtension.TypeMask">
@@ -11565,6 +11969,82 @@
             <typeparam name="T">The generic type to get its <see cref="T:Althea.NativeTypes.DataType"/></typeparam>
             <returns>The corresponding <see cref="T:Althea.NativeTypes.DataType"/> of <typeparamref name="T"/></returns>
             <exception cref="T:System.NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Negate(System.Half)">
+            <summary>
+            Unary negate the given <see cref="T:System.Half"/> float value <paramref name="v"/>
+            </summary>
+            <param name="v">The given <see cref="T:System.Half"/> float value</param>
+            <returns><c>-<paramref name="v"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Reciprocal(System.Half)">
+            <summary>
+            Unary reciprocate the given <see cref="T:System.Half"/> float value <paramref name="v"/>
+            </summary>
+            <param name="v">The given <see cref="T:System.Half"/> float value</param>
+            <returns><c>1 / <paramref name="v"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Sqrt(System.Half)">
+            <summary>
+            Get the square root of the given <see cref="T:System.Half"/> float value <paramref name="v"/>
+            </summary>
+            <param name="v">The given <see cref="T:System.Half"/> float value</param>
+            <returns><c>√<paramref name="v"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Inc(System.Half)">
+            <summary>
+            Unary increase the given <see cref="T:System.Half"/> float value <paramref name="v"/> by 1
+            </summary>
+            <param name="v">The given <see cref="T:System.Half"/> float value</param>
+            <returns><c>1 + <paramref name="v"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Add(System.Half,System.Half)">
+            <summary>
+            Binary add the given <see cref="T:System.Half"/> float value <paramref name="a"/> and <paramref name="b"/>
+            </summary>
+            <param name="a">The first given <see cref="T:System.Half"/> float value</param>
+            <param name="b">The second given <see cref="T:System.Half"/> float value</param>
+            <returns><c><paramref name="a"/> + <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Sub(System.Half,System.Half)">
+            <summary>
+            Binary subtract the given <see cref="T:System.Half"/> float value <paramref name="a"/> by <paramref name="b"/>
+            </summary>
+            <param name="a">The first given <see cref="T:System.Half"/> float value</param>
+            <param name="b">The second given <see cref="T:System.Half"/> float value</param>
+            <returns><c><paramref name="a"/> - <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Mul(System.Half,System.Half)">
+            <summary>
+            Binary multiply the given <see cref="T:System.Half"/> float value <paramref name="a"/> and <paramref name="b"/>
+            </summary>
+            <param name="a">The first given <see cref="T:System.Half"/> float value</param>
+            <param name="b">The second given <see cref="T:System.Half"/> float value</param>
+            <returns><c><paramref name="a"/> * <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Div(System.Half,System.Half)">
+            <summary>
+            Binary divide the given <see cref="T:System.Half"/> float value <paramref name="a"/> by <paramref name="b"/>
+            </summary>
+            <param name="a">The first given <see cref="T:System.Half"/> float value</param>
+            <param name="b">The second given <see cref="T:System.Half"/> float value</param>
+            <returns><c><paramref name="a"/> / <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Pow(System.Half,System.Half)">
+            <summary>
+            Binary exponentiate the given <see cref="T:System.Half"/> float value <paramref name="a"/> by <paramref name="b"/>
+            </summary>
+            <param name="a">The first given <see cref="T:System.Half"/> float value</param>
+            <param name="b">The second given <see cref="T:System.Half"/> float value</param>
+            <returns><c><paramref name="a"/> ^ <paramref name="b"/></c></returns>
+        </member>
+        <member name="M:Althea.NativeTypes.HalfFloatExtension.Pow(System.Half,System.Double)">
+            <summary>
+            Binary add exponentiate given <see cref="T:System.Half"/> float value <paramref name="a"/> by a <see cref="T:System.Double"/> <paramref name="b"/>
+            </summary>
+            <param name="a">The first given <see cref="T:System.Half"/> float value</param>
+            <param name="b">The second given <see cref="T:System.Double"/></param>
+            <returns><c><paramref name="a"/> ^ <paramref name="b"/></c></returns>
         </member>
         <member name="T:Althea.NativeTypes.ICustomNativeType`1">
             <summary>
@@ -11914,9 +12394,23 @@
         </member>
         <member name="P:Althea.Random.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.Random.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.Random.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.Random.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.Random.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.Random.AbstractApi.SetImplementation(Althea.Random.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.Random.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.Random.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="P:Althea.Random.AbstractApi.Dynamic">
             <summary>
@@ -12563,152 +13057,6 @@
               查找类似 ... {0} more 的本地化字符串。
             </summary>
         </member>
-        <member name="T:Althea.Resources.Resource">
-            <summary>
-              一个强类型的资源类，用于查找本地化的字符串等。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.ResourceManager">
-            <summary>
-              返回此类使用的缓存的 ResourceManager 实例。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.Culture">
-            <summary>
-              重写当前线程的 CurrentUICulture 属性，对
-              使用此强类型资源类的所有资源查找执行重写。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.DuplicateLabels">
-            <summary>
-              查找类似 Duplicate labels for tensors are not allowed. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.FolderIllegal">
-            <summary>
-              查找类似 The target folder / file is not a legal array storage. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.FolderNonEmpty">
-            <summary>
-              查找类似 The target folder is not empty. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.FormatNotAtomic">
-            <summary>
-              查找类似 The format(s) must be atomic to perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.FreeFail">
-            <summary>
-              查找类似 Free {0} array memory failed since 0x{1:X} is not a valid array pointer. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.GenericTypeError">
-            <summary>
-              查找类似 The generic types are not compatible. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.HermMatDim">
-            <summary>
-              查找类似 The symmetric / Hermitian matrix must have same leading and second dimensions. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.IndexWrong">
-            <summary>
-              查找类似 The calculated offset of &apos;Index&apos; is out of range. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.InsertSparse">
-            <summary>
-              查找类似 The insertion into sparse array(s) is not allowed. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.MatMustHerm">
-            <summary>
-              查找类似 The matrix(matrices) must be Hermitian to perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.MatMustSquare">
-            <summary>
-              查找类似 The non-square matrix(matrices) cannot perform such operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.MatrixWrongSize">
-            <summary>
-              查找类似 The matrix(matrices) with incompatible size(s) cannot perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.NotErrors">
-            <summary>
-              查找类似 The underlying statuses are not errors. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.RangeCountWrong">
-            <summary>
-              查找类似 The calculated count of &apos;Range&apos; is out of range. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.RangeStartWrong">
-            <summary>
-              查找类似 The calculated start offset of &apos;Range&apos; is out of range. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.RankZero">
-            <summary>
-              查找类似 Rank zero is not allowed. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.RoutineNotLoaded">
-            <summary>
-              查找类似 The target routine is not loaded. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.SpMatMustFormat">
-            <summary>
-              查找类似 The sparse matrix(matrices) must be of {0} format to perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.SpMatTooDense">
-            <summary>
-              查找类似 The sparse matrix with too large number of non-zero values performs worse than the dense one. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.SpVecTooDense">
-            <summary>
-              查找类似 The sparse vector with too large number of non-zero values performs worse than the dense one. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.TensorWrongIndex">
-            <summary>
-              查找类似 The tensor(s) with incompatible index(indices) cannot perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.TensorWrongSize">
-            <summary>
-              查找类似 The tensor(s) with incompatible size(s) cannot perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.VectorLength">
-            <summary>
-              查找类似 The input/output vector should be of length {0}. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.VectorTooShort">
-            <summary>
-              查找类似 The length of the vector is insufficient for this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.VectorWrongSize">
-            <summary>
-              查找类似 The vector(s) with incompatible size(s) cannot perform this operation. 的本地化字符串。
-            </summary>
-        </member>
-        <member name="P:Althea.Resources.Resource.VectorWrongValue">
-            <summary>
-              查找类似 The vector(s) with incompatible value(s) cannot perform this operation. 的本地化字符串。
-            </summary>
-        </member>
         <member name="T:Althea.Resources.Support">
             <summary>
               一个强类型的资源类，用于查找本地化的字符串等。
@@ -12745,6 +13093,11 @@
               查找类似 Ohter location(s) is/are not supported yet. 的本地化字符串。
             </summary>
         </member>
+        <member name="P:Althea.Resources.Support.OperationSystem">
+            <summary>
+              查找类似 This operation does not support the current operating system. 的本地化字符串。
+            </summary>
+        </member>
         <member name="P:Althea.Resources.Support.OtherArray">
             <summary>
               查找类似 Not dense neither sparse array(s) is/are not supported yet. 的本地化字符串。
@@ -12767,9 +13120,23 @@
         </member>
         <member name="P:Althea.Solver.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.Solver.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.Solver.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.Solver.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.Solver.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.Solver.AbstractApi.SetImplementation(Althea.Solver.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.Solver.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.Solver.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="P:Althea.Solver.AbstractApi.Dynamic">
             <summary>
@@ -13503,9 +13870,23 @@
         </member>
         <member name="P:Althea.Storage.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.Storage.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.Storage.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.Storage.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.Storage.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.Storage.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.Storage.AbstractApi.SetImplementation(Althea.Storage.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.Storage.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.Storage.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="P:Althea.Storage.AbstractApi.Dynamic">
             <summary>
@@ -14252,7 +14633,7 @@
         </member>
         <member name="M:Althea.Storage.AbstractApi.AllocateFileAt(System.String,System.Int64)">
             <summary>
-            When implemented by a derived class, create a local file at <paramref name="path"/> with <paramref name="lengthInBytes"/>
+            When implemented by a derived class, create a local file at <paramref name="path"/> with <paramref name="lengthInBytes"/>. The created file shall not be managed by the underlying implementation (it shall not be deleted when disposing the implementation).
             </summary>
             <param name="path">The file path and name of the file to create</param>
             <param name="lengthInBytes">The length which is going to be written into</param>
@@ -15217,9 +15598,23 @@
         </member>
         <member name="P:Althea.TensorAlgebra.Dense.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.TensorAlgebra.Dense.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.TensorAlgebra.Dense.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.TensorAlgebra.Dense.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.TensorAlgebra.Dense.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Dense.AbstractApi.SetImplementation(Althea.TensorAlgebra.Dense.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.TensorAlgebra.Dense.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.TensorAlgebra.Dense.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="P:Althea.TensorAlgebra.Dense.AbstractApi.Dynamic">
             <summary>
@@ -15441,9 +15836,23 @@
         </member>
         <member name="P:Althea.TensorAlgebra.Sparse.AbstractApi.Current">
             <summary>
-            Get the current using <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.
+            Get the currently using <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/>.
             </summary>
             <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.SetImplementation(System.Type)">
+            <summary>
+            Set the currently using <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The <see cref="T:System.Type"/> of the given implementation of <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/></param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Sparse.AbstractApi.SetImplementation(Althea.TensorAlgebra.Sparse.AbstractApi)">
+            <summary>
+            Set the currently using <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/> to the given <paramref name="implementation"/>
+            </summary>
+            <param name="implementation">The instance of an implementation of <see cref="T:Althea.TensorAlgebra.Sparse.AbstractApi"/></param>
+            <returns>Success or not.</returns>
         </member>
         <member name="P:Althea.TensorAlgebra.Sparse.AbstractApi.Dynamic">
             <summary>

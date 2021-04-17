@@ -15,14 +15,26 @@ namespace Althea.Random
 	{
 		#region basic
 		/// <summary>
-		/// Get the current using <see cref="AbstractApi"/>.
+		/// Get the currently using <see cref="AbstractApi"/>.
 		/// </summary>
 		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
 		public static AbstractApi? Current => RecentAPIs.First?.Value;
 
 		private static readonly LinkedList<AbstractApi> RecentAPIs = new();
 
-		internal static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
+		/// <summary>
+		/// Set the currently using <see cref="AbstractApi"/> to the given <paramref name="implementation"/>
+		/// </summary>
+		/// <param name="implementation">The <see cref="Type"/> of the given implementation of <see cref="AbstractApi"/></param>
+		/// <returns>Success or not.</returns>
+		public static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
+
+		/// <summary>
+		/// Set the currently using <see cref="AbstractApi"/> to the given <paramref name="implementation"/>
+		/// </summary>
+		/// <param name="implementation">The instance of an implementation of <see cref="AbstractApi"/></param>
+		/// <returns>Success or not.</returns>
+		internal static bool SetImplementation(AbstractApi? implementation) => SetImplementation(RecentAPIs, implementation);
 		#endregion
 
 

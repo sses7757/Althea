@@ -69,7 +69,6 @@ namespace Althea.LinearAlgebra.Dense
 		/// <list type="bullet">
 		/// <item><see cref="EigenSpecialMatrixGeneral{T, TComplex}(SolveVectorMode, long, Storage{TComplex}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long)"/></item>
 		/// <item><see cref="EigenGeneralMatrixGeneral{T, TComplex}(GeneralEigenType, SolveVectorMode, long, Storage{TComplex}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long, Storage{T}, long)"/></item>
-		/// <item><see cref="SchurDecomposition{T}(SolveVectorMode, long, Storage{T}, long, Storage{T}?, long, Storage{ComplexDouble})"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>

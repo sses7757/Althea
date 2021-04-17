@@ -14,27 +14,49 @@
 ////	__half b = __double2half(0.5);
 ////	nv_bfloat16 c = __float2bfloat16(0.5f);
 ////}
+#include "cublas.h"
+
+void Test()
+{
+	
+}
 #pragma endregion
 
 
 
 #pragma region element-wise multiply and divide
 template<typename T>
-inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const size_t N, const unsigned int stride, bool multiply)
+inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, bool multiply)
 {
 	T* a = (T*)av;
 	const T* b = (const T*)bv;
-	if (stride == 1)
+	if (sa == 1 && sb == 1)
 	{
 		if (multiply)
 			thrust::transform(THRUST_PAR, a, a + N, b, a, thrust::multiplies<T>());
 		else
 			thrust::transform(THRUST_PAR, a, a + N, b, a, thrust::divides<T>());
 	}
+	else if (sa == 1 && sb != 1)
+	{
+		auto strideB = make_strided_range(b, N, sb);
+		if (multiply)
+			thrust::transform(THRUST_PAR, a, a + N, strideB.begin(), a, thrust::multiplies<T>());
+		else
+			thrust::transform(THRUST_PAR, a, a + N, strideB.begin(), a, thrust::divides<T>());
+	}
+	else if (sa != 1 && sb == 1)
+	{
+		auto strideA = make_strided_range(a, N, sa);
+		if (multiply)
+			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), b, strideA.begin(), thrust::multiplies<T>());
+		else
+			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), b, strideA.begin(), thrust::divides<T>());
+	}
 	else
 	{
-		auto strideA = make_strided_range(a, N, stride);
-		auto strideB = make_strided_range(b, N, stride);
+		auto strideA = make_strided_range(a, N, sa);
+		auto strideB = make_strided_range(b, N, sb);
 		if (multiply)
 			thrust::transform(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), strideA.begin(), thrust::multiplies<T>());
 		else
@@ -43,9 +65,9 @@ inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const siz
 }
 
 DLLEXP
-void vecMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int stride, bool multiply)
+void vecMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, bool multiply)
 {
-	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, void, a, b, N, stride, multiply);
+	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, void, a, b, N, strideA, strideB, multiply);
 }
 #pragma endregion
 
@@ -253,21 +275,37 @@ struct complexToRealPart_functor
 };
 
 template <typename RealIn, typename RealOut>
-inline void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, const unsigned int stride, bool toRealByAbs)
+inline void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, const unsigned int s1, const unsigned int s2, bool toRealByAbs)
 {
 	const BlasSupp::complex<RealIn>* src = (const BlasSupp::complex<RealIn>*)srcv;
 	RealOut* dst = (RealOut*)dstv;
-	if (stride == 1)
+	if (s1 == 1 && s2 == 1)
 	{
 		if (toRealByAbs)
 			thrust::transform(THRUST_PAR, src, src + N, dst, complexToRealAbs_functor<RealIn, RealOut>());
 		else
 			thrust::transform(THRUST_PAR, src, src + N, dst, complexToRealPart_functor<RealIn, RealOut>());
 	}
+	else if (s1 == 1 && s2 != 1)
+	{
+		auto strideDst = make_strided_range(dst, N, s2);
+		if (toRealByAbs)
+			thrust::transform(THRUST_PAR, src, src + N, strideDst.begin(), complexToRealAbs_functor<RealIn, RealOut>());
+		else
+			thrust::transform(THRUST_PAR, src, src + N, strideDst.begin(), complexToRealPart_functor<RealIn, RealOut>());
+	}
+	else if (s1 != 1 && s2 == 1)
+	{
+		auto strideSrc = make_strided_range(src, N, s1);
+		if (toRealByAbs)
+			thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), dst, complexToRealAbs_functor<RealIn, RealOut>());
+		else
+			thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), dst, complexToRealPart_functor<RealIn, RealOut>());
+	}
 	else
 	{
-		auto strideSrc = make_strided_range(src, N, stride);
-		auto strideDst = make_strided_range(dst, N, stride);
+		auto strideSrc = make_strided_range(src, N, s1);
+		auto strideDst = make_strided_range(dst, N, s2);
 		if (toRealByAbs)
 			thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), complexToRealAbs_functor<RealIn, RealOut>());
 		else
@@ -276,46 +314,66 @@ inline void vectorComplexToReal(const void* srcv, void* dstv, const size_t N, co
 }
 
 template <typename RealIn, typename RealOut>
-inline void vectorRealToComplex(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
+inline void vectorRealToComplex(const void* srcv, void* dstv, const size_t N, const unsigned int s1, const unsigned int s2, const bool toRealByAbs)
 {
 	const RealIn* src = (const RealIn*)srcv;
 	BlasSupp::complex<RealOut>* dst = (BlasSupp::complex<RealOut>*)dstv;
-	if (stride == 1)
+	if (s1 == 1 && s2 == 1)
 	{
 		thrust::transform(THRUST_PAR, src, src + N, dst, realToComplex_functor<RealIn, RealOut>());
 	}
+	else if(s1 == 1 && s2 != 1)
+	{
+		auto strideDst = make_strided_range(dst, N, s2);
+		thrust::transform(THRUST_PAR, src, src + N, strideDst.begin(), realToComplex_functor<RealIn, RealOut>());
+	}
+	else if (s1 != 1 && s2 == 1)
+	{
+		auto strideSrc = make_strided_range(src, N, s1);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), dst, realToComplex_functor<RealIn, RealOut>());
+	}
 	else
 	{
-		auto strideSrc = make_strided_range(src, N, stride);
-		auto strideDst = make_strided_range(dst, N, stride);
+		auto strideSrc = make_strided_range(src, N, s1);
+		auto strideDst = make_strided_range(dst, N, s2);
 		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), realToComplex_functor<RealIn, RealOut>());
 	}
 }
 
 template <typename RealIn, typename RealOut>
-inline void vectorRealConvert(const void* srcv, void* dstv, const size_t N, const unsigned int stride, const bool toRealByAbs)
+inline void vectorRealConvert(const void* srcv, void* dstv, const size_t N, const unsigned int s1, const unsigned int s2, const bool toRealByAbs)
 {
 	const RealIn* src = (const RealIn*)srcv;
 	RealOut* dst = (RealOut*)dstv;
-	if (stride == 1)
+	if (s1 == 1 && s2 == 1)
 	{
 		thrust::transform(THRUST_PAR, src, src + N, dst, realTypeConvert_functor<RealIn, RealOut>());
 	}
+	else if (s1 == 1 && s2 != 1)
+	{
+		auto strideDst = make_strided_range(dst, N, s2);
+		thrust::transform(THRUST_PAR, src, src + N, strideDst.begin(), realTypeConvert_functor<RealIn, RealOut>());
+	}
+	else if (s1 != 1 && s2 == 1)
+	{
+		auto strideSrc = make_strided_range(src, N, s1);
+		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), dst, realTypeConvert_functor<RealIn, RealOut>());
+	}
 	else
 	{
-		auto strideSrc = make_strided_range(src, N, stride);
-		auto strideDst = make_strided_range(dst, N, stride);
+		auto strideSrc = make_strided_range(src, N, s1);
+		auto strideDst = make_strided_range(dst, N, s2);
 		thrust::transform(THRUST_PAR, strideSrc.begin(), strideSrc.end(), strideDst.begin(), realTypeConvert_functor<RealIn, RealOut>());
 	}
 }
 
 DLLEXP
-void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType dstType, const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs)
+void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType dstType, const void* src, void* dst, const size_t N, const unsigned int strideSrc, const unsigned int strideDst, const bool toRealByAbs)
 {
 	// copy if no data conversion
 	if (srcType == dstType)
 	{
-		AUTO_ALLTYPE_FUNC(vectorStridedCopy, srcType, void, src, dst, N, stride, stride);
+		AUTO_ALLTYPE_FUNC(vectorStridedCopy, srcType, void, src, dst, N, strideSrc, strideDst);
 		// return is inside the auto generated switch
 	}
 
@@ -484,7 +542,7 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 #endif
 
 	// the convert function
-	void (*convertFunc)(const void* src, void* dst, const size_t N, const unsigned int stride, const bool toRealByAbs);
+	void (*convertFunc)(const void* src, void* dst, const size_t N, const unsigned int strideSrc, const unsigned int strideDst, const bool toRealByAbs);
 	if (Datatype::isreal(srcType) && Datatype::isreal(dstType))
 	{	// real convert
 		CONVERT_OUTER_SWITCH(vectorRealConvert);
@@ -499,26 +557,26 @@ void vecDataConvert(const Datatype::DataType srcType, const Datatype::DataType d
 	}
 	else
 	{	// all complex, use the real convert of each part instead
-		if (stride == 1)
+		if (strideSrc == 1 && strideDst == 1)
 		{
-			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, 1, true);
+			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, 1, 1, true);
 		}
 		else
 		{
 			// the real parts
-			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, stride * 2, true);
+			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), src, dst, N * 2, strideSrc * 2, strideDst * 2, true);
 			// increase pointers
 			const int sizeSrc = Datatype::size(srcType), sizeDst = Datatype::size(dstType);
 			const void* srcInc = (const char*)src + sizeSrc;
 			void* dstInc = (char*)dst + sizeDst;
 			// the imaginary parts
-			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), srcInc, dstInc, N * 2, stride * 2, true);
+			vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), srcInc, dstInc, N * 2, strideSrc * 2, strideDst * 2, true);
 		}
 		return;
 	}
 
 	// calculate
-	convertFunc(src, dst, N, stride, toRealByAbs);
+	convertFunc(src, dst, N, strideSrc, strideDst, toRealByAbs);
 }
 #pragma endregion
 
@@ -777,7 +835,7 @@ inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, c
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, src, src + N, dst, thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, dst, T(1), thrust::multiplies<T>());
 	}
 	else if (strideSrc == 1 && strideDst != 1)
 	{
@@ -785,7 +843,7 @@ inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, c
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), T(), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, src, src + N, stridedDst.begin(), T(1), thrust::multiplies<T>());
 	}
 	else if (strideSrc != 1 && strideDst == 1)
 	{
@@ -793,7 +851,7 @@ inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, c
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, T(), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), dst, T(1), thrust::multiplies<T>());
 	}
 	else
 	{
@@ -802,7 +860,7 @@ inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, c
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), thrust::multiplies<T>());
 		else
-			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), T(), thrust::multiplies<T>());
+			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), T(1), thrust::multiplies<T>());
 	}
 }
 

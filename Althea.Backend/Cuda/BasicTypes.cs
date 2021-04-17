@@ -167,32 +167,6 @@ namespace Althea.Backend.Cuda
 		}
 	}
 
-	/// <summary>
-	/// Memory copy enum
-	/// </summary>
-	public enum MemoryCopyKind
-	{
-		/// <summary>
-		/// host to host
-		/// </summary>
-		HostToHost = 0,
-		/// <summary>
-		/// host to device
-		/// </summary>
-		HostToDevice = 1,
-		/// <summary>
-		/// device to host
-		/// </summary>
-		DeviceToHost = 2,
-		/// <summary>
-		/// device to device
-		/// </summary>
-		DeviceToDevice = 3,
-		/// <summary>
-		/// Direction of the transfer is inferred from the pointer values. Requires unified virtual addressing
-		/// </summary>
-		Default = 4
-	}
 
 	/// <summary>
 	/// Error codes returned by CUDA driver API calls
@@ -296,7 +270,7 @@ namespace Althea.Backend.Cuda
 		ErrorInvalidChannelDescriptor = 20,
 
 		/// <summary>
-		/// This indicates that the direction of the "cudaMemcpy" passed to the API call is not one of the types specified by <see cref="MemoryCopyKind"/>.
+		/// This indicates that the direction of the "cudaMemcpy" passed to the API call is not one of the types specified by <see cref="Storage.MemoryCopyKind"/>.
 		/// </summary>
 		ErrorInvalidMemcpyDirection = 21,
 

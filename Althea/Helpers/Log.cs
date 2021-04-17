@@ -41,17 +41,17 @@ namespace Althea.Helpers
 	}
 
 	// for JSON serialization
-	internal struct LogSettings
+	internal record LogSettings
 	{
-		public bool Suppress;
-		public int BufferSize;
-		public int WrapLimit;
-		public string Path;
+		public bool Suppress { get; set; }
+		public int BufferSize { get; set; }
+		public int WrapLimit { get; set; }
+		public string Path { get; set; }
 
-		public LogLevel[] PrintLevels;
-		public LogLevel[] BufferLevels;
+		public LogLevel[] PrintLevels { get; set; }
+		public LogLevel[] BufferLevels { get; set; }
 
-		internal LogSettings(bool _)
+		internal LogSettings()
 		{
 			Suppress = false; BufferSize = 1024; WrapLimit = 125; Path = "Althea.log";
 			PrintLevels = new[] { LogLevel.Error, LogLevel.Warning };

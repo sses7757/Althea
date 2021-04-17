@@ -762,7 +762,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public override string ToString()
 		{
-			return this.ToString(null, Resource.Culture);
+			return this.ToString(null, Print.Culture);
 		}
 
 		/// <summary>
@@ -771,7 +771,7 @@ namespace Althea.NativeTypes
 		/// <param name="format">format of output</param>
 		public string ToString(string? format)
 		{
-			return this.ToString(format, Resource.Culture);
+			return this.ToString(format, Print.Culture);
 		}
 
 		/// <summary>
@@ -781,7 +781,7 @@ namespace Althea.NativeTypes
 		/// <param name="formatProvider">The provider to use to format the value</param>
 		public string ToString(string? format, IFormatProvider? formatProvider = null)
 		{
-			formatProvider ??= Resource.Culture;
+			formatProvider ??= Print.Culture;
 			string r, i;
 			r = this.real.ToString(format, formatProvider);
 			i = this.imag.ToString(format, formatProvider);
@@ -1410,7 +1410,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public override string ToString()
 		{
-			return this.ToString(null, Resource.Culture);
+			return this.ToString(null, Print.Culture);
 		}
 
 		/// <summary>
@@ -1419,7 +1419,7 @@ namespace Althea.NativeTypes
 		/// <param name="format">format of output</param>
 		public string ToString(string? format)
 		{
-			return this.ToString(format, Resource.Culture);
+			return this.ToString(format, Print.Culture);
 		}
 
 		/// <summary>
@@ -1429,7 +1429,7 @@ namespace Althea.NativeTypes
 		/// <param name="formatProvider">The provider to use to format the value</param>
 		public string ToString(string? format, IFormatProvider? formatProvider = null)
 		{
-			formatProvider ??= Resource.Culture;
+			formatProvider ??= Print.Culture;
 			string r, i;
 			r = this.real.ToString(format, formatProvider);
 			i = this.imag.ToString(format, formatProvider);
@@ -2076,7 +2076,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public override string ToString()
 		{
-			return this.ToString(null, Resource.Culture);
+			return this.ToString(null, Print.Culture);
 		}
 
 		/// <summary>
@@ -2085,7 +2085,7 @@ namespace Althea.NativeTypes
 		/// <param name="format">format of output</param>
 		public string ToString(string? format)
 		{
-			return this.ToString(format, Resource.Culture);
+			return this.ToString(format, Print.Culture);
 		}
 
 		/// <summary>
@@ -2095,7 +2095,7 @@ namespace Althea.NativeTypes
 		/// <param name="formatProvider">The provider to use to format the value</param>
 		public string ToString(string? format, IFormatProvider? formatProvider = null)
 		{
-			formatProvider ??= Resource.Culture;
+			formatProvider ??= Print.Culture;
 			string r, i;
 			if (this.real is IFormattable f && this.imag is IFormattable g)
 			{

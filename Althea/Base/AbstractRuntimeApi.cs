@@ -1,20 +1,23 @@
 ﻿using System;
-using System.Dynamic;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-
-using Althea.Linq;
-using Althea.Helpers;
 using System.Collections;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using Althea.Helpers;
+using Althea.Linq;
+
 
 namespace Althea
 {
 	/// <summary>
-	/// The base abstract class for all runtime API classes defined in and out of this assembly
+	/// The base abstract class for all runtime API classes defined in and out of this assembly.<br/>
+	/// The derived concrete class(es) shall be able to serialized and deserialized by <see cref="JsonSerializer"/> (typically through indicating <see cref="JsonConstructorAttribute"/> and implementing <see cref="CurrentConverter"/>).
 	/// </summary>
 	/// <remarks>
-	/// Typically, the <b>caller</b> are responsible for checking the input parameters of these methods.<br/>
-	/// Typically, the inherited concrete classes shall perform lazy initializations if possible, because the instances created by default constructors may be held by the abstract API classes for a long time such that they can find the suitable candidates easily.
+	/// Typically, the <b>callers</b> are responsible for checking the input parameters of all the defined API methods.
 	/// </remarks>
 	public abstract class AbstractRuntimeApi : IDisposable
 	{
@@ -81,7 +84,7 @@ namespace Althea
 		/// <summary>
 		/// Set the current implementation in <paramref name="recents"/> (the first node) to a given <paramref name="implementation"/>
 		/// </summary>
-		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
+		/// <typeparam name="T">Any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
 		/// <param name="implementation">The implementation indicated by a <see cref="Type"/></param>
 		/// <returns>Success or not</returns>
@@ -115,12 +118,14 @@ namespace Althea
 		/// <summary>
 		/// Set the current implementation in <paramref name="recents"/> (the first node) to a given <paramref name="implementation"/>
 		/// </summary>
-		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
+		/// <typeparam name="T">Any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
 		/// <param name="implementation">The implementation indicated by a <typeparamref name="T"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void SetImplementation<T>(LinkedList<T> recents, T implementation) where T : AbstractRuntimeApi
+		protected static bool SetImplementation<T>(LinkedList<T> recents, T? implementation) where T : AbstractRuntimeApi
 		{
+			if (implementation is null)
+				return false;
 			if (recents.Contains(implementation))
 			{
 				PromoteImplementation(recents, implementation);
@@ -133,6 +138,7 @@ namespace Althea
 					node.Next?.Value?.Dispose();
 				}
 			}
+			return true;
 		}
 		#endregion
 
@@ -262,7 +268,7 @@ namespace Althea
 		/// <summary>
 		/// Select the most recent implementation in <paramref name="recents"/> which fits the given predicate <paramref name="validApi"/>
 		/// </summary>
-		/// <typeparam name="T">any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
+		/// <typeparam name="T">Any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
 		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
 		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations</param>
 		/// <param name="from">The starting <see cref="LinkedListNode{T}"/> to begin searching, default null means search from the first of <paramref name="recents"/></param>
@@ -452,6 +458,11 @@ namespace Althea
 		/// </summary>
 		/// <param name="disposeManaged"></param>
 		protected abstract void Dispose(bool disposeManaged);
+
+		/// <summary>
+		/// When implemented by a derived class, get the <see cref="JsonConverter{T}"/> used to serialize it (deserialization is done via default of <see cref="JsonSerializer"/> or <see cref="JsonConstructorAttribute"/>). The default implementation simply returns null.
+		/// </summary>
+		protected internal virtual JsonConverter<AbstractRuntimeApi>? CurrentConverter => null;
 		#endregion
 
 

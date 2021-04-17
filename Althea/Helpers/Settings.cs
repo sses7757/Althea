@@ -65,96 +65,80 @@ namespace Althea.Helpers
 	public static partial class Settings
 	{
 		#region class for settings
-		internal struct ImplementationSettings
+		internal record ImplementationSettings
 		{
-			public bool DisposeNotCurrentImplementation;
+			public bool DisposeNotCurrentImplementation { get; set; }
 
-			public Type Storage, LinearAlgebraDense, LinearAlgebraSparse, TensorAlgebraDense, TensorAlgebraSparse, Random, Solver;
+			public Storage.AbstractApi? Storage { get; set; }
+			public LinearAlgebra.Dense.AbstractApi? LinearAlgebraDense { get; set; }
+			public LinearAlgebra.Sparse.AbstractApi? LinearAlgebraSparse { get; set; }
+			public TensorAlgebra.Dense.AbstractApi? TensorAlgebraDense { get; set; }
+			public TensorAlgebra.Sparse.AbstractApi? TensorAlgebraSparse { get; set; }
+			public Random.AbstractApi? Random { get; set; }
+			public Solver.AbstractApi? Solver { get; set; }
 
-			internal ImplementationSettings(bool _)
+			internal ImplementationSettings(ISetBackend impls)
 			{
 				DisposeNotCurrentImplementation = true;
-				ISetBackend impls = GetInternalBackend("CSharp");
-				Storage = impls.StorageImplementation;
-				LinearAlgebraDense = impls.DenseLinearAlgebraImplementation;
-				LinearAlgebraSparse = impls.SparseLinearAlgebraImplementation;
-				TensorAlgebraDense = impls.DenseTensorAlgebraImplementation;
-				TensorAlgebraSparse = impls.SparseTensorAlgebraImplementation;
-				Random = impls.RandomImplementation;
-				Solver = impls.SolverImplementation;
+
+				Althea.Storage.AbstractApi.SetImplementation(impls.StorageImplementation);
+				this.Storage = Althea.Storage.AbstractApi.Current;
+
+				LinearAlgebra.Dense.AbstractApi.SetImplementation(impls.DenseLinearAlgebraImplementation);
+				this.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
+
+				LinearAlgebra.Sparse.AbstractApi.SetImplementation(impls.SparseLinearAlgebraImplementation);
+				this.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
+
+				TensorAlgebra.Dense.AbstractApi.SetImplementation(impls.DenseTensorAlgebraImplementation);
+				this.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
+				
+				TensorAlgebra.Sparse.AbstractApi.SetImplementation(impls.SparseTensorAlgebraImplementation);
+				this.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
+
+				Althea.Random.AbstractApi.SetImplementation(impls.RandomImplementation);
+				this.Random = Althea.Random.AbstractApi.Current;
+
+				Althea.Solver.AbstractApi.SetImplementation(impls.SolverImplementation);
+				this.Solver = Althea.Solver.AbstractApi.Current;
 			}
 
 			[JsonConstructor]
-			internal ImplementationSettings(bool disposeNotCurrentImplementation, string storage, string linearAlgebra, string tensorAlgebra, string statistics, string solver)
+			internal ImplementationSettings(bool disposeNotCurrentImplementation,
+				Storage.AbstractApi? storage,
+				LinearAlgebra.Dense.AbstractApi? linearAlgebraDense,
+				LinearAlgebra.Sparse.AbstractApi? linearAlgebraSparse,
+				TensorAlgebra.Dense.AbstractApi? tensorAlgebraDense,
+				TensorAlgebra.Sparse.AbstractApi? tensorAlgebraSparse,
+				Random.AbstractApi? random,
+				Solver.AbstractApi? solver)
 			{
 				DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
-				ISetBackend impls = GetInternalBackend("CSharp");
-				try
-				{
-					Storage = Type.GetType(storage) ?? impls.StorageImplementation;
-				}
-				catch (Exception)
-				{
-					Storage = impls.StorageImplementation;
-				}
 
-				try
-				{
-					LinearAlgebraDense = Type.GetType(linearAlgebra) ?? impls.DenseLinearAlgebraImplementation;
-				}
-				catch (Exception)
-				{
-					LinearAlgebraDense = impls.DenseLinearAlgebraImplementation;
-				}
+				Althea.Storage.AbstractApi.SetImplementation(storage);
+				this.Storage = Althea.Storage.AbstractApi.Current;
 
-				try
-				{
-					LinearAlgebraSparse = Type.GetType(linearAlgebra) ?? impls.SparseLinearAlgebraImplementation;
-				}
-				catch (Exception)
-				{
-					LinearAlgebraSparse = impls.SparseLinearAlgebraImplementation;
-				}
+				LinearAlgebra.Dense.AbstractApi.SetImplementation(linearAlgebraDense);
+				this.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
 
-				try
-				{
-					TensorAlgebraDense = Type.GetType(tensorAlgebra) ?? impls.DenseTensorAlgebraImplementation;
-				}
-				catch (Exception)
-				{
-					TensorAlgebraDense = impls.DenseTensorAlgebraImplementation;
-				}
+				LinearAlgebra.Sparse.AbstractApi.SetImplementation(linearAlgebraSparse);
+				this.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
 
-				try
-				{
-					TensorAlgebraSparse = Type.GetType(tensorAlgebra) ?? impls.SparseTensorAlgebraImplementation;
-				}
-				catch (Exception)
-				{
-					TensorAlgebraSparse = impls.SparseTensorAlgebraImplementation;
-				}
+				TensorAlgebra.Dense.AbstractApi.SetImplementation(tensorAlgebraDense);
+				this.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
 
-				try
-				{
-					Random = Type.GetType(statistics) ?? impls.RandomImplementation;
-				}
-				catch (Exception)
-				{
-					Random = impls.RandomImplementation;
-				}
+				TensorAlgebra.Sparse.AbstractApi.SetImplementation(tensorAlgebraSparse);
+				this.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
 
-				try
-				{
-					Solver = Type.GetType(solver) ?? impls.SolverImplementation;
-				}
-				catch (Exception)
-				{
-					Solver = impls.SolverImplementation;
-				}
+				Althea.Random.AbstractApi.SetImplementation(random);
+				this.Random = Althea.Random.AbstractApi.Current;
+
+				Althea.Solver.AbstractApi.SetImplementation(solver);
+				this.Solver = Althea.Solver.AbstractApi.Current;
 			}
 		}
 
-		internal struct JsonSettings
+		internal record JsonSettings
 		{
 			public LogSettings LogSettings;
 
@@ -164,11 +148,11 @@ namespace Althea.Helpers
 
 			public int StackAllocLimit;
 
-			internal JsonSettings(bool _)
+			internal JsonSettings()
 			{
-				LogSettings = new LogSettings(false);
+				LogSettings = new LogSettings();
 				PrintSettings = new PrintSettings(false);
-				ImplementationSettings = new ImplementationSettings(false);
+				ImplementationSettings = new ImplementationSettings(GetInternalBackend("CSharp"));
 				StackAllocLimit = 32768; // 32 KiB
 			}
 
@@ -182,7 +166,7 @@ namespace Althea.Helpers
 			}
 		}
 
-		internal static JsonSettings singletonSettings = default;
+		internal static JsonSettings singletonSettings = new();
 		#endregion
 
 		#region print settings
@@ -254,67 +238,25 @@ namespace Althea.Helpers
 			set => singletonSettings.ImplementationSettings.DisposeNotCurrentImplementation = value;
 		}
 
-		/// <summary>
-		/// Which memory / storage implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type StorageImplementation {
-			get => singletonSettings.ImplementationSettings.Storage;
-			set => singletonSettings.ImplementationSettings.Storage = Storage.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		private static bool CheckAllBackend(ISetBackend backend)
+		{
+			return	singletonSettings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation &&
+					singletonSettings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation &&
+					singletonSettings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation &&
+					singletonSettings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation &&
+					singletonSettings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation &&
+					singletonSettings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation &&
+					singletonSettings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
 		}
-
-		/// <summary>
-		/// Which dense linear algebra implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type DenseLinearAlgebraImplementation {
-			get => singletonSettings.ImplementationSettings.LinearAlgebraDense;
-			set => singletonSettings.ImplementationSettings.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
-		}
-
-		/// <summary>
-		/// Which sparse linear algebra implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type SparseLinearAlgebraImplementation {
-			get => singletonSettings.ImplementationSettings.LinearAlgebraSparse;
-			set => singletonSettings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
-		}
-
-		/// <summary>
-		/// Which dense tensor algebra implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type DenseTensorAlgebraImplementation {
-			get => singletonSettings.ImplementationSettings.TensorAlgebraDense;
-			set => singletonSettings.ImplementationSettings.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
-		}
-
-		/// <summary>
-		/// Which sparse tensor algebra implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type SparseTensorAlgebraImplementation {
-			get => singletonSettings.ImplementationSettings.TensorAlgebraSparse;
-			set => singletonSettings.ImplementationSettings.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
-		}
-
-		/// <summary>
-		/// Which statistics implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type RandomImplementation {
-			get => singletonSettings.ImplementationSettings.Random;
-			set => singletonSettings.ImplementationSettings.Random = Random.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
-		}
-
-		/// <summary>
-		/// Which general solver implementation to use
-		/// </summary>
-		/// <exception cref="NotSupportedException">If the input value cannot be set to the current implementation</exception>
-		public static Type SolverImplementation {
-			get => singletonSettings.ImplementationSettings.Solver;
-			set => singletonSettings.ImplementationSettings.Solver = Solver.AbstractApi.SetImplementation(value) ? value : throw new NotSupportedException();
+		private static bool CheckAnyBackend(ISetBackend backend)
+		{
+			return	singletonSettings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation ||
+					singletonSettings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation ||
+					singletonSettings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation ||
+					singletonSettings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation ||
+					singletonSettings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation ||
+					singletonSettings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation ||
+					singletonSettings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
 		}
 
 		/// <summary>
@@ -328,21 +270,8 @@ namespace Althea.Helpers
 				return false;
 			try
 			{
-				if (backend.StorageImplementation is { IsAbstract: false } t1 && t1.IsAssignableTo(typeof(Storage.AbstractApi)))
-					StorageImplementation = backend.StorageImplementation;
-				if (backend.StorageImplementation is { IsAbstract: false } t2 && t2.IsAssignableTo(typeof(LinearAlgebra.Dense.AbstractApi)))
-					DenseLinearAlgebraImplementation = backend.DenseLinearAlgebraImplementation;
-				if (backend.StorageImplementation is { IsAbstract: false } t3 && t3.IsAssignableTo(typeof(LinearAlgebra.Sparse.AbstractApi)))
-					SparseLinearAlgebraImplementation = backend.SparseLinearAlgebraImplementation;
-				if (backend.StorageImplementation is { IsAbstract: false } t4 && t4.IsAssignableTo(typeof(TensorAlgebra.Dense.AbstractApi)))
-					DenseTensorAlgebraImplementation = backend.DenseTensorAlgebraImplementation;
-				if (backend.StorageImplementation is { IsAbstract: false } t5 && t5.IsAssignableTo(typeof(TensorAlgebra.Sparse.AbstractApi)))
-					SparseTensorAlgebraImplementation = backend.SparseTensorAlgebraImplementation;
-				if (backend.StorageImplementation is { IsAbstract: false } t6 && t6.IsAssignableTo(typeof(Random.AbstractApi)))
-					RandomImplementation = backend.RandomImplementation;
-				if (backend.StorageImplementation is { IsAbstract: false } t7 && t7.IsAssignableTo(typeof(Solver.AbstractApi)))
-					SolverImplementation = backend.SolverImplementation;
-				return true;
+				singletonSettings.ImplementationSettings = new(backend);
+				return CheckAllBackend(backend);
 			}
 			catch (Exception)
 			{
@@ -370,21 +299,12 @@ namespace Althea.Helpers
 		{
 			try
 			{
-				singletonSettings = JsonSerializer.Deserialize<JsonSettings>(File.ReadAllText(fileName), options);
-				// set default back-end
-				SetBackend(GetInternalBackend("CSharp"));
-				Storage.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Storage);
-				LinearAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraDense);
-				LinearAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.LinearAlgebraSparse);
-				TensorAlgebra.Dense.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraDense);
-				TensorAlgebra.Sparse.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.TensorAlgebraSparse);
-				Random.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Random);
-				Solver.AbstractApi.SetImplementation(singletonSettings.ImplementationSettings.Solver);
-				return true;
+				var settings = JsonSerializer.Deserialize<JsonSettings>(File.ReadAllText(fileName), options);
+				return CheckAnyBackend(GetInternalBackend("CSharp"));
 			}
 			catch (Exception e)
 			{
-				singletonSettings = new JsonSettings(false);
+				singletonSettings = new JsonSettings();
 				if (logError)
 				{
 					Log.Write(Resources.Other.ErrorOccur + e.Message, level: LogLevel.Error);
@@ -425,7 +345,44 @@ namespace Althea.Helpers
 		/// </summary>
 		public static void ExportSettings()
 		{
-			string json = JsonSerializer.Serialize(singletonSettings, options);
+			var currentOptions = new JsonSerializerOptions(options);
+
+			singletonSettings.ImplementationSettings.Storage = Storage.AbstractApi.Current;
+			var converter = Storage.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			singletonSettings.ImplementationSettings.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
+			converter = LinearAlgebra.Dense.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			singletonSettings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
+			converter = LinearAlgebra.Sparse.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			singletonSettings.ImplementationSettings.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
+			converter = TensorAlgebra.Dense.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			singletonSettings.ImplementationSettings.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
+			converter = TensorAlgebra.Sparse.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			singletonSettings.ImplementationSettings.Random = Random.AbstractApi.Current;
+			converter = Random.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			singletonSettings.ImplementationSettings.Solver = Solver.AbstractApi.Current;
+			converter = Solver.AbstractApi.Current?.CurrentConverter;
+			if (converter is not null)
+				currentOptions.Converters.Add(converter);
+
+			string json = JsonSerializer.Serialize(singletonSettings, currentOptions);
 			File.WriteAllText(fileName, json);
 		}
 		#endregion

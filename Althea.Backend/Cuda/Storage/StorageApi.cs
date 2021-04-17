@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
@@ -159,31 +158,28 @@ namespace Althea.Backend.Cuda.Storage
 			}
 		}
 
+		/// <summary>
+		/// Get the CUDA driver version
+		/// </summary>
+		/// <returns>The CUDA driver version</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override (int major, int minor) DriverVersion(StorageLocation location)
+		public static (int major, int minor) GetDriverVersion()
 		{
-			if (location.Type != LocationType.GpuRam)
-				return default;
-			int oldDev = CurrentDeviceID;
-			if (oldDev != location.LocationDetail)
-				CurrentDeviceID = location.LocationDetail;
 			int ver = 0;
 			var err = NativeMethods.cudaRuntimeGetVersion(ref ver);
-			CurrentDeviceID = oldDev;
 			return err == CudaError.Success ? (ver / 1000, (ver % 1000) / 10) : default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override (int major, int minor) DriverVersion(StorageLocation location) => GetDriverVersion();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
-			if (location.Type != LocationType.GpuRam)
+			if (location.Type != LocationType.GpuRam || location.LocationDetail != CurrentDeviceID)
 				return default;
-			int oldDev = CurrentDeviceID;
-			if (oldDev != location.LocationDetail)
-				CurrentDeviceID = location.LocationDetail;
 			long free = 0, total = 0;
 			var err = NativeMethods.cudaMemGetInfo(ref free, ref total);
-			CurrentDeviceID = oldDev;
 			return err == CudaError.Success ? (free, total) : default;
 		}
 		#endregion
@@ -417,16 +413,13 @@ namespace Althea.Backend.Cuda.Storage
 		#region strided copy
 		protected override bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long actualCopied)
 		{
-			actualCopied = 0;
-			if (!IsSupportedGpuRam(source.Location) || IsSupportedGpuRam(destination.Location))
-				return false; // only GPU memory strided copy is supported
-			var (srcLen, dstLen) = StridedCopyCheck<T>(source, incrementSource, destination, incrementDestination);
 			// shortcut
 			if (incrementSource == 1 && incrementDestination == 1)
 			{
 				return this.MemoryCopy_(source, destination, out actualCopied);
 			}
 			// other cases
+			var (srcLen, dstLen) = StridedCopyCheck<T>(source, incrementSource, destination, incrementDestination);
 			actualCopied = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
 			long srcOff = source.GetPointerOffsetManaged(out IMemoryPointer? srcMP, out _);
 			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out _);
@@ -434,7 +427,22 @@ namespace Althea.Backend.Cuda.Storage
 			{
 				actualCopied = 0; return false;
 			}
-			NativeMethods.vecStridedCopy(Const<T>.DataType, srcMP.Pointer, dstMP.Pointer, actualCopied, incrementSource, incrementDestination);
+			MemoryCopyKind copyKind = GetCopyKind(srcMP, dstMP);
+			switch (copyKind)
+			{
+				case MemoryCopyKind.HostToDevice:
+					LinearAlgebra.Dense.NativeMethods.cublasSetVector((int)actualCopied, Const<T>.SizeT, srcMP.Pointer, incrementSource, dstMP.Pointer, incrementDestination);
+					break;
+				case MemoryCopyKind.DeviceToHost:
+					LinearAlgebra.Dense.NativeMethods.cublasGetVector((int)actualCopied, Const<T>.SizeT, srcMP.Pointer, incrementSource, dstMP.Pointer, incrementDestination);
+					break;
+				case MemoryCopyKind.DeviceToDevice:
+					NativeMethods.vecStridedCopy(Const<T>.DataType, srcMP.Pointer, dstMP.Pointer, actualCopied, incrementSource, incrementDestination);
+					break;
+				default:
+					actualCopied = 0;
+					return false;
+			}
 			return true;
 		}
 		#endregion
