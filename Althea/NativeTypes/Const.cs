@@ -317,11 +317,12 @@ namespace Althea.NativeTypes
 		/// <summary>
 		///  Get a <see cref="bool"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="Althea"/>.
 		/// </summary>
-		public static readonly bool IsPreDefined = NativeTypeExtension.IsSupported<T>() &&
-													((typeof(T).IsPrimitive && typeof(T) != typeof(bool) && typeof(T) != typeof(char)) ||
-													 typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(ComplexSingle) ||
-														(NativeTypeExtension.IsComplex<T>() &&
-														 typeof(T) == typeof(Complex<>).MakeGenericType(typeof(T).GenericTypeArguments[0])));
+		public static readonly bool IsPreDefined;
+
+		/// <summary>
+		///  Get a <see cref="bool"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="Althea"/>. (<see cref="System.Half"/> and its complex type are excluded.)
+		/// </summary>
+		public static readonly bool IsPreDefinedNoHalf;
 
 		/// <summary>
 		/// Get the <see cref="NativeTypes.DataType"/> of type <typeparamref name="T"/>
@@ -837,6 +838,32 @@ namespace Althea.NativeTypes
 		{
 			if (!NativeTypeExtension.IsSupported<T>())
 				throw new InvalidOperationException();
+			// defined
+			if (typeof(T).IsPrimitive && typeof(T) != typeof(bool))
+			{
+				IsPreDefined = IsPreDefinedNoHalf = true;
+			}
+			else if (typeof(T) == typeof(Half))
+			{
+				IsPreDefined = false; IsPreDefinedNoHalf = true;
+			}
+			else if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(ComplexSingle))
+			{
+				IsPreDefined = IsPreDefinedNoHalf = true;
+			}
+			else if (typeof(T) == typeof(Complex<Half>))
+			{
+				IsPreDefined = false; IsPreDefinedNoHalf = true;
+			}
+			else if (NativeTypeExtension.IsComplex<T>() && typeof(T).GenericTypeArguments[0] is { } t && t.IsPrimitive && t != typeof(bool) && typeof(Complex<>).MakeGenericType(t) == typeof(T))
+			{
+				IsPreDefined = IsPreDefinedNoHalf = true;
+			}
+			else
+			{
+				IsPreDefined = IsPreDefinedNoHalf = false;
+			}
+
 			// conversions
 			ToDoubleDelegate = ConstConvert<T, double>.ConvertDelegate;
 			FromDoubleDelegate = ConstConvert<double, T>.ConvertDelegate;

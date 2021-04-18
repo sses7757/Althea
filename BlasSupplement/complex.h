@@ -64,7 +64,7 @@ namespace BlasSupp
 
 		T _real, _imag;
 
-		__host__ __device__ constexpr complex(const T& real = T(), const T& imag = T()) : _real(real), _imag(imag) {}
+		__host__ __device__ constexpr inline complex(const T& real = T(), const T& imag = T()) : _real(real), _imag(imag) {}
 
 		__host__ __device__ constexpr inline T real() const
 		{
@@ -214,6 +214,12 @@ template <typename T>
 __host__ __device__ inline static bool operator==(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
 {
 	return left._real == right._real && left._imag == right._imag;
+}
+
+template <typename T>
+__host__ __device__ inline static bool operator!=(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
+{
+	return left._real != right._real || left._imag != right._imag;
 }
 
 template <typename T>

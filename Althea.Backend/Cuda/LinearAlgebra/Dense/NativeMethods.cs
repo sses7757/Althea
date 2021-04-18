@@ -819,7 +819,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasScalEx(IntPtr handle, int n, void* alpha, CudaDataType alphaType, IntPtr x, CudaDataType xType, int incx, CudaDataType executiontype);
 
-		// do not support BrainHalf
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasGemmEx(IntPtr handle, CuBlasMatrixOperation transa, int m, int n, int k, void* alpha, IntPtr A, CudaDataType Atype, int lda, IntPtr B, CudaDataType Btype, int ldb, IntPtr beta, IntPtr C, CudaDataType Ctype, int ldc, ComputeType computeType, GemmAlgorithm algo);
 		#endregion
@@ -838,7 +837,33 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		/// <param name="multiply">Perform multiply or divide</param>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern void vecMulDiv(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, bool multiply);
+		internal static extern void vecsMulDiv(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, bool multiply);
+
+		/// <summary>
+		/// Add the vector <paramref name="a"/> scaled by <paramref name="scalar"/> to <paramref name="b"/> in-place
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
+		/// <param name="scalar">The scalar to multiply of <paramref name="type"/></param>
+		/// <param name="a">The vector to add of <paramref name="type"/></param>
+		/// <param name="b">The vector to be in-place modified of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern void vecsAdd(DataType type, void* scalar, IntPtr a, IntPtr b, long N, int strideA, int strideB);
+
+		/// <summary>
+		/// Check whether the two vectors <paramref name="a"/> and <paramref name="b"/> are element-wise equal
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
+		/// <param name="a">The first vector to compare of <paramref name="type"/></param>
+		/// <param name="b">The second vector to compare of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+		/// <returns>The two vectors are element-wise equal</returns>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern bool vecsEq(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB);
 
 		/// <summary>
 		/// In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
@@ -854,7 +879,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <summary>
 		/// In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
 		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> (must be a complex type)</param>
 		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
 		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/>'s real corresponding type</param>
 		/// <param name="N">The number of elements to be operated</param>
@@ -884,7 +909,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
 		/// <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts.</param>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern void vecDataConvert(DataType srcType, DataType dstType, IntPtr src, IntPtr dst, long N, int strideSrc, int strideDst, bool toRealByAbs);
+		internal static extern CudaError vecDataConvert(DataType srcType, DataType dstType, IntPtr src, IntPtr dst, long N, int strideSrc, int strideDst, bool toRealByAbs);
 
 		/// <summary>
 		/// In-place set the values in <paramref name="a"/> whose absolute values are less than or equal to the absolute value of <paramref name="threshold"/> to 0
@@ -909,6 +934,17 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern void vecAddScalar(DataType type, IntPtr a, void* scalar, long N, int stride);
 
 		/// <summary>
+		/// In-place multiplies all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+		/// <param name="scalar">The pointer to the scalar to multiply of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern void vecMulScalar(DataType type, IntPtr a, void* scalar, long N, int stride);
+
+		/// <summary>
 		/// Sums all the elements in vector <paramref name="a"/>
 		/// </summary>
 		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
@@ -918,6 +954,76 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="outSum">The output sum as a pointer of <paramref name="type"/></param>
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern void vecSum(DataType type, IntPtr a, long N, int stride, void* outSum);
+
+		/// <summary>
+		/// Get the index of the element with minimum absolute value in vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <returns>The index of the element</returns>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern long vecArgAbsMin(DataType type, IntPtr a, long N, int stride);
+
+		/// <summary>
+		/// Get the index of the element with maximum absolute value in vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <returns>The index of the element</returns>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern long vecArgAbsMax(DataType type, IntPtr a, long N, int stride);
+
+		/// <summary>
+		/// Sums all the elements's absolute values in vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <returns>The sum as a <see cref="double"/></returns>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern double vecAbsSum(DataType type, IntPtr a, long N, int stride);
+
+		/// <summary>
+		/// Compute the 2-norm of the given vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <returns>The 2-norm as a <see cref="double"/></returns>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern double vecNorm(DataType type, IntPtr a, long N, int stride);
+
+		/// <summary>
+		/// Calculate the inner product of vector <paramref name="a"/> and <paramref name="b"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The left vector to be inner product of <paramref name="type"/></param>
+		/// <param name="b">The right vector to be inner product of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern void vecDot(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, void* outProd);
+
+		/// <summary>
+		/// Calculate the inner product of the conjugate of vector <paramref name="a"/> and <paramref name="b"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/>, must be a complex type</param>
+		/// <param name="a">The left vector to be inner product of <paramref name="type"/></param>
+		/// <param name="b">The right vector to be inner product of <paramref name="type"/></param>
+		/// <param name="N">The number of elements to be operated</param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern void vecDotc(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, void* outProd);
 
 		/// <summary>
 		/// Multiplies all the elements in vector <paramref name="a"/>

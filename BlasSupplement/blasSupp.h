@@ -34,6 +34,7 @@
 #include <thrust/remove.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
+#include <thrust/equal.h>
 
 // self-defined data type
 #include "datatype.h"
@@ -117,7 +118,7 @@ inline static StridedRange<Iterator> make_strided_range(Iterator it, size_t N, c
 template <typename T>
 struct plus_functor
 {
-	__host__ __device__ T operator()(const T x, const T y) const
+	__host__ __device__ const T operator()(const T& x, const T& y) const
 	{
 		return x + y;
 	}

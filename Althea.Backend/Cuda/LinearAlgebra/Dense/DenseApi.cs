@@ -95,9 +95,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
 			long len = p.LengthInBytes / Const<T>.SizeT;
+			len = (len - 1) / stride + 1;
 			if (len > int.MaxValue)
 				return false;
-			length = (int)((len - 1) / stride + 1);
+			length = (int)len;
 			ptr = mp.OffsetPointer(s[0].OffsetInBytes);
 			return true;
 		}
@@ -175,20 +176,26 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		#endregion
 
 		#region BLAS level 1
-		protected override unsafe bool AbsoluteValueArgMax_<T>(Storage<T> x, int strideX, out long index)
+		/// <summary>
+		/// Get the index of the element with horizontal maximum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>
+		/// </summary>
+		/// <typeparam name="T">Any complex data type</typeparam>
+		/// <param name="x">The vector to get maximum absolute value's index</param>
+		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+		/// <param name="index">The output real index in <paramref name="x"/></param>
+		/// <returns>Support or not</returns>
+		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
 		{
 			index = -1;
-			if (!CheckPointer(x, out var px, out var n, strideX))
+			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
 				return false;
-			if (!Const<T>.DataType.CheckBaseSupport())
+			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
 			delegate*<IntPtr, int, IntPtr, int, int*, CudaBlasStatus> func;
 			if (this.Cuda11OrAbove)
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamax,
-					DataType.RealDouble => &NativeMethods.cublasIdamax,
 					DataType.ComplexSingle => &NativeMethods.cublasIcamax,
 					DataType.ComplexDouble => &NativeMethods.cublasIzamax,
 					_ => null,
@@ -198,8 +205,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamax_v2,
-					DataType.RealDouble => &NativeMethods.cublasIdamax_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasIcamax_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasIzamax_v2,
 					_ => null,
@@ -213,20 +218,26 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			return true;
 		}
 
-		protected override unsafe bool AbsoluteValueArgMin_<T>(Storage<T> x, int strideX, out long index)
+		/// <summary>
+		/// Get the index of the element with horizontal minimum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>
+		/// </summary>
+		/// <typeparam name="T">Any complex data type</typeparam>
+		/// <param name="x">The vector to get minimum absolute value's index</param>
+		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+		/// <param name="index">The output real index in <paramref name="x"/></param>
+		/// <returns>Support or not</returns>
+		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
 		{
 			index = -1;
-			if (!CheckPointer(x, out var px, out var n, strideX))
+			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
 				return false;
-			if (!Const<T>.DataType.CheckBaseSupport())
+			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
 			delegate*<IntPtr, int, IntPtr, int, int*, CudaBlasStatus> func;
 			if (this.Cuda11OrAbove)
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamin,
-					DataType.RealDouble => &NativeMethods.cublasIdamin,
 					DataType.ComplexSingle => &NativeMethods.cublasIcamin,
 					DataType.ComplexDouble => &NativeMethods.cublasIzamin,
 					_ => null,
@@ -236,8 +247,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamin_v2,
-					DataType.RealDouble => &NativeMethods.cublasIdamin_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasIcamin_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasIzamin_v2,
 					_ => null,
@@ -251,46 +260,33 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			return true;
 		}
 
+		/// <summary>
+		/// Sum the absolute values (<c>abs(x[i].real) + abs(x[i].imag)</c>) of vector <paramref name="x"/>'s all elements
+		/// </summary>
+		/// <typeparam name="T">Any complex data type</typeparam>
+		/// <param name="x">The vector to be summed</param>
+		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+		/// <param name="sum">Output the sum as a <see cref="double"/></param>
+		/// <returns>Support or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged
+		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged
 		{
-			bool doSum = typeof(Sum) == typeof(bool);
 			sum = 0;
-			if (!CheckPointer(x, out var px, out var n, strideX))
+			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
 				return false;
-			if (!Const<T>.DataType.CheckBaseSupport())
+			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
 			delegate*<IntPtr, int, IntPtr, int, float*, CudaBlasStatus> funcS;
 			delegate*<IntPtr, int, IntPtr, int, double*, CudaBlasStatus> funcD;
 			if (this.Cuda11OrAbove)
 			{
-				funcS = Const<T>.DataType switch
-				{
-					DataType.RealSingle => doSum ? &NativeMethods.cublasSasum : &NativeMethods.cublasSnrm2,
-					DataType.ComplexSingle => doSum ? &NativeMethods.cublasScasum : &NativeMethods.cublasScnrm2,
-					_ => null,
-				};
-				funcD = Const<T>.DataType switch
-				{
-					DataType.RealDouble => doSum ? &NativeMethods.cublasDasum : &NativeMethods.cublasDnrm2,
-					DataType.ComplexSingle => doSum ? &NativeMethods.cublasScasum : &NativeMethods.cublasDznrm2,
-					_ => null,
-				};
+				funcS = Const<T>.DataType == DataType.ComplexSingle ? &NativeMethods.cublasScasum : null;
+				funcD = Const<T>.DataType == DataType.ComplexSingle ? &NativeMethods.cublasScasum : null;
 			}
 			else
 			{
-				funcS = Const<T>.DataType switch
-				{
-					DataType.RealSingle => doSum ? &NativeMethods.cublasSasum_v2 : &NativeMethods.cublasSnrm2_v2,
-					DataType.ComplexSingle => doSum ? &NativeMethods.cublasScasum_v2 : &NativeMethods.cublasScnrm2_v2,
-					_ => null,
-				};
-				funcD = Const<T>.DataType switch
-				{
-					DataType.RealDouble => doSum ? &NativeMethods.cublasDasum_v2 : &NativeMethods.cublasDnrm2_v2,
-					DataType.ComplexDouble => doSum ? &NativeMethods.cublasDzasum_v2 : &NativeMethods.cublasDznrm2_v2,
-					_ => null,
-				};
+				funcS = Const<T>.DataType == DataType.ComplexSingle ? &NativeMethods.cublasScasum_v2 : null;
+				funcD = Const<T>.DataType == DataType.ComplexDouble ? &NativeMethods.cublasDzasum_v2 : null;
 			}
 			if (funcS is null && funcD is null)
 				return false;
@@ -304,6 +300,146 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				funcD(this.cublasHandle, n, px, strideX, &resultD).Check();
 				sum = resultD;
+			}
+			return true;
+		}
+
+		protected override unsafe bool AbsoluteValueArgMax_<T>(Storage<T> x, int strideX, out long index)
+		{
+			index = -1;
+			if (!CheckPointer(x, out var px, out var n, strideX))
+				return false;
+			if (!Const<T>.IsPreDefined || (Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754 && Const<T>.DataType.Bytes() < sizeof(float)))
+				return false; // half float is not supported
+			delegate*<IntPtr, int, IntPtr, int, int*, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasIsamax,
+					DataType.RealDouble => &NativeMethods.cublasIdamax,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasIsamax_v2,
+					DataType.RealDouble => &NativeMethods.cublasIdamax_v2,
+					_ => null,
+				};
+			}
+			if (func is not null)
+			{
+				int result;
+				func(this.cublasHandle, n, px, strideX, &result).Check();
+				index = result - 1;
+			}
+			else
+			{
+				index = NativeMethods.vecArgAbsMax(Const<T>.DataType, px, n, strideX);
+			}
+			return true;
+		}
+
+		protected override unsafe bool AbsoluteValueArgMin_<T>(Storage<T> x, int strideX, out long index)
+		{
+			index = -1;
+			if (!CheckPointer(x, out var px, out var n, strideX))
+				return false;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false; // half float is not supported
+			delegate*<IntPtr, int, IntPtr, int, int*, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasIsamin,
+					DataType.RealDouble => &NativeMethods.cublasIdamin,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasIsamin_v2,
+					DataType.RealDouble => &NativeMethods.cublasIdamin_v2,
+					_ => null,
+				};
+			}
+			if (func is not null)
+			{
+				int result;
+				func(this.cublasHandle, n, px, strideX, &result).Check();
+				index = result - 1;
+			}
+			else
+			{
+				index = NativeMethods.vecArgAbsMin(Const<T>.DataType, px, n, strideX);
+			}
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged
+		{
+			bool doSum = typeof(Sum) == typeof(bool);
+			sum = 0;
+			if (!CheckPointer(x, out var px, out var n, strideX))
+				return false;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			delegate*<IntPtr, int, IntPtr, int, float*, CudaBlasStatus> funcS;
+			delegate*<IntPtr, int, IntPtr, int, double*, CudaBlasStatus> funcD;
+			if (this.Cuda11OrAbove)
+			{
+				funcS = Const<T>.DataType switch
+				{
+					DataType.RealSingle => doSum ? &NativeMethods.cublasSasum : &NativeMethods.cublasSnrm2,
+					DataType.ComplexSingle => doSum ? null : &NativeMethods.cublasScnrm2,
+					_ => null,
+				};
+				funcD = Const<T>.DataType switch
+				{
+					DataType.RealDouble => doSum ? &NativeMethods.cublasDasum : &NativeMethods.cublasDnrm2,
+					DataType.ComplexSingle => doSum ? null : &NativeMethods.cublasDznrm2,
+					_ => null,
+				};
+			}
+			else
+			{
+				funcS = Const<T>.DataType switch
+				{
+					DataType.RealSingle => doSum ? &NativeMethods.cublasSasum_v2 : &NativeMethods.cublasSnrm2_v2,
+					DataType.ComplexSingle => doSum ? null : &NativeMethods.cublasScnrm2_v2,
+					_ => null,
+				};
+				funcD = Const<T>.DataType switch
+				{
+					DataType.RealDouble => doSum ? &NativeMethods.cublasDasum_v2 : &NativeMethods.cublasDnrm2_v2,
+					DataType.ComplexDouble => doSum ? null : &NativeMethods.cublasDznrm2_v2,
+					_ => null,
+				};
+			}
+			if (funcS is null && funcD is null)
+			{
+				sum = doSum ? NativeMethods.vecAbsSum(Const<T>.DataType, px, n, strideX) : NativeMethods.vecNorm(Const<T>.DataType, px, n, strideX);
+			}
+			else
+			{
+				float resultS; double resultD;
+				if (funcS is not null)
+				{
+					funcS(this.cublasHandle, n, px, strideX, &resultS).Check();
+					sum = resultS;
+				}
+				if (funcD is not null)
+				{
+					funcD(this.cublasHandle, n, px, strideX, &resultD).Check();
+					sum = resultD;
+				}
 			}
 			return true;
 		}
@@ -326,7 +462,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (!CheckPointer(y, out var py, out var n2, strideY))
 				return false;
 			int n = Math.Min(n1, n2);
-			if (!Const<T>.DataType.CheckExSupport())
+			if (!Const<T>.IsPreDefined)
 				return false;
 			delegate*<IntPtr, int, IntPtr, int, IntPtr, int, T*, CudaBlasStatus> func;
 			if (this.Cuda11OrAbove)
@@ -351,18 +487,25 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			T result = default;
+			T result;
 			if (func is not null)
 			{
 				func(this.cublasHandle, n, px, strideX, py, strideY, &result).Check();
 			}
-			else
+			else if (Const<T>.DataType == DataType.RealHalf || Const<T>.DataType == DataType.ComplexHalf)
 			{
-				CudaDataType type = Const<T>.DataType.ToCudaDataType();
+				CudaDataType type = Const<T>.DataType == DataType.RealHalf ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
 				if (conjX)
 					NativeMethods.cublasDotcEx(this.cublasHandle, n, px, type, strideX, py, type, strideY, &result, type, type).Check();
 				else
 					NativeMethods.cublasDotEx(this.cublasHandle, n, px, type, strideX, py, type, strideY, &result, type, type).Check();
+			}
+			else
+			{
+				if (conjX && Const<T>.IsComplex)
+					NativeMethods.vecDotc(Const<T>.DataType, px, py, n, strideX, strideY, &result);
+				else
+					NativeMethods.vecDot(Const<T>.DataType, px, py, n, strideX, strideY, &result);
 			}
 			dot = result;
 			return true;
@@ -372,7 +515,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
-			if (!Const<T>.DataType.CheckBaseSupport())
+			if (!Const<T>.IsPreDefined)
 				return false;
 			delegate*<IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
 			if (this.Cuda11OrAbove)
@@ -397,9 +540,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			if (func is null)
-				return false;
-			func(this.cublasHandle, n, &scalar, px, strideX).Check();
+			if (func is not null)
+			{
+				func(this.cublasHandle, n, &scalar, px, strideX).Check();
+			}
+			else if (Const<T>.DataType == DataType.RealHalf || Const<T>.DataType == DataType.ComplexHalf)
+			{
+				CudaDataType type = Const<T>.DataType == DataType.RealHalf ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
+				NativeMethods.cublasScalEx(this.cublasHandle, n, &scalar, type, px, type, strideX, type).Check();
+			}
+			else
+			{
+				NativeMethods.vecMulScalar(Const<T>.DataType, px, &scalar, n, strideX);
+			}
 			return true;
 		}
 
@@ -410,7 +563,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (!CheckPointer(y, out var py, out var n2, strideY))
 				return false;
 			int n = Math.Min(n1, n2);
-			if (!Const<T>.DataType.CheckExSupport())
+			if (!Const<T>.IsPreDefined)
 				return false;
 			delegate*<IntPtr, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
 			if (this.Cuda11OrAbove)
@@ -438,17 +591,48 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (func is not null)
 			{
 				func(this.cublasHandle, n, &α, px, strideX, py, strideY).Check();
-				return true;
 			}
-			// else, ex
-			CudaDataType type = Const<T>.DataType.ToCudaDataType();
-			NativeMethods.cublasAxpyEx(this.cublasHandle, n, &α, type, px, type, strideX, py, type, strideY, type).Check();
+			else if (Const<T>.DataType == DataType.RealHalf || Const<T>.DataType == DataType.ComplexHalf)
+			{
+				CudaDataType type = Const<T>.DataType == DataType.RealHalf ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
+				NativeMethods.cublasAxpyEx(this.cublasHandle, n, &α, type, px, type, strideX, py, type, strideY, type).Check();
+			}
+			else
+			{
+				NativeMethods.vecsAdd(Const<T>.DataType, &α, px, py, n, strideX, strideY);
+			}
 			return true;
 		}
 		#endregion
 
+		#region custom level 1
 		protected override bool AggregateProduct_<T>(Storage<T> x, int stride, out T product) => throw new NotImplementedException();
+
 		protected override bool AggregateSum_<T>(Storage<T> x, int stride, out T sum) => throw new NotImplementedException();
+
+		protected override bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) => throw new NotImplementedException();
+
+		protected override bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) => throw new NotImplementedException();
+
+		protected override bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr) => throw new NotImplementedException();
+
+		protected override bool PointWiseCast_<T, TOut>(Storage<T> source, int incSrc, Storage<TOut> destination, int incDst) => throw new NotImplementedException();
+
+		protected override bool PointWiseConjugate_<T>(Storage<T> x, int stride) => throw new NotImplementedException();
+
+		protected override bool PointWiseDivide_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) => throw new NotImplementedException();
+
+		protected override bool PointWiseEquals_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, out bool equals) => throw new NotImplementedException();
+
+		protected override bool PointWiseMultiply_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) => throw new NotImplementedException();
+
+		protected override bool PointWisePower_<T>(Storage<T> x, int stride, double p) => throw new NotImplementedException();
+
+		protected override bool PointWisePower_<T>(Storage<T> x, int stride, T p) => throw new NotImplementedException();
+
+		protected override bool TruncateArray_<T>(Storage<T> x, double threshold) => throw new NotImplementedException();
+		#endregion
+
 		protected override bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
 		protected override bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
 		protected override bool EigenGeneralMatrixHermitian_<T, TReal>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
@@ -462,16 +646,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		protected override bool LuDecomposition_<T>(long n, Storage<T> A, long lda) => throw new NotImplementedException();
 		protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda) => throw new NotImplementedException();
 		protected override bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) => throw new NotImplementedException();
-		protected override bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) => throw new NotImplementedException();
-		protected override bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr) => throw new NotImplementedException();
-		protected override bool PointWiseCast_<T, TOut>(Storage<T> source, int incSrc, Storage<TOut> destination, int incDst) => throw new NotImplementedException();
-		protected override bool PointWiseConjugate_<T>(Storage<T> x, int stride) => throw new NotImplementedException();
-		protected override bool PointWiseDivide_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) => throw new NotImplementedException();
-		protected override bool PointWiseEquals_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, out bool equals) => throw new NotImplementedException();
-		protected override bool PointWiseMultiply_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) => throw new NotImplementedException();
-		protected override bool PointWisePower_<T>(Storage<T> x, int stride, double p) => throw new NotImplementedException();
-		protected override bool PointWisePower_<T>(Storage<T> x, int stride, T p) => throw new NotImplementedException();
 		protected override bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq) => throw new NotImplementedException();
 		protected override bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
 		protected override bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null) => throw new NotImplementedException();
@@ -480,7 +654,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		protected override bool SymmHermMatrixMultiplyVector_<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) => throw new NotImplementedException();
 		protected override bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) => throw new NotImplementedException();
 		protected override bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
-		protected override bool TruncateArray_<T>(Storage<T> x, double threshold) => throw new NotImplementedException();
 	}
 }
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释

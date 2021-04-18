@@ -11457,6 +11457,11 @@
              Get a <see cref="T:System.Boolean"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="N:Althea"/>.
             </summary>
         </member>
+        <member name="F:Althea.NativeTypes.Const`1.IsPreDefinedNoHalf">
+            <summary>
+             Get a <see cref="T:System.Boolean"/> indicating whether type <typeparamref name="T"/> is a primitive type of .NET or a pre-defined type in <see cref="N:Althea"/>. (<see cref="T:System.Half"/> and its complex type are excluded.)
+            </summary>
+        </member>
         <member name="F:Althea.NativeTypes.Const`1.DataType">
             <summary>
             Get the <see cref="T:Althea.NativeTypes.DataType"/> of type <typeparamref name="T"/>
