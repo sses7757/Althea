@@ -295,7 +295,7 @@ namespace Althea.Backend.Cuda.Storage
 			if (offset == NOT_SUPPORT)
 				return false;
 			if (mp is not null)
-				NativeMethods.vecFillVal(Const<T>.DataType, mp.Pointer, ref Unsafe.As<T, byte>(ref value), pointer.LengthInBytes / Const<T>.SizeT, 1);
+				NativeMethods.vecFillVal(Const<T>.DataType, mp.Pointer, &value, pointer.LengthInBytes / Const<T>.SizeT, 1);
 			if (sp is not null)
 				sp.NativeStream.SetValues(value, pointer.LengthInBytes);
 			return true;

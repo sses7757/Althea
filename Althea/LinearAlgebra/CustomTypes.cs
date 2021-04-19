@@ -308,6 +308,7 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		/// <param name="operation">The <see cref="MatrixOperation"/> to check</param>
 		/// <returns>Whether <paramref name="operation"/> can be performed in-place</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool CanInPlace(this MatrixOperation operation) => operation == MatrixOperation.None || operation == MatrixOperation.Conjugate;
 
 		/// <summary>
@@ -315,6 +316,7 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		/// <param name="operation">The <see cref="MatrixOperation"/> to be transposed</param>
 		/// <returns>The result <see cref="MatrixOperation"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MatrixOperation Transpose(this MatrixOperation operation) => unchecked(operation + (int)MatrixOperation.Transpose);
 
 		/// <summary>
@@ -322,7 +324,50 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		/// <param name="operation">The <see cref="MatrixOperation"/> to be conjugated</param>
 		/// <returns>The result <see cref="MatrixOperation"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MatrixOperation Conjugate(this MatrixOperation operation) => ~operation;
+
+		/// <summary>
+		/// Simplify the given <paramref name="input"/> <see cref="MatrixOperation"/> with type <typeparamref name="T"/> and <paramref name="hermitian"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="input">The input <see cref="MatrixOperation"/> to be simplified</param>
+		/// <param name="hermitian">Whether the target matrix is neither symmetric nor hermitian (null) or simply symmetric (false) or hermitian (true)</param>
+		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="MatrixOperation.None"/> and <see cref="MatrixOperation.Conjugate"/> are possible outputs.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged
+		{
+			bool isComplex = Const<T>.IsComplex;
+			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
+			switch (input)
+			{
+				case MatrixOperation.Transpose:
+					if (symm)
+						return MatrixOperation.None;
+					else if (herm)
+						return MatrixOperation.Conjugate;
+					else
+						return MatrixOperation.Transpose;
+				case MatrixOperation.ConjugateTranspose:
+					if (herm)
+						return MatrixOperation.None;
+					else if (symm)
+						return MatrixOperation.Conjugate;
+					else if (!isComplex)
+						return MatrixOperation.Transpose;
+					else
+						return MatrixOperation.ConjugateTranspose;
+				case MatrixOperation.Conjugate:
+					if (!isComplex)
+						return MatrixOperation.None;
+					else if (herm)
+						return MatrixOperation.Conjugate;
+					else
+						return MatrixOperation.Conjugate;
+				default:
+					return MatrixOperation.None;
+			}
+		}
 	}
 	#endregion
 
@@ -411,69 +456,6 @@ namespace Althea.LinearAlgebra
 			}
 			// return
 			return new(offsetRow, countRow, offsetCol, countCol);
-		}
-	}
-	#endregion
-
-
-	#region converters
-	/// <summary>
-	/// Static class of extension methods used to convert the custom types
-	/// </summary>
-	public static class TypeConverters
-	{
-		// TODO: move to Backend.Cuda.Blas
-		internal static sbyte ToChar(this SVDStore store)
-		{
-			return store switch
-			{
-				SVDStore.All => (sbyte)'A',
-				SVDStore.Economic => (sbyte)'S',
-				SVDStore.Overwrite => (sbyte)'O',
-				SVDStore.None => (sbyte)'N',
-				_ => throw new NotSupportedException(),
-			};
-		}
-
-		/// <summary>
-		/// Simplify the given <paramref name="input"/> <see cref="MatrixOperation"/> with type <typeparamref name="T"/> and <paramref name="hermitian"/>
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="input">The input <see cref="MatrixOperation"/> to be simplified</param>
-		/// <param name="hermitian">Whether the target matrix is neither symmetric nor hermitian (null) or simply symmetric (false) or hermitian (true)</param>
-		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="MatrixOperation.None"/> and <see cref="MatrixOperation.Conjugate"/> are possible outputs.</returns>
-		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged
-		{
-			bool isComplex = Const<T>.IsComplex;
-			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
-			switch (input)
-			{
-				case MatrixOperation.Transpose:
-					if (symm)
-						return MatrixOperation.None;
-					else if (herm)
-						return MatrixOperation.Conjugate;
-					else
-						return MatrixOperation.Transpose;
-				case MatrixOperation.ConjugateTranspose:
-					if (herm)
-						return MatrixOperation.None;
-					else if (symm)
-						return MatrixOperation.Conjugate;
-					else if (!isComplex)
-						return MatrixOperation.Transpose;
-					else
-						return MatrixOperation.ConjugateTranspose;
-				case MatrixOperation.Conjugate:
-					if (!isComplex)
-						return MatrixOperation.None;
-					else if (herm)
-						return MatrixOperation.Conjugate;
-					else
-						return MatrixOperation.Conjugate;
-				default:
-					return MatrixOperation.None;
-			}
 		}
 	}
 	#endregion

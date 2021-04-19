@@ -221,10 +221,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be truncated</param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		public static void TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged
+		public static void TruncateArray<T>(Storage<T> x, int stride, double threshold) where T : unmanaged
 		{
 			CombinationOfLocations location1 = x.LocationDescription;
 			bool success = false;
@@ -232,7 +233,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
-				success = node.Value.TruncateArray_(x, threshold);
+				success = node.Value.TruncateArray_(x, stride, threshold);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -503,6 +504,30 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
+		/// Clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="clearLower">Whether the lower triangular part of <paramref name="A"/> shall be cleared or its upper part</param>
+		/// <param name="n">The number of rows and columns of <paramref name="A"/></param>
+		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+		public static void MatrixClearUpperLowerPart<T>(bool clearLower, long n, Storage<T> A, long lda) where T : unmanaged
+		{
+			CombinationOfLocations location1 = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1), node);
+				success = node.Value.MatrixClearUpperLowerPart_(clearLower, n, A, lda);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
 		/// Calculate matrix Kronecker product:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> ⊗ <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
@@ -689,10 +714,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="x">The vector to be truncated</param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		protected abstract bool TruncateArray_<T>(Storage<T> x, double threshold) where T : unmanaged;
+		protected abstract bool TruncateArray_<T>(Storage<T> x, int stride, double threshold) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, aggregately sum the elements in vector <paramref name="x"/>.
@@ -772,6 +798,18 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		protected abstract bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <param name="clearLower">Whether the lower triangular part of <paramref name="A"/> shall be cleared or its upper part</param>
+		/// <param name="n">The number of rows and columns of <paramref name="A"/></param>
+		/// <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+		protected abstract bool MatrixClearUpperLowerPart_<T>(bool clearLower, long n, Storage<T> A, long lda) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate matrix Kronecker product <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> ⊗ <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>.

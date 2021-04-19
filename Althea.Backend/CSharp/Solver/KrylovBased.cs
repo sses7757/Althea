@@ -11,7 +11,6 @@ using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Solver;
-using Althea.Storage;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
 
@@ -356,14 +355,9 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region get convergence of GMRES
-		private delegate bool QRDelegate<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq) where T : unmanaged;
+		private delegate bool LSDelegate<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
 
-		private static readonly Dictionary<RuntimeTypeHandle, Delegate> QRSolve = new();
-
-		private delegate bool TriangularSolveDelegate<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
-
-		private static readonly Dictionary<RuntimeTypeHandle, Delegate> TriangularSolve = new();
-
+		private static readonly Dictionary<RuntimeTypeHandle, Delegate> LSSolve = new();
 
 		private static unsafe bool LinearSolveConvergenceCheck<T>(int n, SpanMatrix<T> H, double β0, double β, double tol, Span<T> convergedVec, bool forceCalc = false) where T : unmanaged
 		{
@@ -382,11 +376,12 @@ namespace Althea.Backend.CSharp.Solver
 			{
 				H.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<byte, ComplexDouble>(ref newH[0]), n * n), ConstExtension.GetGenericConverter<T, ComplexDouble>());
 			}
+			double estimateNormA;
 			fixed (byte* ptrH = newH)
 			fixed (ComplexDouble* ptrVals = eigenvalues)
 			{
 				var matH = new ManagedPureStorage<ComplexDouble>(ptrH, n * n);
-				var vecE = new ManagedPureStorage<ComplexDouble>(ptrH, n);
+				var vecE = new ManagedPureStorage<ComplexDouble>(ptrVals, n);
 				if (EigenSolve is not null)
 				{
 					EigenSolve.Invoke(SolveVectorMode.NoVector, n, vecE, null, 0, null, 0, matH, n);
@@ -395,61 +390,44 @@ namespace Althea.Backend.CSharp.Solver
 				{
 					LAD.EigenSpecialMatrixGeneral(SolveVectorMode.NoVector, n, vecE, null, 0, null, 0, matH, n);
 				}
+				LinearAlgebra.DenseApi.AbsoluteValueMax(vecE, out var maxAbsEig);
+				estimateNormA = maxAbsEig.Real;
 			}
 			//tex:$\mathbf H' = \left[\begin{matrix}\mathbf H\\\vec 0^T,\beta\end{matrix}\right]$
-			SpanMatrix<T> R = new(MemoryMarshal.CreateSpan(ref Unsafe.As<byte, T>(ref newH[0]), n1 * n), n1);
-			H.CopyTo(R.SubMatrix(..n, ..n));
-			R[n, n - 1] = β.FromDouble<T>();
-			//tex:$\mathbf H' \overset{\text{QR}}\longrightarrow \mathbf U^{(n)} \mathbf R$, $\mathbf U^{(n)} \in \mathbb F^{(n+1) \times (n+1)}$
-			Span<T> U = (n1 * n1).CheckStackLimit<T>() ?? stackalloc T[n1 * n1];
-			var type = typeof(T).TypeHandle;
-			fixed (T* ptrU = U, ptrR = R.UnderlyingSpan)
+			SpanMatrix<T> Hprime = new(MemoryMarshal.CreateSpan(ref Unsafe.As<byte, T>(ref newH[0]), n1 * n), n1);
+			H.CopyTo(Hprime.SubMatrix(..n, ..n));
+			Hprime[n, n - 1] = β.FromDouble<T>();
+			// direct solving by QR is not slower than separate approach
+			//tex:$\min_{\vec y^{(n)}}{\mathbf H' \vec y^{(n)} = \beta_0 \vec e_1}$, $\vec e_1 \in \mathbb F^{n+1}$
+			Span<T> y = stackalloc T[n1]; y[0] = β0.FromDouble<T>();
+			double normY;
+			fixed (T* ptrY = y, ptrR = Hprime.UnderlyingSpan, ptrWork = convergedVec)
 			{
+				var type = typeof(T).TypeHandle;
 				var matR = new ManagedPureStorage<T>(ptrR, n1 * n);
-				var matU = new ManagedPureStorage<T>(ptrU, n1 * n1);
-				if (!QRSolve.ContainsKey(type))
+				var vecY = new ManagedPureStorage<T>(ptrY, n1);
+				var work = new ManagedPureStorage<T>(ptrWork, n);
+				if (!LSSolve.ContainsKey(type))
 				{
 					LAD? pre = LAD.Current;
-					LAD.QRDecomposition(full: true, n1, n, matR, n1, matU, n1);
+					LAD.LeastSquareSolve(n1, n, 1, matR, n1, vecY, n1, work);
 					LAD? now = LAD.Current;
 					Delegate? d = null;
-					pre.SetDelegate<LAD, QRDelegate<T>>(now, nameof(LAD.QRDecomposition), ref d);
-					if (d is QRDelegate<T> dd)
-						QRSolve.Add(type, dd);
+					pre.SetDelegate<LAD, LSDelegate<T>>(now, nameof(LAD.QRDecomposition), ref d);
+					if (d is LSDelegate<T> dd)
+						LSSolve.Add(type, dd);
 				}
 				else
 				{
-					((QRDelegate<T>)QRSolve[type]).Invoke(full: true, n1, n, matR, n1, matU, n1);
+					((LSDelegate<T>)LSSolve[type]).Invoke(n1, n, 1, matR, n1, vecY, n1);
 				}
+				LinearAlgebra.DenseApi.Norm(vecY.MakeReference(0, n), out normY);
 			}
-			//tex:$\beta_0 \left|U_{1,n+1}^{\left(n\right)}\right| < \|A\| \|\vec{b}\| \varepsilon$
-			bool converge = β0 * Math.Abs(U[n * n1].ToDouble()) < eigenvalues.Max(static e => e.Abs()) * tol;
-			T β0T = β0.FromDouble<T>();
+			//tex:converge when: $\|\vec r^{(n)}\| = \|\vec y^{(n)}\| \le \|\mathbf A\| \|\vec{b}\| \varepsilon$
+			bool converge = normY <= estimateNormA * tol; // tolerance includes norm of b
 			if (converge || forceCalc)
 			{
-				//tex:solve for $\vec y_n$: $\mathbf R \vec y_n = \beta_0 \vec U_{1,1:n}^{\left(n\right)}$
-				Span<T> y = convergedVec[..n];
-				// copy the first row of 'U' (the right hand side to be solved) to 'y'
-				new SpanMatrix<T>(U[..(n * n1)], n1).CopyRowTo(0, y);
-				fixed (T* ptrR = R.UnderlyingSpan, ptrY = y)
-				{
-					var matR = new ManagedPureStorage<T>(ptrR, n1 * n);
-					var vecY = new ManagedPureStorage<T>(ptrY, n);
-					if (!TriangularSolve.ContainsKey(type))
-					{
-						LAD? pre = LAD.Current;
-						LAD.TriangularMatrixSolve(leftA: true, fillUpper: true, unitDiag: false, MatrixOperation.None, n, 1, β0T, A: matR, lda: n1, B: vecY, ldb: n);
-						LAD? now = LAD.Current;
-						Delegate? d = null;
-						pre.SetDelegate<LAD, TriangularSolveDelegate<T>>(now, nameof(LAD.QRDecomposition), ref d);
-						if (d is TriangularSolveDelegate<T> dd)
-							TriangularSolve.Add(type, dd);
-					}
-					else
-					{
-						((TriangularSolveDelegate<T>)TriangularSolve[type]).Invoke(true, true, false, MatrixOperation.None, n, 1, β0T, matR, n1, vecY, n);
-					}
-				}
+				y[..n].CopyTo(convergedVec[..n]);
 			}
 			return converge;
 		}

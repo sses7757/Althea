@@ -555,7 +555,7 @@ namespace Althea.Arrays
 		{
 			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
 			{
-				LAD.TruncateArray(this.Storage, threshold);
+				LAD.TruncateArray(this.Storage, 1, threshold);
 				if (this is ISparseArray<T> sparse && !sparse.DefaultValue.IsZero())
 				{
 					double abs = Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue);

@@ -141,6 +141,9 @@
   <data name="GMRESStart" xml:space="preserve">
     <value>Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}.</value>
   </data>
+  <data name="InsufficientCudaCapability" xml:space="preserve">
+    <value>The CUDA compute capability {0} of current CUDA device is less than required {1}.</value>
+  </data>
   <data name="IterationAndTimeInfo" xml:space="preserve">
     <value>Krylov subspace algorithm: now at iteration {0}, {1} passed since last output.</value>
   </data>

@@ -270,7 +270,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
 		/// <remarks>Strided filling reduce the performance greatly.</remarks>
 		[DllImport(CUSTOM_API_DLL_NAME)]
-		internal static extern void vecFillVal(DataType type, IntPtr array, ref byte value, long N, int stride);
+		internal static unsafe extern void vecFillVal(DataType type, IntPtr array, void* value, long N, int stride);
 
 		/// <summary>
 		/// Strided copy the <paramref name="src"/> GPU array to the <paramref name="dst"/> GPU array

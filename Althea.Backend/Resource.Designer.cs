@@ -133,6 +133,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 The CUDA compute capability {0} of current CUDA device is less than required {1}. 的本地化字符串。
+        /// </summary>
+        internal static string InsufficientCudaCapability {
+            get {
+                return ResourceManager.GetString("InsufficientCudaCapability", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
         /// </summary>
         internal static string IterationAndTimeInfo {

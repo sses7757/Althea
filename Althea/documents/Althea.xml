@@ -5973,6 +5973,15 @@
             <param name="operation">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be conjugated</param>
             <returns>The result <see cref="T:Althea.LinearAlgebra.MatrixOperation"/></returns>
         </member>
+        <member name="M:Althea.LinearAlgebra.MatrixOperationExtension.Simplify``1(Althea.LinearAlgebra.MatrixOperation,System.Nullable{System.Boolean})">
+            <summary>
+            Simplify the given <paramref name="input"/> <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> with type <typeparamref name="T"/> and <paramref name="hermitian"/>
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="input">The input <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be simplified</param>
+            <param name="hermitian">Whether the target matrix is neither symmetric nor hermitian (null) or simply symmetric (false) or hermitian (true)</param>
+            <returns>The simplified <paramref name="input"/> as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <see cref="F:Althea.LinearAlgebra.MatrixOperation.Conjugate"/> are possible outputs.</returns>
+        </member>
         <member name="T:Althea.LinearAlgebra.MatrixSliceWrapper">
             <summary>
             The wrapper struct used to store the matrix slicing parameters
@@ -6008,20 +6017,6 @@
             <param name="countCol">The number of the columns to take</param>
             <param name="matrix">The matrix to take slice from</param>
             <param name="sub">The sub-matrix to be overwritten by the sliced <paramref name="matrix"/> or to overwrite the <paramref name="matrix"/>'s slice</param>
-        </member>
-        <member name="T:Althea.LinearAlgebra.TypeConverters">
-            <summary>
-            Static class of extension methods used to convert the custom types
-            </summary>
-        </member>
-        <member name="M:Althea.LinearAlgebra.TypeConverters.Simplify``1(Althea.LinearAlgebra.MatrixOperation,System.Nullable{System.Boolean})">
-            <summary>
-            Simplify the given <paramref name="input"/> <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> with type <typeparamref name="T"/> and <paramref name="hermitian"/>
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="input">The input <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to be simplified</param>
-            <param name="hermitian">Whether the target matrix is neither symmetric nor hermitian (null) or simply symmetric (false) or hermitian (true)</param>
-            <returns>The simplified <paramref name="input"/> as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <see cref="F:Althea.LinearAlgebra.MatrixOperation.Conjugate"/> are possible outputs.</returns>
         </member>
         <member name="T:Althea.LinearAlgebra.Dense.AbstractApi">
             <summary>
@@ -6323,6 +6318,45 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
         </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SymmHermRankTwoUpdate``1(System.Boolean,System.Boolean,System.Int64,``0,Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int64)">
+            <summary>
+            Perform the symmetric/hermitian rank-2 update:<br/>
+            <c><paramref name="A"/> = <paramref name="α"/> * (<paramref name="x"/> * <paramref name="y"/>^op + <paramref name="x"/>^op * <paramref name="y"/>) + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjugate"/> ? H : T</c>.<br/>
+            Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
+            </summary>
+            <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
+            <param name="conjugate">Conjugate the vectors <paramref name="x"/> and <paramref name="y"/> or not</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="α">The scalar used for multiplication</param>
+            <param name="x">The left vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="y">The right vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
+            <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixMultiplyVector``1(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int32)">
+            <summary>
+            Perform the triangular matrix multiply:<br/>
+            <c><paramref name="x"/> = <paramref name="op"/>(<paramref name="A"/>) * <paramref name="x"/></c><br/>
+            Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> upper/lower triangular matrix stored in column-major format and <paramref name="x"/> is a vector.
+            </summary>
+            <param name="fillUpper">Whether <paramref name="A"/> is upper or lower triangular</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all unit (1) or not</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+        </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.GeneralMatricesMultiply``1(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
             <summary>
             Perform the matrix-matrix multiplication:<br/>
@@ -6371,7 +6405,7 @@
             <summary>
             Perform the symmetric/hermitian rank-k update:<br/>
             <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
-            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
+            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions<c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
             </summary>
             <param name="fillUpper">The <see cref="T:System.Boolean"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
@@ -6379,8 +6413,53 @@
             <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
             <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
             <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
-            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+            <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.RankTwoKUpdate``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
+            <summary>
+            Perform the symmetric/hermitian rank-2k update:<br/>
+            <c><paramref name="C"/> = <paramref name="α"/> * (<paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="op"/>(<paramref name="A"/>)^pow * <paramref name="op"/>(<paramref name="B"/>)) + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjugate"/> ? H : T</c>.<br/>
+            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
+            </summary>
+            <param name="fillUpper">The <see cref="T:System.Boolean"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+            <param name="conjugate">Conjugate transpose <paramref name="A"/> and <paramref name="B"/> or just transpose</param>
+            <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+            <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+            <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+            <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+            <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+            <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
+            <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.RankKUpdateVariant``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
+            <summary>
+            Perform the variant symmetric/hermitian rank-k update:<br/>
+            <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjB"/> ? H : T</c>.<br/>
+            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.<br/>
+            This routine can be used when the matrix <paramref name="B"/> is in such way that the result is guaranteed to be hermitian. For example, <paramref name="B"/> is a column-wise scaling of <paramref name="A"/>.
+            </summary>
+            <param name="fillUpper">The <see cref="T:System.Boolean"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+            <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
+            <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+            <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+            <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+            <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+            <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+            <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
             <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
             <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
@@ -6560,7 +6639,7 @@
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SymmHermRankOneUpdate_``1(System.Boolean,System.Boolean,System.Int64,``0,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int64)">
             <summary>
             When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
-            <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
+            <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
             Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
             </summary>
             <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
@@ -6570,6 +6649,45 @@
             <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SymmHermRankTwoUpdate_``1(System.Boolean,System.Boolean,System.Int64,``0,Althea.Storage{``0},System.Int32,Althea.Storage{``0},System.Int32,``0,Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, perform the symmetric/hermitian rank-2 update:<br/>
+            <c><paramref name="A"/> = <paramref name="α"/> * (<paramref name="x"/> * <paramref name="y"/>^op + <paramref name="x"/>^op * <paramref name="y"/>) + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjugate"/> ? H : T</c>.<br/>
+            Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
+            </summary>
+            <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
+            <param name="conjugate">Conjugate the vectors <paramref name="x"/> and <paramref name="y"/> or not</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="α">The scalar used for multiplication</param>
+            <param name="x">The left vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="y">The right vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
+            <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixMultiplyVector_``1(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int32)">
+            <summary>
+            When implemented by a derived class, perform the triangular matrix multiply:<br/>
+            <c><paramref name="x"/> = <paramref name="op"/>(<paramref name="A"/>) * <paramref name="x"/></c><br/>
+            Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> upper/lower triangular matrix stored in column-major format and <paramref name="x"/> is a vector.
+            </summary>
+            <param name="fillUpper">Whether <paramref name="A"/> is upper or lower triangular</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all unit (1) or not</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
@@ -6624,7 +6742,7 @@
             <summary>
             When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
             <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
-            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
+            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions<c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
             </summary>
             <param name="fillUpper">The <see cref="T:System.Boolean"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
@@ -6632,8 +6750,53 @@
             <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
             <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
             <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-            <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="F:Althea.LinearAlgebra.MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
-            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+            <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+            <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.RankTwoKUpdate_``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, perform the symmetric/hermitian rank-2k update:<br/>
+            <c><paramref name="C"/> = <paramref name="α"/> * (<paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="op"/>(<paramref name="A"/>)^pow * <paramref name="op"/>(<paramref name="B"/>)) + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjugate"/> ? H : T</c>.<br/>
+            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
+            </summary>
+            <param name="fillUpper">The <see cref="T:System.Boolean"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+            <param name="conjugate">Conjugate transpose <paramref name="A"/> and <paramref name="B"/> or just transpose</param>
+            <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+            <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+            <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+            <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+            <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+            <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
+            <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+            <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+            <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.RankKUpdateVariant_``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, perform the variant symmetric/hermitian rank-k update:<br/>
+            <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjB"/> ? H : T</c>.<br/>
+            Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.<br/>
+            This routine can be used when the matrix <paramref name="B"/> is in such way that the result is guaranteed to be hermitian. For example, <paramref name="B"/> is a column-wise scaling of <paramref name="A"/>.
+            </summary>
+            <param name="fillUpper">The <see cref="T:System.Boolean"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+            <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
+            <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+            <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+            <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+            <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+            <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+            <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+            <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
             <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
             <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
             <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
@@ -6777,12 +6940,13 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> is less than 1</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TruncateArray``1(Althea.Storage{``0},System.Double)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TruncateArray``1(Althea.Storage{``0},System.Int32,System.Double)">
             <summary>
             Truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="x">The vector to be truncated</param>
+            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
@@ -6912,6 +7076,18 @@
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="storedUpper">Whether the upper triangular part of <paramref name="A"/> is stored or its lower part</param>
             <param name="hermitian">Whether to use hermitian conjugate copies or simple copies</param>
+            <param name="n">The number of rows and columns of <paramref name="A"/></param>
+            <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.MatrixClearUpperLowerPart``1(System.Boolean,System.Int64,Althea.Storage{``0},System.Int64)">
+            <summary>
+            Clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="clearLower">Whether the lower triangular part of <paramref name="A"/> shall be cleared or its upper part</param>
             <param name="n">The number of rows and columns of <paramref name="A"/></param>
             <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
@@ -7081,12 +7257,13 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="incSrc"/> or <paramref name="incDst"/> is less than 1</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TruncateArray_``1(Althea.Storage{``0},System.Double)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.TruncateArray_``1(Althea.Storage{``0},System.Int32,System.Double)">
             <summary>
             When implemented by a derived class, truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
             <param name="x">The vector to be truncated</param>
+            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
@@ -7168,6 +7345,18 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
         </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.MatrixClearUpperLowerPart_``1(System.Boolean,System.Int64,Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="clearLower">Whether the lower triangular part of <paramref name="A"/> shall be cleared or its upper part</param>
+            <param name="n">The number of rows and columns of <paramref name="A"/></param>
+            <param name="A">The matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="n"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+        </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.MatrixKronecker_``1(System.Int64,System.Int64,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,``0,Althea.Storage{``0},System.Int64)">
             <summary>
             When implemented by a derived class, calculate matrix Kronecker product <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> ⊗ <paramref name="B"/> + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -7202,11 +7391,11 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.IsSupportedNormalTypeRealType(System.Span{Althea.CombinationOfLocations},System.Span{Althea.CombinationOfLocations})">
             <summary>
-            check if the given regular-typed locations <paramref name="normals"/> and its real-corresponding locations <paramref name="reals"/> are supported by such operations of this implementation or not.
+            Check if the given regular-typed locations <paramref name="normals"/> and its real-corresponding locations <paramref name="reals"/> are supported by such operations of this implementation or not.
             </summary>
             <param name="normals">The regular input type's <see cref="T:Althea.CombinationOfLocations"/>s</param>
             <param name="reals">The real input type's <see cref="T:Althea.CombinationOfLocations"/>s</param>
-            <returns>Whether mix-typed operations indicated by <paramref name="normals"/> and <paramref name="reals"/> is supported by this <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.</returns>
+            <returns>Whether mix-typed operations indicated by <paramref name="normals"/> and <paramref name="reals"/> are supported by this <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.</returns>
             <remarks>
             The operations:
             <list type="bullet">
@@ -7219,11 +7408,11 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.IsSupportedNormalTypeComplexType(System.Span{Althea.CombinationOfLocations},System.Span{Althea.CombinationOfLocations})">
             <summary>
-            check if the given regular-typed locations <paramref name="normals"/> and its complex-corresponding locations <paramref name="complexes"/> are supported by such operations of this implementation or not.
+            Check if the given regular-typed locations <paramref name="normals"/> and its complex-corresponding locations <paramref name="complexes"/> are supported by such operations of this implementation or not.
             </summary>
             <param name="normals">The regular input type's <see cref="T:Althea.CombinationOfLocations"/>s</param>
             <param name="complexes">The complex input type's <see cref="T:Althea.CombinationOfLocations"/>s</param>
-            <returns>Whether mix-typed operations indicated by <paramref name="normals"/> and <paramref name="complexes"/> is supported by this <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.</returns>
+            <returns>Whether mix-typed operations indicated by <paramref name="normals"/> and <paramref name="complexes"/> are supported by this <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.</returns>
             <remarks>
             The operations:
             <list type="bullet">
@@ -7232,6 +7421,25 @@
             <item>etc.</item>
             </list>
             </remarks>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.IsSupportedMatrixUnaryIndexUnary(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.NativeTypes.DataType)">
+            <summary>
+            Check if the given matrix-unary and index-unary locations are supported by such operations of this implementation or not.
+            </summary>
+            <param name="matrix">The <see cref="T:Althea.CombinationOfLocations"/> of the operand matrix</param>
+            <param name="index">The <see cref="T:Althea.CombinationOfLocations"/> of the operand index array</param>
+            <param name="indexType">The <see cref="T:Althea.NativeTypes.DataType"/> of the operand index array</param>
+            <returns>Whether mix-typed operations indicated by <paramref name="matrix"/>, <paramref name="index"/> and <paramref name="indexType"/> are supported by this <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.</returns>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.IsSupportedMatrixBinaryIndexUnary(Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.CombinationOfLocations,Althea.NativeTypes.DataType)">
+            <summary>
+            Check if the given matrix-binary and index-unary locations are supported by such operations of this implementation or not.
+            </summary>
+            <param name="matrix1">The <see cref="T:Althea.CombinationOfLocations"/> of the first operand matrix</param>
+            <param name="matrix2">The <see cref="T:Althea.CombinationOfLocations"/> of the second operand matrix</param>
+            <param name="index">The <see cref="T:Althea.CombinationOfLocations"/> of the operand index array</param>
+            <param name="indexType">The <see cref="T:Althea.NativeTypes.DataType"/> of the operand index array</param>
+            <returns>Whether mix-typed operations indicated by <paramref name="matrix1"/>, <paramref name="matrix2"/>, <paramref name="index"/> and <paramref name="indexType"/> are supported by this <see cref="T:Althea.LinearAlgebra.Dense.AbstractApi"/>.</returns>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixHermitian``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64)">
             <summary>
@@ -7311,6 +7519,147 @@
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LUDecomposition``2(System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1})">
+            <summary>
+            Compute the LU decomposition of <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix; will be overwritten by its LU decomposition (the lower triangular matrix is of non-stored unit diagonal) at exit.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="pivot">The output pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="pivot"/> is too short</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolveByLU``2(Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64)">
+            <summary>
+            Solve a series of linear systems <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c> by the LU decomposed <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
+            <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The coefficient matrix which was replaced by its LU decomposition before invoking this method.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="pivot">The pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolve``2(Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1})">
+            <summary>
+            Solve a series of linear systems: <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="op"/>(<paramref name="A"/>) is a linear system.<br/>
+            Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its LU decomposition, and <paramref name="B"/> shall be replaced by the solution X.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
+            <param name="A">The input/output coefficient matrix; may be overwritten by its LU decomposition after exit.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="work">The pre-allocated working space of size at least <paramref name="n"/>, default null means internal allocate</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQR``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            Compute the implicit QR factorization the given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="m">The number of rows of matrix <paramref name="A"/></param>
+            <param name="n">The number of columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values) and the lower triangular part overwritten by the sequence of Householder vectors.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="τ">The array to be overwritten by the scaling factors of all Householder vectors of size <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="τ"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQRFormQ``1(System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            Explicitly form the Q matrix from the result of a implicit QR factorization.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="m">The number of rows of matrix <paramref name="Q"/>, must be at least <paramref name="n"/></param>
+            <param name="n">The number of columns of matrix <paramref name="Q"/>, must be at least <paramref name="k"/></param>
+            <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
+            <param name="Q">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors. Overwritten by the formed Q matrix at exit.</param>
+            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
+            <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="Q"/> or <paramref name="τ"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQRMultiplyQ``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},Althea.Storage{``0},System.Int64)">
+            <summary>
+            Multiply the implicit matrix Q of a implicit QR factorization to the given matrix <paramref name="C"/>:<br/>
+            <c><paramref name="C"/> = <paramref name="op"/>(Q) * <paramref name="C"/></c> or <c><paramref name="C"/> = <paramref name="C"/> * <paramref name="op"/>(Q)</c>, depending on <paramref name="leftQ"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="leftQ">The position of the implicit matrix Q -- left or right</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to the implicit matrix Q</param>
+            <param name="m">The number of rows of matrix <paramref name="C"/></param>
+            <param name="n">The number of columns of matrix <paramref name="C"/></param>
+            <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
+            <param name="A">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
+            <param name="C">The input/output matrix of size <c><paramref name="lda"/>×<paramref name="n"/></c></param>
+            <param name="ldc">The leading dimension of <paramref name="C"/></param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> or <paramref name="τ"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="A"/> (or <paramref name="τ"/>) and <paramref name="C"/> has incompatible size</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            Compute the complete QR factorization the given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="full">Whether to perform full factorization or not</param>
+            <param name="m">The number of rows of matrix <paramref name="A"/></param>
+            <param name="n">The number of columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
+            <param name="work">The pre-allocated working space of size at least <paramref name="n"/>, default null means internal allocate</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LeastSquareSolve``1(System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            Least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
+            Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="m">The number of rows of matrix <paramref name="A"/>, must be larger than <paramref name="n"/></param>
+            <param name="n">The number of columns of matrix <paramref name="A"/></param>
+            <param name="nrhs">The number of right-hand sides, a.k.a. the number of overdetermined linear systems.</param>
+            <param name="A">The input/output coefficient matrix; may be overwritten by its implicit QR decomposition after exit.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="work">The pre-allocated working space of size at least <paramref name="n"/>, default null means internal allocate</param>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SingularValues``2(Althea.LinearAlgebra.SVDStore,Althea.LinearAlgebra.SVDStore,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
             Compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> <paramref name="S"/> <paramref name="Vct"/>.
@@ -7334,52 +7683,6 @@
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LuDecomposition``1(System.Int64,Althea.Storage{``0},System.Int64)">
-            <summary>
-            Compute the LU decomposition of <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolve``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
-            <summary>
-            Solve a series of linear systems: <paramref name="A"/> X = <paramref name="B"/>. Where each column pair of X and <paramref name="B"/> is a linear system. <br/>
-            Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> will be replaced by its LU decomposition and <paramref name="B"/> the solution X.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-            <param name="A">The input/output coefficient matrix; will be overwritten by its LU decomposition after exit.</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
-            <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
-            <summary>
-            compute the QR factorization the given matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="full">Whether to perform full factorization or not</param>
-            <param name="m">The number of rows of matrix <paramref name="A"/></param>
-            <param name="n">The number of columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
-            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-            <remarks>This method combined with the <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixSolve``1(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/><br/>can be used to solve least square problems (minimization of <c>||<paramref name="A"/> * x - b||</c>) by solve the triangular linear system of <c>x</c>: <c>R * x == c</c>, where <c>R</c> is <paramref name="A"/> at exit and <c>c = <paramref name="Q"/>ᴴ * b</c></remarks>
-        </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition``1(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{Althea.NativeTypes.ComplexDouble})">
             <summary>
             Compute the Schur decomposition of given matrix <paramref name="A"/>.
@@ -7400,7 +7703,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixHermitian_``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64)">
             <summary>
-            calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
+            When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/></param>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
@@ -7416,7 +7719,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixHermitian_``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            calculate the eigenvalues (and eigenvectors) of given hermitian matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+            When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
             <typeparam name="TReal">Any unmanaged struct as the real corresponding type of <typeparamref name="T"/></typeparam>
@@ -7435,7 +7738,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixGeneral_``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
+            When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
             <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
@@ -7455,7 +7758,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral_``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+            When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
             <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
@@ -7476,9 +7779,159 @@
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LUDecomposition_``2(System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1})">
+            <summary>
+            When implemented by a derived class, compute the LU decomposition of <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix; will be overwritten by its LU decomposition (the lower triangular matrix is of non-stored unit diagonal) at exit.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="pivot">The output pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="pivot"/> is too short</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolveByLU_``2(Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, solve a series of linear systems: <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c> by the LU decomposed <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
+            <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The coefficient matrix which was replaced by its LU decomposition before invoking this method.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="pivot">The pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolve_``2(Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1})">
+            <summary>
+            When implemented by a derived class, solve a series of linear systems: <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="op"/>(<paramref name="A"/>) is a linear system.<br/>
+            Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its LU decomposition, and <paramref name="B"/> shall be replaced by the solution X.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
+            <param name="A">The input/output coefficient matrix; may be overwritten by its LU decomposition after exit.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="work">The pre-allocated working space of size at least <paramref name="n"/>, default null means internal allocate</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQR_``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            When implemented by a derived class, compute the implicit QR factorization the given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="m">The number of rows of matrix <paramref name="A"/></param>
+            <param name="n">The number of columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values) and the lower triangular part overwritten by the sequence of Householder vectors.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="τ">The array to be overwritten by the scaling factors of all Householder vectors of size <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="τ"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQRFormQ_``1(System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            When implemented by a derived class, explicitly form the Q matrix from the result of a implicit QR factorization.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="m">The number of rows of matrix <paramref name="Q"/>, must be at least <paramref name="n"/></param>
+            <param name="n">The number of columns of matrix <paramref name="Q"/>, must be at least <paramref name="k"/></param>
+            <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
+            <param name="Q">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors. Overwritten by the formed Q matrix at exit.</param>
+            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
+            <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="Q"/> or <paramref name="τ"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQRMultiplyQ_``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},Althea.Storage{``0},System.Int64)">
+            <summary>
+            When implemented by a derived class, multiply the implicit matrix Q of a implicit QR factorization to the given matrix <paramref name="C"/>:<br/>
+            <c><paramref name="C"/> = <paramref name="op"/>(Q) * <paramref name="C"/></c> or <c><paramref name="C"/> = <paramref name="C"/> * <paramref name="op"/>(Q)</c>, depending on <paramref name="leftQ"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="leftQ">The position of the implicit matrix Q -- left or right</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> indicates the simple operation to the implicit matrix Q</param>
+            <param name="m">The number of rows of matrix <paramref name="C"/></param>
+            <param name="n">The number of columns of matrix <paramref name="C"/></param>
+            <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
+            <param name="A">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
+            <param name="C">The input/output matrix of size <c><paramref name="lda"/>×<paramref name="n"/></c></param>
+            <param name="ldc">The leading dimension of <paramref name="C"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> or <paramref name="τ"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="A"/> (or <paramref name="τ"/>) and <paramref name="C"/> has incompatible size</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.AllQRSupport``1(System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            Check whether all the implicit QR routines and <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixSolve_``1(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/> support the given parameters
+            </summary>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition_``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            When implemented by a derived class, compute the complete QR factorization the given matrix <paramref name="A"/>.
+            </summary>
+            <remarks>The default implementation utilizes <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQR_``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">ImplicitQR</see>, <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQRFormQ_``1(System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">ImplicitQRFormQ</see> and <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.MatrixClearUpperLowerPart_``1(System.Boolean,System.Int64,Althea.Storage{``0},System.Int64)">MatrixClearUpperLowerPart</see> to perform a complete explicit QR.<br/>
+            The default implementation does <b>NOT</b> check the input parameters.</remarks>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="full">Whether to perform full factorization or not</param>
+            <param name="m">The number of rows of matrix <paramref name="A"/></param>
+            <param name="n">The number of columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
+            <param name="work">The pre-allocated working space of size at least <c>min(<paramref name="m"/>,<paramref name="n"/>)</c>, default null means internal allocate</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LeastSquareSolve_``1(System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">
+            <summary>
+            When implemented by a derived class, least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
+            Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
+            </summary>
+            <remarks>The default implementation utilizes <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQR_``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0})">ImplicitQR</see>, <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.ImplicitQRMultiplyQ_``1(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},Althea.Storage{``0},System.Int64)">ImplicitQRMultiplyQ</see> and <see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.TriangularMatrixSolve_``1(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">TriangularMatrixSolve</see> to perform a complete least square solve.<br/>
+            The default implementation does <b>NOT</b> check the input parameters.</remarks>
+            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+            <param name="m">The number of rows of matrix <paramref name="A"/>, must be larger than <paramref name="n"/></param>
+            <param name="n">The number of columns of matrix <paramref name="A"/></param>
+            <param name="nrhs">The number of right-hand sides, a.k.a. the number of overdetermined linear systems.</param>
+            <param name="A">The input/output coefficient matrix; may be overwritten by its implicit QR decomposition after exit.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="work">The pre-allocated working space of size at least <paramref name="n"/>, default null means internal allocate</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SingularValues_``2(Althea.LinearAlgebra.SVDStore,Althea.LinearAlgebra.SVDStore,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``1},Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> <paramref name="S"/> <paramref name="Vct"/>.
+            When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> <paramref name="S"/> <paramref name="Vct"/>.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
             <typeparam name="TReal">Any unmanaged struct as the real corresponding type of <typeparamref name="T"/></typeparam>
@@ -7497,51 +7950,6 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LuDecomposition_``1(System.Int64,Althea.Storage{``0},System.Int64)">
-            <summary>
-            compute the LU decomposition of <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix; will be overwritten by its LU decomposition after exit.</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.LinearSolve_``1(System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
-            <summary>
-            solve a series of linear systems: <paramref name="A"/> X = <paramref name="B"/>. Where each column pair of X and <paramref name="B"/> is a linear system. <br/>
-            Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> will be replaced by its LU decomposition and <paramref name="B"/> the solution X.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-            <param name="A">The input/output coefficient matrix; will be overwritten by its LU decomposition after exit.</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
-            <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.QRDecomposition_``1(System.Boolean,System.Int64,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
-            <summary>
-            compute the QR factorization the given matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-            <param name="full">Whether to perform full factorization or not</param>
-            <param name="m">The number of rows of matrix <paramref name="A"/></param>
-            <param name="n">The number of columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
-            <param name="ldq">The leading dimension of <paramref name="Q"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.SchurDecomposition_``1(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64,System.Int64@,Althea.Storage{Althea.NativeTypes.ComplexDouble})">

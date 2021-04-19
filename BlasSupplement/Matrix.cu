@@ -258,7 +258,7 @@ struct makeHerm_functor2
 	}
 };
 
-template <typename T, bool upper>
+template <typename T, bool upper, bool makeHerm>
 struct makeHerm_functor
 {
 	const size_t ld, rows;
@@ -285,26 +285,25 @@ struct makeHerm_functor
 			if (row < col)
 				return;
 		}
-		if constexpr (std::is_scalar<T>::value)
+		if constexpr (makeHerm)
+		{
+			if (row == col)
+			{
+				if constexpr (std::is_scalar<T>::value)
+					A[offsetLower] = T(A[offsetLower].real());
+				return;
+			}
+			if constexpr (upper)
+				A[offsetLower] = std::conj(A[offsetUpper]);
+			else
+				A[offsetUpper] = std::conj(A[offsetLower]);
+		}
+		else
 		{
 			if constexpr (upper)
 				A[offsetLower] = A[offsetUpper];
 			else
 				A[offsetUpper] = A[offsetLower];
-		}
-		else
-		{
-			if (row == col)
-			{
-				A[offsetLower] = T(A[offsetLower].real());
-			}
-			else
-			{
-				if constexpr (upper)
-					A[offsetLower] = std::conj(A[offsetUpper]);
-				else
-					A[offsetUpper] = std::conj(A[offsetLower]);
-			}
 		}
 	}
 };
@@ -351,14 +350,18 @@ void matrixMakeHermitian2(void* Av, const size_t ld, const size_t rows, const bo
 }
 
 template<typename T>
-void matrixMakeHermitian(void* Av, const size_t ld, const size_t rows, const bool upperStored)
+void matrixMakeHermitian(void* Av, const size_t ld, const size_t rows, const bool upperStored, const bool hermA)
 {
 	T* A = (T*)Av;
-#define MAKE_HERM_CODE(bool1) thrust::for_each_n(THRUST_PAR, count_iter, rows * rows, makeHerm_functor<T, bool1>(ld, rows, A))
-	if (upperStored)
-		MAKE_HERM_CODE(true);
+#define MAKE_HERM_CODE(bool1, bool2) thrust::for_each_n(THRUST_PAR, count_iter, rows * rows, makeHerm_functor<T, bool1, bool2>(ld, rows, A))
+	if (upperStored && hermA)
+		MAKE_HERM_CODE(true, true);
+	else if (upperStored && !hermA)
+		MAKE_HERM_CODE(true, false);
+	else if (!upperStored && hermA)
+		MAKE_HERM_CODE(false, true);
 	else
-		MAKE_HERM_CODE(false);
+		MAKE_HERM_CODE(false, false);
 }
 
 template<typename T>
@@ -374,9 +377,9 @@ void matrixClearTriangular(void* Av, const size_t ld, const size_t rows, const b
 }
 
 DLLEXP
-void matMakeHerm(const Datatype::DataType type, void* A, const size_t ld, const size_t rows, const bool upperStored)
+void matMakeHerm(const Datatype::DataType type, void* A, const size_t ld, const size_t rows, const bool upperStored, const bool hermA)
 {
-	AUTO_SIGNED_TYPE_FUNC(matrixMakeHermitian, type, void, A, ld, rows, upperStored);
+	AUTO_SIGNED_TYPE_FUNC(matrixMakeHermitian, type, void, A, ld, rows, upperStored, hermA);
 }
 
 DLLEXP

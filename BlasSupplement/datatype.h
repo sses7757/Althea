@@ -239,8 +239,15 @@ namespace Datatype
 
 // automatically generate float type switch functions
 #define UNSUPPORT(funcName, dataType, returnType) do { \
-		printf("[%s] does not support [%s]!", #funcName, Datatype::tostring(dataType).c_str()); \
-		return returnType(); \
+		if constexpr (std::is_same<returnType, void>::value) \
+		{ \
+			printf("[%s] does not support [%s]!", #funcName, Datatype::tostring(dataType).c_str()); \
+			return returnType(); \
+		} \
+		else \
+		{ \
+			return returnType(1); \
+		} \
 	} while(0)
 
 #ifndef HAS_LDBL

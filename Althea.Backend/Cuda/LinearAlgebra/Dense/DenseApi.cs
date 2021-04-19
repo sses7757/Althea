@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
+using Althea.Helpers;
+using System.Numerics;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -16,7 +17,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	/// </summary>
 	/// <remarks>The legacy cuBLAS APIs are not supported.<br/>
 	/// The only supported location is a pure one on GPU memory. But cuFILE cached ones can be supported easily.<br/>
-	/// The stream operation is not supported here, but it can be easily added by utilizing "cudaStreamCreate()", "cublasSetStream()", etc.</remarks>
+	/// The stream operation is not supported here, but it can be easily added by utilizing "cudaStreamCreate()", "cublasSetStream()", etc.<br/>
+	/// The packed matrix, batched matrices and banded matrix BLAS operations are not supported, but it can be easily added as well.</remarks>
 	public class DenseApi : AbstractApi
 	{
 		#region basic
@@ -58,6 +60,29 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			}
 		}
 
+		/// <summary>
+		/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM")
+		/// </summary>
+		public bool ComplexGemmUseGemm3m {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this._complexGemm3m;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set {
+				if (value)
+				{
+					var cap = Storage.StorageApi.GetDeviceComputeCapability(Storage.StorageApi.CurrentDeviceID);
+					if (cap.major < 5)
+					{
+						Log.Write(string.Format(Resource.InsufficientCudaCapability, cap, (5, 0)));
+						return;
+					}
+				}
+				this._complexGemm3m = value;
+			}
+		}
+
+		private bool _complexGemm3m = false;
+
 		public DenseApi()
 		{
 			this.Cuda11OrAbove = Storage.StorageApi.GetDriverVersion().major >= 11;
@@ -73,6 +98,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				NativeMethods.cublasSetPointerMode_v2(this.cublasHandle, PointerMode.Host);
 			}
 			this.UseAtomicsMode = true;
+			
 			// TODO: cuSolver
 		}
 
@@ -99,7 +125,26 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (len > int.MaxValue)
 				return false;
 			length = (int)len;
-			ptr = mp.OffsetPointer(s[0].OffsetInBytes);
+			ptr = mp.OffsetPointer(p.OffsetInBytes);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
+		{
+			ptr = default; r = c = l = 1;
+			if (A is null) // specific null input
+				return true;
+			var p = A[0];
+			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
+				return false;
+			long len = p.LengthInBytes / Const<T>.SizeT;
+			if (cols * ld > len)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
+			if (rows > int.MaxValue || cols > int.MaxValue || ld > int.MaxValue)
+				return false;
+			r = (int)rows; c = (int)cols; l = (int)ld;
+			ptr = mp.OffsetPointer(p.OffsetInBytes);
 			return true;
 		}
 
@@ -173,6 +218,15 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool IsSupportedVectorUnaryMatrixUnary(CombinationOfLocations vector, CombinationOfLocations matrix) => this.IsSupported(vector) && this.IsSupported(matrix);
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool IsSupportedMatrixUnaryIndexUnary(CombinationOfLocations matrix, CombinationOfLocations index, DataType indexType) => this.IsSupported(matrix) && (index == default || this.IsSupported(index)) && (indexType == DataType.RealInt32 || (this.Cuda11OrAbove && indexType == DataType.RealInt64));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool IsSupportedMatrixBinaryIndexUnary(CombinationOfLocations matrix1, CombinationOfLocations matrix2, CombinationOfLocations index, DataType indexType) => this.IsSupported(matrix1) && this.IsSupported(matrix2) && (index == default || this.IsSupported(index)) && (indexType == DataType.RealInt32 || (this.Cuda11OrAbove && indexType == DataType.RealInt64));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override bool AllQRSupport<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work) => this.IsSupported(A.LocationDescription) && this.IsSupported(B.LocationDescription) && (work is null || this.IsSupported(work.LocationDescription));
 		#endregion
 
 		#region BLAS level 1
@@ -281,7 +335,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (this.Cuda11OrAbove)
 			{
 				funcS = Const<T>.DataType == DataType.ComplexSingle ? &NativeMethods.cublasScasum : null;
-				funcD = Const<T>.DataType == DataType.ComplexSingle ? &NativeMethods.cublasScasum : null;
+				funcD = Const<T>.DataType == DataType.ComplexDouble ? &NativeMethods.cublasDzasum : null;
 			}
 			else
 			{
@@ -606,54 +660,385 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		#endregion
 
 		#region custom level 1
-		protected override bool AggregateProduct_<T>(Storage<T> x, int stride, out T product) => throw new NotImplementedException();
+		protected override unsafe bool AggregateProduct_<T>(Storage<T> x, int stride, out T product)
+		{
+			product = default;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			T result;
+			NativeMethods.vecProd(Const<T>.DataType, px, n, stride, &result);
+			product = result;
+			return true;
+		}
 
-		protected override bool AggregateSum_<T>(Storage<T> x, int stride, out T sum) => throw new NotImplementedException();
+		protected override unsafe bool AggregateSum_<T>(Storage<T> x, int stride, out T sum)
+		{
+			sum = default;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			T result;
+			NativeMethods.vecSum(Const<T>.DataType, px, n, stride, &result);
+			sum = result;
+			return true;
+		}
 
-		protected override bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) => throw new NotImplementedException();
+		protected override unsafe bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			int n = Math.Min(nx, ny);
+			NativeMethods.vecParProd(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
+			return true;
+		}
 
-		protected override bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive) => throw new NotImplementedException();
+		protected override bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			int n = Math.Min(nx, ny);
+			NativeMethods.vecParSum(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
+			return true;
+		}
 
-		protected override bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr) => throw new NotImplementedException();
+		protected override unsafe bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr)
+		{
+			if (scalr.IsZero())
+				return true;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			NativeMethods.vecAddScalar(Const<T>.DataType, px, &scalr, n, stride);
+			return true;
+		}
 
-		protected override bool PointWiseCast_<T, TOut>(Storage<T> source, int incSrc, Storage<TOut> destination, int incDst) => throw new NotImplementedException();
+		protected override bool PointWiseCast_<T, TOut>(Storage<T> source, int incSrc, Storage<TOut> destination, int incDst)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(source, out var px, out var nx, incSrc))
+				return false;
+			if (!CheckPointer(destination, out var py, out var ny, incDst))
+				return false;
+			int n = Math.Min(nx, ny);
+			NativeMethods.vecDataConvert(Const<T>.DataType, Const<TOut>.DataType, px, py, n, incSrc, incDst, true).Check();
+			return true;
+		}
 
-		protected override bool PointWiseConjugate_<T>(Storage<T> x, int stride) => throw new NotImplementedException();
+		protected override bool PointWiseConjugate_<T>(Storage<T> x, int stride)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			NativeMethods.vecConj(Const<T>.DataType, px, n, stride);
+			return true;
+		}
 
-		protected override bool PointWiseDivide_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) => throw new NotImplementedException();
+		protected override bool PointWiseDivide_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			int n = Math.Min(nx, ny);
+			NativeMethods.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, false);
+			return true;
+		}
 
-		protected override bool PointWiseEquals_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, out bool equals) => throw new NotImplementedException();
+		protected override bool PointWiseEquals_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, out bool equals)
+		{
+			equals = false;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			int n = Math.Min(nx, ny);
+			equals = NativeMethods.vecsEq(Const<T>.DataType, px, py, n, strideX, strideY);
+			return true;
+		}
 
-		protected override bool PointWiseMultiply_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY) => throw new NotImplementedException();
+		protected override bool PointWiseMultiply_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			int n = Math.Min(nx, ny);
+			NativeMethods.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, true);
+			return true;
+		}
 
-		protected override bool PointWisePower_<T>(Storage<T> x, int stride, double p) => throw new NotImplementedException();
+		protected override unsafe bool PointWisePower_<T>(Storage<T> x, int stride, double p)
+		{
+			if (p == 1)
+				return true;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			if (p == 0)
+			{
+				T one = Const<T>.One;
+				Storage.NativeMethods.vecFillVal(Const<T>.DataType, px, &one, n, stride);
+				return true;
+			}
+			if (p == 2)
+			{
+				NativeMethods.vecsMulDiv(Const<T>.DataType, px, px, n, stride, stride, true);
+				return true;
+			}
+			T pp = p.FromDouble<T>(); // for complex type, (&pp)[0..sizeof(T)/2] == (T::value_type)p
+			NativeMethods.vecPowSameType(Const<T>.DataType, px, &pp, n, stride);
+			return true;
+		}
 
-		protected override bool PointWisePower_<T>(Storage<T> x, int stride, T p) => throw new NotImplementedException();
+		protected override unsafe bool PointWisePower_<T>(Storage<T> x, int stride, T p)
+		{
+			if (p.IsEqual(Const<T>.One))
+				return true;
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			if (p.IsZero())
+			{
+				T one = Const<T>.One;
+				Storage.NativeMethods.vecFillVal(Const<T>.DataType, px, &one, n, stride);
+				return true;
+			}
+			if (p.IsEqual(Const<T>.Two))
+			{
+				NativeMethods.vecsMulDiv(Const<T>.DataType, px, px, n, stride, stride, true);
+				return true;
+			}
+			NativeMethods.vecPowSameType(Const<T>.DataType, px, &p, n, stride);
+			return true;
+		}
 
-		protected override bool TruncateArray_<T>(Storage<T> x, double threshold) => throw new NotImplementedException();
+		protected override unsafe bool TruncateArray_<T>(Storage<T> x, int stride, double threshold)
+		{
+			if (threshold <= 0)
+				throw new ArgumentOutOfRangeException(nameof(threshold), threshold, Resources.Parameter.MustPositive);
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointer(x, out var px, out var n, stride))
+				return false;
+			T pp = threshold.FromDouble<T>();
+			NativeMethods.vecClip(Const<T>.DataType, px, &pp, n, stride);
+			return true;
+		}
 		#endregion
 
-		protected override bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
-		protected override bool EigenGeneralMatrixHermitian_<T, TReal>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
-		protected override bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) => throw new NotImplementedException();
-		protected override bool EigenSpecialMatrixHermitian_<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) => throw new NotImplementedException();
-		protected override bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) => throw new NotImplementedException();
-		protected override bool GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) => throw new NotImplementedException();
-		protected override bool LinearSolve_<T>(long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
-		protected override bool LuDecomposition_<T>(long n, Storage<T> A, long lda) => throw new NotImplementedException();
-		protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda) => throw new NotImplementedException();
-		protected override bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq) => throw new NotImplementedException();
-		protected override bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null) => throw new NotImplementedException();
-		protected override bool SingularValues_<T, TReal>(SVDStore storeU, SVDStore storeV, long m, long n, Storage<T> A, long lda, Storage<TReal> S, Storage<T>? U, long ldu, Storage<T>? Vct, long ldvct) => throw new NotImplementedException();
-		protected override bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool SymmHermMatrixMultiplyVector_<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) => throw new NotImplementedException();
+		#region BLAS level 2
+		protected override unsafe bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
+				return false;
+			var opCuda = op.ToCuda();
+			if (opCuda == CuBlasMatrixOperation.ConjugateAlone)
+				return false;
+			if (nx < (opCuda == CuBlasMatrixOperation.None ? nn : mm))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
+			if (ny < (opCuda == CuBlasMatrixOperation.None ? nn : mm))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
+
+			delegate*<IntPtr, CuBlasMatrixOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSgemv,
+					DataType.RealDouble => &NativeMethods.cublasDgemv,
+					DataType.ComplexSingle => &NativeMethods.cublasCgemv,
+					DataType.ComplexDouble => &NativeMethods.cublasZgemv,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSgemv_v2,
+					DataType.RealDouble => &NativeMethods.cublasDgemv_v2,
+					DataType.ComplexSingle => &NativeMethods.cublasCgemv_v2,
+					DataType.ComplexDouble => &NativeMethods.cublasZgemv_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, opCuda, mm, nn, &α, pA, llda, px, strideX, &β, py, strideY).Check();
+			return true;
+		}
+
+		protected override unsafe bool SymmHermMatrixMultiplyVector_<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
+				return false;
+
+			delegate*<IntPtr, MatrixFillMode, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsymv,
+					DataType.RealDouble => &NativeMethods.cublasDsymv,
+					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemv : &NativeMethods.cublasCsymv,
+					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemv : &NativeMethods.cublasZsymv,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsymv_v2,
+					DataType.RealDouble => &NativeMethods.cublasDsymv_v2,
+					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemv_v2 : &NativeMethods.cublasCsymv_v2,
+					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemv_v2 : &NativeMethods.cublasZsymv_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, nn, &α, pA, llda, px, strideX, &β, py, strideY).Check();
+			return true;
+		}
+
+		protected override unsafe bool GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
+				return false;
+
+			delegate*<IntPtr, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSger,
+					DataType.RealDouble => &NativeMethods.cublasDger,
+					DataType.ComplexSingle => conjY ? &NativeMethods.cublasCgerc : &NativeMethods.cublasCgerc,
+					DataType.ComplexDouble => conjY ? &NativeMethods.cublasZgerc : &NativeMethods.cublasZgerc,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSger_v2,
+					DataType.RealDouble => &NativeMethods.cublasDger_v2,
+					DataType.ComplexSingle => conjY ? &NativeMethods.cublasCgerc_v2 : &NativeMethods.cublasCgerc_v2,
+					DataType.ComplexDouble => conjY ? &NativeMethods.cublasZgerc_v2 : &NativeMethods.cublasZgerc_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			if (β.IsZero())
+
+			func(this.cublasHandle, mm, nn, &α, px, strideX, py, strideY, pA, llda).Check();
+			return true;
+		}
+
 		protected override bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) => throw new NotImplementedException();
+
+		protected override bool SymmHermRankTwoUpdate_<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) => throw new NotImplementedException();
+
+		protected override bool TriangularMatrixMultiplyVector_<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) => throw new NotImplementedException();
+		#endregion
+
+		#region custom level 2
+		protected override bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		#endregion
+
+		#region BLAS level 3
 		protected override bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
+
+		protected override bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) => throw new NotImplementedException();
+
+		protected override bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		protected override bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+
+		protected override bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+
+		protected override bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+
+		protected override bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		#endregion
+
+		#region custom level 3
+		protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda) => throw new NotImplementedException();
+
+		protected override bool MatrixClearUpperLowerPart_<T>(bool clearLower, long n, Storage<T> A, long lda) => throw new NotImplementedException();
+
+		protected override bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		#endregion
+
+		#region solve
+		protected override bool LUDecomposition_<T, TInd>(long n, Storage<T> A, long lda, Storage<TInd> pivot) => throw new NotImplementedException();
+
+		protected override bool LinearSolveByLU_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<TInd> pivot, Storage<T> B, long ldb) => throw new NotImplementedException();
+
+
+		protected override bool ImplicitQR_<T>(long m, long n, Storage<T> A, long lda, Storage<T> τ) => throw new NotImplementedException();
+
+		protected override bool ImplicitQRFormQ_<T>(long m, long n, long k, Storage<T> Q, long ldq, Storage<T> τ) => throw new NotImplementedException();
+
+		protected override bool ImplicitQRMultiplyQ_<T>(bool leftQ, MatrixOperation op, long m, long n, long k, Storage<T> A, long lda, Storage<T> τ, Storage<T> C, long ldc) => throw new NotImplementedException();
+
+
+
+		protected override bool EigenSpecialMatrixHermitian_<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) => throw new NotImplementedException();
+
+		protected override bool EigenGeneralMatrixHermitian_<T, TReal>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
+
+		protected override bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) => throw new NotImplementedException();
+
+		protected override bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
+
+
+		protected override bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null) => throw new NotImplementedException();
+
+		protected override bool SingularValues_<T, TReal>(SVDStore storeU, SVDStore storeV, long m, long n, Storage<T> A, long lda, Storage<TReal> S, Storage<T>? U, long ldu, Storage<T>? Vct, long ldvct) => throw new NotImplementedException();
+		#endregion
 	}
 }
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释

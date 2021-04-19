@@ -287,6 +287,7 @@ namespace Althea.Helpers
 			IncludeFields = true,
 			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
 			WriteIndented = true,
+			IgnoreReadOnlyProperties = true,
 		};
 
 		private static string fileName = "Althea.json";

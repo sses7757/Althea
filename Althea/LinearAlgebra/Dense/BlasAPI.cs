@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Althea.NativeTypes;
 
 namespace Althea.LinearAlgebra.Dense
 {
@@ -451,6 +452,69 @@ namespace Althea.LinearAlgebra.Dense
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
 		}
+
+		/// <summary>
+		/// Perform the symmetric/hermitian rank-2 update:<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * (<paramref name="x"/> * <paramref name="y"/>^op + <paramref name="x"/>^op * <paramref name="y"/>) + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjugate"/> ? H : T</c>.<br/>
+		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
+		/// </summary>
+		/// <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
+		/// <param name="conjugate">Conjugate the vectors <paramref name="x"/> and <paramref name="y"/> or not</param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The left vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The right vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static void SymmHermRankTwoUpdate<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged
+		{
+			CombinationOfLocations locationVec1 = x.LocationDescription, locationVec2 = y.LocationDescription, locationMat = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(locationVec1, locationVec2, locationMat), node);
+				success = node.Value.SymmHermRankTwoUpdate_(fillUpper, conjugate, n, α, x, strideX, y, strideY, β, A, lda);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Perform the triangular matrix multiply:<br/>
+		/// <c><paramref name="x"/> = <paramref name="op"/>(<paramref name="A"/>) * <paramref name="x"/></c><br/>
+		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> upper/lower triangular matrix stored in column-major format and <paramref name="x"/> is a vector.
+		/// </summary>
+		/// <param name="fillUpper">Whether <paramref name="A"/> is upper or lower triangular</param>
+		/// <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all unit (1) or not</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		public static void TriangularMatrixMultiplyVector<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) where T : unmanaged
+		{
+			CombinationOfLocations locationVec = x.LocationDescription, locationMat = A.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixUnary(locationVec, locationMat), node);
+				success = node.Value.TriangularMatrixMultiplyVector_(fillUpper, unitDiag, op, n, A, lda, x, strideX);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
 		#endregion
 
 		#region BLAS level 3
@@ -525,7 +589,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Perform the symmetric/hermitian rank-k update:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
-		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions<c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
 		/// </summary>
 		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
@@ -533,8 +597,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
-		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
@@ -549,6 +613,75 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
 				success = node.Value.RankKUpdate_(fillUpper, op, conjA, n, k, α, A, lda, β, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Perform the symmetric/hermitian rank-2k update:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * (<paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="op"/>(<paramref name="A"/>)^pow * <paramref name="op"/>(<paramref name="B"/>)) + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjugate"/> ? H : T</c>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
+		/// </summary>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="conjugate">Conjugate transpose <paramref name="A"/> and <paramref name="B"/> or just transpose</param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+		/// <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
+		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void RankTwoKUpdate<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
+				success = node.Value.RankTwoKUpdate_(fillUpper, op, conjugate, n, k, α, A, lda, B, ldb, β, C, ldc);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+		/// <summary>
+		/// Perform the variant symmetric/hermitian rank-k update:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjB"/> ? H : T</c>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.<br/>
+		/// This routine can be used when the matrix <paramref name="B"/> is in such way that the result is guaranteed to be hermitian. For example, <paramref name="B"/> is a column-wise scaling of <paramref name="A"/>.
+		/// </summary>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+		/// <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
+		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void RankKUpdateVariant<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
+				success = node.Value.RankKUpdateVariant_(fillUpper, op, conjB, n, k, α, A, lda, B, ldb, β, C, ldc);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -745,7 +878,7 @@ namespace Althea.LinearAlgebra.Dense
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
-		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * <paramref name="x"/> * <paramref name="x"/>^op + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjX"/> ? H : T</c>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
 		/// </summary>
 		/// <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
@@ -761,6 +894,45 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
 		protected abstract bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, perform the symmetric/hermitian rank-2 update:<br/>
+		/// <c><paramref name="A"/> = <paramref name="α"/> * (<paramref name="x"/> * <paramref name="y"/>^op + <paramref name="x"/>^op * <paramref name="y"/>) + <paramref name="β"/> * <paramref name="A"/></c>, <c>op = <paramref name="conjugate"/> ? H : T</c>.<br/>
+		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
+		/// </summary>
+		/// <param name="fillUpper">Whether the result symmetric matrix <paramref name="A"/> shall be stored in its upper or the lower part</param>
+		/// <param name="conjugate">Conjugate the vectors <paramref name="x"/> and <paramref name="y"/> or not</param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="α">The scalar used for multiplication</param>
+		/// <param name="x">The left vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The right vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideY"/>)</c> elements</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="A"/>. If this is 0, then the original values of <paramref name="A"/> will be ignored.</param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		protected abstract bool SymmHermRankTwoUpdate_<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, perform the triangular matrix multiply:<br/>
+		/// <c><paramref name="x"/> = <paramref name="op"/>(<paramref name="A"/>) * <paramref name="x"/></c><br/>
+		/// Where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> upper/lower triangular matrix stored in column-major format and <paramref name="x"/> is a vector.
+		/// </summary>
+		/// <param name="fillUpper">Whether <paramref name="A"/> is upper or lower triangular</param>
+		/// <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all unit (1) or not</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="x">The vector with <c>(1+(<paramref name="n"/>-1)*<paramref name="strideX"/>)</c> elements</param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
+		protected abstract bool TriangularMatrixMultiplyVector_<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) where T : unmanaged;
 		#endregion
 
 		#region BLAS level 3
@@ -811,7 +983,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
 		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjA"/> ? H : T</c>.<br/>
-		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) → <paramref name="n"/>×<paramref name="k"/>.
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions<c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
 		/// </summary>
 		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
@@ -819,14 +991,59 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
 		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-		/// <param name="A">The array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> if trans == <see cref="MatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
-		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
 		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
 		protected abstract bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, perform the symmetric/hermitian rank-2k update:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * (<paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="op"/>(<paramref name="A"/>)^pow * <paramref name="op"/>(<paramref name="B"/>)) + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjugate"/> ? H : T</c>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.
+		/// </summary>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="conjugate">Conjugate transpose <paramref name="A"/> and <paramref name="B"/> or just transpose</param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+		/// <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
+		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+		protected abstract bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, perform the variant symmetric/hermitian rank-k update:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjB"/> ? H : T</c>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.<br/>
+		/// This routine can be used when the matrix <paramref name="B"/> is in such way that the result is guaranteed to be hermitian. For example, <paramref name="B"/> is a column-wise scaling of <paramref name="A"/>.
+		/// </summary>
+		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
+		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
+		/// <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
+		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
+		protected abstract bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, solves the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>

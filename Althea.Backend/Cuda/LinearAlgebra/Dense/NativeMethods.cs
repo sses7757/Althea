@@ -1085,15 +1085,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 											IntPtr dest, long ldD, void* alpha, void* beta);
 
 		/// <summary>
-		/// Makes the matrix <paramref name="A"/> Hermitian by copying its upper part to/from its lower part
+		/// Makes the matrix <paramref name="A"/> hermitian or symmetric by copying its upper part to/from its lower part
 		/// </summary>
 		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/></param>
 		/// <param name="A">The matrix to be modified of <paramref name="type"/></param>
 		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
 		/// <param name="rows">The number of rows of <paramref name="A"/></param>
 		/// <param name="upperStored">Whether <paramref name="A"/>'s upper part or its lower part is stored</param>
+		/// <param name="hermA">If <paramref name="type"/> is a complex type, make <paramref name="A"/> hermitian or symmetric</param>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern void matMakeHerm(DataType type, IntPtr A, long ld, long rows, bool upperStored);
+		internal static extern void matMakeHerm(DataType type, IntPtr A, long ld, long rows, bool upperStored, bool hermA);
 
 		/// <summary>
 		/// Clear (set to 0) the matrix <paramref name="A"/>'s upper part or its lower part

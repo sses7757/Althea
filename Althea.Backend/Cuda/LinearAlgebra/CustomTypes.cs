@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
+using Althea.LinearAlgebra;
 using Althea.NativeTypes;
+
 
 namespace Althea.Backend.Cuda.LinearAlgebra
 {
@@ -31,6 +33,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra
 
 	internal static class Conversions
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static char ToChar(this SVDStore store)
+		{
+			return store switch
+			{
+				SVDStore.All => 'A',
+				SVDStore.Economic => 'S',
+				SVDStore.Overwrite => 'O',
+				SVDStore.None => 'N',
+				_ => throw new NotSupportedException(),
+			};
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static CuBlasMatrixOperation ToCuda(this Althea.LinearAlgebra.MatrixOperation op, bool? hermitian = null)
 		{
