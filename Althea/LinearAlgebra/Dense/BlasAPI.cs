@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Althea.NativeTypes;
 
 namespace Althea.LinearAlgebra.Dense
 {
@@ -626,8 +625,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="conjugate">Conjugate transpose <paramref name="A"/> and <paramref name="B"/> or just transpose</param>
-		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>), <paramref name="op"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
 		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
@@ -661,8 +660,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
-		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>), <paramref name="op"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
 		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
@@ -713,6 +712,40 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
 				success = node.Value.TriangularMatrixSolve_(leftA, fillUpper, unitDiag, op, m, n, α, A, lda, B, ldb);
+			}
+			if (success && node is not null)
+				SetImplementation(RecentAPIs, node.Value);
+		}
+
+
+		/// <summary>
+		/// Multiply the triangular matrix <paramref name="A"/> with the given matrix <paramref name="B"/> and overwrite the result to <paramref name="C"/>:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="B"/></c> if <paramref name="leftA"/> is true, or <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="B"/> * <paramref name="op"/>(<paramref name="A"/>)</c> otherwise.
+		/// </summary>
+		/// <param name="leftA">Whether the matrix <paramref name="A"/> is at left side or right side</param>
+		/// <param name="fillUpper">Whether the matrix <paramref name="A"/>'s upper or lower triangle is filled</param>
+		/// <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+		/// <param name="m">The number of rows of <paramref name="B"/></param>
+		/// <param name="n">The number of columns of <paramref name="B"/></param>
+		/// <param name="α">The scalar to multiply to <paramref name="B"/></param>
+		/// <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> if <paramref name="leftA"/>, or <c><paramref name="lda"/>×<paramref name="n"/></c> otherwise</param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="B">The input general matrix of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <param name="C">The output matrix to be overwritten by the result at exit, can be <paramref name="B"/> when <paramref name="ldc"/> == <paramref name="ldb"/>.</param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/>, must be <paramref name="ldb"/> when <paramref name="B"/> == <paramref name="C"/>.</param>
+		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		public static void TriangularMatrixMultiply<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc) where T : unmanaged
+		{
+			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
+			bool success = false;
+			LinkedListNode<AbstractApi>? node = null;
+			while (!success)
+			{
+				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
+				success = node.Value.TriangularMatrixMultiply_(leftA, fillUpper, unitDiag, op, m, n, α, A, lda, B, ldb, C, ldc);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -1008,8 +1041,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="conjugate">Conjugate transpose <paramref name="A"/> and <paramref name="B"/> or just transpose</param>
-		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>), <paramref name="op"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
 		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
@@ -1031,8 +1064,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
-		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
+		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>), <paramref name="op"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
 		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
@@ -1063,6 +1096,27 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		protected abstract bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
+
+		/// <summary>
+		/// When implemented by a derived class, multiply the triangular matrix <paramref name="A"/> with the given matrix <paramref name="B"/> and overwrite the result to <paramref name="C"/>:<br/>
+		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="B"/></c> if <paramref name="leftA"/> is true, or <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="B"/> * <paramref name="op"/>(<paramref name="A"/>)</c> otherwise.
+		/// </summary>
+		/// <param name="leftA">Whether the matrix <paramref name="A"/> is at left side or right side</param>
+		/// <param name="fillUpper">Whether the matrix <paramref name="A"/>'s upper or lower triangle is filled</param>
+		/// <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
+		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
+		/// <param name="m">The number of rows of <paramref name="B"/></param>
+		/// <param name="n">The number of columns of <paramref name="B"/></param>
+		/// <param name="α">The scalar to multiply to <paramref name="B"/></param>
+		/// <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> if <paramref name="leftA"/>, or <c><paramref name="lda"/>×<paramref name="n"/></c> otherwise</param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
+		/// <param name="B">The input general matrix of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c></param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <param name="C">The output matrix to be overwritten by the result at exit, can be <paramref name="B"/> when <paramref name="ldc"/> == <paramref name="ldb"/>.</param>
+		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/>, must be <paramref name="ldb"/> when <paramref name="B"/> == <paramref name="C"/>.</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		protected abstract bool TriangularMatrixMultiply_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc) where T : unmanaged;
 		#endregion
 		#endregion
 	}

@@ -6,7 +6,6 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
 using Althea.Helpers;
-using System.Numerics;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -130,6 +129,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged
+		{
+			ptr = default; length = 0;
+			var p = s[0];
+			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
+				return false;
+			length = p.LengthInBytes / Const<T>.SizeT;
+			length = (length - 1) / stride + 1;
+			ptr = mp.OffsetPointer(p.OffsetInBytes);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
 		{
 			ptr = default; r = c = l = 1;
@@ -144,6 +156,43 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (rows > int.MaxValue || cols > int.MaxValue || ld > int.MaxValue)
 				return false;
 			r = (int)rows; c = (int)cols; l = (int)ld;
+			ptr = mp.OffsetPointer(p.OffsetInBytes);
+			return true;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out CuBlasMatrixOperation opCuda, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
+		{
+			ptr = default; r = c = l = 1; opCuda = op.ToCuda();
+			if (A is null) // specific null input
+				return true;
+			if (opCuda == CuBlasMatrixOperation.ConjugateAlone)
+				return false;
+			var p = A[0];
+			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
+				return false;
+			long len = p.LengthInBytes / Const<T>.SizeT;
+			long cols = op.CanInPlace() ? colsAfterOp : rowsAfterOp;
+			if (cols * ld > len)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
+			if (rowsAfterOp > int.MaxValue || colsAfterOp > int.MaxValue || ld > int.MaxValue)
+				return false;
+			r = (int)rowsAfterOp; c = (int)colsAfterOp; l = (int)ld;
+			ptr = mp.OffsetPointer(p.OffsetInBytes);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged
+		{
+			ptr = default;
+			if (A is null) // specific null input
+				return true;
+			var p = A[0];
+			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
+				return false;
+			long len = p.LengthInBytes / Const<T>.SizeT;
+			if (cols * ld > len)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
 			ptr = mp.OffsetPointer(p.OffsetInBytes);
 			return true;
 		}
@@ -665,7 +714,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			product = default;
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			T result;
 			NativeMethods.vecProd(Const<T>.DataType, px, n, stride, &result);
@@ -678,7 +727,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			sum = default;
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			T result;
 			NativeMethods.vecSum(Const<T>.DataType, px, n, stride, &result);
@@ -690,11 +739,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var nx, strideX))
+			if (!CheckPointerLong(x, out var px, out var nx, strideX))
 				return false;
-			if (!CheckPointer(y, out var py, out var ny, strideY))
+			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
-			int n = Math.Min(nx, ny);
+			long n = Math.Min(nx, ny);
 			NativeMethods.vecParProd(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
 			return true;
 		}
@@ -703,11 +752,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var nx, strideX))
+			if (!CheckPointerLong(x, out var px, out var nx, strideX))
 				return false;
-			if (!CheckPointer(y, out var py, out var ny, strideY))
+			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
-			int n = Math.Min(nx, ny);
+			long n = Math.Min(nx, ny);
 			NativeMethods.vecParSum(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
 			return true;
 		}
@@ -718,7 +767,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return true;
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			NativeMethods.vecAddScalar(Const<T>.DataType, px, &scalr, n, stride);
 			return true;
@@ -728,11 +777,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(source, out var px, out var nx, incSrc))
+			if (!CheckPointerLong(source, out var px, out var nx, incSrc))
 				return false;
-			if (!CheckPointer(destination, out var py, out var ny, incDst))
+			if (!CheckPointerLong(destination, out var py, out var ny, incDst))
 				return false;
-			int n = Math.Min(nx, ny);
+			long n = Math.Min(nx, ny);
 			NativeMethods.vecDataConvert(Const<T>.DataType, Const<TOut>.DataType, px, py, n, incSrc, incDst, true).Check();
 			return true;
 		}
@@ -741,7 +790,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			NativeMethods.vecConj(Const<T>.DataType, px, n, stride);
 			return true;
@@ -751,11 +800,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var nx, strideX))
+			if (!CheckPointerLong(x, out var px, out var nx, strideX))
 				return false;
-			if (!CheckPointer(y, out var py, out var ny, strideY))
+			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
-			int n = Math.Min(nx, ny);
+			long n = Math.Min(nx, ny);
 			NativeMethods.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, false);
 			return true;
 		}
@@ -765,11 +814,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			equals = false;
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var nx, strideX))
+			if (!CheckPointerLong(x, out var px, out var nx, strideX))
 				return false;
-			if (!CheckPointer(y, out var py, out var ny, strideY))
+			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
-			int n = Math.Min(nx, ny);
+			long n = Math.Min(nx, ny);
 			equals = NativeMethods.vecsEq(Const<T>.DataType, px, py, n, strideX, strideY);
 			return true;
 		}
@@ -778,11 +827,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var nx, strideX))
+			if (!CheckPointerLong(x, out var px, out var nx, strideX))
 				return false;
-			if (!CheckPointer(y, out var py, out var ny, strideY))
+			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
-			int n = Math.Min(nx, ny);
+			long n = Math.Min(nx, ny);
 			NativeMethods.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, true);
 			return true;
 		}
@@ -793,7 +842,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return true;
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			if (p == 0)
 			{
@@ -817,7 +866,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return true;
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			if (p.IsZero())
 			{
@@ -840,7 +889,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				throw new ArgumentOutOfRangeException(nameof(threshold), threshold, Resources.Parameter.MustPositive);
 			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
-			if (!CheckPointer(x, out var px, out var n, stride))
+			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			T pp = threshold.FromDouble<T>();
 			NativeMethods.vecClip(Const<T>.DataType, px, &pp, n, stride);
@@ -946,6 +995,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
 				return false;
+			if (nx < mm)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
+			if (ny < nn)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
 			delegate*<IntPtr, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
 			if (this.Cuda11OrAbove)
@@ -972,44 +1025,538 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			}
 			if (func is null)
 				return false;
-			if (β.IsZero())
-
+			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
 			func(this.cublasHandle, mm, nn, &α, px, strideX, py, strideY, pA, llda).Check();
 			return true;
 		}
 
-		protected override bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) => throw new NotImplementedException();
+		protected override unsafe bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
+				return false;
+			if (nx < nn)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
-		protected override bool SymmHermRankTwoUpdate_<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) => throw new NotImplementedException();
+			delegate*<IntPtr, MatrixFillMode, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyr,
+					DataType.RealDouble => &NativeMethods.cublasDsyr,
+					DataType.ComplexSingle => conjX ? &NativeMethods.cublasCher : &NativeMethods.cublasCsyr,
+					DataType.ComplexDouble => conjX ? &NativeMethods.cublasZher : &NativeMethods.cublasZsyr,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyr_v2,
+					DataType.RealDouble => &NativeMethods.cublasDsyr_v2,
+					DataType.ComplexSingle => conjX ? &NativeMethods.cublasCher_v2 : &NativeMethods.cublasCsyr_v2,
+					DataType.ComplexDouble => conjX ? &NativeMethods.cublasZher_v2 : &NativeMethods.cublasZsyr_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, nn, &α, px, strideX, pA, llda).Check();
+			return true;
+		}
 
-		protected override bool TriangularMatrixMultiplyVector_<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) => throw new NotImplementedException();
+		protected override unsafe bool SymmHermRankTwoUpdate_<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(y, out var py, out var ny, strideY))
+				return false;
+			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
+				return false;
+			if (nx < nn)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
+			if (ny < nn)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
+
+			delegate*<IntPtr, MatrixFillMode, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyr2,
+					DataType.RealDouble => &NativeMethods.cublasSsyr2,
+					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2 : &NativeMethods.cublasCsyr2,
+					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2 : &NativeMethods.cublasZsyr2,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyr2_v2,
+					DataType.RealDouble => &NativeMethods.cublasSsyr2_v2,
+					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2_v2 : &NativeMethods.cublasCsyr2_v2,
+					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2_v2 : &NativeMethods.cublasZsyr2_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, nn, &α, px, strideX, py, strideY, pA, llda).Check();
+			return true;
+		}
+
+		protected override unsafe bool TriangularMatrixMultiplyVector_<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
+				return false;
+			if (nx < nn)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
+
+			delegate*<IntPtr, MatrixFillMode, CuBlasMatrixOperation, DiagType, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasStrmv,
+					DataType.RealDouble => &NativeMethods.cublasDtrmv,
+					DataType.ComplexSingle => &NativeMethods.cublasCtrmv,
+					DataType.ComplexDouble => &NativeMethods.cublasZtrmv,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasStrmv_v2,
+					DataType.RealDouble => &NativeMethods.cublasDtrmv_v2,
+					DataType.ComplexSingle => &NativeMethods.cublasCtrmv_v2,
+					DataType.ComplexDouble => &NativeMethods.cublasZtrmv_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			var opCuda = op.ToCuda();
+			if (opCuda == CuBlasMatrixOperation.ConjugateAlone)
+				return false;
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opCuda, unitDiag ? DiagType.Unit : DiagType.NonUnit, nn, pA, llda, px, strideX).Check();
+			return true;
+		}
+
 		#endregion
 
-		#region custom level 2
-		protected override bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		#region BLAS like level 2
+		protected override unsafe bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(x, out var px, out var nx, strideX))
+				return false;
+			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
+				return false;
+			if (!CheckPointer(C, m, n, ldc, out var pC, out _, out _, out int lldc))
+				return false;
+			if (nx < (leftA ? nn : mm))
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
+
+			delegate*<IntPtr, SideMode, int, int, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			func = Const<T>.DataType switch
+			{
+				DataType.RealSingle => &NativeMethods.cublasSdgmm,
+				DataType.RealDouble => &NativeMethods.cublasDdgmm,
+				DataType.ComplexSingle => &NativeMethods.cublasCdgmm,
+				DataType.ComplexDouble => &NativeMethods.cublasZdgmm,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			func(this.cublasHandle, leftA ? SideMode.Right : SideMode.Left, mm, nn, pA, llda, px, strideX, pC, lldc).Check();
+			return true;
+		}
 		#endregion
 
 		#region BLAS level 3
-		protected override bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
+		protected override unsafe bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(A, m, m, lda, out var pA, out int mm, out _, out int llda))
+				return false;
+			if (!CheckPointer(B, m, n, ldb, out var pB, out _, out int nn, out int lldb))
+				return false;
+			if (α.IsZero()) // result is 0
+				return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, B, ldb, default, null, 0, B, ldb);
 
-		protected override bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc) => throw new NotImplementedException();
+			delegate*<IntPtr, SideMode, MatrixFillMode, CuBlasMatrixOperation, DiagType, int, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasStrsm,
+					DataType.RealDouble => &NativeMethods.cublasDtrsm,
+					DataType.ComplexSingle => &NativeMethods.cublasCtrsm,
+					DataType.ComplexDouble => &NativeMethods.cublasZtrsm,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasStrsm_v2,
+					DataType.RealDouble => &NativeMethods.cublasDtrsm_v2,
+					DataType.ComplexSingle => &NativeMethods.cublasCtrsm_v2,
+					DataType.ComplexDouble => &NativeMethods.cublasZtrsm_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			var opCuda = op.ToCuda();
+			if (opCuda == CuBlasMatrixOperation.ConjugateAlone)
+				return false;
+			func(this.cublasHandle, leftA ? SideMode.Right : SideMode.Left, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opCuda, unitDiag ? DiagType.Unit : DiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb).Check();
+			return true;
+		}
 
-		protected override bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
-		protected override bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		protected override unsafe bool TriangularMatrixMultiply_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			var opCuda = op.ToCuda();
+			if (opCuda == CuBlasMatrixOperation.ConjugateAlone)
+				return false;
+			if (!CheckPointer(B, m, n, ldb, out var pB, out int mm, out int nn, out int lldb))
+				return false;
+			if (!CheckPointer(C, m, n, ldc, out var pC, out _, out _, out int lldc))
+				return false;
+			if (!CheckPointer(A, leftA ? m : n, leftA ? m : n, lda, out var pA, out _, out _, out int llda))
+				return false;
+			if (α.IsZero()) // result if 0
+				this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, null, 0, C, ldc);
 
-		protected override bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+			delegate*<IntPtr, SideMode, MatrixFillMode, CuBlasMatrixOperation, DiagType, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasStrmm,
+					DataType.RealDouble => &NativeMethods.cublasDtrmm,
+					DataType.ComplexSingle => &NativeMethods.cublasCtrmm,
+					DataType.ComplexDouble => &NativeMethods.cublasZtrmm,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasStrmm_v2,
+					DataType.RealDouble => &NativeMethods.cublasDtrmm_v2,
+					DataType.ComplexSingle => &NativeMethods.cublasCtrmm_v2,
+					DataType.ComplexDouble => &NativeMethods.cublasZtrmm_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, leftA ? SideMode.Right : SideMode.Left, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opCuda, unitDiag ? DiagType.Unit : DiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb, pC, lldc).Check();
+			return true;
+		}
 
-		protected override bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		protected override unsafe bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(A, opA, m, n, lda, out var opcA, out var pA, out _, out _, out int llda))
+				return false;
+			if (!CheckPointer(B, opB, m, n, ldb, out var opcB, out var pB, out _, out _, out int lldb))
+				return false;
+			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
+				return false;
 
-		protected override bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+			delegate*<IntPtr, CuBlasMatrixOperation, CuBlasMatrixOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
+			func = Const<T>.DataType switch
+			{
+				DataType.RealSingle => &NativeMethods.cublasSgeam,
+				DataType.RealDouble => &NativeMethods.cublasDgeam,
+				DataType.ComplexSingle => &NativeMethods.cublasCgeam,
+				DataType.ComplexDouble => &NativeMethods.cublasZgeam,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			func(this.cublasHandle, opcA, opcB, mm, nn, &α, pA, llda, &β, pB, lldb, pC, lldc).Check();
+			return true;
+		}
+
+		protected override unsafe bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckEx2Support())
+				return false;
+			if (!CheckPointer(A, opA, m, k, lda, out var opcA, out var pA, out _, out int kk, out int llda))
+				return false;
+			if (!CheckPointer(B, opB, k, n, ldb, out var opcB, out var pB, out _, out _, out int lldb))
+				return false;
+			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
+				return false;
+
+			delegate*<IntPtr, CuBlasMatrixOperation, CuBlasMatrixOperation, int, int, int, T*, IntPtr, int,IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSgemm,
+					DataType.RealDouble => &NativeMethods.cublasDgemm,
+					DataType.ComplexSingle => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasCgemm3m : &NativeMethods.cublasCgemm,
+					DataType.ComplexDouble => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasZgemm3m : &NativeMethods.cublasZgemm,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSgemm_v2,
+					DataType.RealDouble => &NativeMethods.cublasDgemm_v2,
+					DataType.ComplexSingle => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasCgemm3m : &NativeMethods.cublasCgemm_v2,
+					DataType.ComplexDouble => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasZgemm3m : &NativeMethods.cublasZgemm_v2,
+					_ => null,
+				};
+			}
+			if (func is not null)
+			{
+				func(this.cublasHandle, opcA, opcB, mm, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+			}
+			else
+			{
+				if (Const<T>.DataType == DataType.ComplexHalf || Const<T>.DataType == BrainFloatConst.ComplexBrainFloat16)
+					return false;
+				var type = Const<T>.DataType.ToCudaDataType();
+				ComputeType cType = type switch
+				{
+					CudaDataType.RealFloat32 or CudaDataType.ComplexFloat32 => ComputeType.Compute32F,
+					CudaDataType.RealFloat64 or CudaDataType.ComplexFloat64 => ComputeType.Compute64F,
+					CudaDataType.RealFloat16 => ComputeType.Compute16F,
+					CudaDataType.RealBrainFloat16 => ComputeType.Compute32F,
+					_ => default,
+				};
+				NativeMethods.cublasGemmEx(this.cublasHandle, opcA, opcB, mm, nn, kk, &α, pA, type, llda, pB, type, lldb, &β, pC, type, lldc, cType, GemmAlgorithm.Default).Check();
+			}
+			return true;
+		}
+
+		protected override unsafe bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(A, leftA ? m : n, leftA ? m : n, lda, out var pA, out _, out _, out int llda))
+				return false;
+			if (!CheckPointer(B, m, n, ldb, out var pB, out _, out _, out int lldb))
+				return false;
+			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
+				return false;
+
+			delegate*<IntPtr, SideMode, MatrixFillMode, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsymm,
+					DataType.RealDouble => &NativeMethods.cublasDsymm,
+					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemm : &NativeMethods.cublasCsymm,
+					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemm : &NativeMethods.cublasZsymm,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsymm_v2,
+					DataType.RealDouble => &NativeMethods.cublasDsymm_v2,
+					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemm_v2 : &NativeMethods.cublasCsymm_v2,
+					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemm_v2 : &NativeMethods.cublasZsymm_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, leftA ? SideMode.Left : SideMode.Right, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+			return true;
+		}
+
+		protected override unsafe bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(A, op, n, k, lda, out var opcA, out var pA, out int nn, out int kk, out int llda))
+				return false;
+			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
+				return false;
+
+			delegate*<IntPtr, MatrixFillMode, CuBlasMatrixOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyrk,
+					DataType.RealDouble => &NativeMethods.cublasDsyrk,
+					DataType.ComplexSingle => conjA ? &NativeMethods.cublasCherk : &NativeMethods.cublasCsyrk,
+					DataType.ComplexDouble => conjA ? &NativeMethods.cublasZherk : &NativeMethods.cublasZsyrk,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyrk_v2,
+					DataType.RealDouble => &NativeMethods.cublasDsyrk_v2,
+					DataType.ComplexSingle => conjA ? &NativeMethods.cublasCherk_v2 : &NativeMethods.cublasCsyrk_v2,
+					DataType.ComplexDouble => conjA ? &NativeMethods.cublasZherk_v2 : &NativeMethods.cublasZsyrk_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opcA, nn, kk, &α, pA, llda, &β, pC, lldc).Check();
+			return true;
+		}
+
+		protected override unsafe bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(A, op, n, k, lda, out var opCuda, out var pA, out int nn, out int kk, out int llda))
+				return false;
+			if (!CheckPointer(B, op, n, k, lda, out _, out var pB, out _, out _, out int lldb))
+				return false;
+			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
+				return false;
+
+			delegate*<IntPtr, MatrixFillMode, CuBlasMatrixOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyr2k,
+					DataType.RealDouble => &NativeMethods.cublasDsyr2k,
+					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2k : &NativeMethods.cublasCsyr2k,
+					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2k : &NativeMethods.cublasZsyr2k,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyr2k_v2,
+					DataType.RealDouble => &NativeMethods.cublasDsyr2k_v2,
+					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2k_v2 : &NativeMethods.cublasCsyr2k_v2,
+					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2k_v2 : &NativeMethods.cublasZsyr2k_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opCuda, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+			return true;
+		}
+
+		protected override unsafe bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.DataType.CheckBaseSupport())
+				return false;
+			if (!CheckPointer(A, op, n, k, lda, out var opCuda, out var pA, out int nn, out int kk, out int llda))
+				return false;
+			if (!CheckPointer(B, op, n, k, lda, out _, out var pB, out _, out _, out int lldb))
+				return false;
+			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
+				return false;
+
+			delegate*<IntPtr, MatrixFillMode, CuBlasMatrixOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, CudaBlasStatus> func;
+			if (this.Cuda11OrAbove)
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyrkx,
+					DataType.RealDouble => &NativeMethods.cublasDsyrkx,
+					DataType.ComplexSingle => conjB ? &NativeMethods.cublasCherkx : &NativeMethods.cublasCsyrkx,
+					DataType.ComplexDouble => conjB ? &NativeMethods.cublasZherkx : &NativeMethods.cublasZsyrkx,
+					_ => null,
+				};
+			}
+			else
+			{
+				func = Const<T>.DataType switch
+				{
+					DataType.RealSingle => &NativeMethods.cublasSsyrkx_v2,
+					DataType.RealDouble => &NativeMethods.cublasDsyrkx_v2,
+					DataType.ComplexSingle => conjB ? &NativeMethods.cublasCherkx_v2 : &NativeMethods.cublasCsyrkx_v2,
+					DataType.ComplexDouble => conjB ? &NativeMethods.cublasZherkx_v2 : &NativeMethods.cublasZsyrkx_v2,
+					_ => null,
+				};
+			}
+			if (func is null)
+				return false;
+			func(this.cublasHandle, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opCuda, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+			return true;
+		}
 		#endregion
 
 		#region custom level 3
-		protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda) => throw new NotImplementedException();
+		protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointerLong(A, n, lda, out var pA))
+				return false;
+			NativeMethods.matMakeHerm(Const<T>.DataType, pA, lda, n, storedUpper, hermitian);
+			return true;
+		}
 
-		protected override bool MatrixClearUpperLowerPart_<T>(bool clearLower, long n, Storage<T> A, long lda) => throw new NotImplementedException();
+		protected override bool MatrixClearUpperLowerPart_<T>(bool clearLower, long n, Storage<T> A, long lda)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointerLong(A, n, lda, out var pA))
+				return false;
+			NativeMethods.matTriClear(Const<T>.DataType, pA, lda, n, clearLower);
+			return true;
+		}
 
-		protected override bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) => throw new NotImplementedException();
+		protected override unsafe bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
+		{
+			if (!Const<T>.IsPreDefinedNoHalf)
+				return false;
+			if (!CheckPointerLong(A, na, lda, out var pA))
+				return false;
+			if (!CheckPointerLong(B, nb, ldb, out var pB))
+				return false;
+			if (ldc < ma * mb)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(ldc));
+			if (!CheckPointerLong(C, na * nb, ldc, out var pC))
+				return false;
+			NativeMethods.matKron(Const<T>.DataType, pA, lda, ma, na, pB, ldb, mb, nb, pC, ldc, &α, &β);
+			return true;
+		}
 		#endregion
 
 		#region solve
@@ -1017,14 +1564,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		protected override bool LinearSolveByLU_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<TInd> pivot, Storage<T> B, long ldb) => throw new NotImplementedException();
 
-
 		protected override bool ImplicitQR_<T>(long m, long n, Storage<T> A, long lda, Storage<T> τ) => throw new NotImplementedException();
 
 		protected override bool ImplicitQRFormQ_<T>(long m, long n, long k, Storage<T> Q, long ldq, Storage<T> τ) => throw new NotImplementedException();
 
 		protected override bool ImplicitQRMultiplyQ_<T>(bool leftQ, MatrixOperation op, long m, long n, long k, Storage<T> A, long lda, Storage<T> τ, Storage<T> C, long ldc) => throw new NotImplementedException();
-
-
 
 		protected override bool EigenSpecialMatrixHermitian_<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) => throw new NotImplementedException();
 
@@ -1033,7 +1577,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		protected override bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) => throw new NotImplementedException();
 
 		protected override bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) => throw new NotImplementedException();
-
 
 		protected override bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null) => throw new NotImplementedException();
 

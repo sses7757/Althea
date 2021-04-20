@@ -273,7 +273,7 @@ namespace Althea.LinearAlgebra
 	/// </summary>
 	/// <remarks>There are two independent (orthogonal) cyclic unary operations:<br/>
 	/// add <see cref="Transpose"/>: <c>unchecked(<see cref="None"/> + <see cref="Transpose"/> + <see cref="Transpose"/>) == <see cref="None"/></c><br/>
-	/// bit-wise not: <c>~<see cref="None"/> == <see cref="Conjugate"/>, ~(~<see cref="None"/>) == <see cref="None"/></c><br/>
+	/// bit-wise not: <c>~<see cref="None"/> == <see cref="Conjugate"/>, ~(~<see cref="Conjugate"/>) == <see cref="None"/></c><br/>
 	/// As a result, the <see cref="MatrixOperation"/> enum and the unchecked 32-bit integer addition forms an (algebraic) group.</remarks>
 	public enum MatrixOperation : int
 	{

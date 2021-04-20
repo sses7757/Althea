@@ -595,7 +595,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal new static bool TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged
+		internal static bool TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged
 		{
 			return VectorModify<T, double, U_Truncate>(x, threshold);
 		}

@@ -4068,7 +4068,8 @@
             </summary>
             <remarks>The legacy cuBLAS APIs are not supported.<br/>
             The only supported location is a pure one on GPU memory. But cuFILE cached ones can be supported easily.<br/>
-            The stream operation is not supported here, but it can be easily added by utilizing "cudaStreamCreate()", "cublasSetStream()", etc.</remarks>
+            The stream operation is not supported here, but it can be easily added by utilizing "cudaStreamCreate()", "cublasSetStream()", etc.<br/>
+            The packed matrix, batched matrices and banded matrix BLAS operations are not supported, but it can be easily added as well.</remarks>
         </member>
         <member name="F:Althea.Backend.Cuda.LinearAlgebra.Dense.DenseApi.cublasHandle">
             <summary>
@@ -4094,6 +4095,41 @@
             <summary>
             Get or set whether the CDUA BLAS library uses the atomics mode or not
             </summary>
+        </member>
+        <member name="P:Althea.Backend.Cuda.LinearAlgebra.Dense.DenseApi.ComplexGemmUseGemm3m">
+            <summary>
+            Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM")
+            </summary>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.DenseApi.HorizontalAbsoluteValueArgMax``1(Althea.Storage{``0},System.Int32,System.Int64@)">
+            <summary>
+            Get the index of the element with horizontal maximum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>
+            </summary>
+            <typeparam name="T">Any complex data type</typeparam>
+            <param name="x">The vector to get maximum absolute value's index</param>
+            <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+            <param name="index">The output real index in <paramref name="x"/></param>
+            <returns>Support or not</returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.DenseApi.HorizontalAbsoluteValueArgMin``1(Althea.Storage{``0},System.Int32,System.Int64@)">
+            <summary>
+            Get the index of the element with horizontal minimum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>
+            </summary>
+            <typeparam name="T">Any complex data type</typeparam>
+            <param name="x">The vector to get minimum absolute value's index</param>
+            <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+            <param name="index">The output real index in <paramref name="x"/></param>
+            <returns>Support or not</returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.DenseApi.HorizontalAbsoluteSum``1(Althea.Storage{``0},System.Int32,System.Double@)">
+            <summary>
+            Sum the absolute values (<c>abs(x[i].real) + abs(x[i].imag)</c>) of vector <paramref name="x"/>'s all elements
+            </summary>
+            <typeparam name="T">Any complex data type</typeparam>
+            <param name="x">The vector to be summed</param>
+            <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+            <param name="sum">Output the sum as a <see cref="T:System.Double"/></param>
+            <returns>Support or not</returns>
         </member>
         <member name="T:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods">
             <summary>
@@ -4454,6 +4490,261 @@
             <param name="C">array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="ldc">leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
             <returns>operation status enum <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CudaBlasStatus"/></returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecsMulDiv(Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Multiply or divide the vector <paramref name="a"/> by <paramref name="b"/> in-place
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
+            <param name="a">The vector to be in-place multiplied or divided of <paramref name="type"/></param>
+            <param name="b">The vector to multiply or divide <paramref name="a"/> of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+            <param name="multiply">Perform multiply or divide</param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecsAdd(Althea.NativeTypes.DataType,System.Void*,System.IntPtr,System.IntPtr,System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Add the vector <paramref name="a"/> scaled by <paramref name="scalar"/> to <paramref name="b"/> in-place
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
+            <param name="scalar">The scalar to multiply of <paramref name="type"/></param>
+            <param name="a">The vector to add of <paramref name="type"/></param>
+            <param name="b">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecsEq(Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Check whether the two vectors <paramref name="a"/> and <paramref name="b"/> are element-wise equal
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
+            <param name="a">The first vector to compare of <paramref name="type"/></param>
+            <param name="b">The second vector to compare of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+            <returns>The two vectors are element-wise equal</returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecPowSameType(Althea.NativeTypes.DataType,System.IntPtr,System.Void*,System.Int64,System.Int32)">
+            <summary>
+            In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="p">The pointer to the scalar exponent of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecPowRealType(Althea.NativeTypes.DataType,System.IntPtr,System.Void*,System.Int64,System.Int32)">
+            <summary>
+            In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/> (must be a complex type)</param>
+            <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="p">The pointer to the scalar exponent of <paramref name="type"/>'s real corresponding type</param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecConj(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32)">
+            <summary>
+            In-place conjugate the vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecDataConvert(Althea.NativeTypes.DataType,Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Convert the <paramref name="src"/> vector of <paramref name="srcType"/> to the <paramref name="dst"/> vector of <paramref name="dstType"/>
+            </summary>
+            <param name="srcType">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="src"/></param>
+            <param name="dstType">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="dst"/></param>
+            <param name="src">The source vector of <paramref name="srcType"/></param>
+            <param name="dst">The destination vector of <paramref name="dstType"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
+            <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
+            <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts.</param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecClip(Althea.NativeTypes.DataType,System.IntPtr,System.Void*,System.Int64,System.Int32)">
+            <summary>
+            In-place set the values in <paramref name="a"/> whose absolute values are less than or equal to the absolute value of <paramref name="threshold"/> to 0
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="threshold">The pointer to the threshold used to clip the vector <paramref name="a"/> of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecAddScalar(Althea.NativeTypes.DataType,System.IntPtr,System.Void*,System.Int64,System.Int32)">
+            <summary>
+            In-place add all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="scalar">The pointer to the scalar to add of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecMulScalar(Althea.NativeTypes.DataType,System.IntPtr,System.Void*,System.Int64,System.Int32)">
+            <summary>
+            In-place multiplies all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+            <param name="scalar">The pointer to the scalar to multiply of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecSum(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32,System.Void*)">
+            <summary>
+            Sums all the elements in vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be summed of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="outSum">The output sum as a pointer of <paramref name="type"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecArgAbsMin(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32)">
+            <summary>
+            Get the index of the element with minimum absolute value in vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be summed of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+            <returns>The index of the element</returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecArgAbsMax(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32)">
+            <summary>
+            Get the index of the element with maximum absolute value in vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be summed of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+            <returns>The index of the element</returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecAbsSum(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32)">
+            <summary>
+            Sums all the elements's absolute values in vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be summed of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+            <returns>The sum as a <see cref="T:System.Double"/></returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecNorm(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32)">
+            <summary>
+            Compute the 2-norm of the given vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be summed of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+            <returns>The 2-norm as a <see cref="T:System.Double"/></returns>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecDot(Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Int32,System.Int32,System.Void*)">
+            <summary>
+            Calculate the inner product of vector <paramref name="a"/> and <paramref name="b"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The left vector to be inner product of <paramref name="type"/></param>
+            <param name="b">The right vector to be inner product of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+            <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecDotc(Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Int32,System.Int32,System.Void*)">
+            <summary>
+            Calculate the inner product of the conjugate of vector <paramref name="a"/> and <paramref name="b"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/>, must be a complex type</param>
+            <param name="a">The left vector to be inner product of <paramref name="type"/></param>
+            <param name="b">The right vector to be inner product of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
+            <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecProd(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int32,System.Void*)">
+            <summary>
+            Multiplies all the elements in vector <paramref name="a"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="a"/></param>
+            <param name="a">The vector to be multiplied of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+            <param name="outProd">The output product as a pointer of <paramref name="type"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecParSum(Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Boolean,System.Int32,System.Int32)">
+            <summary>
+            Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="src"/> and <paramref name="dst"/></param>
+            <param name="src">The source vector of <paramref name="type"/></param>
+            <param name="dst">The destination vector of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 0)</param>
+            <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
+            <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.vecParProd(Althea.NativeTypes.DataType,System.IntPtr,System.IntPtr,System.Int64,System.Boolean,System.Int32,System.Int32)">
+            <summary>
+            Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="src"/> and <paramref name="dst"/></param>
+            <param name="src">The source vector of <paramref name="type"/></param>
+            <param name="dst">The destination vector of <paramref name="type"/></param>
+            <param name="N">The number of elements to be operated</param>
+            <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 1)</param>
+            <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
+            <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.matKron(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int64,System.Int64,System.IntPtr,System.Int64,System.Int64,System.Int64,System.IntPtr,System.Int64,System.Void*,System.Void*)">
+            <summary>
+            Performs the Kronecker product of matrix <paramref name="A"/> and <paramref name="B"/> and add the result to <paramref name="dest"/> in-place
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="dest"/></param>
+            <param name="A">The input left matrix of <paramref name="type"/></param>
+            <param name="ldA">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rowsA"/></param>
+            <param name="rowsA">The number of rows of <paramref name="A"/></param>
+            <param name="colsA">The number of columns of <paramref name="A"/></param>
+            <param name="B">The input right matrix of <paramref name="type"/></param>
+            <param name="ldB">The leading dimension of <paramref name="B"/>, must be at least <paramref name="rowsB"/></param>
+            <param name="rowsB">The number of rows of <paramref name="B"/></param>
+            <param name="colsB">The number of columns of <paramref name="B"/></param>
+            <param name="dest">The destination matrix of <paramref name="type"/></param>
+            <param name="ldD">The leading dimension of <paramref name="dest"/></param>
+            <param name="alpha">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="A"/>'s elements during the computation</param>
+            <param name="beta">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="dest"/>'s elements during the computation</param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.matMakeHerm(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int64,System.Boolean,System.Boolean)">
+            <summary>
+            Makes the matrix <paramref name="A"/> hermitian or symmetric by copying its upper part to/from its lower part
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="A"/></param>
+            <param name="A">The matrix to be modified of <paramref name="type"/></param>
+            <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
+            <param name="rows">The number of rows of <paramref name="A"/></param>
+            <param name="upperStored">Whether <paramref name="A"/>'s upper part or its lower part is stored</param>
+            <param name="hermA">If <paramref name="type"/> is a complex type, make <paramref name="A"/> hermitian or symmetric</param>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.matTriClear(Althea.NativeTypes.DataType,System.IntPtr,System.Int64,System.Int64,System.Boolean)">
+            <summary>
+            Clear (set to 0) the matrix <paramref name="A"/>'s upper part or its lower part
+            </summary>
+            <param name="type">The <see cref="T:Althea.NativeTypes.DataType"/> of <paramref name="A"/></param>
+            <param name="A">The matrix to be modified of <paramref name="type"/></param>
+            <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
+            <param name="rows">The number of rows of <paramref name="A"/></param>
+            <param name="clearLower">Whether <paramref name="A"/>'s upper part or its lower part shall be preserved</param>
         </member>
         <member name="T:Althea.Backend.Cuda.StatusException">
             <summary>
@@ -5756,7 +6047,7 @@
             <param name="devPtrOffset">Offset relative to the <paramref name="devPtr"/> to read into. This parameter should be used only with registered buffers.</param>
             <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="T:Althea.Backend.Cuda.Storage.CudaFileOpError"/> value.</returns>
         </member>
-        <member name="M:Althea.Backend.Cuda.Storage.NativeMethods.vecFillVal(Althea.NativeTypes.DataType,System.IntPtr,System.Byte@,System.Int64,System.Int32)">
+        <member name="M:Althea.Backend.Cuda.Storage.NativeMethods.vecFillVal(Althea.NativeTypes.DataType,System.IntPtr,System.Void*,System.Int64,System.Int32)">
             <summary>
             Fill the GPU <paramref name="array"/> with given <paramref name="value"/> of <paramref name="type"/>
             </summary>
@@ -5893,6 +6184,11 @@
         <member name="P:Althea.Backend.Resource.GMRESStart">
             <summary>
               查找类似 Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.InsufficientCudaCapability">
+            <summary>
+              查找类似 The CUDA compute capability {0} of current CUDA device is less than required {1}. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Backend.Resource.IterationAndTimeInfo">

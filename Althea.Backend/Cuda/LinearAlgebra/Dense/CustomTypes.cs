@@ -153,11 +153,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	internal enum DiagType
 	{
 		/// <summary>
-		/// the matrix diagonal has non-unit elements
+		/// the matrix diagonal has non-unit elements which are explicitly stored
 		/// </summary>
 		NonUnit = 0,
 		/// <summary>
-		/// the matrix diagonal has unit elements
+		/// the matrix diagonal has unit elements which may not be stored
 		/// </summary>
 		Unit = 1
 	}
