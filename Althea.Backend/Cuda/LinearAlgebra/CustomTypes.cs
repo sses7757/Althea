@@ -8,10 +8,10 @@ using Althea.NativeTypes;
 namespace Althea.Backend.Cuda.LinearAlgebra
 {
 	/// <summary>
-	/// The <see cref="CuBlasMatrixOperation"/> enum indicates which operation needs to be performed with the dense matrix.<br/>
+	/// The <see cref="CuBlasOperation"/> enum indicates which operation needs to be performed with the dense matrix.<br/>
 	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-transpose), ‘T’ or ‘t’ (transpose) and ‘C’ or ‘c’ (conjugate transpose) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
-	internal enum CuBlasMatrixOperation
+	internal enum CuBlasOperation
 	{
 		/// <summary>
 		/// the non-transpose operation is selected
@@ -47,14 +47,14 @@ namespace Althea.Backend.Cuda.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static CuBlasMatrixOperation ToCuda(this Althea.LinearAlgebra.MatrixOperation op, bool? hermitian = null)
+		internal static CuBlasOperation ToCuda(this Althea.LinearAlgebra.MatrixOperation op, bool? hermitian = null)
 		{
 			return op switch
 			{
-				Althea.LinearAlgebra.MatrixOperation.Transpose => CuBlasMatrixOperation.Transpose,
-				Althea.LinearAlgebra.MatrixOperation.Conjugate => hermitian.HasValue && hermitian.Value ? CuBlasMatrixOperation.Transpose : CuBlasMatrixOperation.ConjugateAlone,
-				Althea.LinearAlgebra.MatrixOperation.ConjugateTranspose => CuBlasMatrixOperation.ConjugateTranspose,
-				_ => CuBlasMatrixOperation.None,
+				Althea.LinearAlgebra.MatrixOperation.Transpose => CuBlasOperation.Transpose,
+				Althea.LinearAlgebra.MatrixOperation.Conjugate => hermitian.HasValue && hermitian.Value ? CuBlasOperation.Transpose : CuBlasOperation.ConjugateAlone,
+				Althea.LinearAlgebra.MatrixOperation.ConjugateTranspose => CuBlasOperation.ConjugateTranspose,
+				_ => CuBlasOperation.None,
 			};
 		}
 

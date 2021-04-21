@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Althea.LinearAlgebra;
 using Althea.NativeTypes;
 
 
@@ -22,25 +23,30 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// </summary>
 		public const string CUSTOM_API_DLL_NAME = Storage.NativeMethods.CUSTOM_API_DLL_NAME;
 
+		/// <summary>
+		/// The CUDA Solver (cuSOLVER) dense library name
+		/// </summary>
+		public const string CUSOLVE_API_DLL_NAME = @"cusolver";
+
 
 		#region utilities
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern CudaBlasStatus cublasCreate_v2(ref IntPtr handle);
 		/// <summary>
 		/// This function initializes the CUDA BLAS library and creates a handle to an opaque structure holding the CUDA BLAS library context.
 		/// </summary>
 		/// <param name="handle">returned CUDA BLAS handle</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCreate_v2(ref IntPtr handle);
-		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasCreate(ref IntPtr handle);
 
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern CudaBlasStatus cublasDestroy_v2(IntPtr handle);
 		/// <summary>
 		/// This function releases hardware resources used by the CUBLAS library. This function is usually the last call with a particular handle to the CUBLAS library.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDestroy_v2(IntPtr handle);
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasDestroy(IntPtr handle);
 
@@ -65,6 +71,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSetAtomicsMode(IntPtr handle, AtomicsMode mode);
 
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, ref PointerMode mode);
 		/// <summary>
 		/// This function obtains the pointer mode used by the cuBLAS library.
 		/// </summary>
@@ -72,10 +80,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="mode">returned <see cref="PointerMode"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, ref PointerMode mode);
-		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasGetPointerMode(IntPtr handle, ref PointerMode mode);
 
+		[DllImport(CUBLAS_API_DLL_NAME)]
+		internal static extern CudaBlasStatus cublasSetPointerMode_v2(IntPtr handle, PointerMode mode);
 		/// <summary>
 		/// This function sets the pointer mode used by the cuBLAS library.
 		/// The default is for the values to be passed by reference on the host.
@@ -83,8 +91,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="handle">input CUDA BLAS handle</param>
 		/// <param name="mode">the <see cref="PointerMode"/> to set</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSetPointerMode_v2(IntPtr handle, PointerMode mode);
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSetPointerMode(IntPtr handle, PointerMode mode);
 		#endregion
@@ -120,16 +126,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		#region level 1
-		/// <summary>
-		/// This function finds the (smallest) index of the element of the maximum magnitude.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
-		/// <param name="x">vector with elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus amaxFunc(IntPtr handle, int n, IntPtr x, int incx, int* result);
 		#region abs max
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasIsamax_v2(IntPtr handle, int n, IntPtr x, int incx, int* result);
@@ -152,17 +148,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasIzamax(IntPtr handle, int n, IntPtr x, int incx, int* result);
 		#endregion
 
-
-		/// <summary>
-		/// This function finds the (smallest) index of the element of the minimum magnitude.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
-		/// <param name="x">vector with elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus aminFunc(IntPtr handle, int n, IntPtr x, int incx, int* result);
 		#region abs min
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasIsamin_v2(IntPtr handle, int n, IntPtr x, int incx, int* result);
@@ -185,16 +170,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasIzamin(IntPtr handle, int n, IntPtr x, int incx, int* result);
 		#endregion
 
-		/// <summary>
-		/// This function computes the sum of the absolute values of the elements of vector <paramref name="x"/>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
-		/// <param name="x">vector with elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the resulting index, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus asumFunc<T>(IntPtr handle, int n, IntPtr x, int incx, ref T result);
 		#region abs sum
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSasum_v2(IntPtr handle, int n, IntPtr x, int incx, void* result);
@@ -217,18 +192,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasDzasum(IntPtr handle, int n, IntPtr x, int incx, void* result);
 		#endregion
 
-		/// <summary>
-		/// This function multiplies the vector <paramref name="x"/> by the scalar <paramref name="α"/> and adds it to the vector <paramref name="y"/> overwriting <paramref name="y"/>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/> and <paramref name="y"/></param>
-		/// <param name="α">(host or device) scalar used for multiplication</param>
-		/// <param name="x">vector with elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">(in and out) another vector with elements</param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus axpyFunc<T>(IntPtr handle, int n, ref T α, IntPtr x, int incx, IntPtr y, int incy);
 		#region vector add
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSaxpy_v2(IntPtr handle, int n, void* α, IntPtr x, int incx, IntPtr y, int incy);
@@ -251,18 +214,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZaxpy(IntPtr handle, int n, void* α, IntPtr x, int incx, IntPtr y, int incy);
 		#endregion
 
-		/// <summary>
-		/// This function computes the dot product of vectors <paramref name="x"/> and <paramref name="y"/>. For complex, the one with 'c' implies the conjugate dot.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/> and <paramref name="y"/></param>
-		/// <param name="x">vector with elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">(in and out) another vector with elements</param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <param name="result">the resulting dot product, which is 0.0 if <c>n &lt;= 0</c></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus dotFunc<T>(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy, ref T result);
 		#region vector dot
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSdot_v2(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy, void* result);
@@ -295,16 +246,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZdotu(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy, void* result);
 		#endregion
 
-		/// <summary>
-		/// This function computes the Euclidean norm of the vector <paramref name="x"/>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
-		/// <param name="x">vector with elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="result">the result, which is 0 if <c><paramref name="n"/>,<paramref name="incx"/> &lt;= 0</c></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus normFunc<T>(IntPtr handle, int n, IntPtr x, int incx, ref T result);
 		#region vector norm
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSnrm2_v2(IntPtr handle, int n, IntPtr x, int incx, void* result);
@@ -327,16 +268,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasDznrm2(IntPtr handle, int n, IntPtr x, int incx, void* result);
 		#endregion
 
-		/// <summary>
-		/// This function scales the vector <paramref name="x"/> by the scalar <paramref name="α"/> and overwrites it with the result.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/></param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="x">vector with <paramref name="n"/> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus scalFunc<T>(IntPtr handle, int n, ref T α, IntPtr x, int incx);
 		#region scale
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSscal_v2(IntPtr handle, int n, void* α, IntPtr x, int incx);
@@ -359,17 +290,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZscal(IntPtr handle, int n, void* α, IntPtr x, int incx);
 		#endregion
 
-		/// <summary>
-		/// This function copies the vector <paramref name="x"/> into the vector <paramref name="y"/>. Hence, the performed operation is <c>y[j] = x[k] for i = 1,…,n; k = 1 + (i - 1)*incx and j = 1 + (i - 1)*incy</c>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="n">number of elements in the vector <paramref name="x"/> and <paramref name="y"/></param>
-		/// <param name="x">vector with <paramref name="n"/> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">vector with <paramref name="n"/> elements</param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus copyFunc(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy);
 		#region copy
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasScopy_v2(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy);
@@ -397,62 +317,28 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		#region level 2
-		/// <summary>
-		/// This function performs the matrix-vector multiplication <paramref name="y"/> = <paramref name="α"/> <paramref name="op"/>(<paramref name="A"/>) <paramref name="x"/> + <paramref name="β"/> <paramref name="y"/> where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> and <paramref name="β"/> are scalars.<br/>
-		/// Also, for matrix <paramref name="A"/>: <paramref name="op"/>(<paramref name="A"/>) = <paramref name="A"/> if <paramref name="op"/> == <see cref="CuBlasMatrixOperation.None"/>; <paramref name="A"/>^T if <paramref name="op"/> == <see cref="CuBlasMatrixOperation.Transpose"/>; <paramref name="A"/>^H if <paramref name="op"/> == <see cref="CuBlasMatrixOperation.ConjugateTranspose"/>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="op"><see cref="CuBlasMatrixOperation"/> that is non- or (conj.) transpose</param>
-		/// <param name="m">number of rows of matrix <paramref name="A"/></param>
-		/// <param name="n">number of columns of matrix <paramref name="A"/></param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c>. Unchanged on exit.</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="x">vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incx"/>))</c> elements if <paramref name="op"/>==<see cref="CuBlasMatrixOperation.None"/> or <c>(1+(<paramref name="m"/>-1)*abs(<paramref name="incx"/>))</c> otherwise</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="β">scalar used for multiplication, if <c>b<paramref name="β"/> == 0</c> then <paramref name="y"/> does not have to be a valid input</param>
-		/// <param name="y">(in and out) vector at least <c>(1+(<paramref name="m"/>-1)*abs(<paramref name="incy"/>))</c> elements if <paramref name="op"/>==<see cref="CuBlasMatrixOperation.None"/> or <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incy"/>))</c> otherwise</param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus gemvFunc<T>(IntPtr handle, CuBlasMatrixOperation op, int m, int n, ref T α, IntPtr A, int lda, IntPtr x, int incx, ref T β, IntPtr y, int incy);
 		#region general matrix vector multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgemv_v2(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasSgemv_v2(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgemv(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasSgemv(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDgemv_v2(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasDgemv_v2(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDgemv(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasDgemv(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCgemv_v2(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasCgemv_v2(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCgemv(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasCgemv(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZgemv_v2(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasZgemv_v2(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZgemv(IntPtr handle, CuBlasMatrixOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasZgemv(IntPtr handle, CuBlasOperation op, int m, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		#endregion
 
-		/// <summary>
-		/// This function performs the symmetric/Hermitian matrix-vector multiplication <paramref name="y"/> = <paramref name="α"/> <paramref name="A"/> <paramref name="x"/> + <paramref name="β"/> <paramref name="y"/> where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> symmetric/Hermitian matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="uplo">indicates if matrix lower or upper part is stored</param>
-		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="x">vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incx"/>))</c> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="β">scalar used for multiplication, if <c>b<paramref name="β"/> == 0</c> then <paramref name="y"/> does not have to be a valid input</param>
-		/// <param name="y">(in and out) vector at least <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incy"/>))</c></param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus symvFunc<T>(IntPtr handle, MatrixFillMode uplo, int n, ref T α, IntPtr A, int lda, IntPtr x, int incx, ref T β, IntPtr y, int incy);
 		#region symmetric matrix vector multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSsymv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
@@ -485,57 +371,28 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZhemv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		#endregion
 
-		/// <summary>
-		/// This function performs the triangular matrix-vector multiplication <paramref name="x"/> = <paramref name="op"/>(<paramref name="A"/>) <paramref name="x"/> where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> triangular matrix stored in column-major format, <paramref name="x"/> is a vector.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="uplo">indicates if matrix lower or upper part is stored</param>
-		/// <param name="op"><see cref="CuBlasMatrixOperation"/> to indicate <paramref name="A"/>'s non- or (conj.) transpose</param>
-		/// <param name="diag"><see cref="DiagType"/> to describe <paramref name="A"/>'s diagonal elements</param>
-		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="x">vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incx"/>))</c> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus trmvFunc<T>(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		#region symmetric matrix vector multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasStrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmv(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasStrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasDtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasDtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasCtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasCtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasZtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasZtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		#endregion
 
-		/// <summary>
-		/// This function performs the rank-1 update <paramref name="A"/> = <paramref name="α"/> <paramref name="x"/> (<paramref name="y"/>^T) + <paramref name="A"/> if <c>ger()</c>/<c>geru()</c> is called; <paramref name="A"/> = <paramref name="α"/> <paramref name="x"/> (<paramref name="y"/>^H) + <paramref name="A"/> if <c>gerc()</c> is called; where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> is a scalar.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="m">number of rows of matrix <paramref name="A"/></param>
-		/// <param name="n">number of columns of matrix <paramref name="A"/></param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="x">vector with <c>(1+(<paramref name="m"/>-1)*abs(<paramref name="incx"/>))</c> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incy"/>))</c> elements</param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus gerFunc<T>(IntPtr handle, int m, int n, ref T α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		#region general rank 1 update
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSger_v2(IntPtr handle, int m, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
@@ -568,19 +425,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZgerc(IntPtr handle, int m, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		#endregion
 
-		/// <summary>
-		/// This function performs the symmetric/Hermitian rank-1 update  <paramref name="A"/> = <paramref name="α"/> <paramref name="x"/> (<paramref name="x"/>^T) + <paramref name="A"/> ; where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="fillMode"><see cref="MatrixFillMode"/> of result matrix</param>
-		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="x">vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incx"/>))</c> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus syrFunc<T>(IntPtr handle, MatrixFillMode fillMode, int n, ref T α, IntPtr x, int incx, IntPtr A, int lda);
 		#region symmetric rank 1 update
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSsyr_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
@@ -613,21 +457,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZher(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		#endregion
 
-		/// <summary>
-		/// This function performs the symmetric/Hermitian rank-2 update  <paramref name="A"/> = <paramref name="α"/> (<paramref name="x"/> <paramref name="y"/>^T + <paramref name="x"/>^T <paramref name="y"/>) + <paramref name="A"/> ; where <paramref name="A"/> is a <paramref name="n"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> is a vector, and <paramref name="α"/> is a scalar.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="fillMode"><see cref="MatrixFillMode"/> of result matrix</param>
-		/// <param name="n">number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="x">vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incx"/>))</c> elements</param>
-		/// <param name="incx">stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">vector with <c>(1+(<paramref name="n"/>-1)*abs(<paramref name="incy"/>))</c> elements</param>
-		/// <param name="incy">stride between consecutive elements of <paramref name="y"/></param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus syr2Func<T>(IntPtr handle, MatrixFillMode fillMode, int n, ref T α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		#region symmetric rank 2 update
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSsyr2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
@@ -664,76 +493,33 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		#region level 3
-		/// <summary>
-		/// This function performs the matrix-matrix multiplication <paramref name="C"/> = <paramref name="α"/> <paramref name="opA"/>(<paramref name="A"/>) <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> <paramref name="C"/> where <paramref name="α"/> and <paramref name="β"/> are scalars; <paramref name="A"/> , <paramref name="B"/> and <paramref name="C"/> are matrices stored in column-major format with dimensions <paramref name="opA"/>(<paramref name="A"/>) -- <paramref name="m"/>×<paramref name="k"/>, <paramref name="opB"/>(<paramref name="B"/>) -- <paramref name="k"/>×<paramref name="n"/> and <paramref name="C"/> -- <paramref name="m"/>×<paramref name="n"/>, respectively. <br/>
-		/// Also, for matrix <paramref name="A"/>,
-		/// <paramref name="opA"/>(<paramref name="A"/>) = <paramref name="A"/> if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.None"/>;
-		/// <paramref name="opA"/>(<paramref name="A"/>) = <paramref name="A"/>^T if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.Transpose"/>;
-		/// <paramref name="opA"/>(<paramref name="A"/>) = <paramref name="A"/>^H if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.ConjugateTranspose"/>.
-		/// The same for <paramref name="B"/>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="opA"><see cref="CuBlasMatrixOperation"/> that is non- or (conj.) transpose</param>
-		/// <param name="opB"><see cref="CuBlasMatrixOperation"/> that is non- or (conj.) transpose</param>
-		/// <param name="m">number of rows of matrix <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="n">number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
-		/// <param name="k">number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-		/// <param name="B">array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="CuBlasMatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
-		/// <param name="β">scalar used for multiplication. If <c><paramref name="β"/> == 0</c>, <paramref name="C"/> does not have to be a valid input</param>
-		/// <param name="C">array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="ldc">leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus gemmFunc<T>(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, ref T α, IntPtr A, int lda, IntPtr B, int ldb, ref T β, IntPtr C, int ldc);
 		#region general matrix multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgemm_v2(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSgemm_v2(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgemm(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSgemm(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDgemm_v2(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDgemm_v2(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDgemm(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDgemm(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCgemm_v2(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCgemm_v2(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCgemm(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCgemm(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZgemm_v2(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZgemm_v2(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZgemm(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZgemm(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCgemm3m(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCgemm3m(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZgemm3m(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZgemm3m(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 
-		/// <summary>
-		/// This function performs the symmetric/Hermitian matrix-matrix multiplication: if <paramref name="side"/> == <see cref="SideMode.Left"/>  <paramref name="C"/> = <paramref name="α"/> <paramref name="A"/> <paramref name="B"/> + <paramref name="β"/> <paramref name="C"/> , otherwise  <paramref name="C"/> = <paramref name="α"/> <paramref name="B"/> A + <paramref name="β"/> <paramref name="C"/>.<br/>
-		/// Where <paramref name="A"/> is a symmetric matrix stored in lower or upper mode, <paramref name="B"/> and <paramref name="C"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="side">indicates if matrix <paramref name="A"/> is on the left or right of <paramref name="B"/></param>
-		/// <param name="uplo">indicates if matrix <paramref name="A"/> lower or upper part is stored</param>
-		/// <param name="m">number of rows of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
-		/// <param name="n">number of columns of matrix <paramref name="C"/> and <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="side"/> == <see cref="SideMode.Left"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c>otherwise</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="B">array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
-		/// <param name="β">scalar used for multiplication, if <c><paramref name="β"/> == 0</c> then <paramref name="C"/> does not have to be a valid input</param>
-		/// <param name="C">array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus symmFunc<T>(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, ref T α, IntPtr A, int lda, IntPtr B, int ldb, ref T β, IntPtr C, int ldc);
 		#region symmetric matrix multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSsymm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
@@ -766,299 +552,163 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZhemm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 
-		/// <summary>
-		/// This function performs the symmetric/Hermitian rank-k update  <paramref name="C"/> = <paramref name="α"/> <paramref name="op"/>(<paramref name="A"/>) <paramref name="op"/>(<paramref name="A"/>)^T + <paramref name="β"/> <paramref name="C"/> ; where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric matrix stored in lower or upper mode, and <paramref name="A"/> is a matrix with dimensions <paramref name="op"/>(<paramref name="A"/>) <paramref name="n"/>×<paramref name="k"/>.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="uplo">indicates if matrix <paramref name="C"/> lower or upper part is stored</param>
-		/// <param name="op"><see cref="CuBlasMatrixOperation"/> that is non- or transpose</param>
-		/// <param name="n">number of rows of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="k">number of columns of matrix <paramref name="op"/>(<paramref name="A"/>)</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> if trans == <see cref="CuBlasMatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="k"/>)</c> otherwise</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="β">if <c><paramref name="β"/> == 0</c> then <paramref name="C"/> does not have to be a valid input</param>
-		/// <param name="C">array of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus syrkFunc<T>(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, ref T α, IntPtr A, int lda, ref T β, IntPtr C, int ldc);
 		#region symmetric rank k update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherk(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherk(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		#endregion
 
-		/// <summary>
-		/// This function solves the triangular linear system with multiple right-hand-sides <paramref name="op"/>(<paramref name="A"/>) X == <paramref name="α"/> <paramref name="B"/>; where <paramref name="A"/> is a triangular matrix stored in lower or upper mode with or without the main diagonal, X and <paramref name="B"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> is a scalar.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="side">indicates if matrix <paramref name="A"/> is on the left or right of X.</param>
-		/// <param name="uplo">indicates if matrix <paramref name="A"/> lower or upper part is stored, the other part is not referenced and is inferred from the stored elements.</param>
-		/// <param name="op">operation op(<paramref name="A"/>) that is non- or(conj.) transpose.</param>
-		/// <param name="diag">indicates if the elements on the main diagonal of matrix <paramref name="A"/> are unity and should not be accessed.</param>
-		/// <param name="m">number of rows of matrix <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly.</param>
-		/// <param name="n">number of columns of matrix <paramref name="B"/>, with matrix <paramref name="A"/> is sized accordingly.</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="m"/> if <paramref name="side"/> is left; or <paramref name="lda"/>×<paramref name="n"/> otherwise.</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/>.</param>
-		/// <param name="B">array of dimension <paramref name="lda"/>×<paramref name="n"/></param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store matrix <paramref name="B"/>.</param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus trsmFunc<T>(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, ref T α, IntPtr A, int lda, IntPtr B, int ldb);
 		#region triangular matrix solve
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasStrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasStrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasDtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasDtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasCtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasCtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasZtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasZtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		#endregion
 
-		/// <summary>
-		/// This function This function performs the triangular matrix-matrix multiplication <paramref name="C"/> = <paramref name="α"/> <paramref name="op"/>(<paramref name="A"/>) <paramref name="B"/>; where <paramref name="A"/> is a triangular matrix stored in lower or upper mode with or without the main diagonal, <paramref name="B"/> and <paramref name="C"/> are <paramref name="m"/>×<paramref name="n"/> matrices, and <paramref name="α"/> is a scalar.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="side">indicates if matrix <paramref name="A"/> is on the left or right of X.</param>
-		/// <param name="uplo">indicates if matrix <paramref name="A"/> lower or upper part is stored, the other part is not referenced and is inferred from the stored elements.</param>
-		/// <param name="op">operation op(<paramref name="A"/>) that is non- or(conj.) transpose.</param>
-		/// <param name="diag">indicates if the elements on the main diagonal of matrix <paramref name="A"/> are unity and should not be accessed.</param>
-		/// <param name="m">number of rows of matrix <paramref name="B"/>, with matrix <paramref name="A"/> sized accordingly.</param>
-		/// <param name="n">number of columns of matrix <paramref name="B"/>, with matrix <paramref name="A"/> is sized accordingly.</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="m"/> if <paramref name="side"/> is left; or <paramref name="lda"/>×<paramref name="n"/> otherwise.</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/>.</param>
-		/// <param name="B">array of dimension <paramref name="lda"/>×<paramref name="n"/></param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store matrix <paramref name="B"/>.</param>
-		/// <param name="C">array of dimension <paramref name="lda"/>×<paramref name="n"/></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store matrix <paramref name="C"/>.</param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus trmmFunc<T>(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, ref T α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		#region triangular matrix solve
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasStrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasStrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasMatrixOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		#endregion
 
-		/// <summary>
-		/// This function performs the symmetric/Hermitian rank-2k update: <paramref name="C"/> = <paramref name="α"/> (<paramref name="op"/>(<paramref name="A"/>) <paramref name="op"/>(<paramref name="B"/>)^T + <paramref name="op"/>(<paramref name="A"/>)^T <paramref name="op"/>(<paramref name="B"/>)) + <paramref name="β"/> <paramref name="C"/>;<br/>
-		/// where <paramref name="C"/> is a symmetric matrix stored in lower or upper mode, <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>) are <paramref name="n"/>×<paramref name="k"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="uplo">indicates if matrix <paramref name="C"/> lower or upper part is stored</param>
-		/// <param name="op">operation that is non- or transpose.</param>
-		/// <param name="n">number of rows of matrix <paramref name="C"/> and <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
-		/// <param name="k">number of columns of matrix <paramref name="C"/> and <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="k"/> or <paramref name="lda"/>×<paramref name="n"/></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="B">array of dimension <paramref name="ldb"/>×<paramref name="k"/> or <paramref name="ldb"/>×<paramref name="n"/></param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
-		/// <param name="β">scalar used for multiplication, if <c><paramref name="β"/> == 0</c> then <paramref name="C"/> does not have to be a valid input</param>
-		/// <param name="C">array of dimension <paramref name="ldc"/>×<paramref name="n"/></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus syr2kFunc<T>(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, ref T α, IntPtr A, int lda, IntPtr B, int ldb, ref T β, IntPtr C, int ldc);
 		#region symmetric rank-2k update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCher2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2k(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCher2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZher2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher2k(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZher2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 
-		/// <summary>
-		/// This function performs a variation of the symmetric/Hermitian rank-k update: <paramref name="C"/> = <paramref name="α"/> <paramref name="op"/>(<paramref name="A"/>) <paramref name="op"/>(<paramref name="B"/>)^T + <paramref name="β"/> <paramref name="C"/>;<br/>
-		/// where <paramref name="C"/> is a symmetric matrix stored in lower or upper mode, <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>) are <paramref name="n"/>×<paramref name="k"/> matrices, and <paramref name="α"/> and <paramref name="β"/> are scalars.<br/>
-		/// This routine can be used when B is in such way that the result is guaranteed to be symmetric.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="uplo">indicates if matrix <paramref name="C"/> lower or upper part is stored</param>
-		/// <param name="op">operation that is non- or transpose.</param>
-		/// <param name="n">number of rows of matrix <paramref name="C"/> and <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
-		/// <param name="k">number of columns of matrix <paramref name="C"/> and <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
-		/// <param name="α">scalar used for multiplication</param>
-		/// <param name="A">array of dimension <paramref name="lda"/>×<paramref name="k"/> or <paramref name="lda"/>×<paramref name="n"/></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="B">array of dimension <paramref name="ldb"/>×<paramref name="k"/> or <paramref name="ldb"/>×<paramref name="n"/></param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
-		/// <param name="β">scalar used for multiplication, if <c><paramref name="β"/> == 0</c> then <paramref name="C"/> does not have to be a valid input</param>
-		/// <param name="C">array of dimension <paramref name="ldc"/>×<paramref name="n"/></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus syrkxFunc<T>(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, ref T α, IntPtr A, int lda, IntPtr B, int ldb, ref T β, IntPtr C, int ldc);
 		#region symmetric rank-2k update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherkx(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherkx(IntPtr handle, MatrixFillMode uplo, CuBlasMatrixOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 		#endregion
 
 
 		#region BLAS like
-		/// <summary>
-		/// This function performs the matrix-matrix addition/transposition <paramref name="C"/> = <paramref name="α"/> <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> <paramref name="opB"/>(<paramref name="B"/>)
-		/// where <paramref name="α"/> and <paramref name="β"/> are scalars; <paramref name="A"/>, <paramref name="B"/>, <paramref name="C"/> are matrices stored in column-major format with dimensions <paramref name="opA"/>(<paramref name="A"/>) -- <paramref name="m"/>×<paramref name="n"/>, <paramref name="opB"/>(<paramref name="B"/>) -- <paramref name="m"/>×<paramref name="n"/> and <paramref name="C"/> -- <paramref name="m"/>×<paramref name="n"/>, respectively. <br/>
-		/// Also, for matrix <paramref name="A"/>,
-		/// <paramref name="opA"/>(<paramref name="A"/>) = <paramref name="A"/> if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.None"/>;
-		/// <paramref name="opA"/>(<paramref name="A"/>) = <paramref name="A"/>^T if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.Transpose"/>;
-		/// <paramref name="opA"/>(<paramref name="A"/>) = <paramref name="A"/>^H if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.ConjugateTranspose"/>.
-		/// The same for <paramref name="B"/>.
-		/// </summary>
-		/// <remarks>
-		/// The operation is out-of-place if <paramref name="C"/> does not overlap <paramref name="A"/> or <paramref name="B"/>.<para/>
-		/// The in-place mode supports the following two operations, <paramref name="C"/> = <paramref name="α"/> <paramref name="C"/> + <paramref name="β"/> <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/> = <paramref name="α"/> <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> C.<br/>
-		/// If <c><paramref name="C"/> == <paramref name="A"/></c>, <paramref name="ldc"/> = <paramref name="lda"/> and <paramref name="opA"/> = <see cref="CuBlasMatrixOperation.None"/>, or If <c><paramref name="C"/> == <paramref name="B"/> &amp;&amp; <paramref name="ldc"/> == <paramref name="ldb"/> &amp;&amp; <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.None"/></c>, in-place mode will be used.<br/>
-		/// If the user does not meet above requirements, <see cref="CudaBlasStatus.InvalidValue"/> is returned.
-		/// </remarks>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="opA"><see cref="CuBlasMatrixOperation"/> that is non- or (conj.) transpose</param>
-		/// <param name="opB"><see cref="CuBlasMatrixOperation"/> that is non- or (conj.) transpose</param>
-		/// <param name="m">number of rows of matrix <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="n">number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
-		/// <param name="α">scalar used for multiplication. If <c><paramref name="α"/> == 0</c>, <paramref name="A"/> does not have to be a valid input</param>
-		/// <param name="A">array of dimensions <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.None"/> and <c><paramref name="lda"/>×<paramref name="m"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-		/// <param name="β">scalar used for multiplication. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> does not have to be a valid input</param>
-		/// <param name="B">array of dimensions <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="CuBlasMatrixOperation.None"/> and <c><paramref name="ldb"/>×<paramref name="m"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
-		/// <param name="ldb">leading dimension of two-dimensional array used to store the matrix <paramref name="B"/></param>
-		/// <param name="C">array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus geamFunc<T>(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, ref T α, IntPtr A, int lda, ref T β, IntPtr B, int ldb, IntPtr C, int ldc);
 		#region matrix add
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgeam(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSgeam(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDgeam(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDgeam(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCgeam(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCgeam(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZgeam(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZgeam(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, void* α, IntPtr A, int lda, void* β, IntPtr B, int ldb, IntPtr C, int ldc);
 		#endregion
 
-		/// <summary>
-		/// This function performs the matrix-matrix multiplication <paramref name="C"/> = <paramref name="A"/> diag(x) if <paramref name="mode"/> == <see cref="SideMode.Right"/> or <paramref name="C"/> = diag(x) * <paramref name="A"/> otherwise.
-		/// </summary>
-		/// <param name="handle">handle to the CUDA BLAS library context</param>
-		/// <param name="mode">left or right multiply</param>
-		/// <param name="m">number of rows of matrix <paramref name="A"/> and <paramref name="C"/></param>
-		/// <param name="n">number of columns of matrix <paramref name="A"/> and <paramref name="C"/></param>
-		/// <param name="A">array of dimensions <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="lda">leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
-		/// <param name="x">one-dimensional array</param>
-		/// <param name="incx">stride of one-dimensional array x</param>
-		/// <param name="C">array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
-		/// <param name="ldc">leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
-		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
-		internal delegate CudaBlasStatus dgmmFunc(IntPtr handle, SideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
 		#region diagonal matrix multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSdgmm(IntPtr handle, SideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
@@ -1090,7 +740,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasScalEx(IntPtr handle, int n, void* alpha, CudaDataType alphaType, IntPtr x, CudaDataType xType, int incx, CudaDataType executiontype);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGemmEx(IntPtr handle, CuBlasMatrixOperation opA, CuBlasMatrixOperation opB, int m, int n, int k, void* alpha, IntPtr A, CudaDataType Atype, int lda, IntPtr B, CudaDataType Btype, int ldb, void* beta, IntPtr C, CudaDataType Ctype, int ldc, ComputeType computeType, GemmAlgorithm algo);
+		internal static extern CudaBlasStatus cublasGemmEx(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* alpha, IntPtr A, CudaDataType Atype, int lda, IntPtr B, CudaDataType Btype, int ldb, void* beta, IntPtr C, CudaDataType Ctype, int ldc, ComputeType computeType, GemmAlgorithm algo);
 		#endregion
 		#endregion
 
@@ -1376,6 +1026,263 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="clearLower">Whether <paramref name="A"/>'s upper part or its lower part shall be preserved</param>
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern void matTriClear(DataType type, IntPtr A, long ld, long rows, bool clearLower);
+		#endregion
+
+
+
+		#region solver
+		#region create and destroy
+		/// <summary>
+		/// This function initializes the cuSolverDN library and creates a handle on the cuSolverDN
+		/// context. It must be called before any other cuSolverDN API function is invoked. It
+		/// allocates hardware resources necessary for accessing the GPU
+		/// </summary>
+		/// <param name="handle">the pointer to the handle to the cuSolverDN context.</param>
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCreate(ref IntPtr handle);
+
+		/// <summary>
+		/// This function releases CPU-side resources used by the cuSolverDN library.
+		/// </summary>
+		/// <param name="handle">handle to the cuSolverDN library context.</param>
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDestroy(IntPtr handle);
+		#endregion
+
+		#region implicit QR
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgeqrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr τ, IntPtr Workspace, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgeqrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr τ, IntPtr Workspace, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgeqrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr τ, IntPtr Workspace, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgeqrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr τ, IntPtr Workspace, int lenWork, IntPtr devInfo);
+
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgeqrf_bufferSize(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeTau, IntPtr tau, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgeqrf(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeTau, IntPtr tau, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
+		#endregion
+
+		#region generate Q of implicit QR
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSorgqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDorgqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCungqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZungqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSorgqr(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr work, int lenWork, IntPtr devInfo);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDorgqr(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr work, int lenWork, IntPtr devInfo);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCungqr(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr work, int lenWork, IntPtr devInfo);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZungqr(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr work, int lenWork, IntPtr devInfo);
+		#endregion
+
+		#region multiply Q of implicit QR
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc,  ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, ref int lenWork);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSormqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDormqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCunmqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZunmqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		#endregion
+
+		#region LU Factorization
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgetrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr Workspace, IntPtr devIpiv, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgetrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr Workspace, IntPtr devIpiv, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgetrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr Workspace, IntPtr devIpiv, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgetrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr Workspace, IntPtr devIpiv, IntPtr devInfo);
+
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgetrf_bufferSize(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgetrf(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, IntPtr ipiv, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
+		#endregion
+
+		#region LU solve
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgetrs(IntPtr handle, CuBlasOperation trans, int n, int nrhs, IntPtr A, int lda, IntPtr devIpiv, IntPtr B, int ldb, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgetrs(IntPtr handle, CuBlasOperation trans, int n, int nrhs, IntPtr A, int lda, IntPtr devIpiv, IntPtr B, int ldb, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgetrs(IntPtr handle, CuBlasOperation trans, int n, int nrhs, IntPtr A, int lda, IntPtr devIpiv, IntPtr B, int ldb, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgetrs(IntPtr handle, CuBlasOperation trans, int n, int nrhs, IntPtr A, int lda, IntPtr devIpiv, IntPtr B, int ldb, IntPtr devInfo);
+
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgetrs(IntPtr handle, IntPtr @params, CuBlasOperation trans, long n, long nrhs, CudaDataType dataTypeA, IntPtr A, long lda, IntPtr ipiv, CudaDataType dataTypeB, IntPtr B, long ldb, IntPtr devInfo);
+		#endregion
+
+		#region standard symmetric (Hermitian) eigen-solve
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSsyevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDsyevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCheevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZheevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXsyevd_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXsyevd(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
+		#endregion
+
+		#region generalized symmetric (Hermitian) eigen-solve
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnChegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZhegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnChegvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZhegvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+		#endregion
+
+		#region singular value decomposition
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnSgesvd(IntPtr handle, sbyte jobu, sbyte jobvt, int m, int n, IntPtr A, int lda, IntPtr S, IntPtr U, int ldu, IntPtr VT, int ldvt, IntPtr work, int lenWork, IntPtr rwork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnDgesvd(IntPtr handle, sbyte jobu, sbyte jobvt, int m, int n, IntPtr A, int lda, IntPtr S, IntPtr U, int ldu, IntPtr VT, int ldvt, IntPtr work, int lenWork, IntPtr rwork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnCgesvd(IntPtr handle, sbyte jobu, sbyte jobvt, int m, int n, IntPtr A, int lda, IntPtr S, IntPtr U, int ldu, IntPtr VT, int ldvt, IntPtr work, int lenWork, IntPtr rwork, IntPtr devInfo);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnZgesvd(IntPtr handle, sbyte jobu, sbyte jobvt, int m, int n, IntPtr A, int lda, IntPtr S, IntPtr U, int ldu, IntPtr VT, int ldvt, IntPtr work, int lenWork, IntPtr rwork, IntPtr devInfo);
+
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgesvd_bufferSize(IntPtr handle, IntPtr @params, sbyte jobu, sbyte jobvt, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeVT, IntPtr VT, long ldvt, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgesvd(IntPtr handle, IntPtr @params, sbyte jobu, sbyte jobvt, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeVT, IntPtr VT, long ldvt, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
+
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgesvdp_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, int econ, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeV, IntPtr V, long ldv, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+
+		[DllImport(CUSOLVE_API_DLL_NAME)]
+		internal static extern CudaSolverStatus cusolverDnXgesvdp(IntPtr handle, IntPtr @params, SolveVectorMode jobz, int econ, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeV, IntPtr V, long ldv, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo, ref double error);
+		#endregion
 		#endregion
 	}
 }

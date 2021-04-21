@@ -88,7 +88,7 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 Eigenvalue decomposition failed since {0} off-diagonal elements of an intermediate tridiagonal form did not converge to zero. 的本地化字符串。
+        ///   查找类似 Eigenvalue decomposition failed since {0}-th off-diagonal elements of an intermediate tridiagonal form did not converge to zero. 的本地化字符串。
         /// </summary>
         internal static string MatrixSolveEigen {
             get {
@@ -142,7 +142,7 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 SVD failed to converge, {0} super-diagonal elements of an upper bidiagonal matrix not converged. 的本地化字符串。
+        ///   查找类似 SVD failed to converge, {0}-th super-diagonal elements of an upper bidiagonal matrix not converged. 的本地化字符串。
         /// </summary>
         internal static string MatrixSolveSVD {
             get {

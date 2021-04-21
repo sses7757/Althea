@@ -14,7 +14,7 @@
 ////	__half b = __double2half(0.5);
 ////	nv_bfloat16 c = __float2bfloat16(0.5f);
 ////}
-#include "cublas.h"
+#include "cusolverDn.h"
 
 void Test()
 {

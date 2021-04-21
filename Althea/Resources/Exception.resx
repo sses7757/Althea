@@ -127,7 +127,7 @@
     <value>Cholesky factorization failed since leading minor of order {0} is not positive definite.</value>
   </data>
   <data name="MatrixSolveEigen" xml:space="preserve">
-    <value>Eigenvalue decomposition failed since {0} off-diagonal elements of an intermediate tridiagonal form did not converge to zero.</value>
+    <value>Eigenvalue decomposition failed since {0}-th off-diagonal elements of an intermediate tridiagonal form did not converge to zero.</value>
   </data>
   <data name="MatrixSolveGeneralEigen" xml:space="preserve">
     <value>General eigenvalue decomposition failed since internal solve method such as 'Cholesky' and 'SVD' returns error status.</value>
@@ -145,7 +145,7 @@
     <value>Schur decomposition failed to compute all the eigenvalues, or the eigenvalues could not be reordered because some eigenvalues were too close to separate, or after reordering, round-off changed values of some complex eigenvalues so that leading eigenvalues in the Schur form no longer satisfy the input.</value>
   </data>
   <data name="MatrixSolveSVD" xml:space="preserve">
-    <value>SVD failed to converge, {0} super-diagonal elements of an upper bidiagonal matrix not converged.</value>
+    <value>SVD failed to converge, {0}-th super-diagonal elements of an upper bidiagonal matrix not converged.</value>
   </data>
   <data name="MismatchCannotConvert" xml:space="preserve">
     <value>There is no conversion from '{0}' to '{1}'.</value>

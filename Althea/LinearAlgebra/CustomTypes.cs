@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
+using Althea.Helpers;
 using Althea.NativeTypes;
 
 
@@ -85,34 +86,44 @@ namespace Althea.LinearAlgebra
 
 	#region exception
 	/// <summary>
-	/// The exception to be thrown when a matrix solve method failed due to several reasons
+	/// The exception to be thrown when a matrix solving method of a LAPACK or LAPACK-like library failed due to several reasons
 	/// </summary>
 	[Serializable]
-	public sealed class MatrixSolveAlgorithmException : Exception
+	public class MatrixSolveAlgorithmException : Exception
 	{
-		private static string GetDescription(SolveMethodKind kind)
+		private static string GetDescription(SolveMethodKind kind, int info)
 		{
-			return kind switch
+			if (info == 0)
+				return string.Empty; // no error
+			if (info < 0)
+				return $"The {(-info).ToOrdinal()} input parameter of method '{kind}' is invalid.";
+			string? message = kind switch
 			{
 				SolveMethodKind.Cholesky => Resources.Exception.MatrixSolveCholesky,
 				SolveMethodKind.LU => Resources.Exception.MatrixSolveLU,
-				SolveMethodKind.QR => Resources.Exception.MatrixSolveQR,
 				SolveMethodKind.BunchKaufman => Resources.Exception.MatrixSolveBunchKaufman,
 				SolveMethodKind.SVD => Resources.Exception.MatrixSolveSVD,
 				SolveMethodKind.Eigenvalue => Resources.Exception.MatrixSolveEigen,
+				_ => null,
+			};
+			if (message is not null)
+				return string.Format(message, info);
+			return kind switch
+			{
+				SolveMethodKind.QR => Resources.Exception.MatrixSolveQR,
 				SolveMethodKind.Schur => Resources.Exception.MatrixSolveSchur,
 				SolveMethodKind.GeneralEigen => Resources.Exception.MatrixSolveGeneralEigen,
 				SolveMethodKind.Jacobi => Resources.Exception.MatrixSolveJacobi,
-				_ => "",
+				_ => $"Unknown method with error info = {info}",
 			};
 		}
 
 		/// <summary>
 		/// Constructor of <see cref="MatrixSolveAlgorithmException"/>
 		/// </summary>
-		/// <param name="kind">which kind of CUDA solver is used (in <see cref="SolveMethodKind"/>)</param>
-		/// <param name="i">returned device info</param>
-		public MatrixSolveAlgorithmException(SolveMethodKind kind, int i) : base(string.Format(GetDescription(kind), i)) { }
+		/// <param name="kind">which kind of LAPACK-like solver is used (in <see cref="SolveMethodKind"/>)</param>
+		/// <param name="i">The returned LAPACK-like solver information</param>
+		public MatrixSolveAlgorithmException(SolveMethodKind kind, int i) : base(GetDescription(kind, i)) { }
 
 		/// <summary>
 		/// Empty <see cref="MatrixSolveAlgorithmException"/>
@@ -122,14 +133,11 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// <see cref="MatrixSolveAlgorithmException"/> with custom message
 		/// </summary>
-		/// <param name="message"></param>
 		public MatrixSolveAlgorithmException(string message) : base(message) { }
 
 		/// <summary>
 		/// <see cref="MatrixSolveAlgorithmException"/> with custom message and inner exception
 		/// </summary>
-		/// <param name="message"></param>
-		/// <param name="innerException"></param>
 		public MatrixSolveAlgorithmException(string message, Exception innerException) : base(message, innerException) { }
 	}
 	#endregion
@@ -137,7 +145,7 @@ namespace Althea.LinearAlgebra
 
 	#region enum
 	/// <summary>
-	/// The <see cref="SolveMethodKind"/> enum indicates the classification of a matrix-solving method
+	/// The <see cref="SolveMethodKind"/> enum indicates the classification of a matrix-solving method of a LAPACK or LAPACK-like library
 	/// </summary>
 	public enum SolveMethodKind
 	{
@@ -251,21 +259,6 @@ namespace Althea.LinearAlgebra
 		/// None of the columns / rows are stored
 		/// </summary>
 		None = 3
-	}
-
-	/// <summary>
-	/// The <see cref="DiagType"/> enum indicates whether the main diagonal of the dense matrix is unity and consequently should not be touched or modified by the function.
-	/// </summary>
-	public enum DiagType
-	{
-		/// <summary>
-		/// the matrix diagonal has non-unit elements
-		/// </summary>
-		NonUnit = 0,
-		/// <summary>
-		/// the matrix diagonal has unit elements
-		/// </summary>
-		Unit = 1
 	}
 
 	/// <summary>

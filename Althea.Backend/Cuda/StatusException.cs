@@ -149,6 +149,8 @@ namespace Althea.Backend.Cuda
 		{
 			if (err != CudaError.Success)
 			{
+				if (err == CudaError.ErrorOutOfMemory)
+					throw new OutOfMemoryException();
 				throw new StatusException(err, new StackTrace(0));
 			}
 		}

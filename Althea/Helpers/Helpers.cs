@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.Arm;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 using Althea.Linq;
@@ -133,13 +136,22 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int ReverseBits(this int a)
 		{
-			uint n = unchecked((uint)a);
+			if (ArmBase.IsSupported)
+			{
+				return ArmBase.ReverseElementBits(a);
+			}
+			if (a == 0)
+			{
+				return 0;
+			}
+			// software fall-back
+			uint n = (uint)a;
 			n = (n >> 1) & 0x55555555u | (n << 1) & 0xaaaaaaaau;
 			n = (n >> 2) & 0x33333333u | (n << 2) & 0xccccccccu;
 			n = (n >> 4) & 0x0f0f0f0fu | (n << 4) & 0xf0f0f0f0u;
 			n = (n >> 8) & 0x00ff00ffu | (n << 8) & 0xff00ff00u;
 			n = (n >> 16) & 0x0000ffffu | (n << 16) & 0xffff0000u;
-			return unchecked((int)n);
+			return (int)n;
 		}
 
 		/// <summary>
@@ -150,14 +162,23 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long ReverseBits(this long a)
 		{
-			ulong n = unchecked((ulong)a);
+			if (ArmBase.Arm64.IsSupported)
+			{
+				return ArmBase.Arm64.ReverseElementBits(a);
+			}
+			if (a == 0)
+			{
+				return 0;
+			}
+			// software fall-back
+			ulong n = (ulong)a;
 			n = (n >> 1) & 0x5555555555555555ul | (n << 1) & 0xaaaaaaaaaaaaaaaaul;
 			n = (n >> 2) & 0x3333333333333333ul | (n << 2) & 0xccccccccccccccccul;
 			n = (n >> 4) & 0x0f0f0f0f0f0f0f0ful | (n << 4) & 0xf0f0f0f0f0f0f0f0ul;
 			n = (n >> 8) & 0x00ff00ff00ff00fful | (n << 8) & 0xff00ff00ff00ff00ul;
 			n = (n >> 16) & 0x0000ffff0000fffful | (n << 16) & 0xffff0000ffff0000ul;
 			n = (n >> 32) & 0xffffffff00000000ul | (n << 32) & 0xffffffff00000000ul;
-			return unchecked((long)n);
+			return (long)n;
 		}
 
 		/// <summary>
@@ -165,6 +186,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="input">The input integer</param>
 		/// <returns>Whether <paramref name="input"/> is perfect square or not.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsPerfectSquare(this long input)
 		{
 			long closestRoot = (long)Math.Sqrt(input);
@@ -176,6 +198,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsPowerOfTwo(this long x)
 		{
 			if (x == 1) return true;
@@ -187,6 +210,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsPowerOfTwo(this int x)
 		{
 			if (x == 1) return true;
@@ -198,6 +222,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsPowerOfTwo(this short x)
 		{
 			if (x == 1) return true;
@@ -209,15 +234,31 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">The input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int NearestPowerOfTwo(this int x)
 		{
-			x--;
-			x |= x >> 1;
-			x |= x >> 2;
-			x |= x >> 4;
-			x |= x >> 8;
-			x |= x >> 16;
-			return x + 1;
+			uint value = (uint)x;
+			value |= 1U;
+			if (Lzcnt.IsSupported)
+			{
+				return 1 << (int)(0x1F ^ Lzcnt.LeadingZeroCount(value));
+			}
+			if (ArmBase.IsSupported)
+			{
+				return 1 << (int)(0x1F ^ ArmBase.LeadingZeroCount(value));
+			}
+			if (X86Base.IsSupported)
+			{
+				return 1 << BitOperations.Log2(value);
+			}
+			// software fall-back
+			value--;
+			value |= value >> 1;
+			value |= value >> 2;
+			value |= value >> 4;
+			value |= value >> 8;
+			value |= value >> 16;
+			return (int)(value + 1);
 		}
 
 		/// <summary>
@@ -225,78 +266,66 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="x">The input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long NearestPowerOfTwo(this long x)
 		{
-			x--;
-			x |= x >> 1;
-			x |= x >> 2;
-			x |= x >> 4;
-			x |= x >> 8;
-			x |= x >> 16;
-			x |= x >> 32;
-			return x + 1;
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static short Log2(this short input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static short Log2(this int input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		public static short Log2(this long input)
-		{
-			if (input <= 0)
-				return -1;
-			sbyte targetlevel = 0;
-			while ((input >>= 1) != 0)
-				++targetlevel;
-			return targetlevel;
-		}
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		public static byte CountBitSet(this short input)
-		{
-			byte count = 0;
-			int i = input;
-			for (; i != 0; count++)
+			ulong value = (ulong)x;
+			value |= 1UL;
+			if (Lzcnt.X64.IsSupported)
 			{
-				i &= i - 1;
+				return 1L << (0x3F ^ (int)Lzcnt.X64.LeadingZeroCount(value));
 			}
-			return count;
+			if (ArmBase.Arm64.IsSupported)
+			{
+				return 1L << (0x3F ^ ArmBase.Arm64.LeadingZeroCount(value));
+			}
+			if (X86Base.X64.IsSupported)
+			{
+				return 1L << BitOperations.Log2(value);
+			}
+			// software fall-back
+			value--;
+			value |= value >> 1;
+			value |= value >> 2;
+			value |= value >> 4;
+			value |= value >> 8;
+			value |= value >> 16;
+			value |= value >> 32;
+			return (long)(value + 1);
+		}
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Log2(this short input)
+		{
+			return BitOperations.Log2((uint)input);
+		}
+
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Log2(this int input)
+		{
+			return BitOperations.Log2((uint)input);
+		}
+
+		/// <summary>
+		/// Get the floor round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Log2(this long input)
+		{
+			return BitOperations.Log2((ulong)input);
 		}
 
 		/// <summary>
@@ -304,12 +333,10 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="input">input integer</param>
 		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		public static byte CountBitSet(this int input)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int CountBitSet(this short input)
 		{
-			input -= (input >> 1) & 0x5555_5555;
-			input = (input & 0x3333_3333) + ((input >> 2) & 0x3333_3333);
-			input = (input + (input >> 4)) & 0x0F0F_0F0F;
-			return (byte)((input * 0x0101_0101) >> 24);
+			return BitOperations.PopCount((uint)input);
 		}
 
 		/// <summary>
@@ -317,12 +344,21 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="input">input integer</param>
 		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		public static byte CountBitSet(this long input)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int CountBitSet(this int input)
 		{
-			input -= (input >> 1) & 0x5555_5555_5555_5555L;
-			input = (input & 0x5555_5555_5555_5555L) + ((input >> 2) & 0x3333_3333_3333_3333L);
-			input = (input + (input >> 4)) & 0x0F0F_0F0F_0F0F_0F0FL;
-			return (byte)((input * 0x0101_0101_0101_0101L) >> 24);
+			return BitOperations.PopCount((uint)input);
+		}
+
+		/// <summary>
+		/// Count the <paramref name="input"/>'s bits which are set to 1
+		/// </summary>
+		/// <param name="input">input integer</param>
+		/// <returns>the number <paramref name="input"/>'s bits set</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int CountBitSet(this long input)
+		{
+			return BitOperations.PopCount((ulong)input);
 		}
 
 		/// <summary>
@@ -343,6 +379,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsBitSet(this int input, byte bit)
 		{
 			return (input & (1 << bit)) == 0;
@@ -354,6 +391,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsBitSet(this long input, byte bit)
 		{
 			return (input & (1L << bit)) == 0;
@@ -365,6 +403,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int SetBit(this int input, byte bit)
 		{
 			return input | (1 << bit);
@@ -376,6 +415,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long SetBit(this long input, byte bit)
 		{
 			return input | (1L << bit);
@@ -387,6 +427,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int ResetBit(this int input, byte bit)
 		{
 			return input & ~(1 << bit);
@@ -398,6 +439,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long ResetBit(this long input, byte bit)
 		{
 			return input & ~(1L << bit);

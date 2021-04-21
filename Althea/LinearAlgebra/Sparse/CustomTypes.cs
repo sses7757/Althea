@@ -350,7 +350,7 @@ namespace Althea.LinearAlgebra.Sparse
 			if (format == 0)
 				return Span<SparseVectorFormat>.Empty;
 			int f = (int)format;
-			byte c = f.CountBitSet();
+			int c = f.CountBitSet();
 			if (result.Length < c)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(result));
 			result = result[..c]; c = 0;
@@ -389,7 +389,7 @@ namespace Althea.LinearAlgebra.Sparse
 			if (format == 0)
 				return Span<SparseMatrixFormat>.Empty;
 			int f = (int)format;
-			byte c = f.CountBitSet();
+			int c = f.CountBitSet();
 			if (result.Length < c)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(result));
 			result = result[..c]; c = 0;
