@@ -312,7 +312,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasZcopy(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy);
 		#endregion
-
 		#endregion
 
 
@@ -660,7 +659,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasZher2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 
-		#region symmetric rank-2k update
+		#region symmetric rank-k update variant
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]

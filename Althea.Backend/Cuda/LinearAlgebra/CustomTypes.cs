@@ -34,15 +34,15 @@ namespace Althea.Backend.Cuda.LinearAlgebra
 	internal static class Conversions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static char ToChar(this SVDStore store)
+		internal static sbyte ToChar(this SVDStore store)
 		{
 			return store switch
 			{
-				SVDStore.All => 'A',
-				SVDStore.Economic => 'S',
-				SVDStore.Overwrite => 'O',
-				SVDStore.None => 'N',
-				_ => throw new NotSupportedException(),
+				SVDStore.All => (sbyte)'A',
+				SVDStore.Economic => (sbyte)'S',
+				SVDStore.Overwrite => (sbyte)'O',
+				SVDStore.None => (sbyte)'N',
+				_ => 0,
 			};
 		}
 
