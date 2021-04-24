@@ -45,7 +45,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="device">device ID</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaGetDevice(ref int device);
+		internal static extern CudaError cudaGetDevice(out int device);
 
 		/// <summary>
 		/// Wait for compute device to finish.
@@ -58,7 +58,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="count">returned device count</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaGetDeviceCount(ref int count);
+		internal static extern CudaError cudaGetDeviceCount(out int count);
 
 		/// <summary>
 		/// Gets free and total device memory.
@@ -66,14 +66,14 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="free">returned free memory in bytes</param>
 		/// <param name="total">returned total memory in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaMemGetInfo(ref long free, ref long total);
+		internal static extern CudaError cudaMemGetInfo(out long free, out long total);
 
 		/// <summary>
 		/// Returns the CUDA Runtime version.
 		/// </summary>
 		/// <param name="runtimeVersion">The version is returned as (1000 major + 10 minor). For example, CUDA 9.2 would be represented by 9020.</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaRuntimeGetVersion(ref int runtimeVersion);
+		internal static extern CudaError cudaRuntimeGetVersion(out int runtimeVersion);
 
 		/// <summary>
 		/// Returns the <paramref name="property"/> about the compute <paramref name="device"/>
@@ -81,7 +81,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="property">The output <see cref="CudaDeviceProperty"/></param>
 		/// <param name="device">The index of the CUDA device</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaGetDeviceProperties(ref CudaDeviceProperty property, int device);
+		internal static extern CudaError cudaGetDeviceProperties(out CudaDeviceProperty property, int device);
 		#endregion
 
 		#region memory manipulation
@@ -105,7 +105,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="pHost">the returned host array pointer</param>
 		/// <param name="size">the array size in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaMallocHost(ref IntPtr pHost, long size);
+		internal static extern CudaError cudaMallocHost(out IntPtr pHost, long size);
 
 		/// <summary>
 		/// Allocates memory on the device.
@@ -113,7 +113,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="pDev">the returned device array pointer</param>
 		/// <param name="size">the array size in bytes</param>
 		[DllImport(CUDART_API_DLL_NAME)]
-		internal static extern CudaError cudaMalloc(ref IntPtr pDev, long size);
+		internal static extern CudaError cudaMalloc(out IntPtr pDev, long size);
 
 		/// <summary>
 		/// Copies data between host and device linearly.
@@ -166,7 +166,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		/// <param name="prop">The output <see cref="CudaFileDriverProperty"/></param>
 		[DllImport(CUFILE_API_DLL_NAME)]
-		internal static extern CudaFileError cuFileGetDriverProperties(ref CudaFileDriverProperty prop);
+		internal static extern CudaFileError cuFileGetDriverProperties(out CudaFileDriverProperty prop);
 
 		/// <summary>
 		/// API to set whether the Read/Write APIs use polling to do IO operations
@@ -220,13 +220,13 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="fileHandle">Output a valid pointer to the OS-neutral cuFile handle structure that is supplied by the user but populated and maintained by the cuFile runtime.</param>
 		/// <param name="descr">Input <see cref="CudaFileDescription"/> that is supplied by the user carrying details regarding the file to be opened.</param>
 		[DllImport(CUFILE_API_DLL_NAME)]
-		internal static extern CudaFileError cuFileHandleRegister(ref CudaFileHandle fileHandle, ref CudaFileDescription descr);
+		internal static extern CudaFileError cuFileHandleRegister(out CudaFileHandle fileHandle, ref CudaFileDescription descr);
 
 		/// <summary>
 		/// The API is used to release resources that are claimed by cuFileHandleRegister.<br/>
 		/// This API should be invoked only after the application ensures there are no outstanding IO operations with the handle.
 		/// </summary>
-		/// <param name="fileHandle">The <see cref="CudaFileHandle"/> obtained from <see cref="cuFileHandleRegister(ref CudaFileHandle, ref CudaFileDescription)"/></param>
+		/// <param name="fileHandle">The <see cref="CudaFileHandle"/> obtained from <see cref="cuFileHandleRegister(out CudaFileHandle, ref CudaFileDescription)"/></param>
 		[DllImport(CUFILE_API_DLL_NAME)]
 		internal static extern CudaFileError cuFileHandleDeregister(in CudaFileHandle fileHandle);
 

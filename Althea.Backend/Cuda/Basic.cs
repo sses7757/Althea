@@ -53,10 +53,9 @@ namespace Althea.Backend.Cuda
 			if (workSpaceHostBytes > int.MaxValue)
 				throw new ArgumentOutOfRangeException(nameof(workSpaceHostBytes), workSpaceHostBytes, Resources.Parameter.InvalidValue);
 			this.hostBuffer = workSpaceHostBytes == 0 ? null : ArrayPool<byte>.Shared.Rent((int)workSpaceHostBytes);
-			this.deviceBuffer = default;
 			if (workSpaceDeviceBytes + extraDeviceInfoBytes > 0)
 			{
-				var err = Storage.NativeMethods.cudaMalloc(ref this.deviceBuffer, workSpaceDeviceBytes + extraDeviceInfoBytes);
+				var err = Storage.NativeMethods.cudaMalloc(out this.deviceBuffer, workSpaceDeviceBytes + extraDeviceInfoBytes);
 				this.extraDeviceInfoOffset = extraDeviceInfoBytes == 0 ? 0 : workSpaceDeviceBytes;
 				if (err != CudaError.Success)
 				{
@@ -66,6 +65,7 @@ namespace Althea.Backend.Cuda
 			}
 			else
 			{
+				this.deviceBuffer = default;
 				this.extraDeviceInfoOffset = 0;
 			}
 		}
@@ -149,12 +149,12 @@ namespace Althea.Backend.Cuda
 
 		Type ISetBackend.SparseLinearAlgebraImplementation => typeof(int/*LinearAlgebra.Sparse.SparseApi*/);
 
-		Type ISetBackend.DenseTensorAlgebraImplementation => typeof(int/*TensorAlgebra.DenseApi*/);
+		Type ISetBackend.DenseTensorAlgebraImplementation => typeof(int/*TODO: TensorAlgebra.DenseApi*/);
 
-		Type ISetBackend.SparseTensorAlgebraImplementation => typeof(int/*TensorAlgebra.DenseApi*/);
+		Type ISetBackend.SparseTensorAlgebraImplementation => typeof(int);
 
-		Type ISetBackend.RandomImplementation => typeof(int/*Random.RandomApi*/);
+		Type ISetBackend.RandomImplementation => typeof(int/*TODO: Random.RandomApi*/);
 
-		Type ISetBackend.SolverImplementation => typeof(int/*Solver.SolverApi*/);
+		Type ISetBackend.SolverImplementation => typeof(int);
 	}
 }

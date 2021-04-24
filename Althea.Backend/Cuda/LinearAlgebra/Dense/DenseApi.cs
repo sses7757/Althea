@@ -57,8 +57,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		public bool UseAtomicsMode {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
-				AtomicsMode mode = default;
-				NativeMethods.cublasGetAtomicsMode(this.cublasHandle, ref mode).Check();
+				NativeMethods.cublasGetAtomicsMode(this.cublasHandle, out var mode).Check();
 				return mode == AtomicsMode.Allowed;
 			}
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,16 +110,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			this.BindedDeviceID = Storage.StorageApi.CurrentDeviceID;
 			if (this.Cuda110OrAbove)
 			{
-				NativeMethods.cublasCreate(ref this.cublasHandle).Check();
+				NativeMethods.cublasCreate(out this.cublasHandle).Check();
 				NativeMethods.cublasSetPointerMode(this.cublasHandle, PointerMode.Host);
 			}
 			else
 			{
-				NativeMethods.cublasCreate_v2(ref this.cublasHandle).Check();
+				NativeMethods.cublasCreate_v2(out this.cublasHandle).Check();
 				NativeMethods.cublasSetPointerMode_v2(this.cublasHandle, PointerMode.Host);
 			}
 			this.UseAtomicsMode = true;
-			NativeMethods.cusolverDnCreate(ref this.cusolverHandle).Check();
+			NativeMethods.cusolverDnCreate(out this.cusolverHandle).Check();
 		}
 
 		protected override void Dispose(bool disposeManaged)
@@ -132,6 +131,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			NativeMethods.cusolverDnDestroy(this.cusolverHandle);
 		}
 		#endregion
+
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -291,6 +291,38 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool AllQRSupport<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work) => this.IsSupported(A.LocationDescription) && this.IsSupported(B.LocationDescription) && (work is null || this.IsSupported(work.LocationDescription));
 		#endregion
+
+
+		#region dynamic invoke
+		protected override bool InvokeExtraMethod(ExtraMethodInfo methodInfo, out object? outParam, object[] inputParams)
+		{
+			outParam = null;
+			if ((methodInfo.Name == nameof(HorizontalAbsoluteValueArgMax) || methodInfo.Name == nameof(HorizontalAbsoluteValueArgMin) || methodInfo.Name == nameof(HorizontalAbsoluteSum)) && inputParams.Length == 2)
+			{
+				if (inputParams[0] is IStorage s && s.GetType() is { IsGenericType: true } ts && inputParams[1] is int ii)
+				{
+					bool? max = methodInfo.Name == nameof(HorizontalAbsoluteSum) ? null : methodInfo.Name == nameof(HorizontalAbsoluteValueArgMax);
+					long result = -1;
+					double resultD = 0;
+					// invoke method
+					if (ts.IsAssignableTo(typeof(IComplex<float>)))
+					{
+						return !max.HasValue ? HorizontalAbsoluteSum(s.As<float>(), ii, out resultD) :
+								   max.Value ? HorizontalAbsoluteValueArgMax(s.As<float>(), ii, out result) :
+											   HorizontalAbsoluteValueArgMin(s.As<float>(), ii, out result);
+					}
+					if (ts.IsAssignableTo(typeof(IComplex<double>)))
+					{
+						return !max.HasValue ? HorizontalAbsoluteSum(s.As<double>(), ii, out resultD) :
+								   max.Value ? HorizontalAbsoluteValueArgMax(s.As<double>(), ii, out result) :
+											   HorizontalAbsoluteValueArgMin(s.As<double>(), ii, out result);
+					}
+				}
+			}
+			return false;
+		}
+		#endregion
+
 
 		#region BLAS level 1
 		/// <summary>
@@ -718,6 +750,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 		#endregion
 
+
 		#region custom level 1
 		protected override unsafe bool AggregateProduct_<T>(Storage<T> x, int stride, out T product)
 		{
@@ -907,7 +940,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 		#endregion
 
+
 		#region BLAS level 2
+		// Ignore Spelling: func
 		protected override unsafe bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY)
 		{
 			if (!Const<T>.DataType.CheckBaseSupport())
@@ -1159,6 +1194,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#endregion
 
+
 		#region BLAS like level 2
 		protected override unsafe bool DiagonalMatrixMultiplyGeneral_<T>(bool leftA, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> C, long ldc)
 		{
@@ -1186,6 +1222,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			return true;
 		}
 		#endregion
+
 
 		#region BLAS level 3
 		protected override unsafe bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb)
@@ -1503,6 +1540,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 		#endregion
 
+
 		#region custom level 3
 		protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda)
 		{
@@ -1524,6 +1562,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			return true;
 		}
 
+		// Ignore Spelling: lda ma na ldb mb nb ldc
 		protected override unsafe bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
 		{
 			if (!Const<T>.IsPreDefinedNoHalf)
@@ -1534,6 +1573,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return false;
 			////if (ldc < ma * mb)
 			////	throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(ldc));
+			
 			if (!CheckPointerLong(C, na * nb, ldc, out var pC))
 				return false;
 			NativeMethods.matKron(Const<T>.DataType, pA, lda, ma, na, pB, ldb, mb, nb, pC, ldc, &α, &β);
@@ -1541,8 +1581,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 		#endregion
 
-		#region solve
 
+		#region solve
 		#region LU
 		protected override unsafe bool LUDecomposition_<T, TInd>(long n, Storage<T> A, long lda, Storage<TInd> pivot)
 		{
@@ -1563,8 +1603,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(pivot));
 
 				var type = Const<T>.DataType.ToCudaDataType();
-				long workDevice = 0, workHost = 0;
-				NativeMethods.cusolverDnXgetrf_bufferSize(this.cusolverHandle, IntPtr.Zero, n, n, type, pA, lda, type, ref workDevice, ref workHost).Check();
+				NativeMethods.cusolverDnXgetrf_bufferSize(this.cusolverHandle, IntPtr.Zero, n, n, type, pA, lda, type, out var workDevice, out var workHost).Check();
 				using var buffer = CudaBuffer.Create(workDevice, workHost);
 				NativeMethods.cusolverDnXgetrf(this.cusolverHandle, IntPtr.Zero, n, n, type, pA, lda, pP, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1578,7 +1617,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				////if (np < nn)
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(pivot));
 
-				delegate*<IntPtr, int, int, IntPtr, int, ref int, CudaSolverStatus> bufFunc;
+				delegate*<IntPtr, int, int, IntPtr, int, out int, CudaSolverStatus> bufFunc;
 				delegate*<IntPtr, int, int, IntPtr, int, IntPtr, IntPtr, IntPtr, CudaSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
@@ -1596,8 +1635,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZgetrf,
 					_ => null,
 				};
-				int work = 0;
-				bufFunc(this.cusolverHandle, nn, nn, pA, llda, ref work).Check();
+				bufFunc(this.cusolverHandle, nn, nn, pA, llda, out var work).Check();
 				using var buffer = CudaBuffer.Create<T>(work);
 				calFunc(this.cusolverHandle, nn, nn, pA, llda, buffer.DeviceBuffer, pP, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1674,8 +1712,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
 
 				var type = Const<T>.DataType.ToCudaDataType();
-				long workDevice = 0, workHost = 0;
-				NativeMethods.cusolverDnXgeqrf_bufferSize(this.cusolverHandle, IntPtr.Zero, m, n, type, pA, lda, type, pT, type, ref workDevice, ref workHost).Check();
+				NativeMethods.cusolverDnXgeqrf_bufferSize(this.cusolverHandle, IntPtr.Zero, m, n, type, pA, lda, type, pT, type, out var workDevice, out var workHost).Check();
 				using var buffer = CudaBuffer.Create(workDevice, workHost);
 				NativeMethods.cusolverDnXgeqrf(this.cusolverHandle, IntPtr.Zero, m, n, type, pA, lda, type, pT, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1689,7 +1726,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				////if (nt < Math.Min(mm, nn))
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
 
-				delegate*<IntPtr, int, int, IntPtr, int, ref int, CudaSolverStatus> bufFunc;
+				delegate*<IntPtr, int, int, IntPtr, int, out int, CudaSolverStatus> bufFunc;
 				delegate*<IntPtr, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
@@ -1707,8 +1744,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZgeqrf,
 					_ => null,
 				};
-				int work = 0;
-				bufFunc(this.cusolverHandle, mm, nn, pA, llda, ref work).Check();
+				bufFunc(this.cusolverHandle, mm, nn, pA, llda, out var work).Check();
 				using var buffer = CudaBuffer.Create<T>(work);
 				calFunc(this.cusolverHandle, mm, nn, pA, llda, pT, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1730,7 +1766,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
 			int kk = (int)k;
 
-			delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, ref int, CudaSolverStatus> bufFunc;
+			delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, out int, CudaSolverStatus> bufFunc;
 			delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 			bufFunc = Const<T>.DataType switch
 			{
@@ -1748,8 +1784,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZungqr,
 				_ => null,
 			};
-			int work = 0;
-			bufFunc(this.cusolverHandle, mm, nn, kk, pQ, lldq, pT, ref work).Check();
+			bufFunc(this.cusolverHandle, mm, nn, kk, pQ, lldq, pT, out var work).Check();
 			using var buffer = CudaBuffer.Create<T>(work);
 			calFunc(this.cusolverHandle, mm, nn, kk, pQ, lldq, pT, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo).Check();
 			SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1769,7 +1804,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			////if (nt < kk)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
 
-			delegate*<IntPtr, SideMode, CuBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, ref int, CudaSolverStatus> bufFunc;
+			delegate*<IntPtr, SideMode, CuBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, CudaSolverStatus> bufFunc;
 			delegate*<IntPtr, SideMode, CuBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 			bufFunc = Const<T>.DataType switch
 			{
@@ -1787,8 +1822,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZunmqr,
 				_ => null,
 			};
-			int work = 0;
-			bufFunc(this.cusolverHandle, leftQ ? SideMode.Left : SideMode.Right, opCuda, mm, nn, kk, pA, llda, pT, pC, lldc, ref work).Check();
+			bufFunc(this.cusolverHandle, leftQ ? SideMode.Left : SideMode.Right, opCuda, mm, nn, kk, pA, llda, pT, pC, lldc, out var work).Check();
 			using var buffer = CudaBuffer.Create<T>(work);
 			calFunc(this.cusolverHandle, leftQ ? SideMode.Left : SideMode.Right, opCuda, mm, nn, kk, pA, llda, pT, pC, lldc, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo).Check();
 			SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1809,16 +1843,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			////if (nw > 0 && nw < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(work));
 
-			IntPtr tau = default;
+			IntPtr tau;
 			if (pW == default)
-				Storage.NativeMethods.cudaMalloc(ref tau, n * sizeof(T)).Check();
+				Storage.NativeMethods.cudaMalloc(out tau, n * sizeof(T)).Check();
 			else
 				tau = pW;
 			try
 			{
-				delegate*<IntPtr, int, int, IntPtr, int, ref int, CudaSolverStatus> bufQRFunc = null;
+				delegate*<IntPtr, int, int, IntPtr, int, out int, CudaSolverStatus> bufQRFunc = null;
 				delegate*<IntPtr, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calQRFunc = null;
-				delegate*<IntPtr, SideMode, CuBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, ref int, CudaSolverStatus> bufQmulFunc = null;
+				delegate*<IntPtr, SideMode, CuBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, CudaSolverStatus> bufQmulFunc = null;
 				delegate*<IntPtr, SideMode, CuBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, CudaSolverStatus> calQmulFunc = null;
 				delegate*<IntPtr, SideMode, MatrixFillMode, CuBlasOperation, DiagType, int, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> triSolveFunc = null;
 				CuBlasOperation op = CuBlasOperation.Transpose;
@@ -1858,9 +1892,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 						break;
 				}
 				// get buffer
-				int workSizeT1 = 0, workSizeT2 = 0;
-				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, ref workSizeT1).Check();
-				bufQmulFunc(this.cusolverHandle, SideMode.Left, CuBlasOperation.None, nn, nnrhs, nn, pA, llda, tau, pB, lldb, ref workSizeT2).Check();
+				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, out var workSizeT1).Check();
+				bufQmulFunc(this.cusolverHandle, SideMode.Left, CuBlasOperation.None, nn, nnrhs, nn, pA, llda, tau, pB, lldb, out var workSizeT2).Check();
 				using var buffer = CudaBuffer.Create<T>(Math.Max(workSizeT1, workSizeT2));
 				// implicit QR
 				calQRFunc(this.cusolverHandle, mm, nn, pA, llda, tau, buffer.DeviceBuffer, workSizeT1, buffer.ExtraDeviceInfo).Check();
@@ -1892,16 +1925,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (!CheckPointer(work, out var pW, out int nw))
 				return false;
 
-			IntPtr tau = default;
+			IntPtr tau;
 			if (pW == default)
-				Storage.NativeMethods.cudaMalloc(ref tau, n * sizeof(T)).Check();
+				Storage.NativeMethods.cudaMalloc(out tau, n * sizeof(T)).Check();
 			else
 				tau = pW;
 			try
 			{
-				delegate*<IntPtr, int, int, IntPtr, int, ref int, CudaSolverStatus> bufQRFunc = null;
+				delegate*<IntPtr, int, int, IntPtr, int, out int, CudaSolverStatus> bufQRFunc = null;
 				delegate*<IntPtr, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calQRFunc = null;
-				delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, ref int, CudaSolverStatus> bufGetQFunc = null;
+				delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, out int, CudaSolverStatus> bufGetQFunc = null;
 				delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calGetQFunc = null;
 				switch (Const<T>.DataType)
 				{
@@ -1933,9 +1966,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 						break;
 				}
 				// get buffer
-				int workSizeT1 = 0, workSizeT2 = 0;
-				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, ref workSizeT1).Check();
-				bufGetQFunc(this.cusolverHandle, mm, nnQ, kk, pQ, lldq, tau, ref workSizeT2).Check();
+				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, out var workSizeT1).Check();
+				bufGetQFunc(this.cusolverHandle, mm, nnQ, kk, pQ, lldq, tau, out var workSizeT2).Check();
 				using var buffer = CudaBuffer.Create<T>(Math.Max(workSizeT1, workSizeT2));
 				// implicit QR
 				calQRFunc(this.cusolverHandle, mm, nn, pA, llda, tau, buffer.DeviceBuffer, workSizeT1, buffer.ExtraDeviceInfo).Check();
@@ -1973,8 +2005,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
 				var type = Const<T>.DataType.ToCudaDataType();
-				long workDevice = 0, workHost = 0;
-				NativeMethods.cusolverDnXsyevd_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, MatrixFillMode.Upper, n, type, pA, lda, type, pV, type, ref workDevice, ref workHost).Check();
+				NativeMethods.cusolverDnXsyevd_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, MatrixFillMode.Upper, n, type, pA, lda, type, pV, type, out var workDevice, out var workHost).Check();
 				using var buffer = CudaBuffer.Create(workDevice, workHost);
 				NativeMethods.cusolverDnXsyevd(this.cusolverHandle, IntPtr.Zero, mode, MatrixFillMode.Upper, n, type, pA, lda, type, pV, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.Eigenvalue.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -1988,7 +2019,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				////if (nv < nn)
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
-				delegate*<IntPtr, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, ref int, CudaSolverStatus> bufFunc;
+				delegate*<IntPtr, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, out int, CudaSolverStatus> bufFunc;
 				delegate*<IntPtr, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
@@ -2006,8 +2037,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZheevd,
 					_ => null,
 				};
-				int work = 0;
-				bufFunc(this.cusolverHandle, mode, MatrixFillMode.Upper, nn, pA, llda, pV, ref work).Check();
+				bufFunc(this.cusolverHandle, mode, MatrixFillMode.Upper, nn, pA, llda, pV, out var work).Check();
 				using var buffer = CudaBuffer.Create<T>(work);
 				calFunc(this.cusolverHandle, mode, MatrixFillMode.Upper, nn, pA, llda, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.Eigenvalue.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -2030,7 +2060,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			////if (nv < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
-			delegate*<IntPtr, GeneralEigenType, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, int, IntPtr, ref int, CudaSolverStatus> bufFunc;
+			delegate*<IntPtr, GeneralEigenType, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, int, IntPtr, out int, CudaSolverStatus> bufFunc;
 			delegate*<IntPtr, GeneralEigenType, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 			bufFunc = Const<T>.DataType switch
 			{
@@ -2048,8 +2078,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZhegvd,
 				_ => null,
 			};
-			int work = 0;
-			bufFunc(this.cusolverHandle, eigType, mode, MatrixFillMode.Upper, nn, pA, llda, pB, lldb, pV, ref work).Check();
+			bufFunc(this.cusolverHandle, eigType, mode, MatrixFillMode.Upper, nn, pA, llda, pB, lldb, pV, out var work).Check();
 			using var buffer = CudaBuffer.Create<T>(work);
 			calFunc(this.cusolverHandle, eigType, mode, MatrixFillMode.Upper, nn, pA, llda, pB, lldb, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo).Check();
 			SolveMethodKind.GeneralEigen.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -2080,7 +2109,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			if (this.Cuda111OrAbove)
 			{
 				var type = Const<T>.DataType.ToCudaDataType();
-				long workDevice = 0, workHost = 0;
 				if (this.SvdViaPolarDecomposition)
 				{
 					if (storeU != storeV)
@@ -2089,17 +2117,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 						return false;
 					SolveVectorMode mode = storeU == SVDStore.None ? SolveVectorMode.NoVector : SolveVectorMode.Vector;
 					int econ = storeU == SVDStore.Economic ? 1 : 0;
-					NativeMethods.cusolverDnXgesvdp_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, econ, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, ref workDevice, ref workHost).Check();
+					NativeMethods.cusolverDnXgesvdp_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, econ, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, out var workDevice, out var workHost).Check();
 					using var buffer = CudaBuffer.Create(workDevice, workHost);
-					double error = 0;
-					NativeMethods.cusolverDnXgesvdp(this.cusolverHandle, IntPtr.Zero, mode, econ, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo, ref error).Check();
+					NativeMethods.cusolverDnXgesvdp(this.cusolverHandle, IntPtr.Zero, mode, econ, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo, out var error).Check();
 					SolveMethodKind.SVD.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 				}
 				else
 				{
 					if (m < n)
 						return false;
-					NativeMethods.cusolverDnXgesvd_bufferSize(this.cusolverHandle, IntPtr.Zero, jobU, jobV, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, ref workDevice, ref workHost).Check();
+					NativeMethods.cusolverDnXgesvd_bufferSize(this.cusolverHandle, IntPtr.Zero, jobU, jobV, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, out var workDevice, out var workHost).Check();
 					using var buffer = CudaBuffer.Create(workDevice, workHost);
 					NativeMethods.cusolverDnXgesvd(this.cusolverHandle, IntPtr.Zero, jobU, jobV, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 					SolveMethodKind.SVD.CheckDeviceInfo(buffer.ExtraDeviceInfo);
@@ -2109,7 +2136,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{   // CUDA version <= 11.0
 				if (m < n)
 					return false;
-				delegate*<IntPtr, int, int, ref int, CudaSolverStatus> bufFunc;
+				delegate*<IntPtr, int, int, out int, CudaSolverStatus> bufFunc;
 				delegate*<IntPtr, sbyte, sbyte, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, CudaSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
@@ -2127,8 +2154,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZgesvd,
 					_ => null,
 				};
-				int work = 0;
-				bufFunc(this.cusolverHandle, mm, nn, ref work).Check();
+				bufFunc(this.cusolverHandle, mm, nn, out var work).Check();
 				using var buffer = CudaBuffer.Create<T>(work);
 				calFunc(this.cusolverHandle, jobU, jobV, mm, nn, pA, llda, pS, pU, lldu, pV, lldv, buffer.DeviceBuffer, work, IntPtr.Zero, buffer.ExtraDeviceInfo).Check();
 				SolveMethodKind.GeneralEigen.CheckDeviceInfo(buffer.ExtraDeviceInfo);

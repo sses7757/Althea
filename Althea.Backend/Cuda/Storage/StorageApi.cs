@@ -125,8 +125,7 @@ namespace Althea.Backend.Cuda.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (int major, int minor) GetDeviceComputeCapability(int deviceID)
 		{
-			CudaDeviceProperty prop = default;
-			CudaError err = NativeMethods.cudaGetDeviceProperties(ref prop, deviceID);
+			CudaError err = NativeMethods.cudaGetDeviceProperties(out var prop, deviceID);
 			if (err == CudaError.Success)
 				return (prop.major, prop.minor);
 			else
@@ -145,8 +144,7 @@ namespace Althea.Backend.Cuda.Storage
 			get {
 				if (_currentDevice < 0)
 				{
-					int d = 0;
-					var err = NativeMethods.cudaGetDevice(ref d);
+					var err = NativeMethods.cudaGetDevice(out var d);
 					_currentDevice = err == CudaError.Success ? d : -1;
 				}
 				return _currentDevice;
@@ -165,8 +163,7 @@ namespace Althea.Backend.Cuda.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (int major, int minor) GetDriverVersion()
 		{
-			int ver = 0;
-			var err = NativeMethods.cudaRuntimeGetVersion(ref ver);
+			var err = NativeMethods.cudaRuntimeGetVersion(out var ver);
 			return err == CudaError.Success ? (ver / 1000, (ver % 1000) / 10) : default;
 		}
 
@@ -178,8 +175,7 @@ namespace Althea.Backend.Cuda.Storage
 		{
 			if (location.Type != LocationType.GpuRam || location.LocationDetail != CurrentDeviceID)
 				return default;
-			long free = 0, total = 0;
-			var err = NativeMethods.cudaMemGetInfo(ref free, ref total);
+			var err = NativeMethods.cudaMemGetInfo(out var free, out var total);
 			return err == CudaError.Success ? (free, total) : default;
 		}
 		#endregion
@@ -238,8 +234,7 @@ namespace Althea.Backend.Cuda.Storage
 				return false; // not supported
 			if (location.Type == LocationType.GpuRam)
 			{
-				IntPtr ptr = default;
-				var err = NativeMethods.cudaMalloc(ref ptr, length);
+				var err = NativeMethods.cudaMalloc(out var ptr, length);
 				if (err == CudaError.ErrorOutOfMemory)
 					throw new OutOfMemoryException();
 				err.Check();

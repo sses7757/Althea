@@ -11,7 +11,7 @@ using Althea.NativeTypes;
 namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 {
 	/// <summary>
-	/// The CUDA back-end of the sparse linear algebra <see cref="AbstractApi"/> that utilizes cuSPARSE with CUDA version ≥ 11.1 (and maybe future versions)
+	/// The CUDA back-end of the sparse linear algebra <see cref="AbstractApi"/> that utilizes cuSPARSE. Since the cuSPARSE APIs and underlying types vary drastically from CUDA 10.1 to 11.3 and probably will still be. Therefore, the <see cref="SparseApi"/> is currently not available.
 	/// </summary>
 	/// <remarks>Older versions are not supported since the cuSPARSE library's APIs are updating rapidly and the current APIs may not last long.</remarks>
 	public class SparseApi : AbstractApi

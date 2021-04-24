@@ -31,14 +31,14 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region utilities
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCreate_v2(ref IntPtr handle);
+		internal static extern CudaBlasStatus cublasCreate_v2(out IntPtr handle);
 		/// <summary>
 		/// This function initializes the CUDA BLAS library and creates a handle to an opaque structure holding the CUDA BLAS library context.
 		/// </summary>
 		/// <param name="handle">returned CUDA BLAS handle</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCreate(ref IntPtr handle);
+		internal static extern CudaBlasStatus cublasCreate(out IntPtr handle);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasDestroy_v2(IntPtr handle);
@@ -59,7 +59,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="mode">returned <see cref="AtomicsMode"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetAtomicsMode(IntPtr handle, ref AtomicsMode mode);
+		internal static extern CudaBlasStatus cublasGetAtomicsMode(IntPtr handle, out AtomicsMode mode);
 
 		/// <summary>
 		/// Some routines like <c>cublas&lt;t&gt;symv</c> have an alternate implementation that use atomics to cumulate results. This implementation is generally significantly faster but can generate results that are not strictly identical from one run to the others. Mathematically, those different results are not significant but when debugging those differences can be prejudicial.
@@ -72,7 +72,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasSetAtomicsMode(IntPtr handle, AtomicsMode mode);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, ref PointerMode mode);
+		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, out PointerMode mode);
 		/// <summary>
 		/// This function obtains the pointer mode used by the cuBLAS library.
 		/// </summary>
@@ -80,7 +80,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="mode">returned <see cref="PointerMode"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetPointerMode(IntPtr handle, ref PointerMode mode);
+		internal static extern CudaBlasStatus cublasGetPointerMode(IntPtr handle, out PointerMode mode);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSetPointerMode_v2(IntPtr handle, PointerMode mode);
@@ -1038,7 +1038,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// </summary>
 		/// <param name="handle">the pointer to the handle to the cuSolverDN context.</param>
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCreate(ref IntPtr handle);
+		internal static extern CudaSolverStatus cusolverDnCreate(out IntPtr handle);
 
 		/// <summary>
 		/// This function releases CPU-side resources used by the cuSolverDN library.
@@ -1050,16 +1050,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region implicit QR
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZgeqrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSgeqrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr τ, IntPtr Workspace, int lenWork, IntPtr devInfo);
@@ -1075,7 +1075,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXgeqrf_bufferSize(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeTau, IntPtr tau, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+		internal static extern CudaSolverStatus cusolverDnXgeqrf_bufferSize(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeTau, IntPtr tau, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnXgeqrf(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeTau, IntPtr tau, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
@@ -1083,16 +1083,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region generate Q of implicit QR
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSorgqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSorgqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDorgqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDorgqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCungqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCungqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZungqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZungqr_bufferSize(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSorgqr(IntPtr handle, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr work, int lenWork, IntPtr devInfo);
@@ -1109,16 +1109,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region multiply Q of implicit QR
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc,  ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc,  out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSormqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
@@ -1135,16 +1135,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region LU Factorization
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZgetrf_bufferSize(IntPtr handle, int m, int n, IntPtr A, int lda, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSgetrf(IntPtr handle, int m, int n, IntPtr A, int lda, IntPtr Workspace, IntPtr devIpiv, IntPtr devInfo);
@@ -1160,7 +1160,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXgetrf_bufferSize(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+		internal static extern CudaSolverStatus cusolverDnXgetrf_bufferSize(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnXgetrf(IntPtr handle, IntPtr @params, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, IntPtr ipiv, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
@@ -1186,16 +1186,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region standard symmetric (Hermitian) eigen-solve
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSsyevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
@@ -1211,7 +1211,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXsyevd_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+		internal static extern CudaSolverStatus cusolverDnXsyevd_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnXsyevd(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
@@ -1219,16 +1219,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region generalized symmetric (Hermitian) eigen-solve
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnChegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnChegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZhegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZhegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
@@ -1245,16 +1245,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region singular value decomposition
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSgesvd_bufferSize(IntPtr handle, int m, int n, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDgesvd_bufferSize(IntPtr handle, int m, int n, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCgesvd_bufferSize(IntPtr handle, int m, int n, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZgesvd_bufferSize(IntPtr handle, int m, int n, ref int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZgesvd_bufferSize(IntPtr handle, int m, int n, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSgesvd(IntPtr handle, sbyte jobu, sbyte jobvt, int m, int n, IntPtr A, int lda, IntPtr S, IntPtr U, int ldu, IntPtr VT, int ldvt, IntPtr work, int lenWork, IntPtr rwork, IntPtr devInfo);
@@ -1270,17 +1270,17 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXgesvd_bufferSize(IntPtr handle, IntPtr @params, sbyte jobu, sbyte jobvt, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeVT, IntPtr VT, long ldvt, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+		internal static extern CudaSolverStatus cusolverDnXgesvd_bufferSize(IntPtr handle, IntPtr @params, sbyte jobu, sbyte jobvt, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeVT, IntPtr VT, long ldvt, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnXgesvd(IntPtr handle, IntPtr @params, sbyte jobu, sbyte jobvt, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeVT, IntPtr VT, long ldvt, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
 
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXgesvdp_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, int econ, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeV, IntPtr V, long ldv, CudaDataType computeType, ref long workspaceInBytesOnDevice, ref long workspaceInBytesOnHost);
+		internal static extern CudaSolverStatus cusolverDnXgesvdp_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, int econ, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeV, IntPtr V, long ldv, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXgesvdp(IntPtr handle, IntPtr @params, SolveVectorMode jobz, int econ, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeV, IntPtr V, long ldv, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo, ref double error);
+		internal static extern CudaSolverStatus cusolverDnXgesvdp(IntPtr handle, IntPtr @params, SolveVectorMode jobz, int econ, long m, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeS, IntPtr S, CudaDataType dataTypeU, IntPtr U, long ldu, CudaDataType dataTypeV, IntPtr V, long ldv, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo, out double error);
 		#endregion
 		#endregion
 	}
