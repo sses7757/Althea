@@ -88,7 +88,7 @@ namespace Althea.Arrays
 			// get real labels
 			Span<char> span = stackalloc char[size.Length];
 			if (labels.IsEmpty)
-				span.FillWithRange('a');
+				span.FillWithLabel();
 			else
 				labels.CopyTo(span);
 			// set members

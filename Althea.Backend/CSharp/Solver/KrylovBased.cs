@@ -176,9 +176,9 @@ namespace Althea.Backend.CSharp.Solver
 			}
 		}
 
-		private static void SortPairs(int n, WhichEigenvalues which, Span<ComplexDouble> orderedVals, SpanMatrix<ComplexDouble> orderedVecs, Span<int> conjugatePairs)
+		private static unsafe void SortPairs(int n, WhichEigenvalues which, Span<ComplexDouble> orderedVals, SpanMatrix<ComplexDouble> orderedVecs, Span<int> conjugatePairs)
 		{
-			Span<double> ordered = stackalloc double[n], ordered2 = stackalloc double[n];
+			Span<double> ordered = stackalloc double[n];
 			switch (which)
 			{
 				case WhichEigenvalues.LargestAbsolute:
@@ -202,14 +202,16 @@ namespace Althea.Backend.CSharp.Solver
 				default:
 					throw new NotSupportedException();
 			}
-			ordered.CopyTo(ordered2);
-			ordered2.Sort(orderedVals);
-			ordered.CopyTo(ordered2);
-			ordered.Sort(conjugatePairs);
-			ordered.CopyTo(ordered2);
-			var arrays = orderedVecs.ToArray();
-			ordered.Sort((Span<ComplexDouble[]>)arrays);
-			orderedVecs.FromArray(arrays);
+			fixed (ComplexDouble* p = orderedVecs.UnderlyingSpan)
+			{
+				int ld = orderedVecs.LeadDim;
+				Span<IntPtr> columns = stackalloc IntPtr[n];
+				for (int i = 0; i < n; i++)
+				{
+					columns[i] = (IntPtr)(p + n * ld);
+				}
+				ordered.Sort(columns, orderedVals, conjugatePairs, swapper1: orderedVecs.ColumnSwapper);
+			}
 		}
 		#endregion
 

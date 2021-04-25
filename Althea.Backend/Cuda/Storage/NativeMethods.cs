@@ -3,9 +3,10 @@ using System.Runtime.InteropServices;
 
 using Althea.NativeTypes;
 
+
+#pragma warning disable IDE1006 // 命名样式
 namespace Althea.Backend.Cuda.Storage
 {
-#pragma warning disable IDE1006 // 命名样式
 	/// <summary>
 	/// Native methods from CUDA runtime and GPUDirect® Storage API
 	/// </summary>

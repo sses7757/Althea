@@ -5281,6 +5281,85 @@
             <param name="sizeT">Output the size of <typeparamref name="T"/></param>
             <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
         </member>
+        <member name="T:Althea.Helpers.Swapper`1">
+            <summary>
+            The abstract class that can be used to swap two <typeparamref name="T"/> values in-place
+            </summary>
+            <typeparam name="T">The type of the values to be swapped</typeparam>
+        </member>
+        <member name="T:Althea.Helpers.Swapper`1.DelegateSwapper">
+            <summary>
+            Encapsulates a method that swaps two values <paramref name="a"/> and <paramref name="b"/> in-place
+            </summary>
+            <param name="a">The reference to first value to be swapped with <paramref name="b"/></param>
+            <param name="b">The reference to second value to be swapped with <paramref name="a"/></param>
+        </member>
+        <member name="M:Althea.Helpers.Swapper`1.Create(Althea.Helpers.Swapper{`0}.DelegateSwapper)">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.Swapper`1"/> using a specified in-place <paramref name="swapper"/> <see cref="T:Althea.Helpers.Swapper`1.DelegateSwapper"/>
+            </summary>
+            <param name="swapper">The <see cref="T:Althea.Helpers.Swapper`1.DelegateSwapper"/> used to swap values in-place</param>
+            <returns>The created <see cref="T:Althea.Helpers.Swapper`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.Swapper`1.Swap(`0@,`0@)">
+            <summary>
+            When implemented by a derived class, swap two values <paramref name="a"/> and <paramref name="b"/> in-place
+            </summary>
+            <param name="a">The reference to first value to be swapped with <paramref name="b"/></param>
+            <param name="b">The reference to second value to be swapped with <paramref name="a"/></param>
+        </member>
+        <member name="P:Althea.Helpers.Swapper`1.Default">
+            <summary>
+            Get a default swapper for the type specified by the generic argument <typeparamref name="T"/> that simply swaps the values by assignments.
+            </summary>
+        </member>
+        <member name="T:Althea.Helpers.SortHelper">
+            <summary>
+            The static class that provides the sort utilities for <see cref="T:System.Span`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SortHelper.Sort``2(System.Span{``0},System.Span{``1},System.Collections.Generic.Comparer{``0},Althea.Helpers.Swapper{``1})">
+            <summary>
+            Sort the <paramref name="keys"/> with <paramref name="values"/> using the given <typeparamref name="TKey"/> <paramref name="comparer"/> and <typeparamref name="TValue"/> <paramref name="swapper"/>
+            </summary>
+            <typeparam name="TKey">The type of the keys</typeparam>
+            <typeparam name="TValue">The type of the values</typeparam>
+            <param name="keys">The keys as a <see cref="T:System.Span`1"/> of <typeparamref name="TKey"/></param>
+            <param name="values">The values as a <see cref="T:System.Span`1"/> of <typeparamref name="TValue"/></param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.Comparer`1"/> of <typeparamref name="TKey"/> used to compare the elements in <paramref name="keys"/>. Default null means <see cref="P:System.Collections.Generic.Comparer`1.Default"/>.</param>
+            <param name="swapper">The <see cref="T:Althea.Helpers.Swapper`1"/> of <typeparamref name="TValue"/> used to swap the elements in <paramref name="values"/> (<paramref name="keys"/> always uses a default swapper). Default null means <see cref="P:Althea.Helpers.Swapper`1.Default"/>.</param>
+        </member>
+        <member name="M:Althea.Helpers.SortHelper.Sort``3(System.Span{``0},System.Span{``1},System.Span{``2},System.Collections.Generic.Comparer{``0},Althea.Helpers.Swapper{``1},Althea.Helpers.Swapper{``2})">
+            <summary>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/> and (<typeparamref name="TValue1"/> <paramref name="swapper1"/>, <typeparamref name="TValue2"/> <paramref name="swapper2"/>)
+            </summary>
+            <typeparam name="TKey">The type of the keys</typeparam>
+            <typeparam name="TValue1">The type of the first value array</typeparam>
+            <typeparam name="TValue2">The type of the second value array</typeparam>
+            <param name="keys">The keys as a <see cref="T:System.Span`1"/> of <typeparamref name="TKey"/></param>
+            <param name="values1">The first value array as a <see cref="T:System.Span`1"/> of <typeparamref name="TValue1"/></param>
+            <param name="values2">The second value array as a <see cref="T:System.Span`1"/> of <typeparamref name="TValue2"/></param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.Comparer`1"/> of <typeparamref name="TKey"/> used to compare the elements in <paramref name="keys"/>. Default null means <see cref="P:System.Collections.Generic.Comparer`1.Default"/>.</param>
+            <param name="swapper1">The <see cref="T:Althea.Helpers.Swapper`1"/> of <typeparamref name="TValue1"/> used to swap the elements in <paramref name="values1"/>. Default null means <see cref="P:Althea.Helpers.Swapper`1.Default"/>.</param>
+            <param name="swapper2">The <see cref="T:Althea.Helpers.Swapper`1"/> of <typeparamref name="TValue2"/> used to swap the elements in <paramref name="values2"/>. Default null means <see cref="P:Althea.Helpers.Swapper`1.Default"/>.</param>
+        </member>
+        <member name="M:Althea.Helpers.SortHelper.Sort``4(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Collections.Generic.Comparer{``0},Althea.Helpers.Swapper{``1},Althea.Helpers.Swapper{``2},Althea.Helpers.Swapper{``3})">
+            <summary>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/> and (<typeparamref name="TValue1"/> <paramref name="swapper1"/>, <typeparamref name="TValue2"/> <paramref name="swapper2"/>, <typeparamref name="TValue3"/> <paramref name="swapper3"/>)
+            </summary>
+            <typeparam name="TKey">The type of the keys</typeparam>
+            <typeparam name="TValue1">The type of the first value array</typeparam>
+            <typeparam name="TValue2">The type of the second value array</typeparam>
+            <typeparam name="TValue3">The type of the third value array</typeparam>
+            <param name="keys">The keys as a <see cref="T:System.Span`1"/> of <typeparamref name="TKey"/></param>
+            <param name="values1">The first value array as a <see cref="T:System.Span`1"/> of <typeparamref name="TValue1"/></param>
+            <param name="values2">The second value array as a <see cref="T:System.Span`1"/> of <typeparamref name="TValue2"/></param>
+            <param name="values3">The third value array as a <see cref="T:System.Span`1"/> of <typeparamref name="TValue3"/></param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.Comparer`1"/> of <typeparamref name="TKey"/> used to compare the elements in <paramref name="keys"/>. Default null means <see cref="P:System.Collections.Generic.Comparer`1.Default"/>.</param>
+            <param name="swapper1">The <see cref="T:Althea.Helpers.Swapper`1"/> of <typeparamref name="TValue1"/> used to swap the elements in <paramref name="values1"/>. Default null means <see cref="P:Althea.Helpers.Swapper`1.Default"/>.</param>
+            <param name="swapper2">The <see cref="T:Althea.Helpers.Swapper`1"/> of <typeparamref name="TValue2"/> used to swap the elements in <paramref name="values2"/>. Default null means <see cref="P:Althea.Helpers.Swapper`1.Default"/>.</param>
+            <param name="swapper3">The <see cref="T:Althea.Helpers.Swapper`1"/> of <typeparamref name="TValue3"/> used to swap the elements in <paramref name="values3"/>. Default null means <see cref="P:Althea.Helpers.Swapper`1.Default"/>.</param>
+        </member>
         <member name="T:Althea.Helpers.SpanList`1">
             <summary>
             The list-like span that supports addition and removal. Its internal implementation simply utilizes a fixed-sized <see cref="T:System.Span`1"/>.
@@ -5680,6 +5759,23 @@
             <exception cref="T:System.ArgumentNullException">If any of <paramref name="array"/> or itself is null</exception>
             <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is not the same as this one</exception>
         </member>
+        <member name="P:Althea.Helpers.SpanMatrix`1.ColumnSwapper">
+            <summary>
+            Get the <see cref="T:Althea.Helpers.Swapper`1"/> used to in-place swap two columns of this <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+            <example><code>
+            fixed (<typeparamref name="T"/>* p = spanMatrix.<see cref="P:Althea.Helpers.SpanMatrix`1.UnderlyingSpan">UnderlyingSpan</see>)
+            {
+            	<see cref="T:System.Int32"/> l = spanMatrix.<see cref="P:Althea.Helpers.SpanMatrix`1.LeadDim">LeadDim</see>, n = spanMatrix.<see cref="P:Althea.Helpers.SpanMatrix`1.Cols">Cols</see>;
+            	<see cref="T:System.Span`1">Span</see>&lt;<see cref="T:System.IntPtr"/>&gt; columns = stackalloc <see cref="T:System.IntPtr"/>[n];
+            	for (<see cref="T:System.Int32"/> i = 0; i &lt; n; i++)
+            	{
+            		columns[i] = (<see cref="T:System.IntPtr"/>)(p + n * l);
+            	}
+            	keys.<see cref="M:Althea.Helpers.SortHelper.Sort``2(System.Span{``0},System.Span{``1},System.Collections.Generic.Comparer{``0},Althea.Helpers.Swapper{``1})">Sort</see>(columns, swapper: spanMatrix.<see cref="P:Althea.Helpers.SpanMatrix`1.ColumnSwapper">ColumnSwapper</see>);
+            }
+            </code></example>
+        </member>
         <member name="T:Althea.LinearAlgebra.ILinearAlgebraApi">
             <summary>
             The interface for runtime linear algebra API routines
@@ -5752,15 +5848,15 @@
         </member>
         <member name="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">
             <summary>
-            The exception to be thrown when a matrix solve method failed due to several reasons
+            The exception to be thrown when a matrix solving method of a LAPACK or LAPACK-like library failed due to several reasons
             </summary>
         </member>
         <member name="M:Althea.LinearAlgebra.MatrixSolveAlgorithmException.#ctor(Althea.LinearAlgebra.SolveMethodKind,System.Int32)">
             <summary>
             Constructor of <see cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException"/>
             </summary>
-            <param name="kind">which kind of CUDA solver is used (in <see cref="T:Althea.LinearAlgebra.SolveMethodKind"/>)</param>
-            <param name="i">returned device info</param>
+            <param name="kind">which kind of LAPACK-like solver is used (in <see cref="T:Althea.LinearAlgebra.SolveMethodKind"/>)</param>
+            <param name="i">The returned LAPACK-like solver information</param>
         </member>
         <member name="M:Althea.LinearAlgebra.MatrixSolveAlgorithmException.#ctor">
             <summary>
@@ -5771,18 +5867,15 @@
             <summary>
             <see cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException"/> with custom message
             </summary>
-            <param name="message"></param>
         </member>
         <member name="M:Althea.LinearAlgebra.MatrixSolveAlgorithmException.#ctor(System.String,System.Exception)">
             <summary>
             <see cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException"/> with custom message and inner exception
             </summary>
-            <param name="message"></param>
-            <param name="innerException"></param>
         </member>
         <member name="T:Althea.LinearAlgebra.SolveMethodKind">
             <summary>
-            The <see cref="T:Althea.LinearAlgebra.SolveMethodKind"/> enum indicates the classification of a matrix-solving method
+            The <see cref="T:Althea.LinearAlgebra.SolveMethodKind"/> enum indicates the classification of a matrix-solving method of a LAPACK or LAPACK-like library
             </summary>
         </member>
         <member name="F:Althea.LinearAlgebra.SolveMethodKind.Cholesky">
@@ -5898,21 +5991,6 @@
         <member name="F:Althea.LinearAlgebra.SVDStore.None">
             <summary>
             None of the columns / rows are stored
-            </summary>
-        </member>
-        <member name="T:Althea.LinearAlgebra.DiagType">
-            <summary>
-            The <see cref="T:Althea.LinearAlgebra.DiagType"/> enum indicates whether the main diagonal of the dense matrix is unity and consequently should not be touched or modified by the function.
-            </summary>
-        </member>
-        <member name="F:Althea.LinearAlgebra.DiagType.NonUnit">
-            <summary>
-            the matrix diagonal has non-unit elements
-            </summary>
-        </member>
-        <member name="F:Althea.LinearAlgebra.DiagType.Unit">
-            <summary>
-            the matrix diagonal has unit elements
             </summary>
         </member>
         <member name="T:Althea.LinearAlgebra.MatrixOperation">
@@ -13236,7 +13314,7 @@
         </member>
         <member name="P:Althea.Resources.Exception.MatrixSolveEigen">
             <summary>
-              查找类似 Eigenvalue decomposition failed since {0} off-diagonal elements of an intermediate tridiagonal form did not converge to zero. 的本地化字符串。
+              查找类似 Eigenvalue decomposition failed since {0}-th off-diagonal elements of an intermediate tridiagonal form did not converge to zero. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Resources.Exception.MatrixSolveGeneralEigen">
@@ -13266,7 +13344,7 @@
         </member>
         <member name="P:Althea.Resources.Exception.MatrixSolveSVD">
             <summary>
-              查找类似 SVD failed to converge, {0} super-diagonal elements of an upper bidiagonal matrix not converged. 的本地化字符串。
+              查找类似 SVD failed to converge, {0}-th super-diagonal elements of an upper bidiagonal matrix not converged. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Resources.Exception.MismatchCannotConvert">
@@ -15892,12 +15970,12 @@
         </member>
         <member name="F:Althea.TensorAlgebra.BinaryOperation.Maximum">
             <summary>
-            Maximum of two elements (only for complex-typed tensors)
+            Maximum of two elements (only for real-typed tensors)
             </summary>
         </member>
         <member name="F:Althea.TensorAlgebra.BinaryOperation.Mininum">
             <summary>
-            Minimum of two elements (only for complex-typed tensors)
+            Minimum of two elements (only for real-typed tensors)
             </summary>
         </member>
         <member name="T:Althea.TensorAlgebra.UnaryOperation">
@@ -15970,6 +16048,33 @@
             </summary>
             <returns>The invalidness of this wrapper</returns>
         </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.Equals(System.Object)">
+            <summary>
+            This method always returns false since a ref struct cannot be boxed
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.GetHashCode">
+            <summary>
+            Not supported. Always throws a <see cref="T:System.NotSupportedException"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Always</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.op_Equality(Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.TensorContractInfo)">
+            <summary>
+            Equality comparer
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.op_Inequality(Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.TensorContractInfo)">
+            <summary>
+            Inequality comparer
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.TensorContractInfo.ToString">
+            <summary>
+            Returns the string representation of this <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/>
+            </summary>
+            <returns>The string representation of this <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/></returns>
+        </member>
         <member name="M:Althea.TensorAlgebra.TensorContractInfo.#ctor(System.ReadOnlySpan{System.Int32},System.ReadOnlySpan{System.Int32},System.ReadOnlySpan{System.Int32},System.ReadOnlySpan{System.Int32})">
             <summary>
             Create a <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> with the given direct information
@@ -16030,12 +16135,123 @@
             <returns>The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> created from the given parameters</returns>
             <remarks>This method assumes that all labels are sets</remarks>
         </member>
-        <member name="T:Althea.TensorAlgebra.CheckExtensions">
+        <member name="T:Althea.TensorAlgebra.StorableContractInfo">
             <summary>
-            The static class for check methods other than contract ones which are already implied in <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/>
+            The <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> that can be stored on stack and heap
             </summary>
         </member>
-        <member name="M:Althea.TensorAlgebra.CheckExtensions.CheckReduce(Althea.Arrays.ITensor,Althea.TensorAlgebra.TensorOrder,System.Span{System.Int32},System.Span{System.Int64}@,System.Span{System.Char}@)">
+        <member name="P:Althea.TensorAlgebra.StorableContractInfo.LeftContract">
+            <summary>
+            This partial permutation of the left tensor indicate the contract dimensions/indices of the left tensor
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.StorableContractInfo.RightContract">
+            <summary>
+            The partial permutation of the right tensor indicate the contract dimensions/indices of the right tensor, corresponding to <see cref="P:Althea.TensorAlgebra.StorableContractInfo.LeftContract"/>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.StorableContractInfo.LeftFreeInOutput">
+            <summary>
+            The partial permutation of the output tensor indicate the free (not contracted) dimensions/indices of the left tensor:<br/>
+            <c>output.Labels[<see cref="P:Althea.TensorAlgebra.StorableContractInfo.LeftFreeInOutput"/>] == left.Labels[<see cref="M:Althea.TensorAlgebra.StorableContractInfo.GetLeftFree"/>]</c>
+            </summary>
+        </member>
+        <member name="P:Althea.TensorAlgebra.StorableContractInfo.RightFreeInOutput">
+            <summary>
+            The partial permutation of the output tensor indicate the free (not contracted) dimensions/indices of the right tensor:<br/>
+            <c>output.Labels[<see cref="P:Althea.TensorAlgebra.StorableContractInfo.RightFreeInOutput"/>] == right.Labels[<see cref="M:Althea.TensorAlgebra.StorableContractInfo.GetRightFree"/>]</c>
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.GetLeftFree(System.Span{System.Int32})">
+            <summary>
+            Get the partial permutation of the left tensor indicating the free (not contracted) dimensions/indices of the left tensor.
+            </summary>
+            <param name="output">The <see cref="T:System.Span`1"/> to put the result</param>
+            <returns>The sliced <paramref name="output"/> of correct length</returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="output"/> is too short</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.GetRightFree(System.Span{System.Int32})">
+            <summary>
+            Get the partial permutation of the right tensor indicating the free (not contracted) dimensions/indices of the right tensor.
+            </summary>
+            <param name="output">The <see cref="T:System.Span`1"/> to put the result</param>
+            <returns>The sliced <paramref name="output"/> of correct length</returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="output"/> is too short</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.GetLeftFree">
+            <summary>
+            Get the partial permutation of the left tensor indicating the free (not contracted) dimensions/indices of the left tensor.
+            </summary>
+            <returns>The container of the partial permutation of the left tensor indicating the free (not contracted) dimensions/indices of the left tensor.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.GetRightFree">
+            <summary>
+            Get the partial permutation of the right tensor indicating the free (not contracted) dimensions/indices of the right tensor.
+            </summary>
+            <returns>The container of the partial permutation of the right tensor indicating the free (not contracted) dimensions/indices of the right tensor.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.IsValid">
+            <summary>
+            Check whether this wrapper is an invalid one or not
+            </summary>
+            <returns>The invalidness of this wrapper</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.Equals(Althea.TensorAlgebra.StorableContractInfo)">
+            <summary>
+            Check whether the <paramref name="other"/> <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/> is the same as this one
+            </summary>
+            <param name="other">The other <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.Equals(System.Object)">
+            <summary>
+            Indicates whether this <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/> and a specified object are equal.
+            </summary>
+            <param name="obj">The object to compare with the current instance.</param>
+            <returns>True if obj and this instance are the same type and represent the same value; false otherwise.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.GetHashCode">
+            <summary>
+            Returns the hash code for this <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/>.
+            </summary>
+            <returns>the hash code for this <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/>.</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.op_Equality(Althea.TensorAlgebra.StorableContractInfo,Althea.TensorAlgebra.StorableContractInfo)">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.op_Inequality(Althea.TensorAlgebra.StorableContractInfo,Althea.TensorAlgebra.StorableContractInfo)">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.#ctor(Althea.Arrays.ITensor,Althea.Arrays.ITensor,Althea.Arrays.ITensor)">
+            <summary>
+            Create a <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/> with the given <paramref name="left"/>, <paramref name="right"/> and <paramref name="output"/> tensors
+            </summary>
+            <param name="left">The input left <see cref="T:Althea.Arrays.ITensor"/></param>
+            <param name="right">The input right <see cref="T:Althea.Arrays.ITensor"/></param>
+            <param name="output">The output <see cref="T:Althea.Arrays.ITensor"/></param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.op_Implicit(Althea.TensorAlgebra.TensorContractInfo)~Althea.TensorAlgebra.StorableContractInfo">
+            <summary>
+            Implicitly convert from a <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/>
+            </summary>
+            <param name="info">The given <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> to be converted</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.StorableContractInfo.op_Implicit(Althea.TensorAlgebra.StorableContractInfo)~Althea.TensorAlgebra.TensorContractInfo">
+            <summary>
+            Implicitly convert to a <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/>
+            </summary>
+            <param name="info">The given <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/> to be converted</param>
+        </member>
+        <member name="T:Althea.TensorAlgebra.ContractInfoExtension">
+            <summary>
+            The static class for check methods other than contract ones which are already implied in <see cref="T:Althea.TensorAlgebra.TensorContractInfo"/> and other extension methods
+            </summary>
+        </member>
+        <member name="M:Althea.TensorAlgebra.ContractInfoExtension.CheckReduce(Althea.Arrays.ITensor,Althea.TensorAlgebra.TensorOrder,System.Span{System.Int32},System.Span{System.Int64}@,System.Span{System.Char}@)">
             <summary>
             Check the <paramref name="tensor"/> reduction indicated by the given <paramref name="order"/>
             </summary>
@@ -16045,6 +16261,24 @@
             <param name="size">The <see cref="T:System.Span`1"/> of length equaling the rank. Filled with the actual output size of actual output rank at exit.</param>
             <param name="labels">The <see cref="T:System.Span`1"/> of length equaling the rank. Filled with the actual output labels of actual output rank at exit.</param>
             <returns>The <paramref name="reducePerm"/> of actual reduction rank</returns>
+        </member>
+        <member name="M:Althea.TensorAlgebra.ContractInfoExtension.FillWithLabel(System.Span{System.Char})">
+            <summary>
+            Fill the given <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/>s with the English alphabet followed by the Greek alphabet
+            </summary>
+            <param name="span">The <paramref name="span"/> to be filled with letters</param>
+            <returns>The filled <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="span"/> is too large</exception>
+        </member>
+        <member name="M:Althea.TensorAlgebra.ContractInfoExtension.FillZerosWithLabel(System.Span{System.Char},System.Char)">
+            <summary>
+            Fill the given <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/>s with the English alphabet followed by the Greek alphabet started by <paramref name="from"/>
+            </summary>
+            <param name="span">The <paramref name="span"/> to be filled with letters</param>
+            <param name="from">The starting letter</param>
+            <returns>The filled <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="from"/> is neither a English letter nor a Greek letter</exception>
         </member>
         <member name="T:Althea.TensorAlgebra.Dense.AbstractApi">
             <summary>

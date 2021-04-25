@@ -907,5 +907,51 @@ namespace Althea.Helpers
 			}
 		}
 		#endregion
+
+		#region sort related
+		// Ignore Spelling: stackalloc
+		/// <summary>
+		/// Get the <see cref="Swapper{T}"/> used to in-place swap two columns of this <see cref="SpanMatrix{T}"/>
+		/// </summary>
+		/// <example><code>
+		/// fixed (<typeparamref name="T"/>* p = spanMatrix.<see cref="UnderlyingSpan">UnderlyingSpan</see>)
+		/// {
+		/// 	<see cref="int"/> l = spanMatrix.<see cref="LeadDim">LeadDim</see>, n = spanMatrix.<see cref="Cols">Cols</see>;
+		/// 	<see cref="Span{T}">Span</see>&lt;<see cref="IntPtr"/>&gt; columns = stackalloc <see cref="IntPtr"/>[n];
+		/// 	for (<see cref="int"/> i = 0; i &lt; n; i++)
+		/// 	{
+		/// 		columns[i] = (<see cref="IntPtr"/>)(p + n * l);
+		/// 	}
+		/// 	keys.<see cref="SortHelper.Sort{TKey, TValue}">Sort</see>(columns, swapper: spanMatrix.<see cref="ColumnSwapper">ColumnSwapper</see>);
+		/// }
+		/// </code></example>
+		public unsafe readonly Swapper<IntPtr> ColumnSwapper {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => new ColumnSwapping(this);
+		}
+
+		private sealed class ColumnSwapping : Swapper<IntPtr>
+		{
+			private readonly int rows;
+
+			private readonly byte[]? buffer;
+
+			internal ColumnSwapping(SpanMatrix<T> mat)
+			{
+				this.rows = mat._rows * Unsafe.SizeOf<T>();
+				this.buffer = this.rows.CheckStackLimit<byte>();
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public override unsafe void Swap(ref IntPtr a, ref IntPtr b)
+			{
+				Span<byte> buf = this.buffer ?? stackalloc byte[this.rows];
+				Span<byte> aa = new((void*)a, this.rows), bb = new((void*)b, this.rows);
+				aa.CopyTo(buf);
+				bb.CopyTo(aa);
+				buf.CopyTo(bb);
+			}
+		}
+		#endregion
 	}
 }
