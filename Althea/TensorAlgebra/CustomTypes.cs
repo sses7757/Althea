@@ -6,6 +6,7 @@ using Althea.Arrays;
 using Althea.Linq;
 using Althea.Resources;
 using Althea.Helpers;
+using System.Reflection.Emit;
 
 
 namespace Althea.TensorAlgebra
@@ -125,7 +126,7 @@ namespace Althea.TensorAlgebra
 		/// <returns>The sliced <paramref name="output"/> of correct length</returns>
 		/// <exception cref="ArgumentException">If <paramref name="output"/> is too short</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ReadOnlySpan<int> GetLeftFree(Span<int> output) => GetFree(this.m_leftFreeInOut, this.m_leftConc, output);
+		public readonly ReadOnlySpan<int> GetLeftFree(Span<int> output) => GetFree(this.m_leftFreeInOut, this.m_leftConc, output);
 
 		/// <summary>
 		/// Get the partial permutation of the right tensor indicating the free (not contracted) dimensions/indices of the right tensor.
@@ -134,16 +135,53 @@ namespace Althea.TensorAlgebra
 		/// <returns>The sliced <paramref name="output"/> of correct length</returns>
 		/// <exception cref="ArgumentException">If <paramref name="output"/> is too short</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ReadOnlySpan<int> GetRightFree(Span<int> output) => GetFree(this.m_rightFreeInOut, this.m_rightConc, output);
+		public readonly ReadOnlySpan<int> GetRightFree(Span<int> output) => GetFree(this.m_rightFreeInOut, this.m_rightConc, output);
 
 		/// <summary>
 		/// Check whether this wrapper is an invalid one or not
 		/// </summary>
 		/// <returns>The invalidness of this wrapper</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsInvalid() => this.m_leftConc.Length != this.m_rightConc.Length ||
+		public readonly bool IsInvalid() => this.m_leftConc.Length != this.m_rightConc.Length ||
 			(this.m_leftConc.IsEmpty && this.m_rightConc.IsEmpty && this.m_leftFreeInOut.IsEmpty && this.m_rightFreeInOut.IsEmpty) ||
 			(this.m_leftFreeInOut.IsEmpty && this.m_rightFreeInOut.IsEmpty && this.m_leftConc.Length != this.m_rightConc.Length);
+
+		/// <summary>
+		/// Get a possible combination of labels of all three tensors of this <see cref="TensorContractInfo"/>
+		/// </summary>
+		/// <param name="labelA">The input/output labels of the left tensor</param>
+		/// <param name="labelB">The input/output labels of the right tensor</param>
+		/// <param name="labelC">The input/output labels of the output tensor</param>
+		/// <exception cref="ArgumentException">If the inputs are too short</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void GetLabels(ref Span<char> labelA, ref Span<char> labelB, ref Span<char> labelC)
+		{
+			int fa = this.m_leftFreeInOut.Length, fb = this.m_rightFreeInOut.Length;
+			int c = this.m_leftConc.Length;
+			if (labelC.Length < fa + fb)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labelC));
+			if (labelA.Length < fa + c)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labelA));
+			if (labelB.Length < c + fb)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labelB));
+			labelA = labelA[..(fa + c)];
+			labelB = labelB[..(fb + c)];
+			labelC = labelC[..(fa + fb)];
+			labelC.FillWithLabel();
+
+			Span<int> freeA = stackalloc int[fa];
+			Span<int> freeB = stackalloc int[fb];
+			this.GetLeftFree(freeA); this.GetRightFree(freeB);
+			Span<char> tempLabel = stackalloc char[Math.Max(Math.Max(fa, fb), c)];
+			labelC.ReOrderTo(tempLabel, this.m_leftFreeInOut);
+			tempLabel.InverseOrderTo(labelA, freeA);
+			labelC.ReOrderTo(tempLabel, this.m_rightFreeInOut);
+			tempLabel.InverseOrderTo(labelB, freeB);
+
+			labelA.FillZerosWithLabel((char)('a' + fa + fb));
+			labelA.ReOrderTo(tempLabel, this.m_leftConc);
+			tempLabel.InverseOrderTo(labelB, this.m_rightConc);
+		}
 		#endregion
 
 		#region override
@@ -223,23 +261,11 @@ namespace Althea.TensorAlgebra
 			else
 			{	// normal contraction
 				int fa = this.m_leftFreeInOut.Length, fb = this.m_rightFreeInOut.Length;
-				Span<int> freeA = stackalloc int[fa];
-				Span<int> freeB = stackalloc int[fb];
-				this.GetLeftFree(freeA); this.GetRightFree(freeB);
 				int c = this.m_leftConc.Length;
 				Span<char> labelC = stackalloc char[fa + fb].FillWithLabel();
 				Span<char> labelA = stackalloc char[c + fa];
 				Span<char> labelB = stackalloc char[c + fb];
-				Span<char> tempLabel = stackalloc char[Math.Max(Math.Max(fa, fb), c)];
-				labelC.ReOrderTo(tempLabel, this.m_leftFreeInOut);
-				tempLabel.InverseOrderTo(labelA, freeA);
-				labelC.ReOrderTo(tempLabel, this.m_rightFreeInOut);
-				tempLabel.InverseOrderTo(labelB, freeB);
-
-				labelA.FillZerosWithLabel((char)('a' + fa + fb));
-				labelA.ReOrderTo(tempLabel, this.m_leftConc);
-				tempLabel.InverseOrderTo(labelB, this.m_rightConc);
-
+				this.GetLabels(ref labelA, ref labelB, ref labelC);
 				return $"Contract tensor A[{labelA.SpanJoin(',')}] and tensor B[{labelB.SpanJoin(',')}] to tensor C[{labelC.SpanJoin(',')}].";
 			}
 		}
@@ -501,7 +527,7 @@ namespace Althea.TensorAlgebra
 		/// <returns>The sliced <paramref name="output"/> of correct length</returns>
 		/// <exception cref="ArgumentException">If <paramref name="output"/> is too short</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ReadOnlySpan<int> GetLeftFree(Span<int> output) => TensorContractInfo.GetFree(this.LeftFreeInOutput, this.LeftContract, output);
+		public readonly ReadOnlySpan<int> GetLeftFree(Span<int> output) => TensorContractInfo.GetFree(this.LeftFreeInOutput, this.LeftContract, output);
 
 		/// <summary>
 		/// Get the partial permutation of the right tensor indicating the free (not contracted) dimensions/indices of the right tensor.
@@ -510,14 +536,14 @@ namespace Althea.TensorAlgebra
 		/// <returns>The sliced <paramref name="output"/> of correct length</returns>
 		/// <exception cref="ArgumentException">If <paramref name="output"/> is too short</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ReadOnlySpan<int> GetRightFree(Span<int> output) => TensorContractInfo.GetFree(this.RightFreeInOutput, this.RightContract, output);
+		public readonly ReadOnlySpan<int> GetRightFree(Span<int> output) => TensorContractInfo.GetFree(this.RightFreeInOutput, this.RightContract, output);
 
 		/// <summary>
 		/// Get the partial permutation of the left tensor indicating the free (not contracted) dimensions/indices of the left tensor.
 		/// </summary>
 		/// <returns>The container of the partial permutation of the left tensor indicating the free (not contracted) dimensions/indices of the left tensor.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public FixedBuffer_64<int> GetLeftFree()
+		public readonly FixedBuffer_64<int> GetLeftFree()
 		{
 			FixedBuffer_64<int> result = default;
 			TensorContractInfo.GetFree(this.LeftFreeInOutput, this.LeftContract, result.AsSpan());
@@ -529,7 +555,7 @@ namespace Althea.TensorAlgebra
 		/// </summary>
 		/// <returns>The container of the partial permutation of the right tensor indicating the free (not contracted) dimensions/indices of the right tensor.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public FixedBuffer_64<int> GetRightFree()
+		public readonly FixedBuffer_64<int> GetRightFree()
 		{
 			FixedBuffer_64<int> result = default;
 			TensorContractInfo.GetFree(this.RightFreeInOutput, this.RightContract, result.AsSpan());
@@ -541,7 +567,57 @@ namespace Althea.TensorAlgebra
 		/// </summary>
 		/// <returns>The invalidness of this wrapper</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsValid() => this.m_concLen > 0 || this.m_leftFreeLen > 0 || this.m_rightFreeLen > 0;
+		public readonly bool IsValid() => this.m_concLen > 0 || this.m_leftFreeLen > 0 || this.m_rightFreeLen > 0;
+
+		/// <summary>
+		/// Get a possible combination of labels of all three tensors of this <see cref="StorableContractInfo"/>
+		/// </summary>
+		/// <param name="labelA">The input/output labels of the left tensor</param>
+		/// <param name="labelB">The input/output labels of the right tensor</param>
+		/// <param name="labelC">The input/output labels of the output tensor</param>
+		/// <exception cref="ArgumentException">If the inputs are too short</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void GetLabels(ref Span<char> labelA, ref Span<char> labelB, ref Span<char> labelC)
+		{
+			int fa = this.m_leftFreeLen, fb = this.m_rightFreeLen;
+			int c = this.m_concLen;
+			if (labelC.Length < fa + fb)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labelC));
+			if (labelA.Length < fa + c)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labelA));
+			if (labelB.Length < c + fb)
+				throw new ArgumentException(Parameter.WrongSize, nameof(labelB));
+			labelA = labelA[..(fa + c)];
+			labelB = labelB[..(fb + c)];
+			labelC = labelC[..(fa + fb)];
+			labelC.FillWithLabel();
+
+			Span<int> freeA = stackalloc int[fa];
+			Span<int> freeB = stackalloc int[fb];
+			this.GetLeftFree(freeA); this.GetRightFree(freeB);
+			Span<char> tempLabel = stackalloc char[Math.Max(Math.Max(fa, fb), c)];
+			labelC.ReOrderTo(tempLabel, this.LeftFreeInOutput);
+			tempLabel.InverseOrderTo(labelA, freeA);
+			labelC.ReOrderTo(tempLabel, this.RightFreeInOutput);
+			tempLabel.InverseOrderTo(labelB, freeB);
+
+			labelA.FillZerosWithLabel((char)('a' + fa + fb));
+			labelA.ReOrderTo(tempLabel, this.LeftContract);
+			tempLabel.InverseOrderTo(labelB, this.RightContract);
+		}
+
+		/// <summary>
+		/// Get a possible combination of labels of all three tensors of this <see cref="StorableContractInfo"/>
+		/// </summary>
+		/// <returns>The containers of the labels of left, right and output tensors, respectively.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly (FixedBuffer_32<char> labelA, FixedBuffer_32<char> labelB, FixedBuffer_32<char> labelC) GetLabels()
+		{
+			FixedBuffer_32<char> labelA = default, labelB = default, labelC = default;
+			Span<char> lA = labelA.AsSpan(), lB = labelB.AsSpan(), lC = labelC.AsSpan();
+			this.GetLabels(ref lA, ref lB, ref lC);
+			return (labelA, labelB, labelC);
+		}
 		#endregion
 
 		#region equality
@@ -652,6 +728,17 @@ namespace Althea.TensorAlgebra
 		public static implicit operator TensorContractInfo(StorableContractInfo info)
 		{
 			return info.IsValid() ? new TensorContractInfo(info.LeftContract, info.RightContract, info.LeftFreeInOutput, info.RightFreeInOutput) : default;
+		}
+		#endregion
+
+		#region other
+		/// <summary>
+		/// Returns the string representation of this <see cref="StorableContractInfo"/>
+		/// </summary>
+		/// <returns>The string representation of this <see cref="StorableContractInfo"/></returns>
+		public override string ToString()
+		{
+			return ((TensorContractInfo)this).ToString();
 		}
 		#endregion
 	}

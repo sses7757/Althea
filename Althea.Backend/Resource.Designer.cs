@@ -79,6 +79,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 The CUDA device ID changes from {0} to {1}. 的本地化字符串。
+        /// </summary>
+        internal static string ChangeDevice {
+            get {
+                return ResourceManager.GetString("ChangeDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cannot compare complex numbers of type {0}. 的本地化字符串。
         /// </summary>
         internal static string CompareComplex {

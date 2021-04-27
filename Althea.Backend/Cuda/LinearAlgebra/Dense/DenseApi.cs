@@ -77,7 +77,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			set {
 				if (value)
 				{
-					var cap = Storage.StorageApi.GetDeviceComputeCapability(Storage.StorageApi.CurrentDeviceID);
+					var cap = CudaRuntime.GetDeviceComputeCapability(CudaRuntime.CurrentDeviceID);
 					if (cap.major < 5)
 					{
 						Log.Write(string.Format(Resource.InsufficientCudaCapability, cap, (5, 0)));
@@ -104,10 +104,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		public DenseApi()
 		{
-			var (major, minor) = Storage.StorageApi.GetDriverVersion();
+			var (major, minor) = CudaRuntime.GetDriverVersion();
 			this.Cuda110OrAbove = major >= 11;
 			this.Cuda111OrAbove = (major == 11 && minor >= 1) || major > 11;
-			this.BindedDeviceID = Storage.StorageApi.CurrentDeviceID;
+			this.BindedDeviceID = CudaRuntime.CurrentDeviceID;
 			if (this.Cuda110OrAbove)
 			{
 				NativeMethods.cublasCreate(out this.cublasHandle).Check();

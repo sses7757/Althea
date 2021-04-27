@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Althea.Arrays;
 using Althea.NativeTypes;
 using Althea.Linq;
+using Althea.Helpers;
 
 
 namespace Althea.TensorAlgebra.Dense
@@ -15,51 +16,69 @@ namespace Althea.TensorAlgebra.Dense
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	public readonly ref struct DenseTensorWrapper<T> where T : unmanaged
 	{
+		#region basic
 		private readonly Storage<T> m_values;
 
-		private readonly ReadOnlySpan<long> m_size, m_outerSize;
+		private readonly ReadOnlySpan<long> m_size, m_outerSize, m_strides;
 
 		private readonly UnaryOperation m_op;
 
 		private readonly T m_scalar;
 
 		/// <summary>
-		/// The value array of this tensor as a <see cref="Storage{T}"/> of <typeparamref name="T"/>
+		/// Get the value array of this tensor as a <see cref="Storage{T}"/> of <typeparamref name="T"/>
 		/// </summary>
-		public Storage<T> ValueStorage {
+		public readonly Storage<T> ValueStorage {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_values;
 		}
 
 		/// <summary>
-		/// The presenting size of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// Get the presenting size of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
-		public ReadOnlySpan<long> Size {
+		public readonly ReadOnlySpan<long> Size {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_size;
 		}
 
 		/// <summary>
-		/// The outer size (actual size of all dimensions) of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// Get the rank (number of dimensions) of this tensor as a <see cref="int"/>
+		/// </summary>
+		public readonly int Rank {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size.Length;
+		}
+
+		/// <summary>
+		/// Get the outer size (actual size of all dimensions) of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
 		/// <remarks>If there is not pitch, <see cref="OuterSize"/> == <see cref="Size"/> (reference equals)</remarks>
-		public ReadOnlySpan<long> OuterSize {
+		public readonly ReadOnlySpan<long> OuterSize {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_outerSize;
 		}
 
 		/// <summary>
-		/// The <see cref="UnaryOperation"/> which is about to be applied to this tensor if this wrapper is used as an input
+		/// Get the strides between consecutive elements in each dimension of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
 		/// </summary>
-		public UnaryOperation Operation {
+		/// <remarks>If there is not pitch, <see cref="Strides"/> is empty</remarks>
+		public readonly ReadOnlySpan<long> Strides {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_outerSize;
+		}
+
+		/// <summary>
+		/// Get the <see cref="UnaryOperation"/> which is about to be applied to this tensor if this wrapper is used as an input
+		/// </summary>
+		public readonly UnaryOperation Operation {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_op;
 		}
 
 		/// <summary>
-		/// The scalar which is about to be applied to this tensor if this wrapper is used as an input. If this wrapper is a pure input while <see cref="Scalar"/> is 0, this wrapper shall be considered as a null input.
+		/// Get the scalar which is about to be applied to this tensor if this wrapper is used as an input. If this wrapper is a pure input while <see cref="Scalar"/> is 0, this wrapper shall be considered as a null input.
 		/// </summary>
-		public T Scalar {
+		public readonly T Scalar {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.m_scalar;
 		}
@@ -69,29 +88,132 @@ namespace Althea.TensorAlgebra.Dense
 		/// </summary>
 		/// <returns>The invalidness of this wrapper</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsInvalid() => this.m_values is null || !this.m_values.IsValid() || this.m_size.IsEmpty || this.m_outerSize.IsEmpty || this.m_size.Length != this.m_outerSize.Length;
+		public readonly bool IsInvalid() => this.m_values is null || !this.m_values.IsValid() || this.m_size.IsEmpty || this.m_outerSize.IsEmpty || this.m_strides.IsEmpty || this.m_size.Length != this.m_outerSize.Length;
 
 		/// <summary>
 		/// Check whether this wrapper is an invalid one or not when it is an input parameter
 		/// </summary>
 		/// <returns>The invalidness of this wrapper</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsInputInvalid() => this.m_scalar.IsZero() || this.IsInvalid();
+		public readonly bool IsInputInvalid() => this.m_scalar.IsZero() || this.IsInvalid();
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Check whether this <see cref="DenseTensorWrapper{T}"/> is identical to the <paramref name="other"/> one
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseTensorWrapper{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool Equals(DenseTensorWrapper<T> other)
+		{
+			return this.m_values == other.m_values && this.m_size.SequenceEqual(other.m_size) && this.m_outerSize.SequenceEqual(other.m_outerSize) && this.m_op == other.m_op && this.m_scalar.IsEqual(other.m_scalar);
+		}
+
+		/// <summary>
+		/// Check whether this <see cref="DenseTensorWrapper{T}"/> is identical to the <paramref name="other"/> one other than their <see cref="ValueStorage"/>s
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseTensorWrapper{T}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool OtherThanValueEquals(DenseTensorWrapper<T> other)
+		{
+			return this.m_size.SequenceEqual(other.m_size) && this.m_outerSize.SequenceEqual(other.m_outerSize) && this.m_op == other.m_op && this.m_scalar.IsEqual(other.m_scalar);
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right)
+		{
+			return !left.Equals(right);
+		}
+
+		/// <summary>
+		/// Always returns false since a ref struct cannot be boxed
+		/// </summary>
+		public override bool Equals(object? obj) => false;
+
+		/// <summary>
+		/// Always throws <see cref="NotSupportedException"/> since a ref struct cannot be stored on heap
+		/// </summary>
+		public override int GetHashCode() => throw new NotSupportedException();
+
+		/// <summary>
+		/// Get the string representation of this <see cref="DenseTensorWrapper{T}"/>
+		/// </summary>
+		/// <returns>The string representation of this <see cref="DenseTensorWrapper{T}"/></returns>
+		public override string ToString()
+		{
+			return nameof(DenseTensorWrapper<T>) + $"[ValueStorage={this.m_values}, Size={this.m_size.SpanJoin('x')}" + (this.m_size == this.m_outerSize ? "]" : $"OuterSize={this.m_outerSize.SpanJoin('x')}]");
+		}
+		#endregion
+
+		#region create
+		/// <summary>
+		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+		/// </summary>
+		/// <param name="value">The given dense storage</param>
+		/// <param name="size">The presenting size / extent of all dimensions</param>
+		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, UnaryOperation operation = UnaryOperation.Identity)
+		{
+			this.m_values = value;
+			this.m_size = size;
+			this.m_outerSize = size;
+			this.m_strides = default;
+			this.m_op = operation;
+			this.m_scalar = Const<T>.One;
+		}
+
+		/// <summary>
+		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+		/// </summary>
+		/// <param name="value">The given dense storage</param>
+		/// <param name="size">The presenting size / extent of all dimensions</param>
+		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+		/// <param name="scalar">The scalar which is about to be applied to this wrapper</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, T scalar, UnaryOperation operation = UnaryOperation.Identity)
+		{
+			this.m_values = value;
+			this.m_size = size;
+			this.m_outerSize = size;
+			this.m_strides = default;
+			this.m_op = operation;
+			this.m_scalar = scalar;
+		}
 
 		/// <summary>
 		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters and scalar set to 1
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
-		/// <param name="size">The presenting size</param>
-		/// <param name="outerSize">The actual outer size</param>
+		/// <param name="size">The presenting size / extent of all dimensions</param>
+		/// <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
+		/// <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, UnaryOperation operation = UnaryOperation.Identity)
+		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, UnaryOperation operation = UnaryOperation.Identity)
 		{
 			this.m_values = value; this.m_size = size;
 			if (outerSize.SequenceEqual(size))
+			{
 				outerSize = size;
+				strides = default;
+			}
 			this.m_outerSize = outerSize;
+			this.m_strides = strides;
 			this.m_op = operation;
 			this.m_scalar = Const<T>.One;
 		}
@@ -100,17 +222,22 @@ namespace Althea.TensorAlgebra.Dense
 		/// Create a new <see cref="DenseTensorWrapper{T}"/> with all given parameters
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
-		/// <param name="size">The presenting size</param>
-		/// <param name="outerSize">The actual outer size</param>
+		/// <param name="size">The presenting size / extent of all dimensions</param>
+		/// <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
+		/// <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, T scalar, UnaryOperation operation = UnaryOperation.Identity)
+		public DenseTensorWrapper(Storage<T> value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, T scalar, UnaryOperation operation = UnaryOperation.Identity)
 		{
 			this.m_values = value; this.m_size = size;
 			if (outerSize.SequenceEqual(size))
+			{
 				outerSize = size;
+				strides = default;
+			}
 			this.m_outerSize = outerSize;
+			this.m_strides = strides;
 			this.m_op = operation;
 			this.m_scalar = scalar;
 		}
@@ -133,11 +260,27 @@ namespace Althea.TensorAlgebra.Dense
 			if (tensor is ISparseArray<T>)
 				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(tensor));
 
-			var outerSize = tensor is IPitchedArray<T> p ? p.OuterSize : tensor.Size;
+			ReadOnlySpan<long> outerSize, strides;
+			if (tensor is IPitchedArray<T> p)
+			{
+				if (p.OuterSize.SequenceEqual(p.Size))
+				{
+					outerSize = p.Size; strides = default;
+				}
+				else
+				{
+					outerSize = p.OuterSize; strides = p.Strides;
+				}
+			}
+			else
+			{
+				outerSize = tensor.Size; strides = default;
+			}
 			if (scalar.IsZero())
 				scalar = Const<T>.One;
-			this = new(tensor.Storage, tensor.Size, outerSize, scalar, operation);
+			this = new(tensor.Storage, tensor.Size, outerSize, strides, scalar, operation);
 		}
+		#endregion
 	}
 	#endregion
 }

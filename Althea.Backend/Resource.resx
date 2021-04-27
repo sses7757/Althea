@@ -123,6 +123,9 @@
   <data name="CannotWrite" xml:space="preserve">
     <value>Writing data to unwritable {0} is not allowed.</value>
   </data>
+  <data name="ChangeDevice" xml:space="preserve">
+    <value>The CUDA device ID changes from {0} to {1}.</value>
+  </data>
   <data name="CompareComplex" xml:space="preserve">
     <value>Cannot compare complex numbers of type {0}.</value>
   </data>

@@ -16468,6 +16468,12 @@
             </summary>
             <remarks>If there is not pitch, <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.OuterSize"/> == <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Size"/> (reference equals)</remarks>
         </member>
+        <member name="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Strides">
+            <summary>
+            The strides between consecutive elements in each dimension of this tensor as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Int64"/>
+            </summary>
+            <remarks>If there is not pitch, <see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Strides"/> is empty</remarks>
+        </member>
         <member name="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.Operation">
             <summary>
             The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this tensor if this wrapper is used as an input
@@ -16490,22 +16496,41 @@
             </summary>
             <returns>The invalidness of this wrapper</returns>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation)">
+            <summary>
+            Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+            </summary>
+            <param name="value">The given dense storage</param>
+            <param name="size">The presenting size / extent of all dimensions</param>
+            <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},`0,Althea.TensorAlgebra.UnaryOperation)">
+            <summary>
+            Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+            </summary>
+            <param name="value">The given dense storage</param>
+            <param name="size">The presenting size / extent of all dimensions</param>
+            <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
+            <param name="scalar">The scalar which is about to be applied to this wrapper</param>
+        </member>
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.TensorAlgebra.UnaryOperation)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with all given parameters and scalar set to 1
             </summary>
             <param name="value">The given dense storage</param>
-            <param name="size">The presenting size</param>
-            <param name="outerSize">The actual outer size</param>
+            <param name="size">The presenting size / extent of all dimensions</param>
+            <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
+            <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},`0,Althea.TensorAlgebra.UnaryOperation)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1.#ctor(Althea.Storage{`0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},`0,Althea.TensorAlgebra.UnaryOperation)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`1"/> with all given parameters
             </summary>
             <param name="value">The given dense storage</param>
-            <param name="size">The presenting size</param>
-            <param name="outerSize">The actual outer size</param>
+            <param name="size">The presenting size / extent of all dimensions</param>
+            <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
+            <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
             <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
         </member>

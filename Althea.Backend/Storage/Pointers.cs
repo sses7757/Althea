@@ -553,7 +553,7 @@ namespace Althea.Backend.Storage
 			}
 			// cast
 			var loc = pointer.Location; var ptr = pointer.Pointer; var locType = loc.Type;
-			if (((locType == LocationType.CpuRam) || (locType == LocationType.GpuRam && loc.LocationDetail == Cuda.Storage.StorageApi.CurrentDeviceID)) && ptr is IMemoryPointer mp)
+			if (((locType == LocationType.CpuRam) || (locType == LocationType.GpuRam && loc.LocationDetail == Cuda.CudaRuntime.CurrentDeviceID)) && ptr is IMemoryPointer mp)
 			{
 				memoryPointer = mp;
 			}

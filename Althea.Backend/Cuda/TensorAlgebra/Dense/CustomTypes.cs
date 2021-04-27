@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using Althea.Linq;
+using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
 
-using Microsoft.VisualBasic;
 
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 {
@@ -58,18 +59,18 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 	internal static partial class Converter
 	{
-		internal static ComputeType ToComputeType(this DataType type)
+		internal static ComputeType ToComputeType(this CudaDataType type)
 		{
 			return type switch
 			{
-				DataType.RealInt8 or DataType.ComplexInt8 => ComputeType.SignedByte,
-				DataType.RealInt32 or DataType.ComplexInt32 => ComputeType.SignedInteger,
-				DataType.RealUInt8 or DataType.ComplexUInt8 => ComputeType.UnsignedByte,
-				DataType.RealUInt32 or DataType.ComplexUInt32 => ComputeType.UnsignedInteger,
-				DataType.RealSingle or DataType.ComplexSingle => ComputeType.Single,
-				DataType.RealDouble or DataType.ComplexDouble => ComputeType.Double,
-				DataType.RealHalf or DataType.ComplexHalf => ComputeType.Half,
-				BrainFloatConst.RealBrainFloat16 or BrainFloatConst.ComplexBrainFloat16 => ComputeType.BrainHalf,
+				CudaDataType.RealInt8 or CudaDataType.ComplexInt8 => ComputeType.SignedByte,
+				CudaDataType.RealInt32 or CudaDataType.ComplexInt32 => ComputeType.SignedInteger,
+				CudaDataType.RealUInt8 or CudaDataType.ComplexUInt8 => ComputeType.UnsignedByte,
+				CudaDataType.RealUInt32 or CudaDataType.ComplexUInt32 => ComputeType.UnsignedInteger,
+				CudaDataType.RealFloat32 or CudaDataType.ComplexFloat32 => ComputeType.Single,
+				CudaDataType.RealFloat64 or CudaDataType.ComplexFloat64 => ComputeType.Double,
+				CudaDataType.RealFloat16 or CudaDataType.ComplexFloat16 => ComputeType.Half,
+				CudaDataType.RealBrainFloat16 or CudaDataType.ComplexBrainFloat16 => ComputeType.BrainHalf,
 				// TensorFloat32 not supported
 				_ => 0,
 			};
@@ -116,7 +117,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		/// </summary>
 		InternalError = 14,
 		/// <summary>
-		/// The requested operation is not supported.
+		/// The requested operation under the given combination of data types is not supported.
 		/// </summary>
 		NotSupported = 15,
 		/// <summary>
@@ -368,17 +369,136 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	/// <summary>
 	/// The cuTENSOR's handle wrapper
 	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	internal class CudaTensorHandle
+	[StructLayout(LayoutKind.Sequential, Size = 8 * 512)]
+	internal sealed class CudaTensorHandle
 	{
-		[StructLayout(LayoutKind.Sequential)]
-		private unsafe struct Long512
+		private readonly long data;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public CudaTensorHandle()
 		{
-			internal fixed long data[512];
+			this.data = default;
+			NativeMethods.cutensorInit(ref Unsafe.As<long, byte>(ref this.data)).Check();
 		}
-
-
 	}
 
+	/// <summary>
+	/// The structure for the CUDA Tensor library's tensor descriptor
+	/// </summary>
+	[StructLayout(LayoutKind.Explicit, Size = 8 * 64)]
+	internal readonly struct TensorDescription
+	{
+		[FieldOffset(0)]
+		private readonly int rank;
+
+		[FieldOffset(4)]
+		private readonly CudaDataType dataType;
+
+		[FieldOffset(34 * 4)]
+		private readonly UnaryOperation operation;
+
+		[FieldOffset(2 * 4)]
+		private readonly FixedBuffer_64<int> size;
+
+		[FieldOffset(18 * 4)]
+		private readonly FixedBuffer_64<int> strides;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TensorDescription Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor) where T : unmanaged
+		{
+			var dataType = Const<T>.DataType.ToCudaDataType();
+			TensorDescription descr;
+			if (tensor.Strides.IsEmpty)
+			{
+				NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in Unsafe.NullRef<long>(), dataType, tensor.Operation.ToCudaOp()).Check();
+			}
+			else
+			{
+				NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in tensor.Strides[0], dataType, tensor.Operation.ToCudaOp()).Check();
+			}
+			return descr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static TensorDescription Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, CudaDataType dataType) where T : unmanaged
+		{
+			TensorDescription descr;
+			if (tensor.Strides.IsEmpty)
+			{
+				NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in Unsafe.NullRef<long>(), dataType, tensor.Operation.ToCudaOp()).Check();
+			}
+			else
+			{
+				NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in tensor.Strides[0], dataType, tensor.Operation.ToCudaOp()).Check();
+			}
+			return descr;
+		}
+
+		// The string representation of the <b>guessed</b> underlying structure
+		public override string ToString()
+		{
+			return nameof(TensorDescription) + $"[DataType={this.dataType}, Rank={this.rank}, Operation={this.operation}, Size={this.size.AsSpan(this.rank).SpanJoin('x')}, Strides={this.strides.AsSpan(this.rank).SpanJoin(',')}]";
+		}
+	}
+
+	/// <summary>
+	/// The structure for the CUDA Tensor library's contraction descriptor
+	/// </summary>
+	[StructLayout(LayoutKind.Sequential, Size = 8 * 256)]
+	internal readonly struct ContractDescription
+	{
+		private readonly long data;
+
+		// return supported or not
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, DenseTensorWrapper<T> D, TensorContractInfo info, out ContractDescription descr, ComputeType computeType = 0) where T : unmanaged
+		{
+			descr = default;
+			if (info.IsInvalid())
+				return false;
+			IntPtr	pA = DenseApi.GetPointer(A.ValueStorage), pB = DenseApi.GetPointer(B.ValueStorage),
+					pC = DenseApi.GetPointer(C.ValueStorage), pD = DenseApi.GetPointer(D.ValueStorage);
+			if (pA == default || pB == default || pC == default || pD == default)
+				return false;
+			if (!C.OtherThanValueEquals(D))
+				return false;
+
+			var dataType = Const<T>.DataType.ToCudaDataType();
+			var descrA = TensorDescription.Create(handle, A, dataType);
+			var descrB = TensorDescription.Create(handle, B, dataType);
+			var descrC = TensorDescription.Create(handle, C, dataType);
+			var descrD = TensorDescription.Create(handle, D, dataType);
+
+			NativeMethods.cutensorGetAlignmentRequirement(handle, pA, in descrA, out int alignA).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(handle, pB, in descrB, out int alignB).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(handle, pC, in descrC, out int alignC).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(handle, pD, in descrD, out int alignD).Check();
+
+			Span<char> labelA = stackalloc char[A.Rank], labelB = stackalloc char[B.Rank], labelC = stackalloc char[C.Rank];
+			info.GetLabels(ref labelA, ref labelB, ref labelC);
+			Span<int> modeA = stackalloc int[A.Rank], modeB = stackalloc int[B.Rank], modeC = stackalloc int[C.Rank];
+			labelA.CopyTo(modeA, static c => c); labelB.CopyTo(modeB, static c => c); labelC.CopyTo(modeC, static c => c);
+
+			if (computeType == 0)
+				computeType = dataType.ToComputeType();
+
+			var err = NativeMethods.cutensorInitContractionDescriptor(handle, out descr,
+				in descrA, in modeA[0], alignA, in descrB, in modeB[0], alignB,
+				in descrC, in modeC[0], alignC, in descrD, in modeC[0], alignD, computeType);
+			if (err == CudaTensorStatus.NotSupported &&
+				(computeType == ComputeType.Half || computeType == ComputeType.BrainHalf || computeType == ComputeType.TensorFloat32))
+			{	// try again using float32 as the computation type
+				computeType = ComputeType.Single;
+				err = NativeMethods.cutensorInitContractionDescriptor(handle, out descr,
+					in descrA, in modeA[0], alignA, in descrB, in modeB[0], alignB,
+					in descrC, in modeC[0], alignC, in descrD, in modeC[0], alignD, computeType);
+			}
+			if (err == CudaTensorStatus.InvalidValue || err == CudaTensorStatus.NotSupported)
+				return false;
+			else
+				err.Check();
+			return true;
+		}
+	}
 	#endregion
 }

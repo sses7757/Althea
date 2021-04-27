@@ -117,63 +117,13 @@ namespace Althea.Backend.Cuda.Storage
 		#endregion
 
 		#region driver info
-		/// <summary>
-		/// Get the CUDA device's compute capability
-		/// </summary>
-		/// <param name="deviceID">The CDUA device ID</param>
-		/// <returns>The major and minor compute capability of the <paramref name="deviceID"/>; or both 0 if an error occurred</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (int major, int minor) GetDeviceComputeCapability(int deviceID)
-		{
-			CudaError err = NativeMethods.cudaGetDeviceProperties(out var prop, deviceID);
-			if (err == CudaError.Success)
-				return (prop.major, prop.minor);
-			else
-				return default;
-		}
-
-		private static int _currentDevice = -1;
-
-		/// <summary>
-		/// Statically get or set the current CUDA device, or -1 if it cannot be obtained.
-		/// </summary>
-		/// <exception cref="StatusException">If an <see cref="CudaError"/> returned during setting the device</exception>
-		/// <remarks>Changing the current CDUA device is a global action and shall be very careful when doing so.</remarks>
-		public static int CurrentDeviceID {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (_currentDevice < 0)
-				{
-					var err = NativeMethods.cudaGetDevice(out var d);
-					_currentDevice = err == CudaError.Success ? d : -1;
-				}
-				return _currentDevice;
-			}
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			set {
-				NativeMethods.cudaSetDevice(value).Check();
-				_currentDevice = value;
-			}
-		}
-
-		/// <summary>
-		/// Get the CUDA driver version
-		/// </summary>
-		/// <returns>The CUDA driver version</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (int major, int minor) GetDriverVersion()
-		{
-			var err = NativeMethods.cudaRuntimeGetVersion(out var ver);
-			return err == CudaError.Success ? (ver / 1000, (ver % 1000) / 10) : default;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override (int major, int minor) DriverVersion(StorageLocation location) => GetDriverVersion();
+		public override (int major, int minor) DriverVersion(StorageLocation location) => CudaRuntime.GetDriverVersion();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
-			if (location.Type != LocationType.GpuRam || location.LocationDetail != CurrentDeviceID)
+			if (location.Type != LocationType.GpuRam || location.LocationDetail != CudaRuntime.CurrentDeviceID)
 				return default;
 			var err = NativeMethods.cudaMemGetInfo(out var free, out var total);
 			return err == CudaError.Success ? (free, total) : default;
@@ -182,7 +132,7 @@ namespace Althea.Backend.Cuda.Storage
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool IsSupportedGpuRam(StorageLocation location) => location.Type == LocationType.GpuRam && location.LocationDetail == CurrentDeviceID;
+		private static bool IsSupportedGpuRam(StorageLocation location) => location.Type == LocationType.GpuRam && location.LocationDetail == CudaRuntime.CurrentDeviceID;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool IsSupportedCache(CombinationOfLocations location)
@@ -193,7 +143,7 @@ namespace Althea.Backend.Cuda.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool IsSupportedLocation(StorageLocation location) => (location.Type == LocationType.GpuRam && location.LocationDetail == CurrentDeviceID) || (this.CudaFileSupported && location == FileAlone);
+		public override bool IsSupportedLocation(StorageLocation location) => (location.Type == LocationType.GpuRam && location.LocationDetail == CudaRuntime.CurrentDeviceID) || (this.CudaFileSupported && location == FileAlone);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool IsSupportedNonCache(CombinationOfLocations location)
@@ -265,7 +215,7 @@ namespace Althea.Backend.Cuda.Storage
 
 		protected override PointerSegment AllocateFileAt(string path, long lengthInBytes)
 		{
-			return new(new StreamPointer(new CudaFileStream(new(path), lengthInBytes), new(LocationType.GpuRam, CurrentDeviceID)));
+			return new(new StreamPointer(new CudaFileStream(new(path), lengthInBytes), new(LocationType.GpuRam, CudaRuntime.CurrentDeviceID)));
 		}
 		#endregion
 

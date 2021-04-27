@@ -156,21 +156,21 @@ namespace Althea.Backend.Arrays
 
 		#region clone related
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Storage<T> ToContiguous(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, long newLength)
+		private static Storage<T> ToContiguous(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, long newLength)
 		{
 			if (size.SequenceEqual(outerSize))
-				return CopyToStorage(storage, size, outerSize, newLength);
+				return CopyToStorage(storage, size, outerSize, strides, newLength);
 			else
 				return storage;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ActualStorage<T> CopyToStorage(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, long newLength)
+		private static ActualStorage<T> CopyToStorage(Storage<T> storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, long newLength)
 		{
 			var newStorage = Storage<T>.Create(storage[0].Location, newLength);
 			try
 			{
-				TAD.Permute<T>(new(storage, size, outerSize), new(newStorage, size, size), stackalloc int[size.Length].FillWithRange(0));
+				TAD.Permute<T>(new(storage, size, outerSize, strides), new(newStorage, size), stackalloc int[size.Length].FillWithRange(0));
 				return newStorage;
 			}
 			catch (Exception)
@@ -196,7 +196,7 @@ namespace Althea.Backend.Arrays
 			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
 			try
 			{
-				TAD.Permute<T>(new(this), new(storage, size, size), stackalloc int[this.Rank].FillWithRange(0));
+				TAD.Permute<T>(new(this), new(storage, size), stackalloc int[this.Rank].FillWithRange(0));
 				return storage;
 			}
 			catch (Exception)
@@ -568,8 +568,8 @@ namespace Althea.Backend.Arrays
 			var output = Storage<T>.Create(this.Storage[0].Location, sizeC.Prod());
 			try
 			{
-				TAD.Contract<T>(new(this, scalar: scalar), new(dense), new(output, sizeC, sizeC, scalar: default), info);
-				return new(output, sizeC, sizeC, labelC);
+				TAD.Contract<T>(new(this, scalar: scalar), new(dense), new(output, sizeC, scalar: default), info);
+				return new(output, sizeC, labels: labelC);
 			}
 			catch (Exception)
 			{
@@ -686,7 +686,7 @@ namespace Althea.Backend.Arrays
 			var output = Storage<T>.Create(this.Storage[0].Location, 1);
 			try
 			{
-				TAD.Contract<T>(new(this, UnaryOperation.Conjugate), new(other), new(output, sizeC, sizeC, scalar: default), info);
+				TAD.Contract<T>(new(this, UnaryOperation.Conjugate), new(other), new(output, sizeC, scalar: default), info);
 				return MEM.ToManaged(output);
 			}
 			catch (Exception)
@@ -723,16 +723,19 @@ namespace Althea.Backend.Arrays
 
 			private readonly long rows, cols, ld, length;
 
+			private readonly int rank;
+
 			private readonly PrintSettings settings;
+
 
 			internal ReadOnlySpan<long> OuterSize {
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => this.outerSize.AsSpan();
+				get => this.outerSize.AsSpan(this.rank);
 			}
 
 			internal ReadOnlySpan<long> MatrixSize {
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => this.matrixSize.AsSpan();
+				get => this.matrixSize.AsSpan(this.rank);
 			}
 
 			internal long MatrixOrgRows {
@@ -760,6 +763,7 @@ namespace Althea.Backend.Arrays
 			internal TensorPrintCommonInfo(ReadOnlySpan<long> outerSize, ReadOnlySpan<long> matrixSize, long rows, long cols, long ld, long matrixLength, PrintSettings settings)
 			{
 				this.outerSize.CopyFromSpan(outerSize); this.matrixSize.CopyFromSpan(matrixSize);
+				this.rank = outerSize.Length;
 				this.rows = rows; this.cols = cols; this.ld = ld; this.length = matrixLength;
 				this.settings = settings;
 			}
@@ -849,7 +853,7 @@ namespace Althea.Backend.Arrays
 			{
 				if (tensor.size.Length == 2)
 				{
-					using var temp = ToContiguous(tensor.storage, info.MatrixSize, info.OuterSize, info.MatrixNowLength);
+					using var temp = ToContiguous(tensor.storage, info.MatrixSize, info.OuterSize, stackalloc long[] { 1, info.MatrixNowLD }, info.MatrixNowLength);
 					return DenseMatrix<T>.ActualPrint(temp, info.MatrixOrgRows, info.MatrixOrgCols, info.MatrixNowLD, info.Settings, prefix, postfix);
 				}
 				// else
@@ -891,7 +895,7 @@ namespace Althea.Backend.Arrays
 			{
 				int dd = truncateSize.IndexOf(static s => s > 1);
 				truncateSize[dd] = Math.Min(vectorMaxLen, truncateSize[dd]);
-				using var temp = ToContiguous(storage, truncateSize, outerSize, truncateSize[dd]);
+				using var temp = ToContiguous(storage, truncateSize, outerSize, outerSizeProd, truncateSize[dd]);
 				return DenseVector<T>.ActualPrint(temp, allLength, settings, prefix);
 			}
 			int d = truncateSize.IndexOf(static s => s > 1);
@@ -905,7 +909,7 @@ namespace Althea.Backend.Arrays
 			// actually a matrix
 			if (actualRank == 2)
 			{
-				using var temp = ToContiguous(storage, truncateSize, outerSize, matrixLength);
+				using var temp = ToContiguous(storage, truncateSize, outerSize, outerSizeProd, matrixLength);
 				return DenseMatrix<T>.ActualPrint(temp, rows, cols, ld, settings, prefix);
 			}
 			// else
@@ -947,7 +951,7 @@ namespace Althea.Backend.Arrays
 					{
 						offsets[k + matrixRank] = (i % sizeProd[k + 1]) / sizeProd[k];
 					}
-					using var tempMat = ToContiguous(storage + i * matrixLength, truncateSize, outerSize, matrixLength);
+					using var tempMat = ToContiguous(storage + i * matrixLength, truncateSize, outerSize, outerSizeProd, matrixLength);
 					sb.Append(prefix).Append("Tensor[").Append(matrixRankString).Append(offsets[matrixRank..].SpanJoin(", ")).AppendLine("] =");
 					sb.AppendLine(DenseMatrix<T>.ActualPrint(tempMat, rows, cols, ld, settings, prefix));
 				}

@@ -237,10 +237,10 @@ namespace Althea.Arrays
 
 		#region judge
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int GetJagged(IPitchedArray<T> pitched, int orgRank, ref Span<long> jaggedSize, ref Span<long> jaggedOuterSize)
+		private static int GetJagged(IPitchedArray<T> pitched, int orgRank, ref Span<long> jaggedSize, ref Span<long> jaggedOuterSize, ref Span<long> jaggedStrides)
 		{
-			var orgSize = pitched.Size; var orgOuterSize = pitched.OuterSize;
-			jaggedSize[0] = jaggedOuterSize[0] = 1;
+			var orgSize = pitched.Size; var orgOuterSize = pitched.OuterSize; var strides = pitched.Strides;
+			jaggedSize[0] = jaggedOuterSize[0] = jaggedStrides[0] = 1;
 			int rank = 0;
 			for (int i = 0; i < orgRank; i++)
 			{
@@ -248,18 +248,20 @@ namespace Althea.Arrays
 				{
 					jaggedSize[rank] *= orgSize[i];
 					jaggedOuterSize[rank] *= orgSize[i];
+					jaggedStrides[rank] *= orgSize[i];
 				}
 				else
 				{
 					jaggedSize[rank] *= orgSize[i];
 					jaggedOuterSize[rank] *= orgOuterSize[i];
-					rank++;
-					if (rank == orgRank)
+					jaggedStrides[rank] *= orgOuterSize[i];
+					if (++rank == orgRank)
 						break;
 					jaggedSize[rank] = jaggedOuterSize[rank] = 1;
+					// do not reset strides
 				}
 			}
-			jaggedSize = jaggedSize[..rank]; jaggedOuterSize = jaggedOuterSize[..rank];
+			jaggedSize = jaggedSize[..rank]; jaggedOuterSize = jaggedOuterSize[..rank]; jaggedStrides = jaggedStrides[..rank];
 			return rank;
 		}
 
@@ -270,7 +272,8 @@ namespace Althea.Arrays
 			int orgRank = this.Rank;
 			Span<long> jaggedSize = stackalloc long[orgRank];
 			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			Span<long> jaggedStrides = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
 			// switch different cases
 			if (jaggedSize[1..].Prod() <= 1000)
 			{   // The estimate overhead of one API call is around 1 microsecond
@@ -284,8 +287,8 @@ namespace Althea.Arrays
 			{   // tensor algebra API fill and copy
 				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
 				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
-									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
+									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
 				if (copyFirst)
 					TAD.Permute(thisWrapper, tempWrapper, identityPerm);
 				// edit the temp array
@@ -301,7 +304,8 @@ namespace Althea.Arrays
 			int orgRank = this.Rank;
 			Span<long> jaggedSize = stackalloc long[orgRank];
 			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			Span<long> jaggedStrides = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
 			// switch different cases
 			if (jaggedSize[0] == 1 && rank == 2)
 			{   // linear algebra API with given vector stride
@@ -319,8 +323,8 @@ namespace Althea.Arrays
 			{   // tensor algebra API fill and copy
 				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
 				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
-									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
+									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
 				TAD.Permute(thisWrapper, tempWrapper, identityPerm);
 				// edit the temp array
 				stridedAction.Invoke(temp, 1, value);
@@ -343,7 +347,8 @@ namespace Althea.Arrays
 			int orgRank = this.Rank;
 			Span<long> jaggedSize = stackalloc long[orgRank];
 			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			Span<long> jaggedStrides = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
 			// switch different cases
 			if (jaggedSize[0] == 1 && rank == 2)
 			{   // linear algebra API with given vector stride
@@ -366,18 +371,18 @@ namespace Althea.Arrays
 					// fill with scalar
 					MEM.FillWithValue(temp, v1);
 					// add to this
-					DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
-										  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+					DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
+										  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
 					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, tempWrapper, identityPerm, thisWrapper, identityPerm, thisWrapper);
 				}
 				else if (op == CanUseTensorOp.MultiplyScalar && value is T v2)
 				{
-					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, scalar: v2);
+					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides, scalar: v2);
 					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, thisWrapper, identityPerm, default, default, thisWrapper);
 				}
 				else if (op == CanUseTensorOp.Conjugate)
 				{
-					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, TensorAlgebra.UnaryOperation.Conjugate);
+					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides, TensorAlgebra.UnaryOperation.Conjugate);
 					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, thisWrapper, identityPerm, default, default, thisWrapper);
 				}
 				else
@@ -392,7 +397,8 @@ namespace Althea.Arrays
 			int orgRank = this.Rank;
 			Span<long> jaggedSize = stackalloc long[orgRank];
 			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize);
+			Span<long> jaggedStrides = stackalloc long[orgRank];
+			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
 			// switch different cases
 			if (jaggedSize[0] == 1 && rank == 2)
 			{   // linear algebra API with given vector stride
@@ -410,8 +416,8 @@ namespace Althea.Arrays
 			{   // tensor algebra API fill and copy
 				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
 				// copy the temp array
-				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize, jaggedSize),
-									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize);
+				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
+									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
 				TAD.Permute(thisWrapper, tempWrapper, stackalloc int[rank].FillWithRange(0));
 				// aggregate on temp array
 				return aggregator.Invoke(init, stridedFunction.Invoke(temp, 1));
