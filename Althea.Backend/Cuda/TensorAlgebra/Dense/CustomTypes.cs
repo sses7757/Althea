@@ -582,7 +582,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		// The string representation of the <b>guessed</b> underlying structure
 		public override string ToString()
 		{
-			return nameof(ContractFind) + $"[Algorithm={this.algorithm}" + (this.GETTSpecificAlgorithm < 0 ? "]" : $"SpecificAlgorithm={this.GETTSpecificAlgorithm}]");
+			return nameof(ContractFind) + $"[Algorithm={this.algorithm}" + (this.GETTSpecificAlgorithm < 0 ? "]" : $", SpecificAlgorithm={this.GETTSpecificAlgorithm}]");
 		}
 	}
 

@@ -87,7 +87,13 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Supported(CombinationOfLocations location) => location.Count == 1 && location[0].Type == LocationType.GpuRam;
+		private static bool Supported(CombinationOfLocations location)
+		{
+			if (location.Count != 1)
+				return false;
+			var loc = location[0];
+			return loc.Type == LocationType.GpuRam && loc.LocationDetail == CudaRuntime.CurrentDeviceID;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool IsSupportedTensorBinary(CombinationOfLocations location1, CombinationOfLocations location2) => Supported(location1) && Supported(location2);

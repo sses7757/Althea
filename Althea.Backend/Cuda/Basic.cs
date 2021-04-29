@@ -246,7 +246,7 @@ namespace Althea.Backend.Cuda
 
 		Type ISetBackend.SparseTensorAlgebraImplementation => typeof(int);
 
-		Type ISetBackend.RandomImplementation => typeof(int/*TODO: Random.RandomApi*/);
+		Type ISetBackend.RandomImplementation => typeof(Random.RandomApi);
 
 		Type ISetBackend.SolverImplementation => typeof(int);
 	}

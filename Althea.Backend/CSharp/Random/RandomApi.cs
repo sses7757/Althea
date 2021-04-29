@@ -15,8 +15,9 @@ namespace Althea.Backend.CSharp.Random
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 	/// <summary>
 	/// The C# back-end of <see cref="AbstractApi"/> that utilizes <see cref="System.Random"/>.<br/>
-	/// Only supports storages on CPU memory of primitive and pre-defined types.<br/>
-	/// Only supports the <see cref="UniformDistribution{T}"/> and <see cref="RandomBitsDistribution{T}"/> or their <see cref="SimpleJointRandomDistribution"/> with dimension ≤ 3.
+	/// Only supports storages on CPU memory of primitive and pre-defined real types.<br/>
+	/// Only supports the <see cref="UniformDistribution{T}"/> and <see cref="RandomBitsDistribution{T}"/> or their <see cref="SimpleJointRandomDistribution"/> with dimension ≤ 3.<br/>
+	/// Other distributions can be easily supported by utilizing the result of <see cref="UniformDistribution{T}"/>.
 	/// </summary>
 	public class RandomApi : AbstractApi
 	{
@@ -51,7 +52,7 @@ namespace Althea.Backend.CSharp.Random
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out int length, out T offset, out T scale) where T : unmanaged
+		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out int length, out T offset, out T scale) where T : unmanaged
 		{
 			pointer = default; length = 0; offset = default; scale = default;
 			if (storage is null)
@@ -64,20 +65,38 @@ namespace Althea.Backend.CSharp.Random
 				return false; // not support
 			if (!Const<T>.IsPreDefined)
 				return false; // not support
-			if (storage.Count != 1 || storage[0].Pointer is not IMemoryPointer p)
+			var ss = storage[0];
+			if (storage.Count != 1 || ss.Pointer is not IMemoryPointer p)
 				return false; // not support
 			if (distribution is not (UniformDistribution<T> or RandomBitsDistribution<T>))
 				return false; // not support
-			if (p.LengthInBytes > int.MaxValue)
+			if (ss.LengthInBytes > int.MaxValue)
+				return false; // not support
+			if (Const<T>.IsComplex)
 				return false; // not support
 
-			pointer = p.Pointer; length = (int)p.LengthInBytes;
+			pointer = (IntPtr)(p.Pointer.ToInt64() + ss.OffsetInBytes); length = (int)ss.LengthInBytes;
 			if (distribution is UniformDistribution<T> u)
 			{
 				offset = u.LowerBound; scale = u.UpperBound.NativeSub(offset);
 				if (Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754)
 				{
-					scale = scale.NativeMultiply(typeof(T) == typeof(double) ? ReciprocalD.FromDouble<T>() : ReciprocalS.NativeConvert<float, T>());
+					T s = scale;
+					if (typeof(T) == typeof(double))
+					{
+						double r = ReciprocalD * (*(double*)&s);
+						scale = *(T*)&r;
+					}
+					else if (typeof(T) == typeof(float))
+					{
+						float r = (float)(ReciprocalS * (*(float*)&s));
+						scale = *(T*)&r;
+					}
+					else if (typeof(T) == typeof(Half))
+					{
+						Half r = (Half)(ReciprocalH * ((double)*(Half*)&s));
+						scale = *(T*)&r;
+					}
 				}
 			}
 			return true;
@@ -85,7 +104,8 @@ namespace Althea.Backend.CSharp.Random
 
 
 		private const double ReciprocalD = 1.0 / (ulong.MaxValue + 1.0);
-		private const float ReciprocalS = (float)(1.0 / (uint.MaxValue + 1.0));
+		private const double ReciprocalS = 1.0 / (uint.MaxValue + 1.0);
+		private const double ReciprocalH = 1.0 / (ushort.MaxValue + 1.0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void Generate<T>(IntPtr pointer, int length, T offset, T scale) where T : unmanaged
@@ -97,54 +117,46 @@ namespace Althea.Backend.CSharp.Random
 			// else, random range
 			long len = length / Const<T>.SizeT;
 			DataType type = Const<T>.DataType;
-			if (Const<T>.IsComplex)
+			switch (type)
 			{
-				type = type.RealCorrespond();
-				len *= 2;
-			}
-			else
-			{
-				switch (type)
-				{
-					case DataType.RealSingle:
-						var pS = new ManagedPureStorage<float>(p, len);
-						LAD.PointWiseCast(new ManagedPureStorage<uint>(p, len), pS);
-						LAD.Scale(pS, *(float*)&scale);
-						LAD.PointWiseAddScalar(pS, *(float*)&offset);
-						break;
-					case DataType.RealDouble:
-						var pD = new ManagedPureStorage<double>(p, len);
-						LAD.PointWiseCast(new ManagedPureStorage<ulong>(p, len), pD);
-						LAD.Scale(pD, *(double*)&scale);
-						LAD.PointWiseAddScalar(pD, 1, *(double*)&offset);
-						break;
-					case DataType.RealInt8:
-						LAD.PointWiseModulo(new ManagedPureStorage<byte>(p, len), *(byte*)&scale);
-						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-						break;
-					case DataType.RealInt16:
-						LAD.PointWiseModulo(new ManagedPureStorage<ushort>(p, len), *(ushort*)&scale);
-						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-						break;
-					case DataType.RealInt32:
-						LAD.PointWiseModulo(new ManagedPureStorage<uint>(p, len), *(uint*)&scale);
-						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-						break;
-					case DataType.RealInt64:
-						LAD.PointWiseModulo(new ManagedPureStorage<ulong>(p, len), *(ulong*)&scale);
-						LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-						break;
-					case DataType.RealUInt8:
-					case DataType.RealUInt16:
-					case DataType.RealUInt32:
-					case DataType.RealUInt64:
-						var pU = new ManagedPureStorage<T>(p, len);
-						LAD.PointWiseModulo(pU, scale);
-						LAD.PointWiseAddScalar(pU, offset);
-						break;
-					default:
-						break;
-				}
+				case DataType.RealSingle:
+					var pS = new ManagedPureStorage<float>(p, len);
+					LAD.PointWiseCast(new ManagedPureStorage<uint>(p, len), pS);
+					LAD.Scale(pS, *(float*)&scale);
+					LAD.PointWiseAddScalar(pS, *(float*)&offset);
+					break;
+				case DataType.RealDouble:
+					var pD = new ManagedPureStorage<double>(p, len);
+					LAD.PointWiseCast(new ManagedPureStorage<ulong>(p, len), pD);
+					LAD.Scale(pD, *(double*)&scale);
+					LAD.PointWiseAddScalar(pD, *(double*)&offset);
+					break;
+				case DataType.RealInt8:
+					LAD.PointWiseModulo(new ManagedPureStorage<byte>(p, len), *(byte*)&scale);
+					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
+					break;
+				case DataType.RealInt16:
+					LAD.PointWiseModulo(new ManagedPureStorage<ushort>(p, len), *(ushort*)&scale);
+					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
+					break;
+				case DataType.RealInt32:
+					LAD.PointWiseModulo(new ManagedPureStorage<uint>(p, len), *(uint*)&scale);
+					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
+					break;
+				case DataType.RealInt64:
+					LAD.PointWiseModulo(new ManagedPureStorage<ulong>(p, len), *(ulong*)&scale);
+					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
+					break;
+				case DataType.RealUInt8:
+				case DataType.RealUInt16:
+				case DataType.RealUInt32:
+				case DataType.RealUInt64:
+					var pU = new ManagedPureStorage<T>(p, len);
+					LAD.PointWiseModulo(pU, scale);
+					LAD.PointWiseAddScalar(pU, offset);
+					break;
+				default:
+					break;
 			}
 		}
 
