@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-
-using Althea.TensorAlgebra;
 
 
 #pragma warning disable IDE1006 // 命名样式
@@ -35,15 +28,15 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 		#region permute
 		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorPermutation(CudaTensorHandle handle, in byte alpha, IntPtr A, in TensorDescription descA, in int modeA, IntPtr B, ref TensorDescription descB, in int modeB, CudaDataType type, IntPtr stream);
+		internal static unsafe extern CudaTensorStatus cutensorPermutation(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, IntPtr B, in TensorDescription descB, in int modeB, CudaDataType type, IntPtr stream);
 		#endregion
 
 		#region point-wise
 		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorElementwiseBinary(CudaTensorHandle handle, in byte alpha, IntPtr A, ref TensorDescription descA, in int modeA, in byte gamma, IntPtr C, ref TensorDescription descC, in int modeC, IntPtr D, ref TensorDescription descD, in int modeD, BinaryOperation opAC, CudaDataType type, IntPtr stream);
+		internal static unsafe extern CudaTensorStatus cutensorElementwiseBinary(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, void* gamma, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opAC, CudaDataType typeScalar, IntPtr stream);
 
 		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorElementwiseTrinary(CudaTensorHandle handle, in byte alpha, IntPtr A, ref TensorDescription descA, in int modeA, in byte beta, IntPtr B, ref TensorDescription descB, in int modeB, in byte gamma, IntPtr C, ref TensorDescription descC, in int modeC, IntPtr D, ref TensorDescription descD, in int modeD, BinaryOperation opAB, BinaryOperation opABC, CudaDataType type, IntPtr stream);
+		internal static unsafe extern CudaTensorStatus cutensorElementwiseTrinary(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, void* beta, IntPtr B, in TensorDescription descB, in int modeB, void* gamma, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opAB, BinaryOperation opABC, CudaDataType typeScalar, IntPtr stream);
 		#endregion
 
 		#region contraction
@@ -64,15 +57,15 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		internal static extern CudaTensorStatus cutensorInitContractionPlan(CudaTensorHandle handle, out ContractPlan plan, in ContractDescription desc, in ContractFind find, long workspaceSize);
 
 		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorContraction(CudaTensorHandle handle, ref ContractPlan plan, in byte alpha, IntPtr A, IntPtr B, in byte beta, IntPtr C, IntPtr D, IntPtr workspace, long workspaceSize, IntPtr stream);
+		internal static unsafe extern CudaTensorStatus cutensorContraction(CudaTensorHandle handle, in ContractPlan plan, void* alpha, IntPtr A, IntPtr B, void* beta, IntPtr C, IntPtr D, IntPtr workspace, long workspaceSize, IntPtr stream);
 		#endregion
 
 		#region reduction
 		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorReductionGetWorkspace(CudaTensorHandle handle, IntPtr A, ref TensorDescription descA, in int modeA, IntPtr C, ref TensorDescription descC, in int modeC, IntPtr D, ref TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, ref long workspaceSize);
+		internal static extern CudaTensorStatus cutensorReductionGetWorkspace(CudaTensorHandle handle, IntPtr A, in TensorDescription descA, in int modeA, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, out long workspaceSize);
 
 		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorReduction(CudaTensorHandle handle, in byte alpha, IntPtr A, ref TensorDescription descA, in int modeA, in byte beta, IntPtr C, ref TensorDescription descC, in int modeC, IntPtr D, ref TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, IntPtr workspace, long workspaceSize, IntPtr stream);
+		internal static unsafe extern CudaTensorStatus cutensorReduction(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, void* beta, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, IntPtr workspace, long workspaceSize, IntPtr stream);
 		#endregion
 	}
 }

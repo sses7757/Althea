@@ -111,14 +111,14 @@ namespace Althea.TensorAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Check whether this <see cref="DenseTensorWrapper{T}"/> is identical to the <paramref name="other"/> one other than their <see cref="ValueStorage"/>s
+		/// Check whether this <see cref="DenseTensorWrapper{T}"/> has identical size (and outer size) as the <paramref name="other"/> one
 		/// </summary>
 		/// <param name="other">The other <see cref="DenseTensorWrapper{T}"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
+		/// <returns>this == <paramref name="other"/> for sizes</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool OtherThanValueEquals(DenseTensorWrapper<T> other)
+		public readonly bool SizeEquals(DenseTensorWrapper<T> other)
 		{
-			return this.m_size.SequenceEqual(other.m_size) && this.m_outerSize.SequenceEqual(other.m_outerSize) && this.m_op == other.m_op && this.m_scalar.IsEqual(other.m_scalar);
+			return this.m_size.SequenceEqual(other.m_size) && this.m_outerSize.SequenceEqual(other.m_outerSize);
 		}
 
 		/// <summary>
@@ -279,6 +279,23 @@ namespace Althea.TensorAlgebra.Dense
 			if (scalar.IsZero())
 				scalar = Const<T>.One;
 			this = new(tensor.Storage, tensor.Size, outerSize, strides, scalar, operation);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="DenseTensorWrapper{T}"/> with the given original <paramref name="tensor"/> and new <paramref name="operation"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original <see cref="DenseTensorWrapper{T}"/></param>
+		/// <param name="operation">The new <see cref="UnaryOperation"/></param>
+		/// <param name="scalar">The new scalar</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseTensorWrapper(DenseTensorWrapper<T> tensor, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
+		{
+			this.m_values = tensor.m_values;
+			this.m_size = tensor.m_size;
+			this.m_outerSize = tensor.m_outerSize;
+			this.m_strides = tensor.m_strides;
+			this.m_op = operation;
+			this.m_scalar = scalar;
 		}
 		#endregion
 	}

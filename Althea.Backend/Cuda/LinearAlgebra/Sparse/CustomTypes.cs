@@ -85,7 +85,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 			}
 		}
 
-		// TODO
+		// TODO: sparse API
 		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged
 		////{

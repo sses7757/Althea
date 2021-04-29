@@ -242,7 +242,7 @@ namespace Althea.Backend.Cuda
 
 		Type ISetBackend.SparseLinearAlgebraImplementation => typeof(int/*LinearAlgebra.Sparse.SparseApi*/);
 
-		Type ISetBackend.DenseTensorAlgebraImplementation => typeof(int/*TODO: TensorAlgebra.DenseApi*/);
+		Type ISetBackend.DenseTensorAlgebraImplementation => typeof(TensorAlgebra.Dense.DenseApi);
 
 		Type ISetBackend.SparseTensorAlgebraImplementation => typeof(int);
 
