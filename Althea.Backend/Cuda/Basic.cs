@@ -227,12 +227,11 @@ namespace Althea.Backend.Cuda
 			catch (Exception)
 			{
 				this.Available = false;
-				throw;
 			}
 		}
 
 		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether CUA is available when initializing this instance
+		/// Get a <see cref="bool"/> indicating whether CUDA is available when initializing this instance
 		/// </summary>
 		public bool Available { get; }
 

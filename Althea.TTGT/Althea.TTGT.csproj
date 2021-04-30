@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <Platforms>x64</Platforms>
     <DebugType>portable</DebugType>
     <ApplicationIcon />
@@ -12,7 +12,7 @@
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DocumentationFile>$(MSBuildProjectDirectory)\documents\TTGT.xml</DocumentationFile>
+    <DocumentationFile>D:\Works\git\ALTHEA\Althea.TTGT\documents\Althea.TTGT.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
@@ -29,13 +29,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CudaCSharp\CudaCSharp.csproj" />
+    <ProjectReference Include="..\Althea\Althea.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="cuTT.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="hpTT.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

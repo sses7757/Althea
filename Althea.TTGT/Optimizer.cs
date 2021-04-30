@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Threading;
 
-using CudaCSharp.Linq;
-using CudaCSharp.Tensor;
 
 
-namespace TTGT.Optimizer
+namespace Althea.TTGT.Optimizer
 {
 	/// <summary>
 	/// The optimizer for <see cref="ContractionPlan"/>

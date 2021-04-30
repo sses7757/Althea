@@ -14,11 +14,10 @@ using static Althea.Backend.Storage.ConcretePointersExtension;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
-
 namespace Althea.Backend.CSharp.Storage
 {
 	/// <summary>
-	/// The C# back-end of <see cref="AbstractApi"/> that supports storage locations of CPU and file and (possible) TCP.
+	/// The C# back-end of <see cref="AbstractApi"/> that supports storage locations of CPU and file.
 	/// </summary>
 	public class StorageApi : AbstractApi
 	{
@@ -113,14 +112,23 @@ namespace Althea.Backend.CSharp.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (int major, int minor) DriverVersion(StorageLocation location) => default;
 
-		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
+		internal static (long free, long total) CPUFreeTotalMemory()
 		{
 			var memoryInfo = GC.GetGCMemoryInfo();
 			long total = memoryInfo.TotalAvailableMemoryBytes;
 			long free = total - Environment.WorkingSet;
 			return (free, total);
+		}
+
+		// since this is not implemented yet (see https://github.com/dotnet/runtime/issues/22948), this is a manual implementation
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
+		{
+			if (location == CpuAlone)
+				return CPUFreeTotalMemory();
+			else
+				return (long.MaxValue, long.MaxValue);
 		}
 		#endregion
 
@@ -135,7 +143,7 @@ namespace Althea.Backend.CSharp.Storage
 			IPointer pointer;
 			if (location == CpuAlone)
 			{
-				var ptr = Marshal.AllocHGlobal(checked((int)length));
+				var ptr = Marshal.AllocHGlobal((IntPtr)length);
 				pointer = new MemoryPointer(ptr, length, location);
 				AllocatedHGlobals.AddLast(ptr);
 			}
