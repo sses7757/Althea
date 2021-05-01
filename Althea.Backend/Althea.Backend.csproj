@@ -38,13 +38,9 @@
     <None Update="Cuda\SupplementCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Mkl\BlasSupplementOMP.dll">
+    <None Update="Mkl\SupplementOMP.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Mkl\LinearAlgebra\" />
   </ItemGroup>
 
 </Project>

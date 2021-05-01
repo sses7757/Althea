@@ -755,7 +755,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		/// <param name="multiply">Perform multiply or divide</param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecsMulDiv(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, bool multiply);
 
 		/// <summary>
@@ -768,7 +768,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecsAdd(DataType type, void* scalar, IntPtr a, IntPtr b, long N, int strideA, int strideB);
 
 		/// <summary>
@@ -781,7 +781,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		/// <returns>The two vectors are element-wise equal</returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern bool vecsEq(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB);
 
 		/// <summary>
@@ -792,7 +792,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/></param>
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecPowSameType(DataType type, IntPtr a, void* p, long N, int stride);
 
 		/// <summary>
@@ -803,7 +803,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/>'s real corresponding type</param>
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecPowRealType(DataType type, IntPtr a, void* p, long N, int stride);
 
 		/// <summary>
@@ -813,7 +813,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecConj(DataType type, IntPtr a, long N, int stride);
 
 		/// <summary>
@@ -827,7 +827,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
 		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
 		/// <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts.</param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern CudaError vecDataConvert(DataType srcType, DataType dstType, IntPtr src, IntPtr dst, long N, int strideSrc, int strideDst, bool toRealByAbs);
 
 		/// <summary>
@@ -838,7 +838,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="threshold">The pointer to the threshold used to clip the vector <paramref name="a"/> of <paramref name="type"/></param>
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecClip(DataType type, IntPtr a, void* threshold, long N, int stride);
 
 		/// <summary>
@@ -849,7 +849,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="scalar">The pointer to the scalar to add of <paramref name="type"/></param>
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecAddScalar(DataType type, IntPtr a, void* scalar, long N, int stride);
 
 		/// <summary>
@@ -860,7 +860,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="scalar">The pointer to the scalar to multiply of <paramref name="type"/></param>
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecMulScalar(DataType type, IntPtr a, void* scalar, long N, int stride);
 
 		/// <summary>
@@ -871,7 +871,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="outSum">The output sum as a pointer of <paramref name="type"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecSum(DataType type, IntPtr a, long N, int stride, void* outSum);
 
 		/// <summary>
@@ -882,7 +882,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <returns>The index of the element</returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern long vecArgAbsMin(DataType type, IntPtr a, long N, int stride);
 
 		/// <summary>
@@ -893,7 +893,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <returns>The index of the element</returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern long vecArgAbsMax(DataType type, IntPtr a, long N, int stride);
 
 		/// <summary>
@@ -904,7 +904,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <returns>The sum as a <see cref="double"/></returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern double vecAbsSum(DataType type, IntPtr a, long N, int stride);
 
 		/// <summary>
@@ -915,7 +915,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <returns>The 2-norm as a <see cref="double"/></returns>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern double vecNorm(DataType type, IntPtr a, long N, int stride);
 
 		/// <summary>
@@ -928,7 +928,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecDot(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, void* outProd);
 
 		/// <summary>
@@ -941,7 +941,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecDotc(DataType type, IntPtr a, IntPtr b, long N, int strideA, int strideB, void* outProd);
 
 		/// <summary>
@@ -952,7 +952,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="N">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
 		/// <param name="outProd">The output product as a pointer of <paramref name="type"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecProd(DataType type, IntPtr a, long N, int stride, void* outProd);
 
 		/// <summary>
@@ -965,7 +965,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 0)</param>
 		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
 		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecParSum(DataType type, IntPtr src, IntPtr dst, long N, bool inclusive, int strideSrc, int strideDst);
 
 		/// <summary>
@@ -978,7 +978,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 1)</param>
 		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
 		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void vecParProd(DataType type, IntPtr src, IntPtr dst, long N, bool inclusive, int strideSrc, int strideDst);
 
 		/// <summary>
@@ -997,7 +997,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="ldD">The leading dimension of <paramref name="dest"/></param>
 		/// <param name="alpha">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="A"/>'s elements during the computation</param>
 		/// <param name="beta">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="dest"/>'s elements during the computation</param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void matKron(DataType type,
 											IntPtr A, long ldA, long rowsA, long colsA,
 											IntPtr B, long ldB, long rowsB, long colsB,
@@ -1012,7 +1012,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="rows">The number of rows of <paramref name="A"/></param>
 		/// <param name="upperStored">Whether <paramref name="A"/>'s upper part or its lower part is stored</param>
 		/// <param name="hermA">If <paramref name="type"/> is a complex type, make <paramref name="A"/> hermitian or symmetric</param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void matMakeHerm(DataType type, IntPtr A, long ld, long rows, bool upperStored, bool hermA);
 
 		/// <summary>
@@ -1023,7 +1023,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
 		/// <param name="rows">The number of rows of <paramref name="A"/></param>
 		/// <param name="clearLower">Whether <paramref name="A"/>'s upper part or its lower part shall be preserved</param>
-		[DllImport(CUBLAS_API_DLL_NAME)]
+		[DllImport(CUSTOM_API_DLL_NAME)]
 		internal static extern void matTriClear(DataType type, IntPtr A, long ld, long rows, bool clearLower);
 		#endregion
 
