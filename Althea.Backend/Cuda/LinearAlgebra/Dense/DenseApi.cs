@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
@@ -22,6 +23,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	public class DenseApi : AbstractApi
 	{
 		#region basic
+		internal static readonly LinkedList<IntPtr>[] deviceHandles = new LinkedList<IntPtr>[CudaRuntime.DeviceCount];
+
 		/// <summary>
 		/// The actual CUDA library handles used in its API calls
 		/// </summary>
@@ -118,6 +121,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				NativeMethods.cublasCreate_v2(out this.cublasHandle).Check();
 				NativeMethods.cublasSetPointerMode_v2(this.cublasHandle, PointerMode.Host);
 			}
+			if (deviceHandles[this.BindedDeviceID] is null)
+				deviceHandles[this.BindedDeviceID] = new();
+			deviceHandles[this.BindedDeviceID].AddLast(this.cublasHandle);
 			this.UseAtomicsMode = true;
 			NativeMethods.cusolverDnCreate(out this.cusolverHandle).Check();
 		}
@@ -128,6 +134,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				NativeMethods.cublasDestroy(this.cublasHandle);
 			else
 				NativeMethods.cublasDestroy_v2(this.cublasHandle);
+			deviceHandles[this.BindedDeviceID].Remove(this.cublasHandle);
 			NativeMethods.cusolverDnDestroy(this.cusolverHandle);
 		}
 		#endregion
@@ -1206,7 +1213,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(C, m, n, ldc, out var pC, out _, out _, out int lldc))
 				return false;
-			////if (nx < (leftA ? nn : mm))
+			int lenX = leftA ? nn : mm;
+			////if (nx < lenX)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
 			delegate*<IntPtr, SideMode, int, int, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
@@ -1218,8 +1226,33 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cublasZdgmm,
 				_ => null,
 			};
-			func(this.cublasHandle, leftA ? SideMode.Right : SideMode.Left, mm, nn, pA, llda, px, strideX, pC, lldc).Check();
-			return true;
+			IntPtr cacheC = default;
+			if (!β.IsZero())
+				Storage.NativeMethods.cudaMalloc(out cacheC, sizeof(T) * m * n).Check();
+			var oldC = new TempGpuStorage<T>(cacheC, m * n);
+			try
+			{
+				// cache C
+				if (!β.IsZero())
+				{
+					if (!this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, Const<T>.One, C, ldc, default, default, default, oldC, m))
+						return false;
+				}
+				// overwrite C by diagonal multiply result
+				func(this.cublasHandle, leftA ? SideMode.Right : SideMode.Left, mm, nn, pA, llda, px, strideX, pC, lldc).Check();
+				// C = α * C + β * oldC
+				if (!β.IsZero())
+					return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, β, oldC, m, C, ldc);
+				else if (!α.IsOne())
+					return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, default, default, C, ldc);
+				else
+					return true;
+			}
+			finally
+			{
+				if (cacheC != default)
+					Storage.NativeMethods.cudaFree(cacheC);
+			}
 		}
 		#endregion
 
@@ -1319,6 +1352,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
 				return false;
+			// shortcut
+			if ((A is null || α.IsZero()) != (B is null || β.IsZero()))
+			{
+				if ((A is null || α.IsZero()) && opB == MatrixOperation.None && β.IsOne())
+				{   // copy B to C
+					Storage.NativeMethods.cudaMemcpy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n, Storage.MemoryCopyKind.DeviceToDevice).Check();
+				}
+				else if ((B is null || β.IsZero()) && opA == MatrixOperation.None && α.IsOne())
+				{   // copy A to C
+					Storage.NativeMethods.cudaMemcpy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n, Storage.MemoryCopyKind.DeviceToDevice).Check();
+				}
+				return true;
+			}
 
 			delegate*<IntPtr, CuBlasOperation, CuBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
 			func = Const<T>.DataType switch

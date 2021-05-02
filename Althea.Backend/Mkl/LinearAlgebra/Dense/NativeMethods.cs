@@ -161,16 +161,30 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region symmetric Hermitian matrix vector multiply
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_ssymv(MklBlasLayout Layout, MatrixFillMode uplo, int n, float alpha, IntPtr A, int lda, IntPtr x, int incx, float beta, IntPtr y, int incy);
+		internal static extern void cblas_ssymv(MklBlasLayout Layout, MklBlasFillMode uplo, int n, float alpha, IntPtr A, int lda, IntPtr x, int incx, float beta, IntPtr y, int incy);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_dsymv(MklBlasLayout Layout, MatrixFillMode uplo, int n, double alpha, IntPtr A, int lda, IntPtr x, int incx, double beta, IntPtr y, int incy);
+		internal static extern void cblas_dsymv(MklBlasLayout Layout, MklBlasFillMode uplo, int n, double alpha, IntPtr A, int lda, IntPtr x, int incx, double beta, IntPtr y, int incy);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_chemv(MklBlasLayout Layout, MatrixFillMode uplo, int n, void* alpha, IntPtr A, int lda, IntPtr x, int incx, void* beta, IntPtr y, int incy);
+		internal static extern void cblas_chemv(MklBlasLayout Layout, MklBlasFillMode uplo, int n, void* alpha, IntPtr A, int lda, IntPtr x, int incx, void* beta, IntPtr y, int incy);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_zhemv(MklBlasLayout Layout, MatrixFillMode uplo, int n, void* alpha, IntPtr A, int lda, IntPtr x, int incx, void* beta, IntPtr y, int incy);
+		internal static extern void cblas_zhemv(MklBlasLayout Layout, MklBlasFillMode uplo, int n, void* alpha, IntPtr A, int lda, IntPtr x, int incx, void* beta, IntPtr y, int incy);
+		#endregion
+
+		#region triangular matrix vector multiply
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_strmv(MklBlasLayout Layout, MklBlasFillMode Uplo, MklBlasOperation TransA, MklBlasDiagType Diag, int N, IntPtr A, int lda, IntPtr X, int incX);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_dtrmv(MklBlasLayout Layout, MklBlasFillMode Uplo, MklBlasOperation TransA, MklBlasDiagType Diag, int N, IntPtr A, int lda, IntPtr X, int incX);
+		
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_ctrmv(MklBlasLayout Layout, MklBlasFillMode Uplo, MklBlasOperation TransA, MklBlasDiagType Diag, int N, IntPtr A, int lda, IntPtr X, int incX);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_ztrmv(MklBlasLayout Layout, MklBlasFillMode Uplo, MklBlasOperation TransA, MklBlasDiagType Diag, int N, IntPtr A, int lda, IntPtr X, int incX);
 		#endregion
 
 		#region general rank one
@@ -195,16 +209,47 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region symmetric Hermitian rank one
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_ssyr(MklBlasLayout Layout, MatrixFillMode uplo, int n, float alpha, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern void cblas_ssyr(MklBlasLayout Layout, MklBlasFillMode uplo, int n, float alpha, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_dsyr(MklBlasLayout Layout, MatrixFillMode uplo, int n, double alpha, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern void cblas_dsyr(MklBlasLayout Layout, MklBlasFillMode uplo, int n, double alpha, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_cher(MklBlasLayout Layout, MatrixFillMode uplo, int n, void* alpha, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern void cblas_cher(MklBlasLayout Layout, MklBlasFillMode uplo, int n, void* alpha, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_zher(MklBlasLayout Layout, MatrixFillMode uplo, int n, void* alpha, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern void cblas_zher(MklBlasLayout Layout, MklBlasFillMode uplo, int n, void* alpha, IntPtr x, int incx, IntPtr A, int lda);
+		#endregion
+
+		#region symmetric Hermitian rank two
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_ssyr2(MklBlasLayout Layout, MklBlasFillMode uplo, int n, float alpha, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_dsyr2(MklBlasLayout Layout, MklBlasFillMode uplo, int n, double alpha, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_cher2(MklBlasLayout Layout, MklBlasFillMode uplo, int n, void* alpha, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_zher2(MklBlasLayout Layout, MklBlasFillMode uplo, int n, void* alpha, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		#endregion
+		#endregion
+
+
+		#region BLAS-like level 2
+		#region diagonal matrix multiply
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_sdgmm_batch(MklBlasLayout layout, in MklBlasSideMode side, in int m, in int n, in IntPtr a, in int lda, in IntPtr x, in int incx, ref IntPtr c, in int ldc, int group_count, in int group_size);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_ddgmm_batch(MklBlasLayout layout, in MklBlasSideMode side, in int m, in int n, in IntPtr a, in int lda, in IntPtr x, in int incx, ref IntPtr c, in int ldc, int group_count, in int group_size);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_cdgmm_batch(MklBlasLayout layout, in MklBlasSideMode side, in int m, in int n, in IntPtr a, in int lda, in IntPtr x, in int incx, ref IntPtr c, in int ldc, int group_count, in int group_size);
+
+		[DllImport(MKLBLAS_API_DLL_NAME)]
+		internal static extern void cblas_zdgmm_batch(MklBlasLayout layout, in MklBlasSideMode side, in int m, in int n, in IntPtr a, in int lda, in IntPtr x, in int incx, ref IntPtr c, in int ldc, int group_count, in int group_size);
 		#endregion
 		#endregion
 
@@ -226,42 +271,42 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region symmetric Hermitian matrix multiply
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_ssymm(MklBlasLayout Layout, SideMode side, MatrixFillMode uplo, int m, int n, float alpha, IntPtr A, int lda, IntPtr B, int ldb, float beta, IntPtr C, int ldc);
+		internal static extern void cblas_ssymm(MklBlasLayout Layout, MklBlasSideMode side, MklBlasFillMode uplo, int m, int n, float alpha, IntPtr A, int lda, IntPtr B, int ldb, float beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_dsymm(MklBlasLayout Layout, SideMode side, MatrixFillMode uplo, int m, int n, double alpha, IntPtr A, int lda, IntPtr B, int ldb, double beta, IntPtr C, int ldc);
+		internal static extern void cblas_dsymm(MklBlasLayout Layout, MklBlasSideMode side, MklBlasFillMode uplo, int m, int n, double alpha, IntPtr A, int lda, IntPtr B, int ldb, double beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_csymm(MklBlasLayout Layout, SideMode side, MatrixFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_csymm(MklBlasLayout Layout, MklBlasSideMode side, MklBlasFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_zsymm(MklBlasLayout Layout, SideMode side, MatrixFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_zsymm(MklBlasLayout Layout, MklBlasSideMode side, MklBlasFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_chemm(MklBlasLayout Layout, SideMode side, MatrixFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_chemm(MklBlasLayout Layout, MklBlasSideMode side, MklBlasFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_zhemm(MklBlasLayout Layout, SideMode side, MatrixFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_zhemm(MklBlasLayout Layout, MklBlasSideMode side, MklBlasFillMode uplo, int m, int n, void* alpha, IntPtr A, int lda, IntPtr B, int ldb, void* beta, IntPtr C, int ldc);
 		#endregion
 
 		#region rank k update
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_ssyrk(MklBlasLayout Layout, MatrixFillMode uplo, MklBlasOperation trans, int n, int k, float alpha, IntPtr A, int lda, float beta, IntPtr C, int ldc);
+		internal static extern void cblas_ssyrk(MklBlasLayout Layout, MklBlasFillMode uplo, MklBlasOperation trans, int n, int k, float alpha, IntPtr A, int lda, float beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_dsyrk(MklBlasLayout Layout, MatrixFillMode uplo, MklBlasOperation trans, int n, int k, double alpha, IntPtr A, int lda, double beta, IntPtr C, int ldc);
+		internal static extern void cblas_dsyrk(MklBlasLayout Layout, MklBlasFillMode uplo, MklBlasOperation trans, int n, int k, double alpha, IntPtr A, int lda, double beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_csyrk(MklBlasLayout Layout, MatrixFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_csyrk(MklBlasLayout Layout, MklBlasFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_zsyrk(MklBlasLayout Layout, MatrixFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_zsyrk(MklBlasLayout Layout, MklBlasFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_cherk(MklBlasLayout Layout, MatrixFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_cherk(MklBlasLayout Layout, MklBlasFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
 
 		[DllImport(MKLBLAS_API_DLL_NAME)]
-		internal static extern void cblas_zherk(MklBlasLayout Layout, MatrixFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
+		internal static extern void cblas_zherk(MklBlasLayout Layout, MklBlasFillMode uplo, MklBlasOperation trans, int n, int k, void* alpha, IntPtr A, int lda, void* beta, IntPtr C, int ldc);
 		#endregion
 		#endregion
 

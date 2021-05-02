@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Backend.Storage;
 using Althea.NativeTypes;
 using Althea.Resources;
@@ -226,7 +227,7 @@ namespace Althea.Backend.Cuda.Storage
 			if (offset == NOT_SUPPORT)
 				return false;
 			if (mp is not null)
-				NativeMethods.cudaMemset(mp.Pointer, value, pointer.LengthInBytes).Check();
+				NativeMethods.cudaMemset(mp.OffsetPointer(offset), value, pointer.LengthInBytes).Check();
 			if (sp is not null)
 				sp.NativeStream.SetValues(value, pointer.LengthInBytes);
 			return true;
@@ -240,7 +241,7 @@ namespace Althea.Backend.Cuda.Storage
 			if (offset == NOT_SUPPORT)
 				return false;
 			if (mp is not null)
-				NativeMethods.vecFillVal(Const<T>.DataType, mp.Pointer, &value, pointer.LengthInBytes / Const<T>.SizeT, 1);
+				NativeMethods.vecFillVal(Const<T>.DataType, mp.OffsetPointer(offset), &value, pointer.LengthInBytes / Const<T>.SizeT, 1);
 			if (sp is not null)
 				sp.NativeStream.SetValues(value, pointer.LengthInBytes);
 			return true;
@@ -278,7 +279,7 @@ namespace Althea.Backend.Cuda.Storage
 			actualCopied = Math.Min(source.LengthInBytes, destination.LengthInBytes);
 			if (srcMP is not null && dstMP is not null)
 			{
-				NativeMethods.cudaMemcpy(dstMP.Pointer, srcMP.Pointer, actualCopied, GetCopyKind(srcMP, dstMP)).Check();
+				NativeMethods.cudaMemcpy(dstMP.OffsetPointer(dstOff), srcMP.OffsetPointer(srcOff), actualCopied, GetCopyKind(srcMP, dstMP)).Check();
 			}
 			else
 			{
@@ -302,7 +303,7 @@ namespace Althea.Backend.Cuda.Storage
 				return false;
 			if (srcMP is not null && dstMP is not null)
 			{
-				NativeMethods.cudaMemcpy2D(dstMP.Pointer, destinationLD, srcMP.Pointer, sourceLD, height, width, GetCopyKind(srcMP, dstMP)).Check();
+				NativeMethods.cudaMemcpy2D(dstMP.OffsetPointer(dstOff), destinationLD, srcMP.OffsetPointer(srcOff), sourceLD, height, width, GetCopyKind(srcMP, dstMP)).Check();
 			}
 			else
 			{
@@ -356,7 +357,59 @@ namespace Althea.Backend.Cuda.Storage
 		#endregion
 
 		#region strided copy
-		protected override bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long actualCopied)
+		internal static unsafe bool PointerStridedCopy<T>(IntPtr source, int incrementSource, IntPtr destination, int incrementDestination, MemoryCopyKind copyKind, int copies) where T : unmanaged
+		{
+			if (incrementSource == 1 && incrementDestination == 1)
+			{
+				return NativeMethods.cudaMemcpy(destination, source, sizeof(T) * (long)copies, copyKind) == CudaError.Success;
+			}
+			switch (copyKind)
+			{
+				case MemoryCopyKind.HostToDevice:
+					LinearAlgebra.Dense.NativeMethods.cublasSetVector(copies, sizeof(T), source, incrementSource, destination, incrementDestination);
+					break;
+				case MemoryCopyKind.DeviceToHost:
+					LinearAlgebra.Dense.NativeMethods.cublasGetVector(copies, sizeof(T), source, incrementSource, destination, incrementDestination);
+					break;
+				case MemoryCopyKind.DeviceToDevice:
+					var (major, minor) = CudaRuntime.GetDriverVersion();
+					bool cuda111Above = (major == 11 && minor >= 1) || major > 11;
+					var handles = DenseApi.deviceHandles[CudaRuntime.CurrentDeviceID];
+					if (handles is not null && handles.First is { } h)
+					{
+						delegate*<IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func = null;
+						switch (Const<T>.DataType)
+						{
+							case DataType.RealSingle:
+								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasScopy : &LinearAlgebra.Dense.NativeMethods.cublasScopy_v2;
+								break;
+							case DataType.RealDouble:
+								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasDcopy : &LinearAlgebra.Dense.NativeMethods.cublasDcopy_v2;
+								break;
+							case DataType.ComplexSingle:
+								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasCcopy : &LinearAlgebra.Dense.NativeMethods.cublasCcopy_v2;
+								break;
+							case DataType.ComplexDouble:
+								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasZcopy : &LinearAlgebra.Dense.NativeMethods.cublasZcopy_v2;
+								break;
+							default:
+								break;
+						}
+						if (func is not null)
+						{
+							func(h.Value, copies, source, incrementSource, destination, incrementDestination).Check();
+							return true;
+						}
+					}
+					NativeMethods.vecStridedCopy(Const<T>.DataType, source, destination, copies, incrementSource, incrementDestination);
+					break;
+				default:
+					return false;
+			}
+			return true;
+		}
+
+		protected override unsafe bool StridedCopy_<T>(PointerSegment source, int incrementSource, PointerSegment destination, int incrementDestination, out long actualCopied)
 		{
 			// shortcut
 			if (incrementSource == 1 && incrementDestination == 1)
@@ -366,6 +419,11 @@ namespace Althea.Backend.Cuda.Storage
 			// other cases
 			var (srcLen, dstLen) = StridedCopyCheck<T>(source, incrementSource, destination, incrementDestination);
 			actualCopied = Math.Min((srcLen - 1) / incrementSource + 1, (dstLen - 1) / incrementDestination + 1);
+			if (actualCopied > int.MaxValue)
+			{
+				actualCopied = 0; return false;
+			}
+			int copies = (int)actualCopied;
 			long srcOff = source.GetPointerOffsetManaged(out IMemoryPointer? srcMP, out _);
 			long dstOff = destination.GetPointerOffsetManaged(out IMemoryPointer? dstMP, out _);
 			if (srcOff == NOT_SUPPORT || dstOff == NOT_SUPPORT || srcMP is null || dstMP is null)
@@ -373,22 +431,14 @@ namespace Althea.Backend.Cuda.Storage
 				actualCopied = 0; return false;
 			}
 			MemoryCopyKind copyKind = GetCopyKind(srcMP, dstMP);
-			switch (copyKind)
+			if (!PointerStridedCopy<T>(srcMP.OffsetPointer(srcOff), incrementSource, dstMP.OffsetPointer(dstOff), incrementDestination, copyKind, copies))
 			{
-				case MemoryCopyKind.HostToDevice:
-					LinearAlgebra.Dense.NativeMethods.cublasSetVector((int)actualCopied, Const<T>.SizeT, srcMP.Pointer, incrementSource, dstMP.Pointer, incrementDestination);
-					break;
-				case MemoryCopyKind.DeviceToHost:
-					LinearAlgebra.Dense.NativeMethods.cublasGetVector((int)actualCopied, Const<T>.SizeT, srcMP.Pointer, incrementSource, dstMP.Pointer, incrementDestination);
-					break;
-				case MemoryCopyKind.DeviceToDevice:
-					NativeMethods.vecStridedCopy(Const<T>.DataType, srcMP.Pointer, dstMP.Pointer, actualCopied, incrementSource, incrementDestination);
-					break;
-				default:
-					actualCopied = 0;
-					return false;
+				actualCopied = 0; return false;
 			}
-			return true;
+			else
+			{
+				return true;
+			}
 		}
 		#endregion
 	}

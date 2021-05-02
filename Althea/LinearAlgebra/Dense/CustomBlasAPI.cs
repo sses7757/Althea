@@ -597,8 +597,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, perform the matrix-matrix multiplication:
 		/// <list type="table">
 		/// <listheader><term>Condition</term>  <description>Equation</description></listheader>
-		/// <item><term><paramref name="leftA"/> is true</term>  <description><paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
-		/// <item><term><paramref name="leftA"/> is false</term>  <description><paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></description></item>
+		/// <item><term><paramref name="leftA"/> is true</term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
+		/// <item><term><paramref name="leftA"/> is false</term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></description></item>
 		/// </list>
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>

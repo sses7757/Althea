@@ -87,7 +87,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	/// <summary>
 	/// The symmetric/Hermitian matrix's storage mode in MKL BLAS
 	/// </summary>
-	internal enum MatrixFillMode
+	internal enum MklBlasFillMode
 	{
 		/// <summary>
 		/// The upper part is filled
@@ -100,9 +100,24 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	}
 
 	/// <summary>
+	/// The triangular matrix's diagonal element type in MKL BLAS
+	/// </summary>
+	internal enum MklBlasDiagType
+	{
+		/// <summary>
+		/// The diagonal elements are not unit and stored explicitly
+		/// </summary>
+		NonUnit = 131,
+		/// <summary>
+		/// The diagonal elements are unit and may not be stored
+		/// </summary>
+		Unit = 132
+	}
+
+	/// <summary>
 	/// The side mode in MKL BLAS
 	/// </summary>
-	internal enum SideMode
+	internal enum MklBlasSideMode
 	{
 		/// <summary>
 		/// Left

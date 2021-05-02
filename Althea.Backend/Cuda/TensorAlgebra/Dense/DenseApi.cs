@@ -21,7 +21,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	public class DenseApi : AbstractApi
 	{
 		#region basic
-		private static readonly CudaTensorHandle[] handles = new CudaTensorHandle[CudaRuntime.DeviceNumber];
+		private static readonly CudaTensorHandle[] handles = new CudaTensorHandle[CudaRuntime.DeviceCount];
 
 		private CudaTensorHandle handle;
 

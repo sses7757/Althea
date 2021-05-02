@@ -2,9 +2,53 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Storage;
+using Althea.Resources;
+using Althea.Storage;
+
 
 namespace Althea.Backend.Cuda
 {
+	internal sealed class TempGpuStorage<T> : PureOrMixedStorage<T> where T : unmanaged
+	{
+		private readonly PointerSegment pointerSegment;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal TempGpuStorage(IntPtr pointer, long length) : base(stackalloc StorageLocation[] { new(LocationType.GpuRam, CudaRuntime.CurrentDeviceID) }, stackalloc[] { length })
+		{
+			this.pointerSegment = new(MemoryPointer.Create<T>(pointer, length, this.LocationDescription[0]));
+		}
+
+		// no disposition
+		protected override void Dispose(bool invokedByUser) { }
+
+		public override PointerSegment this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => index == 0 ? this.pointerSegment : throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+		}
+
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
+
+		public override bool Equals(Storage<T>? obj) => obj is TempGpuStorage<T> m && ((MemoryPointer)this.pointerSegment.Pointer).Pointer == ((MemoryPointer)m.pointerSegment.Pointer).Pointer;
+
+		public override bool IsValid() => this.pointerSegment.LengthInBytes > 0;
+
+		public override bool IsOffsetValid(long offset, long newLength = 0) => offset >= 0 && newLength >= 0 && offset + newLength < this.pointerSegment.LengthInBytes;
+
+		public override ActualStorage<T> CreateAlike() => throw new InvalidOperationException();
+
+		public override ActualStorage<TOut> CreateAlike<TOut>() => throw new InvalidOperationException();
+
+		public override ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0) => throw new InvalidOperationException();
+
+		public override ReferenceStorage<TOut> As<TOut>() => throw new InvalidOperationException();
+
+		public override ActualStorage<T> Clone() => throw new InvalidOperationException();
+	}
+
 	/// <summary>
 	/// The static class for static global methods and properties of 
 	/// </summary>
@@ -26,9 +70,9 @@ namespace Althea.Backend.Cuda
 		}
 
 		/// <summary>
-		/// Statically get the number of CUDA devices. Typically, the allowed device IDs are [0, <see cref="DeviceNumber"/> - 1].
+		/// Statically get the number of CUDA devices. Typically, the allowed device IDs are [0, <see cref="DeviceCount"/> - 1].
 		/// </summary>
-		public static int DeviceNumber {
+		public static int DeviceCount {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				Storage.NativeMethods.cudaGetDeviceCount(out int c).Check();

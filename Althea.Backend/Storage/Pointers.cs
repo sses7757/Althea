@@ -17,9 +17,13 @@ namespace Althea.Backend.Storage
 		private readonly PointerSegment pointerSegment;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe ManagedPureStorage(void* pointer, long length) : base(stackalloc StorageLocation[] { new(LocationType.CpuRam, 0) }, stackalloc[] { length })
+		internal unsafe ManagedPureStorage(void* pointer, long length) : this((IntPtr)pointer, length)
+		{ }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal ManagedPureStorage(IntPtr pointer, long length) : base(stackalloc StorageLocation[] { new(LocationType.CpuRam, 0) }, stackalloc[] { length })
 		{
-			this.pointerSegment = new(MemoryPointer.Create<T>((IntPtr)pointer, length));
+			this.pointerSegment = new(MemoryPointer.Create<T>(pointer, length));
 		}
 
 		// no disposition
@@ -99,6 +103,19 @@ namespace Althea.Backend.Storage
 		public static MemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged
 		{
 			return new(pointer, length * Const<T>.SizeT, new(LocationType.CpuRam, 0));
+		}
+
+		/// <summary>
+		/// Create a new <see cref="MemoryPointer"/> with given allocated <paramref name="pointer"/> on <paramref name="location"/> and corresponding <paramref name="length"/> in <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged type as the data type</typeparam>
+		/// <param name="pointer">The allocated pointer on managed memory</param>
+		/// <param name="length">The length in <typeparamref name="T"/></param>
+		/// <param name="location">The <see cref="StorageLocation"/> of <paramref name="pointer"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MemoryPointer Create<T>(IntPtr pointer, long length, StorageLocation location) where T : unmanaged
+		{
+			return new(pointer, length * Const<T>.SizeT, location);
 		}
 
 		/// <summary>

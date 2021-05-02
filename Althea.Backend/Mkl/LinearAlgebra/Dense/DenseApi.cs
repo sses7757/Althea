@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
@@ -25,7 +26,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			// do nothing
 		}
+
+		/// <summary>
+		/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM")
+		/// </summary>
+		public bool ComplexGemmUseGemm3m {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set;
+		}
 		#endregion
+
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -200,7 +212,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
 		{
 			index = -1;
-			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
+			if (!Const<T>.IsComplex)
 				return false;
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
@@ -211,6 +223,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cblas_izamax,
 				_ => null,
 			};
+			if (func is null)
+				return false;
 			index = func(n, px, strideX) - 1;
 			return true;
 		}
@@ -226,7 +240,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
 		{
 			index = -1;
-			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
+			if (!Const<T>.IsComplex)
 				return false;
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
@@ -237,6 +251,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cblas_izamin,
 				_ => null,
 			};
+			if (func is null)
+				return false;
 			index = func(n, px, strideX) - 1;
 			return true;
 		}
@@ -253,7 +269,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged
 		{
 			sum = 0;
-			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
+			if (!Const<T>.IsComplex)
 				return false;
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
@@ -261,10 +277,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				sum = NativeMethods.cblas_scasum(n, px, strideX);
 			}
-			else
+			else if (Const<T>.DataType == DataType.ComplexDouble)
 			{
 				sum = NativeMethods.cblas_dzasum(n, px, strideX);
 			}
+			else
+				return false;
 			return true;
 		}
 
@@ -273,8 +291,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			index = -1;
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
-			if (!Const<T>.IsPreDefined || (Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754 && Const<T>.DataType.Bytes() < sizeof(float)))
-				return false; // half float is not supported
 			delegate*<int, IntPtr, int, long> func;
 			func = Const<T>.DataType switch
 			{
@@ -282,6 +298,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				DataType.RealDouble => &NativeMethods.cblas_idamax,
 				_ => null,
 			};
+			if (func is null)
+				return false;
 			index = func(n, px, strideX) - 1;
 			return true;
 		}
@@ -291,8 +309,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			index = -1;
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
-			if (!Const<T>.IsPreDefinedNoHalf)
-				return false; // half float is not supported
 			delegate*<int, IntPtr, int, long> func;
 			func = Const<T>.DataType switch
 			{
@@ -300,6 +316,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				DataType.RealDouble => &NativeMethods.cblas_idamin,
 				_ => null,
 			};
+			if (func is null)
+				return false;
 			index = func(n, px, strideX) - 1;
 			return true;
 		}
@@ -310,8 +328,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			bool doSum = typeof(Sum) == typeof(bool);
 			sum = 0;
 			if (!CheckPointer(x, out var px, out var n, strideX))
-				return false;
-			if (!Const<T>.IsPreDefinedNoHalf)
 				return false;
 			delegate*<int, IntPtr, int, float> funcS;
 			delegate*<int, IntPtr, int, double> funcD;
@@ -331,10 +347,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				sum = funcS(n, px, strideX);
 			}
-			else
+			else if(funcD is not null)
 			{
 				sum = funcD(n, px, strideX);
 			}
+			else
+				return false;
 			return true;
 		}
 
@@ -356,8 +374,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(y, out var py, out var n2, strideY))
 				return false;
 			int n = Math.Min(n1, n2);
-			if (!Const<T>.IsPreDefined)
-				return false;
 			delegate*<int, IntPtr, int, IntPtr, int, T*, void> func;
 			switch (Const<T>.DataType)
 			{
@@ -376,8 +392,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					func = conjX ? &NativeMethods.cblas_zdotc_sub : &NativeMethods.cblas_zdotu_sub;
 					break;
 				default:
-					func = null;
-					break;
+					return false;
 			}
 			T dotC;
 			func(n, px, strideX, py, strideY, &dotC);
@@ -388,8 +403,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		protected override unsafe bool Scale_<T>(Storage<T> x, int strideX, T scalar)
 		{
 			if (!CheckPointer(x, out var px, out var n, strideX))
-				return false;
-			if (!Const<T>.IsPreDefined)
 				return false;
 			delegate*<int, T*, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
@@ -407,8 +420,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					func = &NativeMethods.cblas_zscal;
 					break;
 				default:
-					func = null;
-					break;
+					return false;
 			}
 			func(n, &scalar, px, strideX);
 			return true;
@@ -421,8 +433,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(y, out var py, out var n2, strideY))
 				return false;
 			int n = Math.Min(n1, n2);
-			if (!Const<T>.IsPreDefined)
-				return false;
 			delegate*<int, T*, IntPtr, int, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
@@ -439,8 +449,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					func = &NativeMethods.cblas_zaxpy;
 					break;
 				default:
-					func = null;
-					break;
+					return false;
 			}
 			func(n, &α, px, strideX, py, strideY);
 			return true;
@@ -642,8 +651,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		// Ignore Spelling: func
 		protected override unsafe bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
 			if (!CheckPointer(x, out var px, out var nx, strideX))
 				return false;
 			if (!CheckPointer(y, out var py, out var ny, strideY))
@@ -658,30 +665,25 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (ny < (opMkl == MklBlasOperation.None ? nn : mm))
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
-			delegate*<MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			delegate*<MklBlasLayout, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_sgemv,
-					DataType.RealDouble => &NativeMethods.cblas_dgemv,
-					DataType.ComplexSingle => &NativeMethods.cblas_cgemv,
-					DataType.ComplexDouble => &NativeMethods.cblas_zgemv,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_sgemv(MklBlasLayout.ColMajor, opMkl, mm,nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dgemv(MklBlasLayout.ColMajor, opMkl, mm, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_cgemv;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_zgemv;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_sgemv_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dgemv_v2,
-					DataType.ComplexSingle => &NativeMethods.cblas_cgemv_v2,
-					DataType.ComplexDouble => &NativeMethods.cblas_zgemv_v2,
-					_ => null,
-				};
-			}
-			func(opMkl, mm, nn, &α, pA, llda, px, strideX, &β, py, strideY);
+			func(MklBlasLayout.ColMajor, opMkl, mm, nn, &α, pA, llda, px, strideX, &β, py, strideY);
 			return true;
 		}
 
@@ -695,31 +697,29 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
 				return false;
+			if (!hermA && Const<T>.IsComplex)
+				return false;
 
-			delegate*<MatrixFillMode, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
+			delegate*<MklBlasLayout, MklBlasFillMode, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssymv,
-					DataType.RealDouble => &NativeMethods.cblas_dsymv,
-					DataType.ComplexSingle => hermA ? &NativeMethods.cblas_chemv : &NativeMethods.cblas_csymv,
-					DataType.ComplexDouble => hermA ? &NativeMethods.cblas_zhemv : &NativeMethods.cblas_zsymv,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_ssymv(MklBlasLayout.ColMajor, fill, nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dsymv(MklBlasLayout.ColMajor, fill, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_chemv;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_zhemv;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssymv_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dsymv_v2,
-					DataType.ComplexSingle => hermA ? &NativeMethods.cblas_chemv_v2 : &NativeMethods.cblas_csymv_v2,
-					DataType.ComplexDouble => hermA ? &NativeMethods.cblas_zhemv_v2 : &NativeMethods.cblas_zsymv_v2,
-					_ => null,
-				};
-			}
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, nn, &α, pA, llda, px, strideX, &β, py, strideY);
+			func(MklBlasLayout.ColMajor, fill, nn, &α, pA, llda, px, strideX, &β, py, strideY);
 			return true;
 		}
 
@@ -738,31 +738,28 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (ny < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
-			delegate*<int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			delegate*<MklBlasLayout, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_sger,
-					DataType.RealDouble => &NativeMethods.cblas_dger,
-					DataType.ComplexSingle => conjY ? &NativeMethods.cblas_cgerc : &NativeMethods.cblas_cgerc,
-					DataType.ComplexDouble => conjY ? &NativeMethods.cblas_zgerc : &NativeMethods.cblas_zgerc,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_sger(MklBlasLayout.ColMajor, mm, nn, *(float*)&α,  px, strideX, py, strideY, pA, llda);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dger(MklBlasLayout.ColMajor, mm, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
+					return true;
+				case DataType.ComplexSingle:
+					func = conjY ? &NativeMethods.cblas_cgerc : &NativeMethods.cblas_cgerc;
+					break;
+				case DataType.ComplexDouble:
+					func = conjY ? &NativeMethods.cblas_zgerc : &NativeMethods.cblas_zgerc;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_sger_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dger_v2,
-					DataType.ComplexSingle => conjY ? &NativeMethods.cblas_cgerc_v2 : &NativeMethods.cblas_cgerc_v2,
-					DataType.ComplexDouble => conjY ? &NativeMethods.cblas_zgerc_v2 : &NativeMethods.cblas_zgerc_v2,
-					_ => null,
-				};
-			}
+			// scale A
 			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
-			func(mm, nn, &α, px, strideX, py, strideY, pA, llda);
+			// add to A
+			func(MklBlasLayout.ColMajor, mm, nn, &α, px, strideX, py, strideY, pA, llda);
 			return true;
 		}
 
@@ -774,34 +771,34 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
 				return false;
+			if (!conjX && Const<T>.IsComplex)
+				return false;
 			////if (nx < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
-			delegate*<MatrixFillMode, int, T*, IntPtr, int, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
+			delegate*<MklBlasLayout, MklBlasFillMode, int, T*, IntPtr, int, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyr,
-					DataType.RealDouble => &NativeMethods.cblas_dsyr,
-					DataType.ComplexSingle => conjX ? &NativeMethods.cblas_cher : &NativeMethods.cblas_csyr,
-					DataType.ComplexDouble => conjX ? &NativeMethods.cblas_zher : &NativeMethods.cblas_zsyr,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_ssyr(MklBlasLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, pA, llda);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dsyr(MklBlasLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, pA, llda);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_cher;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_zher;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyr_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dsyr_v2,
-					DataType.ComplexSingle => conjX ? &NativeMethods.cblas_cher_v2 : &NativeMethods.cblas_csyr_v2,
-					DataType.ComplexDouble => conjX ? &NativeMethods.cblas_zher_v2 : &NativeMethods.cblas_zsyr_v2,
-					_ => null,
-				};
-			}
+			// scale A
 			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, nn, &α, px, strideX, pA, llda);
+			// add to A
+			func(MklBlasLayout.ColMajor, fill, nn, &α, px, strideX, pA, llda);
 			return true;
 		}
 
@@ -815,36 +812,36 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
 				return false;
+			if (!conjugate && Const<T>.IsComplex)
+				return false;
 			////if (nx < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 			////if (ny < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
-			delegate*<MatrixFillMode, int, T*, IntPtr, int, IntPtr, int, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
+			delegate*<MklBlasLayout, MklBlasFillMode, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyr2,
-					DataType.RealDouble => &NativeMethods.cblas_ssyr2,
-					DataType.ComplexSingle => conjugate ? &NativeMethods.cblas_cher2 : &NativeMethods.cblas_csyr2,
-					DataType.ComplexDouble => conjugate ? &NativeMethods.cblas_zher2 : &NativeMethods.cblas_zsyr2,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_ssyr2(MklBlasLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, py, strideY, pA, llda);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dsyr2(MklBlasLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_cher2;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_zher2;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyr2_v2,
-					DataType.RealDouble => &NativeMethods.cblas_ssyr2_v2,
-					DataType.ComplexSingle => conjugate ? &NativeMethods.cblas_cher2_v2 : &NativeMethods.cblas_csyr2_v2,
-					DataType.ComplexDouble => conjugate ? &NativeMethods.cblas_zher2_v2 : &NativeMethods.cblas_zsyr2_v2,
-					_ => null,
-				};
-			}
+			// scale A
 			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, nn, &α, px, strideX, py, strideY, pA, llda);
+			// add to A
+			func(MklBlasLayout.ColMajor, fill, nn, &α, px, strideX, py, strideY, pA, llda);
 			return true;
 		}
 
@@ -856,39 +853,35 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
 				return false;
-			////if (nx < nn)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
-
-			delegate*<MatrixFillMode, MklBlasOperation, DiagType, int, IntPtr, int, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_strmv,
-					DataType.RealDouble => &NativeMethods.cblas_dtrmv,
-					DataType.ComplexSingle => &NativeMethods.cblas_ctrmv,
-					DataType.ComplexDouble => &NativeMethods.cblas_ztrmv,
-					_ => null,
-				};
-			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_strmv_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dtrmv_v2,
-					DataType.ComplexSingle => &NativeMethods.cblas_ctrmv_v2,
-					DataType.ComplexDouble => &NativeMethods.cblas_ztrmv_v2,
-					_ => null,
-				};
-			}
 			var opMkl = op.ToMkl();
 			if (opMkl == MklBlasOperation.ConjugateAlone)
 				return false;
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opMkl, unitDiag ? DiagType.Unit : DiagType.NonUnit, nn, pA, llda, px, strideX);
+			////if (nx < nn)
+			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
+
+			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
+			MklBlasDiagType diag = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
+			delegate*<MklBlasLayout, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, IntPtr, int, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
+			{
+				case DataType.RealSingle:
+					NativeMethods.cblas_strmv(MklBlasLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dtrmv(MklBlasLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_ctrmv;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_ztrmv;
+					break;
+				default:
+					return false;
+			}
+			func(MklBlasLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
 			return true;
 		}
-
 		#endregion
 
 
@@ -906,17 +899,44 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (nx < (leftA ? nn : mm))
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
-			delegate*<SideMode, int, int, IntPtr, int, IntPtr, int, IntPtr, int> func;
+			delegate*<MklBlasLayout, in MklBlasSideMode, in int, in int, in IntPtr, in int, in IntPtr, in int, ref IntPtr, in int, int, in int, void> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cblas_sdgmm,
-				DataType.RealDouble => &NativeMethods.cblas_ddgmm,
-				DataType.ComplexSingle => &NativeMethods.cblas_cdgmm,
-				DataType.ComplexDouble => &NativeMethods.cblas_zdgmm,
+				DataType.RealSingle => &NativeMethods.cblas_sdgmm_batch,
+				DataType.RealDouble => &NativeMethods.cblas_ddgmm_batch,
+				DataType.ComplexSingle => &NativeMethods.cblas_cdgmm_batch,
+				DataType.ComplexDouble => &NativeMethods.cblas_zdgmm_batch,
 				_ => null,
 			};
-			func(leftA ? SideMode.Right : SideMode.Left, mm, nn, pA, llda, px, strideX, pC, lldc);
-			return true;
+			IntPtr cacheC = default;
+			if (!β.IsZero())
+				cacheC = Marshal.AllocHGlobal((IntPtr)(sizeof(T) * m * n));
+			var oldC = new ManagedPureStorage<T>(cacheC, m * n);
+			try
+			{
+				// cache C
+				if (!β.IsZero())
+				{
+					if (!this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, Const<T>.One, C, ldc, default, default, default, oldC, m))
+						return false;
+				}
+				// overwrite C by diagonal multiply result
+				var side = leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left;
+				int one = 1;
+				func(MklBlasLayout.ColMajor, in side, in mm, in nn, in pA, in llda, in px, in strideX, ref pC, in lldc, 1, in one);
+				// C = α * C + β * oldC
+				if (!β.IsZero())
+					return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, β, oldC, m, C, ldc);
+				else if (!α.IsOne())
+					return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, default, default, C, ldc);
+				else
+					return true;
+			}
+			finally
+			{
+				if (cacheC != default)
+					Marshal.FreeHGlobal(cacheC);
+			}
 		}
 		#endregion
 
@@ -933,7 +953,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (α.IsZero()) // result is 0
 				return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, B, ldb, default, null, 0, B, ldb);
 
-			delegate*<SideMode, MatrixFillMode, MklBlasOperation, DiagType, int, int, T*, IntPtr, int, IntPtr, int> func;
+			delegate*<MklBlasSideMode, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int> func;
 			if (this.Mkl110OrAbove)
 			{
 				func = Const<T>.DataType switch
@@ -959,7 +979,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			var opMkl = op.ToMkl();
 			if (opMkl == MklBlasOperation.ConjugateAlone)
 				return false;
-			func(leftA ? SideMode.Right : SideMode.Left, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opMkl, unitDiag ? DiagType.Unit : DiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb);
+			func(leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left, fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb);
 			return true;
 		}
 
@@ -979,7 +999,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (α.IsZero()) // result if 0
 				this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, null, 0, C, ldc);
 
-			delegate*<SideMode, MatrixFillMode, MklBlasOperation, DiagType, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int> func;
+			delegate*<MklBlasSideMode, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int> func;
 			if (this.Mkl110OrAbove)
 			{
 				func = Const<T>.DataType switch
@@ -1002,7 +1022,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			func(leftA ? SideMode.Right : SideMode.Left, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opMkl, unitDiag ? DiagType.Unit : DiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb, pC, lldc);
+			func(leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left, fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb, pC, lldc);
 			return true;
 		}
 
@@ -1016,6 +1036,19 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
 				return false;
+			// shortcut
+			if ((A is null || α.IsZero()) != (B is null || β.IsZero()))
+			{
+				if ((A is null || α.IsZero()) && opB == MatrixOperation.None && β.IsOne())
+				{   // copy B to C
+					Storage.StorageApi.PointerMemoryCopy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n);
+				}
+				else if ((B is null || β.IsZero()) && opA == MatrixOperation.None && α.IsOne())
+				{   // copy A to C
+					Storage.StorageApi.PointerMemoryCopy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n);
+				}
+				return true;
+			}
 
 			delegate*<MklBlasOperation, MklBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, IntPtr, int> func;
 			func = Const<T>.DataType switch
@@ -1097,7 +1130,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
 				return false;
 
-			delegate*<SideMode, MatrixFillMode, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
+			delegate*<MklBlasSideMode, MklBlasFillMode, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
 			if (this.Mkl110OrAbove)
 			{
 				func = Const<T>.DataType switch
@@ -1120,7 +1153,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			func(leftA ? SideMode.Left : SideMode.Right, fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			func(leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right, fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
 			return true;
 		}
 
@@ -1133,7 +1166,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
 				return false;
 
-			delegate*<MatrixFillMode, MklBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int> func;
+			delegate*<MklBlasFillMode, MklBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int> func;
 			if (this.Mkl110OrAbove)
 			{
 				func = Const<T>.DataType switch
@@ -1156,7 +1189,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opcA, nn, kk, &α, pA, llda, &β, pC, lldc);
+			func(fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opcA, nn, kk, &α, pA, llda, &β, pC, lldc);
 			return true;
 		}
 
@@ -1171,7 +1204,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
 				return false;
 
-			delegate*<MatrixFillMode, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
+			delegate*<MklBlasFillMode, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
 			if (this.Mkl110OrAbove)
 			{
 				func = Const<T>.DataType switch
@@ -1194,7 +1227,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			func(fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
 			return true;
 		}
 
@@ -1209,7 +1242,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
 				return false;
 
-			delegate*<MatrixFillMode, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
+			delegate*<MklBlasFillMode, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
 			if (this.Mkl110OrAbove)
 			{
 				func = Const<T>.DataType switch
@@ -1232,7 +1265,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					_ => null,
 				};
 			}
-			func(fillUpper ? MatrixFillMode.Upper : MatrixFillMode.Lower, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			func(fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
 			return true;
 		}
 		#endregion
@@ -1501,8 +1534,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (nt < kk)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
 
-			delegate*<SideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, MklSolverStatus> bufFunc;
-			delegate*<SideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
+			delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, MklSolverStatus> bufFunc;
+			delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
 			bufFunc = Const<T>.DataType switch
 			{
 				DataType.RealSingle => &NativeMethods.cusolverDnSormqr_bufferSize,
@@ -1519,9 +1552,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZunmqr,
 				_ => null,
 			};
-			bufFunc(this.cusolverHandle, leftQ ? SideMode.Left : SideMode.Right, opMkl, mm, nn, kk, pA, llda, pT, pC, lldc, out var work);
+			bufFunc(this.cusolverHandle, leftQ ? MklBlasSideMode.Left : MklBlasSideMode.Right, opMkl, mm, nn, kk, pA, llda, pT, pC, lldc, out var work);
 			using var buffer = MklBuffer.Create<T>(work);
-			calFunc(this.cusolverHandle, leftQ ? SideMode.Left : SideMode.Right, opMkl, mm, nn, kk, pA, llda, pT, pC, lldc, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
+			calFunc(this.cusolverHandle, leftQ ? MklBlasSideMode.Left : MklBlasSideMode.Right, opMkl, mm, nn, kk, pA, llda, pT, pC, lldc, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
 			SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 			return true;
 		}
@@ -1549,9 +1582,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				delegate*<int, int, IntPtr, int, out int, MklSolverStatus> bufQRFunc = null;
 				delegate*<int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calQRFunc = null;
-				delegate*<SideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, MklSolverStatus> bufQmulFunc = null;
-				delegate*<SideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, MklSolverStatus> calQmulFunc = null;
-				delegate*<SideMode, MatrixFillMode, MklBlasOperation, DiagType, int, int, T*, IntPtr, int, IntPtr, int> triSolveFunc = null;
+				delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, MklSolverStatus> bufQmulFunc = null;
+				delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, MklSolverStatus> calQmulFunc = null;
+				delegate*<MklBlasSideMode, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int> triSolveFunc = null;
 				MklBlasOperation op = MklBlasOperation.Transpose;
 				switch (Const<T>.DataType)
 				{
@@ -1590,17 +1623,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				}
 				// get buffer
 				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, out var workSizeT1);
-				bufQmulFunc(this.cusolverHandle, SideMode.Left, MklBlasOperation.None, nn, nnrhs, nn, pA, llda, tau, pB, lldb, out var workSizeT2);
+				bufQmulFunc(this.cusolverHandle, MklBlasSideMode.Left, MklBlasOperation.None, nn, nnrhs, nn, pA, llda, tau, pB, lldb, out var workSizeT2);
 				using var buffer = MklBuffer.Create<T>(Math.Max(workSizeT1, workSizeT2));
 				// implicit QR
 				calQRFunc(this.cusolverHandle, mm, nn, pA, llda, tau, buffer.DeviceBuffer, workSizeT1, buffer.ExtraDeviceInfo);
 				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 				// implicit Q^H * B
-				calQmulFunc(this.cusolverHandle, SideMode.Left, op, mm, nnrhs, nn, pA, llda, tau, pB, lldb, buffer.DeviceBuffer, workSizeT2, buffer.ExtraDeviceInfo);
+				calQmulFunc(this.cusolverHandle, MklBlasSideMode.Left, op, mm, nnrhs, nn, pA, llda, tau, pB, lldb, buffer.DeviceBuffer, workSizeT2, buffer.ExtraDeviceInfo);
 				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 				// triangular solve R * X = Q^H * B
 				T one = Const<T>.One;
-				triSolveFunc(this.cublasHandle, SideMode.Left, MatrixFillMode.Upper, MklBlasOperation.None, DiagType.NonUnit, nn, nnrhs, &one, pA, llda, pB, lldb);
+				triSolveFunc(this.cublasHandle, MklBlasSideMode.Left, MklBlasFillMode.Upper, MklBlasOperation.None, MklBlasDiagType.NonUnit, nn, nnrhs, &one, pA, llda, pB, lldb);
 				return true;
 			}
 			finally
@@ -1702,9 +1735,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
 				var type = Const<T>.DataType.ToMklDataType();
-				NativeMethods.cusolverDnXsyevd_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, MatrixFillMode.Upper, n, type, pA, lda, type, pV, type, out var workDevice, out var workHost);
+				NativeMethods.cusolverDnXsyevd_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, MklBlasFillMode.Upper, n, type, pA, lda, type, pV, type, out var workDevice, out var workHost);
 				using var buffer = MklBuffer.Create(workDevice, workHost);
-				NativeMethods.cusolverDnXsyevd(this.cusolverHandle, IntPtr.Zero, mode, MatrixFillMode.Upper, n, type, pA, lda, type, pV, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo);
+				NativeMethods.cusolverDnXsyevd(this.cusolverHandle, IntPtr.Zero, mode, MklBlasFillMode.Upper, n, type, pA, lda, type, pV, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo);
 				SolveMethodKind.Eigenvalue.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 			}
 			else
@@ -1716,8 +1749,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				////if (nv < nn)
 				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
-				delegate*<SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
-				delegate*<SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
+				delegate*<SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
+				delegate*<SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
 					DataType.RealSingle => &NativeMethods.cusolverDnSsyevd_bufferSize,
@@ -1734,9 +1767,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZheevd,
 					_ => null,
 				};
-				bufFunc(this.cusolverHandle, mode, MatrixFillMode.Upper, nn, pA, llda, pV, out var work);
+				bufFunc(this.cusolverHandle, mode, MklBlasFillMode.Upper, nn, pA, llda, pV, out var work);
 				using var buffer = MklBuffer.Create<T>(work);
-				calFunc(this.cusolverHandle, mode, MatrixFillMode.Upper, nn, pA, llda, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
+				calFunc(this.cusolverHandle, mode, MklBlasFillMode.Upper, nn, pA, llda, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
 				SolveMethodKind.Eigenvalue.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 			}
 			return true;
@@ -1757,8 +1790,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (nv < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
-			delegate*<GeneralEigenType, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
-			delegate*<GeneralEigenType, SolveVectorMode, MatrixFillMode, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
+			delegate*<GeneralEigenType, SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
+			delegate*<GeneralEigenType, SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
 			bufFunc = Const<T>.DataType switch
 			{
 				DataType.RealSingle => &NativeMethods.cusolverDnSsygvd_bufferSize,
@@ -1775,9 +1808,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZhegvd,
 				_ => null,
 			};
-			bufFunc(this.cusolverHandle, eigType, mode, MatrixFillMode.Upper, nn, pA, llda, pB, lldb, pV, out var work);
+			bufFunc(this.cusolverHandle, eigType, mode, MklBlasFillMode.Upper, nn, pA, llda, pB, lldb, pV, out var work);
 			using var buffer = MklBuffer.Create<T>(work);
-			calFunc(this.cusolverHandle, eigType, mode, MatrixFillMode.Upper, nn, pA, llda, pB, lldb, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
+			calFunc(this.cusolverHandle, eigType, mode, MklBlasFillMode.Upper, nn, pA, llda, pB, lldb, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
 			SolveMethodKind.GeneralEigen.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 			return true;
 		}
