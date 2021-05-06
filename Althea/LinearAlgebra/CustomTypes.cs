@@ -114,6 +114,8 @@ namespace Althea.LinearAlgebra
 				SolveMethodKind.Schur => Resources.Exception.MatrixSolveSchur,
 				SolveMethodKind.GeneralEigen => Resources.Exception.MatrixSolveGeneralEigen,
 				SolveMethodKind.Jacobi => Resources.Exception.MatrixSolveJacobi,
+				SolveMethodKind.NonSymmetricEigenvalue => Resources.Exception.MatrixSolveNonSymmEigen,
+				SolveMethodKind.NonSymmetricGenearlEigenvalue => Resources.Exception.MatrixSolveNonSymmGeneralEigen,
 				_ => $"Unknown method with error info = {info}",
 			};
 		}
@@ -149,7 +151,7 @@ namespace Althea.LinearAlgebra
 	/// </summary>
 	public enum SolveMethodKind
 	{
-		// Ignore Spelling: potr getrf geqrf sytrf gesvd sygvd syevd syevj sygvj gesvdj
+		// Ignore Spelling: potr getrf geqrf sytrf gesvd sygv syev syevj sygvj gesvdj geev
 		/// <summary>
 		/// Cholesky factorization, [S|D|C|Z]potr[f|i]
 		/// </summary>
@@ -175,13 +177,21 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		SVD,
 		/// <summary>
-		/// Eigenvalue decomposition, [S|D|C|Z]syevd[x]
+		/// Eigenvalue decomposition (for symmetric matrices), [S|D|C|Z]syev[x]
 		/// </summary>
 		Eigenvalue,
 		/// <summary>
-		/// General eigenvalue decomposition, [S|D|C|Z]sygvd[x]
+		/// Non-symmetric eigenvalue decomposition, [S|D|C|Z]geev[x]
+		/// </summary>
+		NonSymmetricEigenvalue,
+		/// <summary>
+		/// General eigenvalue decomposition (for symmetric matrices), [S|D|C|Z]sygv[x]
 		/// </summary>
 		GeneralEigen,
+		/// <summary>
+		/// Non-symmetric eigenvalue decomposition, [S|D|C|Z]geev[x]
+		/// </summary>
+		NonSymmetricGenearlEigenvalue,
 		/// <summary>
 		/// Singular value decomposition via Jacobi method, [S|D|C|Z]syevj, [S|D|C|Z]sygvj, [S|D|C|Z]gesvdj
 		/// </summary>

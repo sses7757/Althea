@@ -1,35 +1,48 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.NativeTypes;
+
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 {
 	internal static class MklBlasExtension
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static MklBlasOperation ToMkl(this MatrixOperation op)
+		internal static MklOperation ToMkl(this MatrixOperation op)
 		{
 			return op switch
 			{
-				MatrixOperation.None => MklBlasOperation.NoneTranspose,
-				MatrixOperation.Transpose => MklBlasOperation.Transpose,
-				MatrixOperation.ConjugateTranspose => MklBlasOperation.ConjugateTranspose,
-				MatrixOperation.Conjugate => MklBlasOperation.ConjugateAlone,
+				MatrixOperation.None => MklOperation.NoneTranspose,
+				MatrixOperation.Transpose => MklOperation.Transpose,
+				MatrixOperation.ConjugateTranspose => MklOperation.ConjugateTranspose,
+				MatrixOperation.Conjugate => MklOperation.ConjugateAlone,
 				_ => default,
 			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static byte ToMklChar(this MatrixOperation op)
+		internal static MklOperationChar ToMklChar(this MatrixOperation op)
 		{
 			return op switch
 			{
-				MatrixOperation.None => (byte)MklBlasOperation.NoneTranspose,
-				MatrixOperation.Transpose => (byte)MklBlasOperation.Transpose,
-				MatrixOperation.ConjugateTranspose => (byte)MklBlasOperation.ConjugateTranspose,
-				MatrixOperation.Conjugate => (byte)MklBlasOperation.ConjugateAlone,
+				MatrixOperation.None => MklOperationChar.NoneTranspose,
+				MatrixOperation.Transpose => MklOperationChar.Transpose,
+				MatrixOperation.ConjugateTranspose => MklOperationChar.ConjugateTranspose,
+				_ => default,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static MklOperationChar ToChar(this MklOperation op)
+		{
+			return op switch
+			{
+				MklOperation.NoneTranspose => MklOperationChar.NoneTranspose,
+				MklOperation.Transpose => MklOperationChar.Transpose,
+				MklOperation.ConjugateTranspose => MklOperationChar.ConjugateTranspose,
 				_ => default,
 			};
 		}
@@ -44,12 +57,68 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				_ => false,
 			};
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static MklVectorModeChar ToChar(this SolveVectorMode mode)
+		{
+			return mode switch
+			{
+				SolveVectorMode.NoVector => MklVectorModeChar.NoVector,
+				_ => MklVectorModeChar.Vector,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static (MklVectorModeChar l, MklVectorModeChar r) ToLRChar(this SolveVectorMode mode)
+		{
+			return mode switch
+			{
+				SolveVectorMode.NoVector => (MklVectorModeChar.NoVector, MklVectorModeChar.NoVector),
+				SolveVectorMode.Vector => (MklVectorModeChar.Vector, MklVectorModeChar.Vector),
+				SolveVectorMode.LeftOnly => (MklVectorModeChar.Vector, MklVectorModeChar.NoVector),
+				SolveVectorMode.RightOnly => (MklVectorModeChar.NoVector, MklVectorModeChar.Vector),
+				_ => default,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static MklFillModeChar ToChar(this bool fillUpper)
+		{
+			return fillUpper ? MklFillModeChar.Upper : MklFillModeChar.Lower;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static MklSvdModeChar ToChar(this SVDStore store)
+		{
+			return store switch
+			{
+				SVDStore.All => MklSvdModeChar.All,
+				SVDStore.Economic => MklSvdModeChar.Store,
+				SVDStore.Overwrite => MklSvdModeChar.Overwrite,
+				SVDStore.None => MklSvdModeChar.None,
+				_ => default,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void CheckLapackInfo(this SolveMethodKind kind, MklLapackInfo info)
+		{
+			if (info.status > 0)
+				throw new MatrixSolveAlgorithmException(kind, info.status);
+			if (info.status < 0)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, (-info.status).ToOrdinal());
+		}
+	}
+
+	internal readonly struct MklLapackInfo
+	{
+		internal readonly int status;
 	}
 
 	/// <summary>
 	/// The matrix layout enum in MKL BLAS
 	/// </summary>
-	internal enum MklBlasLayout
+	internal enum MklMatrixLayout
 	{
 		/// <summary>
 		/// Row major storage layout
@@ -64,7 +133,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	/// <summary>
 	/// The matrix transposition operation enum in MKL BLAS
 	/// </summary>
-	internal enum MklBlasOperation
+	internal enum MklOperation
 	{
 		/// <summary>
 		/// Do not perform any transpositions 
@@ -87,7 +156,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	/// <summary>
 	/// The symmetric/Hermitian matrix's storage mode in MKL BLAS
 	/// </summary>
-	internal enum MklBlasFillMode
+	internal enum MklFillMode
 	{
 		/// <summary>
 		/// The upper part is filled
@@ -127,5 +196,45 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// Right
 		/// </summary>
 		Right = 142
+	}
+
+
+	internal enum MklMatrixLayoutChar : byte
+	{
+		RowMajor = (byte)'R',
+		ColMajor = (byte)'C'
+	}
+
+	internal enum MklOperationChar : byte
+	{
+		NoneTranspose = (byte)'N',
+		Transpose = (byte)'T',
+		ConjugateTranspose = (byte)'C',
+	}
+
+	internal enum MklFillModeChar : byte
+	{
+		Upper = (byte)'U',
+		Lower = (byte)'L'
+	}
+
+	internal enum MklVectorModeChar : byte
+	{
+		NoVector = (byte)'N',
+		Vector = (byte)'V'
+	}
+
+	internal enum MklSortModeChar : byte
+	{
+		NoSort = (byte)'N',
+		Sort = (byte)'S'
+	}
+
+	internal enum MklSvdModeChar : byte
+	{
+		None = (byte)'N',
+		All = (byte)'A',
+		Store = (byte)'S',
+		Overwrite = (byte)'O',
 	}
 }

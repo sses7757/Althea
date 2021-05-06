@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Backend.Storage;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
@@ -41,7 +42,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged
+		private static bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged
 		{
 			ptr = default; length = 0;
 			if (s is null)
@@ -59,7 +60,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged
+		private static bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged
 		{
 			ptr = default; length = 0;
 			var p = s[0];
@@ -72,7 +73,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
+		private static bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
 		{
 			ptr = default; r = c = l = 1;
 			if (A is null) // specific null input
@@ -92,12 +93,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			return true;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out MklBlasOperation opMkl, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
+		private static bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out MklOperation opMkl, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
 		{
 			ptr = default; r = c = l = 1; opMkl = op.Simplify<T>().ToMkl();
 			if (A is null) // specific null input
 				return true;
-			if (opMkl == MklBlasOperation.ConjugateAlone)
+			if (opMkl == MklOperation.ConjugateAlone)
 				return false;
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !Supported(mp.Location))
@@ -117,7 +118,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged
+		private static bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged
 		{
 			ptr = default;
 			if (A is null) // specific null input
@@ -194,9 +195,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool IsSupportedMatrixBinaryIndexUnary(CombinationOfLocations matrix1, CombinationOfLocations matrix2, CombinationOfLocations index, DataType indexType) => Supported(matrix1) && Supported(matrix2) && (index == default || Supported(index)) && (indexType == DataType.RealInt32 || indexType == DataType.RealUInt32);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool AllQRSupport<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work) => Supported(A.LocationDescription) && Supported(B.LocationDescription) && (work is null || Supported(work.LocationDescription));
 		#endregion
 
 
@@ -209,7 +207,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
+		internal protected static unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
 		{
 			index = -1;
 			if (!Const<T>.IsComplex)
@@ -237,7 +235,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
+		internal protected static unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
 		{
 			index = -1;
 			if (!Const<T>.IsComplex)
@@ -266,7 +264,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="sum">Output the sum as a <see cref="double"/></param>
 		/// <returns>Support or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged
+internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged
 		{
 			sum = 0;
 			if (!Const<T>.IsComplex)
@@ -323,7 +321,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged
+		private static unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged
 		{
 			bool doSum = typeof(Sum) == typeof(bool);
 			sum = 0;
@@ -658,21 +656,21 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
 				return false;
 			var opMkl = op.ToMkl();
-			if (opMkl == MklBlasOperation.ConjugateAlone)
+			if (opMkl == MklOperation.ConjugateAlone)
 				return false;
 			////if (nx < (opMkl == MklBlasOperation.None ? nn : mm))
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 			////if (ny < (opMkl == MklBlasOperation.None ? nn : mm))
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
-			delegate*<MklBlasLayout, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			delegate*<MklMatrixLayout, MklOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_sgemv(MklBlasLayout.ColMajor, opMkl, mm,nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
+					NativeMethods.cblas_sgemv(MklMatrixLayout.ColMajor, opMkl, mm,nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dgemv(MklBlasLayout.ColMajor, opMkl, mm, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
+					NativeMethods.cblas_dgemv(MklMatrixLayout.ColMajor, opMkl, mm, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
 					return true;
 				case DataType.ComplexSingle:
 					func = &NativeMethods.cblas_cgemv;
@@ -683,7 +681,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				default:
 					return false;
 			}
-			func(MklBlasLayout.ColMajor, opMkl, mm, nn, &α, pA, llda, px, strideX, &β, py, strideY);
+			func(MklMatrixLayout.ColMajor, opMkl, mm, nn, &α, pA, llda, px, strideX, &β, py, strideY);
 			return true;
 		}
 
@@ -700,15 +698,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!hermA && Const<T>.IsComplex)
 				return false;
 
-			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
-			delegate*<MklBlasLayout, MklBlasFillMode, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			MklFillMode fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			delegate*<MklMatrixLayout, MklFillMode, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssymv(MklBlasLayout.ColMajor, fill, nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
+					NativeMethods.cblas_ssymv(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsymv(MklBlasLayout.ColMajor, fill, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
+					NativeMethods.cblas_dsymv(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
 					return true;
 				case DataType.ComplexSingle:
 					func = &NativeMethods.cblas_chemv;
@@ -719,7 +717,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				default:
 					return false;
 			}
-			func(MklBlasLayout.ColMajor, fill, nn, &α, pA, llda, px, strideX, &β, py, strideY);
+			func(MklMatrixLayout.ColMajor, fill, nn, &α, pA, llda, px, strideX, &β, py, strideY);
 			return true;
 		}
 
@@ -738,14 +736,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (ny < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
-			delegate*<MklBlasLayout, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, void> func;
+			delegate*<MklMatrixLayout, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_sger(MklBlasLayout.ColMajor, mm, nn, *(float*)&α,  px, strideX, py, strideY, pA, llda);
+					NativeMethods.cblas_sger(MklMatrixLayout.ColMajor, mm, nn, *(float*)&α,  px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dger(MklBlasLayout.ColMajor, mm, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
+					NativeMethods.cblas_dger(MklMatrixLayout.ColMajor, mm, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
 					func = conjY ? &NativeMethods.cblas_cgerc : &NativeMethods.cblas_cgerc;
@@ -759,7 +757,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			// scale A
 			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
 			// add to A
-			func(MklBlasLayout.ColMajor, mm, nn, &α, px, strideX, py, strideY, pA, llda);
+			func(MklMatrixLayout.ColMajor, mm, nn, &α, px, strideX, py, strideY, pA, llda);
 			return true;
 		}
 
@@ -776,15 +774,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (nx < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
-			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
-			delegate*<MklBlasLayout, MklBlasFillMode, int, T*, IntPtr, int, IntPtr, int, void> func;
+			MklFillMode fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			delegate*<MklMatrixLayout, MklFillMode, int, T*, IntPtr, int, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssyr(MklBlasLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, pA, llda);
+					NativeMethods.cblas_ssyr(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsyr(MklBlasLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, pA, llda);
+					NativeMethods.cblas_dsyr(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
 					func = &NativeMethods.cblas_cher;
@@ -798,7 +796,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			// scale A
 			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
 			// add to A
-			func(MklBlasLayout.ColMajor, fill, nn, &α, px, strideX, pA, llda);
+			func(MklMatrixLayout.ColMajor, fill, nn, &α, px, strideX, pA, llda);
 			return true;
 		}
 
@@ -819,15 +817,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (ny < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(y));
 
-			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
-			delegate*<MklBlasLayout, MklBlasFillMode, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, void> func;
+			MklFillMode fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			delegate*<MklMatrixLayout, MklFillMode, int, T*, IntPtr, int, IntPtr, int, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssyr2(MklBlasLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, py, strideY, pA, llda);
+					NativeMethods.cblas_ssyr2(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsyr2(MklBlasLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
+					NativeMethods.cblas_dsyr2(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
 					func = &NativeMethods.cblas_cher2;
@@ -841,7 +839,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			// scale A
 			this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, Const<T>.Zero, null, 0, A, lda);
 			// add to A
-			func(MklBlasLayout.ColMajor, fill, nn, &α, px, strideX, py, strideY, pA, llda);
+			func(MklMatrixLayout.ColMajor, fill, nn, &α, px, strideX, py, strideY, pA, llda);
 			return true;
 		}
 
@@ -854,21 +852,21 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(A, n, n, lda, out var pA, out _, out int nn, out int llda))
 				return false;
 			var opMkl = op.ToMkl();
-			if (opMkl == MklBlasOperation.ConjugateAlone)
+			if (opMkl == MklOperation.ConjugateAlone)
 				return false;
 			////if (nx < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
-			MklBlasFillMode fill = fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower;
+			MklFillMode fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
 			MklBlasDiagType diag = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
-			delegate*<MklBlasLayout, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, IntPtr, int, IntPtr, int, void> func;
+			delegate*<MklMatrixLayout, MklFillMode, MklOperation, MklBlasDiagType, int, IntPtr, int, IntPtr, int, void> func;
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_strmv(MklBlasLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+					NativeMethods.cblas_strmv(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dtrmv(MklBlasLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+					NativeMethods.cblas_dtrmv(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
 					func = &NativeMethods.cblas_ctrmv;
@@ -879,7 +877,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				default:
 					return false;
 			}
-			func(MklBlasLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+			func(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
 			return true;
 		}
 		#endregion
@@ -899,7 +897,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (nx < (leftA ? nn : mm))
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(x));
 
-			delegate*<MklBlasLayout, in MklBlasSideMode, in int, in int, in IntPtr, in int, in IntPtr, in int, ref IntPtr, in int, int, in int, void> func;
+			delegate*<MklMatrixLayout, in MklBlasSideMode, in int, in int, in IntPtr, in int, in IntPtr, in int, ref IntPtr, in int, int, in int, void> func;
 			func = Const<T>.DataType switch
 			{
 				DataType.RealSingle => &NativeMethods.cblas_sdgmm_batch,
@@ -923,7 +921,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				// overwrite C by diagonal multiply result
 				var side = leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left;
 				int one = 1;
-				func(MklBlasLayout.ColMajor, in side, in mm, in nn, in pA, in llda, in px, in strideX, ref pC, in lldc, 1, in one);
+				func(MklMatrixLayout.ColMajor, in side, in mm, in nn, in pA, in llda, in px, in strideX, ref pC, in lldc, 1, in one);
 				// C = α * C + β * oldC
 				if (!β.IsZero())
 					return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, β, oldC, m, C, ldc);
@@ -944,51 +942,45 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#region BLAS level 3
 		protected override unsafe bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
 			if (!CheckPointer(A, m, m, lda, out var pA, out int mm, out _, out int llda))
 				return false;
 			if (!CheckPointer(B, m, n, ldb, out var pB, out _, out int nn, out int lldb))
 				return false;
 			if (α.IsZero()) // result is 0
-				return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, B, ldb, default, null, 0, B, ldb);
-
-			delegate*<MklBlasSideMode, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_strsm,
-					DataType.RealDouble => &NativeMethods.cblas_dtrsm,
-					DataType.ComplexSingle => &NativeMethods.cblas_ctrsm,
-					DataType.ComplexDouble => &NativeMethods.cblas_ztrsm,
-					_ => null,
-				};
-			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_strsm_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dtrsm_v2,
-					DataType.ComplexSingle => &NativeMethods.cblas_ctrsm_v2,
-					DataType.ComplexDouble => &NativeMethods.cblas_ztrsm_v2,
-					_ => null,
-				};
-			}
+				return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, B, ldb, default, default, default, B, ldb);
 			var opMkl = op.ToMkl();
-			if (opMkl == MklBlasOperation.ConjugateAlone)
+			if (opMkl == MklOperation.ConjugateAlone)
 				return false;
-			func(leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left, fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb);
+
+			var side = leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left;
+			var fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			var diag = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
+			delegate*<MklMatrixLayout, MklBlasSideMode, MklFillMode, MklOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
+			{
+				case DataType.RealSingle:
+					NativeMethods.cblas_strsm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(float*)&α, pA, llda, pB, lldb);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dtrsm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(double*)&α, pA, llda, pB, lldb);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_ctrsm;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_ztrsm;
+					break;
+				default:
+					return false;
+			}
+			func(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, &α, pA, llda, pB, lldb);
 			return true;
 		}
 
 		protected override unsafe bool TriangularMatrixMultiply_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
 			var opMkl = op.ToMkl();
-			if (opMkl == MklBlasOperation.ConjugateAlone)
+			if (opMkl == MklOperation.ConjugateAlone)
 				return false;
 			if (!CheckPointer(B, m, n, ldb, out var pB, out int mm, out int nn, out int lldb))
 				return false;
@@ -996,40 +988,44 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(A, leftA ? m : n, leftA ? m : n, lda, out var pA, out _, out _, out int llda))
 				return false;
-			if (α.IsZero()) // result if 0
-				this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, null, 0, C, ldc);
+			if (α.IsZero()) // result is 0
+				return this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, default, default, C, ldc);
+			////if (pC == pB && ldc != ldb)
+			////	throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(ldc));
+			if (pC != pB)
+			{   // copy B to C
+				if (!this.GeneralMatricesAdd_(MatrixOperation.None, MatrixOperation.None, m, n, Const<T>.One, B, ldb, default, default, default, C, ldc))
+					return false;
+				lldb = lldc; pB = pC;
+			}
 
-			delegate*<MklBlasSideMode, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			var side = leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left;
+			var fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			var diag = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
+			delegate*<MklMatrixLayout, MklBlasSideMode, MklFillMode, MklOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_strmm,
-					DataType.RealDouble => &NativeMethods.cblas_dtrmm,
-					DataType.ComplexSingle => &NativeMethods.cblas_ctrmm,
-					DataType.ComplexDouble => &NativeMethods.cblas_ztrmm,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_strmm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(float*)&α, pA, llda, pB, lldb);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dtrmm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(double*)&α, pA, llda, pB, lldb);
+					return true;
+				case DataType.ComplexSingle:
+					func = &NativeMethods.cblas_ctrmm;
+					break;
+				case DataType.ComplexDouble:
+					func = &NativeMethods.cblas_ztrmm;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_strmm_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dtrmm_v2,
-					DataType.ComplexSingle => &NativeMethods.cblas_ctrmm_v2,
-					DataType.ComplexDouble => &NativeMethods.cblas_ztrmm_v2,
-					_ => null,
-				};
-			}
-			func(leftA ? MklBlasSideMode.Right : MklBlasSideMode.Left, fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb, pC, lldc);
+			func(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, &α, pA, llda, pB, lldb);
 			return true;
 		}
 
 		protected override unsafe bool GeneralMatricesAdd_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, Storage<T>? A, long lda, T β, Storage<T>? B, long ldb, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
 			if (!CheckPointer(A, opA, m, n, lda, out var opcA, out var pA, out _, out _, out int llda))
 				return false;
 			if (!CheckPointer(B, opB, m, n, ldb, out var opcB, out var pB, out _, out _, out int lldb))
@@ -1037,36 +1033,71 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
 				return false;
 			// shortcut
-			if ((A is null || α.IsZero()) != (B is null || β.IsZero()))
+			if ((A is null || α.IsZero()) || (B is null || β.IsZero()))
 			{
 				if ((A is null || α.IsZero()) && opB == MatrixOperation.None && β.IsOne())
 				{   // copy B to C
 					Storage.StorageApi.PointerMemoryCopy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n);
+					return true;
 				}
-				else if ((B is null || β.IsZero()) && opA == MatrixOperation.None && α.IsOne())
+				if ((B is null || β.IsZero()) && opA == MatrixOperation.None && α.IsOne())
 				{   // copy A to C
 					Storage.StorageApi.PointerMemoryCopy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n);
+					return true;
 				}
-				return true;
+				// matrix copy
+				if (A is null || α.IsZero())
+				{
+					pA = pB; llda = lldb; α = β; opcA = opcB;
+				}
+				if (pA != pC)
+				{
+					var cpyFunc = Const<T>.DataType switch
+					{
+						DataType.RealSingle => new NativeMethods.omatcopy<float>(NativeMethods.MKL_Somatcopy) as NativeMethods.omatcopy<T>,
+						DataType.RealDouble => new NativeMethods.omatcopy<double>(NativeMethods.MKL_Domatcopy) as NativeMethods.omatcopy<T>,
+						DataType.ComplexSingle => new NativeMethods.omatcopy<ComplexSingle>(NativeMethods.MKL_Comatcopy) as NativeMethods.omatcopy<T>,
+						DataType.ComplexDouble => new NativeMethods.omatcopy<ComplexDouble>(NativeMethods.MKL_Zomatcopy) as NativeMethods.omatcopy<T>,
+						_ => null,
+					};
+					if (cpyFunc is null)
+						return false;
+					cpyFunc(MklMatrixLayoutChar.ColMajor, opcA.ToChar(), mm, nn, α, pA, llda, pC, lldc);
+				}
+				else
+				{
+					if (lda != ldc)
+						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(lda));
+					var cpyFunc = Const<T>.DataType switch
+					{
+						DataType.RealSingle => new NativeMethods.imatcopy<float>(NativeMethods.MKL_Simatcopy) as NativeMethods.imatcopy<T>,
+						DataType.RealDouble => new NativeMethods.imatcopy<double>(NativeMethods.MKL_Dimatcopy) as NativeMethods.imatcopy<T>,
+						DataType.ComplexSingle => new NativeMethods.imatcopy<ComplexSingle>(NativeMethods.MKL_Cimatcopy) as NativeMethods.imatcopy<T>,
+						DataType.ComplexDouble => new NativeMethods.imatcopy<ComplexDouble>(NativeMethods.MKL_Zimatcopy) as NativeMethods.imatcopy<T>,
+						_ => null,
+					};
+					if (cpyFunc is null)
+						return false;
+					cpyFunc(MklMatrixLayoutChar.ColMajor, opcA.ToChar(), mm, nn, α, pA, llda);
+				}
 			}
-
-			delegate*<MklBlasOperation, MklBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, IntPtr, int> func;
-			func = Const<T>.DataType switch
+			// both matrices are not null
+			var func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cblas_sgeam,
-				DataType.RealDouble => &NativeMethods.cblas_dgeam,
-				DataType.ComplexSingle => &NativeMethods.cblas_cgeam,
-				DataType.ComplexDouble => &NativeMethods.cblas_zgeam,
+				DataType.RealSingle => new NativeMethods.omatadd<float>(NativeMethods.MKL_Somatadd) as NativeMethods.omatadd<T>,
+				DataType.RealDouble => new NativeMethods.omatadd<double>(NativeMethods.MKL_Domatadd) as NativeMethods.omatadd<T>,
+				DataType.ComplexSingle => new NativeMethods.omatadd<ComplexSingle>(NativeMethods.MKL_Comatadd) as NativeMethods.omatadd<T>,
+				DataType.ComplexDouble => new NativeMethods.omatadd<ComplexDouble>(NativeMethods.MKL_Zomatadd) as NativeMethods.omatadd<T>,
 				_ => null,
 			};
-			func(opcA, opcB, mm, nn, &α, pA, llda, &β, pB, lldb, pC, lldc);
+			if (func is null)
+				return false;
+			func(MklMatrixLayoutChar.ColMajor, opcA.ToChar(), opcB.ToChar(), mm, nn, α, pA, llda, β, pB, lldb, pC, lldc);
 			return true;
 		}
 
 		protected override unsafe bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckEx2Support())
-				return false;
 			if (!CheckPointer(A, opA, m, k, lda, out var opcA, out var pA, out _, out int kk, out int llda))
 				return false;
 			if (!CheckPointer(B, opB, k, n, ldb, out var opcB, out var pB, out _, out _, out int lldb))
@@ -1074,55 +1105,30 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
 				return false;
 
-			delegate*<MklBlasOperation, MklBlasOperation, int, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			delegate*<MklMatrixLayout, MklOperation, MklOperation, int, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_sgemm,
-					DataType.RealDouble => &NativeMethods.cblas_dgemm,
-					DataType.ComplexSingle => this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_cgemm3m : &NativeMethods.cblas_cgemm,
-					DataType.ComplexDouble => this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_zgemm3m : &NativeMethods.cblas_zgemm,
-					_ => null,
-				};
-			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_sgemm_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dgemm_v2,
-					DataType.ComplexSingle => this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_cgemm3m : &NativeMethods.cblas_cgemm_v2,
-					DataType.ComplexDouble => this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_zgemm3m : &NativeMethods.cblas_zgemm_v2,
-					_ => null,
-				};
-			}
-			if (func is not null)
-			{
-				func(opcA, opcB, mm, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
-			}
-			else
-			{
-				if (Const<T>.DataType == DataType.ComplexHalf || Const<T>.DataType == BrainFloatConst.ComplexBrainFloat16)
+				case DataType.RealSingle:
+					NativeMethods.cblas_sgemm(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dgemm(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
+					return true;
+				case DataType.ComplexSingle:
+					func = this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_cgemm3m : &NativeMethods.cblas_cgemm;
+					break;
+				case DataType.ComplexDouble:
+					func = this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_zgemm3m : &NativeMethods.cblas_zgemm;
+					break;
+				default:
 					return false;
-				var type = Const<T>.DataType.ToMklDataType();
-				ComputeType cType = type switch
-				{
-					MklDataType.RealFloat32 or MklDataType.ComplexFloat32 => ComputeType.Compute32F,
-					MklDataType.RealFloat64 or MklDataType.ComplexFloat64 => ComputeType.Compute64F,
-					MklDataType.RealFloat16 => ComputeType.Compute16F,
-					MklDataType.RealBrainFloat16 => ComputeType.Compute32F,
-					_ => default,
-				};
-				NativeMethods.cublasGemmEx(this.cublasHandle, opcA, opcB, mm, nn, kk, &α, pA, type, llda, pB, type, lldb, &β, pC, type, lldc, cType, GemmAlgorithm.Default);
 			}
+			func(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
 			return true;
 		}
 
 		protected override unsafe bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
 			if (!CheckPointer(A, leftA ? m : n, leftA ? m : n, lda, out var pA, out _, out _, out int llda))
 				return false;
 			if (!CheckPointer(B, m, n, ldb, out var pB, out _, out _, out int lldb))
@@ -1130,73 +1136,62 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, m, n, ldc, out var pC, out int mm, out int nn, out int lldc))
 				return false;
 
-			delegate*<MklBlasSideMode, MklBlasFillMode, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			var side = leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right;
+			var fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			delegate*<MklMatrixLayout, MklBlasSideMode, MklFillMode, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssymm,
-					DataType.RealDouble => &NativeMethods.cblas_dsymm,
-					DataType.ComplexSingle => hermA ? &NativeMethods.cblas_chemm : &NativeMethods.cblas_csymm,
-					DataType.ComplexDouble => hermA ? &NativeMethods.cblas_zhemm : &NativeMethods.cblas_zsymm,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_ssymm(MklMatrixLayout.ColMajor, side, fill, mm, nn, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dsymm(MklMatrixLayout.ColMajor, side, fill, mm, nn, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
+					return true;
+				case DataType.ComplexSingle:
+					func = hermA ? &NativeMethods.cblas_csymm : &NativeMethods.cblas_chemm;
+					break;
+				case DataType.ComplexDouble:
+					func = hermA ? &NativeMethods.cblas_zsymm : &NativeMethods.cblas_zhemm;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssymm_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dsymm_v2,
-					DataType.ComplexSingle => hermA ? &NativeMethods.cblas_chemm_v2 : &NativeMethods.cblas_csymm_v2,
-					DataType.ComplexDouble => hermA ? &NativeMethods.cblas_zhemm_v2 : &NativeMethods.cblas_zsymm_v2,
-					_ => null,
-				};
-			}
-			func(leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right, fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			func(MklMatrixLayout.ColMajor, side, fill, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
 			return true;
 		}
 
 		protected override unsafe bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (!CheckPointer(A, op, n, k, lda, out var opcA, out var pA, out int nn, out int kk, out int llda))
+			if (!CheckPointer(A, op, n, k, lda, out var opMkl, out var pA, out int nn, out int kk, out int llda))
 				return false;
 			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
 				return false;
 
-			delegate*<MklBlasFillMode, MklBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			var fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			delegate*<MklMatrixLayout, MklFillMode, MklOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyrk,
-					DataType.RealDouble => &NativeMethods.cblas_dsyrk,
-					DataType.ComplexSingle => conjA ? &NativeMethods.cblas_cherk : &NativeMethods.cblas_csyrk,
-					DataType.ComplexDouble => conjA ? &NativeMethods.cblas_zherk : &NativeMethods.cblas_zsyrk,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_ssyrk(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(float*)&α, pA, llda, *(float*)&β, pC, lldc);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dsyrk(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(double*)&α, pA, llda,  *(double*)&β, pC, lldc);
+					return true;
+				case DataType.ComplexSingle:
+					func = conjA ? &NativeMethods.cblas_cherk : &NativeMethods.cblas_csyrk;
+					break;
+				case DataType.ComplexDouble:
+					func = conjA ? &NativeMethods.cblas_zherk : &NativeMethods.cblas_zsyrk;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyrk_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dsyrk_v2,
-					DataType.ComplexSingle => conjA ? &NativeMethods.cblas_cherk_v2 : &NativeMethods.cblas_csyrk_v2,
-					DataType.ComplexDouble => conjA ? &NativeMethods.cblas_zherk_v2 : &NativeMethods.cblas_zsyrk_v2,
-					_ => null,
-				};
-			}
-			func(fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opcA, nn, kk, &α, pA, llda, &β, pC, lldc);
+			func(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, &α, pA, llda, &β, pC, lldc);
 			return true;
 		}
 
 		protected override unsafe bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
 			if (!CheckPointer(A, op, n, k, lda, out var opMkl, out var pA, out int nn, out int kk, out int llda))
 				return false;
 			if (!CheckPointer(B, op, n, k, lda, out _, out var pB, out _, out _, out int lldb))
@@ -1204,69 +1199,32 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
 				return false;
 
-			delegate*<MklBlasFillMode, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
+			var fill = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			delegate*<MklMatrixLayout, MklFillMode, MklOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int, void> func;
+			switch (Const<T>.DataType)
 			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyr2k,
-					DataType.RealDouble => &NativeMethods.cblas_dsyr2k,
-					DataType.ComplexSingle => conjugate ? &NativeMethods.cblas_cher2k : &NativeMethods.cblas_csyr2k,
-					DataType.ComplexDouble => conjugate ? &NativeMethods.cblas_zher2k : &NativeMethods.cblas_zsyr2k,
-					_ => null,
-				};
+				case DataType.RealSingle:
+					NativeMethods.cblas_ssyr2k(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
+					return true;
+				case DataType.RealDouble:
+					NativeMethods.cblas_dsyr2k(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
+					return true;
+				case DataType.ComplexSingle:
+					func = conjugate ? &NativeMethods.cblas_cher2k : &NativeMethods.cblas_csyr2k;
+					break;
+				case DataType.ComplexDouble:
+					func = conjugate ? &NativeMethods.cblas_zher2k : &NativeMethods.cblas_zsyr2k;
+					break;
+				default:
+					return false;
 			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyr2k_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dsyr2k_v2,
-					DataType.ComplexSingle => conjugate ? &NativeMethods.cblas_cher2k_v2 : &NativeMethods.cblas_csyr2k_v2,
-					DataType.ComplexDouble => conjugate ? &NativeMethods.cblas_zher2k_v2 : &NativeMethods.cblas_zsyr2k_v2,
-					_ => null,
-				};
-			}
-			func(fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			func(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
 			return true;
 		}
 
 		protected override unsafe bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (!CheckPointer(A, op, n, k, lda, out var opMkl, out var pA, out int nn, out int kk, out int llda))
-				return false;
-			if (!CheckPointer(B, op, n, k, lda, out _, out var pB, out _, out _, out int lldb))
-				return false;
-			if (!CheckPointer(C, n, n, ldc, out var pC, out _, out _, out int lldc))
-				return false;
-
-			delegate*<MklBlasFillMode, MklBlasOperation, int, int, T*, IntPtr, int, IntPtr, int, T*, IntPtr, int> func;
-			if (this.Mkl110OrAbove)
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyrkx,
-					DataType.RealDouble => &NativeMethods.cblas_dsyrkx,
-					DataType.ComplexSingle => conjB ? &NativeMethods.cblas_cherkx : &NativeMethods.cblas_csyrkx,
-					DataType.ComplexDouble => conjB ? &NativeMethods.cblas_zherkx : &NativeMethods.cblas_zsyrkx,
-					_ => null,
-				};
-			}
-			else
-			{
-				func = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cblas_ssyrkx_v2,
-					DataType.RealDouble => &NativeMethods.cblas_dsyrkx_v2,
-					DataType.ComplexSingle => conjB ? &NativeMethods.cblas_cherkx_v2 : &NativeMethods.cblas_csyrkx_v2,
-					DataType.ComplexDouble => conjB ? &NativeMethods.cblas_zherkx_v2 : &NativeMethods.cblas_zsyrkx_v2,
-					_ => null,
-				};
-			}
-			func(fillUpper ? MklBlasFillMode.Upper : MklBlasFillMode.Lower, opMkl, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc);
-			return true;
+			return false;
 		}
 		#endregion
 
@@ -1313,334 +1271,72 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 
 		#region solve
-		#region LU
-		protected override unsafe bool LUDecomposition_<T, TInd>(long n, Storage<T> A, long lda, Storage<TInd> pivot)
+		#region linear solve
+		protected override unsafe bool LinearSolve_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<TInd>? work = null)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
+			if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
 				return false;
-			if ((typeof(TInd) == typeof(long) || typeof(TInd) == typeof(ulong)) && !this.Mkl111OrAbove)
-				return false;
-			if (typeof(TInd) != typeof(long) && typeof(TInd) == typeof(ulong) && typeof(TInd) != typeof(int) && typeof(TInd) != typeof(uint))
-				return false;
-
-			if ((typeof(TInd) == typeof(long) || typeof(TInd) == typeof(ulong)) && this.Mkl111OrAbove)
-			{
-				if (!CheckPointerLong(A, n, lda, out var pA))
-					return false;
-				if (!CheckPointerLong(pivot, out var pP, out var np))
-					return false;
-				////if (np < n)
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(pivot));
-
-				var type = Const<T>.DataType.ToMklDataType();
-				NativeMethods.cusolverDnXgetrf_bufferSize(this.cusolverHandle, IntPtr.Zero, n, n, type, pA, lda, type, out var workDevice, out var workHost);
-				using var buffer = MklBuffer.Create(workDevice, workHost);
-				NativeMethods.cusolverDnXgetrf(this.cusolverHandle, IntPtr.Zero, n, n, type, pA, lda, pP, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo);
-				SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
-			else
-			{   // use legacy
-				if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
-					return false;
-				if (!CheckPointer(pivot, out var pP, out int np))
-					return false;
-				////if (np < nn)
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(pivot));
-
-				delegate*<int, int, IntPtr, int, out int, MklSolverStatus> bufFunc;
-				delegate*<int, int, IntPtr, int, IntPtr, IntPtr, IntPtr, MklSolverStatus> calFunc;
-				bufFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgetrf_bufferSize,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgetrf_bufferSize,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgetrf_bufferSize,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgetrf_bufferSize,
-					_ => null,
-				};
-				calFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgetrf,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgetrf,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgetrf,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgetrf,
-					_ => null,
-				};
-				bufFunc(this.cusolverHandle, nn, nn, pA, llda, out var work);
-				using var buffer = MklBuffer.Create<T>(work);
-				calFunc(this.cusolverHandle, nn, nn, pA, llda, buffer.DeviceBuffer, pP, buffer.ExtraDeviceInfo);
-				SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
-			return true;
-		}
-
-		protected override unsafe bool LinearSolveByLU_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<TInd> pivot, Storage<T> B, long ldb)
-		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if ((typeof(TInd) == typeof(long) || typeof(TInd) == typeof(ulong)) && !this.Mkl111OrAbove)
-				return false;
-			if (typeof(TInd) != typeof(long) && typeof(TInd) == typeof(ulong) && typeof(TInd) != typeof(int) && typeof(TInd) != typeof(uint))
-				return false;
-			var opMkl = op.ToMkl();
-			if (opMkl == MklBlasOperation.ConjugateAlone)
-				return false;
-
-			using var buffer = MklBuffer.Create(0, extraDeviceInfo: true);
-			if ((typeof(TInd) == typeof(long) || typeof(TInd) == typeof(ulong)) && this.Mkl111OrAbove)
-			{
-				if (!CheckPointerLong(A, n, lda, out var pA))
-					return false;
-				if (!CheckPointerLong(B, nrhs, ldb, out var pB))
-					return false;
-				if (!CheckPointerLong(pivot, out var pP, out var np))
-					return false;
-				////if (np < n)
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(pivot));
-
-				var type = Const<T>.DataType.ToMklDataType();
-				NativeMethods.cusolverDnXgetrs(this.cusolverHandle, IntPtr.Zero, opMkl, n, nrhs, type, pA, lda, pP, type, pB, ldb, buffer.ExtraDeviceInfo);
-			}
-			else
-			{   // use legacy
-				if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
-					return false;
-				if (!CheckPointer(B, n, nrhs, ldb, out var pB, out _, out int nnrhs, out int lldb))
-					return false;
-				if (!CheckPointer(pivot, out var pP, out int np))
-					return false;
-				////if (np < nn)
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(pivot));
-
-				delegate*<MklBlasOperation, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
-				calFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgetrs,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgetrs,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgetrs,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgetrs,
-					_ => null,
-				};
-				calFunc(this.cusolverHandle, opMkl, nn, nnrhs, pA, llda, pP, pB, lldb, buffer.ExtraDeviceInfo);
-			}
-			SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			return true;
-		}
-		#endregion
-
-		#region QR
-		protected override unsafe bool ImplicitQR_<T>(long m, long n, Storage<T> A, long lda, Storage<T> τ)
-		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (this.Mkl111OrAbove)
-			{
-				if (!CheckPointerLong(A, n, lda, out var pA))
-					return false;
-				if (!CheckPointerLong(τ, out var pT, out long nt))
-					return false;
-				////if (nt < Math.Min(m, n))
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
-
-				var type = Const<T>.DataType.ToMklDataType();
-				NativeMethods.cusolverDnXgeqrf_bufferSize(this.cusolverHandle, IntPtr.Zero, m, n, type, pA, lda, type, pT, type, out var workDevice, out var workHost);
-				using var buffer = MklBuffer.Create(workDevice, workHost);
-				NativeMethods.cusolverDnXgeqrf(this.cusolverHandle, IntPtr.Zero, m, n, type, pA, lda, type, pT, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo);
-				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
-			else
-			{
-				if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
-					return false;
-				if (!CheckPointer(τ, out var pT, out int nt))
-					return false;
-				////if (nt < Math.Min(mm, nn))
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
-
-				delegate*<int, int, IntPtr, int, out int, MklSolverStatus> bufFunc;
-				delegate*<int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
-				bufFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgeqrf_bufferSize,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgeqrf_bufferSize,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgeqrf_bufferSize,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgeqrf_bufferSize,
-					_ => null,
-				};
-				calFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgeqrf,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgeqrf,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgeqrf,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgeqrf,
-					_ => null,
-				};
-				bufFunc(this.cusolverHandle, mm, nn, pA, llda, out var work);
-				using var buffer = MklBuffer.Create<T>(work);
-				calFunc(this.cusolverHandle, mm, nn, pA, llda, pT, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
-				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
-			return true;
-		}
-
-		protected override unsafe bool ImplicitQRFormQ_<T>(long m, long n, long k, Storage<T> Q, long ldq, Storage<T> τ)
-		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (!CheckPointer(Q, m, n, ldq, out var pQ, out int mm, out int nn, out int lldq))
-				return false;
-			if (!CheckPointer(τ, out var pT, out int nt))
-				return false;
-			////if (k > n || n > m)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(n));
-			////if (nt < k)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
-			int kk = (int)k;
-
-			delegate*<int, int, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
-			delegate*<int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
-			bufFunc = Const<T>.DataType switch
-			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSorgqr_bufferSize,
-				DataType.RealDouble => &NativeMethods.cusolverDnDorgqr_bufferSize,
-				DataType.ComplexSingle => &NativeMethods.cusolverDnCungqr_bufferSize,
-				DataType.ComplexDouble => &NativeMethods.cusolverDnZungqr_bufferSize,
-				_ => null,
-			};
-			calFunc = Const<T>.DataType switch
-			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSorgqr,
-				DataType.RealDouble => &NativeMethods.cusolverDnDorgqr,
-				DataType.ComplexSingle => &NativeMethods.cusolverDnCungqr,
-				DataType.ComplexDouble => &NativeMethods.cusolverDnZungqr,
-				_ => null,
-			};
-			bufFunc(this.cusolverHandle, mm, nn, kk, pQ, lldq, pT, out var work);
-			using var buffer = MklBuffer.Create<T>(work);
-			calFunc(this.cusolverHandle, mm, nn, kk, pQ, lldq, pT, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
-			SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			return true;
-		}
-
-		protected override unsafe bool ImplicitQRMultiplyQ_<T>(bool leftQ, MatrixOperation op, long m, long n, long k, Storage<T> A, long lda, Storage<T> τ, Storage<T> C, long ldc)
-		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (!CheckPointer(A, op, k, m, lda, out var opMkl, out var pA, out int kk, out int mm, out int llda))
-				return false;
-			if (!CheckPointer(C, m, n, lda, out var pC, out _, out int nn, out int lldc))
-				return false;
-			if (!CheckPointer(τ, out var pT, out int nt))
-				return false;
-			////if (nt < kk)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(τ));
-
-			delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, MklSolverStatus> bufFunc;
-			delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
-			bufFunc = Const<T>.DataType switch
-			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSormqr_bufferSize,
-				DataType.RealDouble => &NativeMethods.cusolverDnDormqr_bufferSize,
-				DataType.ComplexSingle => &NativeMethods.cusolverDnCunmqr_bufferSize,
-				DataType.ComplexDouble => &NativeMethods.cusolverDnZunmqr_bufferSize,
-				_ => null,
-			};
-			calFunc = Const<T>.DataType switch
-			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSormqr,
-				DataType.RealDouble => &NativeMethods.cusolverDnDormqr,
-				DataType.ComplexSingle => &NativeMethods.cusolverDnCunmqr,
-				DataType.ComplexDouble => &NativeMethods.cusolverDnZunmqr,
-				_ => null,
-			};
-			bufFunc(this.cusolverHandle, leftQ ? MklBlasSideMode.Left : MklBlasSideMode.Right, opMkl, mm, nn, kk, pA, llda, pT, pC, lldc, out var work);
-			using var buffer = MklBuffer.Create<T>(work);
-			calFunc(this.cusolverHandle, leftQ ? MklBlasSideMode.Left : MklBlasSideMode.Right, opMkl, mm, nn, kk, pA, llda, pT, pC, lldc, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
-			SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			return true;
-		}
-
-		// modify these methods to use a unified buffer for (maybe) better performance
-		protected override unsafe bool LeastSquareSolve_<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work = null)
-		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
-				return false;
-			if (!CheckPointer(B, m, nrhs, ldb, out var pB, out _, out int nnrhs, out int lldb))
+			if (!CheckPointer(B, n, nrhs, ldb, out var pB, out _, out int nnrhs, out int lldb))
 				return false;
 			if (!CheckPointer(work, out var pW, out int nw))
 				return false;
 			////if (nw > 0 && nw < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(work));
-
+			
+			delegate*<MklMatrixLayout, int, int, IntPtr, int, IntPtr, IntPtr, int, MklLapackInfo> func;
+			func = Const<T>.DataType switch
+			{
+				DataType.RealSingle => &NativeMethods.LAPACKE_sgesv,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dgesv,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgesv,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgesv,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			// calculate
 			IntPtr tau;
 			if (pW == default)
-				Storage.NativeMethods.cudaMalloc(out tau, n * sizeof(T));
+				tau = Marshal.AllocHGlobal((IntPtr)(n * sizeof(T)));
 			else
 				tau = pW;
 			try
 			{
-				delegate*<int, int, IntPtr, int, out int, MklSolverStatus> bufQRFunc = null;
-				delegate*<int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calQRFunc = null;
-				delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, out int, MklSolverStatus> bufQmulFunc = null;
-				delegate*<MklBlasSideMode, MklBlasOperation, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, MklSolverStatus> calQmulFunc = null;
-				delegate*<MklBlasSideMode, MklBlasFillMode, MklBlasOperation, MklBlasDiagType, int, int, T*, IntPtr, int, IntPtr, int> triSolveFunc = null;
-				MklBlasOperation op = MklBlasOperation.Transpose;
-				switch (Const<T>.DataType)
-				{
-					case DataType.RealSingle:
-						bufQRFunc = &NativeMethods.cusolverDnSgeqrf_bufferSize;
-						bufQmulFunc = &NativeMethods.cusolverDnSormqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnSgeqrf;
-						calQmulFunc = &NativeMethods.cusolverDnSormqr;
-						triSolveFunc = this.Mkl110OrAbove ? &NativeMethods.cblas_strsm : &NativeMethods.cblas_strsm_v2;
-						break;
-					case DataType.RealDouble:
-						bufQRFunc = &NativeMethods.cusolverDnDgeqrf_bufferSize;
-						bufQmulFunc = &NativeMethods.cusolverDnDormqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnDgeqrf;
-						calQmulFunc = &NativeMethods.cusolverDnDormqr;
-						triSolveFunc = this.Mkl110OrAbove ? &NativeMethods.cblas_dtrsm : &NativeMethods.cblas_dtrsm_v2;
-						break;
-					case DataType.ComplexSingle:
-						bufQRFunc = &NativeMethods.cusolverDnCgeqrf_bufferSize;
-						bufQmulFunc = &NativeMethods.cusolverDnCunmqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnCgeqrf;
-						calQmulFunc = &NativeMethods.cusolverDnCunmqr;
-						triSolveFunc = this.Mkl110OrAbove ? &NativeMethods.cblas_ctrsm : &NativeMethods.cblas_ctrsm_v2;
-						op = MklBlasOperation.ConjugateTranspose;
-						break;
-					case DataType.ComplexDouble:
-						bufQRFunc = &NativeMethods.cusolverDnZgeqrf_bufferSize;
-						bufQmulFunc = &NativeMethods.cusolverDnZunmqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnZgeqrf;
-						calQmulFunc = &NativeMethods.cusolverDnZunmqr;
-						triSolveFunc = this.Mkl110OrAbove ? &NativeMethods.cblas_ztrsm : &NativeMethods.cblas_ztrsm_v2;
-						op = MklBlasOperation.ConjugateTranspose;
-						break;
-					default:
-						break;
-				}
-				// get buffer
-				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, out var workSizeT1);
-				bufQmulFunc(this.cusolverHandle, MklBlasSideMode.Left, MklBlasOperation.None, nn, nnrhs, nn, pA, llda, tau, pB, lldb, out var workSizeT2);
-				using var buffer = MklBuffer.Create<T>(Math.Max(workSizeT1, workSizeT2));
-				// implicit QR
-				calQRFunc(this.cusolverHandle, mm, nn, pA, llda, tau, buffer.DeviceBuffer, workSizeT1, buffer.ExtraDeviceInfo);
-				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-				// implicit Q^H * B
-				calQmulFunc(this.cusolverHandle, MklBlasSideMode.Left, op, mm, nnrhs, nn, pA, llda, tau, pB, lldb, buffer.DeviceBuffer, workSizeT2, buffer.ExtraDeviceInfo);
-				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-				// triangular solve R * X = Q^H * B
-				T one = Const<T>.One;
-				triSolveFunc(this.cublasHandle, MklBlasSideMode.Left, MklBlasFillMode.Upper, MklBlasOperation.None, MklBlasDiagType.NonUnit, nn, nnrhs, &one, pA, llda, pB, lldb);
+				var info = func(MklMatrixLayout.ColMajor, nn, nnrhs, pA, llda, tau, pB, lldb);
+				SolveMethodKind.LU.CheckLapackInfo(info);
 				return true;
 			}
 			finally
 			{
 				if (tau != pW)
-					Storage.NativeMethods.cudaFree(tau);
+					Marshal.FreeHGlobal(tau);
 			}
+		}
+		#endregion
+
+		#region QR
+		// modify these methods to use a unified buffer for (maybe) better performance
+		protected override unsafe bool LeastSquareSolve_<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work = null)
+		{
+			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
+				return false;
+			if (!CheckPointer(B, n, nrhs, ldb, out var pB, out _, out int nnrhs, out int lldb))
+				return false;
+
+			delegate*<MklMatrixLayout, MklOperationChar, int, int, int, IntPtr, int, IntPtr, int, MklLapackInfo> func;
+			func = Const<T>.DataType switch
+			{
+				DataType.RealSingle => &NativeMethods.LAPACKE_sgels,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dgels,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgels,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgels,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			var info = func(MklMatrixLayout.ColMajor, MklOperationChar.NoneTranspose, mm, nn, nnrhs, pA, llda, pB, lldb);
+			SolveMethodKind.QR.CheckLapackInfo(info);
+			return true;
 		}
 
 		protected override unsafe bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq, Storage<T>? work = null)
@@ -1654,133 +1350,91 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointer(work, out var pW, out int nw))
 				return false;
+			////if (nw > 0 && nw < nn)
+			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(work));
 
+			delegate*<MklMatrixLayout, int, int, IntPtr, int, IntPtr, MklLapackInfo> qrfunc;
+			qrfunc = Const<T>.DataType switch
+			{
+				DataType.RealSingle => &NativeMethods.LAPACKE_sgeqrf,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dgeqrf,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgeqrf,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgeqrf,
+				_ => null,
+			};
+			if (qrfunc is null)
+				return false;
+			delegate*<MklMatrixLayout, int, int, int, IntPtr, int, IntPtr, MklLapackInfo> gqfunc;
+			gqfunc = Const<T>.DataType switch
+			{
+				DataType.RealSingle => &NativeMethods.LAPACKE_sorgqr,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dorgqr,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_cungqr,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zungqr,
+				_ => null,
+			};
+			// calculate
 			IntPtr tau;
 			if (pW == default)
-				Storage.NativeMethods.cudaMalloc(out tau, n * sizeof(T));
+				tau = Marshal.AllocHGlobal((IntPtr)(kk * sizeof(T)));
 			else
 				tau = pW;
 			try
 			{
-				delegate*<int, int, IntPtr, int, out int, MklSolverStatus> bufQRFunc = null;
-				delegate*<int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calQRFunc = null;
-				delegate*<int, int, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufGetQFunc = null;
-				delegate*<int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calGetQFunc = null;
-				switch (Const<T>.DataType)
-				{
-					case DataType.RealSingle:
-						bufQRFunc = &NativeMethods.cusolverDnSgeqrf_bufferSize;
-						bufGetQFunc = &NativeMethods.cusolverDnSorgqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnSgeqrf;
-						calGetQFunc = &NativeMethods.cusolverDnSorgqr;
-						break;
-					case DataType.RealDouble:
-						bufQRFunc = &NativeMethods.cusolverDnDgeqrf_bufferSize;
-						bufGetQFunc = &NativeMethods.cusolverDnDorgqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnDgeqrf;
-						calGetQFunc = &NativeMethods.cusolverDnDorgqr;
-						break;
-					case DataType.ComplexSingle:
-						bufQRFunc = &NativeMethods.cusolverDnCgeqrf_bufferSize;
-						bufGetQFunc = &NativeMethods.cusolverDnCungqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnCgeqrf;
-						calGetQFunc = &NativeMethods.cusolverDnCungqr;
-						break;
-					case DataType.ComplexDouble:
-						bufQRFunc = &NativeMethods.cusolverDnZgeqrf_bufferSize;
-						bufGetQFunc = &NativeMethods.cusolverDnZungqr_bufferSize;
-						calQRFunc = &NativeMethods.cusolverDnZgeqrf;
-						calGetQFunc = &NativeMethods.cusolverDnZungqr;
-						break;
-					default:
-						break;
-				}
-				// get buffer
-				bufQRFunc(this.cusolverHandle, nn, nn, pA, llda, out var workSizeT1);
-				bufGetQFunc(this.cusolverHandle, mm, nnQ, kk, pQ, lldq, tau, out var workSizeT2);
-				using var buffer = MklBuffer.Create<T>(Math.Max(workSizeT1, workSizeT2));
 				// implicit QR
-				calQRFunc(this.cusolverHandle, mm, nn, pA, llda, tau, buffer.DeviceBuffer, workSizeT1, buffer.ExtraDeviceInfo);
-				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
+				var info = qrfunc(MklMatrixLayout.ColMajor, mm, nn, pA, llda, tau);
+				SolveMethodKind.QR.CheckLapackInfo(info);
 				// copy A to Q
-				Storage.NativeMethods.cudaMemcpy2D(pQ, ldq, pA, lda, m, Math.Min(colsQ, n), Storage.MemoryCopyKind.DeviceToDevice);
+				Storage.StorageApi.PointerMemoryCopy2D(pA, lda, pQ, ldq,  m, Math.Min(colsQ, n));
 				// form Q
-				calGetQFunc(this.cusolverHandle, mm, nnQ, kk, pQ, lldq, tau, buffer.DeviceBuffer, workSizeT2, buffer.ExtraDeviceInfo);
-				SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
+				info = gqfunc(MklMatrixLayout.ColMajor, mm, nnQ, kk, pQ, lldq, tau);
+				SolveMethodKind.QR.CheckLapackInfo(info);
 				return true;
 			}
 			finally
 			{
 				if (tau != pW)
-					Storage.NativeMethods.cudaFree(tau);
+					Marshal.FreeHGlobal(tau);
 			}
 		}
 		#endregion
 
-		#region eigen
+		#region simple eigen
 		protected override unsafe bool EigenSpecialMatrixHermitian_<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
+			if ((!Const<T>.IsComplex && typeof(T) != typeof(TReal)) ||
+				(Const<T>.IsComplex && (Const<TReal>.IsComplex || typeof(T).GenericTypeArguments[0] != typeof(TReal))))
+				throw new TypeMismatchException(typeof(T), typeof(TReal), TypeMismatchException.MismatchReason.IsNotRealCorrespondence);
+
+			if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
 				return false;
-			if (mode != SolveVectorMode.NoVector)
-				mode = SolveVectorMode.Vector;
+			if (!CheckPointer(valOut, out var pV, out int nv))
+				return false;
+			////if (nv < nn)
+			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
-			if (this.Mkl111OrAbove)
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklFillModeChar, int, IntPtr, int, IntPtr, MklLapackInfo> func;
+			func = Const<T>.DataType switch
 			{
-				if (!CheckPointerLong(A, n, lda, out var pA))
-					return false;
-				if (!CheckPointerLong(valOut, out var pV, out long nv))
-					return false;
-				////if (nv < n)
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
-
-				var type = Const<T>.DataType.ToMklDataType();
-				NativeMethods.cusolverDnXsyevd_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, MklBlasFillMode.Upper, n, type, pA, lda, type, pV, type, out var workDevice, out var workHost);
-				using var buffer = MklBuffer.Create(workDevice, workHost);
-				NativeMethods.cusolverDnXsyevd(this.cusolverHandle, IntPtr.Zero, mode, MklBlasFillMode.Upper, n, type, pA, lda, type, pV, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo);
-				SolveMethodKind.Eigenvalue.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
-			else
-			{   // CUDA version <= 11.0
-				if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
-					return false;
-				if (!CheckPointer(valOut, out var pV, out int nv))
-					return false;
-				////if (nv < nn)
-				////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
-
-				delegate*<SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
-				delegate*<SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
-				bufFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSsyevd_bufferSize,
-					DataType.RealDouble => &NativeMethods.cusolverDnDsyevd_bufferSize,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCheevd_bufferSize,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZheevd_bufferSize,
-					_ => null,
-				};
-				calFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSsyevd,
-					DataType.RealDouble => &NativeMethods.cusolverDnDsyevd,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCheevd,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZheevd,
-					_ => null,
-				};
-				bufFunc(this.cusolverHandle, mode, MklBlasFillMode.Upper, nn, pA, llda, pV, out var work);
-				using var buffer = MklBuffer.Create<T>(work);
-				calFunc(this.cusolverHandle, mode, MklBlasFillMode.Upper, nn, pA, llda, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
-				SolveMethodKind.Eigenvalue.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
+				DataType.RealSingle => &NativeMethods.LAPACKE_ssyev,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dsyev,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_cheev,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zheev,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			var info = func(MklMatrixLayout.ColMajor, mode.ToChar(), MklFillModeChar.Upper, nn, pA, llda, pV);
+			SolveMethodKind.Eigenvalue.CheckLapackInfo(info);
 			return true;
 		}
 
 		protected override unsafe bool EigenGeneralMatrixHermitian_<T, TReal>(GeneralEigenType eigType, SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda, Storage<T> B, long ldb)
 		{
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			if (mode != SolveVectorMode.NoVector)
-				mode = SolveVectorMode.Vector;
+			if ((!Const<T>.IsComplex && typeof(T) != typeof(TReal)) ||
+				(Const<T>.IsComplex && (Const<TReal>.IsComplex || typeof(T).GenericTypeArguments[0] != typeof(TReal))))
+				throw new TypeMismatchException(typeof(T), typeof(TReal), TypeMismatchException.MismatchReason.IsNotRealCorrespondence);
+
 			if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
 				return false;
 			if (!CheckPointer(B, n, n, ldb, out var pB, out _, out _, out int lldb))
@@ -1790,38 +1444,315 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (nv < nn)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
 
-			delegate*<GeneralEigenType, SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, int, IntPtr, out int, MklSolverStatus> bufFunc;
-			delegate*<GeneralEigenType, SolveVectorMode, MklBlasFillMode, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, MklSolverStatus> calFunc;
-			bufFunc = Const<T>.DataType switch
+			delegate*<MklMatrixLayout, GeneralEigenType, MklVectorModeChar, MklFillModeChar, int, IntPtr, int, IntPtr, int, IntPtr, MklLapackInfo> func;
+			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSsygvd_bufferSize,
-				DataType.RealDouble => &NativeMethods.cusolverDnDsygvd_bufferSize,
-				DataType.ComplexSingle => &NativeMethods.cusolverDnChegvd_bufferSize,
-				DataType.ComplexDouble => &NativeMethods.cusolverDnZhegvd_bufferSize,
+				DataType.RealSingle => &NativeMethods.LAPACKE_ssygv,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dsygv,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_chegv,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zhegv,
 				_ => null,
 			};
-			calFunc = Const<T>.DataType switch
-			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSsygvd,
-				DataType.RealDouble => &NativeMethods.cusolverDnDsygvd,
-				DataType.ComplexSingle => &NativeMethods.cusolverDnChegvd,
-				DataType.ComplexDouble => &NativeMethods.cusolverDnZhegvd,
-				_ => null,
-			};
-			bufFunc(this.cusolverHandle, eigType, mode, MklBlasFillMode.Upper, nn, pA, llda, pB, lldb, pV, out var work);
-			using var buffer = MklBuffer.Create<T>(work);
-			calFunc(this.cusolverHandle, eigType, mode, MklBlasFillMode.Upper, nn, pA, llda, pB, lldb, pV, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo);
-			SolveMethodKind.GeneralEigen.CheckDeviceInfo(buffer.ExtraDeviceInfo);
+			if (func is null)
+				return false;
+			var info = func(MklMatrixLayout.ColMajor, eigType, mode.ToChar(), MklFillModeChar.Upper, nn, pA, llda, pB, lldb, pV);
+			SolveMethodKind.GeneralEigen.CheckLapackInfo(info);
 			return true;
 		}
+		#endregion
 
+		#region general eigen
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private unsafe bool CopyEigenToComplex<T, TComplex>(MklVectorModeChar modeL, MklVectorModeChar modeR, long n, int nn, IntPtr pV, T* valR, T* valI, Storage<TComplex>? leftVec, IntPtr pVl, long ldvl, T* vecL, Storage<TComplex>? rightVec, IntPtr pVr, long ldvr, T* vecR) where T : unmanaged where TComplex : unmanaged
+		{
+			// copy eigenvalues
+			Storage.StorageApi.PointerStridedCopy(valR, 1, (T*)pV, 2, nn);
+			Storage.StorageApi.PointerStridedCopy(valI, 1, 1 + (T*)pV, 2, nn);
+			// expand cases for better performance
+			float* floatValI = (float*)valI; double* doubleValI = (double*)valI;
+			if (leftVec is not null && rightVec is not null)
+			{
+				// set eigenvectors to zeros
+				if (!this.GeneralMatricesAdd_(default, default, n, n, default, leftVec, ldvl, default, default, default, leftVec, ldvl))
+					return false;
+				if (!this.GeneralMatricesAdd_(default, default, n, n, default, rightVec, ldvr, default, default, default, rightVec, ldvr))
+					return false;
+				ldvl *= 2; ldvr *= 2;
+				// copy eigenvectors
+				for (int i = 0; i < nn; i++)
+				{
+					// copy real parts in both cases
+					Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
+					Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
+					// check real or complex eigen-pair
+					if ((typeof(T) == typeof(float) && floatValI[i] != 0) || (typeof(T) == typeof(double) && doubleValI[i] != 0))
+					{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
+						// left
+						T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
+						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
+						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
+						if (typeof(T) == typeof(float))
+							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+						else
+							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+						// right
+						ptr = (T*)pVr + (i * ldvr + 1); ptr2 = ptr + ldvr;
+						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
+						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
+						if (typeof(T) == typeof(float))
+							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+						else
+							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+					}
+				}
+			}
+			else if (leftVec is not null && rightVec is null)
+			{
+				// set eigenvectors to zeros
+				if (!this.GeneralMatricesAdd_(default, default, n, n, default, leftVec, ldvl, default, default, default, leftVec, ldvl))
+					return false;
+				ldvl *= 2; ldvr *= 2;
+				// copy eigenvectors
+				for (int i = 0; i < nn; i++)
+				{
+					// copy real parts in both cases
+					Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
+					// check real or complex eigen-pair
+					if ((typeof(T) == typeof(float) && floatValI[i] != 0) || (typeof(T) == typeof(double) && doubleValI[i] != 0))
+					{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
+						T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
+						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
+						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
+						if (typeof(T) == typeof(float))
+							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+						else
+							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+					}
+				}
+			}
+			else if (leftVec is null && rightVec is not null)
+			{
+				// set eigenvectors to zeros
+				if (!this.GeneralMatricesAdd_(default, default, n, n, default, rightVec, ldvr, default, default, default, rightVec, ldvr))
+					return false;
+				ldvl *= 2; ldvr *= 2;
+				// copy eigenvectors
+				for (int i = 0; i < nn; i++)
+				{
+					// copy real parts in both cases
+					Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
+					// check real or complex eigen-pair
+					if ((typeof(T) == typeof(float) && floatValI[i] != 0) || (typeof(T) == typeof(double) && doubleValI[i] != 0))
+					{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
+						T* ptr = (T*)pVr + (i * ldvr + 1), ptr2 = ptr + ldvr;
+						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
+						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
+						if (typeof(T) == typeof(float))
+							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+						else
+							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+					}
+				}
+			}
+			else
+			{
+				// no copy
+			}
+			return true;
+			/*
+			// set eigenvectors to zeros
+			if (leftVec is not null)
+			{
+				if (!this.GeneralMatricesAdd_(default, default, n, n, default, leftVec, ldvl, default, default, default, leftVec, ldvl))
+					return false;
+			}
+			if (rightVec is not null)
+			{
+				if (!this.GeneralMatricesAdd_(default, default, n, n, default, rightVec, ldvr, default, default, default, rightVec, ldvr))
+					return false;
+			}
+			ldvl *= 2; ldvr *= 2;
+			// copy eigenvectors
+			for (int i = 0; i < nn; i++)
+			{
+				// copy real parts in both cases
+				if (leftVec is not null)
+				{
+					Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
+				}
+				if (rightVec is not null)
+				{
+					Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
+				}
+				// check real or complex eigen-pair
+				if (valI[i].IsZero())
+				{   // the i-th eigen-pair is real
+					// do nothing
+				}
+				else
+				{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
+					if (leftVec is not null)
+					{
+						T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
+						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
+						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
+						if (typeof(T) == typeof(float))
+							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+						else
+							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+					}
+					if (rightVec is not null)
+					{
+						T* ptr = (T*)pVr + (i * ldvr + 1), ptr2 = ptr + ldvr;
+						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
+						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
+						if (typeof(T) == typeof(float))
+							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+						else
+							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+					}
+				}
+			}
+			*/
+		}
+
+		protected override unsafe bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda)
+		{
+			if ((Const<T>.IsComplex && typeof(T) != typeof(TComplex)) ||
+				(!Const<T>.IsComplex && (!Const<TComplex>.IsComplex || typeof(T) != typeof(TComplex).GenericTypeArguments[0])))
+				throw new TypeMismatchException(typeof(T), typeof(TComplex), TypeMismatchException.MismatchReason.IsNotComplexCorrespondence);
+
+			if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
+				return false;
+			if (!CheckPointer(leftVec, n, n, ldvl, out var pVl, out _, out _, out int lldvl))
+				return false;
+			if (!CheckPointer(rightVec, n, n, ldvr, out var pVr, out _, out _, out int lldvr))
+				return false;
+			if (!CheckPointer(valOut, out var pV, out int nv))
+				return false;
+			////if (nv < nn)
+			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(valOut));
+
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, int, IntPtr, int, T*, T*, T*, int, T*, int, MklLapackInfo> funcR = null;
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, MklLapackInfo> funcC = null;
+			if (typeof(T) == typeof(float))
+			{
+				funcR = &NativeMethods.LAPACKE_sgeev;
+			}
+			else if (typeof(T) == typeof(double))
+			{
+				funcR = &NativeMethods.LAPACKE_dgeev;
+			}
+			else
+			{
+				switch (Const<T>.DataType)
+				{
+					case DataType.ComplexSingle:
+						funcC = &NativeMethods.LAPACKE_cgeev;
+						break;
+					case DataType.ComplexDouble:
+						funcC = &NativeMethods.LAPACKE_zgeev;
+						break;
+					default:
+						break;
+				}
+			}
+			if (funcR is null && funcC is null)
+				return false;
+			var (modeL, modeR) = mode.ToLRChar();
+			if (funcC is not null)
+			{	// complex typed T
+				var info = funcC(MklMatrixLayout.ColMajor, modeL, modeR, nn, pA, llda, pV, pVl, lldvl, pVr, lldvr);
+				SolveMethodKind.GeneralEigen.CheckLapackInfo(info);
+				return true;
+			}
+			// real typed T
+			// buffer
+			using var buffer = CpuBuffer.Create((2 * n + (modeL == MklVectorModeChar.Vector ? n * n : 0) + (modeR == MklVectorModeChar.Vector ? n * n : 0)) * sizeof(T));
+			fixed (byte* buf = buffer.Buffer)
+			{
+				T* valR = (T*)buf, valI = (T*)buf + n, vecL = (T*)buf + 2 * n, vecR = (T*)buf + 2 * n + (modeL == MklVectorModeChar.Vector ? n * n : 0);
+				// calculate
+				var info = funcR(MklMatrixLayout.ColMajor, modeL, modeR, nn, pA, llda, valR, valI, vecL, lldvl, vecR, lldvr);
+				SolveMethodKind.NonSymmetricEigenvalue.CheckLapackInfo(info);
+				// copy
+				return this.CopyEigenToComplex(modeL, modeR, n, nn, pV, valR, valI, leftVec, pVl, ldvl, vecL, rightVec, pVr, ldvr, vecR);
+			}
+		}
+
+		protected override unsafe bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> α, Storage<T> β, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb)
+		{
+			if ((Const<T>.IsComplex && typeof(T) != typeof(TComplex)) ||
+				(!Const<T>.IsComplex && (!Const<TComplex>.IsComplex || typeof(T) != typeof(TComplex).GenericTypeArguments[0])))
+				throw new TypeMismatchException(typeof(T), typeof(TComplex), TypeMismatchException.MismatchReason.IsNotComplexCorrespondence);
+
+			if (type != GeneralEigenType.Type1)
+				return false;
+			if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
+				return false;
+			if (!CheckPointer(B, n, n, ldb, out var pB, out _, out _, out int lldb))
+				return false;
+			if (!CheckPointer(leftVec, n, n, ldvl, out var pVl, out _, out _, out int lldvl))
+				return false;
+			if (!CheckPointer(rightVec, n, n, ldvr, out var pVr, out _, out _, out int lldvr))
+				return false;
+			if (!CheckPointer(α, out var pVa, out int nva))
+				return false;
+			if (!CheckPointer(β, out var pVb, out int nvb))
+				return false;
+			////if (nva < nn)
+			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(α));
+			////if (nvb < nn)
+			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(β));
+
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, int, IntPtr, int, IntPtr, int, T*, T*, IntPtr, T*, int, T*, int, MklLapackInfo> funcR = null;
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, IntPtr, int, IntPtr, int, MklLapackInfo> funcC = null;
+			if (typeof(T) == typeof(float))
+			{
+				funcR = &NativeMethods.LAPACKE_sggev;
+			}
+			else if (typeof(T) == typeof(double))
+			{
+				funcR = &NativeMethods.LAPACKE_dggev;
+			}
+			else
+			{
+				if (Const<T>.DataType == DataType.ComplexSingle)
+					funcC = &NativeMethods.LAPACKE_cggev;
+				else if (Const<T>.DataType == DataType.ComplexDouble)
+					funcC = &NativeMethods.LAPACKE_zggev;
+			}
+			if (funcR is null && funcC is null)
+				return false;
+			var (modeL, modeR) = mode.ToLRChar();
+			if (funcC is not null)
+			{   // complex typed T
+				var info = funcC(MklMatrixLayout.ColMajor, modeL, modeR, nn, pA, llda, pB, lldb, pVa, pVb, pVl, lldvl, pVr, lldvr);
+				SolveMethodKind.GeneralEigen.CheckLapackInfo(info);
+				return true;
+			}
+			// real typed T
+			// buffer
+			using var buffer = CpuBuffer.Create((2 * n + (modeL == MklVectorModeChar.Vector ? n * n : 0) + (modeR == MklVectorModeChar.Vector ? n * n : 0)) * sizeof(T));
+			fixed (byte* buf = buffer.Buffer)
+			{
+				T* valR = (T*)buf, valI = (T*)buf + n, vecL = (T*)buf + 2 * n, vecR = (T*)buf + 2 * n + (modeL == MklVectorModeChar.Vector ? n * n : 0);
+				// calculate
+				var info = funcR(MklMatrixLayout.ColMajor, modeL, modeR, nn, pA, llda, pB, lldb, valR, valI, pVb, vecL, lldvl, vecR, lldvr);
+				SolveMethodKind.NonSymmetricGenearlEigenvalue.CheckLapackInfo(info);
+				// copy
+				return this.CopyEigenToComplex(modeL, modeR, n, nn, pVa, valR, valI, leftVec, pVl, ldvl, vecL, rightVec, pVr, ldvr, vecR);
+			}
+		}
+		#endregion
+
+		#region other decompose
 		protected override unsafe bool SingularValues_<T, TReal>(SVDStore storeU, SVDStore storeV, long m, long n, Storage<T> A, long lda, Storage<TReal> S, Storage<T>? U, long ldu, Storage<T>? Vct, long ldvct)
 		{
 			if (storeU == SVDStore.Overwrite && storeV == SVDStore.Overwrite)
 				throw new ArgumentException(Resources.Parameter.DuplicateValue, nameof(storeU));
-			if (!Const<T>.DataType.CheckBaseSupport())
-				return false;
-			sbyte jobU = storeU.ToChar(), jobV = storeV.ToChar();
+
+			MklSvdModeChar jobU = storeU.ToChar(), jobV = storeV.ToChar();
 			if (jobU == 0 || jobV == 0)
 				return false;
 			if (!CheckPointer(A, m, n, lda, out var pA, out int mm, out int nn, out int llda))
@@ -1836,71 +1767,165 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			////if (ns < kk)
 			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(S));
 
-			if (this.Mkl111OrAbove)
+			delegate*<MklMatrixLayout, MklSvdModeChar, MklSvdModeChar, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, byte[], MklLapackInfo> func;
+			func = Const<T>.DataType switch
 			{
-				var type = Const<T>.DataType.ToMklDataType();
-				if (this.SvdViaPolarDecomposition)
+				DataType.RealSingle => &NativeMethods.LAPACKE_sgesvd,
+				DataType.RealDouble => &NativeMethods.LAPACKE_dgesvd,
+				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgesvd,
+				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgesvd,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			using var buffer = CpuBuffer.Create<T>(Const<T>.IsComplex ? kk : (kk / 2));
+			var info = func(MklMatrixLayout.ColMajor, jobU, jobV, mm, nn, pA, llda, pS, pU, lldu, pV, lldv, buffer.Buffer);
+			SolveMethodKind.GeneralEigen.CheckLapackInfo(info);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int ApproxIndexOfSingle(ComplexSingle* array, int len, ComplexSingle value)
+		{
+			for (int i = 0; i < len; i++)
+			{
+				var diff = array[i] - value;
+				float diffMax = Math.Max(Math.Abs(diff.Real), Math.Abs(diff.Imag));
+				float max = Math.Max(Math.Abs(array[i].Real), Math.Abs(array[i].Imag));
+				if (diffMax / max < 0.00007011098358136203F)
+					return i;
+			}
+			return -1;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe int ApproxIndexOfDouble(ComplexDouble* array, int len, ComplexDouble value)
+		{
+			for (int i = 0; i < len; i++)
+			{
+				var diff = array[i] - value;
+				double diffMax = Math.Max(Math.Abs(diff.Real), Math.Abs(diff.Imag));
+				double max = Math.Max(Math.Abs(array[i].Real), Math.Abs(array[i].Imag));
+				if (diffMax / max < 5.477420592293901E-7)
+					return i;
+			}
+			return -1;
+		}
+
+		protected override unsafe bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null)
+		{
+			actualNumber = 0;
+			if (!CheckPointer(A, n, n, lda, out var pA, out int nn, out _, out int llda))
+				return false;
+			if (!CheckPointer(U, n, n, ldu, out var pU, out _, out _, out int lldu))
+				return false;
+			if (!CheckPointer(orderVal, out var pO, out int orderLen))
+				return false;
+			if (orderLen >= n)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(orderVal));
+
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, NativeMethods.SchurSelect2?, int, IntPtr, int, out int, T*, T*, IntPtr, int, MklLapackInfo> funcR = null;
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, NativeMethods.SchurSelect1?, int, IntPtr, int, out int, T*, IntPtr, int, MklLapackInfo> funcC = null;
+			if (typeof(T) == typeof(float))
+			{
+				funcR = &NativeMethods.LAPACKE_sgees;
+			}
+			else if (typeof(T) == typeof(double))
+			{
+				funcR = &NativeMethods.LAPACKE_dgees;
+			}
+			else
+			{
+				if (Const<T>.DataType == DataType.ComplexSingle)
+					funcC = &NativeMethods.LAPACKE_cgees;
+				else if (Const<T>.DataType == DataType.ComplexDouble)
+					funcC = &NativeMethods.LAPACKE_zgees;
+			}
+			if (funcR is null && funcC is null)
+				return false;
+
+			var mode = jobu.ToChar();
+			var sort = orderVal is null ? MklSortModeChar.NoSort : MklSortModeChar.Sort;
+			int getEigNumber;
+			MklLapackInfo info;
+			using var buffer = Const<T>.IsComplex ? CpuBuffer.Create<T>(nn + orderLen) : CpuBuffer.Create<T>((nn + orderLen) * 2);
+			fixed (byte* buf = buffer.Buffer)
+			{
+				if (funcC is not null)
 				{
-					if (storeU != storeV)
-						return false;
-					if (storeU == SVDStore.Overwrite)
-						return false;
-					SolveVectorMode mode = storeU == SVDStore.None ? SolveVectorMode.NoVector : SolveVectorMode.Vector;
-					int econ = storeU == SVDStore.Economic ? 1 : 0;
-					NativeMethods.cusolverDnXgesvdp_bufferSize(this.cusolverHandle, IntPtr.Zero, mode, econ, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, out var workDevice, out var workHost);
-					using var buffer = MklBuffer.Create(workDevice, workHost);
-					NativeMethods.cusolverDnXgesvdp(this.cusolverHandle, IntPtr.Zero, mode, econ, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo, out var error);
-					SolveMethodKind.SVD.CheckDeviceInfo(buffer.ExtraDeviceInfo);
+					// calculate
+					NativeMethods.SchurSelect1? selector;
+					if (orderVal is null)
+					{
+						selector = null;
+					}
+					else if (Const<T>.DataType == DataType.ComplexSingle)
+					{
+						// covert to correct type
+						ComplexSingle* selectValues = (ComplexSingle*)buf + n;
+						CSharp.LinearAlgebra.DenseApi.PointWiseCast(orderVal, new ManagedPureStorage<ComplexSingle>(selectValues, orderLen));
+						// local function
+						int Selector(void* pVal)
+						{
+							ComplexSingle val = *(ComplexSingle*)pVal;
+							return ApproxIndexOfSingle(selectValues, orderLen, val);
+						}
+						selector = Selector;
+					}
+					else // complex double
+					{
+						// covert to correct type
+						ComplexDouble* selectValues = (ComplexDouble*)buf + n;
+						Unsafe.CopyBlockUnaligned(selectValues, (void*)pO, (uint)(n * sizeof(ComplexDouble)));
+						// local function
+						int Selector(void* pVal)
+						{
+							ComplexDouble val = *(ComplexDouble*)pVal;
+							return ApproxIndexOfDouble(selectValues, orderLen, val);
+						}
+						selector = Selector;
+					}
+					info = funcC(MklMatrixLayout.ColMajor, mode, sort, selector, nn, pA, llda, out getEigNumber, (T*)buf, pU, lldu);
 				}
 				else
 				{
-					if (m < n)
-						return false;
-					NativeMethods.cusolverDnXgesvd_bufferSize(this.cusolverHandle, IntPtr.Zero, jobU, jobV, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, out var workDevice, out var workHost);
-					using var buffer = MklBuffer.Create(workDevice, workHost);
-					NativeMethods.cusolverDnXgesvd(this.cusolverHandle, IntPtr.Zero, jobU, jobV, m, n, type, pA, lda, type, pS, type, pU, ldu, type, pV, ldvct, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo);
-					SolveMethodKind.SVD.CheckDeviceInfo(buffer.ExtraDeviceInfo);
+					NativeMethods.SchurSelect2? selector;
+					if (orderVal is null)
+					{
+						selector = null;
+					}
+					else if (typeof(T) == typeof(float))
+					{
+						// covert to correct type
+						ComplexSingle* selectValues = (ComplexSingle*)buf + n;
+						CSharp.LinearAlgebra.DenseApi.PointWiseCast(orderVal, new ManagedPureStorage<ComplexSingle>(selectValues, orderLen));
+						// local function
+						int Selector(void* pValR, void* pValI)
+						{
+							ComplexSingle val = new(*(float*)pValR, *(float*)pValI);
+							return ApproxIndexOfSingle(selectValues, orderLen, val);
+						}
+						selector = Selector;
+					}
+					else // double
+					{
+						// covert to correct type
+						ComplexDouble* selectValues = (ComplexDouble*)buf + n;
+						Unsafe.CopyBlockUnaligned(selectValues, (void*)pO, (uint)(n * sizeof(ComplexDouble)));
+						// local function
+						int Selector(void* pValR, void* pValI)
+						{
+							ComplexDouble val = new(*(double*)pValR, *(double*)pValI);
+							return ApproxIndexOfDouble(selectValues, orderLen, val);
+						}
+						selector = Selector;
+					}
+					info = funcR(MklMatrixLayout.ColMajor, mode, sort, selector, nn, pA, llda, out getEigNumber, (T*)buf, (T*)buf + n, pU, lldu);
 				}
 			}
-			else
-			{   // CUDA version <= 11.0
-				if (m < n)
-					return false;
-				delegate*<int, int, out int, MklSolverStatus> bufFunc;
-				delegate*<sbyte, sbyte, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, MklSolverStatus> calFunc;
-				bufFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgesvd_bufferSize,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgesvd_bufferSize,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgesvd_bufferSize,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgesvd_bufferSize,
-					_ => null,
-				};
-				calFunc = Const<T>.DataType switch
-				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgesvd,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgesvd,
-					DataType.ComplexSingle => &NativeMethods.cusolverDnCgesvd,
-					DataType.ComplexDouble => &NativeMethods.cusolverDnZgesvd,
-					_ => null,
-				};
-				bufFunc(this.cusolverHandle, mm, nn, out var work);
-				using var buffer = MklBuffer.Create<T>(work);
-				calFunc(this.cusolverHandle, jobU, jobV, mm, nn, pA, llda, pS, pU, lldu, pV, lldv, buffer.DeviceBuffer, work, IntPtr.Zero, buffer.ExtraDeviceInfo);
-				SolveMethodKind.GeneralEigen.CheckDeviceInfo(buffer.ExtraDeviceInfo);
-			}
+			SolveMethodKind.Schur.CheckLapackInfo(info);
+			actualNumber = getEigNumber;
 			return true;
-		}
-		#endregion
-
-		#region not supported routines
-		protected override bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) => false;
-
-		protected override bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) => false;
-
-		protected override bool SchurDecomposition_<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null)
-		{
-			actualNumber = 0; return false;
 		}
 		#endregion
 		#endregion

@@ -124,6 +124,24 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Eigenvalue decomposition for non-symmetric matrix failed since the internal QR failed to compute all the eigenvalues. 的本地化字符串。
+        /// </summary>
+        internal static string MatrixSolveNonSymmEigen {
+            get {
+                return ResourceManager.GetString("MatrixSolveNonSymmEigen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 General eigenvalue decomposition for non-symmetric matrices failed since the internal QZ iteration failed to compute all the eigenvalues. 的本地化字符串。
+        /// </summary>
+        internal static string MatrixSolveNonSymmGeneralEigen {
+            get {
+                return ResourceManager.GetString("MatrixSolveNonSymmGeneralEigen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 QR factorization failed for unknown reasons. 的本地化字符串。
         /// </summary>
         internal static string MatrixSolveQR {

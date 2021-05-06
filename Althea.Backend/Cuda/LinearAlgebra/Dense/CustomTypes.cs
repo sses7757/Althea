@@ -208,11 +208,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 
 	/// <summary>
-	/// The <see cref="PointerMode"/> enum indicates whether the scalar values are passed by reference on the host or device.<br/>
+	/// The <see cref="CuBlasPointerMode"/> enum indicates whether the scalar values are passed by reference on the host or device.<br/>
 	/// It is important to point out that if several scalar values are present in the function call, all of them must conform to the same single pointer mode.<br/>
 	/// The pointer mode can be set and retrieved using <see cref="NativeMethods.cublasGetPointerMode"/> and <see cref="NativeMethods.cublasSetPointerMode"/> routines, respectively.
 	/// </summary>
-	internal enum PointerMode
+	internal enum CuBlasPointerMode
 	{
 		/// <summary>
 		/// the scalars are passed by reference on the host
@@ -225,10 +225,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	}
 
 	/// <summary>
-	/// The <see cref="AtomicsMode"/> enum indicates whether cuBLAS routines which has an alternate implementation using atomics can be used.<br/>
+	/// The <see cref="CuBlasAtomicsMode"/> enum indicates whether cuBLAS routines which has an alternate implementation using atomics can be used.<br/>
 	/// The atomics mode can be set and queried using and routines <see cref="NativeMethods.cublasSetAtomicsMode"/> and <see cref="NativeMethods.cublasGetAtomicsMode"/>, respectively.
 	/// </summary>
-	internal enum AtomicsMode
+	internal enum CuBlasAtomicsMode
 	{
 		/// <summary>
 		/// the usage of atomics is not allowed
@@ -241,10 +241,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	}
 
 	/// <summary>
-	/// The <see cref="MatrixFillMode"/> enum type indicates which part (lower or upper) of the dense matrix was filled and consequently should be used by the function.<br/>
+	/// The <see cref="CuBlasFillMode"/> enum type indicates which part (lower or upper) of the dense matrix was filled and consequently should be used by the function.<br/>
 	/// Its values correspond to Fortran characters ‘L’ or ‘l’ (lower) and ‘U’ or ‘u’ (upper) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
-	internal enum MatrixFillMode
+	internal enum CuBlasFillMode
 	{
 		/// <summary>
 		/// the lower part of the matrix is filled
@@ -257,10 +257,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	}
 
 	/// <summary>
-	/// The <see cref="DiagType"/> enum indicates whether the main diagonal of the dense matrix is unity and consequently should not be touched or modified by the function.<br/>
+	/// The <see cref="CuBlasDiagType"/> enum indicates whether the main diagonal of the dense matrix is unity and consequently should not be touched or modified by the function.<br/>
 	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-unit) and ‘U’ or ‘u’ (unit) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
-	internal enum DiagType
+	internal enum CuBlasDiagType
 	{
 		/// <summary>
 		/// the matrix diagonal has non-unit elements which are explicitly stored
@@ -273,10 +273,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	}
 
 	/// <summary>
-	/// The <see cref="SideMode"/> enum indicates whether the dense matrix is on the left or right side in the matrix equation solved by a particular function.<br/>
+	/// The <see cref="CuBlasSideMode"/> enum indicates whether the dense matrix is on the left or right side in the matrix equation solved by a particular function.<br/>
 	/// Its values correspond to Fortran characters ‘L’ or ‘l’ (left) and ‘R’ or ‘r’ (right) that are often used as parameters to legacy BLAS implementations.
 	/// </summary>
-	internal enum SideMode
+	internal enum CuBlasSideMode
 	{
 		/// <summary>
 		/// the matrix is on the left side in the equation
@@ -291,7 +291,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	/// <summary>
 	/// The cuBLAS computation type
 	/// </summary>
-	internal enum ComputeType
+	internal enum CuBlasComputeType
 	{
 		/// <summary>
 		/// This is the default and highest-performance mode for 16-bit half precision floating point and all compute and intermediate storage precisions with at least 16-bit half precision. Tensor Cores will be used whenever possible.
@@ -339,7 +339,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		Compute32I_Pedantic = 73,
 	}
 
-	internal enum GemmAlgorithm
+	internal enum CuBlasGemmAlgorithm
 	{
 		Default = -1,
 		// other values are all deprecated

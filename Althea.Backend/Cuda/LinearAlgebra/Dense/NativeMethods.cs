@@ -56,43 +56,43 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// This function queries the atomic mode of a specific cuBLAS context.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
-		/// <param name="mode">returned <see cref="AtomicsMode"/></param>
+		/// <param name="mode">returned <see cref="CuBlasAtomicsMode"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetAtomicsMode(IntPtr handle, out AtomicsMode mode);
+		internal static extern CudaBlasStatus cublasGetAtomicsMode(IntPtr handle, out CuBlasAtomicsMode mode);
 
 		/// <summary>
 		/// Some routines like <c>cublas&lt;t&gt;symv</c> have an alternate implementation that use atomics to cumulate results. This implementation is generally significantly faster but can generate results that are not strictly identical from one run to the others. Mathematically, those different results are not significant but when debugging those differences can be prejudicial.
 		/// <para/>This function allows or disallows the usage of atomics in the CUDA BLAS library for all routines which have an alternate implementation.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
-		/// <param name="mode">the <see cref="AtomicsMode"/> to set</param>
+		/// <param name="mode">the <see cref="CuBlasAtomicsMode"/> to set</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSetAtomicsMode(IntPtr handle, AtomicsMode mode);
+		internal static extern CudaBlasStatus cublasSetAtomicsMode(IntPtr handle, CuBlasAtomicsMode mode);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, out PointerMode mode);
+		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, out CuBlasPointerMode mode);
 		/// <summary>
 		/// This function obtains the pointer mode used by the cuBLAS library.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
-		/// <param name="mode">returned <see cref="PointerMode"/></param>
+		/// <param name="mode">returned <see cref="CuBlasPointerMode"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetPointerMode(IntPtr handle, out PointerMode mode);
+		internal static extern CudaBlasStatus cublasGetPointerMode(IntPtr handle, out CuBlasPointerMode mode);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSetPointerMode_v2(IntPtr handle, PointerMode mode);
+		internal static extern CudaBlasStatus cublasSetPointerMode_v2(IntPtr handle, CuBlasPointerMode mode);
 		/// <summary>
 		/// This function sets the pointer mode used by the cuBLAS library.
 		/// The default is for the values to be passed by reference on the host.
 		/// </summary>
 		/// <param name="handle">input CUDA BLAS handle</param>
-		/// <param name="mode">the <see cref="PointerMode"/> to set</param>
+		/// <param name="mode">the <see cref="CuBlasPointerMode"/> to set</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSetPointerMode(IntPtr handle, PointerMode mode);
+		internal static extern CudaBlasStatus cublasSetPointerMode(IntPtr handle, CuBlasPointerMode mode);
 		#endregion
 
 
@@ -340,56 +340,56 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region symmetric matrix vector multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsymv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasSsymv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsymv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasSsymv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsymv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasDsymv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsymv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasDsymv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsymv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasCsymv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsymv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasCsymv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsymv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasZsymv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsymv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasZsymv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasChemv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasChemv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasChemv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasChemv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZhemv_v2(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasZhemv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZhemv(IntPtr handle, MatrixFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasZhemv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, IntPtr A, int lda, IntPtr x, int incx, void* β, IntPtr y, int incy);
 		#endregion
 
 		#region symmetric matrix vector multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasStrmv_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasStrmv(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasDtrmv_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasDtrmv(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasCtrmv_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasCtrmv(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmv_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasZtrmv_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmv(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
+		internal static extern CudaBlasStatus cublasZtrmv(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, IntPtr A, int lda, IntPtr x, int incx);
 		#endregion
 
 		#region general rank 1 update
@@ -426,66 +426,66 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region symmetric rank 1 update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasSsyr_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasSsyr(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasDsyr_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasDsyr(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCsyr_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCsyr(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZsyr_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZsyr(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCher_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCher(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZher_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZher(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr A, int lda);
 		#endregion
 
 		#region symmetric rank 2 update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasSsyr2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasSsyr2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasDsyr2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasDsyr2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCsyr2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCsyr2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZsyr2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZsyr2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCher2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasCher2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher2_v2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZher2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher2(IntPtr handle, MatrixFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
+		internal static extern CudaBlasStatus cublasZher2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, IntPtr x, int incx, IntPtr y, int incy, IntPtr A, int lda);
 		#endregion
 
 		#endregion
@@ -521,174 +521,174 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region symmetric matrix multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsymm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsymm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsymm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsymm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsymm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsymm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsymm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsymm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsymm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsymm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsymm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsymm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsymm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsymm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsymm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsymm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasChemm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasChemm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasChemm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasChemm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZhemm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZhemm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZhemm(IntPtr handle, SideMode side, MatrixFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZhemm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 
 		#region symmetric rank k update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherk_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherk(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, void* β, IntPtr C, int ldc);
 		#endregion
 
 		#region triangular matrix solve
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasStrsm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasStrsm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasDtrsm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasDtrsm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasCtrsm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasCtrsm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrsm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasZtrsm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrsm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
+		internal static extern CudaBlasStatus cublasZtrsm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb);
 		#endregion
 
 		#region triangular matrix solve
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasStrmm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasStrmm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDtrmm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDtrmm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCtrmm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCtrmm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmm(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZtrmm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZtrmm_v2(IntPtr handle, SideMode side, MatrixFillMode uplo, CuBlasOperation op, DiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZtrmm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, IntPtr A, int lda, IntPtr B, int ldb, IntPtr C, int ldc);
 		#endregion
 
 		#region symmetric rank-2k update
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyr2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyr2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyr2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyr2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyr2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyr2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyr2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyr2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyr2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCher2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCher2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher2k_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZher2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZher2k(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZher2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 
 		#region symmetric rank-k update variant
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrkx_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrkx(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrkx_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDsyrkx(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrkx_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCsyrkx(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrkx_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZsyrkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZsyrkx(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherkx_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCherkx(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherkx_v2(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherkx_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZherkx(IntPtr handle, MatrixFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZherkx(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, IntPtr A, int lda, IntPtr B, int ldb, void* β, IntPtr C, int ldc);
 		#endregion
 		#endregion
 
@@ -710,16 +710,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region diagonal matrix multiply
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSdgmm(IntPtr handle, SideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasSdgmm(IntPtr handle, CuBlasSideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDdgmm(IntPtr handle, SideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasDdgmm(IntPtr handle, CuBlasSideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCdgmm(IntPtr handle, SideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasCdgmm(IntPtr handle, CuBlasSideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasZdgmm(IntPtr handle, SideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
+		internal static extern CudaBlasStatus cublasZdgmm(IntPtr handle, CuBlasSideMode mode, int m, int n, IntPtr A, int lda, IntPtr x, int incx, IntPtr C, int ldc);
 		#endregion
 
 
@@ -739,7 +739,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		internal static extern CudaBlasStatus cublasScalEx(IntPtr handle, int n, void* alpha, CudaDataType alphaType, IntPtr x, CudaDataType xType, int incx, CudaDataType executiontype);
 
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGemmEx(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* alpha, IntPtr A, CudaDataType Atype, int lda, IntPtr B, CudaDataType Btype, int ldb, void* beta, IntPtr C, CudaDataType Ctype, int ldc, ComputeType computeType, GemmAlgorithm algo);
+		internal static extern CudaBlasStatus cublasGemmEx(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* alpha, IntPtr A, CudaDataType Atype, int lda, IntPtr B, CudaDataType Btype, int ldb, void* beta, IntPtr C, CudaDataType Ctype, int ldc, CuBlasComputeType computeType, CuBlasGemmAlgorithm algo);
 		#endregion
 		#endregion
 
@@ -1109,28 +1109,28 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region multiply Q of implicit QR
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSormqr_bufferSize(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDormqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDormqr_bufferSize(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc,  out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCunmqr_bufferSize(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc,  out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZunmqr_bufferSize(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZunmqr_bufferSize(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, out int lenWork);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSormqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnSormqr(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDormqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnDormqr(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCunmqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnCunmqr(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
 		
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZunmqr(IntPtr handle, SideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnZunmqr(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, IntPtr A, int lda, IntPtr τ, IntPtr C, int ldc, IntPtr work, int lenWork, IntPtr devInfo);
 		#endregion
 
 		#region LU Factorization
@@ -1186,61 +1186,61 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region standard symmetric (Hermitian) eigen-solve
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDsyevd_bufferSize(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnCheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZheevd_bufferSize(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSsyevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnSsyevd(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDsyevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnDsyevd(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnCheevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnCheevd(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZheevd(IntPtr handle, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnZheevd(IntPtr handle, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr eigVecOut, IntPtr work, int lenWork, IntPtr devInfo);
 
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXsyevd_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
+		internal static extern CudaSolverStatus cusolverDnXsyevd_bufferSize(IntPtr handle, IntPtr @params, SolveVectorMode jobz, CuBlasFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, out long workspaceInBytesOnDevice, out long workspaceInBytesOnHost);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnXsyevd(IntPtr handle, IntPtr @params, SolveVectorMode jobz, MatrixFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnXsyevd(IntPtr handle, IntPtr @params, SolveVectorMode jobz, CuBlasFillMode uplo, long n, CudaDataType dataTypeA, IntPtr A, long lda, CudaDataType dataTypeW, IntPtr W, CudaDataType computeType, IntPtr bufferOnDevice, long workspaceInBytesOnDevice, byte[] bufferOnHost, long workspaceInBytesOnHost, IntPtr devInfo);
 		#endregion
 
 		#region generalized symmetric (Hermitian) eigen-solve
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnSsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnDsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnChegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnChegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZhegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
+		internal static extern CudaSolverStatus cusolverDnZhegvd_bufferSize(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, out int lenWork);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnSsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnSsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnDsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnDsygvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnChegvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnChegvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
 
 		[DllImport(CUSOLVE_API_DLL_NAME)]
-		internal static extern CudaSolverStatus cusolverDnZhegvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, MatrixFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
+		internal static extern CudaSolverStatus cusolverDnZhegvd(IntPtr handle, GeneralEigenType itype, SolveVectorMode jobz, CuBlasFillMode uplo, int n, IntPtr A, int lda, IntPtr B, int ldb, IntPtr W, IntPtr work, int lenWork, IntPtr devInfo);
 		#endregion
 
 		#region singular value decomposition

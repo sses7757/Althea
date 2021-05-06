@@ -68,7 +68,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// The operations:
 		/// <list type="bullet">
 		/// <item><see cref="EigenSpecialMatrixGeneral{T, TComplex}(SolveVectorMode, long, Storage{TComplex}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long)"/></item>
-		/// <item><see cref="EigenGeneralMatrixGeneral{T, TComplex}(GeneralEigenType, SolveVectorMode, long, Storage{TComplex}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long, Storage{T}, long)"/></item>
+		/// <item><see cref="EigenGeneralMatrixGeneral{T, TComplex}(GeneralEigenType, SolveVectorMode, long, Storage{TComplex}, Storage{T}, Storage{TComplex}?, long, Storage{TComplex}?, long, Storage{T}, long, Storage{T}, long)"/></item>
 		/// <item>etc.</item>
 		/// </list>
 		/// </remarks>
@@ -228,14 +228,15 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+		/// Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
 		/// <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <param name="type">The <see cref="GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+		/// <param name="α">The output numerator of the eigenvalues, must be preallocated, of corresponding complex type <typeparamref name="TComplex"/></param>
+		/// <param name="β">The output denominator of the eigenvalues, must be preallocated, of type <typeparamref name="T"/></param>
 		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
 		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
 		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
@@ -245,32 +246,32 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="α"/> or <paramref name="β"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static void EigenGeneralMatrixGeneral<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>
+		public static void EigenGeneralMatrixGeneral<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> α, Storage<T> β, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>
 		{
 			bool Local_Supported(AbstractApi api)
 			{
-				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[] { A.LocationDescription, B.LocationDescription };
-				Span<CombinationOfLocations> complexes = stackalloc CombinationOfLocations[3].SetValue(valOut.LocationDescription);
+				Span<CombinationOfLocations> normals = stackalloc CombinationOfLocations[] { A.LocationDescription, B.LocationDescription, β.LocationDescription };
+				Span<CombinationOfLocations> complexes = stackalloc CombinationOfLocations[3].SetValue(α.LocationDescription);
 				if (leftVec is not null && rightVec is not null)
 				{
-					complexes.SetValue(valOut.LocationDescription, leftVec.LocationDescription, rightVec.LocationDescription);
+					complexes.SetValue(α.LocationDescription, leftVec.LocationDescription, rightVec.LocationDescription);
 				}
 				else if (leftVec is null && rightVec is not null)
 				{
-					complexes.SetValue(valOut.LocationDescription, rightVec.LocationDescription);
+					complexes.SetValue(α.LocationDescription, rightVec.LocationDescription);
 					complexes = complexes[0..2];
 				}
 				else if (leftVec is not null && rightVec is null)
 				{
-					complexes.SetValue(valOut.LocationDescription, leftVec.LocationDescription);
+					complexes.SetValue(α.LocationDescription, leftVec.LocationDescription);
 					complexes = complexes[0..2];
 				}
 				else
 				{
-					complexes.SetValue(valOut.LocationDescription);
+					complexes.SetValue(α.LocationDescription);
 					complexes = complexes[0..1];
 				}
 				return api.IsSupportedNormalTypeRealType(normals, complexes);
@@ -281,7 +282,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(RecentAPIs, Local_Supported, node);
-				success = node.Value.EigenGeneralMatrixGeneral_(type, mode, n, valOut, leftVec, ldvl, rightVec, ldvr, A, lda, B, ldb);
+				success = node.Value.EigenGeneralMatrixGeneral_(type, mode, n, α, β, leftVec, ldvl, rightVec, ldvr, A, lda, B, ldb);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -289,66 +290,6 @@ namespace Althea.LinearAlgebra.Dense
 		#endregion
 
 		#region linear solve
-		/// <summary>
-		/// Compute the LU decomposition of <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
-		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix; will be overwritten by its LU decomposition (the lower triangular matrix is of non-stored unit diagonal) at exit.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="pivot">The output pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="pivot"/> is too short</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static void LUDecomposition<T, TInd>(long n, Storage<T> A, long lda, Storage<TInd> pivot) where T : unmanaged where TInd : unmanaged
-		{
-			CombinationOfLocations location1 = A.LocationDescription, location2 = pivot.LocationDescription;
-			DataType type = Const<TInd>.DataType;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnaryIndexUnary(location1, location2, type), node);
-				success = node.Value.LUDecomposition_(n, A, lda, pivot);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-		}
-
-		/// <summary>
-		/// Solve a series of linear systems <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c> by the LU decomposed <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
-		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
-		/// <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The coefficient matrix which was replaced by its LU decomposition before invoking this method.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="pivot">The pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
-		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
-		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static void LinearSolveByLU<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<TInd> pivot, Storage<T> B, long ldb) where T : unmanaged where TInd : unmanaged
-		{
-			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = pivot.LocationDescription;
-			DataType type = Const<TInd>.DataType;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinaryIndexUnary(location1, location2, location3, type), node);
-				success = node.Value.LinearSolveByLU_(op, n, nrhs, A, lda, pivot, B, ldb);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-		}
-
 		/// <summary>
 		/// Solve a series of linear systems: <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="op"/>(<paramref name="A"/>) is a linear system.<br/>
 		/// Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its LU decomposition, and <paramref name="B"/> shall be replaced by the solution X.
@@ -382,93 +323,6 @@ namespace Althea.LinearAlgebra.Dense
 		#endregion
 
 		#region QR solve
-		/// <summary>
-		/// Compute the implicit QR factorization the given matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values) and the lower triangular part overwritten by the sequence of Householder vectors.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="τ">The array to be overwritten by the scaling factors of all Householder vectors of size <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="τ"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static void ImplicitQR<T>(long m, long n, Storage<T> A, long lda, Storage<T> τ) where T : unmanaged
-		{
-			CombinationOfLocations location1 = A.LocationDescription, location2 = τ.LocationDescription;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixUnary(location2, location1), node);
-				success = node.Value.ImplicitQR_(m, n, A, lda, τ);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-		}
-
-		/// <summary>
-		/// Explicitly form the Q matrix from the result of a implicit QR factorization.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="m">The number of rows of matrix <paramref name="Q"/>, must be at least <paramref name="n"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="Q"/>, must be at least <paramref name="k"/></param>
-		/// <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
-		/// <param name="Q">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors. Overwritten by the formed Q matrix at exit.</param>
-		/// <param name="ldq">The leading dimension of <paramref name="Q"/></param>
-		/// <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="Q"/> or <paramref name="τ"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public static void ImplicitQRFormQ<T>(long m, long n, long k, Storage<T> Q, long ldq, Storage<T> τ) where T : unmanaged
-		{
-			CombinationOfLocations location1 = Q.LocationDescription, location2 = τ.LocationDescription;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixUnary(location2, location1), node);
-				success = node.Value.ImplicitQRFormQ_(m, n, k, Q, ldq, τ);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-		}
-
-		/// <summary>
-		/// Multiply the implicit matrix Q of a implicit QR factorization to the given matrix <paramref name="C"/>:<br/>
-		/// <c><paramref name="C"/> = <paramref name="op"/>(Q) * <paramref name="C"/></c> or <c><paramref name="C"/> = <paramref name="C"/> * <paramref name="op"/>(Q)</c>, depending on <paramref name="leftQ"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="leftQ">The position of the implicit matrix Q -- left or right</param>
-		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to the implicit matrix Q</param>
-		/// <param name="m">The number of rows of matrix <paramref name="C"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="C"/></param>
-		/// <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
-		/// <param name="A">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
-		/// <param name="C">The input/output matrix of size <c><paramref name="lda"/>×<paramref name="n"/></c></param>
-		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
-		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> or <paramref name="τ"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="A"/> (or <paramref name="τ"/>) and <paramref name="C"/> has incompatible size</exception>
-		public static void ImplicitQRMultiplyQ<T>(bool leftQ, MatrixOperation op, long m, long n, long k, Storage<T> A, long lda, Storage<T> τ, Storage<T> C, long ldc) where T : unmanaged
-		{
-			CombinationOfLocations location1 = τ.LocationDescription, location2 = A.LocationDescription, location3 = C.LocationDescription;
-			bool success = false;
-			LinkedListNode<AbstractApi>? node = null;
-			while (!success)
-			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixBinary(location1, location2, location3), node);
-				success = node.Value.ImplicitQRMultiplyQ_(leftQ, op, m, n, k, A, lda, τ, C, ldc);
-			}
-			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
-		}
-
 		/// <summary>
 		/// Compute the complete QR factorization the given matrix <paramref name="A"/>.
 		/// </summary>
@@ -672,7 +526,7 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool EigenSpecialMatrixHermitian_<T, TReal>(SolveVectorMode mode, long n, Storage<TReal> valOut, Storage<T> A, long lda) where T : unmanaged where TReal : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
 		/// <typeparam name="TReal">Any unmanaged struct as the real corresponding type of <typeparamref name="T"/></typeparam>
@@ -680,9 +534,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="type">The <see cref="GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-		/// <param name="A">The input/output hermitian matrix to calculate the general eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/>; or replaced by the eigenvectors otherwise.</param>
+		/// <param name="A">The input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/>; or replaced by the eigenvectors otherwise.</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="B">Another input hermitian matrix to calculate the general eigen-problem</param>
+		/// <param name="B">Another input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
@@ -711,14 +565,15 @@ namespace Althea.LinearAlgebra.Dense
 		protected abstract bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
 
 		/// <summary>
-		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
 		/// <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <param name="type">The <see cref="GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+		/// <param name="α">The output numerator of the eigenvalues, must be preallocated, of corresponding complex type <typeparamref name="TComplex"/></param>
+		/// <param name="β">The output denominator of the eigenvalues, must be preallocated, of type <typeparamref name="T"/></param>
 		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
 		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
 		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
@@ -728,47 +583,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="α"/> or <paramref name="β"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected abstract bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
+		protected abstract bool EigenGeneralMatrixGeneral_<T, TComplex>(GeneralEigenType type, SolveVectorMode mode, long n, Storage<TComplex> α, Storage<T> β, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged where TComplex : unmanaged, ICustomNativeType<TComplex>;
 		#endregion
 
 		#region linear solve
-		/// <summary>
-		/// When implemented by a derived class, compute the LU decomposition of <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
-		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix; will be overwritten by its LU decomposition (the lower triangular matrix is of non-stored unit diagonal) at exit.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="pivot">The output pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="pivot"/> is too short</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected abstract bool LUDecomposition_<T, TInd>(long n, Storage<T> A, long lda, Storage<TInd> pivot) where T : unmanaged where TInd : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, solve a series of linear systems: <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c> by the LU decomposed <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="TInd">Any integral type unmanaged struct as the data type</typeparam>
-		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
-		/// <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The coefficient matrix which was replaced by its LU decomposition before invoking this method.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="pivot">The pivot indices to indicate that row <c>i</c> interchanged with row <c><paramref name="pivot"/>[i]</c> at exit.</param>
-		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
-		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected abstract bool LinearSolveByLU_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<TInd> pivot, Storage<T> B, long ldb) where T : unmanaged where TInd : unmanaged;
-
 		/// <summary>
 		/// When implemented by a derived class, solve a series of linear systems: <c><paramref name="op"/>(<paramref name="A"/>) * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="op"/>(<paramref name="A"/>) is a linear system.<br/>
 		/// Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its LU decomposition, and <paramref name="B"/> shall be replaced by the solution X.
@@ -786,103 +607,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected virtual bool LinearSolve_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<TInd>? work = null) where T : unmanaged where TInd : unmanaged
-		{
-			if (n <= 0)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.MustPositive);
-			if (lda < n)
-				throw new ArgumentOutOfRangeException(nameof(lda), lda, Resources.Parameter.InvalidValue);
-			if (ldb < n)
-				throw new ArgumentOutOfRangeException(nameof(ldb), ldb, Resources.Parameter.InvalidValue);
-			if (A is null || !A.IsValid())
-				throw new ArgumentNullException(nameof(A));
-			if (B is null || !B.IsValid())
-				throw new ArgumentNullException(nameof(B));
-			if (A.Length < n * lda)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
-			if (B.Length < nrhs * ldb)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(B));
-
-			if (!this.IsSupportedMatrixBinaryIndexUnary(A.LocationDescription, B.LocationDescription, work?.LocationDescription ?? default, Const<TInd>.DataType))
-				return false;
-
-			var pivot = work ?? Storage<TInd>.Create(A[0].Location, n);
-			try
-			{
-				if (!this.LUDecomposition_(n, A, lda, pivot))
-					return false;
-				return this.LinearSolveByLU_(op.Simplify<T>(), n, nrhs, A, lda, pivot, B, ldb);
-			}
-			finally
-			{
-				if (!ReferenceEquals(pivot, work))
-					pivot?.Dispose();
-			}
-		}
+		protected abstract bool LinearSolve_<T, TInd>(MatrixOperation op, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<TInd>? work = null) where T : unmanaged where TInd : unmanaged;
 		#endregion
 
 		#region QR solve
 		/// <summary>
-		/// When implemented by a derived class, compute the implicit QR factorization the given matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values) and the lower triangular part overwritten by the sequence of Householder vectors.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="τ">The array to be overwritten by the scaling factors of all Householder vectors of size <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="τ"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected abstract bool ImplicitQR_<T>(long m, long n, Storage<T> A, long lda, Storage<T> τ) where T : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, explicitly form the Q matrix from the result of a implicit QR factorization.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="m">The number of rows of matrix <paramref name="Q"/>, must be at least <paramref name="n"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="Q"/>, must be at least <paramref name="k"/></param>
-		/// <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
-		/// <param name="Q">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors. Overwritten by the formed Q matrix at exit.</param>
-		/// <param name="ldq">The leading dimension of <paramref name="Q"/></param>
-		/// <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="Q"/> or <paramref name="τ"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="τ"/> do not contain enough space to be overwritten</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected abstract bool ImplicitQRFormQ_<T>(long m, long n, long k, Storage<T> Q, long ldq, Storage<T> τ) where T : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, multiply the implicit matrix Q of a implicit QR factorization to the given matrix <paramref name="C"/>:<br/>
-		/// <c><paramref name="C"/> = <paramref name="op"/>(Q) * <paramref name="C"/></c> or <c><paramref name="C"/> = <paramref name="C"/> * <paramref name="op"/>(Q)</c>, depending on <paramref name="leftQ"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-		/// <param name="leftQ">The position of the implicit matrix Q -- left or right</param>
-		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to the implicit matrix Q</param>
-		/// <param name="m">The number of rows of matrix <paramref name="C"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="C"/></param>
-		/// <param name="k">The number of elementary reflections generated in the implicit QR factorization</param>
-		/// <param name="A">The output column-major matrix of a implicit QR factorization containing the sequence of Householder vectors</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="τ">The output array of a implicit QR factorization of the scaling factors of all Householder vectors of size at least <paramref name="k"/></param>
-		/// <param name="C">The input/output matrix of size <c><paramref name="lda"/>×<paramref name="n"/></c></param>
-		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> or <paramref name="τ"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="A"/> (or <paramref name="τ"/>) and <paramref name="C"/> has incompatible size</exception>
-		protected abstract bool ImplicitQRMultiplyQ_<T>(bool leftQ, MatrixOperation op, long m, long n, long k, Storage<T> A, long lda, Storage<T> τ, Storage<T> C, long ldc) where T : unmanaged;
-
-		/// <summary>
-		/// Check whether all the implicit QR routines and <see cref="TriangularMatrixSolve_{T}"/> support the given parameters
-		/// </summary>
-		protected abstract bool AllQRSupport<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work) where T : unmanaged;
-
-		/// <summary>
 		/// When implemented by a derived class, compute the complete QR factorization the given matrix <paramref name="A"/>.
 		/// </summary>
-		/// <remarks>The default implementation utilizes <see cref="ImplicitQR_{T}(long, long, Storage{T}, long, Storage{T})">ImplicitQR</see>, <see cref="ImplicitQRFormQ_{T}(long, long, long, Storage{T}, long, Storage{T})">ImplicitQRFormQ</see> and <see cref="MatrixClearUpperLowerPart_{T}(bool, long, Storage{T}, long)">MatrixClearUpperLowerPart</see> to perform a complete explicit QR.<br/>
-		/// The default implementation does <b>NOT</b> check the input parameters.</remarks>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="full">Whether to perform full factorization or not</param>
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
@@ -896,53 +627,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected virtual bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq, Storage<T>? work = null) where T : unmanaged
-		{
-			////if (m <= n)
-			////	throw new ArgumentOutOfRangeException(nameof(m), m, Resources.Parameter.InvalidValue);
-			////if (m <= 0)
-			////	throw new ArgumentOutOfRangeException(nameof(m), m, Resources.Parameter.MustPositive);
-			////if (n <= 0)
-			////	throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.MustPositive);
-			////if (lda < m)
-			////	throw new ArgumentOutOfRangeException(nameof(lda), lda, Resources.Parameter.InvalidValue);
-			////if (ldq < m)
-			////	throw new ArgumentOutOfRangeException(nameof(ldq), ldq, Resources.Parameter.InvalidValue);
-			////if (A is null || !A.IsValid())
-			////	throw new ArgumentNullException(nameof(A));
-			////if (Q is null || !Q.IsValid())
-			////	throw new ArgumentNullException(nameof(Q));
-			////if (A.Length < n * lda)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
-			long k = Math.Min(m, n), colsQ = full ? m : k;
-			////if (Q.Length < colsQ * ldq)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(Q));
-			if (!AllQRSupport(m, n, k, A, lda, Q, ldq, work))
-				return false;
-
-			var tau = work ?? Storage<T>.Create(A[0].Location, k);
-			try
-			{
-				if (!this.ImplicitQR_(m, n, A, lda, tau))
-					return false;
-				Storage.AbstractApi.MemoryCopy2D(A, lda, Q, ldq, m, colsQ);
-				if (!this.ImplicitQRFormQ_(m, colsQ, k, Q, ldq, tau))
-					return false;
-				return this.MatrixClearUpperLowerPart_(true, k, A, lda);
-			}
-			finally
-			{
-				if (!ReferenceEquals(tau, work))
-					tau?.Dispose();
-			}
-		}
+		protected abstract bool QRDecomposition_<T>(bool full, long m, long n, Storage<T> A, long lda, Storage<T> Q, long ldq, Storage<T>? work = null) where T : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
 		/// Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
 		/// </summary>
-		/// <remarks>The default implementation utilizes <see cref="ImplicitQR_{T}(long, long, Storage{T}, long, Storage{T})">ImplicitQR</see>, <see cref="ImplicitQRMultiplyQ_{T}(bool, MatrixOperation, long, long, long, Storage{T}, long, Storage{T}, Storage{T}, long)">ImplicitQRMultiplyQ</see> and <see cref="TriangularMatrixSolve_{T}(bool, bool, bool, MatrixOperation, long, long, T, Storage{T}, long, Storage{T}, long)">TriangularMatrixSolve</see> to perform a complete least square solve.<br/>
-		/// The default implementation does <b>NOT</b> check the input parameters.</remarks>
 		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 		/// <param name="m">The number of rows of matrix <paramref name="A"/>, must be larger than <paramref name="n"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
@@ -956,52 +646,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		protected virtual bool LeastSquareSolve_<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work = null) where T : unmanaged
-		{
-			////if (m <= n)
-			////	throw new ArgumentOutOfRangeException(nameof(m), m, Resources.Parameter.InvalidValue);
-			////if (m <= 0)
-			////	throw new ArgumentOutOfRangeException(nameof(m), m, Resources.Parameter.MustPositive);
-			////if (n <= 0)
-			////	throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.MustPositive);
-			////if (nrhs <= 0)
-			////	throw new ArgumentOutOfRangeException(nameof(nrhs), nrhs, Resources.Parameter.MustPositive);
-			////if (lda < m)
-			////	throw new ArgumentOutOfRangeException(nameof(lda), lda, Resources.Parameter.InvalidValue);
-			////if (ldb < n)
-			////	throw new ArgumentOutOfRangeException(nameof(ldb), ldb, Resources.Parameter.InvalidValue);
-			////if (A is null || !A.IsValid())
-			////	throw new ArgumentNullException(nameof(A));
-			////if (B is null || !B.IsValid())
-			////	throw new ArgumentNullException(nameof(B));
-			////if (A.Length < n * lda)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
-			////if (B.Length < nrhs * ldb)
-			////	throw new ArgumentException(Resources.Parameter.WrongSize, nameof(B));
-
-			if (!AllQRSupport(m, n, nrhs, A, lda, B, ldb, work))
-				return false;
-			// Ignore Spelling: \mathbf \tau
-			//tex:Solve $\min_{\vec x}{\| \mathbf A \vec x - \vec b \| = \|\mathbf R \vec x - \mathbf Q^{-1} \vec b\|}$
-			var tau = work ?? Storage<T>.Create(A[0].Location, n);
-			try
-			{
-				//tex:Factorize $\mathbf A \rightarrow \mathbf Q\mathbf R$
-				if (!this.ImplicitQR_(m, n, A, lda, tau))
-					return false;
-				//tex:Compute $\vec c = \mathbf Q^{-1} \vec b = \mathbf Q^* \vec b$
-				if (!this.ImplicitQRMultiplyQ_(true, MatrixOperation.ConjugateTranspose.Simplify<T>(), n, nrhs, n, A, lda, tau, B, ldb))
-					return false;
-				tau.Dispose();
-				//tex:Solve for $\vec x$: $\mathbf R \vec x = \vec c$
-				return this.TriangularMatrixSolve_(true, true, false, MatrixOperation.None, n, nrhs, Const<T>.One, A, lda, B, ldb);
-			}
-			finally
-			{
-				if (!ReferenceEquals(tau, work))
-					tau?.Dispose();
-			}
-		}
+		protected abstract bool LeastSquareSolve_<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T>? work = null) where T : unmanaged;
 		#endregion
 
 		#region other decompositions

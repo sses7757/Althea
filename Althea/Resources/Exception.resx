@@ -138,6 +138,12 @@
   <data name="MatrixSolveLU" xml:space="preserve">
     <value>LU factorization failed since matrix A (U) is singular: U({0}, {0}) = 0.</value>
   </data>
+  <data name="MatrixSolveNonSymmEigen" xml:space="preserve">
+    <value>Eigenvalue decomposition for non-symmetric matrix failed since the internal QR failed to compute all the eigenvalues.</value>
+  </data>
+  <data name="MatrixSolveNonSymmGeneralEigen" xml:space="preserve">
+    <value>General eigenvalue decomposition for non-symmetric matrices failed since the internal QZ iteration failed to compute all the eigenvalues.</value>
+  </data>
   <data name="MatrixSolveQR" xml:space="preserve">
     <value>QR factorization failed for unknown reasons.</value>
   </data>

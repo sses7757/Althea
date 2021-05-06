@@ -1,10 +1,78 @@
 ﻿using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 
 namespace Althea.Backend.Mkl
 {
+	/// <summary>
+	/// The helper structure to provide safe manipulation of CPU memory buffers
+	/// </summary>
+	/// <remarks>Currently, the host buffers are pooled by the <see cref="ArrayPool{T}"/> of <see cref="byte"/>.</remarks>
+	public readonly ref struct CpuBuffer
+	{
+		private readonly byte[]? hostBuffer;
+
+		/// <summary>
+		/// Get the buffer array on CPU memory as an array of <see cref="byte"/>.
+		/// </summary>
+		public byte[] Buffer {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.hostBuffer ?? Array.Empty<byte>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private CpuBuffer(long workSpaceHostBytes)
+		{
+			if (workSpaceHostBytes < 0)
+				throw new ArgumentOutOfRangeException(nameof(workSpaceHostBytes), workSpaceHostBytes, Resources.Parameter.CannotNegative);
+			if (workSpaceHostBytes > int.MaxValue)
+				throw new ArgumentOutOfRangeException(nameof(workSpaceHostBytes), workSpaceHostBytes, Resources.Parameter.InvalidValue);
+			this.hostBuffer = workSpaceHostBytes == 0 ? null : ArrayPool<byte>.Shared.Rent((int)workSpaceHostBytes);
+		}
+
+		/// <summary>
+		/// Create a <see cref="CpuBuffer"/> by indicating the number of bytes required on CPU memory
+		/// </summary>
+		/// <param name="workSpaceHostBytes">The number of bytes required as the working space on host</param>
+		/// <param name="extraDeviceInfo">Whether to allocate the memory space for the extra device info (as a <see cref="int"/>) or not</param>
+		/// <returns>The created <see cref="CpuBuffer"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="workSpaceHostBytes"/> is less than 0</exception>
+		/// <exception cref="OutOfMemoryException">If the requested number of bytes are too large to be allocated</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static CpuBuffer Create(long workSpaceHostBytes = 0, bool extraDeviceInfo = false)
+		{
+			return new(workSpaceHostBytes + (extraDeviceInfo ? sizeof(int) : 0));
+		}
+
+		/// <summary>
+		/// Create a <see cref="CpuBuffer"/> by indicating the number of elements (in <typeparamref name="T"/>) required on current CUDA device and host memory
+		/// </summary>
+		/// <typeparam name="T">The element type</typeparam>
+		/// <param name="workSpaceHostT">The number of elements required on host</param>
+		/// <param name="extraDeviceInfo">Whether to allocate the memory space for the extra device info (as a <see cref="int"/>) or not</param>
+		/// <returns>The created <see cref="CpuBuffer"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="workSpaceHostT"/> is less than 0</exception>
+		/// <exception cref="OutOfMemoryException">If the requested number of bytes are too large to be allocated</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe CpuBuffer Create<T>(int workSpaceHostT = 0, bool extraDeviceInfo = false) where T : unmanaged
+		{
+			return new((long)workSpaceHostT * sizeof(T) + (extraDeviceInfo ? sizeof(int) : 0));
+		}
+
+		/// <summary>
+		/// Release the not pooled allocated buffer(s) of this <see cref="CpuBuffer"/>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.hostBuffer is not null)
+				ArrayPool<byte>.Shared.Return(this.hostBuffer);
+		}
+	}
+
+
 	// Ignore Spelling: Xeon
 	/// <summary>
 	/// The enum for instruction sets of MKL

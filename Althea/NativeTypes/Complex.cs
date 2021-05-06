@@ -310,7 +310,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(ComplexDouble other)
 		{
-			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
+			return this.real == other.real && this.imag == other.imag;
 		}
 
 		/// <summary>
@@ -958,7 +958,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(ComplexSingle other)
 		{
-			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
+			return this.real == other.real && this.imag == other.imag;
 		}
 
 		/// <summary>
