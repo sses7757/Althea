@@ -2,8 +2,56 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
+
+
+namespace Althea.Backend.Cuda
+{
+	/// <summary>
+	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
+	/// </summary>
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check whether the input <see cref="CudaBlasStatus"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaBlasStatus"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaBlasStatus err)
+		{
+			if (err != CudaBlasStatus.Success)
+			{
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+
+		/// <summary>
+		/// Check whether the input <see cref="CudaSolverStatus"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaSolverStatus"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaSolverStatus err)
+		{
+			if (err != CudaSolverStatus.Success)
+			{
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void CheckDeviceInfo(this SolveMethodKind kind, IntPtr deviceInfo)
+		{
+			int info;
+			Storage.NativeMethods.cudaMemcpy((IntPtr)(&info), deviceInfo, sizeof(int), Storage.MemoryCopyKind.DeviceToHost).Check();
+			if (info > 0)
+				throw new MatrixSolveAlgorithmException(kind, info);
+			if (info < 0)
+				throw new ArgumentException(Resources.Parameter.InvalidValue, (-info).ToOrdinal());
+		}
+	}
+}
 
 namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 {
@@ -78,7 +126,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// </summary>
 		LicenseError = 16
 	}
-
 
 	/// <summary>
 	/// The returned status (errors) of the cuSOLVER (CUDA Solver) API calls
@@ -162,50 +209,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// </summary>
 		InvalidLicense = 11
 	}
-
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
-	/// </summary>
-	public static partial class StatusExtension
-	{
-		/// <summary>
-		/// Check whether the input <see cref="CudaBlasStatus"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaBlasStatus"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaBlasStatus err)
-		{
-			if (err != CudaBlasStatus.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
-
-		/// <summary>
-		/// Check whether the input <see cref="CudaSolverStatus"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaSolverStatus"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaSolverStatus err)
-		{
-			if (err != CudaSolverStatus.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe void CheckDeviceInfo(this SolveMethodKind kind, IntPtr deviceInfo)
-		{
-			int info;
-			Storage.NativeMethods.cudaMemcpy((IntPtr)(&info), deviceInfo, sizeof(int), Storage.MemoryCopyKind.DeviceToHost).Check();
-			if (info > 0)
-				throw new MatrixSolveAlgorithmException(kind, info);
-			if (info < 0)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, (-info).ToOrdinal());
-		}
-	}
-
 
 	/// <summary>
 	/// The <see cref="CuBlasPointerMode"/> enum indicates whether the scalar values are passed by reference on the host or device.<br/>

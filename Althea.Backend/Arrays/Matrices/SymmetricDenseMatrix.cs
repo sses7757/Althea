@@ -116,7 +116,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="positiveDefinite">Whether this matrix shall be a positive definite one after exit or simply symmetric / hermitian</param>
 		/// <param name="op">The simple operation to apply to <paramref name="normal"/> before the calculation as a <see cref="MatrixOperation"/></param>
 		/// <remarks><list type="table">
-		///  <listheader><term>(<paramref name="positiveDefinite"/>, <see cref="Hermitian"/>)</term>  <description>Actual Operation</description></listheader>
+		/// <listheader><term>(<paramref name="positiveDefinite"/>, <see cref="Hermitian"/>)</term>  <description>Actual Operation</description></listheader>
 		/// <item><term>(false, false)</term>  <description>0.5 * (<paramref name="normal"/> + <paramref name="normal"/>^T)</description></item>
 		/// <item><term>(false, true)</term>  <description>0.5 * (<paramref name="normal"/> + <paramref name="normal"/>^H)</description></item>
 		/// <item><term>(true, false)</term>  <description>(<paramref name="normal"/> * <paramref name="normal"/>^T)</description></item>

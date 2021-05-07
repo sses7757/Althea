@@ -178,6 +178,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The type &apos;{0}&apos; is not a complex type. 的本地化字符串。
+        /// </summary>
+        internal static string MismatchNotComplex {
+            get {
+                return ResourceManager.GetString("MismatchNotComplex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The type &apos;{1}&apos; is not a complex correspondence type of &apos;{0}&apos;. 的本地化字符串。
         /// </summary>
         internal static string MismatchNotComplexCorrespondence {
@@ -201,6 +210,15 @@ namespace Althea.Resources {
         internal static string MismatchNotInteger {
             get {
                 return ResourceManager.GetString("MismatchNotInteger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The type &apos;{0}&apos; is not a real type. 的本地化字符串。
+        /// </summary>
+        internal static string MismatchNotReal {
+            get {
+                return ResourceManager.GetString("MismatchNotReal", resourceCulture);
             }
         }
         

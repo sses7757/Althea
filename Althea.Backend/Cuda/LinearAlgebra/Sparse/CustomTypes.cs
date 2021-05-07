@@ -4,11 +4,41 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Backend.Cuda.LinearAlgebra.Dense;
+using Althea.Backend.Cuda.LinearAlgebra.Sparse;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.NativeTypes;
 
+namespace Althea.Backend.Cuda
+{
+	/// <summary>
+	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
+	/// </summary>
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check whether the input <see cref="CudaSparseStatus"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaSparseStatus"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaSparseStatus err)
+		{
+			if (err != CudaSparseStatus.Success)
+			{
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+
+		// TODO: sparse API
+		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged
+		////{
+		////	api.GetPointer(vector.Storage, out IntPtr p, out long length);
+		////	return new(api.InternalInfo, length, p, Const<T>.DataType.ToCudaDataType());
+		////}
+	}
+}
 
 namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 {
@@ -65,33 +95,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		/// The resources for the computation, such as GPU global or shared memory, are not sufficient to complete the operation. The error can also indicate that the current computation mode (e.g. bit size of sparse matrix indices) does not allow to handle the given input.
 		/// </summary>
 		InsufficientResource = 11,
-	}
-
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
-	/// </summary>
-	public static partial class StatusExtension
-	{
-		/// <summary>
-		/// Check whether the input <see cref="CudaSparseStatus"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaSparseStatus"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaSparseStatus err)
-		{
-			if (err != CudaSparseStatus.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
-
-		// TODO: sparse API
-		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged
-		////{
-		////	api.GetPointer(vector.Storage, out IntPtr p, out long length);
-		////	return new(api.InternalInfo, length, p, Const<T>.DataType.ToCudaDataType());
-		////}
 	}
 
 	/// <summary>

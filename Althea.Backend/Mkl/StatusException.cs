@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 
-namespace Althea.Backend.Cuda
+namespace Althea.Backend.Mkl
 {
 	/// <summary>
-	/// The exception that wraps CUDA errors: <see cref="CudaError"/>, <see cref="Cuda.Storage.CudaFileError"/>, ...
+	/// The exception that wraps MKL errors
 	/// </summary>
 	public class StatusException : AbstractStatusException
 	{
@@ -19,7 +19,7 @@ namespace Althea.Backend.Cuda
 		/// An status exception with only the overwritten <paramref name="message"/> given
 		/// </summary>
 		/// <param name="message"></param>
-		public StatusException(string? message): base(message) { }
+		public StatusException(string? message) : base(message) { }
 
 		/// <summary>
 		/// An status exception with only the overwritten <paramref name="message"/> and <paramref name="innerException"/> given
@@ -44,33 +44,20 @@ namespace Althea.Backend.Cuda
 		public StatusException(Enum error1, Enum error2, StackTrace? trace = null) : base(error1, error2, trace) { }
 
 		/// <summary>
-		/// statically get the module name (CUDA) of the this exception
+		/// statically get the module name (MKL) of the this exception
 		/// </summary>
 		protected override string ModuleName {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => "CUDA";
+			get => "MKL";
 		}
 	}
 
 
 	/// <summary>
-	/// The static class containing extension methods for <see cref="StatusException"/> and <see cref="CudaError"/>
+	/// The static class for <see cref="StatusException"/>
 	/// </summary>
 	public static partial class StatusExtension
 	{
-		/// <summary>
-		/// Check whether the input <see cref="CudaError"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaError"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaError err)
-		{
-			if (err != CudaError.Success)
-			{
-				if (err == CudaError.ErrorOutOfMemory)
-					throw new OutOfMemoryException();
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
+		
 	}
 }

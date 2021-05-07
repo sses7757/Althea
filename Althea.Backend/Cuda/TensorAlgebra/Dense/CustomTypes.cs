@@ -8,8 +8,30 @@ using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
-using Althea.Resources;
+using Althea.Backend.Cuda.TensorAlgebra.Dense;
 
+
+namespace Althea.Backend.Cuda
+{
+	/// <summary>
+	/// The static class containing extension methods for <see cref="CudaTensorStatus"/> and <see cref="CudaTensorStatus"/>
+	/// </summary>
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check whether the input <see cref="CudaTensorStatus"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaTensorStatus"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaTensorStatus err)
+		{
+			if (err != CudaTensorStatus.Success)
+			{
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+	}
+}
 
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 {
@@ -145,25 +167,6 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		/// Indicates an error related to file I/O.
 		/// </summary>
 		IOError = 21,
-	}
-
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaTensorStatus"/> and <see cref="CudaTensorStatus"/>
-	/// </summary>
-	public static partial class StatusExtension
-	{
-		/// <summary>
-		/// Check whether the input <see cref="CudaTensorStatus"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaTensorStatus"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaTensorStatus err)
-		{
-			if (err != CudaTensorStatus.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
 	}
 	#endregion
 

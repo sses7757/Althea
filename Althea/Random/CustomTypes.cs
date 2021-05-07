@@ -9,7 +9,7 @@ using Althea.NativeTypes;
 
 namespace Althea.Random
 {
-	#region interface
+	#region abstract
 	/// <summary>
 	/// The interface for the meta-data of a random number generator which generates random numbers from a certain random distribution.<br/>
 	/// The inherited <see cref="IReadOnlyList{T}"/> of <see cref="DataType"/> indicates the data type(s) of random variable(s) of this distribution.
@@ -27,6 +27,200 @@ namespace Althea.Random
 		/// <returns>The string representation of this <see cref="IRandomDistribution"/></returns>
 		string ToString();
 	}
+
+	/// <summary>
+	/// The abstract class for distributions whose data type(s) contain a real type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">An unmanaged real type as one of the data type(s)</typeparam>
+	public abstract class RealTypedDistribution<T> : IRandomDistribution where T : unmanaged
+	{
+		/// <summary>
+		/// Get the random seed of this <see cref="RealTypedDistribution{T}"/>. Null means let the internal implementation determine.
+		/// </summary>
+		public long? RandomSeed {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+		}
+
+		static RealTypedDistribution()
+		{
+			if (Const<T>.IsComplex)
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotReal);
+		}
+
+		/// <summary>
+		/// Initialize a <see cref="RealTypedDistribution{T}"/> with given random <paramref name="seed"/>
+		/// </summary>
+		/// <param name="seed">The given random seed</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected RealTypedDistribution(long? seed = null)
+		{
+			this.RandomSeed = seed;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, get the rank / number of dimensions of this distribution, always 1
+		/// </summary>
+		public abstract int Count { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the <see cref="DataType"/> at dimension <paramref name="index"/>
+		/// </summary>
+		/// <param name="index">The index, must be 0</param>
+		/// <returns>The <see cref="DataType"/> of <typeparamref name="T"/></returns>
+		public abstract DataType this[int index] { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the enumerator of the <see cref="DataType"/> of the dimensions of this distribution
+		/// </summary>
+		public abstract IEnumerator<DataType> GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+		/// <summary>
+		/// When implemented by a derived class, get the string representation of the property-value pairs of this <see cref="RealTypedDistribution{T}"/>
+		/// </summary>
+		protected virtual string PropertiesString => $"DataType={typeof(T).GetGenericString()}, Dimension={this.Count}" + (this.RandomSeed.HasValue ? $", {nameof(this.RandomSeed)}={this.RandomSeed}" : "");
+
+		/// <summary>
+		/// Get the string representation of this <see cref="RealTypedDistribution{T}"/>
+		/// </summary>
+		/// <returns>The string representation of this <see cref="RealTypedDistribution{T}"/></returns>
+		public override string ToString()
+		{
+			return this.GetType().Name + "[" + this.PropertiesString + "]";
+		}
+	}
+
+	/// <summary>
+	/// The abstract class for distributions whose data type(s) contain a floating point type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">An unmanaged floating point type as one of the data type(s)</typeparam>
+	public abstract class FloatTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void Check()
+		{
+			if (Const<T>.DataTypeClass == DataTypeClassification.SignedInteger || Const<T>.DataTypeClass == DataTypeClassification.UnsignedInteger)
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotFloat);
+		}
+
+		static FloatTypedDistribution()
+		{
+			Check();
+		}
+
+		/// <summary>
+		/// Initialize a <see cref="FloatTypedDistribution{T}"/> with given random <paramref name="seed"/>
+		/// </summary>
+		/// <param name="seed">The given random seed</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected FloatTypedDistribution(long? seed = null) : base(seed) { }
+	}
+
+	/// <summary>
+	/// The abstract class for distributions whose data type(s) contain an integral type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">An unmanaged integral type as one of the data type(s)</typeparam>
+	public abstract class IntegerTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void Check()
+		{
+			if (Const<T>.DataTypeClass != DataTypeClassification.SignedInteger && Const<T>.DataTypeClass != DataTypeClassification.UnsignedInteger)
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
+		}
+
+		static IntegerTypedDistribution()
+		{
+			Check();
+		}
+
+		/// <summary>
+		/// Initialize a <see cref="IntegerTypedDistribution{T}"/> with given random <paramref name="seed"/>
+		/// </summary>
+		/// <param name="seed">The given random seed</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected IntegerTypedDistribution(long? seed = null) : base(seed) { }
+	}
+
+	/// <summary>
+	/// The abstract class for one-dimensional distributions whose data type is a real type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">An unmanaged real type as the data type</typeparam>
+	public abstract class OneDimensionalRealTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged
+	{
+		/// <summary>
+		/// Initialize a <see cref="OneDimensionalRealTypedDistribution{T}"/> with given random <paramref name="seed"/>
+		/// </summary>
+		/// <param name="seed">The given random seed</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected OneDimensionalRealTypedDistribution(long? seed = null) : base(seed) { }
+
+		/// <summary>
+		/// Get the rank / number of dimensions of this distribution, always 1
+		/// </summary>
+		public override int Count {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1;
+		}
+
+		/// <summary>
+		/// Get the <see cref="DataType"/> at dimension <paramref name="index"/>
+		/// </summary>
+		/// <param name="index">The index, must be 0</param>
+		/// <returns>The <see cref="DataType"/> of <typeparamref name="T"/></returns>
+		public override DataType this[int index] {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => index == 0 ? Const<T>.DataType : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+		}
+
+		/// <summary>
+		/// Get the enumerator of the <see cref="DataType"/> of the dimensions of this distribution
+		/// </summary>
+		public override IEnumerator<DataType> GetEnumerator()
+		{
+			yield return Const<T>.DataType;
+		}
+	}
+
+	/// <summary>
+	/// The abstract class for one-dimensional distributions whose data type is a floating point type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">An unmanaged floating point type as the data type</typeparam>
+	public abstract class OneDimensionalFloatTypedDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
+	{
+		static OneDimensionalFloatTypedDistribution()
+		{
+			FloatTypedDistribution<T>.Check();
+		}
+
+		/// <summary>
+		/// Initialize a <see cref="OneDimensionalFloatTypedDistribution{T}"/> with given random <paramref name="seed"/>
+		/// </summary>
+		/// <param name="seed">The given random seed</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected OneDimensionalFloatTypedDistribution(long? seed = null) : base(seed) { }
+	}
+
+	/// <summary>
+	/// The abstract class for one-dimensional distributions whose data type is an integral type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">An unmanaged integral type as the data type</typeparam>
+	public abstract class OneDimensionalIntegerTypedDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
+	{
+		static OneDimensionalIntegerTypedDistribution()
+		{
+			IntegerTypedDistribution<T>.Check();
+		}
+
+		/// <summary>
+		/// Initialize a <see cref="OneDimensionalIntegerTypedDistribution{T}"/> with given random <paramref name="seed"/>
+		/// </summary>
+		/// <param name="seed">The given random seed</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected OneDimensionalIntegerTypedDistribution(long? seed = null) : base(seed) { }
+	}
 	#endregion
 
 	#region uniform
@@ -34,22 +228,23 @@ namespace Althea.Random
 	/// The class for a one-dimensional uniform distribution
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class UniformDistribution<T> : IRandomDistribution, IMainPropertyFormat where T : unmanaged
+	public class UniformDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
 	{
-		/// <summary>
-		/// Get the random seed of this uniform distribution, null means let the internal implementation determine
-		/// </summary>
-		public long? RandomSeed { get; }
-
 		/// <summary>
 		/// Get the inclusive lower bound of this one-dimensional uniform distribution
 		/// </summary>
-		public T LowerBound { get; }
+		public T LowerBound {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+		}
 
 		/// <summary>
 		/// Get the exclusive upper bound of this one-dimensional uniform distribution
 		/// </summary>
-		public T UpperBound { get; }
+		public T UpperBound {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+		}
 
 		/// <summary>
 		/// Create a new <see cref="UniformDistribution{T}"/> with the given <paramref name="lower"/> and <paramref name="upper"/> bounds and the random <paramref name="seed"/>
@@ -57,77 +252,24 @@ namespace Althea.Random
 		/// <param name="upper">The inclusive lower bound of this one-dimensional uniform distribution</param>
 		/// <param name="lower">The exclusive upper bound of this one-dimensional uniform distribution</param>
 		/// <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
-		public UniformDistribution(T upper, T lower = default, long? seed = null)
+		public UniformDistribution(T upper, T lower = default, long? seed = null) : base(seed)
 		{
-			this.UpperBound = upper; this.LowerBound = lower; this.RandomSeed = seed;
+			this.UpperBound = upper; this.LowerBound = lower;
 		}
 
 		/// <summary>
 		/// Create a new <see cref="UniformDistribution{T}"/> with the given random <paramref name="seed"/> and lower and upper bond equaling to 0 and 1 respectively.
 		/// </summary>
 		/// <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
-		public UniformDistribution(long? seed = null)
+		public UniformDistribution(long? seed = null) : base(seed)
 		{
-			this.UpperBound = Const<T>.One; this.LowerBound = Const<T>.Zero; this.RandomSeed = seed;
+			this.UpperBound = Const<T>.One; this.LowerBound = Const<T>.Zero;
 		}
 
 		/// <summary>
-		/// Get the number of random variables of this uniform distribution
+		/// Get the string representation of the property-value pairs of this <see cref="UniformDistribution{T}"/>
 		/// </summary>
-		public int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
-
-		/// <summary>
-		/// Get the <see cref="DataType"/> of the random variable at <paramref name="index"/>
-		/// </summary>
-		/// <param name="index">The index of the random variable</param>
-		/// <returns>The <see cref="DataType"/> of the random variable at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public DataType this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index != 0 ? throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) : Const<T>.DataType;
-		}
-
-		/// <summary>
-		/// Get the <see cref="IEnumerator{T}"/> of <see cref="DataType"/> of the random variable of this uniform distribution 
-		/// </summary>
-		/// <returns>The <see cref="IEnumerator{T}"/> of <see cref="DataType"/> of the random variable</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IEnumerator<DataType> GetEnumerator()
-		{
-			yield return Const<T>.DataType;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-		string IMainPropertyFormat.StringMain {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => nameof(UniformDistribution<T>);
-		}
-
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => new KeyValuePair<string, object?>[]
-			{
-				new("Dimension", 1),
-				new(nameof(this.RandomSeed), this.RandomSeed),
-				new(nameof(DataType), typeof(T).GetGenericString()),
-				new(nameof(this.LowerBound), this.LowerBound),
-				new(nameof(this.UpperBound), this.UpperBound),
-			};
-		}
-
-		/// <summary>
-		/// Get the string representation of this uniform distribution 
-		/// </summary>
-		/// <returns>The string representation of this uniform distribution</returns>
-		public override string ToString()
-		{
-			return ((IMainPropertyFormat)this).ToString();
-		}
+		protected override string PropertiesString => base.PropertiesString + $", {nameof(this.LowerBound)}={this.LowerBound}, {nameof(this.UpperBound)}={this.UpperBound}";
 	}
 	#endregion
 
@@ -136,77 +278,13 @@ namespace Althea.Random
 	/// The class for a one-dimensional distribution that randomizes each bit
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class RandomBitsDistribution<T> : IRandomDistribution, IMainPropertyFormat where T : unmanaged
+	public class RandomBitsDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
 	{
-		/// <summary>
-		/// Get the random seed of this uniform distribution, null means let the internal implementation determine
-		/// </summary>
-		public long? RandomSeed { get; }
-
 		/// <summary>
 		/// Create a new <see cref="UniformDistribution{T}"/> with the given random <paramref name="seed"/>
 		/// </summary>
 		/// <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
-		public RandomBitsDistribution(long? seed = null)
-		{
-			this.RandomSeed = seed;
-		}
-
-		/// <summary>
-		/// Get the number of random variables of this uniform distribution
-		/// </summary>
-		public int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
-
-		/// <summary>
-		/// Get the <see cref="DataType"/> of the random variable at <paramref name="index"/>
-		/// </summary>
-		/// <param name="index">The index of the random variable</param>
-		/// <returns>The <see cref="DataType"/> of the random variable at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public DataType this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index != 0 ? throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) : Const<T>.DataType;
-		}
-
-		/// <summary>
-		/// Get the <see cref="IEnumerator{T}"/> of <see cref="DataType"/> of the random variable of this uniform distribution 
-		/// </summary>
-		/// <returns>The <see cref="IEnumerator{T}"/> of <see cref="DataType"/> of the random variable</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IEnumerator<DataType> GetEnumerator()
-		{
-			yield return Const<T>.DataType;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-		string IMainPropertyFormat.StringMain {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => nameof(UniformDistribution<T>);
-		}
-
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => new KeyValuePair<string, object?>[]
-			{
-				new("Dimension", 1),
-				new(nameof(this.RandomSeed), this.RandomSeed),
-				new(nameof(DataType), typeof(T).GetGenericString()),
-			};
-		}
-
-		/// <summary>
-		/// Get the string representation of this uniform distribution 
-		/// </summary>
-		/// <returns>The string representation of this uniform distribution</returns>
-		public override string ToString()
-		{
-			return ((IMainPropertyFormat)this).ToString();
-		}
+		public RandomBitsDistribution(long? seed = null) : base(seed) { }
 	}
 	#endregion
 

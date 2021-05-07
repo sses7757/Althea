@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using Althea.Backend.Cuda.Storage;
 using Althea.Helpers;
 
 
@@ -576,57 +577,6 @@ namespace Althea.Backend.Cuda.Storage
 			return this.IsSuccess ? "Success" : this.fileOpResult == CudaFileOpError.CudaDriverError ? this.driverResult.ToString() : this.fileOpResult.ToString();
 		}
 	}
-
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaFileError"/> and <see cref="CudaFileOpError"/>
-	/// </summary>
-	public static partial class StatusExtension
-	{
-		/// <summary>
-		/// Check whether the input <see cref="CudaFileError"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaFileError"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaFileError err)
-		{
-			if (err.IsSuccess)
-			{
-				if (err.fileOpResult == CudaFileOpError.CudaDriverError)
-					throw new StatusException(err.fileOpResult, err.driverResult, new StackTrace(0));
-				else
-					throw new StatusException(err.fileOpResult, new StackTrace(0));
-			}
-		}
-
-		/// <summary>
-		/// Check whether the input <see cref="CudaFileOpError"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaFileOpError"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaFileOpError err)
-		{
-			if (err != CudaFileOpError.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
-
-		/// <summary>
-		/// Check whether the output of <see cref="NativeMethods.cuFileRead"/> and <see cref="NativeMethods.cuFileWrite"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaFileOpError"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void Check(this long err)
-		{
-			if (err < 0)
-			{
-				if (err <= -(int)CudaFileOpError.DriverNotInitialized)
-					throw new StatusException((CudaFileOpError)(int)err, new StackTrace(0));
-				else
-					throw new System.IO.IOException(Resource.CuFileFS, (int)err);
-			}
-		}
-	}
 	#endregion
 
 	#region CUDA file structures
@@ -874,4 +824,58 @@ namespace Althea.Backend.Cuda.Storage
 		public override string ToString() => this.pointer.ToString("X");
 	}
 	#endregion
+}
+
+namespace Althea.Backend.Cuda
+{
+	/// <summary>
+	/// The static class containing extension methods for <see cref="CudaFileError"/> and <see cref="CudaFileOpError"/>
+	/// </summary>
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check whether the input <see cref="CudaFileError"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaFileError"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaFileError err)
+		{
+			if (err.IsSuccess)
+			{
+				if (err.fileOpResult == CudaFileOpError.CudaDriverError)
+					throw new StatusException(err.fileOpResult, err.driverResult, new StackTrace(0));
+				else
+					throw new StatusException(err.fileOpResult, new StackTrace(0));
+			}
+		}
+
+		/// <summary>
+		/// Check whether the input <see cref="CudaFileOpError"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaFileOpError"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaFileOpError err)
+		{
+			if (err != CudaFileOpError.Success)
+			{
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+
+		/// <summary>
+		/// Check whether the output of <see cref="NativeMethods.cuFileRead"/> and <see cref="NativeMethods.cuFileWrite"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaFileOpError"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void Check(this long err)
+		{
+			if (err < 0)
+			{
+				if (err <= -(int)CudaFileOpError.DriverNotInitialized)
+					throw new StatusException((CudaFileOpError)(int)err, new StackTrace(0));
+				else
+					throw new System.IO.IOException(Resource.CuFileFS, (int)err);
+			}
+		}
+	}
 }

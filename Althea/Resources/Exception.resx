@@ -156,6 +156,9 @@
   <data name="MismatchCannotConvert" xml:space="preserve">
     <value>There is no conversion from '{0}' to '{1}'.</value>
   </data>
+  <data name="MismatchNotComplex" xml:space="preserve">
+    <value>The type '{0}' is not a complex type.</value>
+  </data>
   <data name="MismatchNotComplexCorrespondence" xml:space="preserve">
     <value>The type '{1}' is not a complex correspondence type of '{0}'.</value>
   </data>
@@ -164,6 +167,9 @@
   </data>
   <data name="MismatchNotInteger" xml:space="preserve">
     <value>The type '{0}' is not an integral type.</value>
+  </data>
+  <data name="MismatchNotReal" xml:space="preserve">
+    <value>The type '{0}' is not a real type.</value>
   </data>
   <data name="MismatchNotRealCorrespondence" xml:space="preserve">
     <value>The type '{1}' is not a real correspondence type of '{0}'.</value>

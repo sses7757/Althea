@@ -3298,6 +3298,11 @@
             The given type is not an floating point type
             </summary>
         </member>
+        <member name="F:Althea.Helpers.TypeMismatchException.MismatchReason.NotReal">
+            <summary>
+            The given type is not a real type
+            </summary>
+        </member>
         <member name="M:Althea.Helpers.TypeMismatchException.#ctor">
             <summary>
             Empty <see cref="T:Althea.Helpers.TypeMismatchException"/>
@@ -4871,7 +4876,31 @@
             <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
             <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``1(System.Span{``0},System.Span{System.Int64},System.Int32,System.String,System.String)">
+        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.ReadOnlySpan{``0},System.Int32,System.String,System.String)">
+            <summary>
+            Print out 1D array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="input">The dense vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``1(System.Span{``0},System.ReadOnlySpan{System.Int64},System.Int32,System.String,System.String)">
+            <summary>
+            Print out 1D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="values">The values of the sparse vector to print</param>
+            <param name="indices">The indices of the sparse vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{System.Int64},System.Int32,System.String,System.String)">
             <summary>
             Print out 1D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
             </summary>
@@ -4899,7 +4928,36 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``1(System.Span{``0},System.Span{System.Int64},System.Span{System.Int64},System.Int32,System.String,System.String)">
+        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.ReadOnlySpan{``0},System.Int32,System.Int64,System.Int32,System.String,System.String)">
+            <summary>
+            Print out 2D array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="matrix">The column-major values of the dense matrix to print</param>
+            <param name="rows">The number of rows of the given matrix</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``1(System.Span{``0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.Int32,System.String,System.String)">
+            <summary>
+            Print out 2D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="values">The values of the sparse matrix to print</param>
+            <param name="indx">The row indices of the sparse matrix to print</param>
+            <param name="indy">The column indices of the sparse matrix to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.Int32,System.String,System.String)">
             <summary>
             Print out 2D sparse array by <see cref="T:Althea.Helpers.Settings"/> or the override <paramref name="precision"/> settings.
             </summary>
@@ -4932,6 +4990,20 @@
             <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
             <returns>The new array alike <paramref name="array"/> after applying <paramref name="action"/></returns>
         </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.MatrixMultiply``1(System.Int32,System.Int32,System.Int32,System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Boolean,System.Boolean)">
+            <summary>
+            Perform generic typed inner product of two matrices <paramref name="left"/> and <paramref name="right"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="m">number of rows of <paramref name="transLeft"/>(<paramref name="left"/>)</param>
+            <param name="n">number of columns of <paramref name="transRight"/>(<paramref name="right"/>)</param>
+            <param name="k">number of columns of <paramref name="transLeft"/>(<paramref name="left"/>) and rows of <paramref name="transRight"/>(<paramref name="right"/>)</param>
+            <param name="left">The left matrix as a <see cref="T:System.ReadOnlySpan`1"/></param>
+            <param name="right">The right matrix as a <see cref="T:System.ReadOnlySpan`1"/></param>
+            <param name="transLeft">Transpose <paramref name="left"/> matrix or not</param>
+            <param name="transRight">Transpose <paramref name="right"/> matrix or not</param>
+            <returns>The result matrix as a <c><typeparamref name="T"/>[]</c></returns>
+        </member>
         <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0},System.Func{System.Int32,System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
             <summary>
             Perform general inner product of two matrices <paramref name="left"/> and <paramref name="right"/> with <paramref name="multiply"/> as general multiplication
@@ -4947,7 +5019,7 @@
             <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
             <param name="newZero">The function used to create a new output element with value of a general zero</param>
             <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-            <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
+            <returns>the result matrix as a <c><typeparamref name="TO"/>[]</c></returns>
         </member>
         <member name="M:Althea.Helpers.ExtensionHelper.InnerProduct``3(System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0},System.Func{System.Int32,``1},System.Func{``0,``1,``2},System.Func{``2},System.Action{``2,``2})">
             <summary>
@@ -5910,12 +5982,22 @@
         </member>
         <member name="F:Althea.LinearAlgebra.SolveMethodKind.Eigenvalue">
             <summary>
-            Eigenvalue decomposition, [S|D|C|Z]syevd[x]
+            Eigenvalue decomposition (for symmetric matrices), [S|D|C|Z]syev[x]
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.SolveMethodKind.NonSymmetricEigenvalue">
+            <summary>
+            Non-symmetric eigenvalue decomposition, [S|D|C|Z]geev[x]
             </summary>
         </member>
         <member name="F:Althea.LinearAlgebra.SolveMethodKind.GeneralEigen">
             <summary>
-            General eigenvalue decomposition, [S|D|C|Z]sygvd[x]
+            General eigenvalue decomposition (for symmetric matrices), [S|D|C|Z]sygv[x]
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.SolveMethodKind.NonSymmetricGenearlEigenvalue">
+            <summary>
+            Non-symmetric eigenvalue decomposition, [S|D|C|Z]geev[x]
             </summary>
         </member>
         <member name="F:Althea.LinearAlgebra.SolveMethodKind.Jacobi">
@@ -7537,7 +7619,7 @@
             The operations:
             <list type="bullet">
             <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenSpecialMatrixGeneral``2(Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
-            <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
+            <item><see cref="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)"/></item>
             <item>etc.</item>
             </list>
             </remarks>
@@ -7616,16 +7698,17 @@
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+            Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
             <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
             <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
             <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+            <param name="α">The output numerator of the eigenvalues, must be preallocated, of corresponding complex type <typeparamref name="TComplex"/></param>
+            <param name="β">The output denominator of the eigenvalues, must be preallocated, of type <typeparamref name="T"/></param>
             <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
             <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
             <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
@@ -7635,7 +7718,7 @@
             <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="α"/> or <paramref name="β"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -7791,16 +7874,17 @@
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral_``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.AbstractApi.EigenGeneralMatrixGeneral_``2(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,Althea.Storage{``1},Althea.Storage{``0},Althea.Storage{``1},System.Int64,Althea.Storage{``1},System.Int64,Althea.Storage{``0},System.Int64,Althea.Storage{``0},System.Int64)">
             <summary>
-            When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
+            When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
             </summary>
             <typeparam name="T">Any unmanaged struct as the input data type</typeparam>
             <typeparam name="TComplex">Any unmanaged struct as the complex corresponding type of <typeparamref name="T"/></typeparam>
             <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
             <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="valOut">The output eigenvalues, must be preallocated, of corresponding complex type</param>
+            <param name="α">The output numerator of the eigenvalues, must be preallocated, of corresponding complex type <typeparamref name="TComplex"/></param>
+            <param name="β">The output denominator of the eigenvalues, must be preallocated, of type <typeparamref name="T"/></param>
             <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
             <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
             <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
@@ -7810,7 +7894,7 @@
             <param name="B">The input general matrix to calculate general eigen-problem; if <c><paramref name="B"/> is null</c>, the normal eigen is performed and <paramref name="type"/> is not used; otherwise, the general one is performed</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="α"/> or <paramref name="β"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComplex"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -12931,16 +13015,109 @@
             </summary>
             <returns>The string representation of this <see cref="T:Althea.Random.IRandomDistribution"/></returns>
         </member>
+        <member name="T:Althea.Random.RealTypedRandomDistribution`1">
+            <summary>
+            The abstract class for distributions whose data type(s) contain a real type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">An unmanaged real type as one of the data type(s)</typeparam>
+        </member>
+        <member name="P:Althea.Random.RealTypedRandomDistribution`1.RandomSeed">
+            <summary>
+            Get the random seed of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/>. Null means let the internal implementation determine.
+            </summary>
+        </member>
+        <member name="M:Althea.Random.RealTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Initialize a <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The given random seed</param>
+        </member>
+        <member name="P:Althea.Random.RealTypedRandomDistribution`1.Count">
+            <summary>
+            When implemented by a derived class, get the rank / number of dimensions of this distribution, always 1
+            </summary>
+        </member>
+        <member name="P:Althea.Random.RealTypedRandomDistribution`1.Item(System.Int32)">
+            <summary>
+            When implemented by a derived class, get the <see cref="T:Althea.NativeTypes.DataType"/> at dimension <paramref name="index"/>
+            </summary>
+            <param name="index">The index, must be 0</param>
+            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of <typeparamref name="T"/></returns>
+        </member>
+        <member name="M:Althea.Random.RealTypedRandomDistribution`1.GetEnumerator">
+            <summary>
+            When implemented by a derived class, get the enumerator of the <see cref="T:Althea.NativeTypes.DataType"/> of the dimensions of this distribution
+            </summary>
+        </member>
+        <member name="P:Althea.Random.RealTypedRandomDistribution`1.PropertiesString">
+            <summary>
+            When implemented by a derived class, get the string representation of the property-value pairs of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Random.RealTypedRandomDistribution`1.ToString">
+            <summary>
+            Get the string representation of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/>
+            </summary>
+            <returns>The string representation of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/></returns>
+        </member>
+        <member name="T:Althea.Random.FloatTypedRandomDistribution`1">
+            <summary>
+            The abstract class for distributions whose data type(s) contain a floating point type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">An unmanaged floating point type as one of the data type(s)</typeparam>
+        </member>
+        <member name="M:Althea.Random.FloatTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Initialize a <see cref="T:Althea.Random.FloatTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The given random seed</param>
+        </member>
+        <member name="T:Althea.Random.IntegerTypedRandomDistribution`1">
+            <summary>
+            The abstract class for distributions whose data type(s) contain an integral type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">An unmanaged integral type as one of the data type(s)</typeparam>
+        </member>
+        <member name="M:Althea.Random.IntegerTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Initialize a <see cref="T:Althea.Random.IntegerTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The given random seed</param>
+        </member>
+        <member name="T:Althea.Random.OneDimensionalRealTypedRandomDistribution`1">
+            <summary>
+            The abstract class for one-dimensional distributions whose data type is a real type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">An unmanaged real type as the data type</typeparam>
+        </member>
+        <member name="M:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Initialize a <see cref="T:Althea.Random.OneDimensionalRealTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The given random seed</param>
+        </member>
+        <member name="P:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.Count">
+            <summary>
+            Get the rank / number of dimensions of this distribution, always 1
+            </summary>
+        </member>
+        <member name="P:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.Item(System.Int32)">
+            <summary>
+            Get the <see cref="T:Althea.NativeTypes.DataType"/> at dimension <paramref name="index"/>
+            </summary>
+            <param name="index">The index, must be 0</param>
+            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of <typeparamref name="T"/></returns>
+        </member>
+        <member name="M:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.GetEnumerator">
+            <summary>
+            Get the enumerator of the <see cref="T:Althea.NativeTypes.DataType"/> of the dimensions of this distribution
+            </summary>
+        </member>
         <member name="T:Althea.Random.UniformDistribution`1">
             <summary>
             The class for a one-dimensional uniform distribution
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Random.UniformDistribution`1.RandomSeed">
-            <summary>
-            Get the random seed of this uniform distribution, null means let the internal implementation determine
-            </summary>
         </member>
         <member name="P:Althea.Random.UniformDistribution`1.LowerBound">
             <summary>
@@ -12966,30 +13143,10 @@
             </summary>
             <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
         </member>
-        <member name="P:Althea.Random.UniformDistribution`1.Count">
+        <member name="P:Althea.Random.UniformDistribution`1.PropertiesString">
             <summary>
-            Get the number of random variables of this uniform distribution
+            Get the string representation of the property-value pairs of this <see cref="T:Althea.Random.UniformDistribution`1"/>
             </summary>
-        </member>
-        <member name="P:Althea.Random.UniformDistribution`1.Item(System.Int32)">
-            <summary>
-            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
-            </summary>
-            <param name="index">The index of the random variable</param>
-            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Random.UniformDistribution`1.GetEnumerator">
-            <summary>
-            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
-            </summary>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
-        </member>
-        <member name="M:Althea.Random.UniformDistribution`1.ToString">
-            <summary>
-            Get the string representation of this uniform distribution 
-            </summary>
-            <returns>The string representation of this uniform distribution</returns>
         </member>
         <member name="T:Althea.Random.RandomBitsDistribution`1">
             <summary>
@@ -12997,41 +13154,11 @@
             </summary>
             <typeparam name="T">Any unmanaged struct as the data type</typeparam>
         </member>
-        <member name="P:Althea.Random.RandomBitsDistribution`1.RandomSeed">
-            <summary>
-            Get the random seed of this uniform distribution, null means let the internal implementation determine
-            </summary>
-        </member>
         <member name="M:Althea.Random.RandomBitsDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
             Create a new <see cref="T:Althea.Random.UniformDistribution`1"/> with the given random <paramref name="seed"/>
             </summary>
             <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
-        </member>
-        <member name="P:Althea.Random.RandomBitsDistribution`1.Count">
-            <summary>
-            Get the number of random variables of this uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Random.RandomBitsDistribution`1.Item(System.Int32)">
-            <summary>
-            Get the <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/>
-            </summary>
-            <param name="index">The index of the random variable</param>
-            <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of the random variable at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Random.RandomBitsDistribution`1.GetEnumerator">
-            <summary>
-            Get the <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable of this uniform distribution 
-            </summary>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerator`1"/> of <see cref="T:Althea.NativeTypes.DataType"/> of the random variable</returns>
-        </member>
-        <member name="M:Althea.Random.RandomBitsDistribution`1.ToString">
-            <summary>
-            Get the string representation of this uniform distribution 
-            </summary>
-            <returns>The string representation of this uniform distribution</returns>
         </member>
         <member name="T:Althea.Random.SimpleJointRandomDistribution">
             <summary>
@@ -13153,6 +13280,16 @@
               查找类似 LU factorization failed since matrix A (U) is singular: U({0}, {0}) = 0. 的本地化字符串。
             </summary>
         </member>
+        <member name="P:Althea.Resources.Exception.MatrixSolveNonSymmEigen">
+            <summary>
+              查找类似 Eigenvalue decomposition for non-symmetric matrix failed since the internal QR failed to compute all the eigenvalues. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Resources.Exception.MatrixSolveNonSymmGeneralEigen">
+            <summary>
+              查找类似 General eigenvalue decomposition for non-symmetric matrices failed since the internal QZ iteration failed to compute all the eigenvalues. 的本地化字符串。
+            </summary>
+        </member>
         <member name="P:Althea.Resources.Exception.MatrixSolveQR">
             <summary>
               查找类似 QR factorization failed for unknown reasons. 的本地化字符串。
@@ -13173,6 +13310,11 @@
               查找类似 There is no conversion from &apos;{0}&apos; to &apos;{1}&apos;. 的本地化字符串。
             </summary>
         </member>
+        <member name="P:Althea.Resources.Exception.MismatchNotComplex">
+            <summary>
+              查找类似 The type &apos;{0}&apos; is not a complex type. 的本地化字符串。
+            </summary>
+        </member>
         <member name="P:Althea.Resources.Exception.MismatchNotComplexCorrespondence">
             <summary>
               查找类似 The type &apos;{1}&apos; is not a complex correspondence type of &apos;{0}&apos;. 的本地化字符串。
@@ -13186,6 +13328,11 @@
         <member name="P:Althea.Resources.Exception.MismatchNotInteger">
             <summary>
               查找类似 The type &apos;{0}&apos; is not an integral type. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Resources.Exception.MismatchNotReal">
+            <summary>
+              查找类似 The type &apos;{0}&apos; is not a real type. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Resources.Exception.MismatchNotRealCorrespondence">

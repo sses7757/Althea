@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace Althea.Helpers
 {
+	// TODO: thread static
 	#region print setting
 	/// <summary>
 	/// The structure for print settings

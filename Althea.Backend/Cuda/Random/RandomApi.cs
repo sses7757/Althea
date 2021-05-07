@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 
 using Althea.Backend.Storage;
 using Althea.NativeTypes;
@@ -35,7 +34,7 @@ namespace Althea.Backend.Cuda.Random
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged
 		{
-			if (s is null || !s.IsValid() || s.Count != 1)
+			if (s is null || !s.IsValid() || s.Count != 1 || !Supported(s.LocationDescription))
 				return default;
 			if (s[0].Pointer is not IMemoryPointer mp)
 				return default;
@@ -74,7 +73,7 @@ namespace Althea.Backend.Cuda.Random
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalOrLogNormalDistribution<T>? normal, out PoissonDistribution<T>? poisson) where T : unmanaged
+		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out PoissonDistribution<T>? poisson) where T : unmanaged
 		{
 			pointer = default; length = 0;
 			if (storage is null)
@@ -85,7 +84,7 @@ namespace Althea.Backend.Cuda.Random
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 			uniform = distribution as UniformDistribution<T>;
 			bits = distribution as RandomBitsDistribution<T>;
-			normal = distribution as NormalOrLogNormalDistribution<T>;
+			normal = distribution as NormalDistribution<T>;
 			poisson = distribution as PoissonDistribution<T>;
 			var ss = storage[0];
 			if (storage.Count != 1 || ss.Pointer is not IMemoryPointer p)
@@ -115,7 +114,7 @@ namespace Althea.Backend.Cuda.Random
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Generate<T>(Storage<T> s, IntPtr p, long length, UniformDistribution<T>? uniform, RandomBitsDistribution<T>? bits, NormalOrLogNormalDistribution<T>? normal, PoissonDistribution<T>? poisson) where T : unmanaged
+		private unsafe void Generate<T>(Storage<T> s, IntPtr p, long length, UniformDistribution<T>? uniform, RandomBitsDistribution<T>? bits, NormalDistribution<T>? normal, PoissonDistribution<T>? poisson) where T : unmanaged
 		{
 			if (uniform is not null)
 			{

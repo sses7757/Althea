@@ -1,259 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-using Althea.Helpers;
-using Althea.NativeTypes;
-using Althea.Random;
+using Althea.Backend.Cuda.Random;
 
 
 namespace Althea.Backend.Cuda.Random
 {
-	#region distributions
-	/// <summary>
-	/// The class for a one-dimensional (log) normal distribution of type <typeparamref name="T"/>, implements <see cref="IRandomDistribution"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
-	public class NormalOrLogNormalDistribution<T> : IRandomDistribution, IEquatable<NormalOrLogNormalDistribution<T>> where T : unmanaged
-	{
-		/// <summary>
-		/// Get the mean value of this (log) normal distribution
-		/// </summary>
-		public T Mean {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-		}
-
-		/// <summary>
-		/// Get the standard deviation value of this (log) normal distribution
-		/// </summary>
-		public T StandardDeviation {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-		}
-
-		/// <summary>
-		/// Get the desired random seed of this distribution
-		/// </summary>
-		public long? RandomSeed {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-		} = null;
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this is a log normal or simply normal distribution
-		/// </summary>
-		public bool IsLogNormal {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-		} = false;
-
-		/// <summary>
-		/// Create a standard normal distribution with mean = 0 and standard deviation = 1, and random seed is not set
-		/// </summary>
-		public NormalOrLogNormalDistribution()
-		{
-			this.Mean = Const<T>.Zero; this.StandardDeviation = Const<T>.One;
-		}
-
-		/// <summary>
-		/// Create a (log) normal distribution with given <paramref name="mean"/>, <paramref name="stddev"/> and the random <paramref name="seed"/>
-		/// </summary>
-		/// <param name="mean">The given mean value</param>
-		/// <param name="stddev">The given standard deviation</param>
-		/// <param name="logNormal">Whether creating a log normal or simply normal distribution</param>
-		/// <param name="seed">The given random seed, default null means has no preferred random seed</param>
-		public NormalOrLogNormalDistribution(T mean, T stddev, bool logNormal = false, long? seed = null)
-		{
-			this.StandardDeviation = stddev; this.Mean = mean; this.IsLogNormal = logNormal; this.RandomSeed = seed;
-		}
-
-		/// <summary>
-		/// Get the <see cref="DataType"/> of <typeparamref name="T"/>
-		/// </summary>
-		/// <param name="index">The index, must be 0</param>
-		/// <returns>The <see cref="DataType"/> of <typeparamref name="T"/></returns>
-		public DataType this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (index != 0)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
-				return Const<T>.DataType;
-			}
-		}
-
-		/// <summary>
-		/// Get the rank / number of dimensions of this distribution, always 1
-		/// </summary>
-		public int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
-
-		/// <summary>
-		/// Get the enumerator of the <see cref="DataType"/> of the dimensions of this distribution
-		/// </summary>
-		public IEnumerator<DataType> GetEnumerator()
-		{
-			yield return Const<T>.DataType;
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-		/// <summary>
-		/// Check whether the <paramref name="other"/> <see cref="NormalOrLogNormalDistribution{T}"/> represents the same distribution as this one
-		/// </summary>
-		/// <param name="other">The other <see cref="NormalOrLogNormalDistribution{T}"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(NormalOrLogNormalDistribution<T>? other)
-		{
-			if (other is null)
-				return false;
-			if (ReferenceEquals(this, other))
-				return true;
-			return this.IsLogNormal == other.IsLogNormal && this.Mean.IsEqual(other.Mean) && this.StandardDeviation.IsEqual(other.StandardDeviation) && this.RandomSeed == other.RandomSeed;
-		}
-
-		/// <summary>
-		/// Check whether the given <paramref name="obj"/> represents the same distribution as this one
-		/// </summary>
-		/// <param name="obj">The other <see cref="object"/> to compare</param>
-		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj)
-		{
-			return this.Equals(obj as NormalOrLogNormalDistribution<T>);
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="NormalOrLogNormalDistribution{T}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="NormalOrLogNormalDistribution{T}"/></returns>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.IsLogNormal, this.Mean, this.StandardDeviation, this.RandomSeed);
-		}
-
-		/// <summary>
-		/// Get the string representation of this <see cref="NormalOrLogNormalDistribution{T}"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="NormalOrLogNormalDistribution{T}"/></returns>
-		public override string ToString()
-		{
-			return (this.IsLogNormal ? "Log" : "") + nameof(NormalOrLogNormalDistribution<T>) + $"[DataType={typeof(T).GetGenericString()}, {nameof(this.Mean)}={this.Mean}, {nameof(this.StandardDeviation)}={this.StandardDeviation}" + (this.RandomSeed.HasValue ? $", {nameof(this.RandomSeed)}={this.RandomSeed}]" : "]");
-		}
-	}
-
-
-	/// <summary>
-	/// The class for a one-dimensional Poisson distribution of type <typeparamref name="T"/>, implements <see cref="IRandomDistribution"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged integral type</typeparam>
-	public class PoissonDistribution<T> : IRandomDistribution, IEquatable<PoissonDistribution<T>> where T : unmanaged
-	{
-		/// <summary>
-		/// Get the λ value of this Poisson distribution
-		/// </summary>
-		public double Lambda {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-		}
-
-		/// <summary>
-		/// Get the desired random seed of this distribution
-		/// </summary>
-		public long? RandomSeed {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-		} = null;
-
-		/// <summary>
-		/// Create a Poisson distribution with given <paramref name="lambda"/> and the random <paramref name="seed"/>
-		/// </summary>
-		/// <param name="lambda">The given λ value</param>
-		/// <param name="seed">The given random seed, default null means has no preferred random seed</param>
-		public PoissonDistribution(double lambda, long? seed = null)
-		{
-			this.Lambda = lambda; this.RandomSeed = seed;
-		}
-
-		/// <summary>
-		/// Get the <see cref="DataType"/> of <typeparamref name="T"/>
-		/// </summary>
-		/// <param name="index">The index, must be 0</param>
-		/// <returns>The <see cref="DataType"/> of <typeparamref name="T"/></returns>
-		public DataType this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (index != 0)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
-				return Const<T>.DataType;
-			}
-		}
-
-		/// <summary>
-		/// Get the rank / number of dimensions of this distribution, always 1
-		/// </summary>
-		public int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
-
-		/// <summary>
-		/// Get the enumerator of the <see cref="DataType"/> of the dimensions of this distribution
-		/// </summary>
-		public IEnumerator<DataType> GetEnumerator()
-		{
-			yield return Const<T>.DataType;
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-		/// <summary>
-		/// Check whether the <paramref name="other"/> <see cref="PoissonDistribution{T}"/> represents the same distribution as this one
-		/// </summary>
-		/// <param name="other">The other <see cref="PoissonDistribution{T}"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(PoissonDistribution<T>? other)
-		{
-			if (other is null)
-				return false;
-			if (ReferenceEquals(this, other))
-				return true;
-			return this.Lambda.IsEqual(other.Lambda) && this.RandomSeed == other.RandomSeed;
-		}
-
-		/// <summary>
-		/// Check whether the given <paramref name="obj"/> represents the same distribution as this one
-		/// </summary>
-		/// <param name="obj">The other <see cref="object"/> to compare</param>
-		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj)
-		{
-			return this.Equals(obj as PoissonDistribution<T>);
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="PoissonDistribution{T}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="PoissonDistribution{T}"/></returns>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.Lambda, this.RandomSeed);
-		}
-
-		/// <summary>
-		/// Get the string representation of this <see cref="PoissonDistribution{T}"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="PoissonDistribution{T}"/></returns>
-		public override string ToString()
-		{
-			return nameof(PoissonDistribution<T>) + $"[DataType={typeof(T).GetGenericString()}, {nameof(this.Lambda)}={this.Lambda}" + (this.RandomSeed.HasValue ? $", {nameof(this.RandomSeed)}={this.RandomSeed}]" : "]");
-		}
-	}
-	#endregion
-
 	#region error
 	/// <summary>
 	/// The returned status of CUDA Random API calls
@@ -312,25 +64,6 @@ namespace Althea.Backend.Cuda.Random
 		/// Internal library error.
 		/// </summary>
 		InternalError = 999
-	}
-
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaRandomError"/>
-	/// </summary>
-	public static partial class StatusExtension
-	{
-		/// <summary>
-		/// Check whether the input <see cref="CudaRandomError"/> is success or not and throw exception if it is not
-		/// </summary>
-		/// <param name="err">The <see cref="CudaRandomError"/> to be checked</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaRandomError err)
-		{
-			if (err != CudaRandomError.Success)
-			{
-				throw new StatusException(err, new StackTrace(0));
-			}
-		}
 	}
 	#endregion
 
@@ -413,4 +146,26 @@ namespace Althea.Backend.Cuda.Random
 		QuasiDefault = 201
 	}
 	#endregion
+}
+
+namespace Althea.Backend.Cuda
+{
+	/// <summary>
+	/// The static class containing extension methods for <see cref="CudaRandomError"/>
+	/// </summary>
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check whether the input <see cref="CudaRandomError"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaRandomError"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaRandomError err)
+		{
+			if (err != CudaRandomError.Success)
+			{
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+	}
 }
