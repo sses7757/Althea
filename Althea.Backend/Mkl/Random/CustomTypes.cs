@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Random;
+using Althea.Backend.Random;
 using Althea.Backend.Mkl.Random;
 
 
@@ -148,7 +150,7 @@ namespace Althea.Backend.Mkl.Random
 
 	#region other enum
 	/// <summary>
-	/// The MKL random number generator type
+	/// The MKL random number generator type.
 	/// </summary>
 	public enum GeneratorType
 	{
@@ -235,6 +237,101 @@ namespace Althea.Backend.Mkl.Random
 		/// Diagonal elements are packed in 1-dimensional array
 		/// </summary>
 		Diagonal
+	}
+
+	/// <summary>
+	/// The distribution types supported by the MKL RNG
+	/// </summary>
+	internal enum DistributionType
+	{
+		/// <summary>
+		/// <see cref="UniformDistribution{T}"/>
+		/// </summary>
+		Uniform,
+		/// <summary>
+		/// <see cref="RandomBitsDistribution{T}"/>
+		/// </summary>
+		RandomBits,
+		/// <summary>
+		/// <see cref="BernoulliDistribution{T}"/>
+		/// </summary>
+		Bernoulli,
+		/// <summary>
+		/// <see cref="BetaDistribution{T}"/>
+		/// </summary>
+		Beta,
+		/// <summary>
+		/// <see cref="BinomialDistribution{T}"/>
+		/// </summary>
+		Binomial,
+		/// <summary>
+		/// <see cref="CauchyDistribution{T}"/>
+		/// </summary>
+		Cauchy,
+		/// <summary>
+		/// <see cref="ChiSquareDistribution{T}"/>
+		/// </summary>
+		ChiSquare,
+		/// <summary>
+		/// <see cref="ExponentialDistribution{T}"/>
+		/// </summary>
+		Exponential,
+		/// <summary>
+		/// <see cref="GammaDistribution{T}"/>
+		/// </summary>
+		Gamma,
+		/// <summary>
+		/// <see cref="GeometricDistribution{T}"/>
+		/// </summary>
+		Geometric,
+		/// <summary>
+		/// <see cref="GumbelDistribution{T}"/>
+		/// </summary>
+		Gumbel,
+		/// <summary>
+		/// <see cref="HypergeometricDistribution{T}"/>
+		/// </summary>
+		Hypergeometric,
+		/// <summary>
+		/// <see cref="LaplaceDistribution{T}"/>
+		/// </summary>
+		Laplace,
+		/// <summary>
+		/// <see cref="LogNormalDistribution{T}"/>
+		/// </summary>
+		LogNormal,
+		/// <summary>
+		/// <see cref="MultinomialDistribution{T}"/>
+		/// </summary>
+		Multinomial,
+		/// <summary>
+		/// <see cref="MultiNormalDistribution{T}"/>
+		/// </summary>
+		MultiNormal,
+		/// <summary>
+		/// <see cref="NegativeBinomialDistribution{T}"/>
+		/// </summary>
+		NegativeBinomial,
+		/// <summary>
+		/// <see cref="NormalDistribution{T}"/>
+		/// </summary>
+		Normal,
+		/// <summary>
+		/// <see cref="PoissonDistribution{T}"/>
+		/// </summary>
+		Poisson,
+		/// <summary>
+		/// <see cref="RayleighDistribution{T}"/>
+		/// </summary>
+		Rayleigh,
+		/// <summary>
+		/// <see cref="WeibullDistribution{T}"/>
+		/// </summary>
+		Weibull,
+		/// <summary>
+		/// <see cref="SimpleJointRandomDistribution"/>
+		/// </summary>
+		SimpleJoint,
 	}
 	#endregion
 
@@ -356,7 +453,7 @@ namespace Althea.Backend.Mkl.Random
 	internal enum MklRngMethodLogNormal
 	{
 		/// <summary>
-		/// generates pair of normally distributed random numbers <c>x₁</c> and <c>x₂</c> through the pair of uniformly distributed numbers <c>u₁</c> and <c>u₂</c> according to the formulas:
+		/// Generates pair of normally distributed random numbers <c>x₁</c> and <c>x₂</c> through the pair of uniformly distributed numbers <c>u₁</c> and <c>u₂</c> according to the formulas:
 		/// <c>x₁ = sqrt(-ln(u₁)) * sin(2*π*u₂)</c>, <c>x₂ = sqrt(-ln(u₁)) * cos(2*π*u₂)</c>
 		/// </summary>
 		BoxMuller2,
@@ -467,7 +564,7 @@ namespace Althea.Backend.Mkl.Random
 	internal enum MklRngMethodBinomial
 	{
 		/// <summary>
-		/// for <c>ntrial*min(p,1-p) &gt; 30</c> acceptance/rejection method with decomposition onto 4 regions: 2 parallelograms, triangle, left exponential tail and right exponential tail. Otherwise table lookup method is used
+		/// For <c>ntrial*min(p,1-p) &gt; 30</c> acceptance/rejection method with decomposition onto 4 regions: 2 parallelograms, triangle, left exponential tail and right exponential tail. Otherwise table lookup method is used
 		/// </summary>
 		BTPE,
 	}
@@ -477,7 +574,7 @@ namespace Althea.Backend.Mkl.Random
 	internal enum MklRngMethodHypergeometric
 	{
 		/// <summary>
-		/// for <c>ntrial*min(p,1-p) &gt; 30</c> acceptance/rejection method with decomposition onto 3 regions: rectangular, left exponential tail and right exponential tail. Otherwise table lookup method is used
+		/// For <c>ntrial*min(p,1-p) &gt; 30</c> acceptance/rejection method with decomposition onto 3 regions: rectangular, left exponential tail and right exponential tail. Otherwise table lookup method is used
 		/// </summary>
 		H2PE,
 	}

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Althea.Backend.Storage;
 using Althea.NativeTypes;
 using Althea.Random;
+using Althea.Backend.Random;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -73,7 +74,7 @@ namespace Althea.Backend.Cuda.Random
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out PoissonDistribution<T>? poisson) where T : unmanaged
+		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out LogNormalDistribution<T>? logNormal, out PoissonDistribution<T>? poisson) where T : unmanaged
 		{
 			pointer = default; length = 0;
 			if (storage is null)
@@ -85,6 +86,7 @@ namespace Althea.Backend.Cuda.Random
 			uniform = distribution as UniformDistribution<T>;
 			bits = distribution as RandomBitsDistribution<T>;
 			normal = distribution as NormalDistribution<T>;
+			logNormal = distribution as LogNormalDistribution<T>;
 			poisson = distribution as PoissonDistribution<T>;
 			var ss = storage[0];
 			if (storage.Count != 1 || ss.Pointer is not IMemoryPointer p)
@@ -93,7 +95,7 @@ namespace Althea.Backend.Cuda.Random
 				return false; // not support
 
 			pointer = (IntPtr)(p.Pointer.ToInt64() + ss.OffsetInBytes); length = (int)ss.LengthInBytes;
-			if (uniform is not null || normal is not null)
+			if (uniform is not null || normal is not null || logNormal is not null)
 			{
 				if (typeof(T) != typeof(float) && typeof(T) != typeof(double))
 					return false;
@@ -108,13 +110,18 @@ namespace Althea.Backend.Cuda.Random
 				if (typeof(T) != typeof(uint) && !(typeof(T) == typeof(int) && poisson.Lambda < int.MaxValue / 2))
 					return false;
 			}
+			if (logNormal is not null)
+			{	// extra check
+				if (!logNormal.Displacement.IsZero() || !logNormal.ScaleFactor.IsOne())
+					return false;
+			}
 			return true;
 		}
 		#endregion
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Generate<T>(Storage<T> s, IntPtr p, long length, UniformDistribution<T>? uniform, RandomBitsDistribution<T>? bits, NormalDistribution<T>? normal, PoissonDistribution<T>? poisson) where T : unmanaged
+		private unsafe void Generate<T>(Storage<T> s, IntPtr p, long length, UniformDistribution<T>? uniform, RandomBitsDistribution<T>? bits, NormalDistribution<T>? normal, LogNormalDistribution<T>? logNormal, PoissonDistribution<T>? poisson) where T : unmanaged
 		{
 			if (uniform is not null)
 			{
@@ -136,19 +143,19 @@ namespace Althea.Backend.Cuda.Random
 					NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)normal.RandomSeed.Value).Check();
 				T mean = normal.Mean, stdDev = normal.StandardDeviation;
 				if (typeof(T) == typeof(float))
-				{
-					if (normal.IsLogNormal)
-						NativeMethods.curandGenerateLogNormal(this.generator, p, length, *(float*)&mean, *(float*)&stdDev).Check();
-					else
-						NativeMethods.curandGenerateNormal(this.generator, p, length, *(float*)&mean, *(float*)&stdDev).Check();
-				}
+					NativeMethods.curandGenerateNormal(this.generator, p, length, *(float*)&mean, *(float*)&stdDev).Check();
 				else
-				{
-					if (normal.IsLogNormal)
-						NativeMethods.curandGenerateLogNormalDouble(this.generator, p, length, *(double*)&mean, *(double*)&stdDev).Check();
-					else
-						NativeMethods.curandGenerateNormalDouble(this.generator, p, length, *(double*)&mean, *(double*)&stdDev).Check();
-				}
+					NativeMethods.curandGenerateNormalDouble(this.generator, p, length, *(double*)&mean, *(double*)&stdDev).Check();
+			}
+			if (logNormal is not null)
+			{
+				if (logNormal.RandomSeed.HasValue)
+					NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)logNormal.RandomSeed.Value).Check();
+				T mean = logNormal.Mean, stdDev = logNormal.StandardDeviation;
+				if (typeof(T) == typeof(float))
+					NativeMethods.curandGenerateLogNormal(this.generator, p, length, *(float*)&mean, *(float*)&stdDev).Check();
+				else
+					NativeMethods.curandGenerateLogNormalDouble(this.generator, p, length, *(double*)&mean, *(double*)&stdDev).Check();
 			}
 			if (bits is not null)
 			{
@@ -169,9 +176,9 @@ namespace Althea.Backend.Cuda.Random
 
 		protected override bool FillWithRandom_<T>(Storage<T> storage, IRandomDistribution distribution)
 		{
-			if (!Check(storage, distribution, out var p, out long length, out var dist1, out var dist2, out var dist3, out var dist4))
+			if (!Check(storage, distribution, out var p, out long length, out var dist1, out var dist2, out var dist3, out var dist4, out var dist5))
 				return false; // not support
-			this.Generate(storage, p, length, dist1, dist2, dist3, dist4);
+			this.Generate(storage, p, length, dist1, dist2, dist3, dist4, dist5);
 			return true;
 		}
 
@@ -183,13 +190,13 @@ namespace Althea.Backend.Cuda.Random
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 			if (distribution is not SimpleJointRandomDistribution d)
 				return false; // not support
-			if (!Check(storage1, d[0], out var p1, out long length1, out var dist11, out var dist12, out var dist13, out var dist14))
+			if (!Check(storage1, d[0], out var p1, out long length1, out var dist11, out var dist12, out var dist13, out var dist14, out var dist15))
 				return false; // not support
-			if (!Check(storage2, d[1], out var p2, out long length2, out var dist21, out var dist22, out var dist23, out var dist24))
+			if (!Check(storage2, d[1], out var p2, out long length2, out var dist21, out var dist22, out var dist23, out var dist24, out var dist25))
 				return false; // not support
 
-			this.Generate(storage1, p1, length1, dist11, dist12, dist13, dist14);
-			this.Generate(storage2, p2, length2, dist21, dist22, dist23, dist24);
+			this.Generate(storage1, p1, length1, dist11, dist12, dist13, dist14, dist15);
+			this.Generate(storage2, p2, length2, dist21, dist22, dist23, dist24, dist25);
 			return true;
 		}
 		protected override bool FillWithRandom_<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution)
@@ -200,16 +207,16 @@ namespace Althea.Backend.Cuda.Random
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 			if (distribution is not SimpleJointRandomDistribution d)
 				return false; // not support
-			if (!Check(storage1, d[0], out var p1, out long length1, out var dist11, out var dist12, out var dist13, out var dist14))
+			if (!Check(storage1, d[0], out var p1, out long length1, out var dist11, out var dist12, out var dist13, out var dist14, out var dist15))
 				return false; // not support
-			if (!Check(storage2, d[1], out var p2, out long length2, out var dist21, out var dist22, out var dist23, out var dist24))
+			if (!Check(storage2, d[1], out var p2, out long length2, out var dist21, out var dist22, out var dist23, out var dist24, out var dist25))
 				return false; // not support
-			if (!Check(storage3, d[1], out var p3, out long length3, out var dist31, out var dist32, out var dist33, out var dist34))
+			if (!Check(storage3, d[1], out var p3, out long length3, out var dist31, out var dist32, out var dist33, out var dist34, out var dist35))
 				return false; // not support
 
-			this.Generate(storage1, p1, length1, dist11, dist12, dist13, dist14);
-			this.Generate(storage2, p2, length2, dist21, dist22, dist23, dist24);
-			this.Generate(storage3, p3, length3, dist31, dist32, dist33, dist34);
+			this.Generate(storage1, p1, length1, dist11, dist12, dist13, dist14, dist15);
+			this.Generate(storage2, p2, length2, dist21, dist22, dist23, dist24, dist25);
+			this.Generate(storage3, p3, length3, dist31, dist32, dist33, dist34, dist35);
 			return true;
 		}
 

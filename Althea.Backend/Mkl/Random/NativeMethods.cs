@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+using Althea.Backend.Mkl.LinearAlgebra.Dense;
+
 
 #pragma warning disable IDE1006 // 命名样式
 namespace Althea.Backend.Mkl.Random
@@ -34,11 +36,11 @@ namespace Althea.Backend.Mkl.Random
 		[DllImport(MKLRNG_API_DLL_NAME)]
 		internal static extern MklRngStatus vdRngGaussian(MklRngMethodGaussian method, IntPtr stream, int n, double* array, double mean, double sigma);
 
-		// multidimensional Gaussian, covariance matrix = T T^*, length(means) == dim
+		// multidimensional Gaussian, covariance matrix = T Tᵀ, length(means) == dim
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus vsRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, int n, float* array, int dim, MklRngMatrixStorage storageT, in float means, in float matrixT);
+		internal static extern MklRngStatus vsRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, int n, float** arrays, int dim, MklRngMatrixStorage storageT, in float means, in float matrixT);
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus vdRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, int n, double* array, int dim, MklRngMatrixStorage storageT, in double means, in double matrixT);
+		internal static extern MklRngStatus vdRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, int n, double** arrays, int dim, MklRngMatrixStorage storageT, in double means, in double matrixT);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
 		internal static extern MklRngStatus vsRngExponential(MklRngMethodExponential method, IntPtr stream, int n, float* array, float displacement, float beta);
@@ -81,9 +83,9 @@ namespace Althea.Backend.Mkl.Random
 		internal static extern MklRngStatus vdRngGamma(MklRngMethodGamma method, IntPtr stream, int n, double* array, double alpha, double displacement, double beta);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus vsRngBeta(MklRngMethodBeta method, IntPtr stream, int n, float* array, float p, float q, float alpha, float displacement, float beta);
+		internal static extern MklRngStatus vsRngBeta(MklRngMethodBeta method, IntPtr stream, int n, float* array, float p, float q, float displacement, float beta);
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus vdRngBeta(MklRngMethodBeta method, IntPtr stream, int n, double* array, double p, double q, double alpha, double displacement, double beta);
+		internal static extern MklRngStatus vdRngBeta(MklRngMethodBeta method, IntPtr stream, int n, double* array, double p, double q, double displacement, double beta);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
 		internal static extern MklRngStatus vsRngChiSquare(MklRngMethodChiSquare method, IntPtr stream, int n, float* array, int DoF);
@@ -105,29 +107,37 @@ namespace Althea.Backend.Mkl.Random
 		internal static extern MklRngStatus viRngUniformBits64(MklRngMethodUniformBits method, IntPtr stream, int n, ulong* array);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngBernoulli(MklRngMethodBernoulli method, IntPtr stream, int n, int* r, double p);
+		internal static extern MklRngStatus viRngBernoulli(MklRngMethodBernoulli method, IntPtr stream, int n, int* array, double p);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngGeometric(MklRngMethodGeometric method, IntPtr stream, int n, int* r, double p);
+		internal static extern MklRngStatus viRngGeometric(MklRngMethodGeometric method, IntPtr stream, int n, int* array, double p);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngBinomial(MklRngMethodBinomial method, IntPtr stream, int n, int* r, int nTrial, double p);
+		internal static extern MklRngStatus viRngBinomial(MklRngMethodBinomial method, IntPtr stream, int n, int* array, int nTrial, double p);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngHypergeometric(MklRngMethodHypergeometric method, IntPtr stream, int n, int* r, int lotSize, int sampleSize, int markedElements);
+		internal static extern MklRngStatus viRngHypergeometric(MklRngMethodHypergeometric method, IntPtr stream, int n, int* array, int lotSize, int sampleSize, int markedElements);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngPoisson(MklRngMethodPoisson method, IntPtr stream, int n, int* r, double lambda);
+		internal static extern MklRngStatus viRngPoisson(MklRngMethodPoisson method, IntPtr stream, int n, int* array, double lambda);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngPoissonV(MklRngMethodPoissonVariableMean method, IntPtr stream, int n, int* r, double* lambda);
+		internal static extern MklRngStatus viRngPoissonV(MklRngMethodPoissonVariableMean method, IntPtr stream, int n, int* array, double* lambda);
 
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngNegbinomial(MklRngMethodNegativeBinomial method, IntPtr stream, int n, int* r, double a, double p);
+		internal static extern MklRngStatus viRngNegbinomial(MklRngMethodNegativeBinomial method, IntPtr stream, int n, int* array, double a, double p);
 
 		// multi-dimensional, length(p) == dim
 		[DllImport(MKLRNG_API_DLL_NAME)]
-		internal static extern MklRngStatus viRngMultinomial(MklRngMethodMultinomial method, IntPtr stream, int n, int* r, int nTrial, int dim, in double p);
+		internal static extern MklRngStatus viRngMultinomial(MklRngMethodMultinomial method, IntPtr stream, int n, int** arrays, int nTrial, int dim, in double p);
+		#endregion
+
+		#region Cholesky factorization
+		[DllImport(LinearAlgebra.Dense.NativeMethods.MKLBLAS_API_DLL_NAME)]
+		internal static extern MklLapackInfo LAPACKE_spotrf(MklMatrixLayout matrix_layout, MklFillModeChar uplo, int n, float[] a, int lda);
+
+		[DllImport(LinearAlgebra.Dense.NativeMethods.MKLBLAS_API_DLL_NAME)]
+		internal static extern MklLapackInfo LAPACKE_dpotrf(MklMatrixLayout matrix_layout, MklFillModeChar uplo, int n, double[] a, int lda);
 		#endregion
 	}
 }

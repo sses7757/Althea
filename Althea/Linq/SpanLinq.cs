@@ -742,6 +742,35 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Check if all elements of <paramref name="span"/> are the same
+		/// </summary>
+		/// <param name="span">The span to check</param>
+		/// <returns>All elements in <paramref name="span"/> are the same</returns>
+		public static unsafe bool AllSame<T>(this Span<T> span) where T : unmanaged
+		{
+			return AllSame((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// Check if all elements of <paramref name="span"/> are the same
+		/// </summary>
+		/// <param name="span">The span to check</param>
+		/// <returns>All elements in <paramref name="span"/> are the same</returns>
+		public static unsafe bool AllSame<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		{
+			if (span.Length <= 1)
+				return true;
+			T v = span[0];
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (!span[i].IsEqual(v))
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
 		/// Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
 		/// </summary>
 		/// <param name="span">The span to predicate</param>

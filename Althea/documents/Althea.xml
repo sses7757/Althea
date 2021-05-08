@@ -13015,103 +13015,127 @@
             </summary>
             <returns>The string representation of this <see cref="T:Althea.Random.IRandomDistribution"/></returns>
         </member>
-        <member name="T:Althea.Random.RealTypedRandomDistribution`1">
+        <member name="T:Althea.Random.RealTypedDistribution`1">
             <summary>
             The abstract class for distributions whose data type(s) contain a real type <typeparamref name="T"/>
             </summary>
             <typeparam name="T">An unmanaged real type as one of the data type(s)</typeparam>
         </member>
-        <member name="P:Althea.Random.RealTypedRandomDistribution`1.RandomSeed">
+        <member name="P:Althea.Random.RealTypedDistribution`1.RandomSeed">
             <summary>
-            Get the random seed of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/>. Null means let the internal implementation determine.
+            Get the random seed of this <see cref="T:Althea.Random.RealTypedDistribution`1"/>. Null means let the internal implementation determine.
             </summary>
         </member>
-        <member name="M:Althea.Random.RealTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+        <member name="M:Althea.Random.RealTypedDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
-            Initialize a <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            Initialize a <see cref="T:Althea.Random.RealTypedDistribution`1"/> with given random <paramref name="seed"/>
             </summary>
             <param name="seed">The given random seed</param>
         </member>
-        <member name="P:Althea.Random.RealTypedRandomDistribution`1.Count">
+        <member name="P:Althea.Random.RealTypedDistribution`1.Count">
             <summary>
             When implemented by a derived class, get the rank / number of dimensions of this distribution, always 1
             </summary>
         </member>
-        <member name="P:Althea.Random.RealTypedRandomDistribution`1.Item(System.Int32)">
+        <member name="P:Althea.Random.RealTypedDistribution`1.Item(System.Int32)">
             <summary>
             When implemented by a derived class, get the <see cref="T:Althea.NativeTypes.DataType"/> at dimension <paramref name="index"/>
             </summary>
             <param name="index">The index, must be 0</param>
             <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of <typeparamref name="T"/></returns>
         </member>
-        <member name="M:Althea.Random.RealTypedRandomDistribution`1.GetEnumerator">
+        <member name="M:Althea.Random.RealTypedDistribution`1.GetEnumerator">
             <summary>
             When implemented by a derived class, get the enumerator of the <see cref="T:Althea.NativeTypes.DataType"/> of the dimensions of this distribution
             </summary>
         </member>
-        <member name="P:Althea.Random.RealTypedRandomDistribution`1.PropertiesString">
+        <member name="P:Althea.Random.RealTypedDistribution`1.PropertiesString">
             <summary>
-            When implemented by a derived class, get the string representation of the property-value pairs of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/>
+            When implemented by a derived class, get the string representation of the property-value pairs of this <see cref="T:Althea.Random.RealTypedDistribution`1"/>
             </summary>
         </member>
-        <member name="M:Althea.Random.RealTypedRandomDistribution`1.ToString">
+        <member name="M:Althea.Random.RealTypedDistribution`1.ToString">
             <summary>
-            Get the string representation of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/>
+            Get the string representation of this <see cref="T:Althea.Random.RealTypedDistribution`1"/>
             </summary>
-            <returns>The string representation of this <see cref="T:Althea.Random.RealTypedRandomDistribution`1"/></returns>
+            <returns>The string representation of this <see cref="T:Althea.Random.RealTypedDistribution`1"/></returns>
         </member>
-        <member name="T:Althea.Random.FloatTypedRandomDistribution`1">
+        <member name="T:Althea.Random.FloatTypedDistribution`1">
             <summary>
             The abstract class for distributions whose data type(s) contain a floating point type <typeparamref name="T"/>
             </summary>
             <typeparam name="T">An unmanaged floating point type as one of the data type(s)</typeparam>
         </member>
-        <member name="M:Althea.Random.FloatTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+        <member name="M:Althea.Random.FloatTypedDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
-            Initialize a <see cref="T:Althea.Random.FloatTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            Initialize a <see cref="T:Althea.Random.FloatTypedDistribution`1"/> with given random <paramref name="seed"/>
             </summary>
             <param name="seed">The given random seed</param>
         </member>
-        <member name="T:Althea.Random.IntegerTypedRandomDistribution`1">
+        <member name="T:Althea.Random.IntegerTypedDistribution`1">
             <summary>
             The abstract class for distributions whose data type(s) contain an integral type <typeparamref name="T"/>
             </summary>
             <typeparam name="T">An unmanaged integral type as one of the data type(s)</typeparam>
         </member>
-        <member name="M:Althea.Random.IntegerTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+        <member name="M:Althea.Random.IntegerTypedDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
-            Initialize a <see cref="T:Althea.Random.IntegerTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            Initialize a <see cref="T:Althea.Random.IntegerTypedDistribution`1"/> with given random <paramref name="seed"/>
             </summary>
             <param name="seed">The given random seed</param>
         </member>
-        <member name="T:Althea.Random.OneDimensionalRealTypedRandomDistribution`1">
+        <member name="T:Althea.Random.OneDimensionalRealTypedDistribution`1">
             <summary>
             The abstract class for one-dimensional distributions whose data type is a real type <typeparamref name="T"/>
             </summary>
             <typeparam name="T">An unmanaged real type as the data type</typeparam>
         </member>
-        <member name="M:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+        <member name="M:Althea.Random.OneDimensionalRealTypedDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
-            Initialize a <see cref="T:Althea.Random.OneDimensionalRealTypedRandomDistribution`1"/> with given random <paramref name="seed"/>
+            Initialize a <see cref="T:Althea.Random.OneDimensionalRealTypedDistribution`1"/> with given random <paramref name="seed"/>
             </summary>
             <param name="seed">The given random seed</param>
         </member>
-        <member name="P:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.Count">
+        <member name="P:Althea.Random.OneDimensionalRealTypedDistribution`1.Count">
             <summary>
             Get the rank / number of dimensions of this distribution, always 1
             </summary>
         </member>
-        <member name="P:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.Item(System.Int32)">
+        <member name="P:Althea.Random.OneDimensionalRealTypedDistribution`1.Item(System.Int32)">
             <summary>
             Get the <see cref="T:Althea.NativeTypes.DataType"/> at dimension <paramref name="index"/>
             </summary>
             <param name="index">The index, must be 0</param>
             <returns>The <see cref="T:Althea.NativeTypes.DataType"/> of <typeparamref name="T"/></returns>
         </member>
-        <member name="M:Althea.Random.OneDimensionalRealTypedRandomDistribution`1.GetEnumerator">
+        <member name="M:Althea.Random.OneDimensionalRealTypedDistribution`1.GetEnumerator">
             <summary>
             Get the enumerator of the <see cref="T:Althea.NativeTypes.DataType"/> of the dimensions of this distribution
             </summary>
+        </member>
+        <member name="T:Althea.Random.OneDimensionalFloatTypedDistribution`1">
+            <summary>
+            The abstract class for one-dimensional distributions whose data type is a floating point type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">An unmanaged floating point type as the data type</typeparam>
+        </member>
+        <member name="M:Althea.Random.OneDimensionalFloatTypedDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Initialize a <see cref="T:Althea.Random.OneDimensionalFloatTypedDistribution`1"/> with given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The given random seed</param>
+        </member>
+        <member name="T:Althea.Random.OneDimensionalIntegerTypedDistribution`1">
+            <summary>
+            The abstract class for one-dimensional distributions whose data type is an integral type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">An unmanaged integral type as the data type</typeparam>
+        </member>
+        <member name="M:Althea.Random.OneDimensionalIntegerTypedDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Initialize a <see cref="T:Althea.Random.OneDimensionalIntegerTypedDistribution`1"/> with given random <paramref name="seed"/>
+            </summary>
+            <param name="seed">The given random seed</param>
         </member>
         <member name="T:Althea.Random.UniformDistribution`1">
             <summary>
