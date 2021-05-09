@@ -110,10 +110,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 	}
 
+#pragma warning disable CS0649
 	internal readonly struct MklLapackInfo
 	{
 		internal readonly int status;
 	}
+#pragma warning restore CS0649
 
 	/// <summary>
 	/// The matrix layout enum in MKL BLAS

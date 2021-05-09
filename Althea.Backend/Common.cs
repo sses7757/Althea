@@ -4,6 +4,9 @@ using System.Diagnostics;
 using Althea.Helpers;
 
 
+[assembly: CLSCompliant(true)]
+
+
 namespace Althea.Backend
 {
 	#region exception

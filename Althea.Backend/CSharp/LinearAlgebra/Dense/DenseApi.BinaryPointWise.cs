@@ -224,7 +224,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				switch (op)
 				{
 					case BinaryModify.Multiply:
-						ComplexMultiply<byte>(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
+						ComplexMultiply<byte, bool>(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
 						break;
 					case BinaryModify.Divide:
 						ComplexDivide(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
@@ -278,7 +278,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				switch (op)
 				{
 					case BinaryModify.Multiply:
-						ComplexMultiply<byte>(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
+						ComplexMultiply<byte, bool>(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
 						break;
 					case BinaryModify.Divide:
 						ComplexDivide(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);

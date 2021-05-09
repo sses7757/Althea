@@ -70,7 +70,7 @@ namespace Althea.Backend.Cuda.Storage
 		{
 			// CUDA file
 			CudaFileDescription descr = new(Environment.OSVersion.Platform == PlatformID.Unix ? CudaFileHandleType.OpaqueLinux : CudaFileHandleType.OpaqueWindows, this.stream.SafeFileHandle.DangerousGetHandle());
-			var err = NativeMethods.cuFileHandleRegister(ref this.handle, ref descr);
+			var err = NativeMethods.cuFileHandleRegister(out this.handle, ref descr);
 			if (!err.IsSuccess)
 			{
 				this.stream.Dispose();
@@ -94,10 +94,10 @@ namespace Althea.Backend.Cuda.Storage
 				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
 			if (this.gpuMem != IntPtr.Zero)
 				return false;
-			NativeMethods.cudaMalloc(ref this.gpuMem, length).Check();
+			NativeMethods.cudaMalloc(out this.gpuMem, length).Check();
 			try
 			{
-				this.gpuMemDeviceID = StorageApi.CurrentDeviceID;
+				this.gpuMemDeviceID = CudaRuntime.CurrentDeviceID;
 				NativeMethods.cuFileBufRegister(this.gpuMem, length, 0).Check();
 				return true;
 			}
@@ -242,8 +242,7 @@ namespace Althea.Backend.Cuda.Storage
 				throw new NotSupportedException(Support.DataType);
 
 			int bufferSize = BufferSizeInBytes<byte>();
-			IntPtr buf = default;
-			NativeMethods.cudaMalloc(ref buf, Math.Min(bufferSize, length)).Check();
+			NativeMethods.cudaMalloc(out IntPtr buf, Math.Min(bufferSize, length)).Check();
 			try
 			{
 				if (length <= bufferSize)
@@ -337,8 +336,7 @@ namespace Althea.Backend.Cuda.Storage
 			length = this.SetValuesCheck<T>(length);
 
 			int bufferSize = BufferSizeInBytes<byte>();
-			IntPtr buf = default;
-			NativeMethods.cudaMalloc(ref buf, Math.Min(bufferSize, length)).Check();
+			NativeMethods.cudaMalloc(out IntPtr buf, Math.Min(bufferSize, length)).Check();
 			try
 			{
 				PointerSegment ptr = new(new MemoryPointer(buf, bufferSize, new(LocationType.GpuRam, 0)));

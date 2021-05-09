@@ -874,7 +874,7 @@ namespace Althea.Backend.CSharp.Solver
 						////restartInfo.ResidualVec.ForceDispose();
 						restartInfo.Clear(residual: r);
 						// add unconverged vectors
-						AddUnconvergedVectors<TVec, T>(ref restartInfo, qs, preserveIndices, eigvalsNow, eigvecsNow, r, rNorm: betas[^1]); // TODO: validate ^1
+						AddUnconvergedVectors(ref restartInfo, qs, preserveIndices, eigvalsNow, eigvecsNow, r, rNorm: betas[^1]);
 					}
 					catch (Exception)
 					{

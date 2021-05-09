@@ -183,36 +183,32 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						aggregate2 = Avx.Add(aggregate2, current2);
 					}
 					else
-					{   // TODO: improve performance by using 'aggregate1 = reals' and 'aggregate2 = imaginaries'
-						ComplexMultiply<byte>(aggregate1, aggregate2, current1, current2, out aggregate1, out aggregate2);
+					{   // aggregate1 = reals, aggregate2 = imaginaries
+						ComplexMultiply<byte, byte>(aggregate1, aggregate2, current1, current2, out aggregate1, out aggregate2);
 					}
 					lengthLeft -= Vector256<float>.Count;
 					offset += Vector256<float>.Count;
 				}
 				// reduce main
-				ComplexSingle result = ((ComplexSingle*)&aggregate1)[0];
-				for (int i = 1; i < Vector256<float>.Count / 2; i++)
+				ComplexSingle result;
+				if (doSum)
 				{
-					ComplexSingle v = ((ComplexSingle*)&aggregate1)[i];
-					if (doSum)
+					result = ((ComplexSingle*)&aggregate1)[0];
+					for (int i = 1; i < Vector256<float>.Count / 2; i++)
 					{
-						result += v;
+						result += ((ComplexSingle*)&aggregate1)[i];
 					}
-					else
+					for (int i = 0; i < Vector256<float>.Count / 2; i++)
 					{
-						result *= v;
+						result += ((ComplexSingle*)&aggregate2)[i];
 					}
 				}
-				for (int i = 0; i < Vector256<float>.Count / 2; i++)
+				else
 				{
-					ComplexSingle v = ((ComplexSingle*)&aggregate2)[i];
-					if (doSum)
+					result = new(*(float*)&aggregate1, *(float*)&aggregate2);
+					for (int i = 1; i < Vector256<float>.Count / 2; i++)
 					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
+						result *= new ComplexSingle(((float*)&aggregate1)[i], ((float*)&aggregate2)[i]);
 					}
 				}
 				// reduce left
@@ -316,36 +312,32 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						aggregate2 = Avx.Add(aggregate2, current2);
 					}
 					else
-					{   // TODO: improve performance by using 'aggregate1 = reals' and 'aggregate2 = imaginaries'
-						ComplexMultiply<byte>(aggregate1, aggregate2, current1, current2, out aggregate1, out aggregate2);
+					{   // aggregate1 = reals, aggregate2 = imaginaries
+						ComplexMultiply<byte, byte>(aggregate1, aggregate2, current1, current2, out aggregate1, out aggregate2);
 					}
 					lengthLeft -= Vector256<double>.Count;
 					offset += Vector256<double>.Count;
 				}
 				// reduce main
-				ComplexDouble result = ((ComplexDouble*)&aggregate1)[0];
-				for (int i = 1; i < Vector256<double>.Count / 2; i++)
+				ComplexDouble result;
+				if (doSum)
 				{
-					ComplexDouble v = ((ComplexDouble*)&aggregate1)[i];
-					if (doSum)
+					result = ((ComplexDouble*)&aggregate1)[0];
+					for (int i = 1; i < Vector256<double>.Count / 2; i++)
 					{
-						result += v;
+						result += ((ComplexDouble*)&aggregate1)[i];
 					}
-					else
+					for (int i = 0; i < Vector256<double>.Count / 2; i++)
 					{
-						result *= v;
+						result += ((ComplexDouble*)&aggregate2)[i];
 					}
 				}
-				for (int i = 0; i < Vector256<double>.Count / 2; i++)
+				else
 				{
-					ComplexDouble v = ((ComplexDouble*)&aggregate2)[i];
-					if (doSum)
+					result = new(*(double*)&aggregate1, *(double*)&aggregate2);
+					for (int i = 1; i < Vector256<double>.Count / 2; i++)
 					{
-						result += v;
-					}
-					else
-					{
-						result *= v;
+						result *= new ComplexDouble(((double*)&aggregate1)[i], ((double*)&aggregate2)[i]);
 					}
 				}
 				// reduce left

@@ -10,9 +10,6 @@ using Althea.Resources;
 using MEM = Althea.Storage.AbstractApi;
 
 
-[assembly: CLSCompliant(true)]
-
-
 namespace Althea.Backend.Storage
 {
 	/// <summary>

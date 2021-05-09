@@ -5156,7 +5156,7 @@
         </member>
         <member name="T:Althea.Helpers.LogLevel">
             <summary>
-            The logging level enumerate
+            The flag for logging levels
             </summary>
         </member>
         <member name="F:Althea.Helpers.LogLevel.Trace">
@@ -5189,6 +5189,13 @@
             The static class provides basic write log file and output to console feature
             </summary>
         </member>
+        <member name="M:Althea.Helpers.Log.IsValid(Althea.Helpers.LogLevel)">
+            <summary>
+            Check whether the given <see cref="T:Althea.Helpers.LogLevel"/> <paramref name="flags"/> is a valid one
+            </summary>
+            <param name="flags">The <see cref="T:Althea.Helpers.LogLevel"/> flags to check</param>
+            <returns>Whether <paramref name="flags"/> is a valid one or not</returns>
+        </member>
         <member name="P:Althea.Helpers.Log.SuppressLog">
             <summary>
             Get or set whether the log file output should be suppressed
@@ -5211,7 +5218,7 @@
         </member>
         <member name="P:Althea.Helpers.Log.PrintLevels">
             <summary>
-            Get or set the <see cref="T:Althea.Helpers.LogLevel"/>s to print
+            Get or set the <see cref="T:Althea.Helpers.LogLevel"/>s to print to console immediately
             </summary>
         </member>
         <member name="P:Althea.Helpers.Log.BufferLevels">
@@ -5221,11 +5228,12 @@
         </member>
         <member name="M:Althea.Helpers.Log.Write(System.String,System.String,Althea.Helpers.LogLevel)">
             <summary>
-            Write the message of certain category and message level.
+            Asynchronously write the message of certain category and message level.
             </summary>
-            <param name="msg">message to write</param>
-            <param name="category">if <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
-            <param name="level">message log level</param>
+            <param name="msg">The message to write</param>
+            <param name="category">If <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
+            <param name="level">The message <see cref="T:Althea.Helpers.LogLevel"/>, must be atomic</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="level"/> is of invalid value</exception>
         </member>
         <member name="T:Althea.Helpers.PrintSettings">
             <summary>
@@ -5266,6 +5274,7 @@
             <summary>
             The static class for global settings
             </summary>
+            <remarks>Notice that the settings are thread static (see <see cref="T:System.ThreadStaticAttribute"/>).</remarks>
         </member>
         <member name="P:Althea.Helpers.Settings.PrintSetting">
             <summary>
@@ -5350,7 +5359,7 @@
             </summary>
             <typeparam name="T">The data type</typeparam>
             <param name="length">The desired length to allocate</param>
-            <param name="sizeT">Output the size of <typeparamref name="T"/></param>
+            <param name="sizeT">Output the size of <typeparamref name="T"/> (always the size of <see cref="T:System.IntPtr"/> when <typeparamref name="T"/> is a reference type)</param>
             <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
         </member>
         <member name="T:Althea.Helpers.Swapper`1">
@@ -10401,6 +10410,20 @@
             </summary>
             <param name="span">The span to check</param>
             <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.AllSame``1(System.Span{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are the same
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are the same</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.AllSame``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are the same
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are the same</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.All``1(System.Span{``0},System.Predicate{``0})">
             <summary>

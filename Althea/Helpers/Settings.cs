@@ -7,7 +7,6 @@ using System.Text.Json.Serialization;
 
 namespace Althea.Helpers
 {
-	// TODO: thread static
 	#region print setting
 	/// <summary>
 	/// The structure for print settings
@@ -63,6 +62,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The static class for global settings
 	/// </summary>
+	/// <remarks>Notice that the settings are thread static (see <see cref="ThreadStaticAttribute"/>).</remarks>
 	public static partial class Settings
 	{
 		#region class for settings
@@ -141,13 +141,13 @@ namespace Althea.Helpers
 
 		internal record JsonSettings
 		{
-			public LogSettings LogSettings;
+			public LogSettings LogSettings { get; set; }
 
-			public PrintSettings PrintSettings;
+			public PrintSettings PrintSettings { get; set; }
 
-			public ImplementationSettings ImplementationSettings;
+			public ImplementationSettings ImplementationSettings { get; set; }
 
-			public int StackAllocLimit;
+			public int StackAllocLimit { get; set; }
 
 			internal JsonSettings()
 			{
@@ -167,6 +167,7 @@ namespace Althea.Helpers
 			}
 		}
 
+		[ThreadStatic]
 		internal static JsonSettings singletonSettings = new();
 		#endregion
 
@@ -390,7 +391,7 @@ namespace Althea.Helpers
 		#endregion
 
 		#region extension methods
-		internal static ISetBackend GetInternalBackend(string name)
+		private static ISetBackend GetInternalBackend(string name)
 		{
 			if (Type.GetType($"Althea.Backend.{name}.{name}Implementations")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not ISetBackend res)
 				throw new InvalidOperationException();
@@ -419,7 +420,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <typeparam name="T">The data type</typeparam>
 		/// <param name="length">The desired length to allocate</param>
-		/// <param name="sizeT">Output the size of <typeparamref name="T"/></param>
+		/// <param name="sizeT">Output the size of <typeparamref name="T"/> (always the size of <see cref="IntPtr"/> when <typeparamref name="T"/> is a reference type)</param>
 		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T[]? CheckStackLimit<T>(this int length, out int sizeT) where T : notnull

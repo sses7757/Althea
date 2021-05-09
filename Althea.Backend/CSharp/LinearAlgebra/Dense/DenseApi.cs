@@ -9,6 +9,7 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
 
+
 namespace Althea.Backend.CSharp.LinearAlgebra
 {
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -171,7 +172,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, T* r) where T : unmanaged
 		{
-			Unsafe.WriteUnaligned(r, v1);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 0, v1);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 1, v2);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 2, v3);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 3, v4);
@@ -179,14 +180,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, Vector<T> v5, Vector<T> v6, Vector<T> v7, Vector<T> v8, T* r) where T : unmanaged
 		{
-			Unsafe.WriteUnaligned(r, v1);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 0, v1);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 1, v2);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 2, v3);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 3, v4);
-			Unsafe.WriteUnaligned(r + Vector<T>.Count * 4, v1);
-			Unsafe.WriteUnaligned(r + Vector<T>.Count * 5, v2);
-			Unsafe.WriteUnaligned(r + Vector<T>.Count * 6, v3);
-			Unsafe.WriteUnaligned(r + Vector<T>.Count * 7, v4);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 4, v5);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 5, v6);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 6, v7);
+			Unsafe.WriteUnaligned(r + Vector<T>.Count * 7, v8);
 		}
 
 
@@ -408,9 +409,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			UnpackComplexMultiplyAdd<Conj>(realA, imagA, realB, imagB, ref realC, ref imagC);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ComplexMultiply<Conj>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> c0, out Vector256<float> c1)
+		private static void ComplexMultiply<Conj, PackOut>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> c0, out Vector256<float> c1)
 		{
 			bool conj = typeof(Conj) == typeof(bool);
+			bool packOutput = typeof(PackOut) == typeof(bool);
 			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 
 			Vector256<float> AiBi = Avx.Multiply(imagA, imagB);
@@ -444,12 +446,20 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					imag = Avx.Subtract(ArBi, AiBr);
 				}
 			}
-			ComplexPack(real, imag, out c0, out c1);
+			if (packOutput)
+			{
+				ComplexPack(real, imag, out c0, out c1);
+			}
+			else
+			{
+				c0 = real; c1 = imag;
+			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ComplexMultiply<Conj>(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, out Vector256<double> c0, out Vector256<double> c1)
+		private static void ComplexMultiply<Conj, PackOut>(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, out Vector256<double> c0, out Vector256<double> c1)
 		{
 			bool conj = typeof(Conj) == typeof(bool);
+			bool packOutput = typeof(PackOut) == typeof(bool);
 			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 
 			Vector256<double> AiBi = Avx.Multiply(imagA, imagB);
@@ -483,7 +493,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					imag = Avx.Subtract(ArBi, AiBr);
 				}
 			}
-			ComplexPack(real, imag, out c0, out c1);
+			if (packOutput)
+			{
+				ComplexPack(real, imag, out c0, out c1);
+			}
+			else
+			{
+				c0 = real; c1 = imag;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -514,7 +531,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Vector256<float> b0 = LoadVector256<float>(b);
 			Vector256<float> b1 = LoadVector256<float>(b + Vector256<float>.Count / 2);
 
-			ComplexMultiply<Conj>(a0, a1, b0, b1, out left, out right);
+			ComplexMultiply<Conj, bool>(a0, a1, b0, b1, out left, out right);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe void ComplexMultiply<Conj>(ComplexDouble* a, ComplexDouble* b, out Vector256<double> left, out Vector256<double> right)
@@ -524,7 +541,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Vector256<double> b0 = LoadVector256<double>(b);
 			Vector256<double> b1 = LoadVector256<double>(b + Vector256<double>.Count / 2);
 
-			ComplexMultiply<Conj>(a0, a1, b0, b1, out left, out right);
+			ComplexMultiply<Conj, bool>(a0, a1, b0, b1, out left, out right);
 		}
 		#endregion
 
