@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
 using Althea.Helpers;
 using Althea.NativeTypes;
+
 
 namespace Althea.TensorAlgebra.Sparse
 {
@@ -16,22 +16,23 @@ namespace Althea.TensorAlgebra.Sparse
 	public enum SparseTensorFormat : int
 	{
 		/// <summary>
-		/// The simple Coordinate Sparse Format that stores each non-zero element and its <b>zero-based</b> index in separate storages.
+		/// The simple Coordinate sparse tensor format that stores each non-zero element and its <b>zero-based</b> index in separate storages.<br/>
+		/// This is similar to <see cref="LinearAlgebra.Sparse.SparseMatrixFormat.COOC"/>.
 		/// </summary>
-		Coordinated = 1 << 0,
+		COO = 1 << 0,
 		/// <summary>
-		/// The Block Coordinated Sparse Format that divides the tensor into block tensors of fixed size and store their <b>zero-based</b> indices in a storage.<br/>
+		/// The Blocked Coordinated sparse tensor format that divides the tensor into block tensors of fixed size and store their <b>zero-based</b> indices in a storage.<br/>
 		/// This is similar to the <see cref="LinearAlgebra.Sparse.SparseMatrixFormat.BCOC"/>.
 		/// </summary>
-		BlockCoordinated = 1 << 1,
+		BCO = 1 << 1,
 		/// <summary>
-		/// The Variable Block Sparse Format that only differs from <see cref="BlockCoordinated"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
+		/// The Variable Blocked Coordinated sparse tensor format that only differs from <see cref="BCO"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
 		/// Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of corresponding dimensions.
 		/// </summary>
-		VariableBlockCoordinated = 1 << 2,
+		VBC = 1 << 2,
 		/////// <summary>
-		/////// The Abelian Block Sparse Format that labels block tensors with 'charges' within a certain Abelian group with a fixed summation.<br/>
-		/////// This only differs from <see cref="VariableBlockCoordinated"/> by adding charge constraints.
+		/////// The Abelian Variable Blocked Coordinated sparse tensor format that labels block tensors with 'charges' within a certain Abelian group with a fixed summation.<br/>
+		/////// This only differs from <see cref="VBC"/> by adding charge constraints.
 		/////// </summary>
 		////Abelian = 1 << 3,
 	}
@@ -46,11 +47,9 @@ namespace Althea.TensorAlgebra.Sparse
 	{
 		private readonly Storage<T> m_values;
 
-		private readonly IReadOnlyList<IStorage> m_indexArrays;
+		private readonly ISparseTensor<T> m_orignalTensor;
 
 		private readonly ReadOnlySpan<long> m_size;
-
-		private readonly DataType m_indexType;
 
 		private readonly SparseTensorFormat m_format;
 
@@ -67,20 +66,11 @@ namespace Althea.TensorAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// Get the index arrays' storages of this sparse tensor wrapper as a list of <see cref="IStorage"/>
+		/// Get the original sparse tensor as an <see cref="ISparseTensor{T}"/>
 		/// </summary>
-		/// <remarks>If this was created using defined constructors, this is also the actual sparse tensor</remarks>
-		public IReadOnlyList<IStorage> IndexArrays {
+		public ISparseTensor<T> OriginalTensor {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexArrays;
-		}
-
-		/// <summary>
-		/// Get the (major) data type of the index array(s) of this sparse tensor wrapper as a <see cref="DataType"/>
-		/// </summary>
-		public DataType IndexType {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_indexType;
+			get => this.m_orignalTensor;
 		}
 
 		/// <summary>
@@ -128,7 +118,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// </summary>
 		/// <returns>The invalidness of this wrapper</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsInvalid() => this.m_values is null || this.m_indexArrays is null || this.m_size.IsEmpty || this.m_indexArrays.Count == 0 || !this.m_values.IsValid();
+		public bool IsInvalid() => this.m_values is null || this.m_orignalTensor is null || this.m_size.IsEmpty || !this.m_values.IsValid();
 
 		/// <summary>
 		/// Check whether this wrapper is an invalid one or not when it is an input parameter
@@ -151,18 +141,17 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <summary>
 		/// Create a new <see cref="SparseTensorWrapper{T}"/> with all given parameters
 		/// </summary>
-		/// <param name="value">The given sparse tensor</param>
+		/// <param name="tensor">The given sparse tensor</param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SparseTensorWrapper(ISparseTensor<T> value, T scalar, UnaryOperation operation = UnaryOperation.Identity)
+		public SparseTensorWrapper(ISparseTensor<T> tensor, T scalar, UnaryOperation operation = UnaryOperation.Identity)
 		{
-			this.m_values = value.Storage;
-			this.m_indexArrays = value;
-			this.m_format = value.Format;
-			this.m_default = value.DefaultValue;
-			this.m_indexType = value.IndexType;
-			this.m_size = value.Size;
+			this.m_values = tensor.Storage;
+			this.m_orignalTensor = tensor;
+			this.m_format = tensor.Format;
+			this.m_default = tensor.DefaultValue;
+			this.m_size = tensor.Size;
 			this.m_op = operation;
 			this.m_scalar = scalar;
 		}

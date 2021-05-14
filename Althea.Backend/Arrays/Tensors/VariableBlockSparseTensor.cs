@@ -1,6 +1,4 @@
-﻿// TODO: write this later
-
-/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -29,12 +27,12 @@ namespace Althea.Backend.Arrays
 	#endregion
 
 	/// <summary>
-	/// The concrete variable blocked sparse tensor class of format <see cref="SparseTensorFormat.VariableBlockCoordinated"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="VariableBlockSparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset (of blocked tensors) array storage.
+	/// The concrete variable blocked sparse tensor class of format <see cref="SparseTensorFormat.VBC"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="VariableBlockSparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset (of blocked tensors) array storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public class VariableBlockSparseTensor<T, TInd> : Althea.Arrays.SparseTensor<T, TInd>, IKrylovVector<VariableBlockSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
+	public class VariableBlockSparseTensor<T, TInd> : BaseSparseTensor<T, TInd>, IKrylovVector<VariableBlockSparseTensor<T, TInd>, T> where T : unmanaged where TInd : unmanaged
 	{
 		#region basic
 		[FieldOffset(0)]
@@ -125,14 +123,14 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Create an empty <see cref="VariableBlockSparseTensor{T, TInd}"/>
 		/// </summary>
-		public VariableBlockSparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.VariableBlockCoordinated)
+		public VariableBlockSparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.VBC)
 		{
 			this.m_index = this.m_originalIndex = Storage<TInd>.Empty;
 			this.m_blockLengths = this.m_orginalBlockLengths = default;
 		}
 
 		/// <summary>
-		/// Create a <see cref="VariableBlockSparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.VariableBlockCoordinated"/> with given <paramref name="size"/>, <paramref name="blockLengths"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/> of block tensors.
+		/// Create a <see cref="VariableBlockSparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.VBC"/> with given <paramref name="size"/>, <paramref name="blockLengths"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/> of block tensors.
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
@@ -868,4 +866,3 @@ namespace Althea.Backend.Arrays
 		#endregion
 	}
 }
-*/

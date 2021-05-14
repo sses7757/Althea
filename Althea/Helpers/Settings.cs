@@ -167,8 +167,16 @@ namespace Althea.Helpers
 			}
 		}
 
+		private static JsonSettings singletonSetting;
+
 		[ThreadStatic]
-		internal static JsonSettings singletonSettings = new();
+		internal static JsonSettings settings;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void UpdateSingletonSetting()
+		{
+			singletonSetting = settings;
+		}
 		#endregion
 
 		#region print settings
@@ -176,45 +184,63 @@ namespace Althea.Helpers
 		/// Get and set the whole <see cref="PrintSettings"/>
 		/// </summary>
 		public static PrintSettings PrintSetting {
-			get => singletonSettings.PrintSettings;
-			set => singletonSettings.PrintSettings = value;
+			get => settings.PrintSettings;
+			set {
+				settings.PrintSettings = value;
+				UpdateSingletonSetting();
+			}
 		}
 
 		/// <summary>
 		/// Get and set how many digital numbers will be printed out for a supported data type
 		/// </summary>
 		public static int PrintPrecision {
-			get => singletonSettings.PrintSettings.Precision;
-			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, precision: value);
-		}
+			get => settings.PrintSettings.Precision;
+			set { 
+				settings.PrintSettings = new PrintSettings(settings.PrintSettings, precision: value);
+				UpdateSingletonSetting();
+			}
+}
 
 		/// <summary>
 		/// Get and set the maximum number of lines of printed vectors and sparse matrices
 		/// </summary>
 		public static int PrintArrayLength {
-			get => singletonSettings.PrintSettings.ArrayLength;
-			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, arrayLength: value);
+			get => settings.PrintSettings.ArrayLength;
+			set {
+				settings.PrintSettings = new PrintSettings(settings.PrintSettings, arrayLength: value);
+				UpdateSingletonSetting();
+			}
 		}
 		/// <summary>
 		/// Get and set the maximum number of rows of printed matrices
 		/// </summary>
 		public static int PrintMatrixRow {
-			get => singletonSettings.PrintSettings.MatrixRow;
-			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixRow: value);
+			get => settings.PrintSettings.MatrixRow;
+			set {
+				settings.PrintSettings = new PrintSettings(settings.PrintSettings, matrixRow: value);
+				UpdateSingletonSetting();
+			}
 		}
 		/// <summary>
 		/// Get and set the maximum number of columns of printed matrices
 		/// </summary>
 		public static int PrintMatrixColumn {
-			get => singletonSettings.PrintSettings.MatrixColumn;
-			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixColumn: value);
+			get => settings.PrintSettings.MatrixColumn;
+			set {
+				settings.PrintSettings = new PrintSettings(settings.PrintSettings, matrixColumn: value);
+				UpdateSingletonSetting();
+			}
 		}
 		/// <summary>
 		/// Get and set whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
 		/// </summary>
 		public static bool PrintTensorAsEmbeddedMatrices {
-			get => singletonSettings.PrintSettings.MatrixFormTensor;
-			set => singletonSettings.PrintSettings = new PrintSettings(singletonSettings.PrintSettings, matrixFormTensor: value);
+			get => settings.PrintSettings.MatrixFormTensor;
+			set {
+				settings.PrintSettings = new PrintSettings(settings.PrintSettings, matrixFormTensor: value);
+				UpdateSingletonSetting();
+			}
 		}
 		#endregion
 
@@ -224,8 +250,11 @@ namespace Althea.Helpers
 		/// Get and set the maximum size in bytes when using C# keyword "stackalloc" to reduce GC pressure. The default stack size of x64 C# program is 4MB, set a value larger than this may cause unexpected error(s).
 		/// </summary>
 		public static int StackAllocLimit {
-			get => singletonSettings.StackAllocLimit;
-			set => singletonSettings.StackAllocLimit = value;
+			get => settings.StackAllocLimit;
+			set {
+				settings.StackAllocLimit = value;
+				UpdateSingletonSetting();
+			}
 		}
 		#endregion
 
@@ -236,29 +265,32 @@ namespace Althea.Helpers
 		/// If the value is false and some implementation classes maintains large memory blocks (such as handle of cuBLAS), they will be maintained so that there will be some memory loss.
 		/// </summary>
 		public static bool DisposeNotCurrentImplementation {
-			get => singletonSettings.ImplementationSettings.DisposeNotCurrentImplementation;
-			set => singletonSettings.ImplementationSettings.DisposeNotCurrentImplementation = value;
+			get => settings.ImplementationSettings.DisposeNotCurrentImplementation;
+			set {
+				settings.ImplementationSettings.DisposeNotCurrentImplementation = value;
+				UpdateSingletonSetting();
+			}
 		}
 
 		private static bool CheckAllBackend(ISetBackend backend)
 		{
-			return	singletonSettings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation &&
-					singletonSettings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation &&
-					singletonSettings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation &&
-					singletonSettings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation &&
-					singletonSettings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation &&
-					singletonSettings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation &&
-					singletonSettings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
+			return	settings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation &&
+					settings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation &&
+					settings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation &&
+					settings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation &&
+					settings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation &&
+					settings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation &&
+					settings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
 		}
 		private static bool CheckAnyBackend(ISetBackend backend)
 		{
-			return	singletonSettings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation ||
-					singletonSettings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation ||
-					singletonSettings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation ||
-					singletonSettings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation ||
-					singletonSettings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation ||
-					singletonSettings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation ||
-					singletonSettings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
+			return	settings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation ||
+					settings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation ||
+					settings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation ||
+					settings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation ||
+					settings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation ||
+					settings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation ||
+					settings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
 		}
 
 		/// <summary>
@@ -272,7 +304,7 @@ namespace Althea.Helpers
 				return false;
 			try
 			{
-				singletonSettings.ImplementationSettings = new(backend);
+				settings.ImplementationSettings = new(backend);
 				return CheckAllBackend(backend);
 			}
 			catch (Exception)
@@ -285,6 +317,7 @@ namespace Althea.Helpers
 		#region import and export
 		private static readonly JsonSerializerOptions options = new()
 		{
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 			DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
 			IncludeFields = true,
 			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
@@ -307,7 +340,7 @@ namespace Althea.Helpers
 			}
 			catch (Exception e)
 			{
-				singletonSettings = new JsonSettings();
+				settings = new JsonSettings();
 				if (logError)
 				{
 					Log.Write(Resources.Other.ErrorOccur + e.Message, level: LogLevel.Error);
@@ -332,15 +365,23 @@ namespace Althea.Helpers
 
 		static Settings()
 		{
-			// set default implementations
-			// C# implementations
-			SetBackend(GetInternalBackend(@"CSharp"));
-			// CUDA implementations
-			SetBackend(GetInternalBackend(@"Cuda"));
-			// MKL implementations, the real default implementation
-			SetBackend(GetInternalBackend(@"Mkl"));
-			// import at last
-			Import(logError: true);
+			if (singletonSetting is null)
+			{
+				// set default implementations
+				settings = new();
+				// CUDA implementations
+				SetBackend(GetInternalBackend(@"Cuda"));
+				// MKL implementations, the real default implementation
+				SetBackend(GetInternalBackend(@"Mkl"));
+				// import at last
+				Import(logError: true);
+				// set thread shared
+				singletonSetting = settings;
+			}
+			else
+			{
+				settings = singletonSetting;
+			}
 		}
 
 		/// <summary>
@@ -350,42 +391,42 @@ namespace Althea.Helpers
 		{
 			var currentOptions = new JsonSerializerOptions(options);
 
-			singletonSettings.ImplementationSettings.Storage = Storage.AbstractApi.Current;
+			settings.ImplementationSettings.Storage = Storage.AbstractApi.Current;
 			var converter = Storage.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			singletonSettings.ImplementationSettings.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
+			settings.ImplementationSettings.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
 			converter = LinearAlgebra.Dense.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			singletonSettings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
+			settings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
 			converter = LinearAlgebra.Sparse.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			singletonSettings.ImplementationSettings.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
+			settings.ImplementationSettings.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
 			converter = TensorAlgebra.Dense.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			singletonSettings.ImplementationSettings.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
+			settings.ImplementationSettings.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
 			converter = TensorAlgebra.Sparse.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			singletonSettings.ImplementationSettings.Random = Random.AbstractApi.Current;
+			settings.ImplementationSettings.Random = Random.AbstractApi.Current;
 			converter = Random.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			singletonSettings.ImplementationSettings.Solver = Solver.AbstractApi.Current;
+			settings.ImplementationSettings.Solver = Solver.AbstractApi.Current;
 			converter = Solver.AbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			string json = JsonSerializer.Serialize(singletonSettings, currentOptions);
+			string json = JsonSerializer.Serialize(settings, currentOptions);
 			File.WriteAllText(fileName, json);
 		}
 		#endregion

@@ -58,10 +58,19 @@ namespace Althea.Helpers
 		}
 
 		[System.Text.Json.Serialization.JsonConstructor]
-		internal LogSettings(bool suppress, int bufferSize, int wrapLimit, string path, LogLevel printLevels, LogLevel bufferLevels)
+		internal LogSettings(bool suppress, int bufferSize, int wrapLimit, string path, string[] printLevels, string[] bufferLevels)
 		{
 			Suppress = suppress; BufferSize = bufferSize; WrapLimit = wrapLimit; Path = path;
-			PrintLevels = printLevels; BufferLevels = bufferLevels;
+			PrintLevels = 0;
+			foreach (var p in printLevels)
+			{
+				PrintLevels |= Enum.Parse<LogLevel>(p);
+			}
+			BufferLevels = 0;
+			foreach (var b in bufferLevels)
+			{
+				BufferLevels |= Enum.Parse<LogLevel>(b);
+			}
 		}
 	}
 	#endregion
@@ -298,48 +307,70 @@ namespace Althea.Helpers
 		/// Get or set whether the log file output should be suppressed
 		/// </summary>
 		public static bool SuppressLog {
-			get => Settings.singletonSettings.LogSettings.Suppress;
-			set => Settings.singletonSettings.LogSettings.Suppress = value;
+			get => Settings.settings.LogSettings.Suppress;
+			set {
+				Settings.settings.LogSettings.Suppress = value;
+				Settings.UpdateSingletonSetting();
+			}
 		}
 
 		/// <summary>
 		/// Get or set the directory and file name of the log file
 		/// </summary>
 		public static string FilePath {
-			get => Settings.singletonSettings.LogSettings.Path;
-			set => Settings.singletonSettings.LogSettings.Path = value;
-		}
+			get => Settings.settings.LogSettings.Path;
+			set {
+				Settings.settings.LogSettings.Path = value;
+				Settings.UpdateSingletonSetting();
+			}
+}
 
 		/// <summary>
 		/// Get or set the buffer size used for output
 		/// </summary>
 		public static int BufferSize {
-			get => Settings.singletonSettings.LogSettings.BufferSize;
-			set => Settings.singletonSettings.LogSettings.BufferSize = value;
+			get => Settings.settings.LogSettings.BufferSize;
+			set {
+				Settings.settings.LogSettings.BufferSize = value;
+				Settings.UpdateSingletonSetting();
+			}
 		}
 
 		/// <summary>
 		/// Get or set the maximum width (in characters) of a printed line
 		/// </summary>
 		public static int WrapLimit {
-			get => Settings.singletonSettings.LogSettings.WrapLimit;
-			set => Settings.singletonSettings.LogSettings.WrapLimit = value;
+			get => Settings.settings.LogSettings.WrapLimit;
+			set {
+				Settings.settings.LogSettings.WrapLimit = value;
+				Settings.UpdateSingletonSetting();
+			}
 		}
 
 		/// <summary>
 		/// Get or set the <see cref="LogLevel"/>s to print to console immediately
 		/// </summary>
 		public static LogLevel PrintLevels {
-			get => Settings.singletonSettings.LogSettings.PrintLevels;
-			set => Settings.singletonSettings.LogSettings.PrintLevels = value.IsValid() ? value : throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
+			get => Settings.settings.LogSettings.PrintLevels;
+			set {
+				if (!value.IsValid())
+					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
+				Settings.settings.LogSettings.PrintLevels = value;
+				Settings.UpdateSingletonSetting();
+			}
 		}
 
 		/// <summary>
 		/// Get or set the <see cref="LogLevel"/>s to buffer
 		/// </summary>
 		public static LogLevel BufferLevels {
-			get => Settings.singletonSettings.LogSettings.BufferLevels;
-			set => Settings.singletonSettings.LogSettings.BufferLevels = value.IsValid() ? value : throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
+			get => Settings.settings.LogSettings.BufferLevels;
+			set {
+				if (!value.IsValid())
+					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
+				Settings.settings.LogSettings.BufferLevels = value;
+				Settings.UpdateSingletonSetting();
+			}
 		}
 		#endregion
 

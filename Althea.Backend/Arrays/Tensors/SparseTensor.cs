@@ -19,7 +19,7 @@ using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
 namespace Althea.Backend.Arrays
 {
 	/// <summary>
-	/// The concrete sparse tensor class of format <see cref="SparseTensorFormat.Coordinated"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="SparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset array storage.
+	/// The concrete sparse tensor class of format <see cref="SparseTensorFormat.COO"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="SparseTensor{T, TInd}.OffsetStorage"/> refers to the overall offset array storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
@@ -57,14 +57,14 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Create an empty <see cref="SparseTensor{T, TInd}"/>
 		/// </summary>
-		public SparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.Coordinated)
+		public SparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.COO)
 		{
 			this.m_index = this.m_originalIndex = Storage<TInd>.Empty;
 			this.m_vector = new();
 		}
 
 		/// <summary>
-		/// Create a <see cref="SparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.Coordinated"/> with given <paramref name="size"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/>.
+		/// Create a <see cref="SparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.COO"/> with given <paramref name="size"/>, <paramref name="valueArray"/> and total presenting <paramref name="offsets"/>.
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
 		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
@@ -75,7 +75,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or <paramref name="offsets"/> is null or empty</exception>
-		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(size, valueArray, SparseTensorFormat.Coordinated, labels, defaultValue, stores)
+		public SparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, Storage<TInd> offsets, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(size, valueArray, SparseTensorFormat.COO, labels, defaultValue, stores)
 		{
 			var span = MemoryMarshal.CreateReadOnlySpan(ref offsets, 1);
 			Storage<TInd> refIndexArray = Storage<TInd>.Empty;

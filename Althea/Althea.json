@@ -2,53 +2,57 @@
 // Notice: Do not change the section names.
 
 {
-  "LogSettings": {
-    // whether the log file output should be suppressed
-    "SuppressLog": true,
-    // Buffer size used for output
-    "BufferSize": 1024,
-    // The maximum width (in characters) of a printed line
-    "WrapLimit": 125,
-    // The directory that log file should be
-    "LogPath": "F:\\git\\CudaCSharp\\Althea.log",
-    // The printing levels
-    "PrintLevels": [
-      "Error",
-      "Warning",
-      "Information"
-    ],
-    // The buffer levels
-    "BufferLevels": [
-      "Trace",
-      "Debug"
-    ]
-  },
+	"LogSettings": {
+		// whether the log file output should be suppressed
+		"SuppressLog": true,
+		// Buffer size used for output
+		"BufferSize": 1024,
+		// The maximum width (in characters) of a printed line
+		"WrapLimit": 125,
+		// The directory that log file should be
+		"LogPath": "Althea.log",
+		// The printing levels
+		"PrintLevels": [
+			"Error",
+			"Warning",
+			"Information"
+		],
+		// The buffer levels
+		"BufferLevels": [
+			"Trace",
+			"Debug"
+		]
+	},
 
-  "PrintSettings": {
-    // How many digital numbers will be printed out for a supported data type
-    "Precision": 8,
-    // The maximum number of lines of printed vectors and sparse matrices
-    "ArrayLength": 64,
-    // The maximum number of rows of printed matrices
-    "MatrixRow": 32,
-    // The maximum number of columns of printed matrices
-    "MatrixColumn": 32
-  },
+	"PrintSettings": {
+		// How many digital numbers will be printed out for a supported data type
+		"Precision": 8,
+		// The maximum number of lines of printed vectors and sparse matrices
+		"ArrayLength": 64,
+		// The maximum number of rows of printed matrices
+		"MatrixRow": 32,
+		// The maximum number of columns of printed matrices
+		"MatrixColumn": 32,
+		// Whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
+		"MatrixFormTensor": true
+	},
 
-  "ImplementationSettings": {
-    // When the current implementation does not support given condition, shall this library try to find and use the most recent one that support such condition or not? If so, an error will be thrown when there is no suitable implementation. If not, this library will try to create temporary memory which fits the current implementation (may cause significant performance loss). If memory allocation or copies fails, an error will be thrown.
-    ////"UseRecentImplementation": true,
-    // When a new implementation is indicated, whether elder ones will be disposed or not. If the value is true while 'UseRecentImplementation' is true, there may be creations and dispositions of implementation classes. If the value is false and some implementation classes maintains large memory blocks (such as handle of cuBLAS), they will be maintained until this value is set to false.
-    "DisposeNotCurrentImplementation": true,
-    // Which memory / storage implementation to use
-    "Memory": null,
-    // Which linear algebra implementation to use
-    "LinearAlgebra": null,
-    // Which tensor algebra implementation to use
-    "TensorAlgebra": null, //"TTGT.HpTT.HPTensor (CUTensor), TTGT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-    // Which statistics implementation to use
-    "Random": null,
-    // Which general solver implementation to use
-    "Solver": null
-  }
+	"ImplementationSettings": {
+		// When a new implementation is indicated, whether elder ones will be disposed or not. If the value is true while 'UseRecentImplementation' is true, there may be creations and dispositions of implementation classes. If the value is false and some implementation classes maintains large memory blocks (such as handle of cuBLAS), they will be maintained until this value is set to false.
+		"DisposeNotCurrentImplementation": true,
+		// Which memory / storage implementation to use
+		"Storage": null,
+		// Which dense linear algebra implementation to use
+		"LinearAlgebraDense": null,
+		// Which sparse linear algebra implementation to use
+		"LinearAlgebraSparse": null,
+		// Which dense tensor algebra implementation to use
+		"TensorAlgebraDense": null,
+		// Which sparse tensor algebra implementation to use
+		"TensorAlgebraSparse": null,
+		// Which statistics / random implementation to use
+		"Random": null,
+		// Which general solver implementation to use
+		"Solver": null
+	}
 }

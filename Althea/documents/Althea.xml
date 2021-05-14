@@ -17049,20 +17049,21 @@
             The <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorFormat"/> enum indicates the format specification of a sparse tensor. Each bit flag indicates an atomic format.
             </summary>
         </member>
-        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.Coordinated">
+        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.COO">
             <summary>
-            The simple Coordinate Sparse Format that stores each non-zero element and its <b>zero-based</b> index in separate storages.
+            The simple Coordinate sparse tensor format that stores each non-zero element and its <b>zero-based</b> index in separate storages.<br/>
+            This is similar to <see cref="F:Althea.LinearAlgebra.Sparse.SparseMatrixFormat.COOC"/>.
             </summary>
         </member>
-        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BlockCoordinated">
+        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BCO">
             <summary>
-            The Block Coordinated Sparse Format that divides the tensor into block tensors of fixed size and store their <b>zero-based</b> indices in a storage.<br/>
+            The Blocked Coordinated sparse tensor format that divides the tensor into block tensors of fixed size and store their <b>zero-based</b> indices in a storage.<br/>
             This is similar to the <see cref="F:Althea.LinearAlgebra.Sparse.SparseMatrixFormat.BCOC"/>.
             </summary>
         </member>
-        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.VariableBlockCoordinated">
+        <member name="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.VBC">
             <summary>
-            The Variable Block Sparse Format that only differs from <see cref="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BlockCoordinated"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
+            The Variable Blocked Coordinated sparse tensor format that only differs from <see cref="F:Althea.TensorAlgebra.Sparse.SparseTensorFormat.BCO"/> by letting the block tensors have variable sizes while the alignments are still necessary.<br/>
             Therefore the implementation shall contains an extra (size == rank) array whose elements are aligned lengths (or accumulated ones) of corresponding dimensions.
             </summary>
         </member>
@@ -17077,15 +17078,9 @@
             Get the value array storage of this sparse tensor wrapper
             </summary>
         </member>
-        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IndexArrays">
+        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.OriginalTensor">
             <summary>
-            Get the index arrays' storages of this sparse tensor wrapper as a list of <see cref="T:Althea.IStorage"/>
-            </summary>
-            <remarks>If this was created using defined constructors, this is also the actual sparse tensor</remarks>
-        </member>
-        <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.IndexType">
-            <summary>
-            Get the (major) data type of the index array(s) of this sparse tensor wrapper as a <see cref="T:Althea.NativeTypes.DataType"/>
+            Get the original sparse tensor as an <see cref="T:Althea.Arrays.ISparseTensor`1"/>
             </summary>
         </member>
         <member name="P:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1.DefaultValue">
@@ -17136,7 +17131,7 @@
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Sparse.SparseTensorWrapper`1"/> with all given parameters
             </summary>
-            <param name="value">The given sparse tensor</param>
+            <param name="tensor">The given sparse tensor</param>
             <param name="operation">The <see cref="T:Althea.TensorAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
             <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
         </member>

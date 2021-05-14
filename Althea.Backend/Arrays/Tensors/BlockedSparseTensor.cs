@@ -73,7 +73,7 @@ namespace Althea.Backend.Arrays
 	#endregion
 
 	/// <summary>
-	/// The concrete blocked sparse tensor class of format <see cref="SparseTensorFormat.BlockCoordinated"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="BlockedSparseTensor{T, TInd}.PositionStorages"/> refer to the overall position (of blocked tensors) storage.
+	/// The concrete blocked sparse tensor class of format <see cref="SparseTensorFormat.BCO"/> with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage and the <see cref="BlockedSparseTensor{T, TInd}.PositionStorages"/> refer to the overall position (of blocked tensors) storage.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
@@ -139,14 +139,14 @@ namespace Althea.Backend.Arrays
 		/// <summary>
 		/// Create an empty <see cref="BlockedSparseTensor{T, TInd}"/>
 		/// </summary>
-		public BlockedSparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.BlockCoordinated)
+		public BlockedSparseTensor() : base(stackalloc long[1], Storage<T>.Empty, SparseTensorFormat.BCO)
 		{
 			this.m_originalPosition = this.m_position = default;
 			this.m_blockLength = 0;
 		}
 
 		/// <summary>
-		/// Create a <see cref="BlockedSparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.BlockCoordinated"/> with given <paramref name="size"/>, <paramref name="blockSize"/>, <paramref name="valueArray"/> and total presenting <paramref name="position"/> of block tensors.
+		/// Create a <see cref="BlockedSparseTensor{T, TInd}"/> of format <see cref="SparseTensorFormat.BCO"/> with given <paramref name="size"/>, <paramref name="blockSize"/>, <paramref name="valueArray"/> and total presenting <paramref name="position"/> of block tensors.
 		/// </summary>
 		/// <param name="size">The presenting size of this sparse tensor</param>
 		/// <param name="blockSize">The size of the block tensors</param>
@@ -158,7 +158,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an integral type</exception>
 		/// <exception cref="ArgumentException">If <paramref name="labels"/>'s length is neither 0 nor the same as the rank; or <paramref name="size"/> cannot be divided by <paramref name="blockSize"/>; or <paramref name="position"/> has incompatible size</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> or any of <paramref name="position"/> is null or empty</exception>
-		public BlockedSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<int> blockSize, Storage<T> valueArray, ReadOnlySpan<Storage<TInd>> position, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(size, valueArray, SparseTensorFormat.BlockCoordinated, labels, defaultValue, stores)
+		public BlockedSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<int> blockSize, Storage<T> valueArray, ReadOnlySpan<Storage<TInd>> position, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(size, valueArray, SparseTensorFormat.BCO, labels, defaultValue, stores)
 		{
 			if (position.Length != size.Length)
 				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(position));
