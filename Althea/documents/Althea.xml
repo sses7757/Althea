@@ -3349,270 +3349,6 @@
             <param name="to">The second mismatch type</param>
             <param name="reason">The mismatch reason</param>
         </member>
-        <member name="T:Althea.Helpers.FixedClassBuffer_2`1">
-            <summary>
-            The fixed buffer struct of class type <typeparamref name="T"/> with size = 2.
-            </summary>
-            <typeparam name="T">Any class</typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.#ctor(`0[])">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> with a given <paramref name="array"/>
-            </summary>
-            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 2</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.#ctor(System.ReadOnlySpan{`0})">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> with a given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 2</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_2`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_2`1.Count">
-            <summary>
-            Get the number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.Equals(Althea.Helpers.FixedClassBuffer_2{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.op_Equality(Althea.Helpers.FixedClassBuffer_2{`0},Althea.Helpers.FixedClassBuffer_2{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.op_Inequality(Althea.Helpers.FixedClassBuffer_2{`0},Althea.Helpers.FixedClassBuffer_2{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedClassBuffer_8`1">
-            <summary>
-            The fixed buffer struct of class type <typeparamref name="T"/> with size = 8.
-            </summary>
-            <typeparam name="T">Any class</typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(`0[])">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> with a given <paramref name="array"/>
-            </summary>
-            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(System.ReadOnlySpan{`0})">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> with a given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 8</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Count">
-            <summary>
-            Get the number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(Althea.Helpers.FixedClassBuffer_8{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Equality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Inequality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedClassBuffer_16`1">
-            <summary>
-            The fixed buffer struct of class type <typeparamref name="T"/> with size = 16.
-            </summary>
-            <typeparam name="T">Any class</typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.#ctor(`0[])">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> with a given <paramref name="array"/>
-            </summary>
-            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 16</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.#ctor(System.ReadOnlySpan{`0})">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> with a given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
-            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 16</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.AsSpan``1(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
-            </summary>
-            <typeparam name="TClass">Another class type as the output type</typeparam>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Count">
-            <summary>
-            Get the number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.Equals(Althea.Helpers.FixedClassBuffer_16{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.op_Equality(Althea.Helpers.FixedClassBuffer_16{`0},Althea.Helpers.FixedClassBuffer_16{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.op_Inequality(Althea.Helpers.FixedClassBuffer_16{`0},Althea.Helpers.FixedClassBuffer_16{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/></returns>
-        </member>
         <member name="T:Althea.Helpers.IFixedBuffer`1">
             <summary>
             The interface for fixed buffer structures
@@ -3669,916 +3405,6 @@
             </summary>
             <param name="value">The value to find</param>
             <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_12`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 12
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <param name="size">The size of the span, default 0 means all</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_12`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_12`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_12`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.Equals(Althea.Helpers.FixedBuffer_12{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_12`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.op_Equality(Althea.Helpers.FixedBuffer_12{`0},Althea.Helpers.FixedBuffer_12{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.op_Inequality(Althea.Helpers.FixedBuffer_12{`0},Althea.Helpers.FixedBuffer_12{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_8`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 8
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <param name="size">The size of the span, default 0 means all</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_8`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_8`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_8`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.Equals(Althea.Helpers.FixedBuffer_8{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_8`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.op_Equality(Althea.Helpers.FixedBuffer_8{`0},Althea.Helpers.FixedBuffer_8{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.op_Inequality(Althea.Helpers.FixedBuffer_8{`0},Althea.Helpers.FixedBuffer_8{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_16`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 16
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <param name="size">The size of the span, default 0 means all</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_16`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_16`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_16`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.Equals(Althea.Helpers.FixedBuffer_16{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_16`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_16`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.op_Equality(Althea.Helpers.FixedBuffer_16{`0},Althea.Helpers.FixedBuffer_16{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.op_Inequality(Althea.Helpers.FixedBuffer_16{`0},Althea.Helpers.FixedBuffer_16{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_16`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_16`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_16`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_32`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 32
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_32`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_32`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_32`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.Equals(Althea.Helpers.FixedBuffer_32{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_32`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_32`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.op_Equality(Althea.Helpers.FixedBuffer_32{`0},Althea.Helpers.FixedBuffer_32{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.op_Inequality(Althea.Helpers.FixedBuffer_32{`0},Althea.Helpers.FixedBuffer_32{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_32`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_32`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_32`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_64`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 64
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_64`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_64`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_64`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.Equals(Althea.Helpers.FixedBuffer_64{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_64`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_64`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.op_Equality(Althea.Helpers.FixedBuffer_64{`0},Althea.Helpers.FixedBuffer_64{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.op_Inequality(Althea.Helpers.FixedBuffer_64{`0},Althea.Helpers.FixedBuffer_64{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_64`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_64`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_64`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_128`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_128`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_128`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_128`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.Equals(Althea.Helpers.FixedBuffer_128{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_128`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.op_Equality(Althea.Helpers.FixedBuffer_128{`0},Althea.Helpers.FixedBuffer_128{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.op_Inequality(Althea.Helpers.FixedBuffer_128{`0},Althea.Helpers.FixedBuffer_128{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_128`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/></returns>
-        </member>
-        <member name="T:Althea.Helpers.FixedBuffer_256`1">
-            <summary>
-            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 256
-            </summary>
-            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToArray">
-            <summary>
-            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
-            </summary>
-            <returns>The array containing the elements of this fixed buffer</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.As``1">
-            <summary>
-            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
-            </summary>
-            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
-            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
-            <summary>
-            Copy the data from the given <paramref name="span"/> to this fixed buffer
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.CopyToSpan(System.Span{`0},System.Int32)">
-            <summary>
-            Copy the data from this fixed buffer to the given <paramref name="span"/>
-            </summary>
-            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
-            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToStruct``1(System.Int32)">
-            <summary>
-            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="copyStart">The start position to copy in bytes</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.FromStruct``1(``0,System.Int32)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
-            </summary>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="struct">The structure to copy</param>
-            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
-            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.AsSpan(System.Int32)">
-            <summary>
-            Create a <see cref="T:System.Span`1"/> from this fixed buffer
-            </summary>
-            <param name="size">The size of the span, default 0 means all</param>
-            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_256`1.NonDefaults">
-            <summary>
-            Get the number of values whose value is not default(<typeparamref name="T"/>)
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_256`1.Count">
-            <summary>
-            The number of elements in this fixed buffer
-            </summary>
-        </member>
-        <member name="P:Althea.Helpers.FixedBuffer_256`1.Item(System.Int32)">
-            <summary>
-            Basic indexer of this fixed buffer
-            </summary>
-            <param name="index">The index</param>
-            <returns>The value at <paramref name="index"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.GetEnumerator">
-            <summary>
-            Returns an enumerator that iterates through the collection.
-            </summary>
-            <returns>An enumerator that can be used to iterate through the collection.</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.Contains(`0)">
-            <summary>
-            Check whether the this fixed buffer contains the given <paramref name="value"/> 
-            </summary>
-            <param name="value">The value to find</param>
-            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.Equals(Althea.Helpers.FixedBuffer_256{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_256`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.op_Equality(Althea.Helpers.FixedBuffer_256{`0},Althea.Helpers.FixedBuffer_256{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.op_Inequality(Althea.Helpers.FixedBuffer_256{`0},Althea.Helpers.FixedBuffer_256{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/></returns>
         </member>
         <member name="T:Althea.Helpers.ReflectionHelper">
             <summary>
@@ -5856,6 +4682,1292 @@
             	keys.<see cref="M:Althea.Helpers.SortHelper.Sort``2(System.Span{``0},System.Span{``1},System.Collections.Generic.Comparer{``0},Althea.Helpers.Swapper{``1})">Sort</see>(columns, swapper: spanMatrix.<see cref="P:Althea.Helpers.SpanMatrix`1.ColumnSwapper">ColumnSwapper</see>);
             }
             </code></example>
+        </member>
+        <member name="T:Althea.Helpers.FixedClassBuffer_2`1">
+            <summary>
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 2.
+            </summary>
+            <typeparam name="T">Any class</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.#ctor(`0[])">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> with a given <paramref name="array"/>
+            </summary>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 2</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.#ctor(System.ReadOnlySpan{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> with a given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 2</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
+            </summary>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.AsSpan``1(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
+            </summary>
+            <typeparam name="TClass">Another class type as the output type</typeparam>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_2`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_2`1.Count">
+            <summary>
+            Get the number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.Equals(Althea.Helpers.FixedClassBuffer_2{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.op_Equality(Althea.Helpers.FixedClassBuffer_2{`0},Althea.Helpers.FixedClassBuffer_2{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.op_Inequality(Althea.Helpers.FixedClassBuffer_2{`0},Althea.Helpers.FixedClassBuffer_2{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_2`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_2`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedClassBuffer_4`1">
+            <summary>
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 4.
+            </summary>
+            <typeparam name="T">Any class</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.#ctor(`0[])">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_4`1"/> with a given <paramref name="array"/>
+            </summary>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 4</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.#ctor(System.ReadOnlySpan{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_4`1"/> with a given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 4</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
+            </summary>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.AsSpan``1(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
+            </summary>
+            <typeparam name="TClass">Another class type as the output type</typeparam>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_4`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_4`1.Count">
+            <summary>
+            Get the number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.Equals(Althea.Helpers.FixedClassBuffer_4{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_4`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_4`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.op_Equality(Althea.Helpers.FixedClassBuffer_4{`0},Althea.Helpers.FixedClassBuffer_4{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.op_Inequality(Althea.Helpers.FixedClassBuffer_4{`0},Althea.Helpers.FixedClassBuffer_4{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_4`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_4`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_4`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedClassBuffer_8`1">
+            <summary>
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 8.
+            </summary>
+            <typeparam name="T">Any class</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(`0[])">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> with a given <paramref name="array"/>
+            </summary>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 8</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.#ctor(System.ReadOnlySpan{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> with a given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 8</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
+            </summary>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.AsSpan``1(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
+            </summary>
+            <typeparam name="TClass">Another class type as the output type</typeparam>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_8`1.Count">
+            <summary>
+            Get the number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(Althea.Helpers.FixedClassBuffer_8{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Equality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.op_Inequality(Althea.Helpers.FixedClassBuffer_8{`0},Althea.Helpers.FixedClassBuffer_8{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_8`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_8`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedClassBuffer_16`1">
+            <summary>
+            The fixed buffer struct of class type <typeparamref name="T"/> with size = 16.
+            </summary>
+            <typeparam name="T">Any class</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.#ctor(`0[])">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> with a given <paramref name="array"/>
+            </summary>
+            <param name="array">The given array of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="array"/> is larger than 16</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.#ctor(System.ReadOnlySpan{`0})">
+            <summary>
+            Create a <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> with a given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/> used to create</param>
+            <exception cref="T:System.ArgumentException">If the size of <paramref name="span"/> is larger than 16</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed class-typed buffer
+            </summary>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.AsSpan``1(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> of type <typeparamref name="TClass"/> from this fixed class-typed buffer
+            </summary>
+            <typeparam name="TClass">Another class type as the output type</typeparam>
+            <param name="size">The size of the span, default 0 means all</param>
+            <returns>The <see cref="T:System.Span`1"/> of <typeparamref name="TClass"/> referring to this fixed buffer</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedClassBuffer_16`1.Count">
+            <summary>
+            Get the number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.Equals(Althea.Helpers.FixedClassBuffer_16{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.op_Equality(Althea.Helpers.FixedClassBuffer_16{`0},Althea.Helpers.FixedClassBuffer_16{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.op_Inequality(Althea.Helpers.FixedClassBuffer_16{`0},Althea.Helpers.FixedClassBuffer_16{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedClassBuffer_16`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedClassBuffer_16`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_8`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 8
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_8`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_8`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_8`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.Equals(Althea.Helpers.FixedBuffer_8{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_8`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.op_Equality(Althea.Helpers.FixedBuffer_8{`0},Althea.Helpers.FixedBuffer_8{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.op_Inequality(Althea.Helpers.FixedBuffer_8{`0},Althea.Helpers.FixedBuffer_8{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_8`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_8`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_16`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 16
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_16`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_16`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_16`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.Equals(Althea.Helpers.FixedBuffer_16{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_16`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_16`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.op_Equality(Althea.Helpers.FixedBuffer_16{`0},Althea.Helpers.FixedBuffer_16{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.op_Inequality(Althea.Helpers.FixedBuffer_16{`0},Althea.Helpers.FixedBuffer_16{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_16`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_16`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_16`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_32`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 32
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_32`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_32`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_32`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.Equals(Althea.Helpers.FixedBuffer_32{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_32`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_32`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.op_Equality(Althea.Helpers.FixedBuffer_32{`0},Althea.Helpers.FixedBuffer_32{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.op_Inequality(Althea.Helpers.FixedBuffer_32{`0},Althea.Helpers.FixedBuffer_32{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_32`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_32`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_32`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_64`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 64
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_64`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_64`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_64`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.Equals(Althea.Helpers.FixedBuffer_64{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_64`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_64`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.op_Equality(Althea.Helpers.FixedBuffer_64{`0},Althea.Helpers.FixedBuffer_64{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.op_Inequality(Althea.Helpers.FixedBuffer_64{`0},Althea.Helpers.FixedBuffer_64{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_64`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_64`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_64`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_128`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_128`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_128`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_128`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.Equals(Althea.Helpers.FixedBuffer_128{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_128`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.op_Equality(Althea.Helpers.FixedBuffer_128{`0},Althea.Helpers.FixedBuffer_128{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.op_Inequality(Althea.Helpers.FixedBuffer_128{`0},Althea.Helpers.FixedBuffer_128{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_128`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_128`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_256`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 256
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_256`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_256`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_256`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.Equals(Althea.Helpers.FixedBuffer_256{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_256`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.op_Equality(Althea.Helpers.FixedBuffer_256{`0},Althea.Helpers.FixedBuffer_256{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.op_Inequality(Althea.Helpers.FixedBuffer_256{`0},Althea.Helpers.FixedBuffer_256{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_256`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_12`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 12
+            </summary>
+            <typeparam name="T">Any unmanaged struct that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_12`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_12`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_12`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.Equals(Althea.Helpers.FixedBuffer_12{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_12`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.op_Equality(Althea.Helpers.FixedBuffer_12{`0},Althea.Helpers.FixedBuffer_12{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.op_Inequality(Althea.Helpers.FixedBuffer_12{`0},Althea.Helpers.FixedBuffer_12{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_12`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_12`1"/></returns>
         </member>
         <member name="T:Althea.LinearAlgebra.ILinearAlgebraApi">
             <summary>

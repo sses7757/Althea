@@ -540,7 +540,7 @@ namespace Althea.Storage
 	/// The abstract class for runtime memory API routines 
 	/// </summary>
 	/// <remarks>The default implementations of methods about <see cref="Storage{T}"/> ensure that you can only implement the basic low-level memory operations of "pure" storages while the high-level methods about <see cref="Storage{T}"/> work fine automatically. However, if there are native supports, it is still recommended to overwrite these methods.</remarks>
-	public abstract class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractRuntimeApi
 	{
 		#region basic
 		/// <summary>
