@@ -466,16 +466,16 @@ namespace Althea
 		/// <summary>
 		/// The structure used to store the extra methods' information
 		/// </summary>
-		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>, IReadOnlyList<Type>
+		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>
 		{
 			private readonly FixedClassBuffer_16<Type> inputTypes;
 
+			private readonly FixedClassBuffer_8<Type> genericTypes;
+
 			private readonly string name;
 
-			private readonly int genericCount;
-
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			private static void CheckMethodInfo(string name, int genericParameterCount, ReadOnlySpan<Type> inputTypes)
+			private static void CheckMethodInfo(string name, ReadOnlySpan<Type> genericTypes, ReadOnlySpan<Type> inputTypes)
 			{
 				if (name is null)
 					throw new ArgumentNullException(nameof(name));
@@ -483,8 +483,8 @@ namespace Althea
 					throw new ArgumentNullException(nameof(inputTypes));
 				if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-zA-Z_]\w+$"))
 					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(name));
-				if (genericParameterCount < 0)
-					throw new ArgumentOutOfRangeException(nameof(genericParameterCount), genericParameterCount, Resources.Parameter.CannotNegative);
+				if (genericTypes.Length > 8)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(genericTypes));
 				if (inputTypes.Length > 16)
 					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(inputTypes));
 			}
@@ -493,24 +493,18 @@ namespace Althea
 			/// Create an <see cref="ExtraMethodInfo"/> from given <paramref name="name"/> and <paramref name="inputTypes"/>
 			/// </summary>
 			/// <param name="name">The name of the method, must be a valid method name</param>
-			/// <param name="genericParameterCount">The number of generic parameters</param>
-			/// <param name="inputTypes">The input types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/>s</param>
+			/// <param name="genericTypes">The generic parameter types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/></param>
+			/// <param name="inputTypes">The input parameters types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/></param>
 			/// <exception cref="ArgumentNullException">If <paramref name="name"/> is null or <paramref name="inputTypes"/> is empty</exception>
-			/// <exception cref="ArgumentException">If <paramref name="name"/> is not a valid method name, or <paramref name="inputTypes"/> is too large</exception>
-			/// <exception cref="ArgumentOutOfRangeException">If <paramref name="genericParameterCount"/> is less than 0</exception>
-			public ExtraMethodInfo(string name, int genericParameterCount, ReadOnlySpan<Type> inputTypes)
+			/// <exception cref="ArgumentException">If <paramref name="name"/> is not a valid method name, or <paramref name="inputTypes"/> or <paramref name="genericTypes"/> is too large</exception>
+			public ExtraMethodInfo(string name, ReadOnlySpan<Type> genericTypes, ReadOnlySpan<Type> inputTypes)
 			{
-				CheckMethodInfo(name, genericParameterCount, inputTypes);
-				this.inputTypes = default;
-				this.genericCount = genericParameterCount;
+				CheckMethodInfo(name, genericTypes, inputTypes);
+				this.inputTypes = new(inputTypes);
+				this.genericTypes = new(genericTypes);
 				this.name = name;
-				for (int i = 0; i < inputTypes.Length; i++)
-				{
-					this.inputTypes[i] = inputTypes[i];
-				}
 			}
 
-			#region list
 			/// <summary>
 			/// Get the method name as a <see cref="string"/>
 			/// </summary>
@@ -520,60 +514,11 @@ namespace Althea
 			}
 
 			/// <summary>
-			/// Get the number of generic parameters of the method
-			/// </summary>
-			public int GenericParameterCount {
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => this.genericCount;
-			}
-
-			/// <summary>
-			/// Get the number of input arguments of this <see cref="ExtraMethodInfo"/>
-			/// </summary>
-			public int Count {
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get {
-					int find = this.inputTypes.AsSpan().IndexOf(static t => t.Equals(default));
-					return find < 0 ? this.inputTypes.Count : find;
-				}
-			}
-
-			/// <summary>
-			/// Get the <paramref name="index"/>-th input argument's <see cref="RuntimeTypeHandle"/> of this <see cref="ExtraMethodInfo"/>
-			/// </summary>
-			/// <param name="index">The index of the input argument</param>
-			/// <returns>The <paramref name="index"/>-th input argument's <see cref="RuntimeTypeHandle"/></returns>
-			/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-			public Type this[int index] {
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get {
-					if (index < 0 || index >= this.inputTypes.Count)
-						throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
-					return this.inputTypes[index];
-				}
-			}
-
-			/// <summary>
-			/// Get the enumerator of this <see cref="ExtraMethodInfo"/>
-			/// </summary>
-			/// <returns>The enumerator of this <see cref="ExtraMethodInfo"/></returns>
-			public IEnumerator<Type> GetEnumerator()
-			{
-				for (int i = 0; i < this.inputTypes.Count; i++)
-				{
-					yield return this.inputTypes[i];
-				}
-			}
-
-			IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-			#endregion
-
-			/// <summary>
 			/// Indicates whether the current object is equal to another object of the same type.
 			/// </summary>
 			/// <param name="other">The other <see cref="ExtraMethodInfo"/> to compare with this one.</param>
 			/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
-			public bool Equals(ExtraMethodInfo other) => this.name == other.name && this.genericCount == other.genericCount && this.inputTypes == other.inputTypes;
+			public bool Equals(ExtraMethodInfo other) => this.name == other.name && this.genericTypes == other.genericTypes && this.inputTypes == other.inputTypes;
 
 			/// <summary>
 			/// Indicates whether the current object is equal to another object of the same type.
@@ -586,7 +531,7 @@ namespace Althea
 			/// Get the hash code of this <see cref="ExtraMethodInfo"/>
 			/// </summary>
 			/// <returns>The hash code of this <see cref="ExtraMethodInfo"/></returns>
-			public override int GetHashCode() => HashCode.Combine(this.name, this.genericCount, this.inputTypes);
+			public override int GetHashCode() => HashCode.Combine(this.name, this.genericTypes, this.inputTypes);
 
 			/// <summary>
 			/// Equality operator
@@ -609,36 +554,40 @@ namespace Althea
 		/// Find the method with given <paramref name="name"/> and <paramref name="inputTypes"/> (optional) in all implementations of <typeparamref name="TApi"/>. Then register the method to prepare it for dynamic invocation.
 		/// </summary>
 		/// <param name="name">The name of the given method, must be a legal method name</param>
+		/// <param name="genericTypes">The generic parameter types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/>.</param>
 		/// <param name="returnType">The return value type or null if the method has no return.</param>
-		/// <param name="genericCount">The number of generic parameters</param>
-		/// <param name="inputTypes">The input types as an array of <see cref="Type"/>. If this is null or empty, <paramref name="name"/> alone must be enough to determine the given method.</param>
+		/// <param name="inputTypes">The input parameters types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/>. Cannot contain any uninitialized generic parameters.</param>
 		/// <returns>Success or not.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="name"/> is null or <paramref name="inputTypes"/> is empty</exception>
 		/// <exception cref="ArgumentException">If <paramref name="name"/> is not a valid method name, or <paramref name="inputTypes"/> is too large</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="genericCount"/> is less than 0</exception>
-		protected static bool RegisterExtraMethod(string name, int genericCount, Type? returnType, params Type[] inputTypes)
+		protected static bool RegisterExtraMethod(string name, ReadOnlySpan<Type> genericTypes = default, ReadOnlySpan<Type> inputTypes = default, Type? returnType = null)
 		{
 			// change 'extraMethodsApi'
 			bool found = false;
-			var info = new ExtraMethodInfo(name, genericCount, inputTypes);
-			var tempInputTypes = inputTypes;
+			var info = new ExtraMethodInfo(name, genericTypes, inputTypes);
+			Type[] tempInputTypes;
 			if (returnType is not null)
 			{
 				tempInputTypes = new Type[inputTypes.Length + 1];
-				Array.Copy(inputTypes, tempInputTypes, inputTypes.Length);
+				inputTypes.CopyTo(tempInputTypes);
 				tempInputTypes[^1] = returnType.MakeByRefType(); // make 'returnType' an output type
 			}
-			const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+			else
+			{
+				tempInputTypes = inputTypes.ToArray();
+			}
+			const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 			foreach (var item in RecentAPIs)
 			{
 				Type t = item.GetType();
-				var methodInfo = t.GetMethod(name, genericCount, bindingFlags, null, tempInputTypes, null);
+				// TODO: use separate method to get the desired MethodInfo and make generic
+				var methodInfo = t.GetMethod(name, genericTypes.Length, bindingFlags, null, tempInputTypes, null);
 				if (methodInfo is null)
 				{
 					if (name.EndsWith('_'))
-						methodInfo = t.GetMethod(name[..^1], genericCount, bindingFlags, null, tempInputTypes, null);
+						methodInfo = t.GetMethod(name[..^1], genericTypes.Length, bindingFlags, null, tempInputTypes, null);
 					else
-						methodInfo = t.GetMethod(name + "_", genericCount, bindingFlags, null, tempInputTypes, null);
+						methodInfo = t.GetMethod(name + "_", genericTypes.Length, bindingFlags, null, tempInputTypes, null);
 				}
 				if (methodInfo is null || methodInfo.ReturnType != typeof(bool))
 					continue;
@@ -670,15 +619,25 @@ namespace Althea
 				return false;
 
 			// create dynamic method
-			var method = new DynamicMethod(name, returnType, inputTypes, typeof(AbstractRuntimeApi<TApi>), false);
+			tempInputTypes = new Type[inputTypes.Length + 1];
+			tempInputTypes[0] = typeof(TApi);
+			inputTypes.CopyTo(new Span<Type>(tempInputTypes, 1, inputTypes.Length));
+			var method = new DynamicMethod(name, returnType, tempInputTypes, typeof(AbstractRuntimeApi<TApi>), false);
 			var IL = method.GetILGenerator();
-			IL.DeclareLocal(typeof(bool)); //// bool success = false;
 			if (returnType is not null)
 				IL.DeclareLocal(returnType); //// returnType result = default;
 			foreach (var (_, methodInfo) in extraMethodsInfo[info])
 			{
-				
-				IL.Emit(OpCodes.Call, methodInfo);
+				if (!methodInfo.IsStatic)
+					IL.Emit(OpCodes.Ldarg_0);
+				for (int i = 1; i <= inputTypes.Length; i++)
+				{
+					IL.Emit(OpCodes.Ldarg_S, i);
+				}
+				if (returnType is not null)
+					IL.Emit(OpCodes.Ldloca_S, 0); // load the result as reference input
+				IL.Emit(OpCodes.Call, methodInfo); //// bool success = method(...[, out result])
+				// TODO: branch
 			}
 			// add
 			extraStaticMethods.Add(info, method);
