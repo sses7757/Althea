@@ -128,7 +128,7 @@ namespace Althea.Random
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedUnary(location1), node);
 				success = node.Value.FillWithRandom_(storage, distribution);
 			}
 			if (success && node is not null)
@@ -162,7 +162,7 @@ namespace Althea.Random
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(location1, locatio2), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(location1, locatio2), node);
 				success = node.Value.FillWithRandom_(storage1, storage2, distribution);
 			}
 			if (success && node is not null)
@@ -199,7 +199,7 @@ namespace Althea.Random
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedTrinary(location1, locatio2, locatio3), node);
+				node = SelectImplementation(a => a.IsSupportedTrinary(location1, locatio2, locatio3), node);
 				success = node.Value.FillWithRandom_(storage1, storage2, storage3, distribution);
 			}
 			if (success && node is not null)

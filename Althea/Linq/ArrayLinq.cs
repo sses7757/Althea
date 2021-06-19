@@ -541,12 +541,29 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Prepend an <paramref name="element"/> to the start of <paramref name="list"/>
+		/// </summary>
+		/// <typeparam name="T">data type</typeparam>
+		/// <param name="list">The list to be added</param>
+		/// <param name="element">The value to prepend</param>
+		/// <returns>A new list after prepending <paramref name="element"/></returns>
+		public static IReadOnlyList<T> Prepend<T>(this IReadOnlyList<T> list, T element)
+		{
+			if (list is null || list.Count == 0)
+				return new[] { element };
+			T[] newArray = new T[list.Count + 1];
+			Array.Copy(list.ToArray(), 0, newArray, 1, list.Count);
+			newArray[0] = element;
+			return newArray;
+		}
+
+		/// <summary>
 		/// Append an <paramref name="element"/> to the end of <paramref name="list"/>
 		/// </summary>
 		/// <typeparam name="T">data type</typeparam>
 		/// <param name="list">The list to be appended</param>
 		/// <param name="element">The value to append</param>
-		/// <returns>a new list after appending <paramref name="element"/></returns>
+		/// <returns>A new list after appending <paramref name="element"/></returns>
 		public static IReadOnlyList<T> Append<T>(this IReadOnlyList<T> list, T element)
 		{
 			if (list is null || list.Count == 0)

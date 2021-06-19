@@ -136,7 +136,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location1), node);
 				success = node.Value.GetSlice_(source, offsets, lengths, out result);
 			}
 			if (success && node is not null)
@@ -163,7 +163,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.GetSlice_(source, offsets, lengths, sub);
 			}
 			if (success && node is not null)
@@ -190,7 +190,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format1) && a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format1) && a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.GetSlice_(source, offsets, lengths, sub, subOuterSize);
 			}
 			if (success && node is not null)
@@ -216,7 +216,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.SetSlice_(source, offsets, lengths, sub);
 			}
 			if (success && node is not null)
@@ -241,7 +241,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format) && a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.ToDense_(source, destination, outerSize);
 			}
 			if (success && node is not null)
@@ -266,7 +266,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location1), node);
 				success = node.Value.FromDense_(source, format, out result, threshold);
 			}
 			if (success && node is not null)
@@ -294,7 +294,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location), node);
 				success = node.Value.Reshape_(source, newSize, out result);
 			}
 			if (success && node is not null)
@@ -322,7 +322,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location), node);
 				success = node.Value.Permute_(source, permutationOrder, out result);
 			}
 			if (success && node is not null)
@@ -351,7 +351,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.OperationBinary_(binary, left, leftPerm, right, rightPerm, out result);
 			}
 			if (success && node is not null)
@@ -380,7 +380,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location), node);
+				node = SelectImplementation(a => a.IsSupportedFormat(format) && a.IsSupportedTensorUnary(location), node);
 				success = node.Value.Reduce_(reduce, source, reduceDimensions, out result);
 			}
 			if (success && node is not null)
@@ -409,7 +409,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedFormatBinary(format1, format2) && a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.Contract_(left, right, info, out result);
 			}
 			if (success && node is not null)
@@ -437,7 +437,7 @@ namespace Althea.TensorAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedFormatTrinary(format1, format2, format3) && a.IsSupportedTensorTrinary(location1, location2, location3), node);
+				node = SelectImplementation(a => a.IsSupportedFormatTrinary(format1, format2, format3) && a.IsSupportedTensorTrinary(location1, location2, location3), node);
 				success = node.Value.ContractInPlace_(left, right, info, destination);
 			}
 			if (success && node is not null)

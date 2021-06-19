@@ -540,7 +540,7 @@ namespace Althea.Storage
 	/// The abstract class for runtime memory API routines 
 	/// </summary>
 	/// <remarks>The default implementations of methods about <see cref="Storage{T}"/> ensure that you can only implement the basic low-level memory operations of "pure" storages while the high-level methods about <see cref="Storage{T}"/> work fine automatically. However, if there are native supports, it is still recommended to overwrite these methods.</remarks>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
 	{
 		#region basic
 		/// <summary>
@@ -549,47 +549,35 @@ namespace Althea.Storage
 		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
 		public static AbstractApi? Current => RecentAPIs.First?.Value;
 
-		private static readonly LinkedList<AbstractApi> RecentAPIs = new();
-
 		/// <summary>
 		/// Set the currently using <see cref="AbstractApi"/> to the given <paramref name="implementation"/>
 		/// </summary>
 		/// <param name="implementation">The <see cref="Type"/> of the given implementation of <see cref="AbstractApi"/></param>
 		/// <returns>Success or not.</returns>
-		public static bool SetImplementation(Type implementation) => SetImplementation(RecentAPIs, implementation);
+		public static new bool SetImplementation(Type implementation) => SetImplementation(implementation);
 
 		/// <summary>
 		/// Set the currently using <see cref="AbstractApi"/> to the given <paramref name="implementation"/>
 		/// </summary>
 		/// <param name="implementation">The instance of an implementation of <see cref="AbstractApi"/></param>
 		/// <returns>Success or not.</returns>
-		internal static bool SetImplementation(AbstractApi? implementation) => SetImplementation(RecentAPIs, implementation);
+		internal static new bool SetImplementation(AbstractApi? implementation) => SetImplementation(implementation);
 		#endregion
 
 
 		#region dynamic invocation
-		/// <summary>
-		/// Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
-		/// </summary>
-		/// <remarks>
-		/// Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
-		/// Since there are internal caching for <see cref="DynamicObject.TryInvokeMember(InvokeMemberBinder, object[], out object)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
-		/// </remarks>
-		/// <example><code>
-		/// long actualCopied = AbstractApi.Dynamic.MemoryCopyPitched(...);
-		/// </code></example>
-		public static dynamic Dynamic => singletonDynamic;
+		/////// <summary>
+		/////// Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
+		/////// </summary>
+		/////// <remarks>
+		/////// Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
+		/////// Since there are internal caching for <see cref="DynamicObject.TryInvokeMember(InvokeMemberBinder, object[], out object)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
+		/////// </remarks>
+		/////// <example><code>
+		/////// long actualCopied = AbstractApi.Dynamic.MemoryCopyPitched(...);
+		/////// </code></example>
+		////public static dynamic Dynamic => singletonDynamic;
 
-		private static readonly DynamicInvocations singletonDynamic = new();
-
-		private sealed class DynamicInvocations : DynamicInvocation
-		{
-			public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
-			{
-				result = DynamicInvokeExtraMethod(RecentAPIs, binder.Name, args);
-				return true;
-			}
-		}
 		#endregion
 
 
@@ -684,11 +672,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				node = SelectImplementation(a => a.IsSupportedLocation(location), node);
 				success = node.Value.Allocate_(location, length, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -721,11 +709,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				node = SelectImplementation(a => a.IsSupportedLocation(location), node);
 				success = node.Value.Free_(pointer, out result);
 			}
 			if (invokedByUser && success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -743,11 +731,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				node = SelectImplementation(a => a.IsSupportedLocation(location), node);
 				success = node.Value.FillWithValue_(pointer, value);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -765,11 +753,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedLocation(location), node);
+				node = SelectImplementation(a => a.IsSupportedLocation(location), node);
 				success = node.Value.FillWithValue_(pointer, value);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -789,11 +777,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(src, dst), node);
 				success = node.Value.MemoryCopy_(source, destination, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -823,11 +811,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(src, dst), node);
 				success = node.Value.MemoryCopy2D_(source, sourceLD, destination, destinationLD, height, width);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -852,11 +840,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(src, dst), node);
 				success = node.Value.StridedCopy_<T>(source, incrementSource, destination, incrementDestination, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 		#endregion
@@ -878,11 +866,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.ToManaged_(source, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -901,11 +889,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.FromManaged_(destination, value);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -925,11 +913,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.ToManaged_(source, destination, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -950,11 +938,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.FromManaged_(destination, values, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -983,11 +971,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.ToManaged2D_(source, leadDim, height, width, destination, destinationLeadDim);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -1014,11 +1002,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.FromManaged2D_(destination, leadDim, height, width, values, valuesLeadDim);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 		#endregion
 
@@ -1038,11 +1026,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedUnary(location));
+				node = SelectImplementation(a => a.IsSupportedUnary(location));
 				success = node.Value.FillWithValue_(storage, value);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -1060,11 +1048,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedUnary(location));
+				node = SelectImplementation(a => a.IsSupportedUnary(location));
 				success = node.Value.FillWithValue_(storage, value);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -1086,11 +1074,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(src, dst), node);
 				success = node.Value.MemoryCopy_(source, destination, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -1115,11 +1103,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(src, dst), node);
 				success = node.Value.StridedCopy_(source, incrementSource, destination, incrementDestination, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -1149,11 +1137,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedBinary(src, dst), node);
+				node = SelectImplementation(a => a.IsSupportedBinary(src, dst), node);
 				success = node.Value.MemoryCopy2D_(source, sourceLD, destination, destLD, height, width);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 		#endregion
 
@@ -1174,11 +1162,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.ToManaged_(source, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -1197,11 +1185,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.FromManaged_(destination, value);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -1221,11 +1209,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.ToManaged_(source, destination, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -1246,11 +1234,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.FromManaged_(destination, values, out result);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 			return result;
 		}
 
@@ -1278,11 +1266,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.ToManaged2D_(source, leadDim, height, width, destination, destinationLeadDim);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 
 		/// <summary>
@@ -1309,11 +1297,11 @@ namespace Althea.Storage
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.CanTransferWithManaged(location), node);
+				node = SelectImplementation(a => a.CanTransferWithManaged(location), node);
 				success = node.Value.FromManaged2D_(destination, leadDim, height, width, values, valuesLeadDim);
 			}
 			if (success && node is not null)
-				SetImplementation(RecentAPIs, node.Value);
+				SetImplementation(node.Value);
 		}
 		#endregion
 		#endregion
@@ -2040,7 +2028,7 @@ namespace Althea.Storage
 			{
 				if (CheckLocation(node.Value))
 					return node.Value;
-				node = SelectImplementation(RecentAPIs, CheckLocation, node);
+				node = SelectImplementation(CheckLocation, node);
 			}
 			return null;
 		}

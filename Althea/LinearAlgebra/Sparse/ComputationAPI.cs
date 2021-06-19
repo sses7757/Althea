@@ -83,7 +83,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
 				success = node.Value.VectorSparseAddToDense_(α, x, y);
 			}
 			if (success && node is not null)
@@ -108,7 +108,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
 				success = node.Value.VectorSparseDotDense_(conjX, x, y, out result);
 			}
 			if (success && node is not null)
@@ -134,7 +134,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
 				success = node.Value.VectorSparseDotSparse_(conjX, x, y, out result);
 			}
 			if (success && node is not null)
@@ -160,7 +160,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
 				success = node.Value.VectorSparseAddSparse_(x, y, out result, format);
 			}
 			if (success && node is not null)
@@ -183,7 +183,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
 				success = node.Value.VectorSparsePointWiseMultiplyDense_(x, y);
 			}
 			if (success && node is not null)
@@ -205,7 +205,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2) && a.IsSupportedSparseVector(x), node);
 				success = node.Value.VectorSparsePointWiseDivideDense_(x, y);
 			}
 			if (success && node is not null)
@@ -233,7 +233,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(vector1, vector2, matrix) && a.IsSupportedSparseMatrix(M), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinaryMatrixUnary(vector1, vector2, matrix) && a.IsSupportedSparseMatrix(M), node);
 				success = node.Value.MatrixSparseMultiplyVectorDense_(op, α, M, x, β, y);
 			}
 			if (success && node is not null)
@@ -261,7 +261,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinaryMatrixUnary(vector1, vector2, matrix) && a.IsSupportedSparseVector(x), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinaryMatrixUnary(vector1, vector2, matrix) && a.IsSupportedSparseVector(x), node);
 				success = node.Value.MatrixDenseMultiplyVectorSparse_(op, α, m, M, ldm, x, β, y);
 			}
 			if (success && node is not null)
@@ -287,7 +287,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(vector1, vector2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(vector1, vector2) && a.IsSupportedSparseVector(x) && a.IsSupportedSparseVector(y), node);
 				success = node.Value.VectorSparseOuter_(conjY, x, y, out result, format);
 			}
 			if (success && node is not null)
@@ -314,7 +314,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(matrix1), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixUnary(matrix1), node);
 				success = node.Value.SparseMatrixSlice_(matrix, slice, out result);
 			}
 			if (success && node is not null)
@@ -340,7 +340,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
 				success = node.Value.SparseMatrixSlice_(matrix, slice, sub);
 			}
 			if (success && node is not null)
@@ -365,7 +365,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
 				success = node.Value.SparseMatrixSlice_(matrix, slice, sub, subLD);
 			}
 			if (success && node is not null)
@@ -390,7 +390,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(matrix1, matrix2), node);
 				success = node.Value.SparseMatrixSetSlice_(matrix, slice, sub);
 			}
 			if (success && node is not null)
@@ -420,7 +420,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(B), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(B), node);
 				success = node.Value.MatrixDenseAddSparse_(opA, opB, α, A, lda, β, B, C, ldc);
 			}
 			if (success && node is not null)
@@ -464,7 +464,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.MatrixSparseAddSparse_(opA, opB, α, A, β, B, out result, format);
 			}
 			if (success && node is not null)
@@ -501,7 +501,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.MatrixSparseAddSparse_(opA, opB, α, A, β, B, out result, format);
 			}
 			if (success && node is not null)
@@ -532,7 +532,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(B), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(B), node);
 				success = node.Value.MatrixDenseMultiplySparse_(opA, opB, m, α, A, lda, B, β, C, ldc);
 			}
 			if (success && node is not null)
@@ -562,7 +562,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(A), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixTrinary(matrix1, matrix2, matrix3) && a.IsSupportedSparseMatrix(A), node);
 				success = node.Value.MatrixSparseMultiplyDense_(opA, opB, n, α, A, B, ldb, β, C, ldc);
 			}
 			if (success && node is not null)
@@ -587,7 +587,7 @@ namespace Althea.LinearAlgebra.Sparse
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(matrix1, matrix2) && a.IsSupportedSparseMatrix(A) && a.IsSupportedSparseMatrix(B), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(matrix1, matrix2) && a.IsSupportedSparseMatrix(A) && a.IsSupportedSparseMatrix(B), node);
 				success = node.Value.MatrixSparseKronecker_(A, B, out result, format);
 			}
 			if (success && node is not null)

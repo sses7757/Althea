@@ -124,7 +124,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.EigenSpecialMatrixHermitian_(mode, n, valOut, A, lda);
 			}
 			if (success && node is not null)
@@ -161,7 +161,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.EigenGeneralMatrixHermitian_(type, mode, n, valOut, A, lda, B, ldb);
 			}
 			if (success && node is not null)
@@ -220,7 +220,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.EigenSpecialMatrixGeneral_(mode, n, valOut, leftVec, ldvl, rightVec, ldvr, A, lda);
 			}
 			if (success && node is not null)
@@ -281,7 +281,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.EigenGeneralMatrixGeneral_(type, mode, n, α, β, leftVec, ldvl, rightVec, ldvr, A, lda, B, ldb);
 			}
 			if (success && node is not null)
@@ -314,7 +314,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(location1, location2), node);
 				success = node.Value.LinearSolve_(op, n, nrhs, A, lda, B, ldb, work);
 			}
 			if (success && node is not null)
@@ -346,7 +346,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(location1, location2), node);
 				success = node.Value.QRDecomposition_(full, m, n, A, lda, Q, ldq, work);
 			}
 			if (success && node is not null)
@@ -377,7 +377,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixBinary(location1, location2), node);
 				success = node.Value.LeastSquareSolve_(m, n, nrhs, A, lda, B, ldb, work);
 			}
 			if (success && node is not null)
@@ -441,7 +441,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.SingularValues_(storeU, storeV, m, n, A, lda, S, U, ldu, Vct, ldvct);
 			}
 			if (success && node is not null)
@@ -496,7 +496,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, Local_Supported, node);
+				node = SelectImplementation(Local_Supported, node);
 				success = node.Value.SchurDecomposition_(jobu, n, A, lda, U, ldu, out result, orderVal);
 			}
 			if (success && node is not null)

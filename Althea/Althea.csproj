@@ -4,12 +4,20 @@
     <OutputType>Library</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>x64</Platforms>
-    <DebugType>portable</DebugType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <StartupObject></StartupObject>
-    <ApplicationIcon />
-    <!--<AnalysisLevel>5.0</AnalysisLevel>-->
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Helpers\FixedClassBuffer.cs" />
+    <Compile Remove="Helpers\FixedUnmanagedBuffer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="Helpers\FixedClassBuffer.cs" />
+    <AdditionalFiles Include="Helpers\FixedUnmanagedBuffer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
@@ -114,11 +122,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <AdditionalFiles Include="Helpers\FixedClassBuffer.txt" />
-    <AdditionalFiles Include="Helpers\FixedUnmanagedBuffer.txt" />
-    <!--This is a bypass solution since the above one (which is correct) cannot pass the IntelliSense-->
-    <!--<Analyzer Include="..\Althea.SourceGenerator\bin\$(Platform)\$(Configuration)\netstandard2.0\Althea.SourceGenerator.dll" />-->
+    <None Include="Helpers\FixedClassBuffer.cs" />
+    <None Include="Helpers\FixedUnmanagedBuffer.cs" />
   </ItemGroup>
 
 </Project>

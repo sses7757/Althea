@@ -99,7 +99,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, predicate, node);
+				node = SelectImplementation(predicate, node);
 				success = node.Value.GeneralMatricesAdd_(opA, opB, m, n, α, A, lda, β, B, ldb, C, ldc);
 			}
 			if (success && node is not null)
@@ -136,7 +136,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnaryMatrixBinary(locationVec, location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnaryMatrixBinary(locationVec, location1, location2), node);
 				success = node.Value.DiagonalMatrixMultiplyGeneral_(leftA, m, n, α, A, lda, x, strideX, β, C, ldc);
 			}
 			if (success && node is not null)
@@ -162,7 +162,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.PointWisePower_(x, stride, p);
 			}
 			if (success && node is not null)
@@ -186,7 +186,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.PointWisePower_(x, stride, p);
 			}
 			if (success && node is not null)
@@ -209,7 +209,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.PointWiseConjugate_(x, stride);
 			}
 			if (success && node is not null)
@@ -232,7 +232,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.TruncateArray_(x, stride, threshold);
 			}
 			if (success && node is not null)
@@ -257,7 +257,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.AggregateSum_(x, stride, out result);
 			}
 			if (success && node is not null)
@@ -283,7 +283,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.AggregateProduct_(x, stride, out result);
 			}
 			if (success && node is not null)
@@ -308,7 +308,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedVectorUnary(location1), node);
 				success = node.Value.PointWiseAddScalar_(x, stride, scalar);
 			}
 			if (success && node is not null)
@@ -335,7 +335,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2), node);
 				success = node.Value.PointWiseEquals_(x, strideX, y, strideY, out result);
 			}
 			if (success && node is not null)
@@ -361,7 +361,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2), node);
 				success = node.Value.PointWiseMultiply_(x, strideX, y, strideY);
 			}
 			if (success && node is not null)
@@ -386,7 +386,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2), node);
 				success = node.Value.PointWiseDivide_(x, strideX, y, strideY);
 			}
 			if (success && node is not null)
@@ -417,7 +417,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2), node);
 				success = node.Value.PointWiseCast_(source, strideSrc, destination, strideDst);
 			}
 			if (success && node is not null)
@@ -443,7 +443,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2), node);
 				success = node.Value.PartialSum_(x, strideX, y, strideY, inclusive);
 			}
 			if (success && node is not null)
@@ -469,7 +469,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedVectorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedVectorBinary(location1, location2), node);
 				success = node.Value.PartialProduct_(x, strideX, y, strideY, inclusive);
 			}
 			if (success && node is not null)
@@ -496,7 +496,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixUnary(location1), node);
 				success = node.Value.MatrixCopyUpperLowerParts_(storedUpper, hermitian, n, A, lda);
 			}
 			if (success && node is not null)
@@ -520,7 +520,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixUnary(location1), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixUnary(location1), node);
 				success = node.Value.MatrixClearUpperLowerPart_(clearLower, n, A, lda);
 			}
 			if (success && node is not null)
@@ -553,7 +553,7 @@ namespace Althea.LinearAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
+				node = SelectImplementation(a => a.IsSupportedMatrixTrinary(location1, location2, location3), node);
 				success = node.Value.MatrixKronecker_(ma, na, mb, nb, α, A, lda, B, ldb, β, C, ldc);
 			}
 			if (success && node is not null)

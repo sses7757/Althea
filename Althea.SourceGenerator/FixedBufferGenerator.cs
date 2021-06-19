@@ -22,16 +22,11 @@ namespace Althea.SourceGenerator
 
 			foreach (var file in context.AdditionalFiles)
 			{
-				if (!unmanagedGenerated && file.Path.EndsWith(@"FixedUnmanagedBuffer.txt"))
+				if (!unmanagedGenerated && file.Path.EndsWith(@"FixedUnmanagedBuffer.cs"))
 				{
 					// generate FixedUnmanagedBuffers
 					string formatUnmanagedBufferDefine = File.ReadAllText(file.Path);
-					var unmanagedSizes = new int[7];
-					for (int i = 8, j = 0; i <= 256; i *= 2, j++)
-					{
-						unmanagedSizes[j] = i;
-					}
-					unmanagedSizes[6] = 12;
+					var unmanagedSizes = new int[] { 8, 12, 16, 32, 64, 128, 256 };
 					foreach (var s in unmanagedSizes)
 					{
 						string ss = s.ToString();
@@ -40,15 +35,11 @@ namespace Althea.SourceGenerator
 					}
 					unmanagedGenerated = true;
 				}
-				else if (!classGenerated && file.Path.EndsWith(@"FixedClassBuffer.txt"))
+				else if (!classGenerated && file.Path.EndsWith(@"FixedClassBuffer.cs"))
 				{
 					// generate FixedClassBuffers
 					string formatClassBufferDefine = File.ReadAllText(file.Path);
-					var classSizes = new int[4];
-					for (int i = 2, j = 0; i <= 16; i *= 2, j++)
-					{
-						classSizes[j] = i;
-					}
+					var classSizes = new int[] { 2, 4, 8, 16 };
 					foreach (var s in classSizes)
 					{
 						string ss = s.ToString();

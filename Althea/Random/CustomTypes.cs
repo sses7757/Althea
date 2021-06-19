@@ -296,7 +296,7 @@ namespace Althea.Random
 	{
 		private readonly long? m_seed;
 
-		private readonly FixedClassBuffer_16<IRandomDistribution> m_distributions;
+		private readonly IRandomDistribution[] m_distributions;
 
 		private readonly int m_count;
 
@@ -312,7 +312,7 @@ namespace Althea.Random
 				throw new ArgumentNullException(nameof(distributions));
 
 			this.m_count = distributions.Length;
-			this.m_distributions = new(distributions);
+			this.m_distributions = (IRandomDistribution[])distributions.Clone();
 			this.m_seed = 0;
 			for (int i = 0; i < distributions.Length; i++)
 			{
@@ -399,7 +399,7 @@ namespace Althea.Random
 			if (this.m_count == 1)
 				return this.m_distributions[0].ToString();
 			else
-				return $"{{({string.Join("), (", this.m_distributions)})}}";
+				return $"{{({string.Join<IRandomDistribution>("), (", this.m_distributions)})}}";
 		}
 	}
 	#endregion

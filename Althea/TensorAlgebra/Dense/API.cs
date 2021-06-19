@@ -100,7 +100,7 @@ namespace Althea.TensorAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.Permute_(source, destination, permutationOrder);
 			}
 			if (success && node is not null)
@@ -165,7 +165,7 @@ namespace Althea.TensorAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedTensorBinary(location1, location2), node);
+				node = SelectImplementation(a => a.IsSupportedTensorBinary(location1, location2), node);
 				success = node.Value.Reduce_(reduce, source, destination, reduceDimensions);
 			}
 			if (success && node is not null)
@@ -191,7 +191,7 @@ namespace Althea.TensorAlgebra.Dense
 			LinkedListNode<AbstractApi>? node = null;
 			while (!success)
 			{
-				node = SelectImplementation(RecentAPIs, a => a.IsSupportedTensorTrinary(location1, location2, location3), node);
+				node = SelectImplementation(a => a.IsSupportedTensorTrinary(location1, location2, location3), node);
 				success = node.Value.Contract_(left, right, destination, info);
 			}
 			if (success && node is not null)

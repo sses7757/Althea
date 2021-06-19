@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Reflection;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -13,26 +15,35 @@ using Althea.Linq;
 namespace Althea
 {
 	/// <summary>
-	/// The base abstract class for all runtime API classes defined in and out of this assembly.<br/>
+	/// The base abstract class for all runtime API classes defined in and out of this assembly. Any specific API abstract class shall inherit this class. (Concrete classes shall NOT inherit this one directly.)<br/>
 	/// The derived concrete class(es) shall be able to serialized and deserialized by <see cref="JsonSerializer"/> (typically through indicating <see cref="JsonConstructorAttribute"/> and implementing <see cref="CurrentConverter"/>).
 	/// </summary>
+	/// <typeparam name="TApi">Any API abstract class which inherits <see cref="AbstractRuntimeApi{TApi}"/>, like <see cref="Storage.AbstractApi"/></typeparam>
 	/// <remarks>
 	/// Typically, the <b>callers</b> are responsible for checking the input parameters of all the defined API methods.
 	/// </remarks>
-	public abstract class AbstractRuntimeApi : IDisposable
+	public abstract class AbstractRuntimeApi<TApi> : IDisposable where TApi : AbstractRuntimeApi<TApi>
 	{
+		#region basic
+		#region generic static variables for each sub class
+		/// <summary>
+		/// The recently used APIs (of type <typeparamref name="TApi"/>)
+		/// </summary>
+		protected static readonly LinkedList<TApi> RecentAPIs = new();
+		#endregion
+
 		#region static methods used for creating API class instances
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static T Create<T>(Type type) where T : AbstractRuntimeApi
+		private static TApi Create(Type type)
 		{
-			if (type.IsGenericType || type.IsAbstract || !type.IsAssignableTo(typeof(T)))
+			if (type.IsGenericType || type.IsAbstract || !type.IsAssignableTo(typeof(TApi)))
 			{
 				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(type));
 			}
 			var constructor = type.GetConstructor(Array.Empty<Type>());
 			if (constructor is not null)
 			{
-				if (constructor.Invoke(Array.Empty<object>()) is not T result)
+				if (constructor.Invoke(Array.Empty<object>()) is not TApi result)
 					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
 				return result;
 			}
@@ -41,19 +52,18 @@ namespace Althea
 				var constructors = type.GetConstructors();
 				if (constructors.Length == 0 || !constructors.Contains(0, static c => c.GetParameters().Length))
 					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
-				if (constructors.Where(c => c.GetParameters().Length == 0)[0].Invoke(Array.Empty<object>()) is not T result)
+				if (constructors.Where(c => c.GetParameters().Length == 0)[0].Invoke(Array.Empty<object>()) is not TApi result)
 					throw new InvalidOperationException(Resources.Backend.CannotInitialize);
 				return result;
 			}
 		}
 
 		/// <summary>
-		/// Initialize the given <paramref name="node"/> whose <see cref="LinkedListNode{T}.Value"/> is a <see cref="AbstractRuntimeApi"/>
+		/// Initialize the given <paramref name="node"/> whose <see cref="LinkedListNode{TApi}.Value"/> is a <see cref="AbstractRuntimeApi{TApi}"/>
 		/// </summary>
-		/// <typeparam name="T">The API class that inherits <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="node">The <see cref="LinkedListNode{T}"/> to initialize</param>
+		/// <param name="node">The <see cref="LinkedListNode{TApi}"/> to initialize</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void Initialize<T>(LinkedListNode<T> node) where T : AbstractRuntimeApi
+		protected static void Initialize(LinkedListNode<TApi> node)
 		{
 			if (node is null)
 				throw new ArgumentNullException(nameof(node));
@@ -62,18 +72,18 @@ namespace Althea
 				return;
 			}
 			var type = node.Value.GetType();
-			node.Value = Create<T>(type);
+			node.Value = Create(type);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void PromoteImplementation<T>(LinkedList<T> recents, T impl) where T : AbstractRuntimeApi
+		private static void PromoteImplementation(TApi impl)
 		{
-			if (recents is null || impl is null)
+			if (impl is null)
 				return;
-			if (!recents.Contains(impl))
+			if (!RecentAPIs.Contains(impl))
 				return;
-			recents.Remove(impl);
-			var node = recents.AddFirst(impl);
+			RecentAPIs.Remove(impl);
+			var node = RecentAPIs.AddFirst(impl);
 			Initialize(node);
 			if (Settings.DisposeNotCurrentImplementation)
 			{
@@ -82,32 +92,30 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Set the current implementation in <paramref name="recents"/> (the first node) to a given <paramref name="implementation"/>
+		/// Set the current implementation in <see cref="RecentAPIs"/> (the first node) to a given <paramref name="implementation"/>
 		/// </summary>
-		/// <typeparam name="T">Any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
 		/// <param name="implementation">The implementation indicated by a <see cref="Type"/></param>
 		/// <returns>Success or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static bool SetImplementation<T>(LinkedList<T> recents, Type implementation) where T : AbstractRuntimeApi
+		protected static bool SetImplementation(Type implementation)
 		{
-			if (implementation.IsGenericType || implementation.IsAbstract || !implementation.IsAssignableTo(typeof(T)))
+			if (implementation.IsGenericType || implementation.IsAbstract || !implementation.IsAssignableTo(typeof(TApi)))
 			{
 				return false;
 			}
 			// otherwise
-			var current = recents.First;
+			var current = RecentAPIs.First;
 			while (current is not null)
 			{
 				if (current.Value.GetType() == implementation)
 				{
-					PromoteImplementation(recents, current.Value);
+					PromoteImplementation(current.Value);
 					return true;
 				}
 				current = current.Next;
 			}
 			// a new implementation
-			var node = recents.AddFirst(Create<T>(implementation));
+			var node = RecentAPIs.AddFirst(Create(implementation));
 			if (Settings.DisposeNotCurrentImplementation)
 			{
 				node.Next?.Value?.Dispose();
@@ -116,23 +124,21 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Set the current implementation in <paramref name="recents"/> (the first node) to a given <paramref name="implementation"/>
+		/// Set the current implementation in <see cref="RecentAPIs"/> (the first node) to a given <paramref name="implementation"/>
 		/// </summary>
-		/// <typeparam name="T">Any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to operate on</param>
-		/// <param name="implementation">The implementation indicated by a <typeparamref name="T"/></param>
+		/// <param name="implementation">The implementation indicated by a <typeparamref name="TApi"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static bool SetImplementation<T>(LinkedList<T> recents, T? implementation) where T : AbstractRuntimeApi
+		protected static bool SetImplementation(TApi? implementation)
 		{
 			if (implementation is null)
 				return false;
-			if (recents.Contains(implementation))
+			if (RecentAPIs.Contains(implementation))
 			{
-				PromoteImplementation(recents, implementation);
+				PromoteImplementation(implementation);
 			}
 			else
 			{
-				var node = recents.AddFirst(implementation);
+				var node = RecentAPIs.AddFirst(implementation);
 				if (Settings.DisposeNotCurrentImplementation)
 				{
 					node.Next?.Value?.Dispose();
@@ -144,11 +150,11 @@ namespace Althea
 
 		#region static methods used for dispatching
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void DisposeNotCurrent<T>(LinkedList<T> recents) where T : AbstractRuntimeApi
+		private static void DisposeNotCurrent(LinkedList<TApi> RecentAPIs)
 		{
 			if (Settings.DisposeNotCurrentImplementation)
 			{
-				var node = recents.First;
+				var node = RecentAPIs.First;
 				while (node is not null)
 				{
 					node.Value.Dispose();
@@ -158,62 +164,56 @@ namespace Althea
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void Check<T>(LinkedList<T> recents) where T : AbstractRuntimeApi
+		private static void Check(LinkedList<TApi> RecentAPIs)
 		{
-			if (recents is null)
-				throw new ArgumentNullException(nameof(recents));
-			if (recents.Count == 0)
+			if (RecentAPIs is null)
+				throw new ArgumentNullException(nameof(RecentAPIs));
+			if (RecentAPIs.Count == 0)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
-			DisposeNotCurrent(recents);
+			DisposeNotCurrent(RecentAPIs);
 		}
 
 		/// <summary>
-		/// Check the given recent API list <paramref name="recents"/> and the validness of given storage(s)
+		/// Check the given recent API list <see cref="RecentAPIs"/> and the validness of given storage(s)
 		/// </summary>
-		/// <typeparam name="T">The API class type</typeparam>
-		/// <param name="recents">The recent API list as a <see cref="LinkedList{T}"/></param>
 		/// <param name="storage1">The first storage to check validness</param>
 		/// <exception cref="ArgumentNullException">If any of the given storage(s) is null or invalid</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="recents"/> is empty (there is not available back-end)</exception>
+		/// <exception cref="InvalidOperationException">If <see cref="RecentAPIs"/> is empty (there is not available back-end)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void Check<T>(LinkedList<T> recents, IStorage storage1) where T : AbstractRuntimeApi
+		protected static void Check(IStorage storage1)
 		{
 			if (storage1 is null || storage1.IsValid())
 				throw new ArgumentNullException(nameof(storage1));
-			Check(recents);
+			Check(RecentAPIs);
 		}
 
 		/// <summary>
-		/// Check the given recent API list <paramref name="recents"/> and the validness of given storage(s)
+		/// Check the given recent API list <see cref="RecentAPIs"/> and the validness of given storage(s)
 		/// </summary>
-		/// <typeparam name="T">The API class type</typeparam>
-		/// <param name="recents">The recent API list as a <see cref="LinkedList{T}"/></param>
 		/// <param name="storage1">The first storage to check validness</param>
 		/// <param name="storage2">The second storage to check validness</param>
 		/// <exception cref="ArgumentNullException">If any of the given storage(s) is null or invalid</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="recents"/> is empty (there is not available back-end)</exception>
+		/// <exception cref="InvalidOperationException">If <see cref="RecentAPIs"/> is empty (there is not available back-end)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void Check<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2) where T : AbstractRuntimeApi
+		protected static void Check(IStorage storage1, IStorage storage2)
 		{
 			if (storage1 is null || storage1.IsValid())
 				throw new ArgumentNullException(nameof(storage1));
 			if (storage2 is null || storage2.IsValid())
 				throw new ArgumentNullException(nameof(storage2));
-			Check(recents);
+			Check(RecentAPIs);
 		}
 
 		/// <summary>
-		/// Check the given recent API list <paramref name="recents"/> and the validness of given storage(s)
+		/// Check the given recent API list <see cref="RecentAPIs"/> and the validness of given storage(s)
 		/// </summary>
-		/// <typeparam name="T">The API class type</typeparam>
-		/// <param name="recents">The recent API list as a <see cref="LinkedList{T}"/></param>
 		/// <param name="storage1">The first storage to check validness</param>
 		/// <param name="storage2">The second storage to check validness</param>
 		/// <param name="storage3">The third storage to check validness</param>
 		/// <exception cref="ArgumentNullException">If any of the given storage(s) is null or invalid</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="recents"/> is empty (there is not available back-end)</exception>
+		/// <exception cref="InvalidOperationException">If <see cref="RecentAPIs"/> is empty (there is not available back-end)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void Check<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, IStorage storage3) where T : AbstractRuntimeApi
+		protected static void Check(IStorage storage1, IStorage storage2, IStorage storage3)
 		{
 			if (storage1 is null || storage1.IsValid())
 				throw new ArgumentNullException(nameof(storage1));
@@ -221,22 +221,20 @@ namespace Althea
 				throw new ArgumentNullException(nameof(storage2));
 			if (storage3 is null || storage3.IsValid())
 				throw new ArgumentNullException(nameof(storage3));
-			Check(recents);
+			Check(RecentAPIs);
 		}
 
 		/// <summary>
-		/// Check the given recent API list <paramref name="recents"/> and the validness of given storage(s)
+		/// Check the given recent API list <see cref="RecentAPIs"/> and the validness of given storage(s)
 		/// </summary>
-		/// <typeparam name="T">The API class type</typeparam>
-		/// <param name="recents">The recent API list as a <see cref="LinkedList{T}"/></param>
 		/// <param name="storage1">The first storage to check validness</param>
 		/// <param name="storage2">The second storage to check validness</param>
 		/// <param name="storage3">The third storage to check validness</param>
 		/// <param name="storage4">The fourth storage to check validness</param>
 		/// <exception cref="ArgumentNullException">If any of the given storage(s) is null or invalid</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="recents"/> is empty (there is not available back-end)</exception>
+		/// <exception cref="InvalidOperationException">If <see cref="RecentAPIs"/> is empty (there is not available back-end)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void Check<T>(LinkedList<T> recents, IStorage storage1, IStorage storage2, IStorage storage3, IStorage storage4) where T : AbstractRuntimeApi
+		protected static void Check(IStorage storage1, IStorage storage2, IStorage storage3, IStorage storage4)
 		{
 			if (storage1 is null || storage1.IsValid())
 				throw new ArgumentNullException(nameof(storage1));
@@ -246,42 +244,38 @@ namespace Althea
 				throw new ArgumentNullException(nameof(storage3));
 			if (storage4 is null || storage4.IsValid())
 				throw new ArgumentNullException(nameof(storage4));
-			Check(recents);
+			Check(RecentAPIs);
 		}
 
 		/// <summary>
-		/// Check the given recent API list <paramref name="recents"/> and the validness of given storages
+		/// Check the given recent API list <see cref="RecentAPIs"/> and the validness of given storages
 		/// </summary>
-		/// <typeparam name="T">The API class type</typeparam>
-		/// <param name="recents">The recent API list as a <see cref="LinkedList{T}"/></param>
 		/// <param name="storages">The storages to check validness</param>
 		/// <exception cref="ArgumentNullException">If any of the given <paramref name="storages"/> is null or invalid</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="recents"/> is empty (there is not available back-end)</exception>
+		/// <exception cref="InvalidOperationException">If <see cref="RecentAPIs"/> is empty (there is not available back-end)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void Check<T>(LinkedList<T> recents, IReadOnlyList<IStorage> storages) where T : AbstractRuntimeApi
+		protected static void Check(IReadOnlyList<IStorage> storages)
 		{
 			if (storages is null || storages.Any(static s => s is null || !s.IsValid()))
 				throw new ArgumentNullException(nameof(storages));
-			Check(recents);
+			Check(RecentAPIs);
 		}
 
 		/// <summary>
-		/// Select the most recent implementation in <paramref name="recents"/> which fits the given predicate <paramref name="validApi"/>
+		/// Select the most recent implementation in <see cref="RecentAPIs"/> which fits the given predicate <paramref name="validApi"/>
 		/// </summary>
-		/// <typeparam name="T">Any API abstract class which implements <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="recents">The <see cref="LinkedList{T}"/> of recent APIs to select in.</param>
-		/// <param name="validApi">A <see cref="Predicate{T}"/> used to check other validness of the candidate implementations</param>
-		/// <param name="from">The starting <see cref="LinkedListNode{T}"/> to begin searching, default null means search from the first of <paramref name="recents"/></param>
-		/// <returns>The suitable most recent implementation as a <see cref="LinkedListNode{T}"/> or error if not found.</returns>
+		/// <param name="validApi">A <see cref="Predicate{TApi}"/> used to check other validness of the candidate implementations</param>
+		/// <param name="from">The starting <see cref="LinkedListNode{TApi}"/> to begin searching, default null means search from the first of <see cref="RecentAPIs"/></param>
+		/// <returns>The suitable most recent implementation as a <see cref="LinkedListNode{TApi}"/> or error if not found.</returns>
 		/// <exception cref="InvalidOperationException">if there is no available back-end implementation or the suitable one cannot be initialized</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static LinkedListNode<T> SelectImplementation<T>(LinkedList<T> recents, Predicate<T> validApi, LinkedListNode<T>? from = null) where T : AbstractRuntimeApi
+		protected static LinkedListNode<TApi> SelectImplementation(Predicate<TApi> validApi, LinkedListNode<TApi>? from = null)
 		{
 			if (validApi is null)
 				throw new ArgumentNullException(nameof(validApi));
-			Check(recents);
+			Check(RecentAPIs);
 
-			var current = from?.Next ?? recents.First;
+			var current = from?.Next ?? RecentAPIs.First;
 			if (current is null)
 				throw new InvalidOperationException(Resources.Backend.NotAvailable);
 			if (validApi.Invoke(current.Value))
@@ -435,9 +429,10 @@ namespace Althea
 			return combinations;
 		}
 		#endregion
+		#endregion
 
 
-		#region basic
+		#region disposition and serialization
 		/// <summary>
 		/// Whether this class is disposed or not
 		/// </summary>
@@ -462,50 +457,52 @@ namespace Althea
 		/// <summary>
 		/// When implemented by a derived class, get the <see cref="JsonConverter{T}"/> used to serialize it (deserialization is done via default of <see cref="JsonSerializer"/> or <see cref="JsonConstructorAttribute"/>). The default implementation simply returns null.
 		/// </summary>
-		protected internal virtual JsonConverter<AbstractRuntimeApi>? CurrentConverter => null;
+		protected internal virtual JsonConverter<AbstractRuntimeApi<TApi>>? CurrentConverter => null;
 		#endregion
 
 
 		#region dynamic method invocation
-		private readonly struct TypeHandle : IEquatable<TypeHandle>
-		{
-			internal readonly RuntimeTypeHandle handle;
-
-			private TypeHandle(RuntimeTypeHandle handle) => this.handle = handle;
-
-			public bool Equals(TypeHandle other) => this.handle.Equals(other.handle);
-
-			public override bool Equals(object? obj) => obj is TypeHandle handle && this.Equals(handle);
-
-			public override int GetHashCode() => this.handle.GetHashCode();
-
-			public static implicit operator RuntimeTypeHandle(TypeHandle handle) => handle.handle;
-
-			public static implicit operator TypeHandle(RuntimeTypeHandle handle) => new(handle);
-		}
-
+		#region structure
 		/// <summary>
 		/// The structure used to store the extra methods' information
 		/// </summary>
-		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>, IReadOnlyList<RuntimeTypeHandle>
+		protected readonly struct ExtraMethodInfo : IEquatable<ExtraMethodInfo>, IReadOnlyList<Type>
 		{
-			private readonly FixedBuffer_64<TypeHandle> inputTypes;
+			private readonly FixedClassBuffer_16<Type> inputTypes;
 
 			private readonly string name;
+
+			private readonly int genericCount;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private static void CheckMethodInfo(string name, int genericParameterCount, ReadOnlySpan<Type> inputTypes)
+			{
+				if (name is null)
+					throw new ArgumentNullException(nameof(name));
+				if (inputTypes.IsEmpty)
+					throw new ArgumentNullException(nameof(inputTypes));
+				if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-zA-Z_]\w+$"))
+					throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(name));
+				if (genericParameterCount < 0)
+					throw new ArgumentOutOfRangeException(nameof(genericParameterCount), genericParameterCount, Resources.Parameter.CannotNegative);
+				if (inputTypes.Length > 16)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(inputTypes));
+			}
 
 			/// <summary>
 			/// Create an <see cref="ExtraMethodInfo"/> from given <paramref name="name"/> and <paramref name="inputTypes"/>
 			/// </summary>
-			/// <param name="name">The name of the method</param>
-			/// <param name="inputTypes">The input types as a <see cref="ReadOnlySpan{T}"/> of <see cref="RuntimeTypeHandle"/>s</param>
-			public ExtraMethodInfo(string name, ReadOnlySpan<RuntimeTypeHandle> inputTypes)
+			/// <param name="name">The name of the method, must be a valid method name</param>
+			/// <param name="genericParameterCount">The number of generic parameters</param>
+			/// <param name="inputTypes">The input types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/>s</param>
+			/// <exception cref="ArgumentNullException">If <paramref name="name"/> is null or <paramref name="inputTypes"/> is empty</exception>
+			/// <exception cref="ArgumentException">If <paramref name="name"/> is not a valid method name, or <paramref name="inputTypes"/> is too large</exception>
+			/// <exception cref="ArgumentOutOfRangeException">If <paramref name="genericParameterCount"/> is less than 0</exception>
+			public ExtraMethodInfo(string name, int genericParameterCount, ReadOnlySpan<Type> inputTypes)
 			{
-				if (string.IsNullOrWhiteSpace(name))
-					throw new ArgumentNullException(nameof(name));
+				CheckMethodInfo(name, genericParameterCount, inputTypes);
 				this.inputTypes = default;
-				if (inputTypes.Length > this.inputTypes.Count)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(inputTypes));
-
+				this.genericCount = genericParameterCount;
 				this.name = name;
 				for (int i = 0; i < inputTypes.Length; i++)
 				{
@@ -520,6 +517,14 @@ namespace Althea
 			public string Name {
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				get => this.name;
+			}
+
+			/// <summary>
+			/// Get the number of generic parameters of the method
+			/// </summary>
+			public int GenericParameterCount {
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => this.genericCount;
 			}
 
 			/// <summary>
@@ -539,12 +544,12 @@ namespace Althea
 			/// <param name="index">The index of the input argument</param>
 			/// <returns>The <paramref name="index"/>-th input argument's <see cref="RuntimeTypeHandle"/></returns>
 			/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-			public RuntimeTypeHandle this[int index] {
+			public Type this[int index] {
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				get {
 					if (index < 0 || index >= this.inputTypes.Count)
 						throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
-					return this.inputTypes[index].handle;
+					return this.inputTypes[index];
 				}
 			}
 
@@ -552,14 +557,11 @@ namespace Althea
 			/// Get the enumerator of this <see cref="ExtraMethodInfo"/>
 			/// </summary>
 			/// <returns>The enumerator of this <see cref="ExtraMethodInfo"/></returns>
-			public IEnumerator<RuntimeTypeHandle> GetEnumerator()
+			public IEnumerator<Type> GetEnumerator()
 			{
 				for (int i = 0; i < this.inputTypes.Count; i++)
 				{
-					var t = this.inputTypes[i];
-					if (t.Equals(default))
-						break;
-					yield return t.handle;
+					yield return this.inputTypes[i];
 				}
 			}
 
@@ -571,7 +573,7 @@ namespace Althea
 			/// </summary>
 			/// <param name="other">The other <see cref="ExtraMethodInfo"/> to compare with this one.</param>
 			/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
-			public bool Equals(ExtraMethodInfo other) => this.name == other.name && this.inputTypes == other.inputTypes;
+			public bool Equals(ExtraMethodInfo other) => this.name == other.name && this.genericCount == other.genericCount && this.inputTypes == other.inputTypes;
 
 			/// <summary>
 			/// Indicates whether the current object is equal to another object of the same type.
@@ -584,7 +586,7 @@ namespace Althea
 			/// Get the hash code of this <see cref="ExtraMethodInfo"/>
 			/// </summary>
 			/// <returns>The hash code of this <see cref="ExtraMethodInfo"/></returns>
-			public override int GetHashCode() => HashCode.Combine(this.name, this.inputTypes);
+			public override int GetHashCode() => HashCode.Combine(this.name, this.genericCount, this.inputTypes);
 
 			/// <summary>
 			/// Equality operator
@@ -596,72 +598,93 @@ namespace Althea
 			/// </summary>
 			public static bool operator !=(ExtraMethodInfo left, ExtraMethodInfo right) => !left.Equals(right);
 		}
+		#endregion
+
+		#region register and invoke
+		private static readonly Dictionary<ExtraMethodInfo, DynamicMethod> extraStaticMethods = new();
+
+		private static readonly Dictionary<ExtraMethodInfo, LinkedList<(TApi api, MethodInfo method)>> extraMethodsInfo = new();
 
 		/// <summary>
-		/// When implemented by a derived class, dynamically invoke the extra method(s) (the methods not defined in its base class) defined in this class. The default implementation simply returns false.
+		/// Find the method with given <paramref name="name"/> and <paramref name="inputTypes"/> (optional) in all implementations of <typeparamref name="TApi"/>. Then register the method to prepare it for dynamic invocation.
 		/// </summary>
-		/// <param name="methodInfo">The <see cref="ExtraMethodInfo"/> to determine the method</param>
-		/// <param name="outParam">The output result of the method determined by <paramref name="methodInfo"/></param>
-		/// <param name="inputParams">The input parameters as an array of <see cref="object"/>s</param>
-		/// <returns>Whether the invocation succeeded or not</returns>
-		protected virtual bool InvokeExtraMethod(ExtraMethodInfo methodInfo, out object? outParam, object[] inputParams)
+		/// <param name="name">The name of the given method, must be a legal method name</param>
+		/// <param name="returnType">The return value type or null if the method has no return.</param>
+		/// <param name="genericCount">The number of generic parameters</param>
+		/// <param name="inputTypes">The input types as an array of <see cref="Type"/>. If this is null or empty, <paramref name="name"/> alone must be enough to determine the given method.</param>
+		/// <returns>Success or not.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="name"/> is null or <paramref name="inputTypes"/> is empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="name"/> is not a valid method name, or <paramref name="inputTypes"/> is too large</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="genericCount"/> is less than 0</exception>
+		protected static bool RegisterExtraMethod(string name, int genericCount, Type? returnType, params Type[] inputTypes)
 		{
-			outParam = null;
-			return false;
-		}
-
-		/// <summary>
-		/// Dynamically invoke a method which is not listed explicitly in the derived classes of <typeparamref name="T"/>
-		/// </summary>
-		/// <typeparam name="T">The API class type that inherits <see cref="AbstractRuntimeApi"/></typeparam>
-		/// <param name="recentApi">The recent API list</param>
-		/// <param name="name">The name of the method to be invoked</param>
-		/// <param name="args">The input arguments of the method to be invoked</param>
-		/// <returns>The returned of the method to be invoked</returns>
-		protected static object? DynamicInvokeExtraMethod<T>(LinkedList<T> recentApi, string name, object?[]? args) where T : AbstractRuntimeApi
-		{
-			if (string.IsNullOrWhiteSpace(name))
-				throw new ArgumentNullException(nameof(name));
-			if (args is null || args.Length == 0)
-				throw new ArgumentNullException(nameof(args));
-
-			Span<RuntimeTypeHandle> span = stackalloc RuntimeTypeHandle[args.Length];
-			for (int i = 0; i < args.Length; i++)
+			// change 'extraMethodsApi'
+			bool found = false;
+			var info = new ExtraMethodInfo(name, genericCount, inputTypes);
+			var tempInputTypes = inputTypes;
+			if (returnType is not null)
 			{
-				object? a = args[i];
-				if (a is null || (a is ICheckValid v && !v.IsValid()))
-					throw new ArgumentNullException(nameof(args));
-				span[i] = a.GetType().TypeHandle;
+				tempInputTypes = new Type[inputTypes.Length + 1];
+				Array.Copy(inputTypes, tempInputTypes, inputTypes.Length);
+				tempInputTypes[^1] = returnType.MakeByRefType(); // make 'returnType' an output type
 			}
-			var info = new ExtraMethodInfo(name, span);
-
-			object? result = default;
-			bool success = false;
-			LinkedListNode<T>? node = recentApi.First, prevNode = null;
-			while (node is not null && !success)
+			const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+			foreach (var item in RecentAPIs)
 			{
-				success = node.Value.InvokeExtraMethod(info, out result, (object[])args);
-				prevNode = node; node = node.Next;
+				Type t = item.GetType();
+				var methodInfo = t.GetMethod(name, genericCount, bindingFlags, null, tempInputTypes, null);
+				if (methodInfo is null)
+				{
+					if (name.EndsWith('_'))
+						methodInfo = t.GetMethod(name[..^1], genericCount, bindingFlags, null, tempInputTypes, null);
+					else
+						methodInfo = t.GetMethod(name + "_", genericCount, bindingFlags, null, tempInputTypes, null);
+				}
+				if (methodInfo is null || methodInfo.ReturnType != typeof(bool))
+					continue;
+				// add
+				if (extraMethodsInfo.TryGetValue(info, out var ll))
+				{
+					LinkedListNode<(TApi api, MethodInfo method)>? node = ll.First;
+					while (node is not null)
+					{
+						if (node.Value.api == item)
+						{
+							node.Value = (item, methodInfo);
+							break;
+						}
+						node = node.Next;
+					}
+					if (node is null)
+						ll.AddLast((item, methodInfo));
+				}
+				else
+				{
+					var tempList = new LinkedList<(TApi, MethodInfo)>();
+					tempList.AddLast((item, methodInfo));
+					extraMethodsInfo.Add(info, tempList);
+				}
+				found = true;
 			}
-			if (success && prevNode is not null)
-				SetImplementation(recentApi, prevNode.Value);
-			return result;
-		}
+			if (!found)
+				return false;
 
-		/// <summary>
-		/// The dynamic class used to dynamically invoke method(s) not listed explicitly (the methods extra defined in derived classes of <see cref="AbstractRuntimeApi"/>)
-		/// </summary>
-		protected abstract class DynamicInvocation : DynamicObject
-		{
-			/// <summary>
-			/// Provides the implementation for operations that invoke a member.
-			/// </summary>
-			/// <param name="binder">Provides information about the dynamic operation</param>
-			/// <param name="args">The arguments that are passed to the object member during the invoke operation.</param>
-			/// <param name="result">Output the result of the member invocation.</param>
-			/// <returns>True if the operation is successful; otherwise, false.</returns>
-			public override abstract bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result);
+			// create dynamic method
+			var method = new DynamicMethod(name, returnType, inputTypes, typeof(AbstractRuntimeApi<TApi>), false);
+			var IL = method.GetILGenerator();
+			IL.DeclareLocal(typeof(bool)); //// bool success = false;
+			if (returnType is not null)
+				IL.DeclareLocal(returnType); //// returnType result = default;
+			foreach (var (_, methodInfo) in extraMethodsInfo[info])
+			{
+				
+				IL.Emit(OpCodes.Call, methodInfo);
+			}
+			// add
+			extraStaticMethods.Add(info, method);
+			return true;
 		}
+		#endregion
 		#endregion
 	}
 }
