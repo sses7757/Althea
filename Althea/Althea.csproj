@@ -4,6 +4,7 @@
     <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <EnablePreviewFeatures>True</EnablePreviewFeatures>
+    <LangVersion>preview</LangVersion>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -125,6 +126,10 @@
   <ItemGroup>
     <None Include="Helpers\FixedClassBuffer.cs" />
     <None Include="Helpers\FixedUnmanagedBuffer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
   </ItemGroup>
 
 </Project>

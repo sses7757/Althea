@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -8,22 +9,99 @@ using Althea.Resources;
 
 namespace Althea.NativeTypes
 {
-	#region single and double complex types
+	#region interface
 	/// <summary>
-	/// The double precision float complex type
+	/// The base interface for complex numbers
 	/// </summary>
-	/// <remarks>This is a separate struct since the native <see cref="double"/> has not implemented <see cref="IFloatNumber{TSelf}"/> yet</remarks>
+	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
+	/// <typeparam name="T">The type of corresponding real number</typeparam>
+	public interface IComplexNumber<TSelf, T> : INumber<TSelf> where TSelf : IComplexNumber<TSelf, T> where T : unmanaged, INumber<T>
+	{
+		/// <summary>
+		/// Abstract static get imaginary one for <typeparamref name="TSelf"/>
+		/// </summary>
+		abstract static TSelf ImaginaryOne { get; }
+		/// <summary>
+		/// Abstract static get negative imaginary one for <typeparamref name="TSelf"/>
+		/// </summary>
+		abstract static TSelf ImaginaryNegativeOne { get; }
+
+		/// <summary>
+		/// Get the real part of this complex number
+		/// </summary>
+		T Real { get; }
+		/// <summary>
+		/// Get the imaginary part of this complex number
+		/// </summary>
+		T Imaginary { get; }
+		/// <summary>
+		/// Get the magnitude or absolute value of this complex number
+		/// </summary>
+		T Magnitude { get; }
+		/// <summary>
+		/// Get the phase of this complex number
+		/// </summary>
+		T Phase { get; }
+
+		/// <summary>
+		/// Statically return the absolute value of the given <paramref name="complex"/> number
+		/// </summary>
+		/// <param name="complex">The complex number of type <typeparamref name="TSelf"/></param>
+		/// <returns>The magnitude or absolute value of the given <paramref name="complex"/> number</returns>
+		new static T Abs(TSelf complex) => complex.Magnitude;
+
+		/// <summary>
+		/// Get the complex conjugate of this complex number
+		/// </summary>
+		TSelf Conjugate { get; }
+
+		/// <summary>
+		/// Implicitly convert a real number of <typeparamref name="T"/> to complex <typeparamref name="TSelf"/>
+		/// </summary>
+		/// <param name="real">The input real number of type <typeparamref name="T"/></param>
+		abstract static implicit operator TSelf(T real);
+
+		/// <summary>
+		/// Implicitly convert a pair of real number of <typeparamref name="T"/> to complex <typeparamref name="TSelf"/>
+		/// </summary>
+		/// <param name="v">The input real and imaginary parts of type <typeparamref name="T"/></param>
+		abstract static implicit operator TSelf((T real, T imag) v);
+	}
+
+	/// <summary>
+	/// The base interface for complex float numbers
+	/// </summary>
+	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
+	/// <typeparam name="T">The type of corresponding real number</typeparam>
+	public interface IComplexFloatNumber<TSelf, T> : IComplexNumber<TSelf, T>, IFloatingPoint<TSelf>
+		where TSelf : IComplexFloatNumber<TSelf, T>
+		where T : unmanaged, IFloatingPoint<T>
+	{
+		/// <summary>
+		/// Statically return the complex power of the given <paramref name="complex"/> number and a real power <paramref name="p"/>
+		/// </summary>
+		/// <param name="complex">The complex number of type <typeparamref name="TSelf"/></param>
+		/// <param name="p">The power as a real number of type <typeparamref name="T"/></param>
+		/// <returns>The complex power of <paramref name="complex"/> to <paramref name="p"/></returns>
+		abstract static TSelf Pow(TSelf complex, T p);
+	}
+	#endregion
+
+	#region generic complex type
+	/// <summary>
+	/// The general complex type for any real floating point numeric number type including <see cref="float"/> and <see cref="double"/>
+	/// </summary>
+	/// <typeparam name="T">The data type of corresponding real number</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct ComplexDouble : IComplexNumber<ComplexDouble, double>, ICustomNativeType<ComplexDouble>
+	public struct Complex<T> : IComplexFloatNumber<Complex<T>, T>, ICustomNativeType<Complex<T>> where T : unmanaged, IFloatingPoint<T>
 	{
 		#region basic
-		private readonly double real, imag;
+		private readonly T real, imag;
 
 		/// <summary>
 		/// Get the real part
 		/// </summary>
-		public double Real
-		{
+		public T Real {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.real;
 		}
@@ -31,18 +109,17 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the imaginary part
 		/// </summary>
-		public double Imaginary
-		{
+		public T Imaginary {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.imag;
 		}
 
 		/// <summary>
-		/// Construct a <see cref="ComplexDouble"/> from real and imaginary parts
+		/// Construct a <see cref="Complex{T}"/> from real and imaginary parts
 		/// </summary>
 		/// <param name="re">The real part</param>
 		/// <param name="im">The imaginary part, default value is 0</param>
-		public ComplexDouble(double re, double im = default)
+		public Complex(T re, T im = default)
 		{
 			this.real = re;
 			this.imag = im;
@@ -51,74 +128,133 @@ namespace Althea.NativeTypes
 
 		#region static information
 		/// <summary>
-		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="ComplexDouble"/>
+		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="Complex{T}"/>
 		/// </summary>
-		public static DataTypeClassification Classification => DataTypeClassification.FloatPoint_IEEE754;
+		public static DataTypeClassification Classification => NumberTypes<T>.Classification;
 
 		/// <summary>
-		/// Statically get the machine precision of <see cref="ComplexDouble"/>
+		/// Statically get the machine precision of <see cref="Complex{T}"/>
 		/// </summary>
-		public static double MachinePrecision => 2.220446049250313E-16D;
+		public static double MachinePrecision => NumberTypes<T>.MachinePrecision;
+
+		static Complex()
+		{
+			// generic type check
+			if (typeof(T).IsGenericType)
+				throw new InvalidOperationException(Support.DataType);
+			// native type check
+			if (NumberTypes<T>.Classification < DataTypeClassification.FloatPoint_IEEE754)
+				throw new InvalidOperationException(Support.DataType);
+		}
 		#endregion
 
 		#region constant values
 		/// <summary>
-		/// <see cref="ComplexDouble"/> 0
+		/// <see cref="Complex{T}"/> 0
 		/// </summary>
-		public static ComplexDouble Zero => new(0);
+		public static Complex<T> Zero => new(T.Zero);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> 1
+		/// <see cref="Complex{T}"/> -0
 		/// </summary>
-		public static ComplexDouble One => new(1);
+		public static Complex<T> NegativeZero => new(T.NegativeZero);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> -1
+		/// <see cref="Complex{T}"/> 1
 		/// </summary>
-		public static ComplexDouble NegativeOne => new(-1);
+		public static Complex<T> One => new(T.One);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> i
+		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static ComplexDouble ImaginaryOne => new(0, 1);
+		public static Complex<T> NegativeOne => new(T.NegativeOne);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> -1
+		/// <see cref="Complex{T}"/> i
 		/// </summary>
-		public static ComplexDouble ImaginaryNegativeOne => new(0, -1);
+		public static Complex<T> ImaginaryOne => new(T.Zero, T.One);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> 0
+		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static ComplexDouble AdditiveIdentity => Zero;
+		public static Complex<T> ImaginaryNegativeOne => new(T.Zero, T.NegativeOne);
+
+		static Complex<T> IAdditiveIdentity<Complex<T>, Complex<T>>.AdditiveIdentity => Zero;
+		static Complex<T> IMultiplicativeIdentity<Complex<T>, Complex<T>>.MultiplicativeIdentity => One;
+
 		/// <summary>
-		/// <see cref="ComplexDouble"/> 1
+		/// <see cref="Complex{T}"/> +∞
 		/// </summary>
-		public static ComplexDouble MultiplicativeIdentity => One;
+		public static Complex<T> PositiveInfinity => new(T.PositiveInfinity);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> infinity
+		/// <see cref="Complex{T}"/> -∞
 		/// </summary>
-		public static ComplexDouble Infinity => new(double.PositiveInfinity);
+		public static Complex<T> NegativeInfinity => new(T.NegativeInfinity);
 		/// <summary>
-		/// <see cref="ComplexDouble"/> NaN
+		/// <see cref="Complex{T}"/> NaN
 		/// </summary>
-		public static ComplexDouble Nan => new(double.NaN);
+		public static Complex<T> NaN => new(T.NaN);
+
+		/// <summary>
+		/// <see cref="Complex{T}"/> τ
+		/// </summary>
+		public static Complex<T> Tau => new(T.Tau);
+		/// <summary>
+		/// <see cref="Complex{T}"/> π
+		/// </summary>
+		public static Complex<T> Pi => new(T.Pi);
+		/// <summary>
+		/// <see cref="Complex{T}"/> ε
+		/// </summary>
+		public static Complex<T> Epsilon => new(T.Epsilon);
+		/// <summary>
+		/// <see cref="Complex{T}"/> e
+		/// </summary>
+		public static Complex<T> E => new(T.E);
 
 		/// <summary>
 		/// Statically check whether the given <paramref name="value"/> is finite or not
 		/// </summary>
 		/// <param name="value">The given number to check</param>
 		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
-		public static bool IsFinite(ComplexDouble value) => double.IsFinite(value.real) && double.IsFinite(value.imag);
-
+		public static bool IsFinite(Complex<T> value) => T.IsFinite(value.real) && T.IsFinite(value.imag);
 		/// <summary>
 		/// Statically check whether the given <paramref name="value"/> is infinity or not
 		/// </summary>
 		/// <param name="value">The given number to check</param>
 		/// <returns>Whether <paramref name="value"/> is infinity or not</returns>
-		public static bool IsInfinity(ComplexDouble value) => double.IsInfinity(value.real) || double.IsInfinity(value.imag);
-
+		public static bool IsInfinity(Complex<T> value) => T.IsInfinity(value.real) || T.IsInfinity(value.imag);
 		/// <summary>
 		/// Statically check whether the given <paramref name="value"/> is NaN or not
 		/// </summary>
 		/// <param name="value">The given number to check</param>
 		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
-		public static bool IsNan(ComplexDouble value) => double.IsNaN(value.real) && double.IsNaN(value.imag);
+		public static bool IsNaN(Complex<T> value) => T.IsNaN(value.real) && T.IsNaN(value.imag);
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is negative or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is negative or not</returns>
+		public static bool IsNegative(Complex<T> value) => T.IsNegative(value.real) && value.imag == T.Zero;
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is negative infinity or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is negative infinity or not</returns>
+		public static bool IsNegativeInfinity(Complex<T> value) => T.IsNegativeInfinity(value.real) && value.imag == T.Zero;
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is positive infinity or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is positive infinity or not</returns>
+		public static bool IsPositiveInfinity(Complex<T> value) => T.IsPositiveInfinity(value.real) && value.imag == T.Zero;
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is normal or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is normal or not</returns>
+		public static bool IsNormal(Complex<T> value) => T.IsNormal(value.real) && T.IsNormal(value.imag);
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is subnormal or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is subnormal or not</returns>
+		public static bool IsSubnormal(Complex<T> value) => T.IsSubnormal(value.real) && T.IsSubnormal(value.imag);
 		#endregion
 
 		#region parser
@@ -180,8 +316,12 @@ namespace Althea.NativeTypes
 			// real part group
 			@"(" + floatPattern2 + ")";
 
-		internal static unsafe bool TryParseAny<T>(string str, delegate*<string, out T, bool> parseFunc, out T real, out T imag) where T : unmanaged
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static unsafe bool TryParseAny(delegate*<string, NumberStyles, IFormatProvider?, out T, bool> parseFunc, string? str, NumberStyles style, IFormatProvider? provider, out T real, out T imag)
 		{
+			if (str is null)
+				throw new ArgumentNullException(nameof(str));
+
 			real = imag = default;
 
 			Regex regex = new(regexPattern1);
@@ -189,14 +329,14 @@ namespace Althea.NativeTypes
 			bool success = match.Success;
 			if (!success)
 				goto SecondTry;
-			success = parseFunc(match.Groups[1].Value, out real);
+			success = parseFunc(match.Groups[1].Value, style, provider, out real);
 			if (!success)
 				goto SecondTry;
 			string imagStr = match.Groups[2].Value.Replace(" ", "");
 			if (imagStr.Length > 0)
 			{
 				imagStr = imagStr[..(imagStr.Length - 1)];
-				success = parseFunc(imagStr, out imag);
+				success = parseFunc(imagStr, style, provider, out imag);
 			}
 			else
 			{
@@ -213,10 +353,10 @@ namespace Althea.NativeTypes
 			success = match.Success;
 			if (!success)
 				return false;
-			success = parseFunc(match.Groups[1].Value, out imag);
+			success = parseFunc(match.Groups[1].Value, style, provider, out imag);
 			if (!success)
 				return false;
-			success = parseFunc(match.Groups[2].Value, out real);
+			success = parseFunc(match.Groups[2].Value, style, provider, out real);
 			if (!success)
 				return false;
 			else
@@ -224,306 +364,190 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
-		/// Try to parse a <see cref="string"/> to a new <see cref="ComplexDouble"/>
+		/// Try to parse a <see cref="string"/> to a <see cref="Complex{T}"/>
 		/// </summary>
-		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <param name="complex">output <see cref="ComplexDouble"/></param>
-		/// <returns>success or not</returns>
-		public unsafe static bool TryParse(string? s, out ComplexDouble complex)
+		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+		/// <param name="style">The <see cref="NumberStyles"/> of given <paramref name="str"/></param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> which can be null</param>
+		/// <param name="complex">The output <see cref="Complex{T}"/></param>
+		/// <returns>Success or not</returns>
+		public unsafe static bool TryParse(string? str, NumberStyles style, IFormatProvider? provider, out Complex<T> complex)
 		{
 			complex = default;
-			if (s is null || s.Length == 0)
+			if (str is null || str.Length == 0)
 				return false;
-			bool success = TryParseAny(s, &double.TryParse, out double real, out double imag);
+			bool success = TryParseAny(&T.TryParse, str, style, provider, out T real, out T imag);
 			if (success)
 				complex = new(real, imag);
 			return success;
 		}
 
 		/// <summary>
-		/// Parse a <see cref="string"/> to a <see cref="ComplexDouble"/>
+		/// Parse a <see cref="string"/> to a <see cref="Complex{T}"/>
 		/// </summary>
 		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <returns>The parsed <see cref="ComplexDouble"/></returns>
-		public static ComplexDouble Parse(string? str)
+		/// <param name="style">The <see cref="NumberStyles"/> of given <paramref name="str"/></param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> which can be null</param>
+		/// <returns>The parsed <see cref="Complex{T}"/></returns>
+		public static Complex<T> Parse(string? str, NumberStyles style, IFormatProvider? provider)
 		{
 			if (str is null || str.Length == 0)
 				throw new ArgumentNullException(nameof(str));
-			bool success = TryParse(str, out ComplexDouble result);
+			bool success = TryParse(str, style, provider, out Complex<T> result);
 			if (!success)
-				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(double).Name), nameof(str));
+				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
 			return result;
 		}
 
 		/// <summary>
-		/// See <see cref="Parse(string?)"/>
+		/// See <see cref="Parse(string?, NumberStyles, IFormatProvider?)"/>
 		/// </summary>
-		public static ComplexDouble Parse(string? s, IFormatProvider? provider) => Parse(s);
+		public static Complex<T> Parse(string? s, IFormatProvider? provider) => Parse(s, NumberStyles.Any, provider);
 		/// <summary>
-		/// See <see cref="TryParse(string?, out ComplexDouble)"/>
+		/// See <see cref="TryParse(string?, NumberStyles, IFormatProvider, out Complex{T})"/>
 		/// </summary>
-		public static bool TryParse(string? s, IFormatProvider? provider, out ComplexDouble result) => TryParse(s, out result);
+		public static bool TryParse(string? s, IFormatProvider? provider, out Complex<T> result) => TryParse(s, NumberStyles.Any, provider, out result);
+
+		/// <summary>
+		/// See <see cref="Parse(string?, NumberStyles, IFormatProvider?)"/>
+		/// </summary>
+		public static Complex<T> Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => Parse(new string(s), style, provider);
+		/// <summary>
+		/// See <see cref="TryParse(string?, NumberStyles, IFormatProvider?, out Complex{T})"/>
+		/// </summary>
+		public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Complex<T> result) => TryParse(new string(s), style, provider, out result);
+		/// <summary>
+		/// See <see cref="Parse(ReadOnlySpan{char}, NumberStyles, IFormatProvider?)"/>
+		/// </summary>
+		public static Complex<T> Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => Parse(s, NumberStyles.Any, provider);
+		/// <summary>
+		/// See <see cref="TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider?, out Complex{T})"/>
+		/// </summary>
+		public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Complex<T> result) => TryParse(s, NumberStyles.Any, provider, out result);
 		#endregion
 
 		#region converter
 		/// <summary>
-		/// Convert from int
+		/// Convert from T
 		/// </summary>
-		/// <param name="a">a int</param>
-		public static implicit operator ComplexDouble(int a) => new(a);
+		/// <param name="a">a T</param>
+		public static implicit operator Complex<T>(T a) => new(a);
 		/// <summary>
-		/// Convert from double
+		/// Convert from T tuple
 		/// </summary>
-		/// <param name="a">a double</param>
-		public static implicit operator ComplexDouble(double a) => new(a);
-		/// <summary>
-		/// Convert from int tuple
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		public static implicit operator ComplexDouble((int r, int i) a) => new(a.r, a.i);
-		/// <summary>
-		/// Convert from double tuple
-		/// </summary>
-		/// <param name="a">a double tuple</param>
-		public static implicit operator ComplexDouble((double real, double imag) a) => new(a.real, a.imag);
+		/// <param name="a">a T tuple</param>
+		public static implicit operator Complex<T>((T real, T imag) a) => new(a.real, a.imag);
 
 		/// <summary>
-		/// Convert to <see cref="double"/> by taking abs
+		/// Convert to <typeparamref name="T"/> by taking abs
 		/// </summary>
-		public static explicit operator double(ComplexDouble v) => DoubleAbs(v);
+		public static explicit operator T(Complex<T> v) => v.Magnitude;
+
+
+		public static Complex<T> Create<TOther>(TOther value) where TOther : INumber<TOther>
+		{
+
+		}
+
+		public static Complex<T> CreateSaturating<TOther>(TOther value) where TOther : INumber<TOther>
+		{
+
+		}
+
+		public static Complex<T> CreateTruncating<TOther>(TOther value) where TOther : INumber<TOther>
+		{
+			throw new NotImplementedException();
+		}
+
+		public static bool TryCreate<TOther>(TOther value, out Complex<T> result) where TOther : INumber<TOther>
+		{
+			throw new NotImplementedException();
+		}
 		#endregion
 
 		#region equality
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		public static bool operator ==(ComplexDouble a, ComplexDouble b) => a.Equals(b);
+		public static bool operator ==(Complex<T> a, Complex<T> b) => a.Equals(b);
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		public static bool operator !=(ComplexDouble a, ComplexDouble b) => !(a == b);
+		public static bool operator !=(Complex<T> a, Complex<T> b) => !(a == b);
 
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		/// <param name="other">The other <see cref="ComplexDouble"/> to compare</param>
+		/// <param name="other">The other <see cref="Complex{T}"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(ComplexDouble other)
-		{
-			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
-		}
+		public bool Equals(Complex<T> other) => this.real == other.real && this.imag == other.imag;
 
 		/// <summary>
 		/// Override <see cref="object.GetHashCode"/>
 		/// </summary>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.real, this.imag);
-		}
+		public override int GetHashCode() => HashCode.Combine(this.real, this.imag);
 
 		/// <summary>
 		/// Override <see cref="object.Equals(object)"/>
 		/// </summary>
 		public override bool Equals(object? obj)
 		{
-			ComplexDouble a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is double single)
-				a = single;
-			else if (obj is ComplexDouble complex)
+			Complex<T> a;
+			if (obj is T real)
+				a = real;
+			else if (obj is Complex<T> complex)
 				a = complex;
 			else
 				return false;
 			return this.Equals(a);
 		}
+
+		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator <(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
+		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator <=(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
+		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator >(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
+		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator >=(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
+
+		static Complex<T> IModulusOperators<Complex<T>, Complex<T>, Complex<T>>.operator %(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
+
+		static Complex<T> INumber<Complex<T>>.Max(Complex<T> x, Complex<T> y) => throw new InvalidOperationException();
+		static Complex<T> INumber<Complex<T>>.Min(Complex<T> x, Complex<T> y) => throw new InvalidOperationException();
+
+		int IComparable.CompareTo(object? obj) => throw new InvalidOperationException();
+		int IComparable<Complex<T>>.CompareTo(Complex<T> other) => throw new InvalidOperationException();
 		#endregion
 
 		#region arithmetic operators
 		/// <summary>
 		/// Complex negate
 		/// </summary>
-		public static ComplexDouble operator -(ComplexDouble a) => new(-a.real, -a.imag);
+		public static Complex<T> operator -(Complex<T> a) => new(-a.real, -a.imag);
 		/// <summary>
 		/// Complex add
 		/// </summary>
-		public static ComplexDouble operator +(ComplexDouble a, ComplexDouble b) => new(a.real + b.real, a.imag + b.imag);
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real + b.real, a.imag + b.imag);
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
-		public static ComplexDouble operator -(ComplexDouble a, ComplexDouble b) => new(a.real - b.real, a.imag - b.imag);
+		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real - b.real, a.imag - b.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		public static ComplexDouble operator +(ComplexDouble a, double b) => new(a.real + b, a.imag);
+		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		public static ComplexDouble operator +(double b, ComplexDouble a) => new(a.real + b, a.imag);
+		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
-		public static ComplexDouble operator -(ComplexDouble a, double b) => new(a.real - b, a.imag);
+		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
-		public static ComplexDouble operator -(double b, ComplexDouble a) => new(b - a.real, -a.imag);
+		public static Complex<T> operator -(T b, Complex<T> a) => new(b - a.real, -a.imag);
 
-		/// <summary>
-		/// Complex multiply
-		/// </summary>
-		public static unsafe ComplexDouble operator *(ComplexDouble a, ComplexDouble b) => DoubleMul(a, b);
-
-		/// <summary>
-		/// Complex division, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public static unsafe ComplexDouble operator /(ComplexDouble a, ComplexDouble b) => DoubleDiv(a, b);
-
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		public static ComplexDouble operator *(ComplexDouble a, double b) => new(a.real * b, a.imag *b);
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		public static ComplexDouble operator *(double b, ComplexDouble a) => new(a.real * b, a.imag * b);
-		/// <summary>
-		/// Complex divide real number
-		/// </summary>
-		public static ComplexDouble operator /(ComplexDouble a, double b) => new(a.real / b, a.imag / b);
-
-		/// <summary>
-		/// Real number divide complex 
-		/// </summary>
-		public static unsafe ComplexDouble operator /(double a, ComplexDouble b) => DoubleRealDiv(a, b);
-
-		/// <summary>
-		/// Static unary plus operator for one operand <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The operand to be incremented of type <see cref="ComplexDouble"/></param>
-		/// <returns>The unary plus result of type <see cref="ComplexDouble"/></returns>
-		public static ComplexDouble operator +(ComplexDouble value) => value;
-
-		/// <summary>
-		/// Static unary decrement operator for one operand <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The operand to be incremented of type <see cref="ComplexDouble"/></param>
-		/// <returns>The unary decrement result of type <see cref="ComplexDouble"/></returns>
-		public static ComplexDouble operator --(ComplexDouble value)
-		{
-			double r = value.real;
-			r--;
-			return new(r, value.imag);
-		}
-
-		/// <summary>
-		/// Static unary increment operator for one operand <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The operand to be incremented of type <see cref="ComplexDouble"/></param>
-		/// <returns>The unary increment result of type <see cref="ComplexDouble"/></returns>
-		public static ComplexDouble operator ++(ComplexDouble value)
-		{
-			double r = value.real;
-			r++;
-			return new(r, value.imag);
-		}
-		#endregion
-
-		#region other arithmetics
-		/// <summary>
-		/// Get the magnitude or absolute value of this <see cref="ComplexDouble"/>
-		/// </summary>
-		public double Magnitude => DoubleAbs(this);
-
-		/// <summary>
-		/// Get the squared magnitude or absolute value of this <see cref="ComplexDouble"/>
-		/// </summary>
-		public double MagnitudeSquare => DoubleSquareAbs(this);
-
-		/// <summary>
-		/// Get the phase of this <see cref="ComplexDouble"/>
-		/// </summary>
-		public double Phase => DoubleArg(this);
-
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		public ComplexDouble Conj => new(this.real, -this.imag);
-
-		/// <summary>
-		/// Complex number absolute value
-		/// </summary>
-		public static ComplexDouble Abs(ComplexDouble number) => DoubleAbs(number);
-
-		/// <summary>
-		/// Complex exponential (of base <c>e</c>)
-		/// </summary>
-		public static ComplexDouble Exp(ComplexDouble number) => DoubleExp(number);
-		/// <summary>
-		/// Complex logarithm (of base <c>e</c>)
-		/// </summary>
-		public static ComplexDouble Log(ComplexDouble number) => DoubleLog(number);
-		/// <summary>
-		/// Complex number power of real type
-		/// </summary>
-		public static ComplexDouble Pow(ComplexDouble complex, double p) => DoublePow(complex, p);
-		/// <summary>
-		/// Complex number power of complex type
-		/// </summary>
-		public static ComplexDouble Pow(ComplexDouble number, ComplexDouble power) => DoublePow(number, power);
-		/// <summary>
-		/// Complex number reciprocal
-		/// </summary>
-		public static ComplexDouble Reciprocal(ComplexDouble number) => 1 / number;
-		/// <summary>
-		/// Complex number square root
-		/// </summary>
-		public static ComplexDouble Sqrt(ComplexDouble number) => DoubleSqrt(number);
-		#endregion
-
-		#region string representation
-		/// <summary>
-		/// Override <see cref="object.ToString"/>
-		/// </summary>
-		public override string ToString()
-		{
-			return this.ToString(null, Print.Culture);
-		}
-
-		/// <summary>
-		/// String representation of this complex number
-		/// </summary>
-		/// <param name="format">format of output</param>
-		public string ToString(string? format)
-		{
-			return this.ToString(format, Print.Culture);
-		}
-
-		/// <summary>
-		/// Implementation of <see cref="IFormattable.ToString(string, IFormatProvider)"/> that formats the value of the current instance using the specified format.
-		/// </summary>
-		/// <param name="format">The format to use</param>
-		/// <param name="formatProvider">The provider to use to format the value</param>
-		public string ToString(string? format, IFormatProvider? formatProvider = null)
-		{
-			formatProvider ??= Print.Culture;
-			string r, i;
-			if (this.real is IFormattable f && this.imag is IFormattable g)
-			{
-				r = f.ToString(format, formatProvider);
-				i = g.ToString(format, formatProvider);
-			}
-			else
-			{
-				r = string.Format(formatProvider, $"{{0:{format}}}", this.real);
-				i = string.Format(formatProvider, $"{{0:{format}}}", this.imag);
-			}
-			return $"({r},{i})";
-		}
-		#endregion
-
-		#region complex double arithmetic
+		/*
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexDouble DoubleMul(ComplexDouble a, double b)
 		{
@@ -692,932 +716,26 @@ namespace Althea.NativeTypes
 			double imag = Math.Sin(arg);
 			return new ComplexDouble(scale * real, scale * imag);
 		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The single precision float complex type
-	/// </summary>
-	/// <remarks>This is a separate struct since the native <see cref="float"/> has not implemented <see cref="IFloatNumber{TSelf}"/> yet</remarks>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct ComplexSingle : IComplexNumber<ComplexSingle, float>, ICustomNativeType<ComplexSingle>
-	{
-		#region basic
-		private readonly float real, imag;
-
-		/// <summary>
-		/// Get the real part
-		/// </summary>
-		public float Real
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.real;
-		}
-
-		/// <summary>
-		/// Get the imaginary part
-		/// </summary>
-		public float Imaginary
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.imag;
-		}
-
-		/// <summary>
-		/// Construct a <see cref="ComplexSingle"/> from real and imaginary parts
-		/// </summary>
-		/// <param name="re">The real part</param>
-		/// <param name="im">The imaginary part, default value is 0</param>
-		public ComplexSingle(float re, float im = default)
-		{
-			this.real = re;
-			this.imag = im;
-		}
-		#endregion
-
-		#region static information
-		/// <summary>
-		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="ComplexSingle"/>
-		/// </summary>
-		public static DataTypeClassification Classification => DataTypeClassification.FloatPoint_IEEE754;
-
-		/// <summary>
-		/// Statically get the machine precision of <see cref="ComplexSingle"/>
-		/// </summary>
-		public static double MachinePrecision => 1.1920928955078125E-07D;
-		#endregion
-
-		#region constant values
-		/// <summary>
-		/// <see cref="ComplexSingle"/> 0
-		/// </summary>
-		public static ComplexSingle Zero => new(0);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> 1
-		/// </summary>
-		public static ComplexSingle One => new(1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> -1
-		/// </summary>
-		public static ComplexSingle NegativeOne => new(-1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> i
-		/// </summary>
-		public static ComplexSingle ImaginaryOne => new(0, 1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> -1
-		/// </summary>
-		public static ComplexSingle ImaginaryNegativeOne => new(0, -1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> 0
-		/// </summary>
-		public static ComplexSingle AdditiveIdentity => Zero;
-		/// <summary>
-		/// <see cref="ComplexSingle"/> 1
-		/// </summary>
-		public static ComplexSingle MultiplicativeIdentity => One;
-		/// <summary>
-		/// <see cref="ComplexSingle"/> infinity
-		/// </summary>
-		public static ComplexSingle Infinity => new(float.PositiveInfinity);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> NaN
-		/// </summary>
-		public static ComplexSingle Nan => new(float.NaN);
-
-		/// <summary>
-		/// Statically check whether the given <paramref name="value"/> is finite or not
-		/// </summary>
-		/// <param name="value">The given number to check</param>
-		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
-		public static bool IsFinite(ComplexSingle value) => float.IsFinite(value.real) && float.IsFinite(value.imag);
-
-		/// <summary>
-		/// Statically check whether the given <paramref name="value"/> is infinity or not
-		/// </summary>
-		/// <param name="value">The given number to check</param>
-		/// <returns>Whether <paramref name="value"/> is infinity or not</returns>
-		public static bool IsInfinity(ComplexSingle value) => float.IsInfinity(value.real) || float.IsInfinity(value.imag);
-
-		/// <summary>
-		/// Statically check whether the given <paramref name="value"/> is NaN or not
-		/// </summary>
-		/// <param name="value">The given number to check</param>
-		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
-		public static bool IsNan(ComplexSingle value) => float.IsNaN(value.real) && float.IsNaN(value.imag);
-		#endregion
-
-		#region parser
-		/// <summary>
-		/// Try to parse a <see cref="string"/> to a new <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <param name="complex">output <see cref="ComplexSingle"/></param>
-		/// <returns>success or not</returns>
-		public unsafe static bool TryParse(string? s, out ComplexSingle complex)
-		{
-			complex = default;
-			if (s is null || s.Length == 0)
-				return false;
-			bool success = ComplexDouble.TryParseAny(s, &double.TryParse, out double real, out double imag);
-			if (success)
-				complex = new((float)real, (float)imag);
-			return success;
-		}
-
-		/// <summary>
-		/// Parse a <see cref="string"/> to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <returns>The parsed <see cref="ComplexSingle"/></returns>
-		public static ComplexSingle Parse(string? str)
-		{
-			if (str is null || str.Length == 0)
-				throw new ArgumentNullException(nameof(str));
-			bool success = TryParse(str, out ComplexSingle result);
-			if (!success)
-				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(float).Name), nameof(str));
-			return result;
-		}
-
-		/// <summary>
-		/// See <see cref="Parse(string?)"/>
-		/// </summary>
-		public static ComplexSingle Parse(string? s, IFormatProvider? provider) => Parse(s);
-		/// <summary>
-		/// See <see cref="TryParse(string?, out ComplexSingle)"/>
-		/// </summary>
-		public static bool TryParse(string? s, IFormatProvider? provider, out ComplexSingle result) => TryParse(s, out result);
-		#endregion
-
-		#region converter
-		/// <summary>
-		/// Convert from int
-		/// </summary>
-		/// <param name="a">a int</param>
-		public static implicit operator ComplexSingle(int a) => new(a);
-		/// <summary>
-		/// Convert from float
-		/// </summary>
-		/// <param name="a">a float</param>
-		public static implicit operator ComplexSingle(float a) => new(a);
-		/// <summary>
-		/// Convert from int tuple
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		public static implicit operator ComplexSingle((int r, int i) a) => new(a.r, a.i);
-		/// <summary>
-		/// Convert from float tuple
-		/// </summary>
-		/// <param name="a">a float tuple</param>
-		public static implicit operator ComplexSingle((float real, float imag) a) => new(a.real, a.imag);
-
-		/// <summary>
-		/// Convert to <see cref="float"/> by taking abs
-		/// </summary>
-		public static explicit operator float(ComplexSingle v) => SingleAbs(v);
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(ComplexSingle a, ComplexSingle b) => a.Equals(b);
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(ComplexSingle a, ComplexSingle b) => !(a == b);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		/// <param name="other">The other <see cref="ComplexSingle"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(ComplexSingle other)
-		{
-			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
-		}
-
-		/// <summary>
-		/// Override <see cref="object.GetHashCode"/>
-		/// </summary>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.real, this.imag);
-		}
-
-		/// <summary>
-		/// Override <see cref="object.Equals(object)"/>
-		/// </summary>
-		public override bool Equals(object? obj)
-		{
-			ComplexSingle a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is float single)
-				a = single;
-			else if (obj is ComplexSingle complex)
-				a = complex;
-			else
-				return false;
-			return this.Equals(a);
-		}
-		#endregion
-
-		#region arithmetic operators
-		/// <summary>
-		/// Complex negate
-		/// </summary>
-		public static ComplexSingle operator -(ComplexSingle a) => new(-a.real, -a.imag);
-		/// <summary>
-		/// Complex add
-		/// </summary>
-		public static ComplexSingle operator +(ComplexSingle a, ComplexSingle b) => new(a.real + b.real, a.imag + b.imag);
-		/// <summary>
-		/// Complex subtract
-		/// </summary>
-		public static ComplexSingle operator -(ComplexSingle a, ComplexSingle b) => new(a.real - b.real, a.imag - b.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static ComplexSingle operator +(ComplexSingle a, float b) => new(a.real + b, a.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static ComplexSingle operator +(float b, ComplexSingle a) => new(a.real + b, a.imag);
-		/// <summary>
-		/// Complex subtract real
-		/// </summary>
-		public static ComplexSingle operator -(ComplexSingle a, float b) => new(a.real - b, a.imag);
-		/// <summary>
-		/// Real subtract complex
-		/// </summary>
-		public static ComplexSingle operator -(float b, ComplexSingle a) => new(b - a.real, -a.imag);
+		 */
 
 		/// <summary>
 		/// Complex multiply
 		/// </summary>
-		public static unsafe ComplexSingle operator *(ComplexSingle a, ComplexSingle b) => SingleMul(a, b);
-
-		/// <summary>
-		/// Complex division, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		public static unsafe ComplexSingle operator /(ComplexSingle a, ComplexSingle b) => SingleDiv(a, b);
-
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		public static ComplexSingle operator *(ComplexSingle a, float b) => new(a.real * b, a.imag * b);
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		public static ComplexSingle operator *(float b, ComplexSingle a) => new(a.real * b, a.imag * b);
-		/// <summary>
-		/// Complex divide real number
-		/// </summary>
-		public static ComplexSingle operator /(ComplexSingle a, float b) => new(a.real / b, a.imag / b);
-
-		/// <summary>
-		/// Real number divide complex 
-		/// </summary>
-		public static unsafe ComplexSingle operator /(float a, ComplexSingle b) => SingleRealDiv(a, b);
-
-		/// <summary>
-		/// Static unary plus operator for one operand <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The operand to be incremented of type <see cref="ComplexSingle"/></param>
-		/// <returns>The unary plus result of type <see cref="ComplexSingle"/></returns>
-		public static ComplexSingle operator +(ComplexSingle value) => value;
-
-		/// <summary>
-		/// Static unary decrement operator for one operand <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The operand to be incremented of type <see cref="ComplexSingle"/></param>
-		/// <returns>The unary decrement result of type <see cref="ComplexSingle"/></returns>
-		public static ComplexSingle operator --(ComplexSingle value)
+		public static unsafe Complex<T> operator *(Complex<T> x, Complex<T> y)
 		{
-			float r = value.real;
-			r--;
-			return new(r, value.imag);
-		}
-
-		/// <summary>
-		/// Static unary increment operator for one operand <paramref name="value"/>
-		/// </summary>
-		/// <param name="value">The operand to be incremented of type <see cref="ComplexSingle"/></param>
-		/// <returns>The unary increment result of type <see cref="ComplexSingle"/></returns>
-		public static ComplexSingle operator ++(ComplexSingle value)
-		{
-			float r = value.real;
-			r++;
-			return new(r, value.imag);
-		}
-		#endregion
-
-		#region other arithmetics
-		/// <summary>
-		/// Get the magnitude or absolute value of this <see cref="ComplexSingle"/>
-		/// </summary>
-		public float Magnitude => SingleAbs(this);
-
-		/// <summary>
-		/// Get the squared magnitude or absolute value of this <see cref="ComplexSingle"/>
-		/// </summary>
-		public float MagnitudeSquare => SingleSquareAbs(this);
-
-		/// <summary>
-		/// Get the phase of this <see cref="ComplexSingle"/>
-		/// </summary>
-		public float Phase => SingleArg(this);
-
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		public ComplexSingle Conj => new(this.real, -this.imag);
-
-		/// <summary>
-		/// Complex number absolute value
-		/// </summary>
-		public static ComplexSingle Abs(ComplexSingle number) => SingleAbs(number);
-
-		/// <summary>
-		/// Complex exponential (of base <c>e</c>)
-		/// </summary>
-		public static ComplexSingle Exp(ComplexSingle number) => SingleExp(number);
-		/// <summary>
-		/// Complex logarithm (of base <c>e</c>)
-		/// </summary>
-		public static ComplexSingle Log(ComplexSingle number) => SingleLog(number);
-		/// <summary>
-		/// Complex number power of real type
-		/// </summary>
-		public static ComplexSingle Pow(ComplexSingle complex, float p) => SinglePow(complex, p);
-		/// <summary>
-		/// Complex number power of complex type
-		/// </summary>
-		public static ComplexSingle Pow(ComplexSingle number, ComplexSingle power) => SinglePow(number, power);
-		/// <summary>
-		/// Complex number reciprocal
-		/// </summary>
-		public static ComplexSingle Reciprocal(ComplexSingle number) => 1 / number;
-		/// <summary>
-		/// Complex number square root
-		/// </summary>
-		public static ComplexSingle Sqrt(ComplexSingle number) => SingleSqrt(number);
-		#endregion
-
-		#region string representation
-		/// <summary>
-		/// Override <see cref="object.ToString"/>
-		/// </summary>
-		public override string ToString()
-		{
-			return this.ToString(null, Print.Culture);
-		}
-
-		/// <summary>
-		/// String representation of this complex number
-		/// </summary>
-		/// <param name="format">format of output</param>
-		public string ToString(string? format)
-		{
-			return this.ToString(format, Print.Culture);
-		}
-
-		/// <summary>
-		/// Implementation of <see cref="IFormattable.ToString(string, IFormatProvider)"/> that formats the value of the current instance using the specified format.
-		/// </summary>
-		/// <param name="format">The format to use</param>
-		/// <param name="formatProvider">The provider to use to format the value</param>
-		public string ToString(string? format, IFormatProvider? formatProvider = null)
-		{
-			formatProvider ??= Print.Culture;
-			string r, i;
-			if (this.real is IFormattable f && this.imag is IFormattable g)
-			{
-				r = f.ToString(format, formatProvider);
-				i = g.ToString(format, formatProvider);
-			}
-			else
-			{
-				r = string.Format(formatProvider, $"{{0:{format}}}", this.real);
-				i = string.Format(formatProvider, $"{{0:{format}}}", this.imag);
-			}
-			return $"({r},{i})";
-		}
-		#endregion
-
-		#region complex float arithmetic
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleMul(ComplexSingle a, float b)
-		{
-			return new ComplexSingle(a.real * b, a.imag * b);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleMul(ComplexSingle a, ComplexSingle b)
-		{
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, -a.imag * b.imag); // vfmsub213sd
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, a.imag * b.real); // vfmadd213sd
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleDiv(ComplexSingle x, ComplexSingle y)
-		{
-			float squareAbsY = SingleSquareAbs(y);
-			float acbd = MathF.FusedMultiplyAdd(x.real, y.real, x.imag * y.imag); // vfmadd213sd
-			float bcad = MathF.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag); // vfmsub213sd
-			return new ComplexSingle(acbd / squareAbsY, bcad / squareAbsY);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleRealDiv(float x, ComplexSingle y)
-		{
-			float squareAbsY = SingleSquareAbs(y);
-			return new ComplexSingle(x * y.real / squareAbsY, -x * y.imag / squareAbsY);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static float SingleSquareAbs(ComplexSingle a)
-		{
-			float squareAbs = MathF.FusedMultiplyAdd(a.real, a.real, a.imag * a.imag); // vfmadd213sd
-			return squareAbs;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleAddSquareAbs(ComplexSingle a, ComplexSingle b)
-		{
-			// a.r += b.r*b.r + b.i*b.i
-			float real = MathF.FusedMultiplyAdd(b.real, b.real, a.real);
-			real = MathF.FusedMultiplyAdd(b.imag, b.imag, real);
-			// totally 2 FMA (naive is 1*FMA + 1*MUL + 1*ADD)
-			return new(real, a.imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleMulConjA(ComplexSingle a, ComplexSingle b)
-		{
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, a.imag * b.imag); // vfmadd213sd
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -a.imag * b.real); // vfmsub213sd
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleFMA(ComplexSingle a, ComplexSingle b, ComplexSingle c)
-		{
-			// a.r * b.r - (a.i * b.i - c.r)
-			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, -c.real);
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, -temp1);
-			// a.r * b.i + (a.i * b.r + c.i)
-			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, c.real);
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, temp2);
-			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleFMAConjA(ComplexSingle a, ComplexSingle b, ComplexSingle c)
-		{
-			// a.r * b.r + (a.i * b.i + c.r)
-			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, c.real);
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, temp1);
-			// a.r * b.i - (a.i * b.r - c.i)
-			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, -c.real);
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -temp2);
-			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleFMS(ComplexSingle a, ComplexSingle b, ComplexSingle c)
-		{
-			// a.r * b.r - (a.i * b.i + c.r)
-			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, c.real);
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, -temp1);
-			// a.r * b.i + (a.i * b.r - c.i)
-			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, -c.real);
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, temp2);
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleFMSConjA(ComplexSingle a, ComplexSingle b, ComplexSingle c)
-		{
-			// a.r * b.r + (a.i * b.i - c.r)
-			float temp1 = MathF.FusedMultiplyAdd(a.imag, b.imag, -c.real);
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, temp1);
-			// a.r * b.i - (a.i * b.r + c.i)
-			float temp2 = MathF.FusedMultiplyAdd(a.imag, b.real, c.real);
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -temp2);
-			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static float SingleAbs(ComplexSingle a)
-		{
-			return MathF.Sqrt(SingleSquareAbs(a));
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static float SingleArg(ComplexSingle a)
-		{
-			return MathF.Atan2(a.imag, a.real);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleExp(ComplexSingle c)
-		{
-			float exp = MathF.Exp(c.real);
-			float cos = MathF.Cos(c.imag);
-			float sin = MathF.Sin(c.imag);
-			return new ComplexSingle(exp * cos, exp * sin);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleLog(ComplexSingle c)
-		{
-			float real = 0.5F * MathF.Log(SingleAbs(c));
-			float imag = MathF.Atan2(c.imag, c.real);
-			return new ComplexSingle(real, imag);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SinglePowReal(ComplexSingle c, float p)
-		{
-			if (c.imag == 0)
-			{
-				return new ComplexSingle(MathF.Pow(c.real, p));
-			}
-			else
-			{
-				float absC = SingleAbs(c);
-				float argC = MathF.Atan2(c.imag, c.real);
-				float phase = p * argC;
-				float scale = MathF.Pow(absC, p);
-				return new ComplexSingle(scale * MathF.Cos(phase), scale * MathF.Sin(phase));
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SinglePow(ComplexSingle c, float p)
-		{
-			if ((c.real == 0 || c.real == 1) && c.imag == 0)
-				return c;
-			return SinglePowReal(c, p);
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SinglePow(ComplexSingle c, ComplexSingle p)
-		{
-			if ((c.real == 0 || c.real == 1) && c.imag == 0)
-				return c;
-			if (p.imag == 0)
-			{
-				return SinglePowReal(c, p.real);
-			}
-			// else
-			float absC = SingleAbs(c);
-			float argC = MathF.Atan2(c.imag, c.real);
-			float phase = p.real * argC + p.imag * MathF.Log(absC);
-			float scale = MathF.Pow(absC, p.real) * MathF.Exp(-p.imag * argC);
-			return new ComplexSingle(scale * MathF.Cos(phase), scale * MathF.Sin(phase));
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static ComplexSingle SingleSqrt(ComplexSingle c)
-		{
-			float arg = 0.5F * SingleArg(c);
-			float scale = MathF.Sqrt(SingleAbs(c));
-			float real = MathF.Cos(arg);
-			float imag = MathF.Sin(arg);
-			return new ComplexSingle(scale * real, scale * imag);
-		}
-		#endregion
-	}
-	#endregion
-
-
-	#region generic complex type
-	/// <summary>
-	/// The general complex type for any real numeric number type including <see cref="float"/> and <see cref="double"/>
-	/// </summary>
-	/// <typeparam name="T">The data type of corresponding real number</typeparam>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> : IComplexNumber<Complex<T>, T>, ICustomNativeType<Complex<T>>
-		where T : unmanaged, IFloatNumber<T>, INativeConvertibleNumber<T>, ICustomNativeType<T>
-	{
-		#region basic
-		private readonly T real, imag;
-
-		/// <summary>
-		/// Get the real part
-		/// </summary>
-		public T Real {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.real;
-		}
-
-		/// <summary>
-		/// Get the imaginary part
-		/// </summary>
-		public T Imaginary {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.imag;
-		}
-
-		/// <summary>
-		/// Construct a <see cref="Complex{T}"/> from real and imaginary parts
-		/// </summary>
-		/// <param name="re">The real part</param>
-		/// <param name="im">The imaginary part, default value is 0</param>
-		public Complex(T re, T im = default)
-		{
-			this.real = re;
-			this.imag = im;
-		}
-		#endregion
-
-		#region static information
-		/// <summary>
-		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="Complex{T}"/>
-		/// </summary>
-		public static DataTypeClassification Classification => T.Classification;
-
-		/// <summary>
-		/// Statically get the machine precision of <see cref="Complex{T}"/>
-		/// </summary>
-		public static double MachinePrecision => T.MachinePrecision;
-
-		static Complex()
-		{
-			// generic type check
-			if (typeof(T).IsGenericType)
-				throw new InvalidOperationException(Support.DataType);
-			// native type check
-			if (T.Classification < DataTypeClassification.FloatPoint_IEEE754)
-				throw new InvalidOperationException(Support.DataType);
-		}
-		#endregion
-
-		#region constant values
-		/// <summary>
-		/// <see cref="Complex{T}"/> 0
-		/// </summary>
-		public static Complex<T> Zero => new(T.Zero);
-		/// <summary>
-		/// <see cref="Complex{T}"/> 1
-		/// </summary>
-		public static Complex<T> One => new(T.One);
-		/// <summary>
-		/// <see cref="Complex{T}"/> -1
-		/// </summary>
-		public static Complex<T> NegativeOne => new(T.NegativeOne);
-		/// <summary>
-		/// <see cref="Complex{T}"/> i
-		/// </summary>
-		public static Complex<T> ImaginaryOne => new(T.Zero, T.One);
-		/// <summary>
-		/// <see cref="Complex{T}"/> -1
-		/// </summary>
-		public static Complex<T> ImaginaryNegativeOne => new(T.Zero, T.NegativeOne);
-		/// <summary>
-		/// <see cref="Complex{T}"/> 0
-		/// </summary>
-		public static Complex<T> AdditiveIdentity => Zero;
-		/// <summary>
-		/// <see cref="Complex{T}"/> 1
-		/// </summary>
-		public static Complex<T> MultiplicativeIdentity => One;
-		/// <summary>
-		/// <see cref="Complex{T}"/> infinity
-		/// </summary>
-		public static Complex<T> Infinity => new(T.Infinity);
-		/// <summary>
-		/// <see cref="Complex{T}"/> NaN
-		/// </summary>
-		public static Complex<T> Nan => new(T.Nan);
-
-		/// <summary>
-		/// Statically check whether the given <paramref name="value"/> is finite or not
-		/// </summary>
-		/// <param name="value">The given number to check</param>
-		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
-		public static bool IsFinite(Complex<T> value) => T.IsFinite(value.real) && T.IsFinite(value.imag);
-
-		/// <summary>
-		/// Statically check whether the given <paramref name="value"/> is infinity or not
-		/// </summary>
-		/// <param name="value">The given number to check</param>
-		/// <returns>Whether <paramref name="value"/> is infinity or not</returns>
-		public static bool IsInfinity(Complex<T> value) => T.IsInfinity(value.real) || T.IsInfinity(value.imag);
-
-		/// <summary>
-		/// Statically check whether the given <paramref name="value"/> is NaN or not
-		/// </summary>
-		/// <param name="value">The given number to check</param>
-		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
-		public static bool IsNan(Complex<T> value) => T.IsNan(value.real) && T.IsNan(value.imag);
-		#endregion
-
-		#region parser
-		/// <summary>
-		/// Try to parse a <see cref="string"/> to a new <see cref="Complex{T}"/>
-		/// </summary>
-		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <param name="complex">output <see cref="Complex{T}"/></param>
-		/// <returns>success or not</returns>
-		public unsafe static bool TryParse(string? s, out Complex<T> complex)
-		{
-			complex = default;
-			if (s is null || s.Length == 0)
-				return false;
-			bool success = ComplexDouble.TryParseAny(s, &NativeTypeExtension.TryParseNativeType, out T real, out T imag);
-			if (success)
-				complex = new(real, imag);
-			return success;
-		}
-
-		/// <summary>
-		/// Parse a <see cref="string"/> to a <see cref="Complex{T}"/>
-		/// </summary>
-		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <returns>The parsed <see cref="Complex{T}"/></returns>
-		public static Complex<T> Parse(string? str)
-		{
-			if (str is null || str.Length == 0)
-				throw new ArgumentNullException(nameof(str));
-			bool success = TryParse(str, out Complex<T> result);
-			if (!success)
-				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
-			return result;
-		}
-
-		/// <summary>
-		/// See <see cref="Parse(string?)"/>
-		/// </summary>
-		public static Complex<T> Parse(string? s, IFormatProvider? provider) => Parse(s);
-		/// <summary>
-		/// See <see cref="TryParse(string?, out Complex{T})"/>
-		/// </summary>
-		public static bool TryParse(string? s, IFormatProvider? provider, out Complex<T> result) => TryParse(s, out result);
-		#endregion
-
-		#region converter
-		/// <summary>
-		/// Convert from int
-		/// </summary>
-		/// <param name="a">a int</param>
-		public static implicit operator Complex<T>(int a) => new((T)a);
-		/// <summary>
-		/// Convert from T
-		/// </summary>
-		/// <param name="a">a T</param>
-		public static implicit operator Complex<T>(T a) => new(a);
-		/// <summary>
-		/// Convert from int tuple
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		public static implicit operator Complex<T>((int r, int i) a) => new((T)a.r, (T)a.i);
-		/// <summary>
-		/// Convert from T tuple
-		/// </summary>
-		/// <param name="a">a T tuple</param>
-		public static implicit operator Complex<T>((T real, T imag) a) => new(a.real, a.imag);
-
-		/// <summary>
-		/// Convert to <see cref="ComplexDouble"/>
-		/// </summary>
-		public static unsafe explicit operator ComplexDouble(Complex<T> v)
-		{
-			if (typeof(T) == typeof(double))
-				return *(ComplexDouble*)&v;
-			else
-				return new((double)v.real, (double)v.imag);
-		}
-
-		/// <summary>
-		/// Convert from <see cref="ComplexDouble"/>
-		/// </summary>
-		public static unsafe explicit operator Complex<T>(ComplexDouble v)
-		{
-			if (typeof(T) == typeof(double))
-				return *(Complex<T>*)&v;
-			else
-				return new((T)v.Real, (T)v.Imaginary);
-		}
-
-		/// <summary>
-		/// Convert to <typeparamref name="T"/> by taking abs
-		/// </summary>
-		public static explicit operator T(Complex<T> v) => v.Magnitude;
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(Complex<T> a, Complex<T> b) => a.Equals(b);
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(Complex<T> a, Complex<T> b) => !(a == b);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		/// <param name="other">The other <see cref="Complex{T}"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(Complex<T> other)
-		{
-			return this.real == other.real && this.imag == other.imag;
-		}
-
-		/// <summary>
-		/// Override <see cref="object.GetHashCode"/>
-		/// </summary>
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.real, this.imag);
-		}
-
-		/// <summary>
-		/// Override <see cref="object.Equals(object)"/>
-		/// </summary>
-		public override bool Equals(object? obj)
-		{
-			Complex<T> a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is T single)
-				a = single;
-			else if (obj is Complex<T> complex)
-				a = complex;
-			else
-				return false;
-			return this.Equals(a);
-		}
-		#endregion
-
-		#region arithmetic operators
-		/// <summary>
-		/// Complex negate
-		/// </summary>
-		public static Complex<T> operator -(Complex<T> a) => new(-a.real, -a.imag);
-		/// <summary>
-		/// Complex add
-		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real + b.real, a.imag + b.imag);
-		/// <summary>
-		/// Complex subtract
-		/// </summary>
-		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real - b.real, a.imag - b.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real - b, a.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real - b, a.imag);
-		/// <summary>
-		/// Complex subtract real
-		/// </summary>
-		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real - b, a.imag);
-		/// <summary>
-		/// Real subtract complex
-		/// </summary>
-		public static Complex<T> operator -(T b, Complex<T> a) => new(b - a.real, -a.imag);
-
-		/// <summary>
-		/// Complex multiply
-		/// </summary>
-		public static unsafe Complex<T> operator *(Complex<T> a, Complex<T> b)
-		{
-			if (typeof(T) == typeof(float))
-			{
-				ComplexSingle v = (*(ComplexSingle*)&a) * (*(ComplexSingle*)&b);
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				ComplexDouble v = (*(ComplexDouble*)&a) * (*(ComplexDouble*)&b);
-				return *(Complex<T>*)&v;
-			}
-			// else
-			T real = a.real * b.real;
-			T temp = a.imag * b.imag;
-			real -= temp;
-			T imag = a.real * b.imag;
-			temp = a.imag * b.real;
-			imag -= temp;
+			T real = T.FusedMultiplyAdd(x.real, y.real, -x.imag * y.imag);
+			T imag = T.FusedMultiplyAdd(x.real, y.imag, x.imag * y.real);
 			return new Complex<T>(real, imag);
 		}
 
 		/// <summary>
 		/// Complex division, guards against intermediate underflow and overflow by scaling
 		/// </summary>
-		public static unsafe Complex<T> operator /(Complex<T> a, Complex<T> b)
+		public static unsafe Complex<T> operator /(Complex<T> x, Complex<T> y)
 		{
-			if (typeof(T) == typeof(float))
-			{
-				ComplexSingle v = (*(ComplexSingle*)&a) / (*(ComplexSingle*)&b);
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				ComplexDouble v = (*(ComplexDouble*)&a) * (*(ComplexDouble*)&b);
-				return *(Complex<T>*)&v;
-			}
-			// else
-			T squareAbsY = b.MagnitudeSquare;
-			T acbd = a.real * b.real + a.imag * b.imag;
-			T bcad = a.imag * b.real - a.real * b.imag;
+			T squareAbsY = y.MagnitudeSquare;
+			T acbd = T.FusedMultiplyAdd(x.real, y.real, x.imag * y.imag);
+			T bcad = T.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag);
 			return new(acbd / squareAbsY, bcad / squareAbsY);
 		}
 
@@ -1639,17 +757,6 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public static unsafe Complex<T> operator /(T a, Complex<T> b)
 		{
-			if (typeof(T) == typeof(float))
-			{
-				ComplexSingle v = (*(float*)&a) / (*(ComplexSingle*)&b);
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				ComplexDouble v = (*(double*)&a) * (*(ComplexDouble*)&b);
-				return *(Complex<T>*)&v;
-			}
-			// else
 			T squareAbsY = b.MagnitudeSquare;
 			return new(a * b.real / squareAbsY, -a * b.imag / squareAbsY);
 		}
@@ -1690,52 +797,290 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the magnitude or absolute value of this <see cref="Complex{T}"/>
 		/// </summary>
-		public T Magnitude => (T)((ComplexDouble)this).Magnitude;
+		public T Magnitude => T.Sqrt(this.MagnitudeSquare);
 
 		/// <summary>
 		/// Get the squared magnitude or absolute value of this <see cref="Complex{T}"/>
 		/// </summary>
-		public T MagnitudeSquare => (T)((ComplexDouble)this).MagnitudeSquare;
+		public T MagnitudeSquare => T.FusedMultiplyAdd(this.real, this.real, this.imag * this.imag);
 
 		/// <summary>
 		/// Get the phase of this <see cref="Complex{T}"/>
 		/// </summary>
-		public T Phase => (T)((ComplexDouble)this).Phase;
+		public T Phase => T.Atan2(this.imag, this.real);
 
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
-		public Complex<T> Conj=> new(this.real, this.imag.NativeNegate());
+		public Complex<T> Conjugate => new(this.real, -this.imag);
 
 		/// <summary>
 		/// Complex number absolute value
 		/// </summary>
-		public static Complex<T> Abs(Complex<T> number) => (T)((ComplexDouble)number).Magnitude;
+		public static Complex<T> Abs(Complex<T> number) => number.Magnitude;
 
 		/// <summary>
 		/// Complex exponential (of base <c>e</c>)
 		/// </summary>
-		public static Complex<T> Exp(Complex<T> number) => (Complex<T>)ComplexDouble.Exp((ComplexDouble)number);
+		public static Complex<T> Exp(Complex<T> c)
+		{
+			T exp = T.Exp(c.real);
+			T cos = T.Cos(c.imag);
+			T sin = T.Sin(c.imag);
+			return new(exp * cos, exp * sin);
+		}
+
+		private static readonly T OneFourth = T.One / (T.One + T.One + T.One + T.One);
 		/// <summary>
 		/// Complex logarithm (of base <c>e</c>)
 		/// </summary>
-		public static Complex<T> Log(Complex<T> number) => (Complex<T>)ComplexDouble.Log((ComplexDouble)number);
+		public static Complex<T> Log(Complex<T> c)
+		{
+			T real = OneFourth * T.Log(c.MagnitudeSquare);
+			T imag = T.Atan2(c.imag, c.real);
+			return new(real, imag);
+		}
+
+		private static readonly T RealTwo = T.One + T.One;
+		/// <summary>
+		/// Complex logarithm (of base <paramref name="b"/>)
+		/// </summary>
+		public static Complex<T> Log(Complex<T> x, Complex<T> b)
+		{
+			T squareAbsB = b.MagnitudeSquare;
+			T realA = x.Phase * RealTwo, realB = b.Phase * RealTwo;
+			T imagA = T.Log(x.MagnitudeSquare), imagB = T.Log(squareAbsB);
+			T acbd = T.FusedMultiplyAdd(realA, realB, imagA * imagB);
+			T bcad = T.FusedMultiplyAdd(-imagA, realB, realA * imagB);
+			return new(acbd / squareAbsB, bcad / squareAbsB);
+		}
+
+		private static readonly T OneOverLog2 = T.Log(T.One + T.One);
+		private static readonly T OneOverLog10 = T.Log((T.One + T.One) * (T.One + T.One) * (T.One + T.One) + (T.One + T.One));
+		/// <summary>
+		/// Complex logarithm (of base <c>2</c>)
+		/// </summary>
+		public static Complex<T> Log2(Complex<T> x) => Log(x) * OneOverLog2;
+		/// <summary>
+		/// Complex logarithm (of base <c>10</c>)
+		/// </summary>
+		public static Complex<T> Log10(Complex<T> x) => Log(x) * OneOverLog10;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Complex<T> PowReal(Complex<T> c, T p)
+		{
+			if (c.imag == T.Zero)
+			{
+				return new Complex<T>(T.Pow(c.real, p));
+			}
+			else
+			{
+				T absC = c.Magnitude;
+				T argC = c.Phase;
+				T phase = p * argC;
+				T scale = T.Pow(absC, p);
+				return new(scale * T.Cos(phase), scale * T.Sin(phase));
+			}
+		}
 		/// <summary>
 		/// Complex number power of real type
 		/// </summary>
-		public static Complex<T> Pow(Complex<T> complex, T p) => (Complex<T>)ComplexDouble.Pow((ComplexDouble)complex, (double)p);
+		public static Complex<T> Pow(Complex<T> c, T p)
+		{
+			if ((c.real == T.Zero || c.real == T.One) && c.imag == T.Zero)
+				return c;
+			return PowReal(c, p);
+		}
 		/// <summary>
 		/// Complex number power of complex type
 		/// </summary>
-		public static Complex<T> Pow(Complex<T> number, Complex<T> power) => (Complex<T>)ComplexDouble.Pow((ComplexDouble)number, (ComplexDouble)power);
+		public static Complex<T> Pow(Complex<T> c, Complex<T> p)
+		{
+			if ((c.real == T.Zero || c.real == T.One) && c.imag == T.Zero)
+				return c;
+			if (p.imag == T.Zero)
+				return PowReal(c, p.real);
+			T absC = c.Magnitude;
+			T argC = c.Phase;
+			T phase = p.real * argC + p.imag * T.Log(absC);
+			T scale = T.Pow(absC, p.real) * T.Exp(-p.imag * argC);
+			return new(scale * T.Cos(phase), scale * T.Sin(phase));
+		}
+
 		/// <summary>
 		/// Complex number reciprocal
 		/// </summary>
 		public static Complex<T> Reciprocal(Complex<T> number) => T.One / number;
+
+		private static readonly T Half = T.One / (T.One + T.One);
 		/// <summary>
 		/// Complex number square root
 		/// </summary>
-		public static Complex<T> Sqrt(Complex<T> number) => (Complex<T>)ComplexDouble.Sqrt((ComplexDouble)number);
+		public static Complex<T> Sqrt(Complex<T> c)
+		{
+			T arg = Half * c.Phase;
+			T scale = T.Sqrt(c.Magnitude);
+			T real = T.Cos(arg);
+			T imag = T.Sin(arg);
+			return new(scale * real, scale * imag);
+		}
+
+		/// <summary>
+		/// Complex number FMA: <c><paramref name="a"/> * <paramref name="b"/> + <paramref name="c"/></c>
+		/// </summary>
+		public static Complex<T> FusedMultiplyAdd(Complex<T> a, Complex<T> b, Complex<T> c)
+		{
+			// a.r * b.r - (a.i * b.i - c.r)
+			T temp1 = T.FusedMultiplyAdd(a.imag, b.imag, -c.real);
+			T real = T.FusedMultiplyAdd(a.real, b.real, -temp1);
+			// a.r * b.i + (a.i * b.r + c.i)
+			T temp2 = T.FusedMultiplyAdd(a.imag, b.real, c.real);
+			T imag = T.FusedMultiplyAdd(a.real, b.imag, temp2);
+			// totally 4 FMA (naive is 2*FMA + 2*MUL + 2*ADD)
+			return new(real, imag);
+		}
+
+		public static Complex<T> Acos(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Acosh(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Asin(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Asinh(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Atan(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Atan2(Complex<T> y, Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Atanh(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Cos(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Cosh(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Sin(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Sinh(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Tan(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Tanh(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+
+
+
+		public static Complex<T> Cbrt(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> CopySign(Complex<T> x, Complex<T> y)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Ceiling(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+		public static Complex<T> Floor(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+
+
+		public static Complex<T> IEEERemainder(Complex<T> a, Complex<T> b)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static TInteger ILogB<TInteger>(Complex<T> x) where TInteger : IBinaryInteger<TInteger>
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> MaxMagnitude(Complex<T> x, Complex<T> y)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> MinMagnitude(Complex<T> x, Complex<T> y)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Round(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Round<TInteger>(Complex<T> x, TInteger digits) where TInteger : IBinaryInteger<TInteger>
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Round(Complex<T> x, MidpointRounding mode)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Round<TInteger>(Complex<T> x, TInteger digits, MidpointRounding mode) where TInteger : IBinaryInteger<TInteger>
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> ScaleB<TInteger>(Complex<T> x, TInteger n) where TInteger : IBinaryInteger<TInteger>
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Truncate(Complex<T> x)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Clamp(Complex<T> value, Complex<T> min, Complex<T> max)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static (Complex<T> Quotient, Complex<T> Remainder) DivRem(Complex<T> left, Complex<T> right)
+		{
+			throw new NotImplementedException();
+		}
+
+		public static Complex<T> Sign(Complex<T> value)
+		{
+			throw new NotImplementedException();
+		}
+
+
+		static Complex<T> IFloatingPoint<Complex<T>>.BitIncrement(Complex<T> x) => throw new InvalidOperationException();
+		static Complex<T> IFloatingPoint<Complex<T>>.BitDecrement(Complex<T> x) => throw new InvalidOperationException();
 		#endregion
 
 		#region string representation
@@ -1776,6 +1121,32 @@ namespace Althea.NativeTypes
 				i = string.Format(formatProvider, $"{{0:{format}}}", this.imag);
 			}
 			return $"({r},{i})";
+		}
+
+		/// <summary>
+		/// Try to format this complex number to the <paramref name="destination"/> <see cref="Span{T}"/> of <see cref="char"/>
+		/// </summary>
+		/// <param name="destination">The output string as a <see cref="Span{T}"/> of <see cref="char"/></param>
+		/// <param name="charsWritten">Output the number of chars written in <paramref name="destination"/></param>
+		/// <param name="format">The format string as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/></param>
+		/// <param name="provider">The <see cref="IFormatProvider"/></param>
+		/// <returns>Success or not</returns>
+		public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+		{
+			destination[0] = '('; charsWritten = 1;
+			if (!this.real.TryFormat(destination[1..], out int cw1, format, provider))
+				return false;
+			charsWritten += cw1;
+			if (charsWritten + 1 >= destination.Length)
+				return false;
+			destination[charsWritten] = ','; charsWritten++;
+			if (!this.real.TryFormat(destination[charsWritten..], out int cw2, format, provider))
+				return false;
+			charsWritten += cw2;
+			if (charsWritten + 1 >= destination.Length)
+				return false;
+			destination[charsWritten] = ')'; charsWritten++;
+			return true;
 		}
 		#endregion
 	}
