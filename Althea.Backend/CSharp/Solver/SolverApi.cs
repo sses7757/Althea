@@ -161,7 +161,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region linear solve
 		protected override bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve)
 		{
-			return RestartKrylovSubspaceLinearSolve<TVec, T>(hermitianOrDefinite, ref info, out relativeError, out solve, this.InfoLogInterval, this.MaxStagnationSteps);
+			return RestartKrylovSubspaceLinearSolve(hermitianOrDefinite, ref info, out relativeError, out solve, this.InfoLogInterval, this.MaxStagnationSteps);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal protected static bool RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve, TimeSpan interval, int maxStagnations) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged

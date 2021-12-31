@@ -8,44 +8,13 @@ using Althea.Resources;
 
 namespace Althea.NativeTypes
 {
-	#region complex interface
-	/// <summary>
-	/// The complex interface for any possible real data type
-	/// </summary>
-	/// <typeparam name="T">The data type of corresponding real number, usually a primitive type or an unmanaged struct that implements <see cref="ICustomNativeType{T}"/></typeparam>
-	public interface IComplex<T> : IFormattable where T : unmanaged
-	{
-		/// <summary>
-		/// Get the real part of this complex
-		/// </summary>
-		T Real { get; }
-
-		/// <summary>
-		/// Get the imaginary part of this complex
-		/// </summary>
-		T Imag { get; }
-
-		/// <summary>
-		/// Compute the absolute value of this complex
-		/// </summary>
-		/// <returns>The absolute value of this complex as a <typeparamref name="T"/></returns>
-		T Abs();
-
-		/// <summary>
-		/// Compute the argument of this complex
-		/// </summary>
-		/// <returns>The argument of this complex as a <typeparamref name="T"/></returns>
-		T Arg();
-	}
-	#endregion
-
-
 	#region single and double complex types
 	/// <summary>
 	/// The double precision float complex type
 	/// </summary>
+	/// <remarks>This is a separate struct since the native <see cref="double"/> has not implemented <see cref="IFloatNumber{TSelf}"/> yet</remarks>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct ComplexDouble : IComplex<double>, ICustomNativeType<ComplexDouble>, IEquatable<ComplexDouble>
+	public struct ComplexDouble : IComplexNumber<ComplexDouble, double>, ICustomNativeType<ComplexDouble>
 	{
 		#region basic
 		private readonly double real, imag;
@@ -53,7 +22,8 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the real part
 		/// </summary>
-		public double Real {
+		public double Real
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.real;
 		}
@@ -61,7 +31,8 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the imaginary part
 		/// </summary>
-		public double Imag {
+		public double Imaginary
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.imag;
 		}
@@ -71,8 +42,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="re">The real part</param>
 		/// <param name="im">The imaginary part, default value is 0</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble(double re, double im = 0)
+		public ComplexDouble(double re, double im = default)
 		{
 			this.real = re;
 			this.imag = im;
@@ -80,48 +50,91 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region static information
-		DataTypeClassification ICustomNativeType<ComplexDouble>.Classification_Internal() => Const<double>.DataTypeClass;
+		/// <summary>
+		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="ComplexDouble"/>
+		/// </summary>
+		public static DataTypeClassification Classification => DataTypeClassification.FloatPoint_IEEE754;
 
-		double ICustomNativeType<ComplexDouble>.MachinePrecision_Internal() => Const<double>.MachinePrecision;
+		/// <summary>
+		/// Statically get the machine precision of <see cref="ComplexDouble"/>
+		/// </summary>
+		public static double MachinePrecision => 2.220446049250313E-16D;
 		#endregion
 
 		#region constant values
 		/// <summary>
 		/// <see cref="ComplexDouble"/> 0
 		/// </summary>
-		public static readonly ComplexDouble Zero = new(0);
+		public static ComplexDouble Zero => new(0);
 		/// <summary>
 		/// <see cref="ComplexDouble"/> 1
 		/// </summary>
-		public static readonly ComplexDouble One = new(1);
+		public static ComplexDouble One => new(1);
 		/// <summary>
 		/// <see cref="ComplexDouble"/> -1
 		/// </summary>
-		public static readonly ComplexDouble MinusOne = new(-1);
+		public static ComplexDouble NegativeOne => new(-1);
 		/// <summary>
 		/// <see cref="ComplexDouble"/> i
 		/// </summary>
-		public static readonly ComplexDouble ImOne = new(0, 1);
+		public static ComplexDouble ImaginaryOne => new(0, 1);
 		/// <summary>
 		/// <see cref="ComplexDouble"/> -1
 		/// </summary>
-		public static readonly ComplexDouble MinusImOne = new(0, -1);
+		public static ComplexDouble ImaginaryNegativeOne => new(0, -1);
+		/// <summary>
+		/// <see cref="ComplexDouble"/> 0
+		/// </summary>
+		public static ComplexDouble AdditiveIdentity => Zero;
+		/// <summary>
+		/// <see cref="ComplexDouble"/> 1
+		/// </summary>
+		public static ComplexDouble MultiplicativeIdentity => One;
+		/// <summary>
+		/// <see cref="ComplexDouble"/> infinity
+		/// </summary>
+		public static ComplexDouble Infinity => new(double.PositiveInfinity);
+		/// <summary>
+		/// <see cref="ComplexDouble"/> NaN
+		/// </summary>
+		public static ComplexDouble Nan => new(double.NaN);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is finite or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
+		public static bool IsFinite(ComplexDouble value) => double.IsFinite(value.real) && double.IsFinite(value.imag);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is infinity or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is infinity or not</returns>
+		public static bool IsInfinity(ComplexDouble value) => double.IsInfinity(value.real) || double.IsInfinity(value.imag);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is NaN or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
+		public static bool IsNan(ComplexDouble value) => double.IsNaN(value.real) && double.IsNaN(value.imag);
 		#endregion
 
 		#region parser
 		const string floatPattern =
-			// (?:[any_thing]) for a non capturing group
-			@"(?:" +
-				// plus or minus and a X(.XX)? form number
-				@"[-+]?\d+(?:\.\d+)?" +
-				// -or-
-				@"|" +
-				// plus or minus and a X?.XX form number
-				@"[-+]?\d*\.?\d+" +
-			// group end
-			@")" +
-			// non capturing group for [e|E][+|-|empty]XXX scientific notation
-			@"(?:[eE][\+\-]?\d+)?";
+		// (?:[any_thing]) for a non capturing group
+		@"(?:" +
+			// plus or minus and a X(.XX)? form number
+			@"[-+]?\d+(?:\.\d+)?" +
+			// -or-
+			@"|" +
+			// plus or minus and a X?.XX form number
+			@"[-+]?\d*\.?\d+" +
+		// group end
+		@")" +
+		// non capturing group for [e|E][+|-|empty]XXX scientific notation
+		@"(?:[eE][\+\-]?\d+)?";
 		const string floatPattern2 =
 			// (?:[any_thing]) for a non capturing group
 			@"(?:" +
@@ -210,26 +223,20 @@ namespace Althea.NativeTypes
 				return true;
 		}
 
-		unsafe bool ICustomNativeType<ComplexDouble>.TryParse_Internal(string str, out ComplexDouble result)
-		{
-			bool success = TryParseAny(str, &double.TryParse, out double real, out double imag);
-			result = new(real, imag);
-			return success;
-		}
-
 		/// <summary>
 		/// Try to parse a <see cref="string"/> to a new <see cref="ComplexDouble"/>
 		/// </summary>
-		/// <param name="s">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <param name="complex">The output <see cref="ComplexDouble"/></param>
+		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+		/// <param name="complex">output <see cref="ComplexDouble"/></param>
 		/// <returns>success or not</returns>
-		public unsafe static bool TryParse(string s, out ComplexDouble complex)
+		public unsafe static bool TryParse(string? s, out ComplexDouble complex)
 		{
 			complex = default;
 			if (s is null || s.Length == 0)
 				return false;
 			bool success = TryParseAny(s, &double.TryParse, out double real, out double imag);
-			complex = new(real, imag);
+			if (success)
+				complex = new(real, imag);
 			return success;
 		}
 
@@ -238,7 +245,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
 		/// <returns>The parsed <see cref="ComplexDouble"/></returns>
-		public static ComplexDouble Parse(string str)
+		public static ComplexDouble Parse(string? str)
 		{
 			if (str is null || str.Length == 0)
 				throw new ArgumentNullException(nameof(str));
@@ -247,59 +254,54 @@ namespace Althea.NativeTypes
 				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(double).Name), nameof(str));
 			return result;
 		}
+
+		/// <summary>
+		/// See <see cref="Parse(string?)"/>
+		/// </summary>
+		public static ComplexDouble Parse(string? s, IFormatProvider? provider) => Parse(s);
+		/// <summary>
+		/// See <see cref="TryParse(string?, out ComplexDouble)"/>
+		/// </summary>
+		public static bool TryParse(string? s, IFormatProvider? provider, out ComplexDouble result) => TryParse(s, out result);
 		#endregion
 
 		#region converter
 		/// <summary>
-		/// Implicitly convert a int to a <see cref="ComplexDouble"/>
+		/// Convert from int
 		/// </summary>
 		/// <param name="a">a int</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ComplexDouble(int a) => new(a);
 		/// <summary>
-		/// Implicitly convert a double to a <see cref="ComplexDouble"/>
+		/// Convert from double
 		/// </summary>
 		/// <param name="a">a double</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ComplexDouble(double a) => new(a);
 		/// <summary>
-		/// Implicitly convert a int tuple to a <see cref="ComplexDouble"/>
+		/// Convert from int tuple
 		/// </summary>
 		/// <param name="a">a int tuple</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ComplexDouble((int r, int i) a) => new(a.r, a.i);
 		/// <summary>
-		/// Implicitly convert a double tuple to a <see cref="ComplexDouble"/>
+		/// Convert from double tuple
 		/// </summary>
 		/// <param name="a">a double tuple</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ComplexDouble((double r, double i) a) => new(a.r, a.i);
+		public static implicit operator ComplexDouble((double real, double imag) a) => new(a.real, a.imag);
 
 		/// <summary>
-		/// Explicitly convert a <see cref="ComplexDouble"/> to a <see cref="double"/> by getting its absolute value
+		/// Convert to <see cref="double"/> by taking abs
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static explicit operator double(ComplexDouble v) => v.Abs();
-
-		/// <summary>
-		/// Explicitly convert a <see cref="ComplexDouble"/> to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="a">The input <see cref="ComplexDouble"/> to be converted</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static explicit operator ComplexSingle(ComplexDouble a) => new((float)a.real, (float)a.imag);
+		public static explicit operator double(ComplexDouble v) => DoubleAbs(v);
 		#endregion
 
 		#region equality
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(ComplexDouble a, ComplexDouble b) => a.Equals(b);
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(ComplexDouble a, ComplexDouble b) => !(a == b);
 
 		/// <summary>
@@ -307,16 +309,14 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="other">The other <see cref="ComplexDouble"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(ComplexDouble other)
 		{
-			return this.real == other.real && this.imag == other.imag;
+			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
 		}
 
 		/// <summary>
 		/// Override <see cref="object.GetHashCode"/>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(this.real, this.imag);
@@ -325,19 +325,201 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Override <see cref="object.Equals(object)"/>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			ComplexDouble a;
 			if (obj is int @int)
 				a = @int;
-			else if (obj is double real)
-				a = real;
+			else if (obj is double single)
+				a = single;
 			else if (obj is ComplexDouble complex)
 				a = complex;
 			else
 				return false;
 			return this.Equals(a);
+		}
+		#endregion
+
+		#region arithmetic operators
+		/// <summary>
+		/// Complex negate
+		/// </summary>
+		public static ComplexDouble operator -(ComplexDouble a) => new(-a.real, -a.imag);
+		/// <summary>
+		/// Complex add
+		/// </summary>
+		public static ComplexDouble operator +(ComplexDouble a, ComplexDouble b) => new(a.real + b.real, a.imag + b.imag);
+		/// <summary>
+		/// Complex subtract
+		/// </summary>
+		public static ComplexDouble operator -(ComplexDouble a, ComplexDouble b) => new(a.real - b.real, a.imag - b.imag);
+		/// <summary>
+		/// Complex add real
+		/// </summary>
+		public static ComplexDouble operator +(ComplexDouble a, double b) => new(a.real + b, a.imag);
+		/// <summary>
+		/// Complex add real
+		/// </summary>
+		public static ComplexDouble operator +(double b, ComplexDouble a) => new(a.real + b, a.imag);
+		/// <summary>
+		/// Complex subtract real
+		/// </summary>
+		public static ComplexDouble operator -(ComplexDouble a, double b) => new(a.real - b, a.imag);
+		/// <summary>
+		/// Real subtract complex
+		/// </summary>
+		public static ComplexDouble operator -(double b, ComplexDouble a) => new(b - a.real, -a.imag);
+
+		/// <summary>
+		/// Complex multiply
+		/// </summary>
+		public static unsafe ComplexDouble operator *(ComplexDouble a, ComplexDouble b) => DoubleMul(a, b);
+
+		/// <summary>
+		/// Complex division, guards against intermediate underflow and overflow by scaling
+		/// </summary>
+		public static unsafe ComplexDouble operator /(ComplexDouble a, ComplexDouble b) => DoubleDiv(a, b);
+
+		/// <summary>
+		/// Complex multiply real number
+		/// </summary>
+		public static ComplexDouble operator *(ComplexDouble a, double b) => new(a.real * b, a.imag *b);
+		/// <summary>
+		/// Complex multiply real number
+		/// </summary>
+		public static ComplexDouble operator *(double b, ComplexDouble a) => new(a.real * b, a.imag * b);
+		/// <summary>
+		/// Complex divide real number
+		/// </summary>
+		public static ComplexDouble operator /(ComplexDouble a, double b) => new(a.real / b, a.imag / b);
+
+		/// <summary>
+		/// Real number divide complex 
+		/// </summary>
+		public static unsafe ComplexDouble operator /(double a, ComplexDouble b) => DoubleRealDiv(a, b);
+
+		/// <summary>
+		/// Static unary plus operator for one operand <paramref name="value"/>
+		/// </summary>
+		/// <param name="value">The operand to be incremented of type <see cref="ComplexDouble"/></param>
+		/// <returns>The unary plus result of type <see cref="ComplexDouble"/></returns>
+		public static ComplexDouble operator +(ComplexDouble value) => value;
+
+		/// <summary>
+		/// Static unary decrement operator for one operand <paramref name="value"/>
+		/// </summary>
+		/// <param name="value">The operand to be incremented of type <see cref="ComplexDouble"/></param>
+		/// <returns>The unary decrement result of type <see cref="ComplexDouble"/></returns>
+		public static ComplexDouble operator --(ComplexDouble value)
+		{
+			double r = value.real;
+			r--;
+			return new(r, value.imag);
+		}
+
+		/// <summary>
+		/// Static unary increment operator for one operand <paramref name="value"/>
+		/// </summary>
+		/// <param name="value">The operand to be incremented of type <see cref="ComplexDouble"/></param>
+		/// <returns>The unary increment result of type <see cref="ComplexDouble"/></returns>
+		public static ComplexDouble operator ++(ComplexDouble value)
+		{
+			double r = value.real;
+			r++;
+			return new(r, value.imag);
+		}
+		#endregion
+
+		#region other arithmetics
+		/// <summary>
+		/// Get the magnitude or absolute value of this <see cref="ComplexDouble"/>
+		/// </summary>
+		public double Magnitude => DoubleAbs(this);
+
+		/// <summary>
+		/// Get the squared magnitude or absolute value of this <see cref="ComplexDouble"/>
+		/// </summary>
+		public double MagnitudeSquare => DoubleSquareAbs(this);
+
+		/// <summary>
+		/// Get the phase of this <see cref="ComplexDouble"/>
+		/// </summary>
+		public double Phase => DoubleArg(this);
+
+		/// <summary>
+		/// Complex conjugate
+		/// </summary>
+		public ComplexDouble Conj => new(this.real, -this.imag);
+
+		/// <summary>
+		/// Complex number absolute value
+		/// </summary>
+		public static ComplexDouble Abs(ComplexDouble number) => DoubleAbs(number);
+
+		/// <summary>
+		/// Complex exponential (of base <c>e</c>)
+		/// </summary>
+		public static ComplexDouble Exp(ComplexDouble number) => DoubleExp(number);
+		/// <summary>
+		/// Complex logarithm (of base <c>e</c>)
+		/// </summary>
+		public static ComplexDouble Log(ComplexDouble number) => DoubleLog(number);
+		/// <summary>
+		/// Complex number power of real type
+		/// </summary>
+		public static ComplexDouble Pow(ComplexDouble complex, double p) => DoublePow(complex, p);
+		/// <summary>
+		/// Complex number power of complex type
+		/// </summary>
+		public static ComplexDouble Pow(ComplexDouble number, ComplexDouble power) => DoublePow(number, power);
+		/// <summary>
+		/// Complex number reciprocal
+		/// </summary>
+		public static ComplexDouble Reciprocal(ComplexDouble number) => 1 / number;
+		/// <summary>
+		/// Complex number square root
+		/// </summary>
+		public static ComplexDouble Sqrt(ComplexDouble number) => DoubleSqrt(number);
+		#endregion
+
+		#region string representation
+		/// <summary>
+		/// Override <see cref="object.ToString"/>
+		/// </summary>
+		public override string ToString()
+		{
+			return this.ToString(null, Print.Culture);
+		}
+
+		/// <summary>
+		/// String representation of this complex number
+		/// </summary>
+		/// <param name="format">format of output</param>
+		public string ToString(string? format)
+		{
+			return this.ToString(format, Print.Culture);
+		}
+
+		/// <summary>
+		/// Implementation of <see cref="IFormattable.ToString(string, IFormatProvider)"/> that formats the value of the current instance using the specified format.
+		/// </summary>
+		/// <param name="format">The format to use</param>
+		/// <param name="formatProvider">The provider to use to format the value</param>
+		public string ToString(string? format, IFormatProvider? formatProvider = null)
+		{
+			formatProvider ??= Print.Culture;
+			string r, i;
+			if (this.real is IFormattable f && this.imag is IFormattable g)
+			{
+				r = f.ToString(format, formatProvider);
+				i = g.ToString(format, formatProvider);
+			}
+			else
+			{
+				r = string.Format(formatProvider, $"{{0:{format}}}", this.real);
+				i = string.Format(formatProvider, $"{{0:{format}}}", this.imag);
+			}
+			return $"({r},{i})";
 		}
 		#endregion
 
@@ -511,249 +693,378 @@ namespace Althea.NativeTypes
 			return new ComplexDouble(scale * real, scale * imag);
 		}
 		#endregion
+	}
+
+	/// <summary>
+	/// The single precision float complex type
+	/// </summary>
+	/// <remarks>This is a separate struct since the native <see cref="float"/> has not implemented <see cref="IFloatNumber{TSelf}"/> yet</remarks>
+	[StructLayout(LayoutKind.Sequential)]
+	public struct ComplexSingle : IComplexNumber<ComplexSingle, float>, ICustomNativeType<ComplexSingle>
+	{
+		#region basic
+		private readonly float real, imag;
+
+		/// <summary>
+		/// Get the real part
+		/// </summary>
+		public float Real
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.real;
+		}
+
+		/// <summary>
+		/// Get the imaginary part
+		/// </summary>
+		public float Imaginary
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.imag;
+		}
+
+		/// <summary>
+		/// Construct a <see cref="ComplexSingle"/> from real and imaginary parts
+		/// </summary>
+		/// <param name="re">The real part</param>
+		/// <param name="im">The imaginary part, default value is 0</param>
+		public ComplexSingle(float re, float im = default)
+		{
+			this.real = re;
+			this.imag = im;
+		}
+		#endregion
+
+		#region static information
+		/// <summary>
+		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="ComplexSingle"/>
+		/// </summary>
+		public static DataTypeClassification Classification => DataTypeClassification.FloatPoint_IEEE754;
+
+		/// <summary>
+		/// Statically get the machine precision of <see cref="ComplexSingle"/>
+		/// </summary>
+		public static double MachinePrecision => 1.1920928955078125E-07D;
+		#endregion
+
+		#region constant values
+		/// <summary>
+		/// <see cref="ComplexSingle"/> 0
+		/// </summary>
+		public static ComplexSingle Zero => new(0);
+		/// <summary>
+		/// <see cref="ComplexSingle"/> 1
+		/// </summary>
+		public static ComplexSingle One => new(1);
+		/// <summary>
+		/// <see cref="ComplexSingle"/> -1
+		/// </summary>
+		public static ComplexSingle NegativeOne => new(-1);
+		/// <summary>
+		/// <see cref="ComplexSingle"/> i
+		/// </summary>
+		public static ComplexSingle ImaginaryOne => new(0, 1);
+		/// <summary>
+		/// <see cref="ComplexSingle"/> -1
+		/// </summary>
+		public static ComplexSingle ImaginaryNegativeOne => new(0, -1);
+		/// <summary>
+		/// <see cref="ComplexSingle"/> 0
+		/// </summary>
+		public static ComplexSingle AdditiveIdentity => Zero;
+		/// <summary>
+		/// <see cref="ComplexSingle"/> 1
+		/// </summary>
+		public static ComplexSingle MultiplicativeIdentity => One;
+		/// <summary>
+		/// <see cref="ComplexSingle"/> infinity
+		/// </summary>
+		public static ComplexSingle Infinity => new(float.PositiveInfinity);
+		/// <summary>
+		/// <see cref="ComplexSingle"/> NaN
+		/// </summary>
+		public static ComplexSingle Nan => new(float.NaN);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is finite or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
+		public static bool IsFinite(ComplexSingle value) => float.IsFinite(value.real) && float.IsFinite(value.imag);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is infinity or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is infinity or not</returns>
+		public static bool IsInfinity(ComplexSingle value) => float.IsInfinity(value.real) || float.IsInfinity(value.imag);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is NaN or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
+		public static bool IsNan(ComplexSingle value) => float.IsNaN(value.real) && float.IsNaN(value.imag);
+		#endregion
+
+		#region parser
+		/// <summary>
+		/// Try to parse a <see cref="string"/> to a new <see cref="ComplexSingle"/>
+		/// </summary>
+		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+		/// <param name="complex">output <see cref="ComplexSingle"/></param>
+		/// <returns>success or not</returns>
+		public unsafe static bool TryParse(string? s, out ComplexSingle complex)
+		{
+			complex = default;
+			if (s is null || s.Length == 0)
+				return false;
+			bool success = ComplexDouble.TryParseAny(s, &double.TryParse, out double real, out double imag);
+			if (success)
+				complex = new((float)real, (float)imag);
+			return success;
+		}
+
+		/// <summary>
+		/// Parse a <see cref="string"/> to a <see cref="ComplexSingle"/>
+		/// </summary>
+		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
+		/// <returns>The parsed <see cref="ComplexSingle"/></returns>
+		public static ComplexSingle Parse(string? str)
+		{
+			if (str is null || str.Length == 0)
+				throw new ArgumentNullException(nameof(str));
+			bool success = TryParse(str, out ComplexSingle result);
+			if (!success)
+				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(float).Name), nameof(str));
+			return result;
+		}
+
+		/// <summary>
+		/// See <see cref="Parse(string?)"/>
+		/// </summary>
+		public static ComplexSingle Parse(string? s, IFormatProvider? provider) => Parse(s);
+		/// <summary>
+		/// See <see cref="TryParse(string?, out ComplexSingle)"/>
+		/// </summary>
+		public static bool TryParse(string? s, IFormatProvider? provider, out ComplexSingle result) => TryParse(s, out result);
+		#endregion
+
+		#region converter
+		/// <summary>
+		/// Convert from int
+		/// </summary>
+		/// <param name="a">a int</param>
+		public static implicit operator ComplexSingle(int a) => new(a);
+		/// <summary>
+		/// Convert from float
+		/// </summary>
+		/// <param name="a">a float</param>
+		public static implicit operator ComplexSingle(float a) => new(a);
+		/// <summary>
+		/// Convert from int tuple
+		/// </summary>
+		/// <param name="a">a int tuple</param>
+		public static implicit operator ComplexSingle((int r, int i) a) => new(a.r, a.i);
+		/// <summary>
+		/// Convert from float tuple
+		/// </summary>
+		/// <param name="a">a float tuple</param>
+		public static implicit operator ComplexSingle((float real, float imag) a) => new(a.real, a.imag);
+
+		/// <summary>
+		/// Convert to <see cref="float"/> by taking abs
+		/// </summary>
+		public static explicit operator float(ComplexSingle v) => SingleAbs(v);
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(ComplexSingle a, ComplexSingle b) => a.Equals(b);
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(ComplexSingle a, ComplexSingle b) => !(a == b);
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		/// <param name="other">The other <see cref="ComplexSingle"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		public bool Equals(ComplexSingle other)
+		{
+			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
+		}
+
+		/// <summary>
+		/// Override <see cref="object.GetHashCode"/>
+		/// </summary>
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(this.real, this.imag);
+		}
+
+		/// <summary>
+		/// Override <see cref="object.Equals(object)"/>
+		/// </summary>
+		public override bool Equals(object? obj)
+		{
+			ComplexSingle a;
+			if (obj is int @int)
+				a = @int;
+			else if (obj is float single)
+				a = single;
+			else if (obj is ComplexSingle complex)
+				a = complex;
+			else
+				return false;
+			return this.Equals(a);
+		}
+		#endregion
 
 		#region arithmetic operators
 		/// <summary>
 		/// Complex negate
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator -(ComplexDouble a) => new(-a.real, -a.imag);
+		public static ComplexSingle operator -(ComplexSingle a) => new(-a.real, -a.imag);
 		/// <summary>
 		/// Complex add
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator +(ComplexDouble a, ComplexDouble b) => new(a.real + b.real, a.imag + b.imag);
+		public static ComplexSingle operator +(ComplexSingle a, ComplexSingle b) => new(a.real + b.real, a.imag + b.imag);
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator -(ComplexDouble a, ComplexDouble b) => new(a.real - b.real, a.imag - b.imag);
+		public static ComplexSingle operator -(ComplexSingle a, ComplexSingle b) => new(a.real - b.real, a.imag - b.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator +(ComplexDouble a, double b) => new(a.real + b, a.imag);
+		public static ComplexSingle operator +(ComplexSingle a, float b) => new(a.real + b, a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator +(double b, ComplexDouble a) => new(a.real + b, a.imag);
+		public static ComplexSingle operator +(float b, ComplexSingle a) => new(a.real + b, a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator -(ComplexDouble a, double b) => new(a.real - b, a.imag);
+		public static ComplexSingle operator -(ComplexSingle a, float b) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator -(double b, ComplexDouble a) => new(b - a.real, -a.imag);
+		public static ComplexSingle operator -(float b, ComplexSingle a) => new(b - a.real, -a.imag);
 
 		/// <summary>
 		/// Complex multiply
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator *(ComplexDouble a, ComplexDouble b)
-		{
-			return DoubleMul(a, b);
-		}
+		public static unsafe ComplexSingle operator *(ComplexSingle a, ComplexSingle b) => SingleMul(a, b);
+
 		/// <summary>
 		/// Complex division, guards against intermediate underflow and overflow by scaling
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator /(ComplexDouble a, ComplexDouble b)
-		{
-			return DoubleDiv(a, b);
-		}
+		public static unsafe ComplexSingle operator /(ComplexSingle a, ComplexSingle b) => SingleDiv(a, b);
+
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator *(ComplexDouble a, double b) => new(a.real * b, a.imag * b);
+		public static ComplexSingle operator *(ComplexSingle a, float b) => new(a.real * b, a.imag * b);
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator *(double b, ComplexDouble a) => new(a.real * b, a.imag * b);
+		public static ComplexSingle operator *(float b, ComplexSingle a) => new(a.real * b, a.imag * b);
 		/// <summary>
 		/// Complex divide real number
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator /(ComplexDouble a, double b) => new(a.real / b, a.imag / b);
+		public static ComplexSingle operator /(ComplexSingle a, float b) => new(a.real / b, a.imag / b);
+
 		/// <summary>
 		/// Real number divide complex 
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexDouble operator /(double a, ComplexDouble b) => DoubleRealDiv(a, b);
+		public static unsafe ComplexSingle operator /(float a, ComplexSingle b) => SingleRealDiv(a, b);
 
 		/// <summary>
-		/// Complex absolute value of this complex
+		/// Static unary plus operator for one operand <paramref name="value"/>
 		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public double Abs()
+		/// <param name="value">The operand to be incremented of type <see cref="ComplexSingle"/></param>
+		/// <returns>The unary plus result of type <see cref="ComplexSingle"/></returns>
+		public static ComplexSingle operator +(ComplexSingle value) => value;
+
+		/// <summary>
+		/// Static unary decrement operator for one operand <paramref name="value"/>
+		/// </summary>
+		/// <param name="value">The operand to be incremented of type <see cref="ComplexSingle"/></param>
+		/// <returns>The unary decrement result of type <see cref="ComplexSingle"/></returns>
+		public static ComplexSingle operator --(ComplexSingle value)
 		{
-			return DoubleAbs(this);
+			float r = value.real;
+			r--;
+			return new(r, value.imag);
 		}
 
 		/// <summary>
-		/// Square of complex absolute value of this complex
+		/// Static unary increment operator for one operand <paramref name="value"/>
 		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public double SquareAbs()
+		/// <param name="value">The operand to be incremented of type <see cref="ComplexSingle"/></param>
+		/// <returns>The unary increment result of type <see cref="ComplexSingle"/></returns>
+		public static ComplexSingle operator ++(ComplexSingle value)
 		{
-			return DoubleSquareAbs(this);
+			float r = value.real;
+			r++;
+			return new(r, value.imag);
 		}
+		#endregion
+
+		#region other arithmetics
+		/// <summary>
+		/// Get the magnitude or absolute value of this <see cref="ComplexSingle"/>
+		/// </summary>
+		public float Magnitude => SingleAbs(this);
 
 		/// <summary>
-		/// Compute the argument of this complex
+		/// Get the squared magnitude or absolute value of this <see cref="ComplexSingle"/>
 		/// </summary>
-		/// <returns>The argument of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public double Arg()
-		{
-			return DoubleArg(this);
-		}
+		public float MagnitudeSquare => SingleSquareAbs(this);
+
+		/// <summary>
+		/// Get the phase of this <see cref="ComplexSingle"/>
+		/// </summary>
+		public float Phase => SingleArg(this);
 
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Conjugate() => new(this.real, -this.imag);
+		public ComplexSingle Conj => new(this.real, -this.imag);
 
+		/// <summary>
+		/// Complex number absolute value
+		/// </summary>
+		public static ComplexSingle Abs(ComplexSingle number) => SingleAbs(number);
 
 		/// <summary>
 		/// Complex exponential (of base <c>e</c>)
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Exp()
-		{
-			var doubleResult = DoubleExp(this);
-			return doubleResult;
-		}
-
+		public static ComplexSingle Exp(ComplexSingle number) => SingleExp(number);
 		/// <summary>
 		/// Complex logarithm (of base <c>e</c>)
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Log()
-		{
-			return DoubleLog(this);
-		}
-
+		public static ComplexSingle Log(ComplexSingle number) => SingleLog(number);
 		/// <summary>
-		/// Complex number power
+		/// Complex number power of real type
 		/// </summary>
-		/// <param name="p">The power of real type</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Pow(double p)
-		{
-			return DoublePow(this, p);
-		}
-
+		public static ComplexSingle Pow(ComplexSingle complex, float p) => SinglePow(complex, p);
 		/// <summary>
-		/// Complex  number power
+		/// Complex number power of complex type
 		/// </summary>
-		/// <param name="p">The power of complex type <see cref="ComplexDouble"/></param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Pow(ComplexDouble p)
-		{
-			return DoublePow(this, p);
-		}
-
+		public static ComplexSingle Pow(ComplexSingle number, ComplexSingle power) => SinglePow(number, power);
 		/// <summary>
-		/// Get the complex square root of this complex
+		/// Complex number reciprocal
 		/// </summary>
-		/// <returns>The complex square root of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Sqrt()
-		{
-			return DoubleSqrt(this);
-		}
-
+		public static ComplexSingle Reciprocal(ComplexSingle number) => 1 / number;
 		/// <summary>
-		/// Out-of-place add <paramref name="another"/> value of <see cref="ComplexDouble"/>
+		/// Complex number square root
 		/// </summary>
-		/// <param name="another">Another <see cref="ComplexDouble"/> to be added</param>
-		/// <returns>The addition result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Add(ComplexDouble another) => this + another;
-
-		/// <summary>
-		/// Out-of-place subtract <paramref name="another"/> value of <see cref="ComplexDouble"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexDouble"/> to be subtracted</param>
-		/// <returns>The subtraction result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Subtract(ComplexDouble another) => this - another;
-
-		/// <summary>
-		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexDouble"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexDouble"/> to be multiplied</param>
-		/// <returns>The multiplication result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Multiply(ComplexDouble another) => this * another;
-		/// <summary>
-		/// Out-of-place divide <paramref name="another"/> value of <see cref="ComplexDouble"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexDouble"/> to be divided</param>
-		/// <returns>The division result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble Divide(ComplexDouble another) => this / another;
-
-		/// <summary>
-		/// Out-of-place add the square of the absolute value of <paramref name="another"/> <see cref="ComplexDouble"/> to this complex
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexDouble"/> whose absolute value's square is to be added</param>
-		/// <returns>The addition result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble AddSquareAbs(ComplexDouble another) => DoubleAddSquareAbs(this, another);
-
-		/// <summary>
-		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexDouble"/> after conjugating this complex
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexDouble"/> to be multiplied</param>
-		/// <returns>The conjugate multiplication result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble ConjugateMultiply(ComplexDouble another) => DoubleMulConjA(this, another);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/> and <paramref name="b"/> to this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexDouble"/> value to be multiplied</param>
-		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
-		/// <returns>The fused multiplication addition (FMA) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble AddProduct(ComplexDouble a, ComplexDouble b) => DoubleFMA(a, b, this);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexDouble"/> value to be conjugated and multiplied</param>
-		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
-		/// <returns>The fused multiplication addition (FMA) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble AddConjugateProduct(ComplexDouble a, ComplexDouble b) => DoubleFMAConjA(a, b, this);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/> and <paramref name="b"/> to the negation of this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexDouble"/> value to be multiplied</param>
-		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
-		/// <returns>The fused multiplication subtraction (FMS) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble NegateAddProduct(ComplexDouble a, ComplexDouble b) => DoubleFMS(a, b, this);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexDouble"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to the negation of this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexDouble"/> value to be conjugated and multiplied</param>
-		/// <param name="b">The second <see cref="ComplexDouble"/> value to be multiplied</param>
-		/// <returns>The fused multiplication subtraction (FMS) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexDouble NegateAddConjugateProduct(ComplexDouble a, ComplexDouble b) => DoubleFMSConjA(a, b, this);
+		public static ComplexSingle Sqrt(ComplexSingle number) => SingleSqrt(number);
 		#endregion
 
 		#region string representation
@@ -783,209 +1094,17 @@ namespace Althea.NativeTypes
 		{
 			formatProvider ??= Print.Culture;
 			string r, i;
-			r = this.real.ToString(format, formatProvider);
-			i = this.imag.ToString(format, formatProvider);
-			return $"({r},{i})";
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The single precision float complex type
-	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct ComplexSingle : IComplex<float>, ICustomNativeType<ComplexSingle>, IEquatable<ComplexSingle>
-	{
-		#region basic
-		private readonly float real, imag;
-
-		/// <summary>
-		/// Get the real part
-		/// </summary>
-		public float Real {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.real;
-		}
-
-		/// <summary>
-		/// Get the imaginary part
-		/// </summary>
-		public float Imag {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.imag;
-		}
-
-		/// <summary>
-		/// Construct a <see cref="ComplexSingle"/> from real and imaginary parts
-		/// </summary>
-		/// <param name="re">The real part</param>
-		/// <param name="im">The imaginary part, default value is 0</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle(float re, float im = 0)
-		{
-			this.real = re;
-			this.imag = im;
-		}
-		#endregion
-
-		#region static information
-		DataTypeClassification ICustomNativeType<ComplexSingle>.Classification_Internal() => Const<float>.DataTypeClass;
-
-		double ICustomNativeType<ComplexSingle>.MachinePrecision_Internal() => Const<float>.MachinePrecision;
-		#endregion
-
-		#region constant values
-		/// <summary>
-		/// <see cref="ComplexSingle"/> 0
-		/// </summary>
-		public static readonly ComplexSingle Zero = new(0);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> 1
-		/// </summary>
-		public static readonly ComplexSingle One = new(1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> -1
-		/// </summary>
-		public static readonly ComplexSingle MinusOne = new(-1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> i
-		/// </summary>
-		public static readonly ComplexSingle ImOne = new(0, 1);
-		/// <summary>
-		/// <see cref="ComplexSingle"/> -1
-		/// </summary>
-		public static readonly ComplexSingle MinusImOne = new(0, -1);
-		#endregion
-
-		#region parser
-		unsafe bool ICustomNativeType<ComplexSingle>.TryParse_Internal(string str, out ComplexSingle result)
-		{
-			bool success = ComplexDouble.TryParseAny(str, &float.TryParse, out float real, out float imag);
-			result = new(real, imag);
-			return success;
-		}
-
-		/// <summary>
-		/// Try to parse a <see cref="string"/> to a new <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="s">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <param name="complex">The output <see cref="ComplexSingle"/></param>
-		/// <returns>success or not</returns>
-		public unsafe static bool TryParse(string s, out ComplexSingle complex)
-		{
-			complex = default;
-			if (s is null || s.Length == 0)
-				return false;
-			bool success = ComplexDouble.TryParseAny(s, &float.TryParse, out float real, out float imag);
-			complex = new(real, imag);
-			return success;
-		}
-
-		/// <summary>
-		/// Parse a <see cref="string"/> to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
-		/// <returns>The parsed <see cref="ComplexSingle"/></returns>
-		public static ComplexSingle Parse(string str)
-		{
-			if (str is null || str.Length == 0)
-				throw new ArgumentNullException(nameof(str));
-			bool success = TryParse(str, out ComplexSingle result);
-			if (!success)
-				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(float).Name), nameof(str));
-			return result;
-		}
-		#endregion
-
-		#region converter
-		/// <summary>
-		/// Implicitly convert a int to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="a">a int</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ComplexSingle(int a) => new(a);
-		/// <summary>
-		/// Implicitly convert a float to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="a">a float</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ComplexSingle(float a) => new(a);
-		/// <summary>
-		/// Implicitly convert a int tuple to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="a">a int tuple</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ComplexSingle((int r, int i) a) => new(a.r, a.i);
-		/// <summary>
-		/// Implicitly convert a float tuple to a <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="a">a float tuple</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ComplexSingle((float r, float i) a) => new(a.r, a.i);
-
-		/// <summary>
-		/// Convert to <see cref="float"/> by getting absolute value
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static explicit operator float(ComplexSingle v) => v.Abs();
-
-		/// <summary>
-		/// Implicitly convert a <see cref="ComplexSingle"/> to a <see cref="ComplexDouble"/>
-		/// </summary>
-		/// <param name="a">The input <see cref="ComplexSingle"/> to be converted</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ComplexDouble(ComplexSingle a) => new(a.real, a.imag);
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(ComplexSingle a, ComplexSingle b) => a.Equals(b);
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(ComplexSingle a, ComplexSingle b) => !(a == b);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		/// <param name="other">The other <see cref="ComplexSingle"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(ComplexSingle other)
-		{
-			return this.real == other.real && this.imag == other.imag;
-		}
-
-		/// <summary>
-		/// Override <see cref="object.GetHashCode"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.real, this.imag);
-		}
-
-		/// <summary>
-		/// Override <see cref="object.Equals(object)"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			ComplexSingle a;
-			if (obj is int @int)
-				a = @int;
-			else if (obj is float real)
-				a = real;
-			else if (obj is ComplexSingle complex)
-				a = complex;
+			if (this.real is IFormattable f && this.imag is IFormattable g)
+			{
+				r = f.ToString(format, formatProvider);
+				i = g.ToString(format, formatProvider);
+			}
 			else
-				return false;
-			return this.Equals(a);
+			{
+				r = string.Format(formatProvider, $"{{0:{format}}}", this.real);
+				i = string.Format(formatProvider, $"{{0:{format}}}", this.imag);
+			}
+			return $"({r},{i})";
 		}
 		#endregion
 
@@ -998,16 +1117,16 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexSingle SingleMul(ComplexSingle a, ComplexSingle b)
 		{
-			float real = MathF.FusedMultiplyAdd(a.real, b.real, -a.imag * b.imag); // vfmsub213ss
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag,  a.imag * b.real); // vfmadd213ss
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, -a.imag * b.imag); // vfmsub213sd
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, a.imag * b.real); // vfmadd213sd
 			return new ComplexSingle(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexSingle SingleDiv(ComplexSingle x, ComplexSingle y)
 		{
 			float squareAbsY = SingleSquareAbs(y);
-			float acbd = MathF.FusedMultiplyAdd(x.real, y.real,  x.imag * y.imag); // vfmadd213ss
-			float bcad = MathF.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag); // vfmsub213ss
+			float acbd = MathF.FusedMultiplyAdd(x.real, y.real, x.imag * y.imag); // vfmadd213sd
+			float bcad = MathF.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag); // vfmsub213sd
 			return new ComplexSingle(acbd / squareAbsY, bcad / squareAbsY);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1019,7 +1138,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static float SingleSquareAbs(ComplexSingle a)
 		{
-			float squareAbs = MathF.FusedMultiplyAdd(a.real, a.real, a.imag * a.imag); // vfmadd213ss
+			float squareAbs = MathF.FusedMultiplyAdd(a.real, a.real, a.imag * a.imag); // vfmadd213sd
 			return squareAbs;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1034,8 +1153,8 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComplexSingle SingleMulConjA(ComplexSingle a, ComplexSingle b)
 		{
-			float real = MathF.FusedMultiplyAdd(a.real, b.real,  a.imag * b.imag); // vfmadd213ss
-			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -a.imag * b.real); // vfmsub213ss
+			float real = MathF.FusedMultiplyAdd(a.real, b.real, a.imag * b.imag); // vfmadd213sd
+			float imag = MathF.FusedMultiplyAdd(a.real, b.imag, -a.imag * b.real); // vfmsub213sd
 			return new ComplexSingle(real, imag);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1159,283 +1278,6 @@ namespace Althea.NativeTypes
 			return new ComplexSingle(scale * real, scale * imag);
 		}
 		#endregion
-
-		#region arithmetic operators
-		/// <summary>
-		/// Complex negate
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator -(ComplexSingle a) => new(-a.real, -a.imag);
-		/// <summary>
-		/// Complex add
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator +(ComplexSingle a, ComplexSingle b) => new(a.real + b.real, a.imag + b.imag);
-		/// <summary>
-		/// Complex subtract
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator -(ComplexSingle a, ComplexSingle b) => new(a.real - b.real, a.imag - b.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator +(ComplexSingle a, float b) => new(a.real + b, a.imag);
-		/// <summary>
-		/// Complex add real
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator +(float b, ComplexSingle a) => new(a.real + b, a.imag);
-		/// <summary>
-		/// Complex subtract real
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator -(ComplexSingle a, float b) => new(a.real - b, a.imag);
-		/// <summary>
-		/// Real subtract complex
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator -(float b, ComplexSingle a) => new(b - a.real, -a.imag);
-
-		/// <summary>
-		/// Complex multiply
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator *(ComplexSingle a, ComplexSingle b)
-		{
-			return SingleMul(a, b);
-		}
-		/// <summary>
-		/// Complex division, guards against intermediate underflow and overflow by scaling
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator /(ComplexSingle a, ComplexSingle b)
-		{
-			return SingleDiv(a, b);
-		}
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator *(ComplexSingle a, float b) => new(a.real * b, a.imag * b);
-		/// <summary>
-		/// Complex multiply real number
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator *(float b, ComplexSingle a) => new(a.real * b, a.imag * b);
-		/// <summary>
-		/// Complex divide real number
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator /(ComplexSingle a, float b) => new(a.real / b, a.imag / b);
-		/// <summary>
-		/// Real number divide complex 
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComplexSingle operator /(float a, ComplexSingle b) => SingleRealDiv(a, b);
-
-		/// <summary>
-		/// Complex absolute value of this complex
-		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float Abs()
-		{
-			return SingleAbs(this);
-		}
-
-		/// <summary>
-		/// Square of complex absolute value of this complex
-		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float SquareAbs()
-		{
-			return SingleSquareAbs(this);
-		}
-
-		/// <summary>
-		/// Compute the argument of this complex
-		/// </summary>
-		/// <returns>The argument of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float Arg()
-		{
-			return SingleArg(this);
-		}
-
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Conjugate() => new(this.real, -this.imag);
-
-
-		/// <summary>
-		/// Complex exponential (of base <c>e</c>)
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Exp()
-		{
-			var doubleResult = SingleExp(this);
-			return doubleResult;
-		}
-
-		/// <summary>
-		/// Complex logarithm (of base <c>e</c>)
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Log()
-		{
-			return SingleLog(this);
-		}
-
-		/// <summary>
-		/// Complex number power
-		/// </summary>
-		/// <param name="p">The power of real type</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Pow(float p)
-		{
-			return SinglePow(this, p);
-		}
-
-		/// <summary>
-		/// Complex  number power
-		/// </summary>
-		/// <param name="p">The power of complex type <see cref="ComplexSingle"/></param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Pow(ComplexSingle p)
-		{
-			return SinglePow(this, p);
-		}
-
-		/// <summary>
-		/// Get the complex square root of this complex
-		/// </summary>
-		/// <returns>The complex square root of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Sqrt()
-		{
-			return SingleSqrt(this);
-		}
-
-		/// <summary>
-		/// Out-of-place add <paramref name="another"/> value of <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexSingle"/> to be added</param>
-		/// <returns>The addition result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Add(ComplexSingle another) => this + another;
-
-		/// <summary>
-		/// Out-of-place subtract <paramref name="another"/> value of <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexSingle"/> to be subtracted</param>
-		/// <returns>The subtraction result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Subtract(ComplexSingle another) => this - another;
-
-		/// <summary>
-		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexSingle"/> to be multiplied</param>
-		/// <returns>The multiplication result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Multiply(ComplexSingle another) => this * another;
-		/// <summary>
-		/// Out-of-place divide <paramref name="another"/> value of <see cref="ComplexSingle"/>
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexSingle"/> to be divided</param>
-		/// <returns>The division result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle Divide(ComplexSingle another) => this / another;
-
-		/// <summary>
-		/// Out-of-place add the square of the absolute value of <paramref name="another"/> <see cref="ComplexSingle"/> to this complex
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexSingle"/> whose absolute value's square is to be added</param>
-		/// <returns>The addition result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle AddSquareAbs(ComplexSingle another) => SingleAddSquareAbs(this, another);
-
-		/// <summary>
-		/// Out-of-place multiply <paramref name="another"/> value of <see cref="ComplexSingle"/> after conjugating this complex
-		/// </summary>
-		/// <param name="another">Another <see cref="ComplexSingle"/> to be multiplied</param>
-		/// <returns>The conjugate multiplication result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle ConjugateMultiply(ComplexSingle another) => SingleMulConjA(this, another);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/> and <paramref name="b"/> to this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexSingle"/> value to be multiplied</param>
-		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
-		/// <returns>The fused multiplication addition (FMA) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle AddProduct(ComplexSingle a, ComplexSingle b) => SingleFMA(a, b, this);
-		
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexSingle"/> value to be conjugated and multiplied</param>
-		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
-		/// <returns>The fused multiplication addition (FMA) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle AddConjugateProduct(ComplexSingle a, ComplexSingle b) => SingleFMAConjA(a, b, this);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/> and <paramref name="b"/> to the negation of this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexSingle"/> value to be multiplied</param>
-		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
-		/// <returns>The fused multiplication subtraction (FMS) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle NegateAddProduct(ComplexSingle a, ComplexSingle b) => SingleFMS(a, b, this);
-
-		/// <summary>
-		/// Out-of-place add the product result of <see cref="ComplexSingle"/>s <paramref name="a"/>'s conjugate and <paramref name="b"/> to the negation of this complex
-		/// </summary>
-		/// <param name="a">The first <see cref="ComplexSingle"/> value to be conjugated and multiplied</param>
-		/// <param name="b">The second <see cref="ComplexSingle"/> value to be multiplied</param>
-		/// <returns>The fused multiplication subtraction (FMS) result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComplexSingle NegateAddConjugateProduct(ComplexSingle a, ComplexSingle b) => SingleFMSConjA(a, b, this);
-		#endregion
-
-		#region string representation
-		/// <summary>
-		/// Override <see cref="object.ToString"/>
-		/// </summary>
-		public override string ToString()
-		{
-			return this.ToString(null, Print.Culture);
-		}
-
-		/// <summary>
-		/// String representation of this complex number
-		/// </summary>
-		/// <param name="format">format of output</param>
-		public string ToString(string? format)
-		{
-			return this.ToString(format, Print.Culture);
-		}
-
-		/// <summary>
-		/// Implementation of <see cref="IFormattable.ToString(string, IFormatProvider)"/> that formats the value of the current instance using the specified format.
-		/// </summary>
-		/// <param name="format">The format to use</param>
-		/// <param name="formatProvider">The provider to use to format the value</param>
-		public string ToString(string? format, IFormatProvider? formatProvider = null)
-		{
-			formatProvider ??= Print.Culture;
-			string r, i;
-			r = this.real.ToString(format, formatProvider);
-			i = this.imag.ToString(format, formatProvider);
-			return $"({r},{i})";
-		}
-		#endregion
 	}
 	#endregion
 
@@ -1445,10 +1287,9 @@ namespace Althea.NativeTypes
 	/// The general complex type for any real numeric number type including <see cref="float"/> and <see cref="double"/>
 	/// </summary>
 	/// <typeparam name="T">The data type of corresponding real number</typeparam>
-	/// <remarks>This is an <c>unmanaged</c> type since C# 8.0.<br/>
-	/// If <typeparamref name="T"/> is <see cref="float"/> or <see cref="double"/>, the corresponding <see cref="ComplexSingle"/> or <see cref="ComplexDouble"/> is recommended since their operations are much faster.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> : IComplex<T>, ICustomNativeType<Complex<T>>, IEquatable<Complex<T>> where T : unmanaged
+	public struct Complex<T> : IComplexNumber<Complex<T>, T>, ICustomNativeType<Complex<T>>
+		where T : unmanaged, IFloatNumber<T>, INativeConvertibleNumber<T>, ICustomNativeType<T>
 	{
 		#region basic
 		private readonly T real, imag;
@@ -1464,7 +1305,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the imaginary part
 		/// </summary>
-		public T Imag {
+		public T Imaginary {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.imag;
 		}
@@ -1474,7 +1315,6 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="re">The real part</param>
 		/// <param name="im">The imaginary part, default value is 0</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Complex(T re, T im = default)
 		{
 			this.real = re;
@@ -1483,9 +1323,15 @@ namespace Althea.NativeTypes
 		#endregion
 
 		#region static information
-		DataTypeClassification ICustomNativeType<Complex<T>>.Classification_Internal() => Const<T>.DataTypeClass;
+		/// <summary>
+		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="Complex{T}"/>
+		/// </summary>
+		public static DataTypeClassification Classification => T.Classification;
 
-		double ICustomNativeType<Complex<T>>.MachinePrecision_Internal() => Const<T>.MachinePrecision;
+		/// <summary>
+		/// Statically get the machine precision of <see cref="Complex{T}"/>
+		/// </summary>
+		public static double MachinePrecision => T.MachinePrecision;
 
 		static Complex()
 		{
@@ -1493,7 +1339,7 @@ namespace Althea.NativeTypes
 			if (typeof(T).IsGenericType)
 				throw new InvalidOperationException(Support.DataType);
 			// native type check
-			if (Const<T>.DataTypeClass < DataTypeClassification.FloatPoint_IEEE754)
+			if (T.Classification < DataTypeClassification.FloatPoint_IEEE754)
 				throw new InvalidOperationException(Support.DataType);
 		}
 		#endregion
@@ -1502,35 +1348,70 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// <see cref="Complex{T}"/> 0
 		/// </summary>
-		public static readonly Complex<T> Zero = new(default);
+		public static Complex<T> Zero => new(T.Zero);
 		/// <summary>
 		/// <see cref="Complex{T}"/> 1
 		/// </summary>
-		public static readonly Complex<T> One = new(Const<T>.One);
+		public static Complex<T> One => new(T.One);
 		/// <summary>
 		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static readonly Complex<T> MinusOne = new(Const<T>.MinusOne);
+		public static Complex<T> NegativeOne => new(T.NegativeOne);
 		/// <summary>
 		/// <see cref="Complex{T}"/> i
 		/// </summary>
-		public static readonly Complex<T> ImOne = new(default, Const<T>.One);
+		public static Complex<T> ImaginaryOne => new(T.Zero, T.One);
 		/// <summary>
 		/// <see cref="Complex{T}"/> -1
 		/// </summary>
-		public static readonly Complex<T> MinusImOne = new(default, Const<T>.MinusOne);
+		public static Complex<T> ImaginaryNegativeOne => new(T.Zero, T.NegativeOne);
+		/// <summary>
+		/// <see cref="Complex{T}"/> 0
+		/// </summary>
+		public static Complex<T> AdditiveIdentity => Zero;
+		/// <summary>
+		/// <see cref="Complex{T}"/> 1
+		/// </summary>
+		public static Complex<T> MultiplicativeIdentity => One;
+		/// <summary>
+		/// <see cref="Complex{T}"/> infinity
+		/// </summary>
+		public static Complex<T> Infinity => new(T.Infinity);
+		/// <summary>
+		/// <see cref="Complex{T}"/> NaN
+		/// </summary>
+		public static Complex<T> Nan => new(T.Nan);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is finite or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
+		public static bool IsFinite(Complex<T> value) => T.IsFinite(value.real) && T.IsFinite(value.imag);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is infinity or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is infinity or not</returns>
+		public static bool IsInfinity(Complex<T> value) => T.IsInfinity(value.real) || T.IsInfinity(value.imag);
+
+		/// <summary>
+		/// Statically check whether the given <paramref name="value"/> is NaN or not
+		/// </summary>
+		/// <param name="value">The given number to check</param>
+		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
+		public static bool IsNan(Complex<T> value) => T.IsNan(value.real) && T.IsNan(value.imag);
 		#endregion
 
 		#region parser
-		bool ICustomNativeType<Complex<T>>.TryParse_Internal(string str, out Complex<T> result) => TryParse(str, out result);
-
 		/// <summary>
 		/// Try to parse a <see cref="string"/> to a new <see cref="Complex{T}"/>
 		/// </summary>
 		/// <param name="s">string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
 		/// <param name="complex">output <see cref="Complex{T}"/></param>
 		/// <returns>success or not</returns>
-		public unsafe static bool TryParse(string s, out Complex<T> complex)
+		public unsafe static bool TryParse(string? s, out Complex<T> complex)
 		{
 			complex = default;
 			if (s is null || s.Length == 0)
@@ -1546,7 +1427,7 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="str">The string to parse of form "a + b<c>i</c>", "a - b<c>i</c>", "a", "b<c>i</c>" or "-b<c>i</c>" where both 'a' and 'b' are float point numbers</param>
 		/// <returns>The parsed <see cref="Complex{T}"/></returns>
-		public static Complex<T> Parse(string str)
+		public static Complex<T> Parse(string? str)
 		{
 			if (str is null || str.Length == 0)
 				throw new ArgumentNullException(nameof(str));
@@ -1555,6 +1436,15 @@ namespace Althea.NativeTypes
 				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
 			return result;
 		}
+
+		/// <summary>
+		/// See <see cref="Parse(string?)"/>
+		/// </summary>
+		public static Complex<T> Parse(string? s, IFormatProvider? provider) => Parse(s);
+		/// <summary>
+		/// See <see cref="TryParse(string?, out Complex{T})"/>
+		/// </summary>
+		public static bool TryParse(string? s, IFormatProvider? provider, out Complex<T> result) => TryParse(s, out result);
 		#endregion
 
 		#region converter
@@ -1562,71 +1452,60 @@ namespace Althea.NativeTypes
 		/// Convert from int
 		/// </summary>
 		/// <param name="a">a int</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator Complex<T>(int a) => new(a.NativeConvert<int, T>());
+		public static implicit operator Complex<T>(int a) => new((T)a);
 		/// <summary>
 		/// Convert from T
 		/// </summary>
 		/// <param name="a">a T</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Complex<T>(T a) => new(a);
 		/// <summary>
 		/// Convert from int tuple
 		/// </summary>
 		/// <param name="a">a int tuple</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator Complex<T>((int r, int i) a) => new(a.r.NativeConvert<int, T>(), a.i.NativeConvert<int, T>());
+		public static implicit operator Complex<T>((int r, int i) a) => new((T)a.r, (T)a.i);
 		/// <summary>
 		/// Convert from T tuple
 		/// </summary>
 		/// <param name="a">a T tuple</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator Complex<T>((T r, T i) a) => new(a.r, a.i);
+		public static implicit operator Complex<T>((T real, T imag) a) => new(a.real, a.imag);
 
 		/// <summary>
 		/// Convert to <see cref="ComplexDouble"/>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe explicit operator ComplexDouble(Complex<T> v)
 		{
-			if (typeof(T) == typeof(float))
-				return *(ComplexSingle*)&v;
-			else if (typeof(T) == typeof(double))
+			if (typeof(T) == typeof(double))
 				return *(ComplexDouble*)&v;
 			else
-				return new(v.real.ToDouble(), v.imag.ToDouble());
+				return new((double)v.real, (double)v.imag);
 		}
 
 		/// <summary>
 		/// Convert from <see cref="ComplexDouble"/>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe explicit operator Complex<T>(ComplexDouble v)
 		{
 			if (typeof(T) == typeof(double))
 				return *(Complex<T>*)&v;
 			else
-				return new(v.Real.FromDouble<T>(), v.Imag.FromDouble<T>());
+				return new((T)v.Real, (T)v.Imaginary);
 		}
 
 		/// <summary>
-		/// Convert to <typeparamref name="T"/>
+		/// Convert to <typeparamref name="T"/> by taking abs
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static explicit operator T(Complex<T> v) => v.Abs();
+		public static explicit operator T(Complex<T> v) => v.Magnitude;
 		#endregion
 
 		#region equality
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Complex<T> a, Complex<T> b) => a.Equals(b);
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Complex<T> a, Complex<T> b) => !(a == b);
 
 		/// <summary>
@@ -1634,16 +1513,14 @@ namespace Althea.NativeTypes
 		/// </summary>
 		/// <param name="other">The other <see cref="Complex{T}"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Complex<T> other)
 		{
-			return this.real.IsEqual(other.real) && this.imag.IsEqual(other.imag);
+			return this.real == other.real && this.imag == other.imag;
 		}
 
 		/// <summary>
 		/// Override <see cref="object.GetHashCode"/>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(this.real, this.imag);
@@ -1652,7 +1529,6 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Override <see cref="object.Equals(object)"/>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			Complex<T> a;
@@ -1672,43 +1548,35 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Complex negate
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a) => new(a.real.NativeNegate(), a.imag.NativeNegate());
+		public static Complex<T> operator -(Complex<T> a) => new(-a.real, -a.imag);
 		/// <summary>
 		/// Complex add
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real.NativeAdd(b.real), a.imag.NativeAdd(b.imag));
+		public static Complex<T> operator +(Complex<T> a, Complex<T> b) => new(a.real + b.real, a.imag + b.imag);
 		/// <summary>
 		/// Complex subtract
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real.NativeSub(b.real), a.imag.NativeSub(b.imag));
+		public static Complex<T> operator -(Complex<T> a, Complex<T> b) => new(a.real - b.real, a.imag - b.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real.NativeAdd(b), a.imag);
+		public static Complex<T> operator +(Complex<T> a, T b) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Complex add real
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real.NativeAdd(b), a.imag);
+		public static Complex<T> operator +(T b, Complex<T> a) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Complex subtract real
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real.NativeSub(b), a.imag);
+		public static Complex<T> operator -(Complex<T> a, T b) => new(a.real - b, a.imag);
 		/// <summary>
 		/// Real subtract complex
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator -(T b, Complex<T> a) => new(b.NativeSub(a.real), a.imag.NativeNegate());
+		public static Complex<T> operator -(T b, Complex<T> a) => new(b - a.real, -a.imag);
 
 		/// <summary>
 		/// Complex multiply
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe Complex<T> operator *(Complex<T> a, Complex<T> b)
 		{
 			if (typeof(T) == typeof(float))
@@ -1722,19 +1590,18 @@ namespace Althea.NativeTypes
 				return *(Complex<T>*)&v;
 			}
 			// else
-			T real = a.real.NativeMultiply(b.real);
-			T temp = a.imag.NativeMultiply(b.imag);
-			real = real.NativeSub(temp);
-			T imag = a.real.NativeMultiply(b.imag);
-			temp = a.imag.NativeMultiply(b.real);
-			imag = imag.NativeAdd(temp);
+			T real = a.real * b.real;
+			T temp = a.imag * b.imag;
+			real -= temp;
+			T imag = a.real * b.imag;
+			temp = a.imag * b.real;
+			imag -= temp;
 			return new Complex<T>(real, imag);
 		}
 
 		/// <summary>
 		/// Complex division, guards against intermediate underflow and overflow by scaling
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe Complex<T> operator /(Complex<T> a, Complex<T> b)
 		{
 			if (typeof(T) == typeof(float))
@@ -1744,33 +1611,32 @@ namespace Althea.NativeTypes
 			}
 			if (typeof(T) == typeof(double))
 			{
-				ComplexDouble v = (*(ComplexSingle*)&a) * (*(ComplexSingle*)&b);
+				ComplexDouble v = (*(ComplexDouble*)&a) * (*(ComplexDouble*)&b);
 				return *(Complex<T>*)&v;
 			}
 			// else
-			return (Complex<T>)((ComplexDouble)a / (ComplexDouble)b);
+			T squareAbsY = b.MagnitudeSquare;
+			T acbd = a.real * b.real + a.imag * b.imag;
+			T bcad = a.imag * b.real - a.real * b.imag;
+			return new(acbd / squareAbsY, bcad / squareAbsY);
 		}
 
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(Complex<T> a, T b) => new(a.real.NativeMultiply(b), a.imag.NativeMultiply(b));
+		public static Complex<T> operator *(Complex<T> a, T b) => new(a.real * b, a.imag * b);
 		/// <summary>
 		/// Complex multiply real number
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator *(T b, Complex<T> a) => new(a.real.NativeMultiply(b), a.imag.NativeMultiply(b));
+		public static Complex<T> operator *(T b, Complex<T> a) => new(a.real * b, a.imag * b);
 		/// <summary>
 		/// Complex divide real number
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Complex<T> operator /(Complex<T> a, T b) => new(a.real.NativeDivide(b), a.imag.NativeDivide(b));
+		public static Complex<T> operator /(Complex<T> a, T b) => new(a.real / b, a.imag / b);
 
 		/// <summary>
 		/// Real number divide complex 
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe Complex<T> operator /(T a, Complex<T> b)
 		{
 			if (typeof(T) == typeof(float))
@@ -1784,290 +1650,92 @@ namespace Althea.NativeTypes
 				return *(Complex<T>*)&v;
 			}
 			// else
-			return (Complex<T>)(a.ToDouble() / (ComplexDouble)b);
+			T squareAbsY = b.MagnitudeSquare;
+			return new(a * b.real / squareAbsY, -a * b.imag / squareAbsY);
 		}
 
 		/// <summary>
-		/// Complex absolute value of this complex
+		/// Static unary plus operator for one operand <paramref name="value"/>
 		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe T Abs()
+		/// <param name="value">The operand to be incremented of type <see cref="Complex{T}"/></param>
+		/// <returns>The unary plus result of type <see cref="Complex{T}"/></returns>
+		public static Complex<T> operator +(Complex<T> value) => value;
+
+		/// <summary>
+		/// Static unary decrement operator for one operand <paramref name="value"/>
+		/// </summary>
+		/// <param name="value">The operand to be incremented of type <see cref="Complex{T}"/></param>
+		/// <returns>The unary decrement result of type <see cref="Complex{T}"/></returns>
+		public static Complex<T> operator --(Complex<T> value)
 		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				float v = (*(ComplexSingle*)&p).Abs();
-				return *(T*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				double v = (*(ComplexDouble*)&p).Abs();
-				return *(T*)&v;
-			}
-			// else
-			return ((ComplexDouble)this).Abs().FromDouble<T>();
+			T r = value.real;
+			r--;
+			return new(r, value.imag);
 		}
 
 		/// <summary>
-		/// Complex absolute value of this complex
+		/// Static unary increment operator for one operand <paramref name="value"/>
 		/// </summary>
-		/// <returns>The absolute value of this complex as a <see cref="float"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe double AbsSingle()
+		/// <param name="value">The operand to be incremented of type <see cref="Complex{T}"/></param>
+		/// <returns>The unary increment result of type <see cref="Complex{T}"/></returns>
+		public static Complex<T> operator ++(Complex<T> value)
 		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				return (*(ComplexSingle*)&p).Abs();
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				return (float)(*(ComplexDouble*)&p).Abs();
-			}
-			// else
-			return (float)((ComplexDouble)this).Abs();
+			T r = value.real;
+			r++;
+			return new(r, value.imag);
 		}
+		#endregion
+
+		#region other arithmetics
+		/// <summary>
+		/// Get the magnitude or absolute value of this <see cref="Complex{T}"/>
+		/// </summary>
+		public T Magnitude => (T)((ComplexDouble)this).Magnitude;
 
 		/// <summary>
-		/// Complex absolute value of this complex
+		/// Get the squared magnitude or absolute value of this <see cref="Complex{T}"/>
 		/// </summary>
-		/// <returns>The absolute value of this complex as a <see cref="double"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe double AbsDouble()
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				return (*(ComplexSingle*)&p).Abs();
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				return (*(ComplexDouble*)&p).Abs();
-			}
-			// else
-			return ((ComplexDouble)this).Abs();
-		}
+		public T MagnitudeSquare => (T)((ComplexDouble)this).MagnitudeSquare;
 
 		/// <summary>
-		/// Square of complex absolute value of this complex
+		/// Get the phase of this <see cref="Complex{T}"/>
 		/// </summary>
-		/// <returns>The absolute value of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe T SquareAbs()
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				float v = (*(ComplexSingle*)&p).SquareAbs();
-				return *(T*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				double v = (*(ComplexDouble*)&p).SquareAbs();
-				return *(T*)&v;
-			}
-			// else
-			return ((ComplexDouble)this).SquareAbs().FromDouble<T>();
-		}
-
-		/// <summary>
-		/// Compute the argument of this complex
-		/// </summary>
-		/// <returns>The argument of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe T Arg()
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				float v = (*(ComplexSingle*)&p).Arg();
-				return *(T*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				double v = (*(ComplexDouble*)&p).Arg();
-				return *(T*)&v;
-			}
-			// else
-			return ((ComplexDouble)this).Arg().FromDouble<T>();
-		}
+		public T Phase => (T)((ComplexDouble)this).Phase;
 
 		/// <summary>
 		/// Complex conjugate
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Conjugate() => new(this.real, this.imag.NativeNegate());
+		public Complex<T> Conj=> new(this.real, this.imag.NativeNegate());
+
+		/// <summary>
+		/// Complex number absolute value
+		/// </summary>
+		public static Complex<T> Abs(Complex<T> number) => (T)((ComplexDouble)number).Magnitude;
 
 		/// <summary>
 		/// Complex exponential (of base <c>e</c>)
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Complex<T> Exp()
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				ComplexSingle v = (*(ComplexSingle*)&p).Exp();
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				ComplexDouble v = (*(ComplexDouble*)&p).Exp();
-				return *(Complex<T>*)&v;
-			}
-			// else
-			var doubleResult = ((ComplexDouble)this).Exp();
-			return (Complex<T>)doubleResult;
-		}
-
+		public static Complex<T> Exp(Complex<T> number) => (Complex<T>)ComplexDouble.Exp((ComplexDouble)number);
 		/// <summary>
 		/// Complex logarithm (of base <c>e</c>)
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Complex<T> Log()
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> p = this;
-				ComplexSingle v = (*(ComplexSingle*)&p).Log();
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> p = this;
-				ComplexDouble v = (*(ComplexDouble*)&p).Log();
-				return *(Complex<T>*)&v;
-			}
-			// else
-			return (Complex<T>)((ComplexDouble)this).Log();
-		}
-
+		public static Complex<T> Log(Complex<T> number) => (Complex<T>)ComplexDouble.Log((ComplexDouble)number);
 		/// <summary>
-		/// Complex number power
+		/// Complex number power of real type
 		/// </summary>
-		/// <param name="p">The power of real type <typeparamref name="T"/></param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Complex<T> Pow(T p)
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> a = this;
-				ComplexSingle v = (*(ComplexSingle*)&a).Pow(*(float*)&p);
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> a = this;
-				ComplexDouble v = (*(ComplexDouble*)&a).Pow(*(double*)&p);
-				return *(Complex<T>*)&v;
-			}
-			// else
-			return (Complex<T>)((ComplexDouble)this).Pow(p.ToDouble());
-		}
-
-		internal unsafe Complex<T> PowDouble(double p)
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> a = this;
-				ComplexSingle v = (*(ComplexSingle*)&a).Pow((float)p);
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> a = this;
-				ComplexDouble v = (*(ComplexDouble*)&a).Pow(p);
-				return *(Complex<T>*)&v;
-			}
-			// else
-			return (Complex<T>)((ComplexDouble)this).Pow(p);
-		}
-
-
+		public static Complex<T> Pow(Complex<T> complex, T p) => (Complex<T>)ComplexDouble.Pow((ComplexDouble)complex, (double)p);
 		/// <summary>
-		/// Complex  number power
+		/// Complex number power of complex type
 		/// </summary>
-		/// <param name="p">The power of complex type <see cref="Complex{T}"/></param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Complex<T> Pow(Complex<T> p)
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> a = this;
-				ComplexSingle v = (*(ComplexSingle*)&a).Pow(*(ComplexSingle*)&p);
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> a = this;
-				ComplexDouble v = (*(ComplexDouble*)&a).Pow(*(ComplexDouble*)&p);
-				return *(Complex<T>*)&v;
-			}
-			// else
-			return (Complex<T>)((ComplexDouble)this).Pow((ComplexDouble)p);
-		}
-
+		public static Complex<T> Pow(Complex<T> number, Complex<T> power) => (Complex<T>)ComplexDouble.Pow((ComplexDouble)number, (ComplexDouble)power);
 		/// <summary>
-		/// Get the complex square root of this complex
+		/// Complex number reciprocal
 		/// </summary>
-		/// <returns>The complex square root of this complex</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Complex<T> Sqrt()
-		{
-			if (typeof(T) == typeof(float))
-			{
-				Complex<T> a = this;
-				ComplexSingle v = (*(ComplexSingle*)&a).Sqrt();
-				return *(Complex<T>*)&v;
-			}
-			if (typeof(T) == typeof(double))
-			{
-				Complex<T> a = this;
-				ComplexDouble v = (*(ComplexDouble*)&a).Sqrt();
-				return *(Complex<T>*)&v;
-			}
-			// else
-			return (Complex<T>)((ComplexDouble)this).Sqrt();
-		}
-
+		public static Complex<T> Reciprocal(Complex<T> number) => T.One / number;
 		/// <summary>
-		/// Out-of-place add <paramref name="another"/> value of <see cref="Complex{T}"/>
+		/// Complex number square root
 		/// </summary>
-		/// <param name="another">another value to be added</param>
-		/// <returns>The addition result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Add(Complex<T> another) => this + another;
-
-		/// <summary>
-		/// Out-of-place subtract <paramref name="another"/> value of <see cref="Complex{T}"/>
-		/// </summary>
-		/// <param name="another">another value to be subtracted</param>
-		/// <returns>The subtraction result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Subtract(Complex<T> another) => this - another;
-
-		/// <summary>
-		/// Out-of-place multiply <paramref name="another"/> value of <see cref="Complex{T}"/>
-		/// </summary>
-		/// <param name="another">another value to be multiplied</param>
-		/// <returns>The multiplication result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Multiply(Complex<T> another) => this * another;
-
-		/// <summary>
-		/// Out-of-place divide <paramref name="another"/> value of <see cref="Complex{T}"/>
-		/// </summary>
-		/// <param name="another">another value to be divided</param>
-		/// <returns>The division result</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Complex<T> Divide(Complex<T> another) => this / another;
+		public static Complex<T> Sqrt(Complex<T> number) => (Complex<T>)ComplexDouble.Sqrt((ComplexDouble)number);
 		#endregion
 
 		#region string representation

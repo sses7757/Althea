@@ -5,7 +5,6 @@ using Althea.LinearAlgebra;
 using Althea.NativeTypes;
 
 
-#pragma warning disable IDE1006
 namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 {
 	/// <summary>

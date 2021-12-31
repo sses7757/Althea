@@ -289,51 +289,20 @@ namespace Althea.NativeTypes
 
 	#region custom native type interface
 	/// <summary>
-	/// The interface for custom native types such as <c>long double</c> in C++ on some platforms.
+	/// The interface for custom native types.
 	/// </summary>
-	/// <typeparam name="T">The type of actual struct that implement this interface</typeparam>
-	public interface ICustomNativeType<T> : IFormattable where T : unmanaged, ICustomNativeType<T>
+	/// <typeparam name="TSelf">The type of actual struct that implement this interface</typeparam>
+	public interface ICustomNativeType<TSelf> where TSelf : ICustomNativeType<TSelf>
 	{
 		/// <summary>
-		/// A in-fact <b>static</b> method to be implemented to parse a string <paramref name="str"/> to <typeparamref name="T"/>
+		/// Statically get the <see cref="DataTypeClassification"/> of <typeparamref name="TSelf"/>
 		/// </summary>
-		/// <param name="str">The <see cref="string"/> to be parsed</param>
-		/// <param name="result">The output result of type <typeparamref name="T"/></param>
-		/// <returns>success or not</returns>
-		protected bool TryParse_Internal(string str, out T result);
+		abstract static DataTypeClassification Classification { get; }
 
 		/// <summary>
-		/// A static method to be implemented to parse a string <paramref name="str"/> to <typeparamref name="T"/>
+		/// Statically get the machine precision of <typeparamref name="TSelf"/>
 		/// </summary>
-		/// <param name="str">The <see cref="string"/> to be parsed</param>
-		/// <returns>the output result of type <typeparamref name="T"/>, null means unsuccessful parse</returns>
-		public static T? TryParse(string str)
-		{
-			bool success = default(T).TryParse_Internal(str, out T result);
-			return success ? result : null;
-		}
-
-		/// <summary>
-		/// A in-fact <b>static</b> method to be implemented to indicate whether this type is a floating point type or a integral type
-		/// </summary>
-		/// <returns>The <see cref="DataTypeClassification"/> of <typeparamref name="T"/></returns>
-		protected DataTypeClassification Classification_Internal();
-
-		/// <summary>
-		/// The <see cref="DataTypeClassification"/> of <typeparamref name="T"/>
-		/// </summary>
-		public static DataTypeClassification Classification => default(T).Classification_Internal();
-
-		/// <summary>
-		/// A in-fact <b>static</b> method to be implemented to get the machine precision of this type
-		/// </summary>
-		/// <returns>The machine precision of <typeparamref name="T"/></returns>
-		protected double MachinePrecision_Internal();
-
-		/// <summary>
-		/// The machine precision of <typeparamref name="T"/>
-		/// </summary>
-		public static double MachinePrecision => default(T).MachinePrecision_Internal();
+		abstract static double MachinePrecision { get; }
 	}
 	#endregion
 

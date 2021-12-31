@@ -45,7 +45,7 @@ namespace Althea.Backend.CSharp.Solver
 			{
 				double re = value.NativeRealPart();
 				double im = value.NativeImagPart();
-				// check whether the imaginary is small enough (the absolute value is not affected by it)
+				// check whether the imaginary is small enough (the absolute value equals to the real part in machine precision)
 				if (Math.Abs(im / re) > Const<T>.MachinePrecisionHalf)
 					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
 				return re;
