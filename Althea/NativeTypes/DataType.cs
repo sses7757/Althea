@@ -302,7 +302,6 @@ namespace Althea.NativeTypes
 		/// <param name="type">The <see cref="Type"/> to be converted</param>
 		/// <returns>The corresponding <see cref="DataType"/> of  <paramref name="type"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="type"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType ToDataType(this Type type)
 		{
 			object? v;
@@ -330,37 +329,38 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The generic type to get its <see cref="DataType"/></typeparam>
 		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static DataType ToDataType<T>() where T : unmanaged
+		public static unsafe DataType ToDataType<T>() where T : unmanaged, INumber<T>
 		{
 			return default(T) switch
 			{
 				// built-in float types
+				Half => DataType.RealHalf,
 				float => DataType.RealSingle,
 				double => DataType.RealDouble,
 				// built-in integer types
-				int => DataType.RealInt32,
-				long => DataType.RealInt64,
 				sbyte => DataType.RealInt8,
 				short => DataType.RealInt16,
-				uint => DataType.RealUInt32,
-				ulong => DataType.RealUInt64,
+				int => DataType.RealInt32,
+				long => DataType.RealInt64,
 				byte => DataType.RealUInt8,
 				ushort => DataType.RealUInt16,
+				uint => DataType.RealUInt32,
+				ulong => DataType.RealUInt64,
 				// complex types
+				Complex<Half> => DataType.ComplexHalf,
 				Complex<float> => DataType.ComplexSingle,
 				Complex<double> => DataType.ComplexDouble,
-				Complex<sbyte> => DataType.ComplexInt8,
-				Complex<short> => DataType.ComplexInt16,
-				Complex<int> => DataType.ComplexInt32,
-				Complex<long> => DataType.ComplexInt64,
-				Complex<byte> => DataType.ComplexUInt8,
-				Complex<ushort> => DataType.ComplexUInt16,
-				Complex<uint> => DataType.ComplexUInt32,
-				Complex<ulong> => DataType.ComplexUInt64,
+				ComplexInteger<sbyte> => DataType.ComplexInt8,
+				ComplexInteger<short> => DataType.ComplexInt16,
+				ComplexInteger<int> => DataType.ComplexInt32,
+				ComplexInteger<long> => DataType.ComplexInt64,
+				ComplexInteger<byte> => DataType.ComplexUInt8,
+				ComplexInteger<ushort> => DataType.ComplexUInt16,
+				ComplexInteger<uint> => DataType.ComplexUInt32,
+				ComplexInteger<ulong> => DataType.ComplexUInt64,
 				// otherwise
-				_ => !Cacher<T>.IsSupported || Cacher<T>.IsComplex is null ? throw new NotSupportedException(Resources.Support.DataType)
-						: MakeDataType(Cacher<T>.IsComplex.Value, Cacher<T>.Classification, Const<T>.SizeT),
+				_ => NativeType<T>.Classification == 0 ? throw new NotSupportedException(Resources.Support.DataType) : 
+					MakeDataType(NativeType<T>.IsComplex, NativeType<T>.Classification, NativeType<T>.Size),
 			};
 		}
 		#endregion
