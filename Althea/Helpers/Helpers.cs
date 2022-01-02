@@ -590,7 +590,7 @@ namespace Althea.Helpers
 			if (precision <= 0)
 				precision = Settings.PrintPrecision;
 
-			ReadOnlySpan<char> pre = prefix, pos = postfix ?? string.Empty + Environment.NewLine;
+			ReadOnlySpan<char> pre = prefix, pos = (postfix ?? string.Empty) + Environment.NewLine;
 			int maxLength = input.Length * (precision + 8 + pre.Length + pos.Length);
 			char[] chars = new char[maxLength];
 			Span<char> str = chars;
@@ -646,7 +646,7 @@ namespace Althea.Helpers
 			if (values.IsEmpty)
 				return string.Empty;
 
-			ReadOnlySpan<char> pre = prefix, pos = postfix ?? string.Empty + Environment.NewLine, mid = " -> ";
+			ReadOnlySpan<char> pre = prefix, pos = (postfix ?? string.Empty) + Environment.NewLine, mid = " -> ";
 			int maxLength = values.Length * (precision + 8 + pre.Length + pos.Length + mid.Length);
 			char[] chars = new char[maxLength];
 			Span<char> str = chars;
@@ -674,13 +674,15 @@ namespace Althea.Helpers
 		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+		/// <exception cref="FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
-			return ToMatrixString((ReadOnlySpan<T>)matrix, rows, more, precision, prefix, postfix);
+			return ToMatrixString((ReadOnlySpan<T>)matrix, rows, more, precision, prefix, postfix, provider);
 		}
 
 		/// <summary>
@@ -693,11 +695,13 @@ namespace Althea.Helpers
 		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+		/// <exception cref="FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this ReadOnlySpan<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToMatrixString<T>(this ReadOnlySpan<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
 			if (matrix.IsEmpty)
 				return string.Empty;
@@ -707,54 +711,63 @@ namespace Althea.Helpers
 				throw new ArgumentException(Other.CannotDivide);
 
 			int cols = matrix.Length / rows;
-			string format = GetFormatString(ref precision);
-			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
 			string moreStr = more > 0 ? string.Format("  " + Print.RowMore, more) : "  ";
-			StringBuilder sb = new();
+			ReadOnlySpan<char> pre = prefix, pos = (postfix ?? string.Empty) + moreStr + Environment.NewLine;
+			int maxLength = matrix.Length * (precision + 8) + rows * (pre.Length + pos.Length);
+			char[] chars = new char[maxLength];
+			Span<char> str = chars;
 			for (int i = 0; i < rows; i++)
 			{
-				sb.Append(prefix);
+				pre.CopyTo(str); str = str[pre.Length..];
 				for (int j = 0; j < cols; j++)
 				{
-					sb.Append(toStringFunc.Invoke(matrix[i + j * rows], format, precision));
+					if (!GetNumberString(matrix[i + j * rows], str, out int numberStrWidth, provider, precision))
+						throw new FormatException(Support.Format);
+					str = str[numberStrWidth..];
 				}
-				sb.Append(moreStr).AppendLine(postfix);
+				pos.CopyTo(str); str = str[pos.Length..];
 			}
-			return sb.ToString();
+			return new(new ReadOnlySpan<char>(chars, 0, maxLength - str.Length));
 		}
 
 		/// <summary>
 		/// Print out 2D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">The supported data type</typeparam>
+		/// <typeparam name="TVal">The supported data type</typeparam>
+		/// <typeparam name="TInd">The supported index type</typeparam>
 		/// <param name="values">The values of the sparse matrix to print</param>
 		/// <param name="indx">The row indices of the sparse matrix to print</param>
 		/// <param name="indy">The column indices of the sparse matrix to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+		/// <exception cref="FormatException">If any value in <paramref name="values"/> or <paramref name="indx"/> or <paramref name="indy"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseMatrixString<T>(this Span<T> values, ReadOnlySpan<long> indx, ReadOnlySpan<long> indy, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToSparseMatrixString<TVal, TInd>(this Span<TVal> values, ReadOnlySpan<TInd> indx, ReadOnlySpan<TInd> indy, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where TVal : ISpanFormattable, IAdditiveIdentity<TVal, TVal>, IEquatable<TVal> where TInd : ISpanFormattable
 		{
-			return ToSparseMatrixString((ReadOnlySpan<T>)values, indx, indy, precision, prefix, postfix);
+			return ToSparseMatrixString((ReadOnlySpan<TVal>)values, indx, indy, precision, prefix, postfix, provider);
 		}
 
 		/// <summary>
 		/// Print out 2D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">The supported data type</typeparam>
+		/// <typeparam name="TVal">The supported data type</typeparam>
+		/// <typeparam name="TInd">The supported index type</typeparam>
 		/// <param name="values">The values of the sparse matrix to print</param>
 		/// <param name="indx">The row indices of the sparse matrix to print</param>
 		/// <param name="indy">The column indices of the sparse matrix to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+		/// <exception cref="FormatException">If any value in <paramref name="values"/> or <paramref name="indx"/> or <paramref name="indy"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseMatrixString<T>(this ReadOnlySpan<T> values, ReadOnlySpan<long> indx, ReadOnlySpan<long> indy, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToSparseMatrixString<TVal, TInd>(this ReadOnlySpan<TVal> values, ReadOnlySpan<TInd> indx, ReadOnlySpan<TInd> indy, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where TVal : ISpanFormattable, IAdditiveIdentity<TVal, TVal>, IEquatable<TVal> where TInd : ISpanFormattable
 		{
 			if (values.Length != indx.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
@@ -763,15 +776,27 @@ namespace Althea.Helpers
 			if (values.IsEmpty)
 				return string.Empty;
 
-			string format = GetFormatString(ref precision);
-			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
-			StringBuilder sb = new();
+			ReadOnlySpan<char> pre = prefix, pos = (postfix ?? string.Empty) + Environment.NewLine, mid = ") -> ", com = ", ";
+			int maxLength = values.Length * (precision + 8 + pre.Length + pos.Length + mid.Length);
+			char[] chars = new char[maxLength];
+			Span<char> str = chars;
 			for (int i = 0; i < values.Length; i++)
 			{
-				sb.Append(prefix).Append('(').Append(indx[i]).Append(", ").Append(indy[i]).Append(") -> ")
-				  .Append(toStringFunc.Invoke(values[i], format, precision)).AppendLine(postfix);
+				pre.CopyTo(str); str = str[pre.Length..];
+				str[0] = '('; str = str[1..];
+				if (!GetIntegerString(indx[i], str, out int numberStrWidth, provider))
+					throw new FormatException(Support.Format);
+				str = str[numberStrWidth..];
+				com.CopyTo(str); str = str[com.Length..];
+				if (!GetIntegerString(indy[i], str, out numberStrWidth, provider))
+					throw new FormatException(Support.Format);
+				str = str[numberStrWidth..];
+				mid.CopyTo(str); str = str[mid.Length..];
+				if (!GetNumberString(values[i], str, out numberStrWidth, provider, precision))
+					throw new FormatException(Support.Format);
+				pos.CopyTo(str); str = str[pos.Length..];
 			}
-			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
+			return new(new ReadOnlySpan<char>(chars, 0, maxLength - str.Length));
 		}
 		#endregion
 
@@ -828,193 +853,6 @@ namespace Althea.Helpers
 		}
 		#endregion
 
-		#region inner product related
-		/// <summary>
-		/// Perform generic typed inner product of two matrices <paramref name="left"/> and <paramref name="right"/>
-		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="m">number of rows of <paramref name="transLeft"/>(<paramref name="left"/>)</param>
-		/// <param name="n">number of columns of <paramref name="transRight"/>(<paramref name="right"/>)</param>
-		/// <param name="k">number of columns of <paramref name="transLeft"/>(<paramref name="left"/>) and rows of <paramref name="transRight"/>(<paramref name="right"/>)</param>
-		/// <param name="left">The left matrix as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <param name="right">The right matrix as a <see cref="ReadOnlySpan{T}"/></param>
-		/// <param name="transLeft">Transpose <paramref name="left"/> matrix or not</param>
-		/// <param name="transRight">Transpose <paramref name="right"/> matrix or not</param>
-		/// <returns>The result matrix as a <c><typeparamref name="T"/>[]</c></returns>
-		public static T[] MatrixMultiply<T>(int m, int n, int k, ReadOnlySpan<T> left, ReadOnlySpan<T> right, bool transLeft = false, bool transRight = false) where T : unmanaged
-		{
-			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m), m, Parameter.MustPositive);
-			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), n, Parameter.MustPositive);
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
-			if (left.IsEmpty) throw new ArgumentNullException(nameof(left));
-			if (right.IsEmpty) throw new ArgumentNullException(nameof(right));
-			if (left.Length <= m * k) throw new ArgumentException(Parameter.WrongSize, nameof(left));
-			if (right.Length <= n * k) throw new ArgumentException(Parameter.WrongSize, nameof(right));
-
-			var output = new T[m * n];
-			if (transLeft && transRight)
-			{
-				for (int i = 0; i < m; i++)
-				{
-					for (int j = 0; j < n; j++)
-					{
-						for (int t = 0; t < k; t++)
-						{
-							output[i + j * m] = left[t + i * k].NativeMultiply(right[j + t * n]);
-						}
-					}
-				}
-			}
-			else if (transLeft && !transRight)
-			{
-				for (int i = 0; i < m; i++)
-				{
-					for (int j = 0; j < n; j++)
-					{
-						for (int t = 0; t < k; t++)
-						{
-							output[i + j * m] = left[t + i * k].NativeMultiply(right[t + j * k]);
-						}
-					}
-				}
-			}
-			else if (!transLeft && transRight)
-			{
-				for (int i = 0; i < m; i++)
-				{
-					for (int j = 0; j < n; j++)
-					{
-						for (int t = 0; t < k; t++)
-						{
-							output[i + j * m] = left[i + t * m].NativeMultiply(right[j + t * n]);
-						}
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < m; i++)
-				{
-					for (int j = 0; j < n; j++)
-					{
-						for (int t = 0; t < k; t++)
-						{
-							output[i + j * m] = left[i + t * m].NativeMultiply(right[t + j * k]);
-						}
-					}
-				}
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// Perform general inner product of two matrices <paramref name="left"/> and <paramref name="right"/> with <paramref name="multiply"/> as general multiplication
-		/// </summary>
-		/// <typeparam name="TL">The left matrix's data type</typeparam>
-		/// <typeparam name="TR">The right matrix's data type</typeparam>
-		/// <typeparam name="TO">The output matrix's data type</typeparam>
-		/// <param name="m">number of rows of <paramref name="left"/></param>
-		/// <param name="n">number of columns of <paramref name="right"/></param>
-		/// <param name="k">number of columns of <paramref name="left"/> and rows of <paramref name="right"/></param>
-		/// <param name="left">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
-		/// <param name="right">right matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TR"/></param>
-		/// <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-		/// <param name="newZero">The function used to create a new output element with value of a general zero</param>
-		/// <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[]</c></returns>
-		public static TO[] InnerProduct<TL, TR, TO>(int m, int n, int k, Func<int, int, TL> left, Func<int, int, TR> right, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
-		{
-			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m), m, Parameter.MustPositive);
-			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), n, Parameter.MustPositive);
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
-			if (left is null) throw new ArgumentNullException(nameof(left));
-			if (right is null) throw new ArgumentNullException(nameof(right));
-			if (multiply is null) throw new ArgumentNullException(nameof(multiply));
-
-			var output = new TO[m * n];
-			for (int i = 0; i < m; i++)
-			{
-				for (int j = 0; j < n; j++)
-				{
-					output[i + j * m] = newZero();
-					for (int t = 0; t < k; t++)
-					{
-						inPlaceAdd(output[i + j * m], multiply(left(i, t), right(t, j)));
-					}
-				}
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// Perform general inner product of a matrix <paramref name="leftMat"/> and a vector <paramref name="rightVec"/> with <paramref name="multiply"/> as general multiplication
-		/// </summary>
-		/// <typeparam name="TL">The left matrix's data type</typeparam>
-		/// <typeparam name="TR">The right matrix's data type</typeparam>
-		/// <typeparam name="TO">The output matrix's data type</typeparam>
-		/// <param name="m">number of rows of <paramref name="leftMat"/></param>
-		/// <param name="k">number of columns of <paramref name="leftMat"/> and rows of <paramref name="rightVec"/></param>
-		/// <param name="leftMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
-		/// <param name="rightVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
-		/// <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-		/// <param name="newZero">The function used to create a new output element with value of a general zero</param>
-		/// <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
-		public static TO[] InnerProduct<TL, TR, TO>(int m, int k, Func<int, int, TL> leftMat, Func<int, TR> rightVec, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
-		{
-			if (m <= 0) throw new ArgumentOutOfRangeException(nameof(m), m, Parameter.MustPositive);
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
-			if (leftMat is null) throw new ArgumentNullException(nameof(leftMat));
-			if (rightVec is null) throw new ArgumentNullException(nameof(rightVec));
-			if (multiply is null) throw new ArgumentNullException(nameof(multiply));
-
-			var output = new TO[m];
-			for (int i = 0; i < m; i++)
-			{
-				output[i] = newZero();
-				for (int t = 0; t < k; t++)
-				{
-					inPlaceAdd(output[i], multiply(leftMat(i, t), rightVec(t)));
-				}
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// Perform general inner product of a vector <paramref name="leftVec"/> and a matrix <paramref name="rightMat"/> with <paramref name="multiply"/> as general multiplication
-		/// </summary>
-		/// <typeparam name="TL">The left matrix's data type</typeparam>
-		/// <typeparam name="TR">The right matrix's data type</typeparam>
-		/// <typeparam name="TO">The output matrix's data type</typeparam>
-		/// <param name="n">number of columns of <paramref name="leftVec"/> and rows of <paramref name="rightMat"/></param>
-		/// <param name="k">number of columns of <paramref name="rightMat"/></param>
-		/// <param name="rightMat">left matrix as an function whose inputs are (<c>x</c> coordinate, <c>y</c> coordinate) and output is a <typeparamref name="TL"/></param>
-		/// <param name="leftVec">right vector as an function whose input is the index <c>i</c> and output is a <typeparamref name="TR"/></param>
-		/// <param name="multiply">general multiply function whose inputs are two elements with type <typeparamref name="TL"/> &amp; <typeparamref name="TR"/> and output is a <typeparamref name="TO"/></param>
-		/// <param name="newZero">The function used to create a new output element with value of a general zero</param>
-		/// <param name="inPlaceAdd">The function used to in-place add the first parameter by the second one</param>
-		/// <returns>the result matrix as a <c><typeparamref name="TO"/>[,]</c></returns>
-		public static TO[] InnerProduct<TL, TR, TO>(int n, int k, Func<int, TL> leftVec, Func<int, int, TR> rightMat, Func<TL, TR, TO> multiply, Func<TO> newZero, Action<TO, TO> inPlaceAdd)
-		{
-			if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), n, Parameter.MustPositive);
-			if (k <= 0) throw new ArgumentOutOfRangeException(nameof(k), k, Parameter.MustPositive);
-			if (rightMat is null) throw new ArgumentNullException(nameof(rightMat));
-			if (leftVec is null) throw new ArgumentNullException(nameof(leftVec));
-			if (multiply is null) throw new ArgumentNullException(nameof(multiply));
-
-			var output = new TO[k];
-			for (int i = 0; i < k; i++)
-			{
-				output[i] = newZero();
-				for (int t = 0; t < n; t++)
-				{
-					inPlaceAdd(output[i], multiply(leftVec(t), rightMat(t, i)));
-				}
-			}
-			return output;
-		}
-		#endregion
-
 		#region index and range related
 		/// <summary>
 		/// Calculate the offset from the start using the giving collection length.
@@ -1061,137 +899,6 @@ namespace Althea.Helpers
 			if (check && (end <= start || start >= length || end < 0 || end > length))
 				throw new ArgumentOutOfRangeException(nameof(range), range, Parameter.InvalidValue);
 			return (start, end - start);
-		}
-		#endregion
-
-		#region 1D to 2D array extends
-		/// <summary>
-		/// Convert a 1D array to a 2D jagged array
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="array">The array to convert</param>
-		/// <param name="innerSize">The size of inner dimension of the 2D jagged array</param>
-		/// <returns>the 2D jagged array</returns>
-		public static T[][] ToJagged<T>(this T[] array, long innerSize)
-		{
-			if (array is null || array.Length == 0)
-				throw new ArgumentNullException(nameof(array));
-			if (array.Length % innerSize != 0)
-				throw new ArgumentOutOfRangeException(nameof(array), array, nameof(array.Length));
-
-			var output = new T[array.Length / innerSize][];
-			for (int i = 0; i < array.Length / innerSize; i++)
-			{
-				output[i] = new T[innerSize];
-				for (int j = 0; j < innerSize; j++)
-				{
-					output[i][j] = array[j + i * innerSize];
-				}
-			}
-			return output;
-		}
-
-		/// <summary>
-		/// Construct a new 2D array out of a 1D array, column major
-		/// </summary>
-		/// <typeparam name="T">any data type</typeparam>
-		/// <returns>a 2D array T[,]</returns>
-		/// <param name="input">input 1D array</param>
-		/// <param name="rows">height (number of rows) of the new 2D array</param>
-		/// <param name="columns">width (number of columns) of the new 2D array</param>
-		public static T[,] Make2DArray<T>(this T[] input, long rows, long columns)
-		{
-			if (input is null)
-				throw new ArgumentNullException(nameof(input));
-			T[,] output = new T[rows, columns];
-			for (long i = 0; i < columns; i++)
-				for (long j = 0; j < rows; j++)
-					output[j, i] = input[i * rows + j];
-
-			return output;
-		}
-		#endregion
-
-		#region 2D array extends
-		/// <summary>
-		/// Get the number of rows and columns of the 2D array.
-		/// </summary>
-		/// <typeparam name="T">any type</typeparam>
-		/// <param name="arr">2D array</param>
-		/// <returns>the number of rows and columns</returns>
-		public static (int rows, int columns) GetRowColumns<T>(this T[,] arr)
-		{
-			if (arr is null)
-				throw new ArgumentNullException(nameof(arr));
-			return (arr.GetLength(0), arr.GetLength(1));
-		}
-
-		/// <summary>
-		/// Take out the 2D array column by column.
-		/// </summary>
-		/// <param name="arr">input array</param>
-		/// <returns>the result 1D array</returns>
-		/// <typeparam name="T">any data type</typeparam>
-		public static T[] ColumnTake<T>(this T[,] arr)
-		{
-			if (arr is null)
-				throw new ArgumentNullException(nameof(arr));
-
-			var (rows, columns) = arr.GetRowColumns();
-			T[] oneDim = new T[rows * columns];
-			for (long j = 0; j < columns; j++)
-				for (long i = 0; i < rows; i++)
-					oneDim[i + j * rows] = arr[i, j];
-			return oneDim;
-		}
-
-		/// <summary>
-		/// Act on each element of a 2D array.
-		/// </summary>
-		/// <typeparam name="T">input array type</typeparam>
-		/// <param name="arr">input 2D array</param>
-		/// <param name="action">action function, parameter 2 &amp; 3 are row &amp; column indices respectively</param>
-		public static void ForEach<T>(this T[,] arr, Action<T, int, int> action)
-		{
-			if (arr is null)
-				throw new ArgumentNullException(nameof(arr));
-
-			var (rows, cols) = arr.GetRowColumns();
-			for (int i = 0; i < rows; i++)
-				for (int j = 0; j < cols; j++)
-					action(arr[i, j], i, j);
-		}
-
-		/// <summary>
-		/// Check if the 2D array is Hermitian or not
-		/// </summary>
-		/// <param name="arr">input 2D array to test</param>
-		/// <returns>Hermitian or not</returns>
-		/// <typeparam name="T">The supported data type</typeparam>
-		public static bool IsHermitian<T>(this T[,] arr) where T : unmanaged, IFormattable, IEquatable<T>
-		{
-			if (arr is null)
-				throw new ArgumentNullException(nameof(arr));
-
-			var (rows, cols) = arr.GetRowColumns();
-			if (rows != cols)
-				return false;
-
-			if (Const<T>.IsComplex)
-			{
-				for (long i = 0; i < rows; i++)
-					for (long j = 0; j < i; j++)
-						if (!arr[i, j].Equals(arr[j, i].NativeConjugate()))
-							return false;
-			}
-			else
-			{
-				for (long i = 0; i < rows; i++)
-					for (long j = 0; j < i; j++)
-						if (arr[i, j].Equals(arr[j, i]))
-							return false;
-			}
-			return true;
 		}
 		#endregion
 

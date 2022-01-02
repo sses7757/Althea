@@ -186,8 +186,8 @@ namespace Althea.Helpers
 			// otherwise
 			T value = this._span[index];
 			// allocate temp
-			var heapArray = this._size.CheckStackLimit<T>(out int sizeT);
-			var tmpPtr = stackalloc byte[heapArray is null ? 0 : sizeT * this._size];
+			var heapArray = this._size.CheckStackLimit<T>();
+			var tmpPtr = stackalloc byte[heapArray is null ? 0 : Unsafe.SizeOf<T>() * this._size];
 			Span<T> temp = heapArray ?? new Span<T>(tmpPtr, this._size);
 			// copy
 			if (index > 0)

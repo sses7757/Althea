@@ -9,50 +9,35 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The structure for print settings
 	/// </summary>
-	public readonly struct PrintSettings
+	public record struct PrintSettings
 	{
 		/// <summary>
 		/// The print precision
 		/// </summary>
-		public readonly int Precision;
+		public int Precision { get; internal set; }
 		/// <summary>
 		/// The maximum lines of vectors to print
 		/// </summary>
-		public readonly int ArrayLength;
+		public int ArrayLength { get; internal set; }
 		/// <summary>
 		/// The maximum rows of matrices to print
 		/// </summary>
-		public readonly int MatrixRow;
+		public int MatrixRow { get; internal set; }
 		/// <summary>
 		/// The maximum columns of matrices to print
 		/// </summary>
-		public readonly int MatrixColumn;
+		public int MatrixColumn { get; internal set; }
 		/// <summary>
 		/// Whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
 		/// </summary>
-		public readonly bool MatrixFormTensor;
-
-		internal PrintSettings(bool _)
-		{
-			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5; MatrixFormTensor = false;
-		}
+		public bool MatrixFormTensor { get; internal set; }
 
 		/// <summary>
-		/// Create a new <see cref="PrintSettings"/> with previous settings. The non-positive new value(s) are inherited from <paramref name="previousSettings"/>
+		/// Create a <see cref="PrintSettings"/> with default settings
 		/// </summary>
-		public PrintSettings(PrintSettings previousSettings, int precision = 0, int arrayLength = 0, int matrixRow = 0, int matrixColumn = 0, bool? matrixFormTensor = null)
+		public PrintSettings()
 		{
-			Precision = precision > 0 ? precision : previousSettings.Precision;
-			ArrayLength = arrayLength > 0 ? arrayLength : previousSettings.ArrayLength;
-			MatrixRow = matrixRow > 0 ? matrixRow : previousSettings.MatrixRow;
-			MatrixColumn = matrixColumn > 0 ? matrixColumn : previousSettings.MatrixColumn;
-			MatrixFormTensor = matrixFormTensor ?? previousSettings.MatrixFormTensor;
-		}
-
-		[JsonConstructor]
-		internal PrintSettings(int precision, int arrayLength, int matrixRow, int matrixColumn, bool matrixFormTensor)
-		{
-			Precision = precision; ArrayLength = arrayLength; MatrixRow = matrixRow; MatrixColumn = matrixColumn; MatrixFormTensor = matrixFormTensor;
+			Precision = 8; ArrayLength = 40; MatrixRow = 20; MatrixColumn = 5; MatrixFormTensor = false;
 		}
 	}
 	#endregion
@@ -64,7 +49,7 @@ namespace Althea.Helpers
 	public static partial class Settings
 	{
 		#region class for settings
-		internal record ImplementationSettings
+		internal record struct ImplementationSettings
 		{
 			public bool DisposeNotCurrentImplementation { get; set; }
 
@@ -75,6 +60,9 @@ namespace Althea.Helpers
 			public TensorAlgebra.Sparse.AbstractApi? TensorAlgebraSparse { get; set; }
 			public Random.AbstractApi? Random { get; set; }
 			public Solver.AbstractApi? Solver { get; set; }
+
+			public ImplementationSettings() : this(GetInternalBackend("CSharp"))
+			{ }
 
 			internal ImplementationSettings(ISetBackend impls)
 			{
@@ -140,41 +128,20 @@ namespace Althea.Helpers
 		internal record JsonSettings
 		{
 			public LogSettings LogSettings { get; set; }
-
 			public PrintSettings PrintSettings { get; set; }
-
 			public ImplementationSettings ImplementationSettings { get; set; }
-
 			public int StackAllocLimit { get; set; }
 
-			internal JsonSettings()
+			public JsonSettings()
 			{
-				LogSettings = new LogSettings();
-				PrintSettings = new PrintSettings(false);
-				ImplementationSettings = new ImplementationSettings(GetInternalBackend("CSharp"));
-				StackAllocLimit = 32768; // 32 KiB
-			}
-
-			[JsonConstructor]
-			internal JsonSettings(LogSettings logSettings, PrintSettings printSettings, ImplementationSettings implementationSettings, int stackAllocLimit)
-			{
-				LogSettings = logSettings;
-				PrintSettings = printSettings;
-				ImplementationSettings = implementationSettings;
-				StackAllocLimit = stackAllocLimit;
+				this.LogSettings = new();
+				this.PrintSettings = new();
+				this.ImplementationSettings = new();
+				this.StackAllocLimit = 32 * 1024;
 			}
 		}
 
-		private static JsonSettings singletonSetting;
-
-		[ThreadStatic]
-		internal static JsonSettings settings;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void UpdateSingletonSetting()
-		{
-			singletonSetting = settings;
-		}
+		internal static volatile JsonSettings settings;
 		#endregion
 
 		#region print settings
@@ -183,10 +150,7 @@ namespace Althea.Helpers
 		/// </summary>
 		public static PrintSettings PrintSetting {
 			get => settings.PrintSettings;
-			set {
-				settings.PrintSettings = value;
-				UpdateSingletonSetting();
-			}
+			set => settings.PrintSettings = value;
 		}
 
 		/// <summary>
@@ -194,51 +158,36 @@ namespace Althea.Helpers
 		/// </summary>
 		public static int PrintPrecision {
 			get => settings.PrintSettings.Precision;
-			set { 
-				settings.PrintSettings = new PrintSettings(settings.PrintSettings, precision: value);
-				UpdateSingletonSetting();
-			}
-}
+			set => settings.PrintSettings = settings.PrintSettings with { Precision = value};
+		}
 
 		/// <summary>
 		/// Get and set the maximum number of lines of printed vectors and sparse matrices
 		/// </summary>
 		public static int PrintArrayLength {
 			get => settings.PrintSettings.ArrayLength;
-			set {
-				settings.PrintSettings = new PrintSettings(settings.PrintSettings, arrayLength: value);
-				UpdateSingletonSetting();
-			}
+			set => settings.PrintSettings = settings.PrintSettings with { ArrayLength = value };
 		}
 		/// <summary>
 		/// Get and set the maximum number of rows of printed matrices
 		/// </summary>
 		public static int PrintMatrixRow {
 			get => settings.PrintSettings.MatrixRow;
-			set {
-				settings.PrintSettings = new PrintSettings(settings.PrintSettings, matrixRow: value);
-				UpdateSingletonSetting();
-			}
+			set => settings.PrintSettings = settings.PrintSettings with { MatrixRow = value };
 		}
 		/// <summary>
 		/// Get and set the maximum number of columns of printed matrices
 		/// </summary>
 		public static int PrintMatrixColumn {
 			get => settings.PrintSettings.MatrixColumn;
-			set {
-				settings.PrintSettings = new PrintSettings(settings.PrintSettings, matrixColumn: value);
-				UpdateSingletonSetting();
-			}
+			set => settings.PrintSettings = settings.PrintSettings with { MatrixColumn = value };
 		}
 		/// <summary>
 		/// Get and set whether to print tensor as embedded matrices (like MATHEMATICA) or a list of matrices (like MATLAB)
 		/// </summary>
 		public static bool PrintTensorAsEmbeddedMatrices {
 			get => settings.PrintSettings.MatrixFormTensor;
-			set {
-				settings.PrintSettings = new PrintSettings(settings.PrintSettings, matrixFormTensor: value);
-				UpdateSingletonSetting();
-			}
+			set => settings.PrintSettings = settings.PrintSettings with { MatrixFormTensor = value };
 		}
 		#endregion
 
@@ -249,10 +198,7 @@ namespace Althea.Helpers
 		/// </summary>
 		public static int StackAllocLimit {
 			get => settings.StackAllocLimit;
-			set {
-				settings.StackAllocLimit = value;
-				UpdateSingletonSetting();
-			}
+			set => settings.StackAllocLimit = value;
 		}
 		#endregion
 
@@ -264,10 +210,7 @@ namespace Althea.Helpers
 		/// </summary>
 		public static bool DisposeNotCurrentImplementation {
 			get => settings.ImplementationSettings.DisposeNotCurrentImplementation;
-			set {
-				settings.ImplementationSettings.DisposeNotCurrentImplementation = value;
-				UpdateSingletonSetting();
-			}
+			set => settings.ImplementationSettings = settings.ImplementationSettings with { DisposeNotCurrentImplementation = value };
 		}
 
 		private static bool CheckAllBackend(ISetBackend backend)
@@ -363,23 +306,14 @@ namespace Althea.Helpers
 
 		static Settings()
 		{
-			if (singletonSetting is null)
-			{
-				// set default implementations
-				settings = new();
-				// CUDA implementations
-				SetBackend(GetInternalBackend(@"Cuda"));
-				// MKL implementations, the real default implementation
-				SetBackend(GetInternalBackend(@"Mkl"));
-				// import at last
-				Import(logError: true);
-				// set thread shared
-				singletonSetting = settings;
-			}
-			else
-			{
-				settings = singletonSetting;
-			}
+			// set default implementations
+			settings = new();
+			// CUDA implementations
+			SetBackend(GetInternalBackend(@"Cuda"));
+			// MKL implementations, the real default implementation
+			SetBackend(GetInternalBackend(@"Mkl"));
+			// import at last
+			Import(logError: true);
 		}
 
 		/// <summary>
@@ -448,24 +382,6 @@ namespace Althea.Helpers
 		public static T[]? CheckStackLimit<T>(this int length) where T : notnull
 		{
 			if (length * Unsafe.SizeOf<T>() > StackAllocLimit)
-				return new T[length];
-			else
-				return null;
-		}
-
-		/// <summary>
-		/// Check whether the given <paramref name="length"/> and an unmanaged type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> or not.<br/>
-		/// If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
-		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="length">The desired length to allocate</param>
-		/// <param name="sizeT">Output the size of <typeparamref name="T"/> (always the size of <see cref="IntPtr"/> when <typeparamref name="T"/> is a reference type)</param>
-		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T[]? CheckStackLimit<T>(this int length, out int sizeT) where T : notnull
-		{
-			sizeT = Unsafe.SizeOf<T>();
-			if (length * sizeT > StackAllocLimit)
 				return new T[length];
 			else
 				return null;

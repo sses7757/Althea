@@ -137,6 +137,12 @@ namespace Althea.NativeTypes
 				return size.Value;
 			}
 		}
+
+		/// <summary>
+		/// Get the <see cref="NativeTypes.DataType"/> of <typeparamref name="T"/>.
+		/// </summary>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		public static DataType DataType => DataTypeExtension.ToDataType<T>();
 	}
 	#endregion
 }

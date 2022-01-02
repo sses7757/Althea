@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 
 namespace Althea.NativeTypes
@@ -329,7 +328,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The generic type to get its <see cref="DataType"/></typeparam>
 		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		public static unsafe DataType ToDataType<T>() where T : unmanaged, INumber<T>
+		internal static unsafe DataType ToDataType<T>() where T : INumber<T>
 		{
 			return default(T) switch
 			{

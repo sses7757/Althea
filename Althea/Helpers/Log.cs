@@ -36,36 +36,35 @@ namespace Althea.Helpers
 	}
 
 	// for JSON serialization
-	internal record LogSettings
+	internal record struct LogSettings
 	{
 		public bool Suppress { get; set; }
 		public int BufferSize { get; set; }
 		public int WrapLimit { get; set; }
 		public string Path { get; set; }
-
 		public LogLevel PrintLevels { get; set; }
 		public LogLevel BufferLevels { get; set; }
 
-		internal LogSettings()
+		public LogSettings()
 		{
-			Suppress = false; BufferSize = 1024; WrapLimit = 125; Path = "Althea.log";
-			PrintLevels = LogLevel.Error | LogLevel.Warning;
-			BufferLevels = LogLevel.Trace | LogLevel.Debug;
+			this.Suppress = false; this.BufferSize = 1024; this.WrapLimit = 125; this.Path = "Althea.log";
+			this.PrintLevels = LogLevel.Error | LogLevel.Warning;
+			this.BufferLevels = LogLevel.Trace | LogLevel.Debug;
 		}
 
 		[System.Text.Json.Serialization.JsonConstructor]
 		internal LogSettings(bool suppress, int bufferSize, int wrapLimit, string path, string[] printLevels, string[] bufferLevels)
 		{
-			Suppress = suppress; BufferSize = bufferSize; WrapLimit = wrapLimit; Path = path;
-			PrintLevels = 0;
+			this.Suppress = suppress; this.BufferSize = bufferSize; this.WrapLimit = wrapLimit; this.Path = path;
+			this.PrintLevels = 0;
 			foreach (var p in printLevels)
 			{
-				PrintLevels |= Enum.Parse<LogLevel>(p);
+				this.PrintLevels |= Enum.Parse<LogLevel>(p);
 			}
-			BufferLevels = 0;
+			this.BufferLevels = 0;
 			foreach (var b in bufferLevels)
 			{
-				BufferLevels |= Enum.Parse<LogLevel>(b);
+				this.BufferLevels |= Enum.Parse<LogLevel>(b);
 			}
 		}
 	}
@@ -304,10 +303,7 @@ namespace Althea.Helpers
 		/// </summary>
 		public static bool SuppressLog {
 			get => Settings.settings.LogSettings.Suppress;
-			set {
-				Settings.settings.LogSettings.Suppress = value;
-				Settings.UpdateSingletonSetting();
-			}
+			set => Settings.settings.LogSettings = Settings.settings.LogSettings with { Suppress = value};
 		}
 
 		/// <summary>
@@ -315,21 +311,15 @@ namespace Althea.Helpers
 		/// </summary>
 		public static string FilePath {
 			get => Settings.settings.LogSettings.Path;
-			set {
-				Settings.settings.LogSettings.Path = value;
-				Settings.UpdateSingletonSetting();
-			}
-}
+			set => Settings.settings.LogSettings = Settings.settings.LogSettings with { Path = value };
+		}
 
 		/// <summary>
 		/// Get or set the buffer size used for output
 		/// </summary>
 		public static int BufferSize {
 			get => Settings.settings.LogSettings.BufferSize;
-			set {
-				Settings.settings.LogSettings.BufferSize = value;
-				Settings.UpdateSingletonSetting();
-			}
+			set => Settings.settings.LogSettings= Settings.settings.LogSettings with { BufferSize = value };
 		}
 
 		/// <summary>
@@ -337,10 +327,7 @@ namespace Althea.Helpers
 		/// </summary>
 		public static int WrapLimit {
 			get => Settings.settings.LogSettings.WrapLimit;
-			set {
-				Settings.settings.LogSettings.WrapLimit = value;
-				Settings.UpdateSingletonSetting();
-			}
+			set => Settings.settings.LogSettings= Settings.settings.LogSettings with { WrapLimit = value };
 		}
 
 		/// <summary>
@@ -351,8 +338,7 @@ namespace Althea.Helpers
 			set {
 				if (!value.IsValid())
 					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
-				Settings.settings.LogSettings.PrintLevels = value;
-				Settings.UpdateSingletonSetting();
+				Settings.settings.LogSettings = Settings.settings.LogSettings with { PrintLevels = value };
 			}
 		}
 
@@ -364,8 +350,7 @@ namespace Althea.Helpers
 			set {
 				if (!value.IsValid())
 					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
-				Settings.settings.LogSettings.BufferLevels = value;
-				Settings.UpdateSingletonSetting();
+				Settings.settings.LogSettings = Settings.settings.LogSettings with { BufferLevels = value };
 			}
 		}
 		#endregion
