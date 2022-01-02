@@ -350,7 +350,7 @@ namespace Althea.Linq
 		/// <param name="init">The initial value</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateSum<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		public static ReadOnlySpan<T> AccumulateSum<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			return AccumulateSum((ReadOnlySpan<T>)span, result, init, inclusive);
 		}
@@ -363,7 +363,7 @@ namespace Althea.Linq
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T>
 		{
 			return AccumulateProd((ReadOnlySpan<T>)span, result, init, inclusive);
 		}
@@ -373,7 +373,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to accumulate</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<T>(this Span<T> span) where T : unmanaged
+		public static T Sum<T>(this Span<T> span) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			return Sum((ReadOnlySpan<T>)span);
 		}
@@ -383,7 +383,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to accumulate</param>
 		/// <returns>The product result</returns>
-		public static T Prod<T>(this Span<T> span) where T : unmanaged
+		public static T Prod<T>(this Span<T> span) where T : unmanaged, IMultiplyOperators<T, T, T>
 		{
 			return Prod((ReadOnlySpan<T>)span);
 		}
@@ -394,7 +394,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Sum<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			return Sum((ReadOnlySpan<TOrg>)span, selector);
 		}
@@ -405,7 +405,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The product result</returns>
-		public static T Prod<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Prod<TOrg, T>(this Span<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged, IMultiplyOperators<T, T, T>
 		{
 			return Prod((ReadOnlySpan<TOrg>)span, selector);
 		}
@@ -420,7 +420,7 @@ namespace Althea.Linq
 		/// <param name="init">The initial value</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateSum<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		public static ReadOnlySpan<T> AccumulateSum<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -433,7 +433,7 @@ namespace Althea.Linq
 				result[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = span[i].NativeAdd(result[i]);
+					result[i + 1] = span[i] + result[i];
 				}
 				return result;
 			}
@@ -443,15 +443,15 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = span[i].NativeAdd(result[i]);
+					result[i + 1] = span[i] + result[i];
 				}
 			}
 			else
 			{
-				result[0] = init.NativeAdd(span[0]);
+				result[0] = init + span[0];
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = span[i].NativeAdd(result[i - 1]);
+					result[i] = span[i] + result[i - 1];
 				}
 			}
 			return result[..span.Length];
@@ -465,14 +465,14 @@ namespace Althea.Linq
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged
+		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
 			if (result.Length < span.Length)
 				throw new ArgumentException(Parameter.WrongSize, nameof(result));
-			if (init.IsZero())
-				init = Const<T>.One;
+			if (init == T.AdditiveIdentity)
+				init = T.MultiplicativeIdentity;
 
 			int len = span.Length;
 			if (result.Length > len)
@@ -480,7 +480,7 @@ namespace Althea.Linq
 				result[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = span[i].NativeMultiply(result[i]);
+					result[i + 1] = span[i] * result[i];
 				}
 				return result;
 			}
@@ -490,15 +490,15 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = span[i].NativeMultiply(result[i]);
+					result[i + 1] = span[i] * result[i];
 				}
 			}
 			else
 			{
-				result[0] = init.NativeMultiply(span[0]);
+				result[0] = init * span[0];
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = span[i].NativeMultiply(result[i - 1]);
+					result[i] = span[i] * result[i - 1];
 				}
 			}
 			return result[..span.Length];
@@ -509,7 +509,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to accumulate</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		public static T Sum<T>(this ReadOnlySpan<T> span) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -518,7 +518,7 @@ namespace Althea.Linq
 			T result = span[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = span[i].NativeAdd(result);
+				result = span[i] + result;
 			}
 			return result;
 		}
@@ -528,7 +528,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to accumulate</param>
 		/// <returns>The product result</returns>
-		public static T Prod<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		public static T Prod<T>(this ReadOnlySpan<T> span) where T : unmanaged, IMultiplyOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -537,7 +537,7 @@ namespace Althea.Linq
 			T result = span[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = span[i].NativeMultiply(result);
+				result = span[i] * result;
 			}
 			return result;
 		}
@@ -548,7 +548,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Sum<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -557,7 +557,7 @@ namespace Althea.Linq
 			T result = selector.Invoke(span[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = selector.Invoke(span[i]).NativeAdd(result);
+				result = selector.Invoke(span[i]) + result;
 			}
 			return result;
 		}
@@ -568,7 +568,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The product result</returns>
-		public static T Prod<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Prod<TOrg, T>(this ReadOnlySpan<TOrg> span, Converter<TOrg, T> selector) where T : unmanaged, IMultiplyOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -577,7 +577,7 @@ namespace Althea.Linq
 			T result = selector.Invoke(span[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = selector.Invoke(span[i]).NativeMultiply(result);
+				result = selector.Invoke(span[i]) * result;
 			}
 			return result;
 		}
@@ -711,21 +711,21 @@ namespace Althea.Linq
 
 		#region predicate
 		/// <summary>
-		/// Check if all elements of <paramref name="span"/> are zeros
+		/// Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
-		public static bool AllZeros<T>(this Span<T> span) where T : unmanaged
+		public static bool FastAllZeros<T>(this Span<T> span) where T : unmanaged
 		{
-			return AllZeros((ReadOnlySpan<T>)span);
+			return FastAllZeros((ReadOnlySpan<T>)span);
 		}
 
 		/// <summary>
-		/// Check if all elements of <paramref name="span"/> are zeros
+		/// Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
-		public static unsafe bool AllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		public static unsafe bool FastAllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged
 		{
 			int size = Math.Min(span.Length, 8) * sizeof(T);
 			ReadOnlySpan<byte> spanFirst = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref span.Ref()), size);
@@ -742,11 +742,37 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Check if all elements of <paramref name="span"/> are zeros by comparing elements in <paramref name="span"/> individually
+		/// </summary>
+		/// <param name="span">The span to check</param>
+		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
+		public static bool AllZeros<T>(this Span<T> span) where T : unmanaged, IEquatable<T>, IAdditiveIdentity<T, T>
+		{
+			return AllZeros((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// Check if all elements of <paramref name="span"/> are zeros by comparing elements in <paramref name="span"/> individually
+		/// </summary>
+		/// <param name="span">The span to check</param>
+		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
+		public static bool AllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>, IAdditiveIdentity<T, T>
+		{
+			int n = span.Length;
+			for (int i = 0; i < n; i++)
+			{
+				if (!span[i].Equals(T.AdditiveIdentity))
+					return false;
+			}
+			return true;
+		}
+
+		/// <summary>
 		/// Check if all elements of <paramref name="span"/> are the same
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are the same</returns>
-		public static unsafe bool AllSame<T>(this Span<T> span) where T : unmanaged
+		public static unsafe bool AllSame<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
 		{
 			return AllSame((ReadOnlySpan<T>)span);
 		}
@@ -756,7 +782,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are the same</returns>
-		public static unsafe bool AllSame<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		public static unsafe bool AllSame<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
 		{
 			if (span.Length <= 1)
 				return true;
@@ -764,7 +790,7 @@ namespace Althea.Linq
 			int len = span.Length;
 			for (int i = 0; i < len; i++)
 			{
-				if (!span[i].IsEqual(v))
+				if (!span[i].Equals(v))
 					return false;
 			}
 			return true;
@@ -1236,14 +1262,14 @@ namespace Althea.Linq
 				return true;
 			int len = span.Length;
 			Span<T> temp = len.CheckStackLimit<T>() ?? stackalloc T[len];
-			var slice = temp.Slice(0, 0);
+			var slice = temp[..0];
 			int now = 0;
 			for (int i = 0; i < len; i++)
 			{
 				if (!slice.Contains(span[i]))
 				{
 					temp[now++] = span[i];
-					slice = temp.Slice(0, now);
+					slice = temp[..now];
 				}
 				else
 					return false;
@@ -1300,14 +1326,14 @@ namespace Althea.Linq
 			if (span.Length <= 1)
 				return span.Length;
 			Span<T> temp = stackalloc T[span.Length];
-			Span<T> slice = temp.Slice(0, 0);
+			Span<T> slice = temp[..0];
 			int now = 0, len = span.Length;
 			for (int i = 0; i < len; i++)
 			{
 				if (!slice.Contains(span[i]))
 				{
 					temp[now++] = span[i];
-					slice = temp.Slice(0, now);
+					slice = temp[..now];
 				}
 			}
 			return now;
@@ -1624,24 +1650,16 @@ namespace Althea.Linq
 		/// <param name="start">The start value of the range</param>
 		/// <param name="step">The step of the range, default 0 will be replaced by 1</param>
 		/// <returns>The input <paramref name="span"/></returns>
-		public static Span<T> FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged
+		public static Span<T> FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged, IEquatable<T>, IAdditiveIdentity<T, T>, IMultiplicativeIdentity<T, T>, IAdditionOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
 			span[0] = start;
-			if (step.IsZero())
+			if (step.Equals(T.AdditiveIdentity))
+				step = T.MultiplicativeIdentity;
+			for (int i = 1; i < span.Length; i++)
 			{
-				for (int i = 1; i < span.Length; i++)
-				{
-					span[i] = span[i - 1].NativeIncrement();
-				}
-			}
-			else
-			{
-				for (int i = 1; i < span.Length; i++)
-				{
-					span[i] = span[i - 1].NativeAdd(step);
-				}
+				span[i] = span[i - 1] + step;
 			}
 			return span;
 		}
@@ -1677,19 +1695,22 @@ namespace Althea.Linq
 		/// <summary>
 		/// Scale the values in <paramref name="span"/> by <paramref name="scalar"/> in-place
 		/// </summary>
-		/// <typeparam name="T">Any supported (<see cref="NativeTypeExtension.IsSupported{T}()"/>) unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any supported unmanaged struct as the data type</typeparam>
 		/// <param name="span">The span to be scaled in-place</param>
 		/// <param name="scalar">The scalar to multiply to each element in <paramref name="span"/></param>
-		public static void Scale<T>(this Span<T> span, T scalar) where T : unmanaged
+		public static void Scale<T>(this Span<T> span, T scalar) where T : unmanaged, IEquatable<T>, IAdditiveIdentity<T, T>, IMultiplyOperators<T, T, T>
 		{
 			int len = span.Length;
 			if (len <= 0)
 				return;
-			if (scalar.IsZero())
+			if (scalar.Equals(T.AdditiveIdentity))
+			{
 				span.Clear();
+				return;
+			}
 			for (int i = 0; i < len; i++)
 			{
-				span[i] = span[i].NativeMultiply(scalar);
+				span[i] *= scalar;
 			}
 		}
 		#endregion

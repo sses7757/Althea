@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 
 
 namespace Althea.Linq
@@ -51,7 +49,7 @@ namespace Althea.Linq
 	}
 	#endregion
 
-	internal sealed class ImmutableSet<T> : IImmutableSet<T>, IEquatable<ImmutableSet<T>>
+	internal sealed class ImmutableSet<T> : IImmutableSet<T>, IEqualityOperators<ImmutableSet<T>, ImmutableSet<T>>
 	{
 		#region basic
 		private readonly T[] data;
@@ -189,7 +187,7 @@ namespace Althea.Linq
 	/// The immutable set which only contains zero or one element
 	/// </summary>
 	/// <typeparam name="T">any data type</typeparam>
-	public readonly struct ImmutableZeroOneElementSet<T> : IStructImmutableSet<T>, IEquatable<ImmutableZeroOneElementSet<T>>
+	public readonly struct ImmutableZeroOneElementSet<T> : IStructImmutableSet<T>, IEqualityOperators<ImmutableZeroOneElementSet<T>, ImmutableZeroOneElementSet<T>>
 	{
 		#region basic
 		private readonly bool hasValue;
@@ -354,7 +352,7 @@ namespace Althea.Linq
 	/// The immutable set which only contains exactly two elements
 	/// </summary>
 	/// <typeparam name="T">any data type</typeparam>
-	public readonly struct ImmutableTwoElementSet<T> : IImmutableSet<T>, IEquatable<ImmutableTwoElementSet<T>>
+	public readonly struct ImmutableTwoElementSet<T> : IImmutableSet<T>, IEqualityOperators<ImmutableTwoElementSet<T>, ImmutableTwoElementSet<T>>
 	{
 		#region basic
 		private readonly T data1, data2;
@@ -529,7 +527,7 @@ namespace Althea.Linq
 	/// The immutable set which only contains exactly three elements
 	/// </summary>
 	/// <typeparam name="T">any data type</typeparam>
-	public readonly struct ImmutableThreeElementSet<T> : IImmutableSet<T>, IEquatable<ImmutableThreeElementSet<T>>
+	public readonly struct ImmutableThreeElementSet<T> : IImmutableSet<T>, IEqualityOperators<ImmutableThreeElementSet<T>, ImmutableThreeElementSet<T>>
 	{
 		#region basic
 		private readonly T data1, data2, data3;

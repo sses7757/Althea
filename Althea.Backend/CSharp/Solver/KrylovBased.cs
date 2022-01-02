@@ -448,7 +448,7 @@ namespace Althea.Backend.CSharp.Solver
 					vectorReal[i] = v.OperateOn(Q, real[i]);
 					double normReal = vectorReal[i].Norm();
 					double normImag = 0;
-					if (!imag[i].AllZeros())
+					if (!imag[i].FastAllZeros())
 					{
 						vectorImag[i] = v.OperateOn(Q, imag[i]);
 						normImag = vectorImag[i].Norm();

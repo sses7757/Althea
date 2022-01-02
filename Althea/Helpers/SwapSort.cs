@@ -1,0 +1,508 @@
+﻿using System.Runtime.CompilerServices;
+
+
+namespace Althea.Helpers
+{
+	#region interface
+	/// <summary>
+	/// The interface to swap two <typeparamref name="T"/> values in-place
+	/// </summary>
+	/// <typeparam name="T">The type of the values to be swapped</typeparam>
+	public interface ISwapper<T> where T : ISwapper<T>
+	{
+		/// <summary>
+		/// When implemented by a derived class, swap two values <paramref name="a"/> and <paramref name="b"/> in-place
+		/// </summary>
+		/// <param name="a">The reference to first value to be swapped with <paramref name="b"/></param>
+		/// <param name="b">The reference to second value to be swapped with <paramref name="a"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		abstract static void Swap(ref T a, ref T b);
+	}
+
+	/// <summary>
+	/// The static class that provides the sort utilities for <see cref="Span{T}"/>
+	/// </summary>
+	public static class SwapSort
+	{
+		/// <summary>
+		/// Sort the <paramref name="keys"/> with <paramref name="values"/> using the given <typeparamref name="TKey"/> <paramref name="comparer"/> and the <see cref="ISwapper{T}.Swap(ref T, ref T)"/> of <typeparamref name="TValue"/>
+		/// </summary>
+		/// <typeparam name="TKey">The type of the keys</typeparam>
+		/// <typeparam name="TValue">The type of the values which must implement <see cref="ISwapper{T}"/></typeparam>
+		/// <param name="keys">The keys as a <see cref="Span{T}"/> of <typeparamref name="TKey"/></param>
+		/// <param name="values">The values as a <see cref="Span{T}"/> of <typeparamref name="TValue"/></param>
+		/// <param name="comparer">The <see cref="Comparer{T}"/> of <typeparamref name="TKey"/> used to compare the elements in <paramref name="keys"/>. Default null means <see cref="Comparer{T}.Default"/>.</param>
+		public static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values, Comparer<TKey>? comparer = null) where TValue : ISwapper<TValue>
+		{
+			SortHelper<TKey, TValue>.Sort(keys, values, comparer ?? Comparer<TKey>.Default);
+		}
+
+		/// <summary>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/> and the <see cref="ISwapper{T}.Swap(ref T, ref T)"/>s of <typeparamref name="TValue1"/> and <typeparamref name="TValue2"/>
+		/// </summary>
+		/// <typeparam name="TKey">The type of the keys</typeparam>
+		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
+		/// <typeparam name="TValue2">The type of the second value array which must implement <see cref="ISwapper{T}"/></typeparam>
+		/// <param name="keys">The keys as a <see cref="Span{T}"/> of <typeparamref name="TKey"/></param>
+		/// <param name="values1">The first value array as a <see cref="Span{T}"/> of <typeparamref name="TValue1"/></param>
+		/// <param name="values2">The second value array as a <see cref="Span{T}"/> of <typeparamref name="TValue2"/></param>
+		/// <param name="comparer">The <see cref="Comparer{T}"/> of <typeparamref name="TKey"/> used to compare the elements in <paramref name="keys"/>. Default null means <see cref="Comparer{T}.Default"/>.</param>
+		public static void Sort<TKey, TValue1, TValue2>(this Span<TKey> keys, Span<TValue1> values1, Span<TValue2> values2, Comparer<TKey>? comparer = null) where TValue1 : ISwapper<TValue1> where TValue2 : ISwapper<TValue2>
+		{
+			SortHelper<TKey, TValue1, TValue2>.Sort(keys, values1, values2, comparer ?? Comparer<TKey>.Default);
+		}
+
+		/// <summary>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/> and the <see cref="ISwapper{T}.Swap(ref T, ref T)"/>s of <typeparamref name="TValue1"/>, <typeparamref name="TValue2"/>, <typeparamref name="TValue3"/>
+		/// </summary>
+		/// <typeparam name="TKey">The type of the keys</typeparam>
+		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
+		/// <typeparam name="TValue2">The type of the second value array which must implement <see cref="ISwapper{T}"/></typeparam>
+		/// <typeparam name="TValue3">The type of the third value array which must implement <see cref="ISwapper{T}"/></typeparam>
+		/// <param name="keys">The keys as a <see cref="Span{T}"/> of <typeparamref name="TKey"/></param>
+		/// <param name="values1">The first value array as a <see cref="Span{T}"/> of <typeparamref name="TValue1"/></param>
+		/// <param name="values2">The second value array as a <see cref="Span{T}"/> of <typeparamref name="TValue2"/></param>
+		/// <param name="values3">The third value array as a <see cref="Span{T}"/> of <typeparamref name="TValue3"/></param>
+		/// <param name="comparer">The <see cref="Comparer{T}"/> of <typeparamref name="TKey"/> used to compare the elements in <paramref name="keys"/>. Default null means <see cref="Comparer{T}.Default"/>.</param>
+		public static void Sort<TKey, TValue1, TValue2, TValue3>(this Span<TKey> keys, Span<TValue1> values1, Span<TValue2> values2, Span<TValue3> values3, Comparer<TKey>? comparer = null) where TValue1 : ISwapper<TValue1> where TValue2 : ISwapper<TValue2> where TValue3 : ISwapper<TValue3>
+		{
+			SortHelper<TKey, TValue1, TValue2, TValue3>.Sort(keys, values1, values2, values3, comparer ?? Comparer<TKey>.Default);
+		}
+	}
+	#endregion
+
+
+	#region implementations
+	internal static class SortHelper<TKey, TVal1> where TVal1 : ISwapper<TVal1>
+	{
+		internal static void Sort(Span<TKey> keys, Span<TVal1> values, Comparer<TKey> comparer)
+		{
+			if (keys.Length > 1)
+			{
+				IntroSort(keys, values, depthLimit: 2 * (keys.Length.Log2() + 1), comparer);
+			}
+		}
+
+		private static void SwapIfGreaterWithValues(Span<TKey> keys, Span<TVal1> values, Comparer<TKey> comparer, int i, int j)
+		{
+			if (comparer.Compare(keys[i], keys[j]) > 0)
+			{
+				TKey val = keys[i];
+				keys[i] = keys[j];
+				keys[j] = val;
+				TVal1.Swap(ref values[i], ref values[j]);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Swap(Span<TKey> keys, Span<TVal1> values, int i, int j)
+		{
+			TKey val = keys[i];
+			keys[i] = keys[j];
+			keys[j] = val;
+			TVal1.Swap(ref values[i], ref values[j]);
+		}
+
+		private static void IntroSort(Span<TKey> keys, Span<TVal1> values, int depthLimit, Comparer<TKey> comparer)
+		{
+			int left = keys.Length;
+			while (left > 1)
+			{
+				if (left <= 16)
+				{
+					switch (left)
+					{
+						case 2:
+							SwapIfGreaterWithValues(keys, values, comparer, 0, 1);
+							break;
+						case 3:
+							SwapIfGreaterWithValues(keys, values, comparer, 0, 1);
+							SwapIfGreaterWithValues(keys, values, comparer, 0, 2);
+							SwapIfGreaterWithValues(keys, values, comparer, 1, 2);
+							break;
+						default:
+							InsertionSort(keys[..left], values[..left], comparer);
+							break;
+					}
+					break;
+				}
+				if (depthLimit == 0)
+				{
+					HeapSort(keys[..left], values[..left], comparer);
+					break;
+				}
+				depthLimit--;
+				int partition = PickPivotAndPartition(keys[..left], values[..left], comparer);
+				IntroSort(keys[(partition + 1)..left], values[(partition + 1)..left], depthLimit, comparer);
+				left = partition;
+			}
+		}
+
+		private static int PickPivotAndPartition(Span<TKey> keys, Span<TVal1> values, Comparer<TKey> comparer)
+		{
+			int maxN = keys.Length - 1;
+			int halfN = maxN >> 1;
+			SwapIfGreaterWithValues(keys, values, comparer, 0, halfN);
+			SwapIfGreaterWithValues(keys, values, comparer, 0, maxN);
+			SwapIfGreaterWithValues(keys, values, comparer, halfN, maxN);
+			TKey val = keys[halfN];
+			Swap(keys, values, halfN, maxN - 1);
+			int count = 0;
+			int left = maxN - 1;
+			while (count < left)
+			{
+				while (comparer.Compare(keys[++count], val) < 0)
+				{ }
+				while (comparer.Compare(val, keys[--left]) < 0)
+				{ }
+				if (count >= left)
+				{
+					break;
+				}
+				Swap(keys, values, count, left);
+			}
+			if (count != maxN - 1)
+			{
+				Swap(keys, values, count, maxN - 1);
+			}
+			return count;
+		}
+
+		private static void HeapSort(Span<TKey> keys, Span<TVal1> values, Comparer<TKey> comparer)
+		{
+			int length = keys.Length;
+			for (int i = length / 2 - 1; i >= 0; i--)
+			{
+				MaximizeHeap(keys, values, i, length, comparer);
+			}
+			for (int i = length - 1; i > 0; i--)
+			{
+				Swap(keys, values, 0, i);
+				MaximizeHeap(keys, values, 0, i, comparer);
+			}
+		}
+
+		private static void MaximizeHeap(Span<TKey> keys, Span<TVal1> values, int start, int end, Comparer<TKey> comparer)
+		{
+			int parent = start, child = parent * 2 + 1;
+			while (child < end)
+			{
+				if (child + 1 < end && comparer.Compare(keys[child], keys[child + 1]) < 0)
+					child++;
+				if (comparer.Compare(keys[parent], keys[child]) > 0)
+					return;
+				Swap(keys, values, parent, child);
+				parent = child;
+				child = parent * 2 + 1;
+			}
+		}
+
+		private static void InsertionSort(Span<TKey> keys, Span<TVal1> values, Comparer<TKey> comparer)
+		{
+			for (int i = 1; i < keys.Length - 1; i++)
+			{
+				TKey key0 = keys[i + 1];
+				int j = i - 1;
+				while (j >= 0 && comparer.Compare(key0, keys[j]) < 0)
+				{
+					keys[j + 1] = keys[j];
+					TVal1.Swap(ref values[j + 1], ref values[j]);
+					j--;
+				}
+				keys[j + 1] = key0;
+			}
+		}
+	}
+
+	internal static class SortHelper<TKey, TVal1, TVal2> where TVal1 : ISwapper<TVal1> where TVal2 : ISwapper<TVal2>
+	{
+		internal static void Sort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Comparer<TKey> comparer)
+		{
+			if (keys.Length > 1)
+			{
+				IntroSort(keys, values1, values2, depthLimit: 2 * (keys.Length.Log2() + 1), comparer);
+			}
+		}
+
+		private static void SwapIfGreaterWithValues(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Comparer<TKey> comparer, int i, int j)
+		{
+			if (comparer.Compare(keys[i], keys[j]) > 0)
+			{
+				TKey val = keys[i];
+				keys[i] = keys[j];
+				keys[j] = val;
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, int i, int j)
+		{
+			TKey val = keys[i];
+			keys[i] = keys[j];
+			keys[j] = val;
+			TVal1.Swap(ref values1[i], ref values1[j]);
+			TVal2.Swap(ref values2[i], ref values2[j]);
+		}
+
+		private static void IntroSort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, int depthLimit, Comparer<TKey> comparer)
+		{
+			int left = keys.Length;
+			while (left > 1)
+			{
+				if (left <= 16)
+				{
+					switch (left)
+					{
+						case 2:
+							SwapIfGreaterWithValues(keys, values1, values2, comparer, 0, 1);
+							break;
+						case 3:
+							SwapIfGreaterWithValues(keys, values1, values2, comparer, 0, 1);
+							SwapIfGreaterWithValues(keys, values1, values2, comparer, 0, 2);
+							SwapIfGreaterWithValues(keys, values1, values2, comparer, 1, 2);
+							break;
+						default:
+							InsertionSort(keys[..left], values1[..left], values2[..left], comparer);
+							break;
+					}
+					break;
+				}
+				if (depthLimit == 0)
+				{
+					HeapSort(keys[..left], values1[..left], values2[..left], comparer);
+					break;
+				}
+				depthLimit--;
+				int partition = PickPivotAndPartition(keys[..left], values1[..left], values2[..left], comparer);
+				IntroSort(keys[(partition + 1)..left], values1[(partition + 1)..left], values2[(partition + 1)..left], depthLimit, comparer);
+				left = partition;
+			}
+		}
+
+		private static int PickPivotAndPartition(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Comparer<TKey> comparer)
+		{
+			int maxN = keys.Length - 1;
+			int halfN = maxN >> 1;
+			SwapIfGreaterWithValues(keys, values1, values2, comparer, 0, halfN);
+			SwapIfGreaterWithValues(keys, values1, values2, comparer, 0, maxN);
+			SwapIfGreaterWithValues(keys, values1, values2, comparer, halfN, maxN);
+			TKey val = keys[halfN];
+			Swap(keys, values1, values2, halfN, maxN - 1);
+			int count = 0;
+			int left = maxN - 1;
+			while (count < left)
+			{
+				while (comparer.Compare(keys[++count], val) < 0)
+				{ }
+				while (comparer.Compare(val, keys[--left]) < 0)
+				{ }
+				if (count >= left)
+				{
+					break;
+				}
+				Swap(keys, values1, values2, count, left);
+			}
+			if (count != maxN - 1)
+			{
+				Swap(keys, values1, values2, count, maxN - 1);
+			}
+			return count;
+		}
+
+		private static void HeapSort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Comparer<TKey> comparer)
+		{
+			int length = keys.Length;
+			for (int i = length / 2 - 1; i >= 0; i--)
+			{
+				MaximizeHeap(keys, values1, values2, i, length, comparer);
+			}
+			for (int i = length - 1; i > 0; i--)
+			{
+				Swap(keys, values1, values2, 0, i);
+				MaximizeHeap(keys, values1, values2, 0, i, comparer);
+			}
+		}
+
+		private static void MaximizeHeap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, int start, int end, Comparer<TKey> comparer)
+		{
+			int parent = start, child = parent * 2 + 1;
+			while (child < end)
+			{
+				if (child + 1 < end && comparer.Compare(keys[child], keys[child + 1]) < 0)
+					child++;
+				if (comparer.Compare(keys[parent], keys[child]) > 0)
+					return;
+				Swap(keys, values1, values2, parent, child);
+				parent = child;
+				child = parent * 2 + 1;
+			}
+		}
+
+		private static void InsertionSort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Comparer<TKey> comparer)
+		{
+			for (int i = 1; i < keys.Length - 1; i++)
+			{
+				TKey key0 = keys[i + 1];
+				int j = i - 1;
+				while (j >= 0 && comparer.Compare(key0, keys[j]) < 0)
+				{
+					keys[j + 1] = keys[j];
+					TVal1.Swap(ref values1[j + 1], ref values1[j]);
+					TVal2.Swap(ref values2[j + 1], ref values2[j]);
+					j--;
+				}
+				keys[j + 1] = key0;
+			}
+		}
+	}
+
+	internal static class SortHelper<TKey, TVal1, TVal2, TVal3> where TVal1 : ISwapper<TVal1> where TVal2 : ISwapper<TVal2> where TVal3 : ISwapper<TVal3>
+	{
+		internal static void Sort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Comparer<TKey> comparer)
+		{
+			if (keys.Length > 1)
+			{
+				IntroSort(keys, values1, values2, values3, depthLimit: 2 * (keys.Length.Log2() + 1), comparer);
+			}
+		}
+
+		private static void SwapIfGreaterWithValues(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Comparer<TKey> comparer, int i, int j)
+		{
+			if (comparer.Compare(keys[i], keys[j]) > 0)
+			{
+				TKey val = keys[i];
+				keys[i] = keys[j];
+				keys[j] = val;
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, int i, int j)
+		{
+			TKey val = keys[i];
+			keys[i] = keys[j];
+			keys[j] = val;
+			TVal1.Swap(ref values1[i], ref values1[j]);
+			TVal2.Swap(ref values2[i], ref values2[j]);
+			TVal3.Swap(ref values3[i], ref values3[j]);
+		}
+
+		private static void IntroSort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, int depthLimit, Comparer<TKey> comparer)
+		{
+			int left = keys.Length;
+			while (left > 1)
+			{
+				if (left <= 16)
+				{
+					switch (left)
+					{
+						case 2:
+							SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, 0, 1);
+							break;
+						case 3:
+							SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, 0, 1);
+							SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, 0, 2);
+							SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, 1, 2);
+							break;
+						default:
+							InsertionSort(keys[..left], values1[..left], values2[..left], values3[..left], comparer);
+							break;
+					}
+					break;
+				}
+				if (depthLimit == 0)
+				{
+					HeapSort(keys[..left], values1[..left], values2[..left], values3[..left], comparer);
+					break;
+				}
+				depthLimit--;
+				int partition = PickPivotAndPartition(keys[..left], values1[..left], values2[..left], values3[..left], comparer);
+				IntroSort(keys[(partition + 1)..left], values1[(partition + 1)..left], values2[(partition + 1)..left], values3[(partition + 1)..left], depthLimit, comparer);
+				left = partition;
+			}
+		}
+
+		private static int PickPivotAndPartition(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Comparer<TKey> comparer)
+		{
+			int maxN = keys.Length - 1;
+			int halfN = maxN >> 1;
+			SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, 0, halfN);
+			SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, 0, maxN);
+			SwapIfGreaterWithValues(keys, values1, values2, values3, comparer, halfN, maxN);
+			TKey val = keys[halfN];
+			Swap(keys, values1, values2, values3, halfN, maxN - 1);
+			int count = 0;
+			int left = maxN - 1;
+			while (count < left)
+			{
+				while (comparer.Compare(keys[++count], val) < 0)
+				{ }
+				while (comparer.Compare(val, keys[--left]) < 0)
+				{ }
+				if (count >= left)
+				{
+					break;
+				}
+				Swap(keys, values1, values2, values3, count, left);
+			}
+			if (count != maxN - 1)
+			{
+				Swap(keys, values1, values2, values3, count, maxN - 1);
+			}
+			return count;
+		}
+
+		private static void HeapSort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Comparer<TKey> comparer)
+		{
+			int length = keys.Length;
+			for (int i = length / 2 - 1; i >= 0; i--)
+			{
+				MaximizeHeap(keys, values1, values2, values3, i, length, comparer);
+			}
+			for (int i = length - 1; i > 0; i--)
+			{
+				Swap(keys, values1, values2, values3, 0, i);
+				MaximizeHeap(keys, values1, values2, values3, 0, i, comparer);
+			}
+		}
+
+		private static void MaximizeHeap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, int start, int end, Comparer<TKey> comparer)
+		{
+			int parent = start, child = parent * 2 + 1;
+			while (child < end)
+			{
+				if (child + 1 < end && comparer.Compare(keys[child], keys[child + 1]) < 0)
+					child++;
+				if (comparer.Compare(keys[parent], keys[child]) > 0)
+					return;
+				Swap(keys, values1, values2, values3, parent, child);
+				parent = child;
+				child = parent * 2 + 1;
+			}
+		}
+
+		private static void InsertionSort(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Comparer<TKey> comparer)
+		{
+			for (int i = 1; i < keys.Length - 1; i++)
+			{
+				TKey key0 = keys[i + 1];
+				int j = i - 1;
+				while (j >= 0 && comparer.Compare(key0, keys[j]) < 0)
+				{
+					keys[j + 1] = keys[j];
+					TVal1.Swap(ref values1[j + 1], ref values1[j]);
+					TVal2.Swap(ref values2[j + 1], ref values2[j]);
+					TVal3.Swap(ref values3[j + 1], ref values3[j]);
+					j--;
+				}
+				keys[j + 1] = key0;
+			}
+		}
+	}
+	#endregion
+}

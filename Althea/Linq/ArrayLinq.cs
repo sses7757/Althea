@@ -152,7 +152,7 @@ namespace Althea.Linq
 		/// <param name="init">The initial value</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false) or both (null)</param>
 		/// <returns>The output accumulated result</returns>
-		public static IReadOnlyList<T> AccumulateSum<T>(this IReadOnlyList<T> list, T init = default, bool? inclusive = true) where T : unmanaged
+		public static IReadOnlyList<T> AccumulateSum<T>(this IReadOnlyList<T> list, T init = default, bool? inclusive = true) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
@@ -164,7 +164,7 @@ namespace Althea.Linq
 				res[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					res[i + 1] = Const<T>.AddDelegate.Invoke(list[i], res[i]);
+					res[i + 1] = list[i] + res[i];
 				}
 				return res;
 			}
@@ -175,15 +175,15 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.AddDelegate.Invoke(list[i], result[i]);
+					result[i + 1] = list[i] + result[i];
 				}
 			}
 			else
 			{
-				result[0] = Const<T>.AddDelegate.Invoke(init, list[0]);
+				result[0] = list[0] + init;
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = Const<T>.AddDelegate.Invoke(list[i], result[i - 1]);
+					result[i] = list[i] + result[i - 1];
 				}
 			}
 			return result;
@@ -196,12 +196,12 @@ namespace Althea.Linq
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false) or both (null)</param>
 		/// <returns>The output accumulated result</returns>
-		public static IReadOnlyList<T> AccumulateProd<T>(this IReadOnlyList<T> list, T init = default, bool? inclusive = true) where T : unmanaged
+		public static IReadOnlyList<T> AccumulateProd<T>(this IReadOnlyList<T> list, T init = default, bool? inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T>
 		{
 			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
-			if (init.IsZero())
-				init = Const<T>.One;
+			if (init == T.AdditiveIdentity)
+				init = T.MultiplicativeIdentity;
 
 			int len = list.Count;
 			if (inclusive is null)
@@ -210,7 +210,7 @@ namespace Althea.Linq
 				res[0] = init;
 				for (int i = 0; i < len; i++)
 				{
-					res[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], res[i]);
+					res[i + 1] = list[i] * res[i];
 				}
 				return res;
 			}
@@ -221,15 +221,15 @@ namespace Althea.Linq
 				result[0] = init; len--;
 				for (int i = 0; i < len; i++)
 				{
-					result[i + 1] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i]);
+					result[i + 1] = list[i] * result[i];
 				}
 			}
 			else
 			{
-				result[0] = Const<T>.MultiplyDelegate.Invoke(init, list[0]);
+				result[0] = init * list[0];
 				for (int i = 1; i < len; i++)
 				{
-					result[i] = Const<T>.MultiplyDelegate.Invoke(list[i], result[i - 1]);
+					result[i] = list[i] * result[i - 1];
 				}
 			}
 			return result;
@@ -265,7 +265,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="list">The list to accumulate</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<T>(this IReadOnlyList<T> list) where T : unmanaged
+		public static T Sum<T>(this IReadOnlyList<T> list) where T : unmanaged, INumber<T>
 		{
 			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
@@ -274,7 +274,7 @@ namespace Althea.Linq
 			T result = list[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.AddDelegate.Invoke(list[i], result);
+				result += list[i];
 			}
 			return result;
 		}
@@ -284,7 +284,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="list">The list to accumulate</param>
 		/// <returns>The product result</returns>
-		public static T Prod<T>(this IReadOnlyList<T> list) where T : unmanaged
+		public static T Prod<T>(this IReadOnlyList<T> list) where T : unmanaged, INumber<T>
 		{
 			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
@@ -293,7 +293,7 @@ namespace Althea.Linq
 			T result = list[0];
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.MultiplyDelegate.Invoke(list[i], result);
+				result *= list[i];
 			}
 			return result;
 		}
@@ -304,7 +304,7 @@ namespace Althea.Linq
 		/// <param name="list">The list to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The summation result</returns>
-		public static T Sum<TOrg, T>(this IReadOnlyList<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Sum<TOrg, T>(this IReadOnlyList<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged, IAdditionOperators<T, T, T>
 		{
 			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
@@ -313,7 +313,7 @@ namespace Althea.Linq
 			T result = selector.Invoke(list[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.AddDelegate.Invoke(selector.Invoke(list[i]), result);
+				result += selector.Invoke(list[i]);
 			}
 			return result;
 		}
@@ -324,7 +324,7 @@ namespace Althea.Linq
 		/// <param name="list">The list to accumulate</param>
 		/// <param name="selector">The selector to apply to each element</param>
 		/// <returns>The product result</returns>
-		public static T Prod<TOrg, T>(this IReadOnlyList<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged
+		public static T Prod<TOrg, T>(this IReadOnlyList<TOrg> list, Converter<TOrg, T> selector) where T : unmanaged, IMultiplyOperators<T, T, T>
 		{
 			if (list is null || list.Count == 0)
 				throw new ArgumentNullException(nameof(list));
@@ -333,7 +333,7 @@ namespace Althea.Linq
 			T result = selector.Invoke(list[0]);
 			for (int i = 1; i < len; i++)
 			{
-				result = Const<T>.MultiplyDelegate.Invoke(selector.Invoke(list[i]), result);
+				result *= selector.Invoke(list[i]);
 			}
 			return result;
 		}

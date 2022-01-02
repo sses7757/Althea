@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
@@ -199,35 +198,7 @@ namespace Althea.Helpers
 		/// <param name="x">The input integer</param>
 		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsPowerOfTwo(this long x)
-		{
-			if (x == 1) return true;
-			return (x > 1) && ((x & (x - 1)) == 0);
-		}
-
-		/// <summary>
-		/// Whether the input integer is a power of 2
-		/// </summary>
-		/// <param name="x">The input integer</param>
-		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsPowerOfTwo(this int x)
-		{
-			if (x == 1) return true;
-			return (x > 1) && ((x & (x - 1)) == 0);
-		}
-
-		/// <summary>
-		/// Whether the input integer is a power of 2
-		/// </summary>
-		/// <param name="x">The input integer</param>
-		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsPowerOfTwo(this short x)
-		{
-			if (x == 1) return true;
-			return (x > 1) && ((x & (x - 1)) == 0);
-		}
+		public static bool IsPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.IsPow2(x);
 
 		/// <summary>
 		/// Get the nearest power of 2 integer of the input integer
@@ -235,64 +206,7 @@ namespace Althea.Helpers
 		/// <param name="x">The input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int NearestPowerOfTwo(this int x)
-		{
-			uint value = (uint)x;
-			value |= 1U;
-			if (Lzcnt.IsSupported)
-			{
-				return 1 << (int)(0x1F ^ Lzcnt.LeadingZeroCount(value));
-			}
-			if (ArmBase.IsSupported)
-			{
-				return 1 << (int)(0x1F ^ ArmBase.LeadingZeroCount(value));
-			}
-			if (X86Base.IsSupported)
-			{
-				return 1 << BitOperations.Log2(value);
-			}
-			// software fall-back
-			value--;
-			value |= value >> 1;
-			value |= value >> 2;
-			value |= value >> 4;
-			value |= value >> 8;
-			value |= value >> 16;
-			return (int)(value + 1);
-		}
-
-		/// <summary>
-		/// Get the nearest power of 2 integer of the input integer
-		/// </summary>
-		/// <param name="x">The input integer</param>
-		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long NearestPowerOfTwo(this long x)
-		{
-			ulong value = (ulong)x;
-			value |= 1UL;
-			if (Lzcnt.X64.IsSupported)
-			{
-				return 1L << (0x3F ^ (int)Lzcnt.X64.LeadingZeroCount(value));
-			}
-			if (ArmBase.Arm64.IsSupported)
-			{
-				return 1L << (0x3F ^ ArmBase.Arm64.LeadingZeroCount(value));
-			}
-			if (X86Base.X64.IsSupported)
-			{
-				return 1L << BitOperations.Log2(value);
-			}
-			// software fall-back
-			value--;
-			value |= value >> 1;
-			value |= value >> 2;
-			value |= value >> 4;
-			value |= value >> 8;
-			value |= value >> 16;
-			value |= value >> 32;
-			return (long)(value + 1);
-		}
+		public static T NearestPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.One << (int)(object)T.Log2(x);
 
 		/// <summary>
 		/// Get the floor round of log2(<paramref name="input"/>)
@@ -300,33 +214,7 @@ namespace Althea.Helpers
 		/// <param name="input">input number</param>
 		/// <returns>the nearest log2 of <paramref name="input"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Log2(this short input)
-		{
-			return BitOperations.Log2((uint)input);
-		}
-
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Log2(this int input)
-		{
-			return BitOperations.Log2((uint)input);
-		}
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Log2(this long input)
-		{
-			return BitOperations.Log2((ulong)input);
-		}
+		public static T Log2<T>(this T input) where T : IBinaryInteger<T> => T.Log2(input);
 
 		/// <summary>
 		/// Count the <paramref name="input"/>'s bits which are set to 1
@@ -334,32 +222,7 @@ namespace Althea.Helpers
 		/// <param name="input">input integer</param>
 		/// <returns>the number <paramref name="input"/>'s bits set</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int CountBitSet(this short input)
-		{
-			return BitOperations.PopCount((uint)input);
-		}
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int CountBitSet(this int input)
-		{
-			return BitOperations.PopCount((uint)input);
-		}
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int CountBitSet(this long input)
-		{
-			return BitOperations.PopCount((ulong)input);
-		}
+		public static T PopCount<T>(this T input) where T : IBinaryInteger<T> => T.PopCount(input);
 
 		/// <summary>
 		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
@@ -368,10 +231,7 @@ namespace Althea.Helpers
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsBitSet(this short input, byte bit)
-		{
-			return (input & (1 << bit)) == 0;
-		}
+		public static bool IsBitSet<T>(this T input, byte bit) where T : IBinaryInteger<T> => (input & T.Create(1 << bit)) == T.Zero;
 
 		/// <summary>
 		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
@@ -380,10 +240,7 @@ namespace Althea.Helpers
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsBitSet(this int input, byte bit)
-		{
-			return (input & (1 << bit)) == 0;
-		}
+		public static T SetBit<T>(this T input, byte bit) where T : IBinaryInteger<T> => input | T.Create(1 << bit);
 
 		/// <summary>
 		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
@@ -392,58 +249,7 @@ namespace Althea.Helpers
 		/// <param name="bit">bit position</param>
 		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsBitSet(this long input, byte bit)
-		{
-			return (input & (1L << bit)) == 0;
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int SetBit(this int input, byte bit)
-		{
-			return input | (1 << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long SetBit(this long input, byte bit)
-		{
-			return input | (1L << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int ResetBit(this int input, byte bit)
-		{
-			return input & ~(1 << bit);
-		}
-
-		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long ResetBit(this long input, byte bit)
-		{
-			return input & ~(1L << bit);
-		}
+		public static T ResetBit<T>(this T input, byte bit) where T : IBinaryInteger<T> => input & ~T.Create(1 << bit);
 		#endregion
 
 		#region time related
@@ -666,107 +472,86 @@ namespace Althea.Helpers
 			sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length);
 			return sb.ToString();
 		}
+
+		/// <summary>
+		/// Pad some characters indicated by <paramref name="padding"/> to the left of <paramref name="str"/> and push its original content to the right.
+		/// </summary>
+		/// <param name="str">The input/output string as a <see cref="Span{T}"/> of <see cref="char"/></param>
+		/// <param name="totalWidth">The total number of chars in <paramref name="str"/></param>
+		/// <param name="currentWidth">The current number of chars in <paramref name="str"/>. If it is larger than <paramref name="totalWidth"/>, this method simply returns true.</param>
+		/// <param name="padding">The character to pad, default space</param>
+		/// <returns>The padded string of length <paramref name="totalWidth"/> if padded, or <paramref name="str"/> if not.</returns>
+		public static Span<char> PadLeft(this Span<char> str, int totalWidth, int currentWidth, char padding = ' ')
+		{
+			if (totalWidth <= currentWidth)
+				return str;
+			if (currentWidth > 128)
+			{ // exceeds desired stack limit
+				new string(str[..currentWidth]).PadLeft(totalWidth, padding).CopyTo(str);
+				return str;
+			}
+			int pad = totalWidth - currentWidth;
+			Span<char> temp = stackalloc char[currentWidth];
+			str[..currentWidth].CopyTo(temp);
+			str[..pad].Fill(padding);
+			temp.CopyTo(str[pad..]);
+			return str[..totalWidth];
+		}
+
+		/// <summary>
+		/// Pad some characters indicated by <paramref name="padding"/> to the right of <paramref name="str"/>.
+		/// </summary>
+		/// <param name="str">The input/output string as a <see cref="Span{T}"/> of <see cref="char"/></param>
+		/// <param name="totalWidth">The total number of chars in <paramref name="str"/></param>
+		/// <param name="currentWidth">The current number of chars in <paramref name="str"/>. If it is larger than <paramref name="totalWidth"/>, this method simply returns true.</param>
+		/// <param name="padding">The character to pad, default space</param>
+		/// <returns>The padded string of length <paramref name="totalWidth"/> if padded, or <paramref name="str"/> if not.</returns>
+		public static Span<char> PadRight(this Span<char> str, int totalWidth, int currentWidth, char padding = ' ')
+		{
+			if (totalWidth <= currentWidth)
+				return str;
+			str[currentWidth..totalWidth].Fill(padding);
+			return str[..totalWidth];
+		}
 		#endregion
 
 		#region print related
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static string GetNumberString<T>(this T input, string format, IFormatProvider formatProvider, int precision) where T : unmanaged, IFormattable
+		private static readonly string[] PrecisionDict;
+
+		static ExtensionHelper()
 		{
-			string normal = input.ToString(format, formatProvider);
-			bool neg = normal.StartsWith('-'), zero = input.IsZero();
-			if (neg && zero)
-				normal = normal[1..];
+			PrecisionDict = new string[40];
+			for (int i = 0; i < PrecisionDict.Length; i++)
+			{
+				PrecisionDict[i] = "G" + i;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool GetNumberString<T>(T input, Span<char> chars, out int charsWritten, IFormatProvider? provider, int precision) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
+		{
+			if (!input.TryFormat(chars, out charsWritten, PrecisionDict[precision].AsSpan(), provider))
+				return false;
 			int totalLength = precision + 2;
-			normal = normal.PadLeft(totalLength);
-			if (normal.Length > totalLength)
+			var padded = chars.PadLeft(totalLength, charsWritten);
+			if (padded.Length > totalLength)
 			{
-				int newPre = 2 * precision - normal.Length + 2;
-				normal = input.ToString("G" + newPre, formatProvider);
-				while (normal.Length > totalLength)
-					normal = input.ToString("G" + (--newPre), formatProvider);
-				normal = normal.PadLeft(totalLength);
+				precision = 2 * precision - padded.Length + 2;
+				if (!input.TryFormat(chars, out charsWritten, PrecisionDict[precision].AsSpan(), provider))
+					return false;
+				while (charsWritten > totalLength)
+				{
+					if (!input.TryFormat(chars, out charsWritten, PrecisionDict[--precision].AsSpan(), provider))
+						return false;
+				}
+				chars.PadLeft(totalLength, charsWritten);
 			}
-			return normal;
+			return true;
 		}
-
-		private static string GetNumberStringReal<T>(this T input, string format, int precision) where T : unmanaged, IFormattable
-		{
-			return input.GetNumberString(format, Print.Culture, precision);
-		}
-
-		private static string GetNumberStringComplex<T>(this Complex<T> input, string format, int precision) where T : unmanaged, IFormattable
-		{
-			string r = input.Real.GetNumberString(format, Print.Culture, precision);
-			string i = input.Imag.GetNumberString(format, Print.Culture, precision);
-			return $"({r},{i})";
-		}
-
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static string GetNumberStringNoFormat<T>(this T input, string format, IFormatProvider formatProvider, int precision) where T : unmanaged
+		private static bool GetIntegerString<T>(T input, Span<char> chars, out int charsWritten, IFormatProvider? provider) where T : ISpanFormattable
 		{
-			string normal = string.Format(formatProvider, $"{{0:{format}}}", input);
-			bool neg = normal.StartsWith('-'), zero = input.IsZero();
-			if (neg && zero)
-				normal = normal[1..];
-			int totalLength = precision + 2;
-			normal = normal.PadLeft(totalLength);
-			if (normal.Length > totalLength)
-			{
-				int newPre = 2 * precision - normal.Length + 2;
-				normal = string.Format(formatProvider, $"{{0:G{newPre}}}", input);
-				while (normal.Length > totalLength)
-					normal = string.Format(formatProvider, $"{{0:G{--newPre}}}", input);
-				normal = normal.PadLeft(totalLength);
-			}
-			return normal;
-		}
-
-		private static string GetNumberStringRealNoFormat<T>(this T input, string format, int precision) where T : unmanaged
-		{
-			return input.GetNumberStringNoFormat(format, Print.Culture, precision);
-		}
-
-		private static string GetNumberStringComplexNoFormat<T>(this Complex<T> input, string format, int precision) where T : unmanaged
-		{
-			string r = input.Real.GetNumberStringNoFormat(format, Print.Culture, precision);
-			string i = input.Imag.GetNumberStringNoFormat(format, Print.Culture, precision);
-			return $"({r},{i})";
-		}
-
-
-		private delegate string getNumberStringDelegate<T>(T input, string format, int precision) where T : unmanaged;
-
-		private static readonly Dictionary<RuntimeTypeHandle, Delegate> cache_getNumberString = new();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static getNumberStringDelegate<T> GetDelegateOfGetNumberString<T>() where T : unmanaged
-		{
-			RuntimeTypeHandle t = typeof(T).TypeHandle;
-			if (!cache_getNumberString.ContainsKey(t))
-			{
-				string methodName;
-				if (typeof(T).IsAssignableTo(typeof(IFormattable)))
-					methodName = Const<T>.IsComplex ? nameof(GetNumberStringComplex) : nameof(GetNumberStringReal);
-				else
-					methodName = Const<T>.IsComplex ? nameof(GetNumberStringComplexNoFormat) : nameof(GetNumberStringRealNoFormat);
-				Type[] types = Const<T>.IsComplex ? typeof(T).GenericTypeArguments : new[] { typeof(T) };
-				var temp = typeof(ExtensionHelper).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)?
-												  .MakeGenericMethod(types)?
-												  .CreateDelegate<getNumberStringDelegate<T>>();
-				if (temp is null)
-					throw new InvalidOperationException();
-				getNumberStringDelegate<T> result = temp;
-				cache_getNumberString.Add(t, result);
-			}
-			return (getNumberStringDelegate<T>)cache_getNumberString[t];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static string GetFormatString(ref int precision)
-		{
-			precision = precision <= 0 ? Settings.PrintPrecision : precision;
-			return "G" + precision;
+			return input.TryFormat(chars, out charsWritten, string.Empty, provider);
 		}
 
 		/// <summary>
@@ -777,11 +562,13 @@ namespace Althea.Helpers
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
+		/// <exception cref="FormatException">If any value in <paramref name="input"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToVectorString<T>(this Span<T> input, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToVectorString<T>(this Span<T> input, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
-			return ToVectorString((ReadOnlySpan<T>)input, precision, prefix, postfix);
+			return ToVectorString((ReadOnlySpan<T>)input, precision, prefix, postfix, provider);
 		}
 
 		/// <summary>
@@ -792,20 +579,30 @@ namespace Althea.Helpers
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
+		/// <exception cref="FormatException">If any value in <paramref name="input"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToVectorString<T>(this ReadOnlySpan<T> input, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToVectorString<T>(this ReadOnlySpan<T> input, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
 			if (input.IsEmpty)
 				return string.Empty;
-			string format = GetFormatString(ref precision);
-			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
-			StringBuilder sb = new();
+			if (precision <= 0)
+				precision = Settings.PrintPrecision;
+
+			ReadOnlySpan<char> pre = prefix, pos = postfix ?? string.Empty + Environment.NewLine;
+			int maxLength = input.Length * (precision + 8 + pre.Length + pos.Length);
+			char[] chars = new char[maxLength];
+			Span<char> str = chars;
 			for (int i = 0; i < input.Length; i++)
 			{
-				sb.Append(prefix).Append(toStringFunc.Invoke(input[i], format, precision)).AppendLine(postfix);
+				pre.CopyTo(str); str = str[pre.Length..];
+				if (!GetNumberString(input[i], str, out int numberStrWidth, provider, precision))
+					throw new FormatException(Support.Format);
+				str = str[numberStrWidth..];
+				pos.CopyTo(str); str = str[pos.Length..];
 			}
-			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
+			return new(new ReadOnlySpan<char>(chars, 0, maxLength - str.Length));
 		}
 
 		/// <summary>
@@ -817,41 +614,54 @@ namespace Althea.Helpers
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
+		/// <exception cref="FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseVectorString<T>(this Span<T> values, ReadOnlySpan<long> indices, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToSparseVectorString<T>(this Span<T> values, ReadOnlySpan<long> indices, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
-			return ToSparseVectorString((ReadOnlySpan<T>)values, indices, precision, prefix, postfix);
+			return ToSparseVectorString((ReadOnlySpan<T>)values, indices, precision, prefix, postfix, provider);
 		}
 
 		/// <summary>
 		/// Print out 1D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">The supported data type</typeparam>
+		/// <typeparam name="TVal">The supported data type</typeparam>
+		/// <typeparam name="TInd">The supported index type</typeparam>
 		/// <param name="values">The values of the sparse vector to print</param>
 		/// <param name="indices">The indices of the sparse vector to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
+		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
+		/// <exception cref="FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseVectorString<T>(this ReadOnlySpan<T> values, ReadOnlySpan<long> indices, int precision = -1, string? prefix = null, string? postfix = null) where T : unmanaged
+		public static string ToSparseVectorString<TVal, TInd>(this ReadOnlySpan<TVal> values, ReadOnlySpan<TInd> indices, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where TVal : ISpanFormattable, IAdditiveIdentity<TVal, TVal>, IEquatable<TVal> where TInd : ISpanFormattable
 		{
 			if (values.Length != indices.Length)
 				throw new ArgumentException(Parameter.NotSameSize);
 			if (values.IsEmpty)
 				return string.Empty;
 
-			string format = GetFormatString(ref precision);
-			getNumberStringDelegate<T> toStringFunc = GetDelegateOfGetNumberString<T>();
-			StringBuilder sb = new();
+			ReadOnlySpan<char> pre = prefix, pos = postfix ?? string.Empty + Environment.NewLine, mid = " -> ";
+			int maxLength = values.Length * (precision + 8 + pre.Length + pos.Length + mid.Length);
+			char[] chars = new char[maxLength];
+			Span<char> str = chars;
 			for (int i = 0; i < values.Length; i++)
 			{
-				sb.Append(prefix).Append(indices[i]).Append(" -> ").Append(toStringFunc.Invoke(values[i], format, precision)).AppendLine(postfix);
+				pre.CopyTo(str); str = str[pre.Length..];
+				if (!GetIntegerString(indices[i], str, out int numberStrWidth, provider))
+					throw new FormatException(Support.Format);
+				str = str[numberStrWidth..];
+				mid.CopyTo(str); str = str[mid.Length..];
+				if (!GetNumberString(values[i], str, out numberStrWidth, provider, precision))
+					throw new FormatException(Support.Format);
+				pos.CopyTo(str); str = str[pos.Length..];
 			}
-			return sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length).ToString();
+			return new(new ReadOnlySpan<char>(chars, 0, maxLength - str.Length));
 		}
 
 		/// <summary>

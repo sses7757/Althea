@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -922,7 +920,7 @@ namespace Althea.Helpers
 		/// 	{
 		/// 		columns[i] = (<see cref="IntPtr"/>)(p + n * l);
 		/// 	}
-		/// 	keys.<see cref="SortHelper.Sort{TKey, TValue}">Sort</see>(columns, swapper: spanMatrix.<see cref="ColumnSwapper">ColumnSwapper</see>);
+		/// 	keys.<see cref="SwapSort.Sort{TKey, TValue}">Sort</see>(columns, swapper: spanMatrix.<see cref="ColumnSwapper">ColumnSwapper</see>);
 		/// }
 		/// </code></example>
 		public unsafe readonly Swapper<IntPtr> ColumnSwapper {

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
 
 
@@ -216,7 +212,7 @@ namespace Althea.Helpers
 
 	internal class LogTraceListener : TraceListener
 	{
-		private readonly Timer timer = new(3000);
+		private readonly System.Timers.Timer timer = new(3000);
 
 		private readonly StreamWriter stream;
 
@@ -234,7 +230,7 @@ namespace Althea.Helpers
 			timer.Elapsed += Timer_Elapsed;
 		}
 
-		private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+		private void Timer_Elapsed(object? sender, ElapsedEventArgs e)
 		{
 			_ = GlobalLock(stream.FlushAsync);
 		}

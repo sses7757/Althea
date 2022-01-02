@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
+using Althea.Linq;
 
 
 namespace Althea.Arrays
@@ -13,8 +14,6 @@ namespace Althea.Arrays
 	public abstract class AbstractArray<T> : IDisposable, ICloneable where T : unmanaged
 	{
 		#region properties
-		private readonly long m_length;
-
 		/// <summary>
 		/// When implemented by a derived class, get the rank of this array as a <see cref="int"/>
 		/// </summary>
@@ -30,7 +29,7 @@ namespace Althea.Arrays
 		/// </summary>
 		public long Length {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_length;
+			get => this.Size.Prod();
 		}
 		#endregion
 
@@ -44,8 +43,6 @@ namespace Althea.Arrays
 		{
 			if (length < 0)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.CannotNegative);
-
-			this.m_length = length;
 		}
 
 		/// <summary>

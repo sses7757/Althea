@@ -195,7 +195,7 @@ namespace Althea.TensorAlgebra.Sparse
 			if (format == 0)
 				return Span<SparseTensorFormat>.Empty;
 			int f = (int)format;
-			int c = f.CountBitSet();
+			int c = f.PopCount();
 			if (result.Length < c)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(result));
 			result = result[..c]; c = 0;
