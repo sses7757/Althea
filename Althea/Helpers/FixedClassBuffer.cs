@@ -17,7 +17,7 @@ namespace Althea.Helpers
 	[StructLayout(LayoutKind.Sequential, Size = __placeholder__ * 8)]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public struct FixedClassBuffer___placeholder__<T> : IEquatable<FixedClassBuffer___placeholder__<T>>, IReadOnlyList<T>, IAsSpan<T> where T : class
+	public struct FixedClassBuffer___placeholder__<T> : IEqualityOperators<FixedClassBuffer___placeholder__<T>>, IReadOnlyList<T>, IAsSpan<T> where T : class
 	{
 		#region basic
 		private const int _count = __placeholder__;

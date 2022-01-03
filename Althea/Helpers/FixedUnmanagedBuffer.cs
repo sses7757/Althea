@@ -18,7 +18,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer___placeholder__<T> : IEquatable<FixedBuffer___placeholder__<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer___placeholder__<T> : IEqualityOperators<FixedBuffer___placeholder__<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = __placeholder__ / sizeof(T);

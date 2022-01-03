@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -23,19 +21,15 @@ namespace Althea
 		/// <summary>
 		/// Represents a storage location represented by Universal Resource Identifier.
 		/// </summary>
-		Uri = 0 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassStream,
+		Uri = LocationTypeExtension.ClassStream + 0,
 		/// <summary>
 		/// Storage at local CPU RAM
 		/// </summary>
-		CpuRam = 0 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassMemory,
+		CpuRam = LocationTypeExtension.ClassMemory + 0,
 		/// <summary>
 		/// Storage at local GPU RAM
 		/// </summary>
-		GpuRam = 1 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassMemory,
-		/// <summary>
-		/// Storage at platform-specific local RAM (with custom order the 1st) other than <see cref="CpuRam"/> and <see cref="GpuRam"/>. For example, a RAM associated with a FPGA.
-		/// </summary>
-		OtherRam_0 = 2 << LocationTypeExtension.ClassificationEnd | LocationTypeExtension.ClassMemory,
+		GpuRam = LocationTypeExtension.ClassMemory + 1 << LocationTypeExtension.ClassMaskEnd,
 	}
 
 	/// <summary>
@@ -46,31 +40,31 @@ namespace Althea
 		/// <summary>
 		/// The classification mask end bit of <see cref="LocationType"/>
 		/// </summary>
-		public const int ClassificationEnd = 3;
+		public const int ClassMaskEnd = 3;
 		
 		/// <summary>
 		/// The classification mask of <see cref="LocationType"/>
 		/// </summary>
-		public const int ClassificationMask = 0b111;
+		public const int ClassMask = 0b111;
 
 		/// <summary>
 		/// The classification of stream typed <see cref="LocationType"/>
 		/// </summary>
 		/// <remarks>Other classifications are not presented here but they are also supported.</remarks>
-		public const int ClassStream = 0b000;
+		public const int ClassStream = 0b001;
 
 		/// <summary>
 		/// The classification of memory typed <see cref="LocationType"/>
 		/// </summary>
 		/// <remarks>Other classifications are not presented here but they are also supported.</remarks>
-		public const int ClassMemory = 0b001;
+		public const int ClassMemory = 0b000;
 
 		/// <summary>
 		/// Get the classification of given <see cref="LocationType"/>
 		/// </summary>
 		/// <param name="locationType">The given <see cref="LocationType"/></param>
 		/// <returns>The classification as a <see cref="byte"/></returns>
-		public static byte GetClassification(this LocationType locationType) => (byte)(((byte)locationType) & ClassificationMask);
+		public static byte GetClassification(this LocationType locationType) => (byte)(((byte)locationType) & ClassMask);
 	}
 
 	/// <summary>
@@ -131,9 +125,9 @@ namespace Althea
 	/// The struct of a storage location
 	/// </summary>
 	/// <remarks>
-	/// This struct has size of a <see cref="int"/>. The <see cref="LocationType"/> occupies first few bits and its detail occupies the rest (slightly smaller than a full <see cref="int"/>).
+	/// This struct has size of a <see cref="int"/>. The <see cref="LocationType"/> occupies first few bits and its detail occupies the rest.
 	/// </remarks>
-	public readonly struct StorageLocation : IEquatable<StorageLocation>
+	public readonly struct StorageLocation : IEqualityOperators<StorageLocation, StorageLocation>
 	{
 		#region basic
 		private readonly int _data;
@@ -163,7 +157,7 @@ namespace Althea
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StorageLocation(LocationType location, int detail)
 		{
-			if (detail < 0 || (uint)detail >= 0xffffff)
+			if ((uint)detail > 0xffffff)
 				throw new ArgumentOutOfRangeException(nameof(detail), detail, Parameter.InvalidValue);
 			this._data = (byte)location + (detail << 8);
 		}
@@ -222,55 +216,18 @@ namespace Althea
 		#endregion
 
 		#region string related
-		private static readonly Dictionary<LocationType, string> static_OtherLocationNames = new();
-		private static readonly Dictionary<LocationType, Func<int, KeyValuePair<string, string>>> static_OtherDetailNames = new();
-
-		/// <summary>
-		/// Set the name of <see cref="Type"/> used for <see cref="ToString"/> of this if it represents a storage position in other types like <see cref="LocationType.OtherRam_0"/>
-		/// </summary>
-		/// <param name="location">The <see cref="LocationType"/> of a storage position in other types</param>
-		/// <param name="name">The name as a <see cref="string"/> to set; notice that all the spaces will be replaced by '_'</param>
-		/// <returns>success or not</returns>
-		public static bool SetOtherLocationName(LocationType location, string name)
-		{
-			if (location < LocationType.OtherRam_0)
-				return false;
-			static_OtherLocationNames[location] = name.Replace(' ', '_');
-			return true;
-		}
-
-		/// <summary>
-		/// Set the name of <see cref="LocationDetail"/> used for <see cref="ToString"/> of this if it represents a storage position in other types like <see cref="LocationType.OtherRam_0"/>
-		/// </summary>
-		/// <param name="location">The <see cref="LocationType"/> of a storage position in other types</param>
-		/// <param name="nameFunc">The name function as a <see cref="Func{T, TResult}"/> to set. The input value is <see cref="LocationDetail"/> and the output is a <see cref="KeyValuePair{TKey, TValue}"/> of <see cref="string"/>s to represent the name and value</param>
-		/// <returns>success or not</returns>
-		public static bool SetOtherDetailName(LocationType location, Func<int, KeyValuePair<string, string>> nameFunc)
-		{
-			if (location < LocationType.OtherRam_0)
-				return false;
-			static_OtherDetailNames[location] = nameFunc;
-			return true;
-		}
-
 		/// <summary>
 		/// Return the string representation of this <see cref="StorageLocation"/>
 		/// </summary>
 		/// <returns>the string representation of this <see cref="StorageLocation"/></returns>
 		public override string ToString()
 		{
-			var str = this.Type switch
-			{
-				LocationType.Uri => "URI",
-				LocationType.CpuRam => "CPU_Memory",
-				LocationType.GpuRam => "GPU_Memory",
-				_ => static_OtherLocationNames.GetValueOrDefault(this.Type) ?? $"Other_Memory_{this.Type - LocationType.OtherRam_0}",
-			};
+			var str = this.Type.GetName();
 			if (this.Type == LocationType.Uri)
 			{
 				str += $"(scheme={Storage.UriSchemeExtension.GetName((Storage.UriScheme)this.LocationDetail)})";
 			}
-			else if (this.Type < LocationType.OtherRam_0)
+			else if (this.Type == LocationType.CpuRam || this.Type == LocationType.GpuRam)
 			{
 				str += $"(device_ID={this.LocationDetail})";
 			}
@@ -299,7 +256,7 @@ namespace Althea
 	/// Furthermore, still nearly no GC is necessary even if some reference type has field of this <see cref="CombinationOfLocations"/>.
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public readonly struct CombinationOfLocations : IEquatable<CombinationOfLocations>, IReadOnlyList<StorageLocation>
+	public readonly struct CombinationOfLocations : IEqualityOperators<CombinationOfLocations, CombinationOfLocations>, IReadOnlyList<StorageLocation>
 	{
 		#region basic
 		private const int MaxSize = (64 - 4) / 4 ;//default(FixedBuffer_64<StorageLocation>).Count - 1;
@@ -520,7 +477,7 @@ namespace Althea
 		/// <returns>the string representation of this <see cref="CombinationOfLocations"/></returns>
 		public override string ToString()
 		{
-			return $"{nameof(CombinationOfLocations)} [Type={this.type}, Data={this.data.AsSpan(this.count).SpanJoin(", ")}]";
+			return $"{nameof(CombinationOfLocations)} [Type={this.type.GetName()}, Data={this.data.AsSpan(this.count).SpanJoin(", ")}]";
 		}
 		#endregion
 	}

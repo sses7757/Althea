@@ -53,48 +53,6 @@ namespace Althea.Storage
 	/// </summary>
 	public static class UriSchemeExtension
 	{
-		private static readonly Dictionary<UriScheme, string> static_names = new();
-
-		private static readonly Dictionary<string, UriScheme> static_names_inv = new();
-
-		/// <summary>
-		/// Set the name (string representation) of given <see cref="UriScheme"/>
-		/// </summary>
-		/// <param name="scheme">The given <see cref="UriScheme"/> whose name will be set</param>
-		/// <param name="name">The name (string representation) of given <paramref name="scheme"/></param>
-		/// <returns>If <paramref name="scheme"/> is a pre-defined one,
-		/// or <paramref name="name"/> is null or contains space or non-ASCII characters,
-		/// or <paramref name="name"/> already exists,
-		/// this method returns false;
-		/// otherwise, the name will be set and this method returns true</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool SetName(this UriScheme scheme, string name)
-		{
-			if (scheme >= UriScheme.Unknown && scheme <= UriScheme.HTTPS)
-				return false;
-			if (name is null || name.Contains(' ') || Encoding.UTF8.GetByteCount(name) != name.Length) // check ASCII
-				return false;
-			if (static_names_inv.ContainsKey(name))
-				return false;
-			static_names[scheme] = name;
-			static_names_inv[name] = scheme;
-			return true;
-		}
-
-		/// <summary>
-		/// Get the name (string representation) of given <see cref="UriScheme"/> (can be the ones preset by <see cref="SetName(UriScheme, string)"/>
-		/// </summary>
-		/// <param name="scheme">The given <see cref="UriScheme"/> whose name will be get</param>
-		/// <returns>The name (string representation) of <paramref name="scheme"/> or the underlying number if the name cannot be obtained</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string GetName(this UriScheme scheme)
-		{
-			if (static_names.ContainsKey(scheme))
-				return static_names[scheme];
-			else
-				return scheme.ToString();
-		}
-
 		/// <summary>
 		/// Get the <see cref="UriScheme"/> from a <see cref="Uri"/>
 		/// </summary>
@@ -116,8 +74,8 @@ namespace Althea.Storage
 				return UriScheme.HTTP;
 			if (uri.Scheme == Uri.UriSchemeHttps)
 				return UriScheme.HTTPS;
-			if (static_names_inv.ContainsKey(uri.Scheme))
-				return static_names_inv[uri.Scheme];
+			if (EnumHelper.TryParse(uri.Scheme, out UriScheme s))
+				return s;
 			return UriScheme.Unknown;
 		}
 	}
