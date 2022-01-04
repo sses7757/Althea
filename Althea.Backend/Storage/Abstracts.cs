@@ -26,12 +26,12 @@ namespace Althea.Backend.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool ICheckValid.IsValid() => this.Pointer != default && this.LengthInBytes > 0;
 
-		string IMainPropertyFormat.StringMain {
+		string IMainPropertyFormattable.StringMain {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.Pointer.ToString("X");
 		}
 
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => new Dictionary<string, object?>(1)
 			{
@@ -383,7 +383,7 @@ namespace Althea.Backend.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool ICheckValid.IsValid() => this.NativeStream.IsValid();
 
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => new Dictionary<string, object?>(2)
 			{

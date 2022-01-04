@@ -23,27 +23,27 @@ namespace Althea
 	/// <summary>
 	/// The interface for an object which can convert to string by principle string representation and string representation of properties
 	/// </summary>
-	public interface IMainPropertyFormat
+	/// <typeparam name="T">The actual implementing class/struct</typeparam>
+	public interface IMainPropertyFormattable<T> where T : IMainPropertyFormattable<T>
 	{
 		/// <summary>
-		/// Get the string representation of the principle value of this object as a <see cref="string"/>
+		/// Statically get the string representation of the principle value of <typeparamref name="T"/> as a <see cref="string"/>
 		/// </summary>
-		string StringMain { get; }
+		abstract static string StringMain { get; }
 
 		/// <summary>
-		/// Get the string representation of printable properties of this object as a <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/>
+		/// Statically get the names of the printable properties of <typeparamref name="T"/> as a <see cref="IEnumerable{T}"/> of <see cref="string"/>
 		/// </summary>
-		IEnumerable<KeyValuePair<string, object?>> StringProperties { get; }
+		abstract static IEnumerable<string> PropertyNames { get; }
 
 		/// <summary>
-		/// Combine the string representation of the principle value (<paramref name="main"/>) and the string representation of printable properties (<paramref name="properties"/>)
+		/// Get the values of printable properties of this object as a <see cref="IEnumerable{T}"/> of <see cref="string"/> whose order is the same as <see cref="PropertyNames"/>
 		/// </summary>
-		/// <param name="main">The string representation of the principle value</param>
-		/// <param name="properties">The string representation of printable properties</param>
-		/// <returns>The combination <see cref="string"/></returns>
-		public static string Combine(string main, IEnumerable<KeyValuePair<string, object?>> properties)
+		IEnumerable<object?> PropertyValues { get; }
+
+		private static string Combine(string main, IEnumerable<string> names, IEnumerable<object?> properties)
 		{
-			if (properties is null)
+			if (names is null || properties is null)
 			{
 				return main;
 			}
@@ -51,17 +51,18 @@ namespace Althea
 			if (properties.Any())
 			{
 				stringBuilder.Append(' ').Append('[');
-				stringBuilder.Append(string.Join(", ", properties.Select(static p => $"{p.Key}={p.Value}")));
+				stringBuilder.Append(string.Join(", ", names.Zip(properties).Select(static p => $"{p.First}={p.Second}")));
 				stringBuilder.Append(']');
 			}
 			return stringBuilder.ToString();
 		}
 
 		/// <summary>
-		/// Get the string representation of this object by printing <see cref="StringMain"/>, <see cref="StringProperties"/>
+		/// Get the string representation of this object by printing <see cref="StringMain"/>, <see cref="PropertyNames"/> and <see cref="PropertyValues"/>
 		/// </summary>
-		/// <returns>The string representation of this object</returns>
-		string ToString() => Combine(this.StringMain, this.StringProperties);
+		/// <param name="value">The instance value of type <typeparamref name="T"/></param>
+		/// <returns>The string representation of <paramref name="value"/></returns>
+		protected static string ToString(in T value) => Combine(T.StringMain, T.PropertyNames, value.PropertyValues);
 	}
 
 	/// <summary>

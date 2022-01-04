@@ -124,7 +124,7 @@ namespace Althea.Backend.Cuda.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override (long free, long total) FreeAndTotalMemory(StorageLocation location)
 		{
-			if (location.Type != LocationType.GpuRam || location.LocationDetail != CudaRuntime.CurrentDeviceID)
+			if (location.Type != LocationType.GpuRam || location.Detail != CudaRuntime.CurrentDeviceID)
 				return default;
 			var err = NativeMethods.cudaMemGetInfo(out var free, out var total);
 			return err == CudaError.Success ? (free, total) : default;
@@ -133,7 +133,7 @@ namespace Althea.Backend.Cuda.Storage
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool IsSupportedGpuRam(StorageLocation location) => location.Type == LocationType.GpuRam && location.LocationDetail == CudaRuntime.CurrentDeviceID;
+		private static bool IsSupportedGpuRam(StorageLocation location) => location.Type == LocationType.GpuRam && location.Detail == CudaRuntime.CurrentDeviceID;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool IsSupportedCache(CombinationOfLocations location)
@@ -144,7 +144,7 @@ namespace Althea.Backend.Cuda.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool IsSupportedLocation(StorageLocation location) => (location.Type == LocationType.GpuRam && location.LocationDetail == CudaRuntime.CurrentDeviceID) || (this.CudaFileSupported && location == FileAlone);
+		public override bool IsSupportedLocation(StorageLocation location) => (location.Type == LocationType.GpuRam && location.Detail == CudaRuntime.CurrentDeviceID) || (this.CudaFileSupported && location == FileAlone);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool IsSupportedNonCache(CombinationOfLocations location)

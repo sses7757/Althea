@@ -19,7 +19,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormat where T : unmanaged
+	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormattable where T : unmanaged
 	{
 		#region properties
 		private readonly Storage<T> m_orginalStorage;
@@ -858,12 +858,12 @@ namespace Althea.Arrays
 			Size
 		}
 
-		string IMainPropertyFormat.StringMain {
+		string IMainPropertyFormattable.StringMain {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.GetType().GetGenericString(full: false) ?? this.GetType().Name;
 		}
 
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				var other = this.GetMetaData();
@@ -893,7 +893,7 @@ namespace Althea.Arrays
 		{
 			// shortcut
 			if ((include is null || include.Length == 0) && terms is null)
-				return ((IMainPropertyFormat)this).ToString();
+				return ((IMainPropertyFormattable)this).ToString();
 			// default values
 			if (include is null || include.Length == 0)
 				include = new[] { StringTerms.DataType, StringTerms.Size, StringTerms.Storages };
@@ -930,7 +930,7 @@ namespace Althea.Arrays
 				{
 					newTerms[now++] = new(kv.Key, kv.Value);
 				}
-				return IMainPropertyFormat.Combine(name, newTerms);
+				return IMainPropertyFormattable.Combine(name, newTerms);
 			}
 			else
 			{
@@ -943,7 +943,7 @@ namespace Althea.Arrays
 				{
 					newTerms[now++] = new(kv.Key, kv.Value);
 				}
-				return IMainPropertyFormat.Combine(name, newTerms);
+				return IMainPropertyFormattable.Combine(name, newTerms);
 			}
 		}
 

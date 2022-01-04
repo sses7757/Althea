@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -16,7 +17,7 @@ namespace Althea
 	/// <summary>
 	/// The enum of the storage location types
 	/// </summary>
-	public enum LocationType : byte
+	public enum LocationType : short
 	{
 		/// <summary>
 		/// Represents a storage location represented by Universal Resource Identifier.
@@ -65,6 +66,20 @@ namespace Althea
 		/// <param name="locationType">The given <see cref="LocationType"/></param>
 		/// <returns>The classification as a <see cref="byte"/></returns>
 		public static byte GetClassification(this LocationType locationType) => (byte)(((byte)locationType) & ClassMask);
+
+		/// <summary>
+		/// The delegate for obtaining the description of the given <paramref name="detail"/> which is associated with different values of <see cref="LocationType"/>
+		/// </summary>
+		/// <param name="detail">The input detail as a <see cref="short"/></param>
+		/// <returns>The description of the given <paramref name="detail"/> associated with current value of <see cref="LocationType"/></returns>
+		public delegate string GetDetailDescription(short detail);
+
+		static LocationTypeExtension()
+		{
+			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.Uri, static d => $"(scheme={((Storage.UriScheme)d).GetName()})");
+			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.CpuRam, static d => $"(device_ID={d})");
+			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.GpuRam, static d => $"(device_ID={d})");
+		}
 	}
 
 	/// <summary>
@@ -130,36 +145,30 @@ namespace Althea
 	public readonly struct StorageLocation : IEqualityOperators<StorageLocation, StorageLocation>
 	{
 		#region basic
-		private readonly int _data;
-
 		/// <summary>
 		/// The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/>
 		/// </summary>
-		public LocationType Type {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (LocationType)unchecked((byte)(this._data & byte.MaxValue));
-		}
+		public LocationType Type { get; }
 
 		/// <summary>
 		/// The location detail of the <see cref="Type"/>.
 		/// </summary>
-		public int LocationDetail {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._data >> 8;
-		}
+		public short Detail { get; }
 
 		/// <summary>
 		/// Create with given location and device ID
 		/// </summary>
-		/// <param name="location">The location of this <see cref="StorageLocation"/>, must be a flag</param>
-		/// <param name="detail">The detail of <paramref name="location"/>: a <see cref="Althea.Storage.UriScheme"/> for a <see cref="LocationType.Uri"/> or a device ID otherwise. The largest 8 bits must be empty.</param>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="detail"/> is too large to fit with <see cref="LocationType"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public StorageLocation(LocationType location, int detail)
+		/// <param name="type">The location of this <see cref="StorageLocation"/>, must be a flag</param>
+		/// <param name="detail">The detail of <paramref name="type"/>: a <see cref="Althea.Storage.UriScheme"/> for a <see cref="LocationType.Uri"/> or a device ID otherwise.</param>
+		public StorageLocation(LocationType type, short detail)
 		{
-			if ((uint)detail > 0xffffff)
-				throw new ArgumentOutOfRangeException(nameof(detail), detail, Parameter.InvalidValue);
-			this._data = (byte)location + (detail << 8);
+			this.Type = type; this.Detail = detail;
+		}
+
+		[System.Text.Json.Serialization.JsonConstructor]
+		internal StorageLocation(string type, short detail)
+		{
+			this.Type = EnumHelper.Parse<LocationType>(type); this.Detail = detail;
 		}
 		#endregion
 
@@ -169,50 +178,31 @@ namespace Althea
 		/// </summary>
 		/// <param name="other">another <see cref="StorageLocation"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(StorageLocation other)
-		{
-			return this._data == other._data;
-		}
+		public bool Equals(StorageLocation other) => this.Type == other.Type && this.Detail == other.Detail;
 
 		/// <summary>
 		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			return obj is StorageLocation storageDetail && this.Equals(storageDetail);
-		}
+		public override bool Equals(object? obj) => obj is StorageLocation storageDetail && this.Equals(storageDetail);
 
 		/// <summary>
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StorageLocation"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-		{
-			return this._data;
-		}
+		public override int GetHashCode() => ((int)this.Type << sizeof(short)) + this.Detail;
 
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(StorageLocation left, StorageLocation right)
-		{
-			return left.Equals(right);
-		}
+		public static bool operator ==(StorageLocation left, StorageLocation right) => left.Equals(right);
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(StorageLocation left, StorageLocation right)
-		{
-			return !(left == right);
-		}
+		public static bool operator !=(StorageLocation left, StorageLocation right) => !(left == right);
 		#endregion
 
 		#region string related
@@ -222,28 +212,8 @@ namespace Althea
 		/// <returns>the string representation of this <see cref="StorageLocation"/></returns>
 		public override string ToString()
 		{
-			var str = this.Type.GetName();
-			if (this.Type == LocationType.Uri)
-			{
-				str += $"(scheme={Storage.UriSchemeExtension.GetName((Storage.UriScheme)this.LocationDetail)})";
-			}
-			else if (this.Type == LocationType.CpuRam || this.Type == LocationType.GpuRam)
-			{
-				str += $"(device_ID={this.LocationDetail})";
-			}
-			else
-			{
-				var kv = static_OtherDetailNames[this.Type](this.LocationDetail);
-				str += $"({kv.Key}={kv.Value})";
-			}
-			return str;
+			return this.Type.GetName() + this.Type.GetMethod<LocationType, LocationTypeExtension.GetDetailDescription>();
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal int AsInt() => this._data;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal StorageLocation(int data) => this._data = data;
 		#endregion
 	}
 
@@ -485,17 +455,17 @@ namespace Althea
 
 
 	#region pointer
-
 	#region interface
 	/// <summary>
 	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
-	public interface IPointer : IMainPropertyFormat, ICheckValid, IEquatable<IPointer>
+	/// <typeparam name="T">The actual implementation type</typeparam>
+	public interface IPointer<T> : ICheckValid, IEqualityOperators<T, T>, IMainPropertyFormattable<T> where T : IPointer<T>
 	{
 		/// <summary>
-		/// When implemented by derived classes, get the <see cref="StorageLocation"/> of this pointer's underlying storage
+		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type
 		/// </summary>
-		StorageLocation Location { get; }
+		abstract static StorageLocation Location { get; }
 
 		/// <summary>
 		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes
@@ -503,7 +473,7 @@ namespace Althea
 		long LengthInBytes { get; }
 
 		/// <summary>
-		/// When implemented by derived classes, get the hash code this <see cref="IPointer"/>.
+		/// When implemented by derived classes, get the hash code this <see cref="IPointer{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
 		int GetHashCode();
@@ -511,231 +481,179 @@ namespace Althea
 	#endregion
 
 	/// <summary>
-	/// The struct of which delimits a certain section of a certain unmanaged memory block
+	/// The struct of which delimits a certain section of a certain memory block
 	/// </summary>
-	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used for storing information of memory blocks.</remarks>
-	public readonly struct PointerSegment : IEquatable<PointerSegment>, IMainPropertyFormat, ICheckValid
+	/// <typeparam name="T">The type of <see cref="IPointer{T}"/></typeparam>
+	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used to store information of memory blocks.</remarks>
+	public readonly struct PointerSegment<T> :
+		ICheckValid,
+		IMainPropertyFormattable<PointerSegment<T>>,
+		IEqualityOperators<PointerSegment<T>, PointerSegment<T>>,
+		IAdditiveIdentity<PointerSegment<T>, long>,
+		IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>,
+		ISubtractionOperators<PointerSegment<T>, long, PointerSegment<T>>,
+		ISubtractionOperators<PointerSegment<T>, PointerSegment<T>, long>
+		where T : IPointer<T>
 	{
 		#region basic
-		private readonly IPointer pointer;
-		
-		private readonly long offset;
-
-		private readonly long length;
-
 		/// <summary>
 		/// Check whether this pointer is a valid pointer or not
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsValid() => this.length > 0 && this.pointer is not null && this.pointer.IsValid();
+		public bool IsValid() => this.LengthInBytes > 0 && this.Pointer is not null && this.Pointer.IsValid();
 
 		/// <summary>
-		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment"/>
+		/// The <see cref="StorageLocation"/> of this <see cref="PointerSegment{T}"/>
 		/// </summary>
-		public StorageLocation Location {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.pointer?.Location ?? default;
-		}
+		public static StorageLocation Location => T.Location;
 
 		/// <summary>
-		/// The native pointer (without offset and presenting length) as a <see cref="IPointer"/>
+		/// The native pointer (without offset and presenting length) as a <see cref="IPointer{T}"/>
 		/// </summary>
-		public IPointer Pointer {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.pointer;
-		}
+		public IPointer<T> Pointer { get; }
 
 		/// <summary>
-		/// The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment"/>
+		/// The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment{T}"/>
 		/// </summary>
-		public long OffsetInBytes {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.offset;
-		}
+		public long OffsetInBytes { get; }
 
 		/// <summary>
-		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment"/>
+		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment{T}"/>
 		/// </summary>
-		public long LengthInBytes {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.length;
-		}
+		public long LengthInBytes { get; }
 
 		/// <summary>
 		/// Create with given pointer
 		/// </summary>
 		/// <param name="pointer">The pointer</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is not a valid value</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PointerSegment(IPointer pointer)
+		public PointerSegment(IPointer<T> pointer)
 		{
 			if (pointer is null || !pointer.IsValid())
 				throw new ArgumentNullException(nameof(pointer));
 
-			this.pointer = pointer; this.offset = 0; this.length = pointer.LengthInBytes;
+			this.Pointer = pointer; this.OffsetInBytes = 0; this.LengthInBytes = pointer.LengthInBytes;
 		}
 
 		/// <summary>
-		/// Create with given <see cref="PointerSegment"/> <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/> to the <paramref name="storage"/>
+		/// Create with given <see cref="PointerSegment{T}"/> <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/> to the <paramref name="storage"/>
 		/// </summary>
-		/// <param name="storage">The <see cref="PointerSegment"/> to copy info from</param>
+		/// <param name="storage">The <see cref="PointerSegment{T}"/> to copy info from</param>
 		/// <param name="offset">The offset to the <paramref name="storage"/> in bytes</param>
-		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer.LengthInBytes"/>. A value less than or equals to 0 means automatically calculate.</param>
+		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer{T}.LengthInBytes"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PointerSegment(PointerSegment storage, long offset = 0, long newLength = 0)
+		public PointerSegment(PointerSegment<T> storage, long offset = 0, long newLength = 0)
 		{
-			offset += storage.offset;
+			offset += storage.OffsetInBytes;
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
 			long off = offset;
-			if (off > storage.pointer.LengthInBytes)
+			if (off > storage.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.InvalidValue);
 			if (newLength <= 0)
-				newLength = storage.pointer.LengthInBytes - off;
-			if (off + newLength > storage.pointer.LengthInBytes)
+				newLength = storage.Pointer.LengthInBytes - off;
+			if (off + newLength > storage.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
 
-			this.pointer = storage.pointer; this.offset = off; this.length = newLength;
+			this.Pointer = storage.Pointer; this.OffsetInBytes = off; this.LengthInBytes = newLength;
 		}
 
 		/// <summary>
-		/// Create a new <see cref="PointerSegment"/> with given <paramref name="offset"/>
+		/// Create a new <see cref="PointerSegment{T}"/> with given <paramref name="offset"/>
 		/// </summary>
 		/// <param name="offset">The offset in bytes to move</param>
 		/// <param name="newLength">The new length in bytes to set, default 0 means auto calculation from <paramref name="offset"/>. A value less than or equals to 0 means automatically calculate.</param>
-		/// <returns>The new <see cref="PointerSegment"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
+		/// <returns>The new <see cref="PointerSegment{T}"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PointerSegment MoveBy(long offset, long newLength = 0) => offset == 0 && newLength <= 0 ? this : new PointerSegment(this, offset, newLength);
+		public PointerSegment<T> MoveBy(long offset, long newLength = 0) => offset == 0 && newLength <= 0 ? this : new(this, offset, newLength);
 
 		/// <summary>
-		/// Create a new <see cref="PointerSegment"/> with given <paramref name="newLength"/>
+		/// Create a new <see cref="PointerSegment{T}"/> with given <paramref name="newLength"/>
 		/// </summary>
 		/// <param name="newLength">The new length in bytes to set</param>
-		/// <returns>The new <see cref="PointerSegment"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
+		/// <returns>The new <see cref="PointerSegment{T}"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newLength"/> exceeds the boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PointerSegment AsLength(long newLength) => newLength == this.length ? this : new PointerSegment(this, 0, newLength);
+		public PointerSegment<T> AsLength(long newLength) => newLength == this.LengthInBytes ? this : new(this, 0, newLength);
 		#endregion
 
 		#region equality
 		/// <summary>
-		/// Check whether this <see cref="PointerSegment"/> overlaps with the <paramref name="other"/> <see cref="PointerSegment"/>
+		/// Check whether this <see cref="PointerSegment{T}"/> overlaps with the <paramref name="other"/> <see cref="PointerSegment{T}"/>
 		/// </summary>
-		/// <param name="other">The other <see cref="PointerSegment"/> to check overlap</param>
+		/// <param name="other">The other <see cref="PointerSegment{T}"/> to check overlap</param>
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool OverlapWith(PointerSegment other) => this.pointer.Equals(other.pointer) && (this.offset > other.offset + other.length || other.offset > this.offset + this.length);
+		public bool OverlapWith(PointerSegment<T> other) => this.Pointer == other.Pointer && (this.OffsetInBytes > other.OffsetInBytes + other.LengthInBytes || other.OffsetInBytes > this.OffsetInBytes + this.LengthInBytes);
 
 		/// <summary>
 		/// Whether this == <paramref name="other"/>
 		/// </summary>
-		/// <param name="other">another <see cref="PointerSegment"/> to compare</param>
+		/// <param name="other">another <see cref="PointerSegment{T}"/> to compare</param>
 		/// <returns>this == <paramref name="other"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(PointerSegment other)
-		{
-			return this.pointer.Equals(other.pointer) && this.offset == other.offset;
-		}
+		public bool Equals(PointerSegment<T> other) => this.Pointer == other.Pointer && this.OffsetInBytes == other.OffsetInBytes;
 
 		/// <summary>
 		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
 		/// </summary>
 		/// <param name="obj">another object to compare</param>
 		/// <returns>this == <paramref name="obj"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			return obj is PointerSegment storage && this.Equals(storage);
-		}
+		public override bool Equals(object? obj) => obj is PointerSegment<T> s && this.Equals(s);
 
 		/// <summary>
-		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="PointerSegment"/>.
+		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="PointerSegment{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(this.pointer.GetHashCode(), this.offset);
-		}
+		public override int GetHashCode() => HashCode.Combine(this.Pointer.GetHashCode(), this.OffsetInBytes);
 
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(PointerSegment left, PointerSegment right)
-		{
-			return left.Equals(right);
-		}
+		public static bool operator ==(PointerSegment<T> left, PointerSegment<T> right) => left.Equals(right);
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(PointerSegment left, PointerSegment right)
-		{
-			return !(left == right);
-		}
+		public static bool operator !=(PointerSegment<T> left, PointerSegment<T> right) => !(left == right);
 		#endregion
 
 		#region to string
-		string IMainPropertyFormat.StringMain {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.pointer.StringMain;
-		}
+		private static readonly string[] names = new[]{ nameof(Location), nameof(LengthInBytes), nameof(OffsetInBytes) };
 
-
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.offset == 0 ? new Dictionary<string, object?>(2)
-			{
-				[nameof(this.Location)] = this.pointer.Location,
-				[nameof(this.LengthInBytes)] = this.length,
-			} : new Dictionary<string, object?>(3)
-			{
-				[nameof(this.Location)] = this.pointer.Location,
-				[nameof(this.LengthInBytes)] = this.length,
-				[nameof(this.OffsetInBytes)] = this.offset,
-			};
-		}
+		static string IMainPropertyFormattable<PointerSegment<T>>.StringMain => T.StringMain;
+		static IEnumerable<string> IMainPropertyFormattable<PointerSegment<T>>.PropertyNames => names;
+		IEnumerable<object?> IMainPropertyFormattable<PointerSegment<T>>.PropertyValues => new object[] { Location, this.LengthInBytes, this.OffsetInBytes };
 
 		/// <summary>
-		/// Return the string representation of this <see cref="PointerSegment"/>
+		/// Return the string representation of this <see cref="PointerSegment{T}"/>
 		/// </summary>
-		/// <returns>the string representation of this <see cref="PointerSegment"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override string ToString() => ((IMainPropertyFormat)this).ToString();
+		/// <returns>the string representation of this <see cref="PointerSegment{T}"/></returns>
+		public override string ToString() => IMainPropertyFormattable<PointerSegment<T>>.ToString(in this);
 		#endregion
 
-		#region operator
-		/// <summary>
-		/// Add offset (in bytes) to a <see cref="PointerSegment"/> to get another.
-		/// </summary>
-		/// <param name="storage">The <see cref="PointerSegment"/></param>
-		/// <param name="offset">The offset of type <see cref="long"/></param>
-		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static PointerSegment operator +(PointerSegment storage, long offset) => offset == 0 ? storage : new PointerSegment(storage, offset);
+		#region operators
+		static long IAdditiveIdentity<PointerSegment<T>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
-		/// Subtract offset (in bytes) to a <see cref="PointerSegment"/> to get another.
+		/// Add offset (in bytes) to a <see cref="PointerSegment{T}"/> to get another.
 		/// </summary>
-		/// <param name="storage">The <see cref="PointerSegment"/></param>
+		/// <param name="storage">The <see cref="PointerSegment{T}"/></param>
 		/// <param name="offset">The offset of type <see cref="long"/></param>
 		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static PointerSegment operator -(PointerSegment storage, long offset) => offset == 0 ? storage : new PointerSegment(storage, -offset);
+		public static PointerSegment<T> operator +(PointerSegment<T> storage, long offset) => offset == 0 ? storage : new(storage, offset);
 
 		/// <summary>
-		/// Get the pointer's difference (in bytes) of two <see cref="PointerSegment"/>s.
+		/// Subtract offset (in bytes) to a <see cref="PointerSegment{T}"/> to get another.
 		/// </summary>
-		/// <param name="left">The left <see cref="PointerSegment"/></param>
-		/// <param name="right">The right <see cref="PointerSegment"/></param>
+		/// <param name="storage">The <see cref="PointerSegment{T}"/></param>
+		/// <param name="offset">The offset of type <see cref="long"/></param>
+		/// <returns>a <see cref="Storage{T}"/> with <paramref name="offset"/> added to the pointer</returns>
+		public static PointerSegment<T> operator -(PointerSegment<T> storage, long offset) => offset == 0 ? storage : new(storage, -offset);
+
+		/// <summary>
+		/// Get the pointer's difference (in bytes) of two <see cref="PointerSegment{T}"/>s.
+		/// </summary>
+		/// <param name="left">The left <see cref="PointerSegment{T}"/></param>
+		/// <param name="right">The right <see cref="PointerSegment{T}"/></param>
 		/// <returns>If <paramref name="left"/> and <paramref name="right"/> have different references, return <see cref="long.MinValue"/>; otherwise, return a <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long operator -(PointerSegment left, PointerSegment right)
-			=> left.Location != right.Location || !left.pointer.Equals(right.pointer) ? long.MinValue : left.offset - right.offset;
+		public static long operator -(PointerSegment<T> left, PointerSegment<T> right) => left.Pointer != right.Pointer ? long.MinValue : left.OffsetInBytes - right.OffsetInBytes;
 		#endregion
 	}
 	#endregion
@@ -748,7 +666,7 @@ namespace Althea
 	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
 	/// </summary>
 	/// <remarks>This interface exists only because it is necessary for a data type cast operation to be conducted without copying. You shall <b>NOT</b> implement this interface; implement <see cref="Storage{T}"/> instead.</remarks>
-	public interface IStorage : IReadOnlyList<PointerSegment>, IEquatable<IStorage>, ICheckValid, IDisposable, IMainPropertyFormat
+	public interface IStorage : IReadOnlyList<PointerSegment>, IEquatable<IStorage>, ICheckValid, IDisposable, IMainPropertyFormattable
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the data type of this storage as a <see cref="NativeTypes.DataType"/>
@@ -829,10 +747,10 @@ namespace Althea
 	/// </summary>
 	/// <typeparam name="T">any unmanaged data type</typeparam>
 	/// <remarks>
-	/// I must warn you that although .NET has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
+	/// I must warn you that although .NET has GC to periodically collect unused garbage to prevent memory leak, you should not rely on it too much during HPC. <b>Remember</b> to use <c>using</c> statement or call <see cref="Storage{T}.Dispose()"/>.<br/>
 	/// The leaked memory which will be collected GC still causes not only performance loss but also potential bugs if you do not know how GC works.<br/>
 	/// See https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/ for official documentations of GC of .NET.</remarks>
-	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, ICloneable<Storage<T>> where T : struct, INumber<T>
+	public abstract class Storage<T> : IStorage, IEquatable<Storage<T>>, ICloneable<Storage<T>> where T : unmanaged, INumber<T>
 	{
 		#region properties
 		/// <summary>
@@ -1208,12 +1126,12 @@ namespace Althea
 		#endregion
 
 		#region string
-		string IMainPropertyFormat.StringMain {
+		string IMainPropertyFormattable.StringMain {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.Count == 1 ? ((IMainPropertyFormat)this[0]).StringMain : $"{{{string.Join(", ", this)}}}";
+			get => this.Count == 1 ? ((IMainPropertyFormattable)this[0]).StringMain : $"{{{string.Join(", ", this)}}}";
 		}
 
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => new Dictionary<string, object?>
 			{
@@ -1223,10 +1141,10 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, get the string representation of this <see cref="Storage{T}"/>. The default implementation utilizes <see cref="IMainPropertyFormat.ToString()"/>
+		/// When implemented by a derived class, get the string representation of this <see cref="Storage{T}"/>. The default implementation utilizes <see cref="IMainPropertyFormattable.ToString()"/>
 		/// </summary>
 		/// <returns>The string representation</returns>
-		public override string ToString() => ((IMainPropertyFormat)this).ToString();
+		public override string ToString() => ((IMainPropertyFormattable)this).ToString();
 		#endregion
 
 		#region operator

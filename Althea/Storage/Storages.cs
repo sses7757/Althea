@@ -702,12 +702,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region override
-		string IMainPropertyFormat.StringMain {
+		string IMainPropertyFormattable.StringMain {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ((IMainPropertyFormat)this[0]).StringMain;
+			get => ((IMainPropertyFormattable)this[0]).StringMain;
 		}
 
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormat.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				int count = this.CacheLevels - 1;

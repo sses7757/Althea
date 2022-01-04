@@ -234,7 +234,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool IsSupported(StorageLocation location) => location.Type == LocationType.GpuRam && location.LocationDetail == this.BindedDeviceID;
+		private bool IsSupported(StorageLocation location) => location.Type == LocationType.GpuRam && location.Detail == this.BindedDeviceID;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool IsSupported(CombinationOfLocations location) => location.Count == 1 && this.IsSupported(location[0]);
 

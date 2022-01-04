@@ -143,7 +143,7 @@ namespace Althea.Backend.Storage
 		/// Get the string representation of this <see cref="MemoryPointer"/>
 		/// </summary>
 		/// <returns>The string representation of this <see cref="MemoryPointer"/></returns>
-		public override string ToString() => ((IMainPropertyFormat)this).ToString();
+		public override string ToString() => ((IMainPropertyFormattable)this).ToString();
 		#endregion
 	}
 
@@ -187,7 +187,7 @@ namespace Althea.Backend.Storage
 			GC.SuppressFinalize(this);
 		}
 
-		string IMainPropertyFormat.StringMain {
+		string IMainPropertyFormattable.StringMain {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.NativeStream.ToString();
 		}
@@ -217,7 +217,7 @@ namespace Althea.Backend.Storage
 		/// Get the string representation of this <see cref="StreamPointer"/>
 		/// </summary>
 		/// <returns>The string representation of this <see cref="StreamPointer"/></returns>
-		public override string ToString() => ((IMainPropertyFormat)this).ToString();
+		public override string ToString() => ((IMainPropertyFormattable)this).ToString();
 		#endregion
 	}
 
@@ -570,7 +570,7 @@ namespace Althea.Backend.Storage
 			}
 			// cast
 			var loc = pointer.Location; var ptr = pointer.Pointer; var locType = loc.Type;
-			if (((locType == LocationType.CpuRam) || (locType == LocationType.GpuRam && loc.LocationDetail == Cuda.CudaRuntime.CurrentDeviceID)) && ptr is IMemoryPointer mp)
+			if (((locType == LocationType.CpuRam) || (locType == LocationType.GpuRam && loc.Detail == Cuda.CudaRuntime.CurrentDeviceID)) && ptr is IMemoryPointer mp)
 			{
 				memoryPointer = mp;
 			}

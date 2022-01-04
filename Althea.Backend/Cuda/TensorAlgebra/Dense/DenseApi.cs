@@ -92,7 +92,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			if (location.Count != 1)
 				return false;
 			var loc = location[0];
-			return loc.Type == LocationType.GpuRam && loc.LocationDetail == CudaRuntime.CurrentDeviceID;
+			return loc.Type == LocationType.GpuRam && loc.Detail == CudaRuntime.CurrentDeviceID;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

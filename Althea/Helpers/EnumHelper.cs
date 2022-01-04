@@ -1,8 +1,81 @@
-﻿using Althea.Linq;
+﻿using System.Runtime.CompilerServices;
+
+using Althea.Linq;
 
 
 namespace Althea.Helpers
 {
+	/// <summary>
+	/// The read-only struct for storing method parameter types
+	/// </summary>
+	public readonly struct MethodParametersInfo : IEqualityOperators<MethodParametersInfo, MethodParametersInfo>
+	{
+		private readonly FixedClassBuffer_8<Type> parameterTypes;
+
+		/// <summary>
+		/// Create an <see cref="MethodParametersInfo"/> from <paramref name="parameterInfos"/>
+		/// </summary>
+		/// <param name="parameterInfos">The input parameters types as a <see cref="ReadOnlySpan{T}"/> of <see cref="System.Reflection.ParameterInfo"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="parameterInfos"/> is empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="parameterInfos"/> is too long</exception>
+		public MethodParametersInfo(ReadOnlySpan<System.Reflection.ParameterInfo> parameterInfos)
+		{
+			if (parameterInfos.IsEmpty)
+				throw new ArgumentNullException(nameof(parameterInfos));
+			if (parameterInfos.Length > 8)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(parameterInfos));
+			Span<Type> types = (stackalloc IntPtr[parameterInfos.Length]).AsClassType<Type>();
+			for (int i = 0; i < parameterInfos.Length; i++)
+				types[i] = parameterInfos[i].ParameterType;
+			this.parameterTypes = new(types);
+		}
+
+		/// <summary>
+		/// Create an <see cref="MethodParametersInfo"/> from <paramref name="parameterTypes"/>
+		/// </summary>
+		/// <param name="parameterTypes">The input parameters types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/></param>
+		/// <exception cref="ArgumentNullException">If <paramref name="parameterTypes"/> is empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="parameterTypes"/> is too long</exception>
+		public MethodParametersInfo(ReadOnlySpan<Type> parameterTypes)
+		{
+			if (parameterTypes.IsEmpty)
+				throw new ArgumentNullException(nameof(parameterTypes));
+			if (parameterTypes.Length > 8)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(parameterTypes));
+			this.parameterTypes = new(parameterTypes);
+		}
+
+		/// <summary>
+		/// Indicates whether the current object is equal to another object of the same type.
+		/// </summary>
+		/// <param name="other">The other <see cref="MethodParametersInfo"/> to compare with this one.</param>
+		/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+		public bool Equals(MethodParametersInfo other) => this.parameterTypes == other.parameterTypes;
+
+		/// <summary>
+		/// Indicates whether the current object is equal to another object of the same type.
+		/// </summary>
+		/// <param name="obj">The other object to compare with this one.</param>
+		/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
+		public override bool Equals(object? obj) => obj is MethodParametersInfo info && this.Equals(info);
+
+		/// <summary>
+		/// Get the hash code of this <see cref="MethodParametersInfo"/>
+		/// </summary>
+		/// <returns>The hash code of this <see cref="MethodParametersInfo"/></returns>
+		public override int GetHashCode() => this.parameterTypes.GetHashCode();
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(MethodParametersInfo left, MethodParametersInfo right) => left.Equals(right);
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(MethodParametersInfo left, MethodParametersInfo right) => !left.Equals(right);
+	}
+
 	/// <summary>
 	/// The static class for generic enum helper methods
 	/// </summary>
@@ -11,6 +84,8 @@ namespace Althea.Helpers
 		private static class NameCacher<T> where T : struct, Enum
 		{
 			internal static Dictionary<T, string> names = new();
+
+			internal static Dictionary<MethodParametersInfo, Type> methodParas = new();
 		}
 
 		private static class MethodCacher<TEnum, TDelegate> where TEnum : struct, Enum where TDelegate : Delegate
@@ -66,6 +141,23 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
+		/// Parse the given enum <paramref name="name"/> to a enum value
+		/// </summary>
+		/// <typeparam name="T">The type of the enum</typeparam>
+		/// <param name="name">The name / string representation of the enum to parse</param>
+		/// <returns>The enum of type <typeparamref name="T"/> given by <paramref name="name"/></returns>
+		/// <exception cref="ArgumentException">If <paramref name="name"/> cannot be converted to a enum of type <typeparamref name="T"/></exception>
+		public static T Parse<T>(string name) where T : struct, Enum
+		{
+			if (Enum.TryParse(name, out T e))
+				return e;
+			if (!NameCacher<T>.names.ContainsValue(name))
+				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(name));
+			e = NameCacher<T>.names.FirstOrDefault(kv => kv.Value == name).Key;
+			return e;
+		}
+
+		/// <summary>
 		/// Get the method delegate of type <typeparamref name="TDelegate"/> associated to the given enum value
 		/// </summary>
 		/// <typeparam name="TEnum">The type of the enum</typeparam>
@@ -94,7 +186,13 @@ namespace Althea.Helpers
 				MethodCacher<TEnum, TDelegate>.methods[e] = method;
 				return;
 			}
-			
+			if (!NameCacher<TEnum>.methodParas.TryGetValue(new(method.Method.GetParameters()), out Type? oldType))
+				oldType = null;
+			if (oldType is null || oldType == typeof(TDelegate))
+			{
+				MethodCacher<TEnum, TDelegate>.methods[e] = method;
+				return;
+			}
 		}
 	}
 }
