@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Althea.NativeTypes
 {
@@ -30,8 +31,8 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The static class for primitive and custom native types' meta data
 	/// </summary>
-	/// <typeparam name="T">The type of the numbers</typeparam>
-	public static class NativeType<T> where T : INumber<T>
+	/// <typeparam name="T">An unmanaged struct which implements <see cref="INumber{TSelf}"/> as the number type</typeparam>
+	public static class NativeType<T> where T : unmanaged, INumber<T>
 	{
 		private static readonly Type? interfaceType = null;
 
@@ -70,8 +71,8 @@ namespace Althea.NativeTypes
 				}
 				classification = default(T) switch
 				{
-					byte or ushort or uint or ulong or nuint or UIntPtr => DataTypeClassification.UnsignedInteger,
-					sbyte or short or int or long or uint or IntPtr => DataTypeClassification.SignedInteger,
+					byte or ushort or uint or ulong or nuint => DataTypeClassification.UnsignedInteger,
+					sbyte or short or int or long or nint => DataTypeClassification.SignedInteger,
 					Half or float or double => DataTypeClassification.FloatPoint_IEEE754,
 					_ => 0,
 				};
@@ -97,7 +98,7 @@ namespace Althea.NativeTypes
 				}
 				machinePrecision = default(T) switch
 				{
-					byte or ushort or uint or ulong or nuint or UIntPtr or sbyte or short or int or long or uint or IntPtr => 1,
+					byte or ushort or uint or ulong or nuint or sbyte or short or int or long or nint => 1,
 					Half => 0.0009765625,
 					float => 1.1920928955078125E-07,
 					double => 2.220446049250313E-16,
@@ -123,19 +124,13 @@ namespace Althea.NativeTypes
 			}
 		}
 
-		private static int? size = null;
 		/// <summary>
 		/// Get the size of type <typeparamref name="T"/> (in bytes).
 		/// </summary>
-		public static int Size
+		public static unsafe int Size
 		{
-			get
-			{
-				if (size is not null)
-					return size.Value;
-				size = Marshal.SizeOf<T>();
-				return size.Value;
-			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => sizeof(T);
 		}
 
 		/// <summary>

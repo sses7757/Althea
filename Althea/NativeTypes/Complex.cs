@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -87,7 +86,7 @@ namespace Althea.NativeTypes
 	/// </summary>
 	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
 	/// <typeparam name="T">The type of corresponding real number</typeparam>
-	public interface IComplexIntegerNumber<TSelf, T> : IComplexNumber<TSelf, T>, IBinaryNumber<TSelf>
+	public interface IComplexIntegerNumber<TSelf, T> : IComplexNumber<TSelf, T>, IBinaryInteger<TSelf>
 		where TSelf : IComplexIntegerNumber<TSelf, T>
 		where T : unmanaged, IBinaryInteger<T>
 	{
@@ -111,7 +110,8 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the real part
 		/// </summary>
-		public T Real {
+		public T Real
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.real;
 		}
@@ -119,7 +119,8 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Get the imaginary part
 		/// </summary>
-		public T Imaginary {
+		public T Imaginary
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.imag;
 		}
@@ -1707,6 +1708,48 @@ namespace Althea.NativeTypes
 		{
 			return new(T.Log2(x.real), T.Log2(x.imag));
 		}
+		/// <summary>
+		/// ComplexInteger check power of 2 for both parts
+		/// </summary>
+		public static bool IsPow2(ComplexInteger<T> x)
+		{
+			return T.IsPow2(x.real) && T.IsPow2(x.imag);
+		}
+		/// <summary>
+		/// ComplexInteger get leading zero counts for each part
+		/// </summary>
+		public static ComplexInteger<T> LeadingZeroCount(ComplexInteger<T> value)
+		{
+			return new(T.LeadingZeroCount(value.real), T.LeadingZeroCount(value.imag));
+		}
+		/// <summary>
+		/// ComplexInteger get trailing zero counts for each part
+		/// </summary>
+		public static ComplexInteger<T> TrailingZeroCount(ComplexInteger<T> value)
+		{
+			return new(T.TrailingZeroCount(value.real), T.TrailingZeroCount(value.imag));
+		}
+		/// <summary>
+		/// ComplexInteger get pop counts for each part
+		/// </summary>
+		public static ComplexInteger<T> PopCount(ComplexInteger<T> value)
+		{
+			return new(T.PopCount(value.real), T.PopCount(value.imag));
+		}
+		/// <summary>
+		/// ComplexInteger rotate left for each part
+		/// </summary>
+		public static ComplexInteger<T> RotateLeft(ComplexInteger<T> value, int rotateAmount)
+		{
+			return new(T.RotateLeft(value.real, rotateAmount), T.RotateLeft(value.imag, rotateAmount));
+		}
+		/// <summary>
+		/// ComplexInteger rotate right for each part
+		/// </summary>
+		public static ComplexInteger<T> RotateRight(ComplexInteger<T> value, int rotateAmount)
+		{
+			return new(T.RotateRight(value.real, rotateAmount), T.RotateRight(value.imag, rotateAmount));
+		}
 
 		/// <summary>
 		/// ComplexInteger bitwise AND for both parts
@@ -1736,14 +1779,21 @@ namespace Althea.NativeTypes
 		{
 			return new(~left.real, ~left.imag);
 		}
-
 		/// <summary>
-		/// ComplexInteger check power of 2 for both parts
+		/// ComplexInteger left shift
 		/// </summary>
-		public static bool IsPow2(ComplexInteger<T> x)
+		public static ComplexInteger<T> operator <<(ComplexInteger<T> value, int shiftAmount)
 		{
-			return T.IsPow2(x.real) && T.IsPow2(x.imag);
+			return new(value.real << shiftAmount, value.imag << shiftAmount);
 		}
+		/// <summary>
+		/// ComplexInteger right shift
+		/// </summary>
+		public static ComplexInteger<T> operator >>(ComplexInteger<T> value, int shiftAmount)
+		{
+			return new(value.real >> shiftAmount, value.imag >> shiftAmount);
+		}
+
 		#endregion
 
 		#region string representation

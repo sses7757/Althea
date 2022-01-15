@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 [assembly: CLSCompliant(true)]
 
@@ -41,6 +42,7 @@ namespace Althea
 		/// </summary>
 		IEnumerable<object?> PropertyValues { get; }
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static string Combine(string main, IEnumerable<string> names, IEnumerable<object?> properties)
 		{
 			if (names is null || properties is null)
@@ -62,6 +64,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="value">The instance value of type <typeparamref name="T"/></param>
 		/// <returns>The string representation of <paramref name="value"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static string ToString(in T value) => Combine(T.StringMain, T.PropertyNames, value.PropertyValues);
 	}
 
