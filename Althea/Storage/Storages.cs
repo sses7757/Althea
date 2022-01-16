@@ -20,7 +20,7 @@ namespace Althea.Storage
 	/// The enum representing the URI schemes which can be used as memories.
 	/// </summary>
 	/// <remarks>See <see cref="Uri.UriSchemeFile"/>, etc.</remarks>
-	public enum UriScheme : int
+	public enum UriScheme : short
 	{
 		/// <summary>
 		/// Specifies that the URI scheme is unknown
@@ -82,554 +82,267 @@ namespace Althea.Storage
 	#endregion
 
 
-	#region pure or mixed storage classes
+	#region pure storage
 	/// <summary>
-	/// The interface for any cached storage, including actual ones and referenced one
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 1 and its <see cref="CombinationOfLocations.Type"/> == Store.
 	/// </summary>
-	public interface IPureOrMixedStorage : IStorage { }
-
-	/// <summary>
-	/// The abstract storage class as a base class for all <see cref="Storage{T}"/> classes with <see cref="Storage{T}.LocationDescription"/>.<see cref="CombinationOfLocations.Type">Type</see> == <see cref="CombinationType.PureOrMixed"/>. Inherits <see cref="ActualStorage{T}"/>.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <remarks>This abstract class does not actually allocate storages on the given locations.</remarks>
-	public abstract class PureOrMixedStorage<T> : ActualStorage<T>, IPureOrMixedStorage where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+	public abstract class PureStorage<T, TP> : IStorage<T, PureStorage<T, TP>> where T : unmanaged, INumber<T> where TP : notnull, IPointer<TP>
 	{
 		#region basic
 		/// <summary>
-		/// The description of the storage locations of this storage class as a <see cref="CombinationOfLocations"/>
+		/// Statically get an empty <see cref="PureStorage{T, TP}"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription { get; }
+		public static PureStorage<T, TP> Empty => throw new NotImplementedException();
 
 		/// <summary>
-		/// Create (without allocation) a <see cref="PureOrMixedStorage{T}"/> with given <paramref name="locations"/> and <paramref name="lengths"/>
+		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
 		/// </summary>
-		/// <param name="locations">The locations as a <see cref="ReadOnlySpan{T}"/> of <see cref="StorageLocation"/></param>
-		/// <param name="lengths">The presenting lengths in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/></param>
-		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
-		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
-		protected PureOrMixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths) : base(lengths.Sum())
-		{
-			if (locations.Length == 0)
-				throw new ArgumentNullException(nameof(locations));
-			if (lengths.Length == 0)
-				throw new ArgumentNullException(nameof(lengths));
-			if (locations.Length != lengths.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
-			if (lengths.Length == 1 && lengths[0] == 0)
-				return; // empty
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), lengths.ToArray(), Parameter.MustPositive);
+		public static DataType DataType => NativeType<T>.DataType;
 
-			this.LocationDescription = new CombinationOfLocations(CombinationType.PureOrMixed, locations);
+		/// <summary>
+		/// Statically get the description of the storage locations of this <see cref="PureStorage{T, TP}"/> as a <see cref="CombinationOfLocations"/>
+		/// </summary>
+		public static CombinationOfLocations LocationDescription => new(TP.Location);
+
+		/// <summary>
+		/// Get the <see cref="PointerSegment{T}"/> of this <see cref="PureStorage{T, TP}"/>
+		/// </summary>
+		public PointerSegment<TP> Pointer { get; }
+
+		/// <summary>
+		/// Get the total length of the presenting array in bytes
+		/// </summary>
+		public long LengthInBytes => Pointer.LengthInBytes;
+
+		/// <summary>
+		/// Create a new <see cref="PureStorage{T, TP}"/> with given pointer of type <typeparamref name="TP"/>
+		/// </summary>
+		/// <param name="pointer">The pointer of type <typeparamref name="TP"/> to create from</param>
+		protected PureStorage(TP pointer)
+		{
+			this.Pointer = new(pointer);
 		}
+
+		void IStorage<PureStorage<T, TP>>.Dispose(bool invokedByUser)
+		{
+			if (this is ActualPureStorage<T, TP>)
+			{
+				MEM.Free(this.Pointer, invokedByUser);
+			}
+		}
+
+		/// <summary>
+		/// Check whether this <see cref="PureStorage{T, TP}"/> is a valid one or not
+		/// </summary>
+		/// <returns>The validness of this <see cref="PureStorage{T, TP}"/></returns>
+		public bool IsValid() => this.Pointer.IsValid();
 		#endregion
 
-		#region override
+		#region reference
 		/// <summary>
-		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// Make a referenced <see cref="PureStorage{T, TP}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
+		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="PureStorage{T, TP}"/> as a <see cref="long"/></param>
 		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A <see cref="ReferenceStorage{T}"/> of this one</returns>
+		/// <returns>A referenced <see cref="PureStorage{T, TP}"/> of this one</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override ReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
+		public PureStorage<T, TP> MakeReference(long offset = 0, long newLength = 0)
 		{
-			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
+			if (offset == 0 && newLength == 0 && this is ReferencePureStorage<T, TP> @ref)
+				return @ref;
+			else
+				return new ReferencePureStorage<T, TP>(this, offset, newLength);
 		}
 
 		/// <summary>
-		/// Convert this <see cref="PureOrMixedStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// Check whether this <see cref="PureStorage{T, TP}"/> overlaps with the <paramref name="other"/> <see cref="PureStorage{T, TP}"/>.
 		/// </summary>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <returns>A <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override ReferenceStorage<TOut> As<TOut>()
+		/// <param name="other">The other <see cref="PureStorage{T, TP}"/> to check overlap</param>
+		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		public bool OverlapWith(PureStorage<T, TP> other) => this.Pointer.OverlapWith(other.Pointer);
+
+		/// <summary>
+		/// Create a referenced storage of type <typeparamref name="TOther"/> over this storage
+		/// </summary>
+		/// <typeparam name="TOther">Any storage type that implements <see cref="IStorage{TOther}"/></typeparam>
+		/// <returns>A referenced storage of type <typeparamref name="TOther"/> over this storage</returns>
+		/// <exception cref="InvalidCastException">If a referenced <typeparamref name="TOther"/> cannot be created from <typeparamref name="TSelf"/></exception>
+		TOther IStorage<PureStorage<T, TP>>.As<TOther>()
 		{
-			long newLength = CheckCast<TOut>(this.Length);
-			return new PureOrMixedReferenceStorage<TOut>(this, newLength: newLength);
+			if (typeof(TOther).IsAssignableTo(typeof(PureStorage<T, TP>)))
+				return this.MakeReference() as TOther ?? TOther.Empty;
+
 		}
 
 		/// <summary>
-		/// Get the hash code of this <see cref="ActualStorage{T}"/>
+		/// Create a referenced storage of data type <typeparamref name="TOther"/> over this storage
 		/// </summary>
-		/// <returns>the hash code</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode() => this.HashCodeOfArray();
-		#endregion
-	}
-
-	/// <summary>
-	/// The storage class that references to a <see cref="PureOrMixedStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class PureOrMixedReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
-	{
-		#region basic
-		private readonly int start, end;
-
-		private readonly long startOffsetBytes, endOffsetBytes;
-
-		/// <summary>
-		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
-		/// </summary>
-		public override int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.end - this.start;
-		}
-
-		/// <summary>
-		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
-		/// </summary>
-		public override CombinationOfLocations LocationDescription {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.Reference?.LocationDescription[this.start..this.end] ?? default;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="PureOrMixedReferenceStorage{T}"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal PureOrMixedReferenceStorage() : base(null) { }
-
-		/// <summary>
-		/// Create a <see cref="PureOrMixedReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
-		/// </summary>
-		/// <param name="storage">The <see cref="PureOrMixedStorage{T}"/> to be referenced</param>
-		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureOrMixedStorage{T}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PureOrMixedReferenceStorage(IStorage storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
+		/// <typeparam name="TOther">Any unmanaged number as the new data type</typeparam>
+		/// <returns></returns>
+		public PureStorage<TOther, TP> As<TOther>() where TOther : unmanaged, INumber<TOther>
 		{
-			if (this.Reference is null)
-				return;
-			// check 
-			if (this.Reference is not PureOrMixedStorage<T> && !this.Reference.GetType().MakeGenericType(typeof(T)).IsAssignableTo(typeof(PureOrMixedStorage<T>)))
-				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
-			// set offsets
-			long offsetInBytes = this.TotalOffsetInBytes;
-			for (int i = 0; i < storage.Count; i++)
-			{
-				long lengthOfI = storage[i].LengthInBytes;
-				if (offsetInBytes < lengthOfI)
-				{   // set
-					this.start = i; this.startOffsetBytes = offsetInBytes;
-					break;
-				}
-				else
-				{
-					offsetInBytes -= lengthOfI;
-				}
-			}
-			offsetInBytes += this.LengthInBytes;
-			for (int i = this.start; i < storage.Count; i++)
-			{
-				long lengthOfI = storage[i].LengthInBytes;
-				if (offsetInBytes <= lengthOfI)
-				{   // set
-					this.end = i + 1; this.endOffsetBytes = offsetInBytes;
-					break;
-				}
-				else
-				{
-					offsetInBytes -= lengthOfI;
-				}
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private PureOrMixedReferenceStorage(IStorage? storage, long offset, long newLength, int start, int end, long startOffsetBytes, long endOffsetBytes) : base(storage, offset, newLength)
-		{
-			this.start = start; this.end = end;
-			this.startOffsetBytes = startOffsetBytes; this.endOffsetBytes = endOffsetBytes;
+			if (typeof(TOther) == typeof(T))
+				return this.MakeReference() as PureStorage<TOther, TP> ?? PureStorage<TOther, TP>.Empty;
+			new ReferencePureStorage<TOther, TP>()
 		}
 		#endregion
 
-		#region override
+		#region create
 		/// <summary>
-		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="PureOrMixedReferenceStorage{T}"/> (in presenting order)
+		/// Statically <b>allocate</b> and create a new <see cref="PureStorage{T, TP}"/> of given <paramref name="combinationType"/> and given locations and lengths.
 		/// </summary>
-		/// <param name="index">The element index</param>
-		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
-		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureOrMixedReferenceStorage{T}"/> is null</exception>
-		public override PointerSegment this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
-				if (this.Reference is null)
-					throw new InvalidOperationException();
-				PointerSegment pointer = this.Reference[index - this.start];
-				if (index <= 0)
-				{
-					pointer = pointer.MoveBy(this.startOffsetBytes);
-				}
-				else if (index == this.Count - 1)
-				{   // this.Count cannot be 1
-					pointer = new PointerSegment(pointer, newLength: this.endOffsetBytes);
-				}
-				return pointer;
-			}
-		}
-
-		/// <summary>
-		/// Make a <see cref="ReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A <see cref="PureOrMixedReferenceStorage{T}"/> of this one</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureOrMixedReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
-		{
-			return new PureOrMixedReferenceStorage<T>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Convert this <see cref="PureOrMixedReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
-		/// </summary>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <returns>a referenced <see cref="PureOrMixedReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureOrMixedReferenceStorage<TOut> As<TOut>()
-		{
-			if (this.Reference is null)
-				return new PureOrMixedReferenceStorage<TOut>(null, 0, 0, 0, 0, 0, 0);
-			long offset = CheckCast<TOut>(this.TotalOffsetInBytes, sizeInBytes: true);
-			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
-			return new PureOrMixedReferenceStorage<TOut>(this.Reference, offset, length);
-		}
-
-		/// <summary>
-		/// Determines whether the specified object is equal to the current object.
-		/// </summary>
-		/// <param name="obj">another object</param>
-		/// <returns>this equals to <paramref name="obj"/> or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(Storage<T>? obj)
-		{
-			if (obj is not null && obj is PureOrMixedReferenceStorage<T> r)
-			{
-				return this.Reference == r.Reference && this.start == r.start && this.end == r.end && this.startOffsetBytes == r.startOffsetBytes && this.endOffsetBytes == r.endOffsetBytes;
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
-		/// </summary>
-		/// <returns>the hash code</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode() => HashCode.Combine(this.Reference, this.start, this.end, this.startOffsetBytes, this.endOffsetBytes);
-		#endregion
-	}
-
-	/// <summary>
-	/// Represents a storage of a contiguous memory block on a certain memory location, implements <see cref="PureOrMixedStorage{T}"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class PureStorage<T> : PureOrMixedStorage<T> where T : unmanaged
-	{
-		#region basic
-		/// <summary>
-		/// Get whether the given <see cref="CombinationType"/> and <see cref="StorageLocation"/>s is supported by this class
-		/// </summary>
-		/// <param name="type">The given <see cref="CombinationType"/></param>
+		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
 		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
-		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
+		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
+		/// <returns>The created new <see cref="PureStorage{T, TP}"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		public static PureStorage<T, TP> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
-			return type == CombinationType.PureOrMixed && locations.Length == 1;
+			
 		}
 
-		private readonly PointerSegment pointer;
-
 		/// <summary>
-		/// <b>Allocate</b> and create a <see cref="PureStorage{T}"/> of given <see cref="Storage{T}.Length"/> on given <see cref="StorageLocation"/> 
+		/// Statically allocate and creates a new <see cref="PureStorage{T, TP}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="location">The <see cref="StorageLocation"/> representing the memory location</param>
-		/// <param name="length">The length of contiguous memory block in <typeparamref name="T"/></param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PureStorage(StorageLocation location, long length) : base(stackalloc[] { location }, stackalloc[] { length })
+		/// <param name="storage">The storage of type <typeparamref name="TOther"/> to mimic.</param>
+		/// <returns>A new <see cref="PureStorage{T, TP}"/> that likes <paramref name="storage"/></returns>
+		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
+		public static PureStorage<T, TP> CreateAlike<TOther>(TOther storage) where TOther : class, IStorage<TOther>
 		{
-			this.pointer = length == 0 ? default : Allocate(location, length);
+			
 		}
 		#endregion
 
-		#region override
-		/// <summary>
-		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
-		/// </summary>
-		public override int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
+		#region operators
+		static long IAdditiveIdentity<PureStorage<T, TP>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
-		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
+		/// Indicates whether the current <see cref="PureStorage{T, TP}"/> is equal to the <paramref name="other"/> <see cref="PureStorage{T, TP}"/> of the same type.
 		/// </summary>
-		/// <param name="index">The element index</param>
-		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public override PointerSegment this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (index != 0)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
-				return this.pointer;
-			}
-		}
+		/// <param name="other">The other <see cref="PureStorage{T, TP}"/> to compare to</param>
+		/// <returns>true if the current <see cref="PureStorage{T, TP}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		public bool Equals(PureStorage<T, TP>? other) => other is not null && this.Pointer == other.Pointer;
 
 		/// <summary>
-		/// Allocate and creates a new <see cref="PureStorage{T}"/> that is a copy of the current one.
+		/// Get the hash code of this <see cref="PureStorage{T, TP}"/>
 		/// </summary>
-		/// <returns>A new <see cref="PureStorage{T}"/> that is a copy of the current instance</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureStorage<T> Clone()
+		/// <returns>The hash code of this <see cref="PureStorage{T, TP}"/></returns>
+		public override int GetHashCode() => this.Pointer.GetHashCode();
+
+		/// <summary>
+		/// Check whether this <see cref="PureStorage{T, TP}"/> equals the other <paramref name="obj"/> or not
+		/// </summary>
+		/// <param name="obj">The other object to compare to</param>
+		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		public override bool Equals(object? obj) => this.Equals(obj as PureStorage<T, TP>);
+
+		/// <summary>
+		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="PureStorage{T, TP}"/>s
+		/// </summary>
+		/// <param name="left">The left operand of type <see cref="PureStorage{T, TP}"/></param>
+		/// <param name="right">The right operand of type <see cref="PureStorage{T, TP}"/></param>
+		/// <returns>The distance between two <see cref="PureStorage{T, TP}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
+		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		public static long operator -(PureStorage<T, TP> left, PureStorage<T, TP> right)
 		{
-			var storage = new PureStorage<T>(this.pointer.Location, this.Length);
-			try
-			{
-				MEM.MemoryCopy(this.pointer, storage.pointer);
-				return storage;
-			}
-			catch (System.Exception)
-			{
-				storage?.Dispose();
-				throw;
-			}
+			long diffBytes = IStorage<PureStorage<T, TP>>.StorageDiffBytes(left, right);
+			if (diffBytes % NativeType<T>.Size != 0)
+				throw new InvalidOperationException(Other.CannotDivide);
+			return diffBytes / NativeType<T>.Size;
 		}
 
 		/// <summary>
-		/// Convert this <see cref="PureReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
+		/// <see cref="PureStorage{T, TP}"/> addition operator
 		/// </summary>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <returns>A <see cref="PureReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureReferenceStorage<TOut> As<TOut>()
-		{
-			long newLength = CheckCast<TOut>(this.Length);
-			return new PureReferenceStorage<TOut>(this, newLength: newLength);
-		}
+		public static PureStorage<T, TP> operator +(PureStorage<T, TP> left, long right) => left.MakeReference(right);
 
 		/// <summary>
-		/// Make a <see cref="PureReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// <see cref="PureStorage{T, TP}"/> subtraction operator
 		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A <see cref="PureReferenceStorage{T}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
-		{
-			return new PureReferenceStorage<T>(this, offset, newLength);
-		}
-		#endregion
-	}
-
-
-	/// <summary>
-	/// The storage class that references to a <see cref="PureStorage{T}"/>, implements <see cref="ReferenceStorage{T}"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <remarks>Although the <see cref="PureOrMixedReferenceStorage{T}"/> covers the usage of this class, this class is specially separated to improve performance.</remarks>
-	public class PureReferenceStorage<T> : ReferenceStorage<T>, IPureOrMixedStorage, IReferenceStorage where T : unmanaged
-	{
-		#region basic
-		private readonly PointerSegment refPointer;
+		public static PureStorage<T, TP> operator -(PureStorage<T, TP> left, long right) => left.MakeReference(-right);
 
 		/// <summary>
-		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
+		/// <see cref="PureStorage{T, TP}"/> equality operator
 		/// </summary>
-		public override int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
+		public static bool operator ==(PureStorage<T, TP> left, PureStorage<T, TP> right) => left.Equals(right);
 
 		/// <summary>
-		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
+		/// <see cref="PureStorage{T, TP}"/> inequality operator
 		/// </summary>
-		public override CombinationOfLocations LocationDescription {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.Reference?.LocationDescription ?? default;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal PureReferenceStorage() : base(null) { }
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal PureReferenceStorage(PointerSegment refPointer) : base(null, 0, refPointer.LengthInBytes / Const<T>.SizeT) => this.refPointer = refPointer;
-
-		/// <summary>
-		/// Create a <see cref="PureReferenceStorage{T}"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
-		/// </summary>
-		/// <param name="storage">The <see cref="PureStorage{T}"/> to be referenced</param>
-		/// <param name="offset">The total offset in <typeparamref name="T"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/>, default 0 means automatically calculate by <paramref name="storage"/> and <paramref name="offset"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> or its reference is null</exception>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorage{T}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PureReferenceStorage(IStorage? storage, long offset = 0, long newLength = 0) : base(storage, offset, newLength)
-		{
-			if (this.Reference is null)
-				return;
-			// check 
-			if (this.Reference is not PureStorage<T> && !this.Reference.GetType().MakeGenericType(typeof(T)).IsAssignableTo(typeof(PureStorage<T>)))
-				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
-			// set
-			this.refPointer = this.Reference[0].MoveBy(this.TotalOffsetInBytes, this.LengthInBytes);
-		}
+		public static bool operator !=(PureStorage<T, TP> left, PureStorage<T, TP> right) => !left.Equals(right);
 		#endregion
 
-		#region override
-		/// <summary>
-		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="PureReferenceStorage{T}"/> (in presenting order)
-		/// </summary>
-		/// <param name="index">The element index</param>
-		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
-		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="PureReferenceStorage{T}"/> is null</exception>
-		public override PointerSegment this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (index < 0 || index >= this.Count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
-				return this.refPointer;
-			}
-		}
+		#region string
+		static string IMainPropertyFormattable<PureStorage<T, TP>>.StringMain => nameof(PureStorage<T, TP>);
+
+		static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(StorageLocation), nameof(IStorage<T, PureStorage<T, TP>>.Length), "Pointer" };
+
+		IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object?[] { DataType, TP.Location, ((IStorage<T, PureStorage<T, TP>>)this).Length, this.Pointer.Pointer.ToString() };
 
 		/// <summary>
-		/// Make a <see cref="PureReferenceStorage{T}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Storage{T}.Length"/> changing to <paramref name="newLength"/>.
+		/// Return the string representation of this <see cref="PureStorage{T, TP}"/>
 		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="Storage{T}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A <see cref="PureReferenceStorage{T}"/> of this one</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureReferenceStorage<T> MakeReference(long offset = 0, long newLength = 0)
-		{
-			return new PureReferenceStorage<T>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Convert this <see cref="PureReferenceStorage{T}"/> to another one with different data type <typeparamref name="TOut"/>
-		/// </summary>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <returns>a referenced <see cref="PureReferenceStorage{TOut}"/></returns>
-		/// <exception cref="InvalidCastException">if <see cref="IStorage.LengthInBytes"/> cannot be divided by <see cref="Const{TOut}.SizeT"/></exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override PureReferenceStorage<TOut> As<TOut>()
-		{
-			if (this.Reference is null)
-				return new PureReferenceStorage<TOut>(null, 0, 0);
-			long offset = CheckCast<TOut>(this.TotalOffsetInBytes, sizeInBytes: true);
-			long length = CheckCast<TOut>(this.Reference.LengthInBytes - this.TotalOffsetInBytes, sizeInBytes: true);
-			return new PureReferenceStorage<TOut>(this.Reference, offset, length);
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="ReferenceStorage{T}"/>
-		/// </summary>
-		/// <returns>the hash code</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode() => HashCode.Combine(this.Reference, this.TotalOffsetInBytes, this.Length);
+		/// <returns>the string representation of this <see cref="PureStorage{T, TP}"/></returns>
+		public override string ToString() => IMainPropertyFormattable<PureStorage<T, TP>>.ToString(this);
 		#endregion
 	}
 
 	/// <summary>
-	/// Represents a storage of several contiguous memory blocks on different memory locations with fixed sizes, implements <see cref="ActualStorage{T}"/>
+	/// The actual storage class for a pure storage on a single location.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class MixedStorage<T> : PureOrMixedStorage<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+	public sealed class ActualPureStorage<T, TP> : PureStorage<T, TP>, IActualStorage<T, PureStorage<T, TP>>
+		where T : unmanaged, INumber<T>
+		where TP : notnull, IPointer<TP>
 	{
-		#region basic
 		/// <summary>
-		/// Get whether the given <see cref="CombinationType"/> and <see cref="StorageLocation"/>s is supported by this class
+		/// Create a new <see cref="ActualPureStorage{T, TP}"/> from the given <paramref name="pointer"/> of type <typeparamref name="TP"/>
 		/// </summary>
-		/// <param name="type">The given <see cref="CombinationType"/></param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
-		/// <returns>Whether <paramref name="type"/> and <paramref name="locations"/> is supported or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsSupported(CombinationType type, ReadOnlySpan<StorageLocation> locations)
+		/// <param name="pointer">The given pointer of type <typeparamref name="TP"/></param>
+		public ActualPureStorage(TP pointer) : base(pointer)
 		{
-			return type == CombinationType.PureOrMixed && locations.Length > 1;
+			// do nothing
 		}
+	}
 
-		private readonly PointerSegment[] pointers;
+	/// <summary>
+	/// The reference storage class for a pure storage on a single location.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+	public sealed class ReferencePureStorage<T, TOrg, TP> : PureStorage<T, TP>, IReferenceStorage<TOrg, PureStorage<TOrg, TP>>
+		where T : unmanaged, INumber<T>
+		where TP : notnull, IPointer<TP>
+	{
+		/// <summary>
+		/// Get the reference <see cref="PureStorage{T, TP}"/> of this <see cref="ReferencePureStorage{T, TP}"/>
+		/// </summary>
+		public PureStorage<T, TP>? Reference { get; }
 
 		/// <summary>
-		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
+		/// Get the total offset of this <see cref="ReferencePureStorage{T, TP}"/> in bytes
 		/// </summary>
-		/// <param name="locations">The <see cref="ReadOnlySpan{T}"/> of given <see cref="StorageLocation"/>s</param>
-		/// <param name="lengths">The <see cref="ReadOnlySpan{T}"/> of given lengths</param>
-		/// <param name="allowSameLocation">allow same <see cref="StorageLocation"/>s in <paramref name="locations"/> or not</param>
-		/// <exception cref="ArgumentNullException">If the sizes of <paramref name="locations"/> or <paramref name="lengths"/> is 0</exception>
-		/// <exception cref="ArgumentException">If the sizes of <paramref name="locations"/> and <paramref name="lengths"/> are not the same; or <paramref name="allowSameLocation"/> is false while <paramref name="locations"/> contains duplicate value(s)</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any length in <paramref name="lengths"/> is 0</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MixedStorage(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths, bool allowSameLocation = true) : base(locations, lengths)
+		public long TotalOffsetInBytes => this.Pointer.OffsetInBytes;
+
+		/// <summary>
+		/// Create a new <see cref="ReferencePureStorage{T, TP}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="storage">The base <see cref="PureStorage{T, TP}"/> to refer to</param>
+		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+		public ReferencePureStorage(PureStorage<T, TP>? storage, long offset = 0, long newLength = 0) :
+			base(storage is null ? TP.Default : storage.Pointer.Pointer)
 		{
-			if (!allowSameLocation && !locations.ElementsUnique())
-				throw new ArgumentException(Parameter.DuplicateValue, nameof(locations));
-
-			try
-			{
-				this.pointers = new PointerSegment[locations.Length];
-				for (int i = 0; i < locations.Length; i++)
-				{
-					this.pointers[i] = Allocate(locations[i], lengths[i]);
-				}
-			}
-			catch (System.Exception)
-			{
-				this.Dispose(true);
-				throw;
-			}
+			var (reference, _, _) = IReferenceStorage<PureStorage<T, TP>>.Create(storage, offset * NativeType<T>.Size, newLength * NativeType<T>.Size);
+			this.Reference = reference;
 		}
-
-		/// <summary>
-		/// <b>Allocate</b> and create a <see cref="MixedStorage{T}"/> of given lengths on given <see cref="StorageLocation"/>s
-		/// </summary>
-		/// <param name="param">The <see cref="Array"/> of given lengths and <see cref="StorageLocation"/>s</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MixedStorage(params (StorageLocation location, long length)[] param) :
-			this(param.CopyTo(stackalloc StorageLocation[param.Length], static p => p.location),
-				 param.CopyTo(stackalloc long[param.Length], static p => p.length),
-				 allowSameLocation: true)
-		{ }
-		#endregion
-
-		#region override
-		/// <summary>
-		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
-		/// </summary>
-		public override int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.pointers.Length;
-		}
-
-		/// <summary>
-		/// Indexer of the <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> (in presenting order)
-		/// </summary>
-		/// <param name="index">The element index</param>
-		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public override PointerSegment this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				return this.pointers[index];
-			}
-		}
-		#endregion
 	}
 	#endregion
 

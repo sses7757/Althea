@@ -82,19 +82,11 @@ namespace Althea
 	}
 
 	/// <summary>
-	/// The enum for the type of the description the combination of storage locations
+	/// The enum for the type of the description the combination of storage locations, each bit represents the type of its corresponding location in <see cref="CombinationOfLocations"/>
 	/// </summary>
+	[Flags]
 	public enum CombinationType : short
 	{
-		/// <summary>
-		/// Storage composed of only one storage location (pure) or a <b>set</b> of storage memory locations (mixed)
-		/// </summary>
-		/// <remarks>The storages with this type only </remarks>
-		PureOrMixed = (0 << CombinationTypeExtension.ClassificationEnd) | CombinationTypeExtension.ClassCombined,
-		/// <summary>
-		/// Storage composed of several <b>ordered</b> storage locations
-		/// </summary>
-		Cached = (0 << CombinationTypeExtension.ClassificationEnd) | CombinationTypeExtension.ClassOrdered,
 	}
 
 	/// <summary>
@@ -103,33 +95,47 @@ namespace Althea
 	public static class CombinationTypeExtension
 	{
 		/// <summary>
-		/// The classification mask end bit of <see cref="CombinationType"/>
+		/// Create a <see cref="CombinationType"/> from given information about whether the levels are caches or actual storages.
 		/// </summary>
-		public const int ClassificationEnd = 1;
+		/// <param name="levelAsCache">The input <see cref="ReadOnlySpan{T}"/> of <see cref="bool"/> to indicate whether the levels are caches or actual storages</param>
+		/// <returns>The created <see cref="CombinationType"/> from <paramref name="levelAsCache"/>.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="levelAsCache"/>'s length is too long to fit in a <see cref="CombinationType"/>.</exception>
+		public static CombinationType Create(this ReadOnlySpan<bool> levelAsCache)
+		{
+			if (levelAsCache.IsEmpty)
+				return 0;
+			if (levelAsCache.Length > sizeof(CombinationType) * 8)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(levelAsCache));
+			CombinationType c = 0;
+			for (int i = 0; i < levelAsCache.Length; i++)
+			{
+				if (levelAsCache[i])
+					c |= (CombinationType)(1 << i);
+			}
+			return c;
+		}
 
 		/// <summary>
-		/// The classification mask of <see cref="CombinationType"/>
+		/// Get the string representation of the given <see cref="CombinationType"/> under given <paramref name="length"/>.
 		/// </summary>
-		public const int ClassificationMask = 0b1;
-
-		/// <summary>
-		/// The classification of combined (unordered) typed <see cref="CombinationType"/>
-		/// </summary>
-		/// <remarks>Other classifications are not supported.</remarks>
-		public const int ClassCombined = 0b0;
-
-		/// <summary>
-		/// The classification of ordered typed <see cref="CombinationType"/>
-		/// </summary>
-		/// <remarks>Other classifications are not supported.</remarks>
-		public const int ClassOrdered = 0b1;
-
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether the given <see cref="CombinationType"/> is an ordered one or a unordered one.
-		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/></param>
-		/// <returns>Whether the given <see cref="CombinationType"/> is an ordered one or a unordered one</returns>
-		public static bool IsOrdered(this CombinationType combinationType) => ((short)combinationType).IsBitSet(0);
+		/// <param name="c">The given <see cref="CombinationType"/> to get string representation</param>
+		/// <param name="length">The size of <paramref name="c"/></param>
+		/// <returns>The name  string representation of <paramref name="c"/>.</returns>
+		public static string GetName(this CombinationType c, int length)
+		{
+			int l = "Store".Length + 1;
+			Span<char> chars = stackalloc char[length * l + 2];
+			chars[0] = '{';
+			for (int i = 0; i < length; i++)
+			{
+				if ((c & (CombinationType)(1 << i)) == 0)
+					"Store".CopyTo(chars[(1 + l * i)..]);
+				else
+					"Cache".CopyTo(chars[(1 + l * i)..]);
+			}
+			chars[^1] = '}';
+			return new(chars);
+		}
 	}
 	#endregion
 
@@ -279,7 +285,7 @@ namespace Althea
 		/// <param name="memoryLocation">The given <see cref="StorageLocation"/></param>
 		public CombinationOfLocations(StorageLocation memoryLocation)
 		{
-			this.type = CombinationType.PureOrMixed;
+			this.type = 0;
 			this.data = default;
 			this.data[0] = memoryLocation;
 			this.count = 1;
@@ -301,8 +307,6 @@ namespace Althea
 				return false;
 			if (this.count == 0)
 				return true;
-			if (this.type.IsOrdered())
-				return this.data.Equals(other.data);
 			else
 				return this.data.AsSpan(this.count).SetEquals(other.data.AsSpan(this.count));
 		}
@@ -325,11 +329,7 @@ namespace Althea
 		{
 			Span<StorageLocation> span = stackalloc StorageLocation[this.count];
 			this.data.CopyToSpan(span);
-			ReadOnlySpan<StorageLocation> s = span;
-			if (this.type.IsOrdered())
-				return HashCode.Combine(this.type, s.HashCodeOfSpan());
-			else
-				return HashCode.Combine(this.type, s.HashCodeOfSet());
+			return HashCode.Combine(this.type, span.HashCodeOfSet());
 		}
 
 		/// <summary>
@@ -416,7 +416,7 @@ namespace Althea
 
 		static IEnumerable<string> IMainPropertyFormattable<CombinationOfLocations>.PropertyNames => new[] { "Type", "Data" };
 
-		IEnumerable<object?> IMainPropertyFormattable<CombinationOfLocations>.PropertyValues => new object[] { this.type.GetName(), this.data.AsSpan(this.count).SpanJoin(", ") };
+		IEnumerable<object?> IMainPropertyFormattable<CombinationOfLocations>.PropertyValues => new object[] { this.type.GetName(this.count), this.data.AsSpan(this.count).SpanJoin(',') };
 
 		/// <summary>
 		/// Return the string representation of this <see cref="CombinationOfLocations"/>
@@ -441,6 +441,11 @@ namespace Althea
 		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type
 		/// </summary>
 		abstract static StorageLocation Location { get; }
+
+		/// <summary>
+		/// When implemented by derived classes, statically get the default value of <typeparamref name="TSelf"/>
+		/// </summary>
+		abstract static TSelf Default { get; }
 
 		/// <summary>
 		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes
@@ -468,7 +473,7 @@ namespace Althea
 		IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>,
 		ISubtractionOperators<PointerSegment<T>, long, PointerSegment<T>>,
 		ISubtractionOperators<PointerSegment<T>, PointerSegment<T>, long>
-		where T : IPointer<T>
+		where T : notnull, IPointer<T>
 	{
 		#region basic
 		/// <summary>
@@ -589,20 +594,6 @@ namespace Althea
 		public static bool operator !=(PointerSegment<T> left, PointerSegment<T> right) => !(left == right);
 		#endregion
 
-		#region to string
-		private static readonly string[] names = new[] { nameof(Location), nameof(LengthInBytes), nameof(OffsetInBytes) };
-
-		static string IMainPropertyFormattable<PointerSegment<T>>.StringMain => T.StringMain;
-		static IEnumerable<string> IMainPropertyFormattable<PointerSegment<T>>.PropertyNames => names;
-		IEnumerable<object?> IMainPropertyFormattable<PointerSegment<T>>.PropertyValues => new object[] { Location, this.LengthInBytes, this.OffsetInBytes };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="PointerSegment{T}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="PointerSegment{T}"/></returns>
-		public override string ToString() => IMainPropertyFormattable<PointerSegment<T>>.ToString(in this);
-		#endregion
-
 		#region operators
 		static long IAdditiveIdentity<PointerSegment<T>, long>.AdditiveIdentity => 0;
 
@@ -631,6 +622,18 @@ namespace Althea
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different pointers</exception>
 		public static long operator -(PointerSegment<T> left, PointerSegment<T> right) => left.Pointer == right.Pointer ? left.OffsetInBytes - right.OffsetInBytes : throw new InvalidOperationException();
 		#endregion
+
+		#region to string
+		static string IMainPropertyFormattable<PointerSegment<T>>.StringMain => T.StringMain;
+		static IEnumerable<string> IMainPropertyFormattable<PointerSegment<T>>.PropertyNames => new[] { nameof(Location), nameof(LengthInBytes), nameof(OffsetInBytes) };
+		IEnumerable<object?> IMainPropertyFormattable<PointerSegment<T>>.PropertyValues => new object[] { Location, this.LengthInBytes, this.OffsetInBytes };
+
+		/// <summary>
+		/// Return the string representation of this <see cref="PointerSegment{T}"/>
+		/// </summary>
+		/// <returns>the string representation of this <see cref="PointerSegment{T}"/></returns>
+		public override string ToString() => IMainPropertyFormattable<PointerSegment<T>>.ToString(in this);
+		#endregion
 	}
 	#endregion
 
@@ -644,8 +647,21 @@ namespace Althea
 		ICheckValid, IDisposable, IEqualityOperators<TSelf, TSelf>, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>
 		where TSelf : class, IStorage<TSelf>
 	{
+		void IDisposable.Dispose()
+		{
+			if (this.IsValid())
+				this.Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
 		/// <summary>
-		/// When implemented by a derived class, get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// When implemented by a derived class, actually unmanaged resources held by this <typeparamref name="TSelf"/>
+		/// </summary>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected abstract void Dispose(bool invokedByUser);
+
+		/// <summary>
+		/// When implemented by a derived class, statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
 		/// </summary>
 		abstract static DataType DataType { get; }
 
@@ -671,7 +687,7 @@ namespace Althea
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this <typeparamref name="TSelf"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
 		/// <remarks>Default implementation utilizes <see cref="LengthInBytes"/> and <see cref="IReferenceStorage{TStorage}.TotalOffsetInBytes"/></remarks>
-		bool IsByteOffsetValid(long offset, long newLength = 0)
+		public virtual bool IsByteOffsetValid(long offset, long newLength = 0)
 		{
 			if (newLength < 0 || !this.IsValid())
 				return false;
@@ -703,7 +719,7 @@ namespace Althea
 		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>Default implementation utilizes the <see cref="IEqualityOperators{TSelf, TOther}"/>.</remarks>
 		/// <exception cref="NotImplementedException">If this <typeparamref name="TSelf"/> or the <paramref name="other"/> <typeparamref name="TSelf"/> is neither an <see cref="IActualStorage{TStorage}"/> nor an <see cref="IReferenceStorage{TStorage}"/>.</exception>
-		bool SameOriginAs(TSelf other)
+		public virtual bool SameOriginAs(TSelf other)
 		{
 			if (!this.IsValid() || !other.IsValid())
 				return false;
@@ -761,7 +777,7 @@ namespace Althea
 		/// <returns>The distance between two <typeparamref name="TSelf"/>s in bytes as a <see cref="long"/>.</returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long StorageDiff(TSelf left, TSelf right)
+		protected static long StorageDiffBytes(TSelf left, TSelf right)
 		{
 			if (!left.IsValid())
 				throw new ArgumentNullException(nameof(left));
@@ -797,7 +813,7 @@ namespace Althea
 		/// <summary>
 		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="NativeType{T}.Size"/>.
 		/// </summary>
-		long Length => LengthInBytes / NativeType<T>.Size;
+		public virtual long Length => LengthInBytes / NativeType<T>.Size;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="Length"/> to <paramref name="newLength"/>.
@@ -806,7 +822,7 @@ namespace Althea
 		/// <param name="newLength">The length to check in <typeparamref name="T"/>, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this <typeparamref name="TSelf"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
 		/// <remarks>Default implementation utilizes <see cref="IStorage{TSelf}.IsByteOffsetValid(long, long)"/>.</remarks>
-		bool IsOffsetValid(long offset, long newLength = 0) => IsByteOffsetValid(offset * NativeType<T>.Size, newLength * NativeType<T>.Size);
+		public virtual bool IsOffsetValid(long offset, long newLength = 0) => IsByteOffsetValid(offset * NativeType<T>.Size, newLength * NativeType<T>.Size);
 
 		/// <summary>
 		/// When implemented by a derived class, make a referenced <typeparamref name="TSelf"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
@@ -840,7 +856,7 @@ namespace Althea
 			Span<StorageLocation> locations = stackalloc StorageLocation[1];
 			locations.SetValue(location);
 			Span<long> lengths = stackalloc long[] { length };
-			return TSelf.Create(CombinationType.PureOrMixed, locations, lengths);
+			return TSelf.Create(0, locations, lengths);
 		}
 
 		/// <summary>
@@ -881,18 +897,6 @@ namespace Althea
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{TSelf}"/></typeparam>
 	public interface IActualStorage<TStorage> : IStorage<TStorage> where TStorage : class, IStorage<TStorage>
 	{
-		void IDisposable.Dispose()
-		{
-			if (this.IsValid())
-				this.Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, actually unmanaged resources held by this <typeparamref name="TStorage"/>
-		/// </summary>
-		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
-		protected abstract void Dispose(bool invokedByUser);
 	}
 
 	/// <summary>
@@ -912,11 +916,7 @@ namespace Althea
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{TStorage}"/></typeparam>
 	public interface IReferenceStorage<TStorage> : IStorage<TStorage> where TStorage : class, IStorage<TStorage>
 	{
-		void IDisposable.Dispose()
-		{
-			// do nothing
-			GC.SuppressFinalize(this);
-		}
+		void IStorage<TStorage>.Dispose(bool invokedByUser) { }
 
 		/// <summary>
 		/// When implemented by a derived class, get the referenced storage as a nullable <typeparamref name="TStorage"/>
@@ -974,7 +974,7 @@ namespace Althea
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
 		/// <remarks>The default implementation does not check whether <see cref="IReferenceStorage{TStorage}.TotalOffsetInBytes"/> can be divided by <see cref="NativeType{T}.Size"/> or not.</remarks>
-		long TotalOffset => TotalOffsetInBytes / NativeType<T>.Size;
+		public virtual long TotalOffset => TotalOffsetInBytes / NativeType<T>.Size;
 	}
 	#endregion
 }
