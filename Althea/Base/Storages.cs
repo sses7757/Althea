@@ -87,6 +87,10 @@ namespace Althea
 	[Flags]
 	public enum CombinationType : short
 	{
+		/// <summary>
+		/// Indicating that all locations are used as storage
+		/// </summary>
+		AllStored = 0,
 	}
 
 	/// <summary>
@@ -640,12 +644,9 @@ namespace Althea
 
 	#region storage interfaces
 	/// <summary>
-	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of any data type
+	/// The base interface for all storage classes
 	/// </summary>
-	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{TSelf}"/></typeparam>
-	public interface IStorage<TSelf> :
-		ICheckValid, IDisposable, IEqualityOperators<TSelf, TSelf>, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>
-		where TSelf : class, IStorage<TSelf>
+	public interface IStorage : ICheckValid, IDisposable
 	{
 		void IDisposable.Dispose()
 		{
@@ -655,7 +656,7 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, actually unmanaged resources held by this <typeparamref name="TSelf"/>
+		/// When implemented by a derived class, actually unmanaged resources held by this <see cref="IStorage"/>
 		/// </summary>
 		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
 		protected abstract void Dispose(bool invokedByUser);
@@ -666,47 +667,60 @@ namespace Althea
 		abstract static DataType DataType { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get an empty <typeparamref name="TSelf"/>
-		/// </summary>
-		abstract static TSelf Empty { get; }
-
-		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in bytes
 		/// </summary>
 		long LengthInBytes { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the description of the storage locations of this <typeparamref name="TSelf"/> as a <see cref="CombinationOfLocations"/>
+		/// When implemented by a derived class, statically get the description of the storage locations of this <see cref="IStorage"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		abstract static CombinationOfLocations LocationDescription { get; }
 
+	}
+
+	/// <summary>
+	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of type <typeparamref name="T"/>
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
+	public interface IStorage<T, TSelf> : IStorage,
+		IEqualityOperators<TSelf, TSelf>, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>,
+		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
+		where T : unmanaged, INumber<T>
+		where TSelf : class, IStorage<T, TSelf>
+	{
 		/// <summary>
-		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="LengthInBytes"/> to <paramref name="newLength"/>
+		/// When implemented by a derived class, statically get an empty <typeparamref name="TSelf"/>
 		/// </summary>
-		/// <param name="offset">The offset to move in bytes</param>
-		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
+		abstract static TSelf Empty { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="Length"/> to <paramref name="newLength"/>
+		/// </summary>
+		/// <param name="offset">The offset to move in <typeparamref name="T"/></param>
+		/// <param name="newLength">The length to check in <typeparamref name="T"/>, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this <typeparamref name="TSelf"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
-		/// <remarks>Default implementation utilizes <see cref="LengthInBytes"/> and <see cref="IReferenceStorage{TStorage}.TotalOffsetInBytes"/></remarks>
-		public virtual bool IsByteOffsetValid(long offset, long newLength = 0)
+		/// <remarks>Default implementation utilizes <see cref="Length"/> and <see cref="IReferenceStorage{T, TStorage}.TotalOffset"/></remarks>
+		public virtual bool IsOffsetValid(long offset, long newLength = 0)
 		{
 			if (newLength < 0 || !this.IsValid())
 				return false;
-			if (this is IReferenceStorage<TSelf> reference)
+			if (this is IReferenceStorage<T, TSelf> reference)
 			{
 				if (reference.Reference is null)
 					return false;
-				offset += reference.TotalOffsetInBytes;
-				if (offset < 0 || offset >= reference.Reference.LengthInBytes)
+				offset += reference.TotalOffset;
+				if (offset < 0 || offset >= reference.Reference.LengthInBytes / NativeType<T>.Size)
 					return false;
-				if (newLength > 0 && newLength + offset > reference.Reference.LengthInBytes)
+				if (newLength > 0 && newLength + offset > reference.Reference.LengthInBytes / NativeType<T>.Size)
 					return false;
 				return true;
 			}
 			else
 			{
-				if (offset < 0 || offset >= this.LengthInBytes)
+				if (offset < 0 || offset >= this.Length)
 					return false;
-				if (newLength > 0 && newLength + offset > this.LengthInBytes)
+				if (newLength > 0 && newLength + offset > this.Length)
 					return false;
 				return true;
 			}
@@ -717,18 +731,17 @@ namespace Althea
 		/// </summary>
 		/// <param name="other">The other <typeparamref name="TSelf"/> to check overlap</param>
 		/// <returns>True if this storage has same origin with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>Default implementation utilizes the <see cref="IEqualityOperators{TSelf, TOther}"/>.</remarks>
-		/// <exception cref="NotImplementedException">If this <typeparamref name="TSelf"/> or the <paramref name="other"/> <typeparamref name="TSelf"/> is neither an <see cref="IActualStorage{TStorage}"/> nor an <see cref="IReferenceStorage{TStorage}"/>.</exception>
+		/// <exception cref="NotImplementedException">If this <typeparamref name="TSelf"/> or the <paramref name="other"/> <typeparamref name="TSelf"/> is neither an <see cref="IActualStorage{T, TStorage}"/> nor an <see cref="IReferenceStorage{T, TStorage}"/>.</exception>
 		public virtual bool SameOriginAs(TSelf other)
 		{
 			if (!this.IsValid() || !other.IsValid())
 				return false;
 
-			var originThis = (TSelf?)(this as IActualStorage<TSelf>) ?? (this as IReferenceStorage<TSelf>)?.Reference;
-			var originOther = (TSelf?)(other as IActualStorage<TSelf>) ?? (other as IReferenceStorage<TSelf>)?.Reference;
+			var originThis = this as IActualStorage<T, TSelf> ?? (this as IReferenceStorage<T, TSelf>)?.Reference;
+			var originOther = other as IActualStorage<T, TSelf> ?? (other as IReferenceStorage<T, TSelf>)?.Reference;
 			if (originThis is null || originOther is null)
 				throw new NotImplementedException();
-			return originThis == originOther;
+			return originThis.Equals(originOther);
 		}
 
 		/// <summary>
@@ -739,27 +752,31 @@ namespace Althea
 		bool OverlapWith(TSelf other);
 
 		/// <summary>
-		/// When implemented by a derived class, create a referenced storage of type <typeparamref name="TOther"/> over this storage
+		/// When implemented by a derived class, statically create a referenced storage of type <typeparamref name="TSelf"/> over <paramref name="storage"/> of data type <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOther">Any storage type that implements <see cref="IStorage{TOther}"/></typeparam>
-		/// <returns>A referenced storage of type <typeparamref name="TOther"/> over this storage</returns>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+		/// <typeparam name="TOther">Any storage type that implements <see cref="IStorage{TOut, TOther}"/></typeparam>
+		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <returns>A referenced storage of type <typeparamref name="TSelf"/> over <paramref name="storage"/></returns>
 		/// <exception cref="InvalidCastException">If a referenced <typeparamref name="TOther"/> cannot be created from <typeparamref name="TSelf"/></exception>
-		TOther As<TOther>() where TOther : class, IStorage<TOther>;
+		abstract static TSelf RefFrom<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
 
 		/// <summary>
 		/// When implemented by a derived class, statically allocate and creates a new <typeparamref name="TSelf"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of type <typeparamref name="TOther"/> to mimic.</param>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+		/// <typeparam name="TOther">Any storage type that implements <see cref="IStorage{TOut, TOther}"/></typeparam>
+		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A new <typeparamref name="TSelf"/> that likes <paramref name="storage"/></returns>
 		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
-		abstract static TSelf CreateAlike<TOther>(TOther storage) where TOther : class, IStorage<TOther>;
+		abstract static TSelf CreateAlike<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
 
 		TSelf ICloneable<TSelf>.Clone()
 		{
-			var storage = TSelf.CreateAlike((TSelf)this);
+			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
 			try
 			{
-				//// TODO: MEM.MemoryCopy(this, storage);
+				MEM.MemoryCopy((TSelf)this, storage);
 				return storage;
 			}
 			catch (System.Exception)
@@ -786,8 +803,8 @@ namespace Althea
 			// check same origin
 			if (!left.SameOriginAs(right))
 				throw new InvalidOperationException();
-			IActualStorage<TSelf>? actualLeft = left as IActualStorage<TSelf>, actualRight = right as IActualStorage<TSelf>;
-			IReferenceStorage<TSelf>? refLeft = left as IReferenceStorage<TSelf>, refRight = right as IReferenceStorage<TSelf>;
+			IActualStorage<T, TSelf>? actualLeft = left as IActualStorage<T, TSelf>, actualRight = right as IActualStorage<T, TSelf>;
+			IReferenceStorage<T, TSelf>? refLeft = left as IReferenceStorage<T, TSelf>, refRight = right as IReferenceStorage<T, TSelf>;
 			// check offset divisible
 			if (actualLeft is not null && refRight is not null)
 				return -refRight.TotalOffsetInBytes;
@@ -798,31 +815,11 @@ namespace Althea
 			else
 				return 0;
 		}
-	}
 
-	/// <summary>
-	/// The interface for wrapper of unmanaged memory block(s) of different <see cref="StorageLocation"/>(s) of type <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public interface IStorage<T, TSelf> : IStorage<TSelf>,
-		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
-		where T : unmanaged, INumber<T>
-		where TSelf : class, IStorage<T, TSelf>
-	{
 		/// <summary>
 		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="NativeType{T}.Size"/>.
 		/// </summary>
 		public virtual long Length => LengthInBytes / NativeType<T>.Size;
-
-		/// <summary>
-		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="Length"/> to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset to move in <typeparamref name="T"/></param>
-		/// <param name="newLength">The length to check in <typeparamref name="T"/>, default 0 means auto calculation by <paramref name="offset"/></param>
-		/// <returns>The validness of this <typeparamref name="TSelf"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
-		/// <remarks>Default implementation utilizes <see cref="IStorage{TSelf}.IsByteOffsetValid(long, long)"/>.</remarks>
-		public virtual bool IsOffsetValid(long offset, long newLength = 0) => IsByteOffsetValid(offset * NativeType<T>.Size, newLength * NativeType<T>.Size);
 
 		/// <summary>
 		/// When implemented by a derived class, make a referenced <typeparamref name="TSelf"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
@@ -876,7 +873,7 @@ namespace Althea
 		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <param name="size">The size in <typeparamref name="T"/> to check</param>
+		/// <param name="size">The size to check</param>
 		/// <param name="sizeInBytes">Whether <paramref name="size"/> is in bytes or in <typeparamref name="T"/></param>
 		/// <returns>The <paramref name="size"/> (multiplies the size of <typeparamref name="T"/> then) divides the size of <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">if <paramref name="size"/>( multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
@@ -892,73 +889,12 @@ namespace Althea
 	}
 
 	/// <summary>
-	/// The interface for an actual storage of any data type
-	/// </summary>
-	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{TSelf}"/></typeparam>
-	public interface IActualStorage<TStorage> : IStorage<TStorage> where TStorage : class, IStorage<TStorage>
-	{
-	}
-
-	/// <summary>
 	/// The interface for an actual storage of data type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public interface IActualStorage<T, TStorage> : IStorage<T, TStorage>, IActualStorage<TStorage>
-		where T : unmanaged, INumber<T> where
-		TStorage : class, IStorage<T, TStorage>
+	public interface IActualStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
-	}
-
-	/// <summary>
-	/// The interface for a referenced storage of any data type and storage type <typeparamref name="TStorage"/>
-	/// </summary>
-	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{TStorage}"/></typeparam>
-	public interface IReferenceStorage<TStorage> : IStorage<TStorage> where TStorage : class, IStorage<TStorage>
-	{
-		void IStorage<TStorage>.Dispose(bool invokedByUser) { }
-
-		/// <summary>
-		/// When implemented by a derived class, get the referenced storage as a nullable <typeparamref name="TStorage"/>
-		/// </summary>
-		TStorage? Reference { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the total offset compared to the start of <see cref="Reference"/> in bytes
-		/// </summary>
-		long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a referenced <typeparamref name="TStorage"/> with given reference <paramref name="storage"/> and <paramref name="offsetInBytes"/> to it
-		/// </summary>
-		/// <param name="storage">The <typeparamref name="TStorage"/> to be referenced</param>
-		/// <param name="offsetInBytes">The total offset in bytes compared to <paramref name="storage"/> as a <see cref="long"/></param>
-		/// <param name="newLengthInBytes">The new presenting length in bytes. A value less than or equals to 0 means the maximum possible value calculate from <paramref name="storage"/> and <paramref name="offsetInBytes"/></param>
-		/// <returns>The reference as <typeparamref name="TStorage?"/> and the real total offset and length in bytes</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetInBytes"/> and <paramref name="newLengthInBytes"/> is out of boundary</exception>
-		protected static (TStorage? reference, long totalOffsetBytes, long lengthBytes) Create(TStorage? storage, long offsetInBytes = 0, long newLengthInBytes = 0)
-		{
-			if (storage is null)
-				return default;
-			// get offset and new length in bytes
-			if (newLengthInBytes <= 0)
-				newLengthInBytes = storage.LengthInBytes - offsetInBytes;
-			// dereference first
-			while (storage is IReferenceStorage<TStorage> @ref)
-			{
-				if (@ref.Reference is null)
-					return default;
-				storage = @ref.Reference;
-				offsetInBytes += @ref.TotalOffsetInBytes;
-			}
-			// check
-			if (offsetInBytes < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetInBytes), offsetInBytes, Parameter.CannotNegative);
-			if (storage.LengthInBytes != offsetInBytes + newLengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(newLengthInBytes), newLengthInBytes, Parameter.InvalidValue);
-			// return
-			return (storage, offsetInBytes, newLengthInBytes);
-		}
 	}
 
 	/// <summary>
@@ -966,14 +902,67 @@ namespace Althea
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TStorage}"/></typeparam>
-	public interface IReferenceStorage<T, TStorage> : IStorage<T, TStorage>, IReferenceStorage<TStorage>
-		where T : unmanaged, INumber<T>
-		where TStorage : class, IStorage<T, TStorage>
+	public interface IReferenceStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
+		void IStorage.Dispose(bool invokedByUser) { }
+
+		/// <summary>
+		/// When implemented by a derived class, get the referenced storage as a nullable <see cref="IStorage"/>
+		/// </summary>
+		IStorage? Reference { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the total offset compared to the start of <see cref="Reference"/> in bytes
+		/// </summary>
+		long TotalOffsetInBytes { get; }
+
+		/// <summary>
+		/// Create a referenced <typeparamref name="TStorage"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
+		/// </summary>
+		/// <typeparam name="TS">The type constrain for <paramref name="storage"/></typeparam>
+		/// <param name="storage">The <see cref="IStorage"/> to be referenced</param>
+		/// <param name="offset">The total offset compared to <paramref name="storage"/> as a <see cref="long"/></param>
+		/// <param name="newLength">The new presenting length. A value less than or equals to 0 means the maximum possible value calculate from <paramref name="storage"/> and <paramref name="offset"/></param>
+		/// <param name="sizeInBytes">Whether <paramref name="offset"/> and <paramref name="newLength"/> are in bytes or in <typeparamref name="T"/></param>
+		/// <returns>The reference as a nullable <see cref="IStorage"/> and the real total offset and length in bytes</returns>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <typeparamref name="TS"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static (IStorage? reference, long totalOffsetBytes, long lengthBytes) Create<TS>(IStorage? storage, long offset = 0, long newLength = 0, bool sizeInBytes = false)
+		{
+			if (storage is null)
+				return default;
+			if (!sizeInBytes)
+			{
+				offset *= NativeType<T>.Size;
+				newLength *= NativeType<T>.Size;
+			}
+			// get offset and new length in bytes
+			if (newLength <= 0)
+				newLength = storage.LengthInBytes - offset;
+			// dereference first
+			while (storage is IReferenceStorage<T, TStorage> @ref)
+			{
+				if (@ref.Reference is null)
+					return default;
+				storage = @ref.Reference;
+				offset += @ref.TotalOffsetInBytes;
+			}
+			// check
+			if (storage is not TS)
+				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
+			if (storage.LengthInBytes < offset + newLength)
+				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
+			// return
+			return (storage, offset, newLength);
+		}
+
 		/// <summary>
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
-		/// <remarks>The default implementation does not check whether <see cref="IReferenceStorage{TStorage}.TotalOffsetInBytes"/> can be divided by <see cref="NativeType{T}.Size"/> or not.</remarks>
+		/// <remarks>The default implementation does not check whether <see cref="TotalOffsetInBytes"/> can be divided by <see cref="NativeType{T}.Size"/> or not.</remarks>
 		public virtual long TotalOffset => TotalOffsetInBytes / NativeType<T>.Size;
 	}
 	#endregion

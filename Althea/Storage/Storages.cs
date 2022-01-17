@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Text;
 
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
@@ -17,7 +14,7 @@ namespace Althea.Storage
 {
 	#region URI related
 	/// <summary>
-	/// The enum representing the URI schemes which can be used as memories.
+	/// The enum representing the URI schemes which can be used as a storage location detail <see cref="StorageLocation.Detail"/>.
 	/// </summary>
 	/// <remarks>See <see cref="Uri.UriSchemeFile"/>, etc.</remarks>
 	public enum UriScheme : short
@@ -84,17 +81,46 @@ namespace Althea.Storage
 
 	#region pure storage
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 1 and its <see cref="CombinationOfLocations.Type"/> == Store.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 1 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// </summary>
+	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+	public abstract class PureStorageBase<TP> where TP : notnull, IPointer<TP>
+	{
+		/// <summary>
+		/// Get the <see cref="PointerSegment{T}"/> of this <see cref="PureStorage{T, TP}"/>
+		/// </summary>
+		public PointerSegment<TP> Pointer { get; }
+
+		/// <summary>
+		/// Create a new <see cref="PureStorageBase{TP}"/> with given <see cref="PointerSegment{T}"/> of type <typeparamref name="TP"/>
+		/// </summary>
+		/// <param name="pointer">The <see cref="PointerSegment{T}"/> of type <typeparamref name="TP"/> to create from</param>
+		protected PureStorageBase(PointerSegment<TP> pointer)
+		{
+			this.Pointer = pointer;
+		}
+	}
+
+	/// <summary>
+	/// The abstract pure storage class that inherits <see cref="PureStorageBase{TP}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class PureStorage<T, TP> : IStorage<T, PureStorage<T, TP>> where T : unmanaged, INumber<T> where TP : notnull, IPointer<TP>
+	public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, PureStorage<T, TP>> where T : unmanaged, INumber<T> where TP : notnull, IPointer<TP>
 	{
 		#region basic
 		/// <summary>
+		/// Create a new <see cref="PureStorage{T, TP}"/> with given <see cref="PointerSegment{T}"/> of type <typeparamref name="TP"/>
+		/// </summary>
+		/// <param name="pointer">The <see cref="PointerSegment{T}"/> of type <typeparamref name="TP"/> to create from</param>
+		protected PureStorage(PointerSegment<TP> pointer) : base(pointer)
+		{ }
+
+		/// <summary>
 		/// Statically get an empty <see cref="PureStorage{T, TP}"/>
 		/// </summary>
-		public static PureStorage<T, TP> Empty => throw new NotImplementedException();
+		public static PureStorage<T, TP> Empty => new ReferencePureStorage<T, TP>(null);
 
 		/// <summary>
 		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
@@ -107,29 +133,20 @@ namespace Althea.Storage
 		public static CombinationOfLocations LocationDescription => new(TP.Location);
 
 		/// <summary>
-		/// Get the <see cref="PointerSegment{T}"/> of this <see cref="PureStorage{T, TP}"/>
-		/// </summary>
-		public PointerSegment<TP> Pointer { get; }
-
-		/// <summary>
 		/// Get the total length of the presenting array in bytes
 		/// </summary>
 		public long LengthInBytes => Pointer.LengthInBytes;
 
 		/// <summary>
-		/// Create a new <see cref="PureStorage{T, TP}"/> with given pointer of type <typeparamref name="TP"/>
+		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
-		/// <param name="pointer">The pointer of type <typeparamref name="TP"/> to create from</param>
-		protected PureStorage(TP pointer)
-		{
-			this.Pointer = new(pointer);
-		}
+		public long Length => Pointer.LengthInBytes / NativeType<T>.Size;
 
-		void IStorage<PureStorage<T, TP>>.Dispose(bool invokedByUser)
+		void IStorage.Dispose(bool invokedByUser)
 		{
 			if (this is ActualPureStorage<T, TP>)
 			{
-				MEM.Free(this.Pointer, invokedByUser);
+				MEM.Free(this.Pointer.Pointer, invokedByUser);
 			}
 		}
 
@@ -163,29 +180,23 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		public bool OverlapWith(PureStorage<T, TP> other) => this.Pointer.OverlapWith(other.Pointer);
 
-		/// <summary>
-		/// Create a referenced storage of type <typeparamref name="TOther"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOther">Any storage type that implements <see cref="IStorage{TOther}"/></typeparam>
-		/// <returns>A referenced storage of type <typeparamref name="TOther"/> over this storage</returns>
-		/// <exception cref="InvalidCastException">If a referenced <typeparamref name="TOther"/> cannot be created from <typeparamref name="TSelf"/></exception>
-		TOther IStorage<PureStorage<T, TP>>.As<TOther>()
+		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.RefFrom<TOut, TOther>(TOther storage)
 		{
-			if (typeof(TOther).IsAssignableTo(typeof(PureStorage<T, TP>)))
-				return this.MakeReference() as TOther ?? TOther.Empty;
-
+			return (storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
 		}
 
 		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOther"/> over this storage
+		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
 		/// </summary>
-		/// <typeparam name="TOther">Any unmanaged number as the new data type</typeparam>
-		/// <returns></returns>
-		public PureStorage<TOther, TP> As<TOther>() where TOther : unmanaged, INumber<TOther>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+		/// <returns>The referenced <see cref="PureStorage{T, TP}"/> of data type <typeparamref name="TOut"/></returns>
+		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+		public PureStorage<TOut, TP> As<TOut>() where TOut : unmanaged, INumber<TOut>
 		{
-			if (typeof(TOther) == typeof(T))
-				return this.MakeReference() as PureStorage<TOther, TP> ?? PureStorage<TOther, TP>.Empty;
-			new ReferencePureStorage<TOther, TP>()
+			if (typeof(TOut) == typeof(T))
+				return this.MakeReference() as PureStorage<TOut, TP> ?? PureStorage<TOut, TP>.Empty;
+			IStorage<T, PureStorage<T, TP>>.CheckCast<TOut>(this.Length);
+			return new ReferencePureStorage<TOut, TP>(this);
 		}
 		#endregion
 
@@ -203,18 +214,29 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static PureStorage<T, TP> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
 		{
-			
+			if (combinationType != CombinationType.AllStored || locations.Length != 1 || lengths.Length != 1)
+				throw new InvalidOperationException(Support.Location);
+			if (lengths[0] <= 0)
+				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
+			TP pointer = MEM.Allocate<T>(locations[0], lengths[0]);
+			return new ActualPureStorage<T, TP>(pointer);
+		}
+
+
+		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.CreateAlike<TOut, TOther>(TOther storage)
+		{
+			return CreateAlike(storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(Parameter.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="PureStorage{T, TP}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of type <typeparamref name="TOther"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A new <see cref="PureStorage{T, TP}"/> that likes <paramref name="storage"/></returns>
-		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
-		public static PureStorage<T, TP> CreateAlike<TOther>(TOther storage) where TOther : class, IStorage<TOther>
+		public static PureStorage<T, TP> CreateAlike<TOut>(PureStorage<TOut, TP> storage) where TOut : unmanaged, INumber<TOut>
 		{
-			
+			var descr = PureStorage<TOut, TP>.LocationDescription;
+			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
 		}
 		#endregion
 
@@ -250,7 +272,7 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
 		public static long operator -(PureStorage<T, TP> left, PureStorage<T, TP> right)
 		{
-			long diffBytes = IStorage<PureStorage<T, TP>>.StorageDiffBytes(left, right);
+			long diffBytes = IStorage<T, PureStorage<T, TP>>.StorageDiffBytes(left, right);
 			if (diffBytes % NativeType<T>.Size != 0)
 				throw new InvalidOperationException(Other.CannotDivide);
 			return diffBytes / NativeType<T>.Size;
@@ -280,9 +302,9 @@ namespace Althea.Storage
 		#region string
 		static string IMainPropertyFormattable<PureStorage<T, TP>>.StringMain => nameof(PureStorage<T, TP>);
 
-		static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(StorageLocation), nameof(IStorage<T, PureStorage<T, TP>>.Length), "Pointer" };
+		static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, PureStorage<T, TP>>.Length), nameof(Pointer) };
 
-		IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object?[] { DataType, TP.Location, ((IStorage<T, PureStorage<T, TP>>)this).Length, this.Pointer.Pointer.ToString() };
+		IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object?[] { DataType, this.Length, this.Pointer.Pointer.ToString() };
 
 		/// <summary>
 		/// Return the string representation of this <see cref="PureStorage{T, TP}"/>
@@ -305,7 +327,7 @@ namespace Althea.Storage
 		/// Create a new <see cref="ActualPureStorage{T, TP}"/> from the given <paramref name="pointer"/> of type <typeparamref name="TP"/>
 		/// </summary>
 		/// <param name="pointer">The given pointer of type <typeparamref name="TP"/></param>
-		public ActualPureStorage(TP pointer) : base(pointer)
+		public ActualPureStorage(TP pointer) : base(new(pointer))
 		{
 			// do nothing
 		}
@@ -316,14 +338,14 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferencePureStorage<T, TOrg, TP> : PureStorage<T, TP>, IReferenceStorage<TOrg, PureStorage<TOrg, TP>>
+	public sealed class ReferencePureStorage<T, TP> : PureStorage<T, TP>, IReferenceStorage<T, PureStorage<T, TP>>
 		where T : unmanaged, INumber<T>
 		where TP : notnull, IPointer<TP>
 	{
 		/// <summary>
-		/// Get the reference <see cref="PureStorage{T, TP}"/> of this <see cref="ReferencePureStorage{T, TP}"/>
+		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferencePureStorage{T, TP}"/>
 		/// </summary>
-		public PureStorage<T, TP>? Reference { get; }
+		public IStorage? Reference { get; }
 
 		/// <summary>
 		/// Get the total offset of this <see cref="ReferencePureStorage{T, TP}"/> in bytes
@@ -333,14 +355,15 @@ namespace Althea.Storage
 		/// <summary>
 		/// Create a new <see cref="ReferencePureStorage{T, TP}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
 		/// </summary>
-		/// <param name="storage">The base <see cref="PureStorage{T, TP}"/> to refer to</param>
+		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
 		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
 		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferencePureStorage(PureStorage<T, TP>? storage, long offset = 0, long newLength = 0) :
-			base(storage is null ? TP.Default : storage.Pointer.Pointer)
+		public ReferencePureStorage(IStorage? storage, long offset = 0, long newLength = 0) :
+			base(storage is PureStorageBase<TP> p ? p.Pointer.MoveBy(offset * NativeType<T>.Size, newLength * NativeType<T>.Size) : default)
 		{
-			var (reference, _, _) = IReferenceStorage<PureStorage<T, TP>>.Create(storage, offset * NativeType<T>.Size, newLength * NativeType<T>.Size);
+			var (reference, _, _) = IReferenceStorage<T, PureStorage<T, TP>>.Create<PureStorageBase<TP>>(storage, offset, newLength);
 			this.Reference = reference;
 		}
 	}
@@ -369,7 +392,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, get the number of total caching levels, include the actual storage level. The default implementation is <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see>.
 		/// </summary>
-		int CacheLevels {
+		int CacheLevels
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.LocationDescription.Count;
 		}
@@ -415,14 +439,17 @@ namespace Althea.Storage
 		#endregion
 
 		#region override
-		string IMainPropertyFormattable.StringMain {
+		string IMainPropertyFormattable.StringMain
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ((IMainPropertyFormattable)this[0]).StringMain;
 		}
 
-		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties {
+		IEnumerable<KeyValuePair<string, object?>> IMainPropertyFormattable.StringProperties
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
+			get
+			{
 				int count = this.CacheLevels - 1;
 				var dict = new Dictionary<string, object?>(2 + count)
 				{
@@ -454,7 +481,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the number of total caching levels, include the actual storage level.
 		/// </summary>
-		public int CacheLevels {
+		public int CacheLevels
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.LocationDescription.Count;
 		}
@@ -517,7 +545,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// The number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/>, always return 1
 		/// </summary>
-		public override int Count {
+		public override int Count
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => 1;
 		}
@@ -529,9 +558,11 @@ namespace Althea.Storage
 		/// <returns>the <see cref="PointerSegment"/> at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
-		public override PointerSegment this[int index] {
+		public override PointerSegment this[int index]
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
+			get
+			{
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				return this.GetCacheLevel(this.CacheLevels - 1);
@@ -633,7 +664,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// The cache sizes in bytes of the top level as a <see cref="long"/>.
 		/// </summary>
-		public long TopCacheSizeInBytes {
+		public long TopCacheSizeInBytes
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.Reference is ICachedStorage c ? c.TopCacheSizeInBytes : 0;
 		}
@@ -641,7 +673,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the number of <see cref="PointerSegment"/>(s) of this <see cref="Storage{T}"/> 
 		/// </summary>
-		public override int Count {
+		public override int Count
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.Reference is null ? 0 : 1;
 		}
@@ -649,7 +682,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the description of the storage locations of this <see cref="Storage{T}"/> class as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public override CombinationOfLocations LocationDescription {
+		public override CombinationOfLocations LocationDescription
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.Reference?.LocationDescription ?? default;
 		}
@@ -657,7 +691,8 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the number of total caching levels, include the actual storage level.
 		/// </summary>
-		public int CacheLevels {
+		public int CacheLevels
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.Reference is ICachedStorage c ? c.CacheLevels : 0;
 		}
@@ -706,9 +741,11 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of the range</exception>
 		/// <exception cref="InvalidOperationException">If the referenced storage of this <see cref="CachedReferenceStorage{T}"/> is null</exception>
 		/// <remarks>You can <b>only</b> modify the data of the result of this indexer <b>right after</b> calling <see cref="Flush"/>. Otherwise, it may cause unexpected results.</remarks>
-		public override PointerSegment this[int index] {
+		public override PointerSegment this[int index]
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
+			get
+			{
 				if (index != 0)
 					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
 				if (this.Reference is null)
@@ -1010,7 +1047,7 @@ namespace Althea.Storage
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <remarks>Independent checks for parameters are not necessary</remarks>
 		public delegate ActualStorage<T> CreateDelegate(ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
-		
+
 
 		private static readonly Dictionary<CombinationType, CreateDelegate> cache_create = new()
 		{
@@ -1087,7 +1124,7 @@ namespace Althea.Storage
 					continue;
 				try
 				{
-					var method = type.GetMethod(nameof(PureStorage<T>.IsSupported), BindingFlags.Public | BindingFlags.Static, null, supportMethodArgTypes, null);
+					var method = type.GetMethod(nameof(PureStorageBase<T>.IsSupported), BindingFlags.Public | BindingFlags.Static, null, supportMethodArgTypes, null);
 					if (method is null)
 						continue;
 					if (!method.CreateDelegate<_SupportDelegate>().Invoke(combinationType, locations))
@@ -1136,7 +1173,7 @@ namespace Althea.Storage
 		/// <returns>The created new <see cref="Storage{T}"/></returns>
 		/// <remarks>If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod"/>,<br/>
 		/// this method will try to find the first suitable one by iterating all exported types of all loaded assemblies,<br/>
-		/// (the type with static method like <see cref="PureStorage{T}.IsSupported"/> and constructor using <paramref name="locations"/> and <paramref name="lengths"/>)<br/>
+		/// (the type with static method like <see cref="PureStorageBase{T}.IsSupported"/> and constructor using <paramref name="locations"/> and <paramref name="lengths"/>)<br/>
 		/// which can be <b>really</b> slow. Therefore, try to use <see cref="SetCreateMethod"/> before calling this method if possible.</remarks>
 		/// <exception cref="InvalidOperationException">If the creation method of <paramref name="type"/> is neither default indicated nor manually indicated by <see cref="SetCreateMethod(CombinationType, CreateDelegate)"/>, and it cannot be obtained from the public constructors of other assemblies</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
