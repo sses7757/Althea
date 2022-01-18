@@ -8,18 +8,6 @@
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <Compile Remove="Helpers\FixedClassBuffer.cs" />
-    <Compile Remove="Helpers\FixedUnmanagedBuffer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="Helpers\FixedClassBuffer.cs" />
-    <AdditionalFiles Include="Helpers\FixedUnmanagedBuffer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup>
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
@@ -54,6 +42,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Update="Helpers\FixedClassBuffer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FixedClassBuffer.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Helpers\FixedUnmanagedBuffer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FixedUnmanagedBuffer.tt</DependentUpon>
+    </Compile>
     <Compile Update="Resources\Exception.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -117,6 +115,14 @@
     <None Update="Althea.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Helpers\FixedClassBuffer.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FixedClassBuffer.cs</LastGenOutput>
+    </None>
+    <None Update="Helpers\FixedUnmanagedBuffer.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FixedUnmanagedBuffer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -130,6 +136,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

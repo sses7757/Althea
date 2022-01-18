@@ -519,26 +519,26 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Create with given <see cref="PointerSegment{T}"/> <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/> to the <paramref name="storage"/>
+		/// Create with given <see cref="PointerSegment{T}"/> <paramref name="pointer"/> and <paramref name="offset"/> and <paramref name="newLength"/> to the <paramref name="pointer"/>
 		/// </summary>
-		/// <param name="storage">The <see cref="PointerSegment{T}"/> to copy info from</param>
-		/// <param name="offset">The offset to the <paramref name="storage"/> in bytes</param>
+		/// <param name="pointer">The <see cref="PointerSegment{T}"/> to copy info from</param>
+		/// <param name="offset">The offset to the <paramref name="pointer"/> in bytes</param>
 		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer{T}.LengthInBytes"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment(PointerSegment<T> storage, long offset = 0, long newLength = 0)
+		public PointerSegment(PointerSegment<T> pointer, long offset = 0, long newLength = 0)
 		{
-			offset += storage.OffsetInBytes;
+			offset += pointer.OffsetInBytes;
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
 			long off = offset;
-			if (off > storage.Pointer.LengthInBytes)
+			if (off > pointer.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.InvalidValue);
 			if (newLength <= 0)
-				newLength = storage.Pointer.LengthInBytes - off;
-			if (off + newLength > storage.Pointer.LengthInBytes)
+				newLength = pointer.Pointer.LengthInBytes - off;
+			if (off + newLength > pointer.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
 
-			this.Pointer = storage.Pointer; this.OffsetInBytes = off; this.LengthInBytes = newLength;
+			this.Pointer = pointer.Pointer; this.OffsetInBytes = off; this.LengthInBytes = newLength;
 		}
 
 		/// <summary>

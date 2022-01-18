@@ -707,6 +707,64 @@ namespace Althea.Linq
 			}
 			return -1;
 		}
+
+		/// <summary>
+		/// Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="sortedSpan">The sorted span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+		public static int LowerBound<T>(this Span<T> sortedSpan, T value) where T : IComparable<T>, IEquatable<T>
+		{
+			return LowerBound((ReadOnlySpan<T>)sortedSpan, value);
+		}
+
+		/// <summary>
+		/// Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="sortedSpan">The sorted span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+		public static int UpperBound<T>(this Span<T> sortedSpan, T value) where T : IComparable<T>, IEquatable<T>
+		{
+			return UpperBound((ReadOnlySpan<T>)sortedSpan, value);
+		}
+
+		/// <summary>
+		/// Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="sortedSpan">The sorted span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+		public static int LowerBound<T>(this ReadOnlySpan<T> sortedSpan, T value) where T : IComparable<T>, IEquatable<T>
+		{
+			int find = sortedSpan.BinarySearch(value);
+			if (find == 0)
+				return find;
+			if (find > 0)
+				return sortedSpan[..(find + 1)].IndexOf(value);
+			else
+				return ~find;
+		}
+
+		/// <summary>
+		/// Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="sortedSpan">The sorted span to find in</param>
+		/// <param name="value">The value to find</param>
+		/// <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+		public static int UpperBound<T>(this ReadOnlySpan<T> sortedSpan, T value) where T : IComparable<T>, IEquatable<T>
+		{
+			int find = sortedSpan.BinarySearch(value);
+			if (find < 0)
+				return ~find;
+			int newFind = sortedSpan[(find + 1)..].LastIndexOf(value);
+			return newFind >= 0 ? newFind + 1 : sortedSpan.Length;
+		}
 		#endregion
 
 		#region predicate

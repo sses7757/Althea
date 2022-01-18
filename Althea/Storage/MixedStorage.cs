@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
-using Althea.Helpers;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
@@ -27,12 +20,12 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
 		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; }
+		public PointerSegment<TP1> Pointer1 { get; protected init; }
 
 		/// <summary>
 		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
 		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; }
+		public PointerSegment<TP2> Pointer2 { get; protected init; }
 
 		/// <summary>
 		/// Create a new <see cref="MixedStorageBase{TP1, TP2}"/> with given <see cref="PointerSegment{T}"/>s
@@ -44,6 +37,11 @@ namespace Althea.Storage
 			this.Pointer1 = pointer1;
 			this.Pointer2 = pointer2;
 		}
+
+		/// <summary>
+		/// Create an empty <see cref="MixedStorageBase{TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+		/// </summary>
+		protected MixedStorageBase() { }
 	}
 
 	/// <summary>
@@ -73,6 +71,11 @@ namespace Althea.Storage
 		{ }
 
 		/// <summary>
+		/// Create an empty <see cref="MixedStorage{T, TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+		/// </summary>
+		protected MixedStorage() : base() { }
+
+		/// <summary>
 		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2}"/>
 		/// </summary>
 		public static MixedStorage<T, TP1, TP2> Empty => new ReferenceMixedStorage<T, TP1, TP2>(null);
@@ -97,7 +100,8 @@ namespace Althea.Storage
 		/// </summary>
 		public long Length => this.LengthInBytes / NativeType<T>.Size;
 
-		void IStorage.Dispose(bool invokedByUser)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void Dispose(bool invokedByUser)
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2>)
 			{
@@ -105,6 +109,13 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer2.Pointer, invokedByUser);
 			}
 		}
+
+		void IStorage.Dispose(bool invokedByUser) => this.Dispose(invokedByUser);
+
+		/// <summary>
+		/// The deconstructor invoked by GC
+		/// </summary>
+		~MixedStorage() => this.Dispose(false);
 
 		/// <summary>
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2}"/> is a valid one or not
@@ -313,31 +324,6 @@ namespace Althea.Storage
 		/// </summary>
 		public long TotalOffsetInBytes { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static (PointerSegment<TP1> p1, PointerSegment<TP2> p2) GetPointerSegments(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			if (storage is not MixedStorageBase<TP1, TP2> s)
-				return default;
-			offset *= NativeType<T>.Size;
-			newLength *= NativeType<T>.Size;
-			if (newLength == 0)
-				newLength = storage.LengthInBytes - offset;
-			PointerSegment<TP1> p1; PointerSegment<TP2> p2;
-			if (offset >= s.Pointer1.LengthInBytes)
-			{
-				p1 = default; p2 = s.Pointer2.MoveBy(offset - s.Pointer1.LengthInBytes, newLength);
-				return (p1, p2);
-			}
-			if (newLength + offset <= s.Pointer1.LengthInBytes)
-			{
-				p1 = s.Pointer1.MoveBy(offset, newLength); p2 = default;
-				return (p1, p2);
-			}
-			p1 = s.Pointer1.MoveBy(offset);
-			p2 = s.Pointer2.MoveBy(offset - s.Pointer1.LengthInBytes, newLength - s.Pointer1.LengthInBytes);
-			return (p1, p2);
-		}
-
 		/// <summary>
 		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
 		/// </summary>
@@ -346,12 +332,40 @@ namespace Althea.Storage
 		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0) :
-			base(GetPointerSegments(storage, offset, newLength))
+		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
 		{
-			var (reference, offsetBytes, _) = IReferenceStorage<T, MixedStorage<T, TP1, TP2>>.Create<MixedStorageBase<TP1, TP2>>(storage, offset, newLength);
-			this.Reference = reference;
-			this.TotalOffsetInBytes = offsetBytes;
+			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2>>.Create<MixedStorageBase<TP1, TP2>>(storage, offset, newLength);
+			if (storage is not MixedStorageBase<TP1, TP2> s)
+				return;
+
+			this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default;
+			long offsetEnd = offset + newLength;
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes };
+			lenAccu.AccumulateSum(lenAccu, inclusive: false);
+			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+			if (0 > firstNonEmpty && 0 < lastNonEmpty)
+				p1 = s.Pointer1;
+			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+				p1 = s.Pointer1.MoveBy(offset, newLength);
+			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+				p1 = s.Pointer1.MoveBy(offset);
+			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+				p1 = s.Pointer1.MoveBy(0, newLength - lenAccu[lastNonEmpty - 1]);
+
+			offset -= s.Pointer1.LengthInBytes;
+			if (1 > firstNonEmpty && 1 < lastNonEmpty)
+				p2 = s.Pointer2;
+			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+				p2 = s.Pointer2.MoveBy(offset, newLength);
+			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+				p2 = s.Pointer2.MoveBy(offset);
+			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+				p2 = s.Pointer2.MoveBy(0, newLength - lenAccu[lastNonEmpty - 1]);
+
+			this.Pointer1 = p1; this.Pointer2 = p2;
 		}
 	}
 }
