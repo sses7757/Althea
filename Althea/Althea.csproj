@@ -52,6 +52,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>FixedUnmanagedBuffer.tt</DependentUpon>
     </Compile>
+    <Compile Update="Helpers\SwapSort.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SwapSort.tt</DependentUpon>
+    </Compile>
     <Compile Update="Resources\Exception.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -81,6 +86,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Support.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Storage\MixedStorage.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MixedStorage.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
@@ -123,15 +133,18 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FixedUnmanagedBuffer.cs</LastGenOutput>
     </None>
+    <None Update="Helpers\SwapSort.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SwapSort.cs</LastGenOutput>
+    </None>
+    <None Update="Storage\MixedStorage.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MixedStorage.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="documents\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Helpers\FixedClassBuffer.cs" />
-    <None Include="Helpers\FixedUnmanagedBuffer.cs" />
   </ItemGroup>
 
   <ItemGroup>
