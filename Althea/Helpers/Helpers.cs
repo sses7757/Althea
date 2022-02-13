@@ -109,7 +109,7 @@ namespace Althea.Helpers
 		/// Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
 		/// </summary>
 		/// <param name="a">The input number</param>
-		/// <returns>the ordinal representation string</returns>
+		/// <returns>The ordinal representation string</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToOrdinal(this int a)
@@ -126,6 +126,16 @@ namespace Althea.Helpers
 				_ => $"{a}-th",
 			};
 		}
+
+		/// <summary>
+		/// Create a number of type <typeparamref name="T2"/> from the given number of type <typeparamref name="T1"/>
+		/// </summary>
+		/// <typeparam name="T1">The input number type</typeparam>
+		/// <typeparam name="T2">The output number type</typeparam>
+		/// <param name="x">The input number</param>
+		/// <returns><paramref name="x"/> as <typeparamref name="T2"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T2 As<T1, T2>(this T1 x) where T1 : INumber<T1> where T2 : INumber<T2> => T2.Create(x);
 
 		/// <summary>
 		/// Reverse the bits of <paramref name="a"/>
@@ -145,11 +155,11 @@ namespace Althea.Helpers
 			}
 			// software fall-back
 			uint n = (uint)a;
-			n = (n >> 1) & 0x55555555u | (n << 1) & 0xaaaaaaaau;
-			n = (n >> 2) & 0x33333333u | (n << 2) & 0xccccccccu;
-			n = (n >> 4) & 0x0f0f0f0fu | (n << 4) & 0xf0f0f0f0u;
-			n = (n >> 8) & 0x00ff00ffu | (n << 8) & 0xff00ff00u;
-			n = (n >> 16) & 0x0000ffffu | (n << 16) & 0xffff0000u;
+			n = (n >> 1) & 0x55555555U | (n << 1) & 0xaaaaaaaaU;
+			n = (n >> 2) & 0x33333333U | (n << 2) & 0xccccccccU;
+			n = (n >> 4) & 0x0f0f0f0fU | (n << 4) & 0xf0f0f0f0U;
+			n = (n >> 8) & 0x00ff00ffU | (n << 8) & 0xff00ff00U;
+			n = (n >> 16) & 0x0000ffffU | (n << 16) & 0xffff0000U;
 			return (int)n;
 		}
 
@@ -171,12 +181,12 @@ namespace Althea.Helpers
 			}
 			// software fall-back
 			ulong n = (ulong)a;
-			n = (n >> 1) & 0x5555555555555555ul | (n << 1) & 0xaaaaaaaaaaaaaaaaul;
-			n = (n >> 2) & 0x3333333333333333ul | (n << 2) & 0xccccccccccccccccul;
-			n = (n >> 4) & 0x0f0f0f0f0f0f0f0ful | (n << 4) & 0xf0f0f0f0f0f0f0f0ul;
-			n = (n >> 8) & 0x00ff00ff00ff00fful | (n << 8) & 0xff00ff00ff00ff00ul;
-			n = (n >> 16) & 0x0000ffff0000fffful | (n << 16) & 0xffff0000ffff0000ul;
-			n = (n >> 32) & 0xffffffff00000000ul | (n << 32) & 0xffffffff00000000ul;
+			n = (n >> 1) & 0x5555555555555555UL | (n << 1) & 0xaaaaaaaaaaaaaaaaUL;
+			n = (n >> 2) & 0x3333333333333333UL | (n << 2) & 0xccccccccccccccccUL;
+			n = (n >> 4) & 0x0f0f0f0f0f0f0f0fUL | (n << 4) & 0xf0f0f0f0f0f0f0f0UL;
+			n = (n >> 8) & 0x00ff00ff00ff00ffUL | (n << 8) & 0xff00ff00ff00ff00UL;
+			n = (n >> 16) & 0x0000ffff0000ffffUL | (n << 16) & 0xffff0000ffff0000UL;
+			n = (n >> 32) & 0xffffffff00000000UL | (n << 32) & 0xffffffff00000000UL;
 			return (long)n;
 		}
 
@@ -201,26 +211,51 @@ namespace Althea.Helpers
 		public static bool IsPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.IsPow2(x);
 
 		/// <summary>
-		/// Get the nearest power of 2 integer of the input integer
+		/// Get the nearest power of 2 integer which is not larger than the input integer
 		/// </summary>
 		/// <param name="x">The input integer</param>
 		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T NearestPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.One << (int)(object)T.Log2(x);
+		public static T FloorPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.One << T.Log2(x).As<T, int>();
+
+		/// <summary>
+		/// Get the nearest power of 2 integer which is not less than the input integer
+		/// </summary>
+		/// <param name="x">The input integer</param>
+		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T CeilPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.One << (T.Log2(x - T.One).As<T, int>() + 1);
 
 		/// <summary>
 		/// Get the floor round of log2(<paramref name="input"/>)
 		/// </summary>
 		/// <param name="input">input number</param>
-		/// <returns>the nearest log2 of <paramref name="input"/></returns>
+		/// <returns>The nearest log2 of <paramref name="input"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T Log2<T>(this T input) where T : IBinaryInteger<T> => T.Log2(input);
+
+		/// <summary>
+		/// Get the ceiling round of log2(<paramref name="input"/>)
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <returns>The ceiling round of log2 of <paramref name="input"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T CeilLog2<T>(this T input) where T : IBinaryInteger<T> => T.Log2(input - T.One) + T.One;
+
+		/// <summary>
+		/// Get the division and remainder of <paramref name="denominator"/> / <paramref name="numerator"/>
+		/// </summary>
+		/// <param name="denominator">The input denominator</param>
+		/// <param name="numerator">The input numerator</param>
+		/// <returns>The quotient and the remainder of <paramref name="denominator"/> / <paramref name="numerator"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static (T Quotient, T Remainder) DivRem<T>(this T denominator, T numerator) where T : IBinaryInteger<T> => T.DivRem(denominator, numerator);
 
 		/// <summary>
 		/// Count the <paramref name="input"/>'s bits which are set to 1
 		/// </summary>
 		/// <param name="input">input integer</param>
-		/// <returns>the number <paramref name="input"/>'s bits set</returns>
+		/// <returns>The number <paramref name="input"/>'s bits set</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T PopCount<T>(this T input) where T : IBinaryInteger<T> => T.PopCount(input);
 
@@ -259,7 +294,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="span">The time span</param>
 		/// <param name="restFormat">an optional format string of the rest, see <see cref="TimeSpan.ToString(string)"/></param>
-		/// <returns>the string representation</returns>
+		/// <returns>The string representation</returns>
 		public static string TotalMinutesString(this TimeSpan span, string restFormat = @"ss\.ff")
 		{
 			return $"{(int)span.TotalMinutes}:{span.ToString(restFormat)}s";
@@ -270,7 +305,7 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="span">The time span</param>
 		/// <param name="restFormat">an optional format string of the rest, see <see cref="TimeSpan.ToString(string)"/></param>
-		/// <returns>the string representation</returns>
+		/// <returns>The string representation</returns>
 		public static string TotalHoursString(this TimeSpan span, string restFormat = @"mm:ss\.ff")
 		{
 			return $"{(int)span.TotalHours}:{span.ToString(restFormat)}s";
@@ -887,7 +922,7 @@ namespace Althea.Helpers
 		/// <param name="range">The <see cref="Range"/></param>
 		/// <param name="length">The length of the collection that the range will be used with. It has to be a positive value.</param>
 		/// <param name="check">check parameters and result or not</param>
-		/// <returns>the offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
+		/// <returns>The offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
 		/// <remarks>This is a <see cref="long"/> version of <see cref="Range.GetOffsetAndLength(int)"/> at x64 platforms.</remarks>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="range"/> is out of [0, <paramref name="length"/>)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

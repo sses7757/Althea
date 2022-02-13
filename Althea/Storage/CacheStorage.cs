@@ -1,4 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Collections;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -9,18 +12,291 @@ using MEM = Althea.Storage.AbstractApi;
 
 namespace Althea.Storage
 {
+	#region cache strategy
+	/// <summary>
+	/// Encapsulates a method that copies a block of memory from <paramref name="sourceOffset"/> to <paramref name="destinationOffset"/> of <paramref name="copyLength"/> with copy direction indicated by <paramref name="copyToCache"/>.
+	/// </summary>
+	/// <param name="sourceOffset">The source offset in bytes</param>
+	/// <param name="destinationOffset">The destination offset in bytes</param>
+	/// <param name="copyLength">The copy length in bytes</param>
+	/// <param name="copyToCache">If true, copy from actual storage to cache; otherwise, copy from cache to actual storage</param>
+	/// <return>Whether the encapsulated method succeed or not</return>
+	public delegate bool CopyDelegate(long sourceOffset, long destinationOffset, long copyLength, bool copyToCache);
+
+	/// <summary>
+	/// The interface for caching strategy of a two-level caching system
+	/// </summary>
+	/// <typeparam name="TSelf">The actual unmanaged struct that implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
+	public interface ICacheStrategy<TSelf> : IEqualityOperators<TSelf, TSelf>, ICheckValid where TSelf : struct, ICacheStrategy<TSelf>
+	{
+		/// <summary>
+		/// When implemented by a derived struct, statically create a <typeparamref name="TSelf"/> and get the size of the cache level in bytes with given size of the low speed level.
+		/// </summary>
+		/// <param name="actualStorageInBytes">The given size of the low speed level in bytes</param>
+		/// <param name="cacheSizeInBytes">Output the size of the cache level in bytes with respect to <paramref name="actualStorageInBytes"/></param>
+		/// <returns>The created <typeparamref name="TSelf"/>.</returns>
+		abstract static TSelf Create(long actualStorageInBytes, out long cacheSizeInBytes);
+
+		/// <summary>
+		/// When implemented by a derived struct, get the size of one cache line in bytes.
+		/// </summary>
+		int CacheLineSize { get; }
+
+		/// <summary>
+		/// When implemented by a derived struct, calculate the cache offset of given actual storage offset, copy data if necessary, and update internal information of this <typeparamref name="TSelf"/>.
+		/// </summary>
+		/// <param name="storageOffset">The offset of actual storage in bytes which is the location of the byte of interest</param>
+		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data if necessary</param>
+		/// <param name="intentWrite">Whether the intent of using this piece of cache is to write (true) or read (false)</param>
+		/// <returns>The offsets to the cache pointer in bytes which contains the requested byte.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		long GetCacheOf(long storageOffset, CopyDelegate copy, bool intentWrite);
+	}
+
+	/// <summary>
+	/// The direct mapping cache strategy as the default strategy as well as a demonstration
+	/// </summary>
+	public struct DirectMappingStrategy : ICacheStrategy<DirectMappingStrategy>, IEqualityOperators<DirectMappingStrategy, DirectMappingStrategy>
+	{
+		#region basic
+		[StructLayout(LayoutKind.Explicit)]
+		private struct CacheLineInfo : IEqualityOperators<CacheLineInfo, CacheLineInfo>, IEquatable<CacheLineInfo>
+		{
+			[FieldOffset(0)] // little-endian
+			private byte dirtyAndValid;
+			[FieldOffset(0)]
+			private ulong tag;
+
+			private const int TAG_OFFSET = 8;
+			public const int MAX_TAG_BITS = 64 - TAG_OFFSET;
+
+			public bool Dirty
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => (this.dirtyAndValid & 0b01) == 1;
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				set
+				{
+					if (value)
+						this.dirtyAndValid |= 1;
+					else
+						this.dirtyAndValid &= 0xfe;
+				}
+			}
+
+			public bool Valid
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => (dirtyAndValid & 0b10) == 1;
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				set
+				{
+					if (value)
+						this.dirtyAndValid |= 2;
+					else
+						this.dirtyAndValid &= 0xfd;
+				}
+			}
+
+			public long Tag
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => (long)(tag >> TAG_OFFSET);
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				set
+				{
+					byte oldDV = dirtyAndValid;
+					this.tag = (ulong)(value << TAG_OFFSET);
+					this.dirtyAndValid = oldDV;
+				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public CacheLineInfo(bool dirty, bool valid, long tag)
+			{
+				this.tag = (ulong)(tag << TAG_OFFSET);
+				this.dirtyAndValid = (byte)((dirty ? 1 : 0) | (valid ? 2 : 0));
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool Equals(CacheLineInfo other) => this.tag == other.tag;
+
+			public static bool operator ==(CacheLineInfo left, CacheLineInfo right) => left.Equals(right);
+
+			public static bool operator !=(CacheLineInfo left, CacheLineInfo right) => !left.Equals(right);
+
+			public override bool Equals(object? obj) => obj is CacheLineInfo info && this.Equals(info);
+
+			public override int GetHashCode() => this.tag.GetHashCode();
+		}
+
+		private readonly byte lineSizeLog2, nLinesLog2;
+
+		private readonly ushort withinLineMask;
+
+		private readonly int lineAddressMask;
+
+		private readonly CacheLineInfo[] lineInfo;
+
+		/// <summary>
+		/// Get the size of one cache line in bytes.
+		/// </summary>
+		public int CacheLineSize => 1 << lineSizeLog2;
+
+		private DirectMappingStrategy(byte cacheLineSizeLog2, byte nCacheLinesLog2)
+		{
+			this.lineSizeLog2 = cacheLineSizeLog2;
+			this.nLinesLog2 = nCacheLinesLog2;
+			this.withinLineMask = (ushort)(1 << (cacheLineSizeLog2 + 1) - 1);
+			this.lineAddressMask = (1 << (cacheLineSizeLog2 + nCacheLinesLog2 + 1) - 1) & ~this.withinLineMask;
+			this.lineInfo = new CacheLineInfo[1 << nCacheLinesLog2];
+		}
+
+		/// <summary>
+		/// Statically create a <see cref="DirectMappingStrategy"/> and get the size of the cache level in bytes with given size of the low speed level.
+		/// </summary>
+		/// <param name="actualStorageInBytes">The given size of the low speed level in bytes</param>
+		/// <param name="cacheSizeInBytes">Output the size of the cache level in bytes with respect to <paramref name="actualStorageInBytes"/></param>
+		/// <returns>The created <see cref="DirectMappingStrategy"/>.</returns>
+		/// <remarks>The cache strategy created has at most 8KiB cache line size, the same as internal file buffer size of CLR.</remarks>
+		public static DirectMappingStrategy Create(long actualStorageInBytes, out long cacheSizeInBytes)
+		{
+			const int MAX_CACHE_LINE_BITS = 13; // 8KiB
+			int addressBits = (int)actualStorageInBytes.CeilLog2();
+			if (addressBits <= MAX_CACHE_LINE_BITS)
+			{
+				byte bits = (byte)actualStorageInBytes.Log2();
+				cacheSizeInBytes = 1 << bits;
+				return new(bits, (byte)(actualStorageInBytes > cacheSizeInBytes ? 2 : 1));
+			}
+			cacheSizeInBytes = 1 << MAX_CACHE_LINE_BITS;
+			return new(MAX_CACHE_LINE_BITS, (byte)((actualStorageInBytes + 1) >> MAX_CACHE_LINE_BITS).CeilLog2());
+		}
+
+
+		/// <summary>
+		/// Calculate the cache offset of given actual storage offset, copy data if necessary, and update internal information of this <see cref="DirectMappingStrategy"/>.
+		/// </summary>
+		/// <param name="storageOffset">The offset of actual storage in bytes which is the location of the byte of interest</param>
+		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data if necessary</param>
+		/// <param name="intentWrite">Whether the intent of using this piece of cache is to write (true) or read (false)</param>
+		/// <returns>The offsets to the cache pointer in bytes which contains the requested byte.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public long GetCacheOf(long storageOffset, CopyDelegate copy, bool intentWrite)
+		{
+			long tag = storageOffset >> (this.lineSizeLog2 + this.nLinesLog2);
+			int cacheLine = (int)storageOffset & this.lineAddressMask;
+			int withinLineOffset = (int)storageOffset & this.withinLineMask;
+			long cacheOffset = cacheLine << this.lineSizeLog2;
+			var info = this.lineInfo[cacheLine];
+			if (!info.Valid)
+			{   // cache empty
+				goto SWAP_IN;
+			}
+			if (info.Tag == tag)
+			{   // cache hit
+				info.Dirty &= intentWrite;
+				this.lineInfo[cacheLine] = info;
+				return cacheOffset + withinLineOffset;
+			}
+			// cache miss
+			if (info.Dirty)
+			{   // swap out
+				copy(cacheOffset, storageOffset, 1 << this.lineSizeLog2, false);
+			}
+		SWAP_IN:
+			this.lineInfo[cacheLine] = new(false, true, tag);
+			copy(storageOffset, cacheOffset, 1 << this.lineSizeLog2, true);
+			return cacheOffset + withinLineOffset;
+		}
+
+		/// <summary>
+		/// Check whether this <see cref="DirectMappingStrategy"/> is a valid one or not
+		/// </summary>
+		/// <returns>The validness of this <see cref="DirectMappingStrategy"/></returns>
+		public bool IsValid() => this.lineSizeLog2 > 0;
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Check whether this <see cref="DirectMappingStrategy"/> is the same as the <paramref name="other"/> one
+		/// </summary>
+		/// <param name="other">The other <see cref="DirectMappingStrategy"/> to compare</param>
+		/// <returns>this == <paramref name="other"/> or not</returns>
+		public bool Equals(DirectMappingStrategy other) => this.lineSizeLog2 == other.lineSizeLog2 && this.lineInfo.SequenceEqual(other.lineInfo);
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(DirectMappingStrategy left, DirectMappingStrategy right) => left.Equals(right);
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(DirectMappingStrategy left, DirectMappingStrategy right) => !left.Equals(right);
+
+		/// <summary>
+		/// Check whether this <see cref="DirectMappingStrategy"/> is the same as the other object
+		/// </summary>
+		/// <param name="obj">The other <see cref="object"/> to compare</param>
+		/// <returns>this == <paramref name="obj"/> or not</returns>
+		public override bool Equals(object? obj) => obj is DirectMappingStrategy strategy && this.Equals(strategy);
+
+		/// <summary>
+		/// Get the hash code of this <see cref="DirectMappingStrategy"/>
+		/// </summary>
+		/// <returns>The hash code</returns>
+		public override int GetHashCode() => HashCode.Combine(this.lineSizeLog2, this.lineInfo.HashCodeOfArray());
+		#endregion
+	}
+	#endregion
+
+	/// <summary>
+	/// The abstract storage class as a base class for all single level caching storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2.
+	/// </summary>
+	/// <typeparam name="TS">Any cache strategy struct which implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
+	/// <typeparam name="TPh">Any high speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+	/// <typeparam name="TPl">Any low speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+	public abstract class CachedStorageBase<TS, TPh, TPl>
+		where TS : struct, ICacheStrategy<TS>
+		where TPh : notnull, IPointer<TPh>
+		where TPl : notnull, IPointer<TPl>
+	{
+		/// <summary>
+		/// When implemented by a derived struct, get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
+		/// </summary>
+		public abstract TS Strategy { get; }
+
+		/// <summary>
+		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
+		/// </summary>
+		public PointerSegment<TPh> Cache { get; }
+
+		/// <summary>
+		/// Get the low speed actual storage <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
+		/// </summary>
+		public PointerSegment<TPl> Actual { get; }
+
+		/// <summary>
+		/// Create a new <see cref="CachedStorageBase{TS, TPh, TPl}"/> with given cache and actual <see cref="PointerSegment{T}"/>s
+		/// </summary>
+		/// <param name="cache">The <see cref="PointerSegment{T}"/> of type <typeparamref name="TPh"/> as cache pointer</param>
+		/// <param name="actual">The <see cref="PointerSegment{T}"/> of type <typeparamref name="TPl"/> as actual storage pointer</param>
+		protected CachedStorageBase(PointerSegment<TPh> cache, PointerSegment<TPl> actual)
+		{
+			this.Cache = cache;
+			this.Actual = actual;
+		}
+	}
+
 	/// <summary>
 	/// The interface for any cached storage, including actual ones and referenced one
 	/// </summary>
-	public interface ICachedStorage : IStorage
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
+	public interface ICachedStorage<T, TSelf> : IStorage<T, TSelf> where T : unmanaged, INumber<T> where TSelf : class, ICachedStorage<T, TSelf>
 	{
-		#region other definitions
-		/// <summary>
-		/// The ratio of the size of a lower caching level and the size of its upper level shall be larger than this value.
-		/// </summary>
-		public const int CacheSizeRatio = 10;
-		#endregion
-
 		#region new methods
 		/// <summary>
 		/// When implemented by a derived class, get the cache sizes in bytes of the top level as a <see cref="long"/>.
@@ -28,13 +304,9 @@ namespace Althea.Storage
 		long TopCacheSizeInBytes { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the number of total caching levels, include the actual storage level. The default implementation is <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see>.
+		/// Statically get the number of total caching levels, include the actual storage level. The default implementation is <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see>.
 		/// </summary>
-		int CacheLevels
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.LocationDescription.Count;
-		}
+		public static int CacheLevels => TSelf.LocationDescription.Count;
 
 		/// <summary>
 		/// When implemented by a derived class, get the whole caching level at <paramref name="index"/> as a <see cref="PointerSegment"/>

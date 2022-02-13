@@ -16,7 +16,7 @@ namespace Althea.Storage
 	public abstract class PureStorageBase<TP> where TP : notnull, IPointer<TP>
 	{
 		/// <summary>
-		/// Get the <see cref="PointerSegment{T}"/> of this <see cref="PureStorage{T, TP}"/>
+		/// Get the <see cref="PointerSegment{T}"/> of this <see cref="PureStorageBase{TP}"/>
 		/// </summary>
 		public PointerSegment<TP> Pointer { get; }
 
