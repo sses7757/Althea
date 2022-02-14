@@ -115,7 +115,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, <#=pointerTypes#>}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { <# for (int j = 1; j < i; j++) { #>TP<#=j#>.Location, <# } #>TP<#=i#>.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { <# for (int j = 1; j <= i; j++) { #>TP<#=j#>.Location, <# } #> });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -198,28 +198,25 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, <#=pointerTypes#>}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, <#=pointerTypes#>}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, <#=pointerTypes#>}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, <#=pointerTypes#>> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, <#=pointerTypes#>> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != <#=i#> || lengths.Length != <#=i#>)
+			if (lengths.Length != <#=i#>)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
 <# for (int j = 0; j < i; j++) { #>
-			TP<#=j+1#> pointer<#=j+1#> = MEM.Allocate<T>(locations[<#=j#>], lengths[<#=j#>]);
+			TP<#=j+1#> pointer<#=j+1#> = MEM.Allocate<T>(TP<#=j+1#>.Location, lengths[<#=j#>]);
 <# } #>
 			return new ActualMixedStorage<T, <#=pointerTypes#>>(<#=pointerInputs#>);
 		}
-
 
 		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -234,7 +231,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, <#=pointerTypes#>> CreateAlike<TOut>(MixedStorage<TOut, <#=pointerTypes#>> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, <#=pointerTypes#>>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { <# for (int j = 1; j <= i; j++) { #>storage.Pointer<#=j#>.LengthInBytes / NativeType<TOut>.Size, <# } #>});
 		}
 		#endregion
 
@@ -376,7 +373,7 @@ namespace Althea.Storage
 
 			<# for (int j = 1; j < i; j++) { #>PointerSegment<TP<#=j#>> p<#=j#> = default; <# } #>PointerSegment<TP<#=i#>> p<#=i#> = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { <# for (int j = 1; j < i; j++) { #>s.Pointer<#=j#>.LengthInBytes, <# } #>s.Pointer<#=i#>.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { <# for (int j = 1; j <= i; j++) { #>s.Pointer<#=j#>.LengthInBytes, <# } #> };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 

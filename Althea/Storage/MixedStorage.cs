@@ -85,7 +85,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -167,27 +167,24 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 2 || lengths.Length != 2)
+			if (lengths.Length != 2)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
 			return new ActualMixedStorage<T, TP1, TP2>(pointer1, pointer2);
 		}
-
 
 		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -202,7 +199,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -339,7 +336,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -452,7 +449,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -535,28 +532,25 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 3 || lengths.Length != 3)
+			if (lengths.Length != 3)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3>(pointer1, pointer2, pointer3);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -571,7 +565,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -711,7 +705,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -844,7 +838,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -928,29 +922,26 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 4 || lengths.Length != 4)
+			if (lengths.Length != 4)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
-			TP4 pointer4 = MEM.Allocate<T>(locations[3], lengths[3]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
+			TP4 pointer4 = MEM.Allocate<T>(TP4.Location, lengths[3]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(pointer1, pointer2, pointer3, pointer4);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -965,7 +956,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, storage.Pointer4.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -1108,7 +1099,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -1261,7 +1252,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -1346,30 +1337,27 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 5 || lengths.Length != 5)
+			if (lengths.Length != 5)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
-			TP4 pointer4 = MEM.Allocate<T>(locations[3], lengths[3]);
-			TP5 pointer5 = MEM.Allocate<T>(locations[4], lengths[4]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
+			TP4 pointer4 = MEM.Allocate<T>(TP4.Location, lengths[3]);
+			TP5 pointer5 = MEM.Allocate<T>(TP5.Location, lengths[4]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(pointer1, pointer2, pointer3, pointer4, pointer5);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -1384,7 +1372,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, storage.Pointer4.LengthInBytes / NativeType<TOut>.Size, storage.Pointer5.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -1530,7 +1518,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -1703,7 +1691,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -1789,31 +1777,28 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 6 || lengths.Length != 6)
+			if (lengths.Length != 6)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
-			TP4 pointer4 = MEM.Allocate<T>(locations[3], lengths[3]);
-			TP5 pointer5 = MEM.Allocate<T>(locations[4], lengths[4]);
-			TP6 pointer6 = MEM.Allocate<T>(locations[5], lengths[5]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
+			TP4 pointer4 = MEM.Allocate<T>(TP4.Location, lengths[3]);
+			TP5 pointer5 = MEM.Allocate<T>(TP5.Location, lengths[4]);
+			TP6 pointer6 = MEM.Allocate<T>(TP6.Location, lengths[5]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -1828,7 +1813,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, storage.Pointer4.LengthInBytes / NativeType<TOut>.Size, storage.Pointer5.LengthInBytes / NativeType<TOut>.Size, storage.Pointer6.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -1977,7 +1962,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -2170,7 +2155,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -2257,32 +2242,29 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 7 || lengths.Length != 7)
+			if (lengths.Length != 7)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
-			TP4 pointer4 = MEM.Allocate<T>(locations[3], lengths[3]);
-			TP5 pointer5 = MEM.Allocate<T>(locations[4], lengths[4]);
-			TP6 pointer6 = MEM.Allocate<T>(locations[5], lengths[5]);
-			TP7 pointer7 = MEM.Allocate<T>(locations[6], lengths[6]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
+			TP4 pointer4 = MEM.Allocate<T>(TP4.Location, lengths[3]);
+			TP5 pointer5 = MEM.Allocate<T>(TP5.Location, lengths[4]);
+			TP6 pointer6 = MEM.Allocate<T>(TP6.Location, lengths[5]);
+			TP7 pointer7 = MEM.Allocate<T>(TP7.Location, lengths[6]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -2297,7 +2279,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, storage.Pointer4.LengthInBytes / NativeType<TOut>.Size, storage.Pointer5.LengthInBytes / NativeType<TOut>.Size, storage.Pointer6.LengthInBytes / NativeType<TOut>.Size, storage.Pointer7.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -2449,7 +2431,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -2662,7 +2644,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -2750,33 +2732,30 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 8 || lengths.Length != 8)
+			if (lengths.Length != 8)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
-			TP4 pointer4 = MEM.Allocate<T>(locations[3], lengths[3]);
-			TP5 pointer5 = MEM.Allocate<T>(locations[4], lengths[4]);
-			TP6 pointer6 = MEM.Allocate<T>(locations[5], lengths[5]);
-			TP7 pointer7 = MEM.Allocate<T>(locations[6], lengths[6]);
-			TP8 pointer8 = MEM.Allocate<T>(locations[7], lengths[7]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
+			TP4 pointer4 = MEM.Allocate<T>(TP4.Location, lengths[3]);
+			TP5 pointer5 = MEM.Allocate<T>(TP5.Location, lengths[4]);
+			TP6 pointer6 = MEM.Allocate<T>(TP6.Location, lengths[5]);
+			TP7 pointer7 = MEM.Allocate<T>(TP7.Location, lengths[6]);
+			TP8 pointer8 = MEM.Allocate<T>(TP8.Location, lengths[7]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -2791,7 +2770,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, storage.Pointer4.LengthInBytes / NativeType<TOut>.Size, storage.Pointer5.LengthInBytes / NativeType<TOut>.Size, storage.Pointer6.LengthInBytes / NativeType<TOut>.Size, storage.Pointer7.LengthInBytes / NativeType<TOut>.Size, storage.Pointer8.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -2946,7 +2925,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default; PointerSegment<TP8> p8 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 
@@ -3179,7 +3158,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location, TP9.Location });
+		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location, TP9.Location,  });
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -3268,34 +3247,31 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 9 || lengths.Length != 9)
+			if (lengths.Length != 9)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP1 pointer1 = MEM.Allocate<T>(locations[0], lengths[0]);
-			TP2 pointer2 = MEM.Allocate<T>(locations[1], lengths[1]);
-			TP3 pointer3 = MEM.Allocate<T>(locations[2], lengths[2]);
-			TP4 pointer4 = MEM.Allocate<T>(locations[3], lengths[3]);
-			TP5 pointer5 = MEM.Allocate<T>(locations[4], lengths[4]);
-			TP6 pointer6 = MEM.Allocate<T>(locations[5], lengths[5]);
-			TP7 pointer7 = MEM.Allocate<T>(locations[6], lengths[6]);
-			TP8 pointer8 = MEM.Allocate<T>(locations[7], lengths[7]);
-			TP9 pointer9 = MEM.Allocate<T>(locations[8], lengths[8]);
+			TP1 pointer1 = MEM.Allocate<T>(TP1.Location, lengths[0]);
+			TP2 pointer2 = MEM.Allocate<T>(TP2.Location, lengths[1]);
+			TP3 pointer3 = MEM.Allocate<T>(TP3.Location, lengths[2]);
+			TP4 pointer4 = MEM.Allocate<T>(TP4.Location, lengths[3]);
+			TP5 pointer5 = MEM.Allocate<T>(TP5.Location, lengths[4]);
+			TP6 pointer6 = MEM.Allocate<T>(TP6.Location, lengths[5]);
+			TP7 pointer7 = MEM.Allocate<T>(TP7.Location, lengths[6]);
+			TP8 pointer8 = MEM.Allocate<T>(TP8.Location, lengths[7]);
+			TP9 pointer9 = MEM.Allocate<T>(TP9.Location, lengths[8]);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9);
 		}
-
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -3310,7 +3286,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / NativeType<TOut>.Size, storage.Pointer2.LengthInBytes / NativeType<TOut>.Size, storage.Pointer3.LengthInBytes / NativeType<TOut>.Size, storage.Pointer4.LengthInBytes / NativeType<TOut>.Size, storage.Pointer5.LengthInBytes / NativeType<TOut>.Size, storage.Pointer6.LengthInBytes / NativeType<TOut>.Size, storage.Pointer7.LengthInBytes / NativeType<TOut>.Size, storage.Pointer8.LengthInBytes / NativeType<TOut>.Size, storage.Pointer9.LengthInBytes / NativeType<TOut>.Size, });
 		}
 		#endregion
 
@@ -3468,7 +3444,7 @@ namespace Althea.Storage
 
 			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default; PointerSegment<TP8> p8 = default; PointerSegment<TP9> p9 = default;
 			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes, s.Pointer9.LengthInBytes };
+			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes, s.Pointer9.LengthInBytes,  };
 			lenAccu.AccumulateSum(lenAccu, inclusive: false);
 			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
 

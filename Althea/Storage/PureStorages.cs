@@ -138,26 +138,23 @@ namespace Althea.Storage
 
 		#region create
 		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="PureStorage{T, TP}"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// Statically <b>allocate</b> and create a new <see cref="PureStorage{T, TP}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="PureStorage{T, TP}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static PureStorage<T, TP> Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths)
+		public static PureStorage<T, TP> Create(ReadOnlySpan<long> lengths)
 		{
-			if (combinationType != CombinationType.AllStored || locations.Length != 1 || lengths.Length != 1)
+			if (lengths.Length != 1)
 				throw new InvalidOperationException(Support.Location);
 			if (lengths[0] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP pointer = MEM.Allocate<T>(locations[0], lengths[0]);
+			TP pointer = MEM.Allocate<T>(TP.Location, lengths[0]);
 			return new ActualPureStorage<T, TP>(pointer);
 		}
-
 
 		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
@@ -172,7 +169,7 @@ namespace Althea.Storage
 		public static PureStorage<T, TP> CreateAlike<TOut>(PureStorage<TOut, TP> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = PureStorage<TOut, TP>.LocationDescription;
-			return Create(descr.Type, descr.CopyLocationsToSpan(stackalloc StorageLocation[1]), stackalloc long[1] { storage.Length });
+			return Create(stackalloc long[] { storage.Length });
 		}
 		#endregion
 
@@ -240,7 +237,7 @@ namespace Althea.Storage
 
 		static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, PureStorage<T, TP>>.Length), nameof(Pointer) };
 
-		IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object?[] { DataType, this.Length, this.Pointer.Pointer.ToString() };
+		IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object[] { DataType, this.Length, this.Pointer };
 
 		/// <summary>
 		/// Return the string representation of this <see cref="PureStorage{T, TP}"/>

@@ -101,10 +101,18 @@ namespace Althea
 		/// <summary>
 		/// Create a <see cref="CombinationType"/> from given information about whether the levels are caches or actual storages.
 		/// </summary>
+		/// <param name="levelAsCache">The input <see cref="Span{T}"/> of <see cref="bool"/> to indicate whether the levels are caches or actual storages</param>
+		/// <returns>The created <see cref="CombinationType"/> from <paramref name="levelAsCache"/>.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="levelAsCache"/>'s length is too long to fit in a <see cref="CombinationType"/>.</exception>
+		public static CombinationType CreateCombinationType(this Span<bool> levelAsCache) => CreateCombinationType((ReadOnlySpan<bool>)levelAsCache);
+
+		/// <summary>
+		/// Create a <see cref="CombinationType"/> from given information about whether the levels are caches or actual storages.
+		/// </summary>
 		/// <param name="levelAsCache">The input <see cref="ReadOnlySpan{T}"/> of <see cref="bool"/> to indicate whether the levels are caches or actual storages</param>
 		/// <returns>The created <see cref="CombinationType"/> from <paramref name="levelAsCache"/>.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="levelAsCache"/>'s length is too long to fit in a <see cref="CombinationType"/>.</exception>
-		public static CombinationType Create(this ReadOnlySpan<bool> levelAsCache)
+		public static CombinationType CreateCombinationType(this ReadOnlySpan<bool> levelAsCache)
 		{
 			if (levelAsCache.IsEmpty)
 				return 0;
@@ -629,8 +637,8 @@ namespace Althea
 
 		#region to string
 		static string IMainPropertyFormattable<PointerSegment<T>>.StringMain => T.StringMain;
-		static IEnumerable<string> IMainPropertyFormattable<PointerSegment<T>>.PropertyNames => new[] { nameof(Location), nameof(LengthInBytes), nameof(OffsetInBytes) };
-		IEnumerable<object?> IMainPropertyFormattable<PointerSegment<T>>.PropertyValues => new object[] { Location, this.LengthInBytes, this.OffsetInBytes };
+		static IEnumerable<string> IMainPropertyFormattable<PointerSegment<T>>.PropertyNames => new[] { nameof(Location), nameof(LengthInBytes), nameof(OffsetInBytes), nameof(Pointer) };
+		IEnumerable<object?> IMainPropertyFormattable<PointerSegment<T>>.PropertyValues => new object[] { Location, this.LengthInBytes, this.OffsetInBytes, this.Pointer };
 
 		/// <summary>
 		/// Return the string representation of this <see cref="PointerSegment{T}"/>
@@ -644,6 +652,34 @@ namespace Althea
 
 	#region storage interfaces
 	/// <summary>
+	/// The returned status of a storage request <see cref="IStorage{T, TSelf}.TryRequest(long, long, bool)"/>
+	/// </summary>
+	/// <remarks>All positive return values indicate the maximum length allowed for specific request</remarks>
+	public enum StorageRequestStatus : long
+	{
+		/// <summary>
+		/// The storage request succeeded
+		/// </summary>
+		Success = 0,
+		/// <summary>
+		/// The requested storage is invalid
+		/// </summary>
+		InvalidStorage = -1,
+		/// <summary>
+		/// The input parameters indicate a storage piece out of range
+		/// </summary>
+		OutOfRange = -2,
+		/// <summary>
+		/// The input offset is invalid
+		/// </summary>
+		InvalidOffset = -3,
+		/// <summary>
+		/// The input length is invalid
+		/// </summary>
+		InvalidLength = -4,
+	}
+
+	/// <summary>
 	/// The base interface for all storage classes
 	/// </summary>
 	public interface IStorage : ICheckValid, IDisposable
@@ -654,6 +690,11 @@ namespace Althea
 				this.Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, get the total length of the presenting array in bytes
+		/// </summary>
+		long LengthInBytes { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, actually unmanaged resources held by this <see cref="IStorage"/>
@@ -667,15 +708,9 @@ namespace Althea
 		abstract static DataType DataType { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the total length of the presenting array in bytes
-		/// </summary>
-		long LengthInBytes { get; }
-
-		/// <summary>
 		/// When implemented by a derived class, statically get the description of the storage locations of this <see cref="IStorage"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		abstract static CombinationOfLocations LocationDescription { get; }
-
 	}
 
 	/// <summary>
@@ -689,11 +724,6 @@ namespace Althea
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IStorage<T, TSelf>
 	{
-		/// <summary>
-		/// When implemented by a derived class, statically get an empty <typeparamref name="TSelf"/>
-		/// </summary>
-		abstract static TSelf Empty { get; }
-
 		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="Length"/> to <paramref name="newLength"/>
 		/// </summary>
@@ -727,6 +757,38 @@ namespace Althea
 		}
 
 		/// <summary>
+		/// Try to request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
+		/// </summary>
+		/// <param name="offset">The starting requesting element offset compared to this storage</param>
+		/// <param name="length">The number of element(s) requested</param>
+		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
+		/// <returns>A <see cref="StorageRequestStatus"/> indicating the return status.</returns>
+		/// <remarks>The default implementation only checks <paramref name="offset"/> and <paramref name="length"/>.</remarks>
+		public virtual StorageRequestStatus TryRequest(long offset, long length, bool intentWrite)
+		{
+			if (!this.IsValid())
+				return StorageRequestStatus.InvalidStorage;
+			if (offset <= 0)
+				return StorageRequestStatus.InvalidOffset;
+			if (length <= 0)
+				return StorageRequestStatus.InvalidLength;
+			if (this is IReferenceStorage<T, TSelf> reference)
+			{
+				if (reference.Reference is null)
+					return StorageRequestStatus.InvalidStorage;
+				offset += reference.TotalOffset;
+				if (length + offset > reference.Reference.LengthInBytes / NativeType<T>.Size)
+					return StorageRequestStatus.OutOfRange;
+			}
+			else
+			{
+				if (length + offset > this.Length)
+					return StorageRequestStatus.OutOfRange;
+			}
+			return StorageRequestStatus.Success;
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> has same origin as the <paramref name="other"/> <typeparamref name="TSelf"/>.
 		/// </summary>
 		/// <param name="other">The other <typeparamref name="TSelf"/> to check overlap</param>
@@ -751,6 +813,26 @@ namespace Althea
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		bool OverlapWith(TSelf other);
 
+		TSelf ICloneable<TSelf>.Clone()
+		{
+			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
+			try
+			{
+				MEM.MemoryCopy((TSelf)this, storage);
+				return storage;
+			}
+			catch (System.Exception)
+			{
+				storage?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, statically get an empty <typeparamref name="TSelf"/>
+		/// </summary>
+		abstract static TSelf Empty { get; }
+
 		/// <summary>
 		/// When implemented by a derived class, statically create a referenced storage of type <typeparamref name="TSelf"/> over <paramref name="storage"/> of data type <typeparamref name="TOut"/>
 		/// </summary>
@@ -770,21 +852,6 @@ namespace Althea
 		/// <returns>A new <typeparamref name="TSelf"/> that likes <paramref name="storage"/></returns>
 		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
 		abstract static TSelf CreateAlike<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
-
-		TSelf ICloneable<TSelf>.Clone()
-		{
-			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
-			try
-			{
-				MEM.MemoryCopy((TSelf)this, storage);
-				return storage;
-			}
-			catch (System.Exception)
-			{
-				storage?.Dispose();
-				throw;
-			}
-		}
 
 		/// <summary>
 		/// Statically get the distance in bytes between two <typeparamref name="TSelf"/>s
@@ -853,21 +920,19 @@ namespace Althea
 			Span<StorageLocation> locations = stackalloc StorageLocation[1];
 			locations.SetValue(location);
 			Span<long> lengths = stackalloc long[] { length };
-			return TSelf.Create(0, locations, lengths);
+			return TSelf.Create(lengths);
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, statically <b>allocate</b> and create a new <typeparamref name="TSelf"/> of given <paramref name="combinationType"/> and given locations and lengths.
+		/// When implemented by a derived class, statically <b>allocate</b> and create a new <typeparamref name="TSelf"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
 		/// </summary>
-		/// <param name="combinationType">The given <see cref="CombinationType"/> to create</param>
-		/// <param name="locations">The given <see cref="StorageLocation"/>s</param>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <typeparamref name="TSelf"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="locations"/> or <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		abstract static TSelf Create(CombinationType combinationType, ReadOnlySpan<StorageLocation> locations, ReadOnlySpan<long> lengths);
+		abstract static TSelf Create(ReadOnlySpan<long> lengths);
 
 		/// <summary>
 		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>

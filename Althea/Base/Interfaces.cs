@@ -52,7 +52,7 @@ namespace Althea
 			StringBuilder stringBuilder = new(main);
 			if (properties.Any())
 			{
-				stringBuilder.Append(' ').Append('[');
+				stringBuilder.Append('[');
 				stringBuilder.Append(string.Join(", ", names.Zip(properties).Select(static p => $"{p.First}={p.Second}")));
 				stringBuilder.Append(']');
 			}
