@@ -10,6 +10,21 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <DocumentationMarkdown>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).md</DocumentationMarkdown>
+    <Win32Resource />
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RootNamespace>Althea</RootNamespace>
+    <AssemblyName>Althea</AssemblyName>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
 
@@ -28,17 +43,6 @@
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <DocumentationMarkdown>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).md</DocumentationMarkdown>
-    <Win32Resource />
-    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-    <RootNamespace>Althea</RootNamespace>
-    <AssemblyName>Althea</AssemblyName>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -145,10 +149,6 @@
 
   <ItemGroup>
     <Folder Include="documents\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

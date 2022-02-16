@@ -148,7 +148,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static long AbsoluteValueArgMax<T>(Storage<T> x, int strideX) where T : unmanaged
+		public static long AbsoluteValueArgMax<T>(IStorage x, int strideX) where T : unmanaged
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			long result = default;
@@ -157,7 +157,7 @@ namespace Althea.LinearAlgebra.Dense
 			while (!success)
 			{
 				node = SelectImplementation(a => a.IsSupportedVectorUnary(location), node);
-				success = node.Value.AbsoluteValueArgMax_(x, strideX, out result);
+				success = node.Value.AbsoluteValueArgMax<T>(x, strideX, out result);
 			}
 			if (success && node is not null)
 				SetImplementation(RecentAPIs, node.Value);
@@ -766,8 +766,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool AbsoluteValueArgMax_<T>(Storage<T> x, int strideX, out long index) where T : unmanaged;
-
+		protected abstract bool AbsoluteValueArgMax<T>(IStorage x, int strideX, out long index) where T : unmanaged;
+		
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the minimum magnitude.
 		/// </summary>

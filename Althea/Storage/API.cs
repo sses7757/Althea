@@ -540,96 +540,23 @@ namespace Althea.Storage
 	/// The abstract class for runtime memory API routines 
 	/// </summary>
 	/// <remarks>The default implementations of methods about <see cref="Storage{T}"/> ensure that you can only implement the basic low-level memory operations of "pure" storages while the high-level methods about <see cref="Storage{T}"/> work fine automatically. However, if there are native supports, it is still recommended to overwrite these methods.</remarks>
-	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
+	public abstract partial class AbstractApi : IRuntimeApi<AbstractApi>
 	{
 		#region basic
-		/// <summary>
-		/// Get the currently using <see cref="AbstractApi"/>.
-		/// </summary>
-		/// <remarks><b>DO NOT</b> invoke methods of this property directly unless you are sure about what you are doing; otherwise, there may be exceptions and / or unnoticeable bugs.</remarks>
-		public static AbstractApi? Current => RecentAPIs.First?.Value;
-
 		/// <summary>
 		/// Set the currently using <see cref="AbstractApi"/> to the given <paramref name="implementation"/>
 		/// </summary>
 		/// <param name="implementation">The <see cref="Type"/> of the given implementation of <see cref="AbstractApi"/></param>
 		/// <returns>Success or not.</returns>
-		public static new bool SetImplementation(Type implementation) => SetImplementation(implementation);
+		public static new bool SetImplementation(Type implementation) => AbstractRuntimeApi<AbstractApi>.SetImplementation(implementation);
 
 		/// <summary>
 		/// Set the currently using <see cref="AbstractApi"/> to the given <paramref name="implementation"/>
 		/// </summary>
 		/// <param name="implementation">The instance of an implementation of <see cref="AbstractApi"/></param>
 		/// <returns>Success or not.</returns>
-		internal static new bool SetImplementation(AbstractApi? implementation) => SetImplementation(implementation);
+		internal static new bool SetImplementation(AbstractApi? implementation) => AbstractRuntimeApi<AbstractApi>.SetImplementation(implementation);
 		#endregion
-
-
-		#region dynamic invocation
-		/////// <summary>
-		/////// Get the dynamic object used to dynamically invoke method(s) not listed explicitly here (the methods extra defined in derived classes)
-		/////// </summary>
-		/////// <remarks>
-		/////// Due to the limitations of dynamic invocation, <c>ref</c>, <c>in</c>, <c>out</c> and <c>ref struct</c>, etc. are not supported and non of the input arguments can be null.<br/>
-		/////// Since there are internal caching for <see cref="DynamicObject.TryInvokeMember(InvokeMemberBinder, object[], out object)"/>, the average repeated dynamic invocation may cost around 1 microsecond.
-		/////// </remarks>
-		/////// <example><code>
-		/////// long actualCopied = AbstractApi.Dynamic.MemoryCopyPitched(...);
-		/////// </code></example>
-		////public static dynamic Dynamic => singletonDynamic;
-
-		#endregion
-
-
-		#region support information
-		/// <summary>
-		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by unary operations of this implementation or not.
-		/// </summary>
-		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether <paramref name="location"/> is supported by this <see cref="AbstractApi"/>.</returns>
-		/// <remarks>
-		/// The unary operations:
-		/// <list type="bullet">
-		/// <item><see cref="Allocate(StorageLocation, long)"/></item>
-		/// <item><see cref="Free(PointerSegment, bool)"/></item>
-		/// <item><see cref="FillWithValue(PointerSegment, byte)"/></item>
-		/// <item>etc.</item>
-		/// </list>
-		/// </remarks>
-		protected abstract bool IsSupportedUnary(CombinationOfLocations location);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by binary operations of this implementation or not.
-		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether binary operations between <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="AbstractApi"/>.</returns>
-		/// <remarks>
-		/// The binary operations:
-		/// <list type="bullet">
-		/// <item><see cref="MemoryCopy(PointerSegment, PointerSegment)"/></item>
-		/// <item><see cref="MemoryCopy2D(PointerSegment, long, PointerSegment, long, long, long)"/></item>
-		/// <item>etc.</item>
-		/// </list>
-		/// </remarks>
-		protected abstract bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2);
-
-		/// <summary>
-		/// When implemented by a derived class, check whether the given <see cref="CombinationOfLocations"/> can transfer data with C# managed memory using this implementation or not.
-		/// </summary>
-		/// <param name="location">The <see cref="CombinationOfLocations"/> to indicate the unmanaged storage location combination</param>
-		/// <returns>Whether this <see cref="AbstractApi"/> supports data transfer between <paramref name="location"/> and C# managed memory</returns>
-		/// <remarks>
-		/// The transfer operations:
-		/// <list type="bullet">
-		/// <item><see cref="FromManaged{T}(PointerSegment, T)"/></item>
-		/// <item><see cref="ToManaged{T}(PointerSegment)"/></item>
-		/// <item>etc.</item>
-		/// </list>
-		/// </remarks>
-		protected abstract bool CanTransferWithManaged(CombinationOfLocations location);
-		#endregion
-
 
 		#region properties
 		/// <summary>
@@ -789,9 +716,9 @@ namespace Althea.Storage
 		/// Copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
 		/// <param name="source">The source pointer</param>
-		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
+		/// <param name="sourceLD">The source array actual height (leading dimension) in bytes</param>
 		/// <param name="destination">The destination pointer</param>
-		/// <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
+		/// <param name="destinationLD">The destination array actual height (leading dimension) in bytes</param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in the real type</param>
 		/// <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>

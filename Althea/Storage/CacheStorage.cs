@@ -371,24 +371,21 @@ namespace Althea.Storage
 		public bool IsValid() => this.Memory.IsValid();
 
 		/// <summary>
-		/// Try to request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
+		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
 		/// </summary>
 		/// <param name="offset">The starting requesting element offset compared to this storage</param>
 		/// <param name="length">The number of element(s) requested</param>
 		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
-		/// <returns>A <see cref="StorageRequestStatus"/> indicating the return status.</returns>
-		public StorageRequestStatus TryRequest(long offset, long length, bool intentWrite)
+		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
+		public long Request(long offset, long length, bool intentWrite)
 		{
-			var basic = ((IStorage<T, CachedStorage<T, TS, TPh, TPl>>)this).TryRequest(offset, length, intentWrite);
-			if (basic < 0)
-				return basic;
 			offset *= NativeType<T>.Size; length *= NativeType<T>.Size;
 			offset += this.Memory.OffsetInBytes;
 			long cacheIndex = offset / this.Strategy.CacheLineSize;
 			if (cacheIndex != (offset + length) / this.Strategy.CacheLineSize) // too large
-				return (StorageRequestStatus)(this.Strategy.CacheLineSize - offset + cacheIndex * this.Strategy.CacheLineSize);
+				return this.Strategy.CacheLineSize - offset + cacheIndex * this.Strategy.CacheLineSize;
 			this.Strategy.GetCacheOf(offset, this.CopyWrapper, intentWrite);
-			return StorageRequestStatus.Success;
+			return 0;
 		}
 		#endregion
 
@@ -547,7 +544,7 @@ namespace Althea.Storage
 	}
 
 	/// <summary>
-	/// The actual cached storage class that inherits <see cref="CachedStorageBase{TS, TPh, TPl}"/> and constrains data type to <typeparamref name="T"/>
+	/// The actual single level cached storage class that inherits <see cref="CachedStorageBase{TS, TPh, TPl}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">Any cache strategy struct which implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
@@ -582,7 +579,7 @@ namespace Althea.Storage
 	}
 
 	/// <summary>
-	/// The referenced cached storage class that inherits <see cref="CachedStorageBase{TS, TPh, TPl}"/> and constrains data type to <typeparamref name="T"/>
+	/// The referenced single level cached storage class that inherits <see cref="CachedStorageBase{TS, TPh, TPl}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">Any cache strategy struct which implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
@@ -597,17 +594,19 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override TS Strategy => ((CachedStorageBase<TS, TPh, TPl>?)this.Reference)?.Strategy ?? default;
+		public override TS Strategy => this.Reference_?.Strategy ?? default;
 
 		/// <summary>
 		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override PointerSegment<TPh> Cache => ((CachedStorageBase<TS, TPh, TPl>?)this.Reference)?.Cache ?? default;
+		public override PointerSegment<TPh> Cache => this.Reference_?.Cache ?? default;
 
 		/// <summary>
 		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/>
 		/// </summary>
 		public IStorage? Reference { get; }
+
+		private CachedStorageBase<TS, TPh, TPl>? Reference_ => (CachedStorageBase<TS, TPh, TPl>?)this.Reference;
 
 		/// <summary>
 		/// Get the total offset of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/> in bytes

@@ -652,34 +652,6 @@ namespace Althea
 
 	#region storage interfaces
 	/// <summary>
-	/// The returned status of a storage request <see cref="IStorage{T, TSelf}.TryRequest(long, long, bool)"/>
-	/// </summary>
-	/// <remarks>All positive return values indicate the maximum length allowed for specific request</remarks>
-	public enum StorageRequestStatus : long
-	{
-		/// <summary>
-		/// The storage request succeeded
-		/// </summary>
-		Success = 0,
-		/// <summary>
-		/// The requested storage is invalid
-		/// </summary>
-		InvalidStorage = -1,
-		/// <summary>
-		/// The input parameters indicate a storage piece out of range
-		/// </summary>
-		OutOfRange = -2,
-		/// <summary>
-		/// The input offset is invalid
-		/// </summary>
-		InvalidOffset = -3,
-		/// <summary>
-		/// The input length is invalid
-		/// </summary>
-		InvalidLength = -4,
-	}
-
-	/// <summary>
 	/// The base interface for all storage classes
 	/// </summary>
 	public interface IStorage : ICheckValid, IDisposable
@@ -757,36 +729,14 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Try to request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
+		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
 		/// </summary>
 		/// <param name="offset">The starting requesting element offset compared to this storage</param>
 		/// <param name="length">The number of element(s) requested</param>
 		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
-		/// <returns>A <see cref="StorageRequestStatus"/> indicating the return status.</returns>
-		/// <remarks>The default implementation only checks <paramref name="offset"/> and <paramref name="length"/>.</remarks>
-		public virtual StorageRequestStatus TryRequest(long offset, long length, bool intentWrite)
-		{
-			if (!this.IsValid())
-				return StorageRequestStatus.InvalidStorage;
-			if (offset <= 0)
-				return StorageRequestStatus.InvalidOffset;
-			if (length <= 0)
-				return StorageRequestStatus.InvalidLength;
-			if (this is IReferenceStorage<T, TSelf> reference)
-			{
-				if (reference.Reference is null)
-					return StorageRequestStatus.InvalidStorage;
-				offset += reference.TotalOffset;
-				if (length + offset > reference.Reference.LengthInBytes / NativeType<T>.Size)
-					return StorageRequestStatus.OutOfRange;
-			}
-			else
-			{
-				if (length + offset > this.Length)
-					return StorageRequestStatus.OutOfRange;
-			}
-			return StorageRequestStatus.Success;
-		}
+		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
+		/// <remarks>The default implementation simply returns 0 for performance issues, invoke <see cref="IsOffsetValid(long, long)"/> to check parameters if necessary.</remarks>
+		public virtual long Request(long offset, long length, bool intentWrite) => 0;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> has same origin as the <paramref name="other"/> <typeparamref name="TSelf"/>.
