@@ -8,7 +8,7 @@ namespace Althea.Solver
 	/// <summary>
 	/// The abstract class for runtime general solver API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractApiSelector
 	{
 		#region basic
 		/// <summary>

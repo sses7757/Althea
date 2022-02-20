@@ -11,7 +11,7 @@ namespace Althea.Random
 	/// <summary>
 	/// The abstract class for runtime random API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractApiSelector
 	{
 		#region basic
 		/// <summary>

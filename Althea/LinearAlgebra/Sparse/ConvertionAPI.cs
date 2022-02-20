@@ -11,7 +11,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// <summary>
 	/// The abstract class for runtime sparse linear algebra API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractApiSelector
 	{
 		#region support information
 		/// <summary>

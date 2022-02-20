@@ -8,7 +8,7 @@ namespace Althea.TensorAlgebra.Dense
 	/// <summary>
 	/// The abstract class for runtime dense tensor algebra API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractApiSelector
 	{
 		#region basic
 		/// <summary>

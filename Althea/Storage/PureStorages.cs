@@ -152,8 +152,7 @@ namespace Althea.Storage
 				throw new InvalidOperationException(Support.Location);
 			if (lengths[0] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TP pointer = MEM.Allocate<T>(TP.Location, lengths[0]);
-			return new ActualPureStorage<T, TP>(pointer);
+			return new ActualPureStorage<T, TP>(lengths[0]);
 		}
 
 		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.CreateAlike<TOut, TOther>(TOther storage)
@@ -257,10 +256,12 @@ namespace Althea.Storage
 		where TP : notnull, IPointer<TP>
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualPureStorage{T, TP}"/> from the given <paramref name="pointer"/> of type <typeparamref name="TP"/>
+		/// Create a new <see cref="ActualPureStorage{T, TP}"/> of given <paramref name="length"/>
 		/// </summary>
-		/// <param name="pointer">The given pointer of type <typeparamref name="TP"/></param>
-		public ActualPureStorage(TP pointer) : base(new(pointer))
+		/// <param name="length">The length to create in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
+		public ActualPureStorage(long length) : base(length > 0 ? MEM.Allocate<T, TP>(length) : throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive))
 		{
 			// do nothing
 		}

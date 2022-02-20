@@ -288,11 +288,13 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2) : base(new(pointer1), new(pointer2))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -655,12 +657,14 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3) : base(new(pointer1), new(pointer2), new(pointer3))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -1047,13 +1051,15 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth pointer of type <typeparamref name="TP4"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4) : base(new(pointer1), new(pointer2), new(pointer3), new(pointer4))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -1464,14 +1470,16 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth pointer of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth pointer of type <typeparamref name="TP5"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5) : base(new(pointer1), new(pointer2), new(pointer3), new(pointer4), new(pointer5))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), Parameter.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -1906,15 +1914,17 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth pointer of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth pointer of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth pointer of type <typeparamref name="TP6"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6) : base(new(pointer1), new(pointer2), new(pointer3), new(pointer4), new(pointer5), new(pointer6))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), Parameter.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), Parameter.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -2373,16 +2383,18 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth pointer of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth pointer of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth pointer of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh pointer of type <typeparamref name="TP7"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7) : base(new(pointer1), new(pointer2), new(pointer3), new(pointer4), new(pointer5), new(pointer6), new(pointer7))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), Parameter.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), Parameter.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), Parameter.MustPositive), length7 > 0 ? MEM.Allocate<T, TP7>(length7) : throw new ArgumentOutOfRangeException(nameof(length7), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -2865,17 +2877,19 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth pointer of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth pointer of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth pointer of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh pointer of type <typeparamref name="TP7"/> to create from</param>
-		/// <param name="pointer8">The eighth pointer of type <typeparamref name="TP8"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8) : base(new(pointer1), new(pointer2), new(pointer3), new(pointer4), new(pointer5), new(pointer6), new(pointer7), new(pointer8))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), Parameter.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), Parameter.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), Parameter.MustPositive), length7 > 0 ? MEM.Allocate<T, TP7>(length7) : throw new ArgumentOutOfRangeException(nameof(length7), Parameter.MustPositive), length8 > 0 ? MEM.Allocate<T, TP8>(length8) : throw new ArgumentOutOfRangeException(nameof(length8), Parameter.MustPositive))
 		{
 			// do nothing
 		}
@@ -3382,18 +3396,20 @@ namespace Althea.Storage
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from the given lengths of all locations
 		/// </summary>
-		/// <param name="pointer1">The first pointer of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second pointer of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third pointer of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth pointer of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth pointer of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth pointer of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh pointer of type <typeparamref name="TP7"/> to create from</param>
-		/// <param name="pointer8">The eighth pointer of type <typeparamref name="TP8"/> to create from</param>
-		/// <param name="pointer9">The ninth pointer of type <typeparamref name="TP9"/> to create from</param>
-		public ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8, TP9 pointer9) : base(new(pointer1), new(pointer2), new(pointer3), new(pointer4), new(pointer5), new(pointer6), new(pointer7), new(pointer8), new(pointer9))
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), Parameter.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), Parameter.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), Parameter.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), Parameter.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), Parameter.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), Parameter.MustPositive), length7 > 0 ? MEM.Allocate<T, TP7>(length7) : throw new ArgumentOutOfRangeException(nameof(length7), Parameter.MustPositive), length8 > 0 ? MEM.Allocate<T, TP8>(length8) : throw new ArgumentOutOfRangeException(nameof(length8), Parameter.MustPositive), length9 > 0 ? MEM.Allocate<T, TP9>(length9) : throw new ArgumentOutOfRangeException(nameof(length9), Parameter.MustPositive))
 		{
 			// do nothing
 		}

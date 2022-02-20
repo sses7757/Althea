@@ -633,6 +633,11 @@ namespace Althea
 		/// <returns>A <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different pointers</exception>
 		public static long operator -(PointerSegment<T> left, PointerSegment<T> right) => left.Pointer == right.Pointer ? left.OffsetInBytes - right.OffsetInBytes : throw new InvalidOperationException();
+
+		/// <summary>
+		/// Implicitly convert a pointer of type <typeparamref name="T"/> to a <see cref="PointerSegment{T}"/>
+		/// </summary>
+		public static implicit operator PointerSegment<T>(T pointer) => new(pointer);
 		#endregion
 
 		#region to string

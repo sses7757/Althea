@@ -189,7 +189,7 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region set delegate
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void SetDelegate<TApi, TDelegate>(this TApi? pre, TApi? now, string name, ref Delegate? @delegate) where TApi : AbstractRuntimeApi where TDelegate : Delegate
+		internal static void SetDelegate<TApi, TDelegate>(this TApi? pre, TApi? now, string name, ref Delegate? @delegate) where TApi : AbstractApiSelector where TDelegate : Delegate
 		{
 			if (@delegate is not null)
 				return;

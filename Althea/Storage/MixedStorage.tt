@@ -322,12 +322,14 @@ namespace Althea.Storage
 
 	{
 		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, <#=pointerTypes#>}"/> from the given pointers
+		/// Create a new <see cref="ActualMixedStorage{T, <#=pointerTypes#>}"/> from the given lengths of all locations
 		/// </summary>
 <# for (int j = 1; j <= i; j++) { #>
-		/// <param name="pointer<#=j#>">The <#=ordinal[j - 1]#> pointer of type <typeparamref name="TP<#=j#>"/> to create from</param>
+		/// <param name="length<#=j#>">The length in <typeparamref name="T"/> of the <#=ordinal[j - 1]#> location</param>
 <# } #>
-		public ActualMixedStorage(<#=pointerRawParas#>) : base(<# for (int j = 1; j < i; j++) { #>new(pointer<#=j#>), <# } #>new(pointer<#=i#>))
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+		public ActualMixedStorage(<# for (int j = 1; j < i; j++) { #>long length<#=j#>, <# } #>long length<#=i#>) : base(<# for (int j = 1; j < i; j++) { #>length<#=j#> > 0 ? MEM.Allocate<T, TP<#=j#>>(length<#=j#>) : throw new ArgumentOutOfRangeException(nameof(length<#=j#>), Parameter.MustPositive), <# } #>length<#=i#> > 0 ? MEM.Allocate<T, TP<#=i#>>(length<#=i#>) : throw new ArgumentOutOfRangeException(nameof(length<#=i#>), Parameter.MustPositive))
 		{
 			// do nothing
 		}

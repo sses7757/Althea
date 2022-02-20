@@ -7,7 +7,7 @@ namespace Althea.LinearAlgebra.Dense
 	/// <summary>
 	/// The abstract class for runtime dense linear algebra API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractApiSelector
 	{
 		#region support information
 		/// <summary>

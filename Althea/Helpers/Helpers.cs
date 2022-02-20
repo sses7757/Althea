@@ -78,32 +78,6 @@ namespace Althea.Helpers
 	public static class ExtensionHelper
 	{
 		#region integer related
-		/// <summary>
-		/// Get the combination number of given integers
-		/// </summary>
-		/// <param name="n">The length of any combination</param>
-		/// <param name="N">The number of all potential values</param>
-		/// <returns>0 if <paramref name="n"/> &gt; <paramref name="N"/> or <paramref name="n"/> == 0 or <paramref name="N"/> == 0, the binomial (<paramref name="N"/>, <paramref name="n"/>) otherwise</returns>
-		/// <exception cref="OverflowException">If an overflow happened during the calculation</exception>
-		public static long CombinationNumber(int n, int N)
-		{
-			if (n < N || n == 0 || N == 0)
-				return 0;
-			if (n == 1)
-				return N;
-			if (n == N)
-				return 1;
-			// otherwise
-			long ret = 1;
-			int c = N - n;
-			c = Math.Min(c, n);
-			for (int i = N - c + 1; i <= N; i++)
-				ret = checked(ret * i);
-			for (int i = 2; i <= c; i++)
-				ret /= i;
-			return ret;
-		}
-
 		// Ignore Spelling: nd
 		/// <summary>
 		/// Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd

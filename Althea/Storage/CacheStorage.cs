@@ -448,8 +448,7 @@ namespace Althea.Storage
 				throw new InvalidOperationException(Support.Location);
 			if (lengths[1] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-			TPl memory = MEM.Allocate<T>(TPl.Location, lengths[1]);
-			return new ActualCachedStorage<T, TS, TPh, TPl>(new(memory));
+			return new ActualCachedStorage<T, TS, TPh, TPl>(lengths[1]);
 		}
 
 		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.CreateAlike<TOut, TOther>(TOther storage)
@@ -567,14 +566,15 @@ namespace Althea.Storage
 		public override PointerSegment<TPh> Cache { get; }
 
 		/// <summary>
-		/// Create a new <see cref="ActualCachedStorage{T, TS, TPh, TPl}"/> with given memory <see cref="PointerSegment{T}"/>
+		/// Create a new <see cref="ActualCachedStorage{T, TS, TPh, TPl}"/> of given <paramref name="length"/>
 		/// </summary>
-		/// <param name="memory">The <see cref="PointerSegment{T}"/> of type <typeparamref name="TPl"/> as memory storage pointer</param>
-		public ActualCachedStorage(PointerSegment<TPl> memory) : base(memory)
+		/// <param name="length">The length to create in <typeparamref name="T"/></param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
+		public ActualCachedStorage(long length) : base(length > 0 ? MEM.Allocate<T, TPl>(length) : throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive))
 		{
-			this.Strategy = TS.Create(memory.LengthInBytes, out long cacheSizeBytes);
-			TPh cache = MEM.Allocate(TPh.Location, cacheSizeBytes);
-			this.Cache = new(cache);
+			this.Strategy = TS.Create(length * NativeType<T>.Size, out long cacheSizeBytes);
+			this.Cache = MEM.Allocate<TPh>(cacheSizeBytes);
 		}
 	}
 

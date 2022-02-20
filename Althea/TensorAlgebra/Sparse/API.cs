@@ -11,7 +11,7 @@ namespace Althea.TensorAlgebra.Sparse
 	/// <summary>
 	/// The abstract class for runtime sparse tensor algebra API routines 
 	/// </summary>
-	public abstract partial class AbstractApi : AbstractRuntimeApi
+	public abstract partial class AbstractApi : AbstractApiSelector
 	{
 		#region basic
 		/// <summary>
