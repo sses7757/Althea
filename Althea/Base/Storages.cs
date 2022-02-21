@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,7 +9,7 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.ApiSelector;
 
 
 namespace Althea
@@ -652,6 +654,7 @@ namespace Althea
 		public override string ToString() => IMainPropertyFormattable<PointerSegment<T>>.ToString(in this);
 		#endregion
 	}
+
 	#endregion
 
 
@@ -717,9 +720,9 @@ namespace Althea
 				if (reference.Reference is null)
 					return false;
 				offset += reference.TotalOffset;
-				if (offset < 0 || offset >= reference.Reference.LengthInBytes / NativeType<T>.Size)
+				if (offset < 0 || offset >= reference.Reference.LengthInBytes / Unmanaged<T>.Size)
 					return false;
-				if (newLength > 0 && newLength + offset > reference.Reference.LengthInBytes / NativeType<T>.Size)
+				if (newLength > 0 && newLength + offset > reference.Reference.LengthInBytes / Unmanaged<T>.Size)
 					return false;
 				return true;
 			}
@@ -773,7 +776,7 @@ namespace Althea
 			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
 			try
 			{
-				MEM.MemoryCopy((TSelf)this, storage);
+				MEM.MemoryCopy<T, TSelf>((TSelf)this, storage);
 				return storage;
 			}
 			catch (System.Exception)
@@ -839,9 +842,9 @@ namespace Althea
 		}
 
 		/// <summary>
-		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="NativeType{T}.Size"/>.
+		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="Unmanaged{T}.Size"/>.
 		/// </summary>
-		public virtual long Length => LengthInBytes / NativeType<T>.Size;
+		public virtual long Length => LengthInBytes / Unmanaged<T>.Size;
 
 		/// <summary>
 		/// When implemented by a derived class, make a referenced <typeparamref name="TSelf"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
@@ -860,23 +863,6 @@ namespace Althea
 		/// <returns>The distance between two <typeparamref name="TSelf"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
 		abstract static long operator -(TSelf left, TSelf right);
-
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <typeparamref name="TSelf"/> on given <paramref name="location"/> with corresponding <paramref name="length"/>.
-		/// </summary>
-		/// <param name="location">The given <see cref="StorageLocation"/> to create on</param>
-		/// <param name="length">The corresponding length in <typeparamref name="T"/></param>
-		/// <returns>The created new <typeparamref name="TSelf"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		public static TSelf Create(StorageLocation location, long length)
-		{
-			Span<StorageLocation> locations = stackalloc StorageLocation[1];
-			locations.SetValue(location);
-			Span<long> lengths = stackalloc long[] { length };
-			return TSelf.Create(lengths);
-		}
 
 		/// <summary>
 		/// When implemented by a derived class, statically <b>allocate</b> and create a new <typeparamref name="TSelf"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
@@ -900,10 +886,10 @@ namespace Althea
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static long CheckCast<TOut>(long size, bool sizeInBytes = false) where TOut : unmanaged, INumber<TOut>
 		{
-			long newSize = sizeInBytes ? size : (size * NativeType<T>.Size);
-			if (size * NativeType<T>.Size % NativeType<TOut>.Size != 0)
+			long newSize = sizeInBytes ? size : (size * Unmanaged<T>.Size);
+			if (size * Unmanaged<T>.Size % Unmanaged<TOut>.Size != 0)
 				throw new InvalidCastException(Other.CannotDivide);
-			newSize /= NativeType<TOut>.Size;
+			newSize /= Unmanaged<TOut>.Size;
 			return newSize;
 		}
 	}
@@ -954,8 +940,8 @@ namespace Althea
 				return default;
 			if (!sizeInBytes)
 			{
-				offset *= NativeType<T>.Size;
-				newLength *= NativeType<T>.Size;
+				offset *= Unmanaged<T>.Size;
+				newLength *= Unmanaged<T>.Size;
 			}
 			// get offset and new length in bytes
 			if (newLength <= 0)
@@ -982,8 +968,8 @@ namespace Althea
 		/// <summary>
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
-		/// <remarks>The default implementation does not check whether <see cref="TotalOffsetInBytes"/> can be divided by <see cref="NativeType{T}.Size"/> or not.</remarks>
-		public virtual long TotalOffset => TotalOffsetInBytes / NativeType<T>.Size;
+		/// <remarks>The default implementation does not check whether <see cref="TotalOffsetInBytes"/> can be divided by <see cref="Unmanaged{T}.Size"/> or not.</remarks>
+		public virtual long TotalOffset => TotalOffsetInBytes / Unmanaged<T>.Size;
 	}
 	#endregion
 }

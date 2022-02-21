@@ -6,7 +6,7 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Storage
@@ -330,7 +330,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
 		/// </summary>
-		public static DataType DataType => NativeType<T>.DataType;
+		public static DataType DataType => Unmanaged<T>.DataType;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="CachedStorage{T, TS, TPh, TPl}"/> as a <see cref="CombinationOfLocations"/>
@@ -345,24 +345,24 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
-		public long Length => this.Memory.LengthInBytes / NativeType<T>.Size;
+		public long Length => this.Memory.LengthInBytes / Unmanaged<T>.Size;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose(bool invokedByUser)
+		private void Dispose()
 		{
 			if (this is ActualCachedStorage<T, TS, TPh, TPl>)
 			{
-				MEM.Free(this.Cache.Pointer, invokedByUser);
-				MEM.Free(this.Memory.Pointer, invokedByUser);
+				MEM.Free(this.Cache.Pointer);
+				MEM.Free(this.Memory.Pointer);
 			}
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose(invokedByUser);
+		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
 
 		/// <summary>
 		/// The deconstructor invoked by GC
 		/// </summary>
-		~CachedStorage() => this.Dispose(false);
+		~CachedStorage() => this.Dispose();
 
 		/// <summary>
 		/// Check whether this <see cref="CachedStorage{T, TS, TPh, TPl}"/> is a valid one or not
@@ -379,7 +379,7 @@ namespace Althea.Storage
 		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
 		public long Request(long offset, long length, bool intentWrite)
 		{
-			offset *= NativeType<T>.Size; length *= NativeType<T>.Size;
+			offset *= Unmanaged<T>.Size; length *= Unmanaged<T>.Size;
 			offset += this.Memory.OffsetInBytes;
 			long cacheIndex = offset / this.Strategy.CacheLineSize;
 			if (cacheIndex != (offset + length) / this.Strategy.CacheLineSize) // too large
@@ -464,7 +464,7 @@ namespace Althea.Storage
 		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<TOut>(CachedStorage<TOut, TS, TPh, TPl> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = CachedStorage<TOut, TS, TPh, TPl>.LocationDescription;
-			return Create(stackalloc long[] { storage.Cache.LengthInBytes / NativeType<TOut>.Size, storage.Length });
+			return Create(stackalloc long[] { storage.Cache.LengthInBytes / Unmanaged<TOut>.Size, storage.Length });
 		}
 		#endregion
 
@@ -501,9 +501,9 @@ namespace Althea.Storage
 		public static long operator -(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right)
 		{
 			long diffBytes = IStorage<T, CachedStorage<T, TS, TPh, TPl>>.StorageDiffBytes(left, right);
-			if (diffBytes % NativeType<T>.Size != 0)
+			if (diffBytes % Unmanaged<T>.Size != 0)
 				throw new InvalidOperationException(Other.CannotDivide);
-			return diffBytes / NativeType<T>.Size;
+			return diffBytes / Unmanaged<T>.Size;
 		}
 
 		/// <summary>
@@ -573,7 +573,7 @@ namespace Althea.Storage
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
 		public ActualCachedStorage(long length) : base(length > 0 ? MEM.Allocate<T, TPl>(length) : throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive))
 		{
-			this.Strategy = TS.Create(length * NativeType<T>.Size, out long cacheSizeBytes);
+			this.Strategy = TS.Create(length * Unmanaged<T>.Size, out long cacheSizeBytes);
 			this.Cache = MEM.Allocate<TPh>(cacheSizeBytes);
 		}
 	}
@@ -622,7 +622,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorageBase{TS, TPh, TPl}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
 		public ReferenceCachedStorage(IStorage? storage, long offset = 0, long newLength = 0) :
-			base(storage is CachedStorageBase<TS, TPh, TPl> p ? p.Memory.MoveBy(offset * NativeType<T>.Size, newLength * NativeType<T>.Size) : default)
+			base(storage is CachedStorageBase<TS, TPh, TPl> p ? p.Memory.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size) : default)
 		{
 			var (reference, _, _) = IReferenceStorage<T, CachedStorage<T, TS, TPh, TPl>>.Create<CachedStorageBase<TS, TPh, TPl>>(storage, offset, newLength);
 			this.Reference = reference;

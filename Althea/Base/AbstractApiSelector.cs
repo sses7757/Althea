@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -23,7 +26,7 @@ namespace Althea
 		public bool Disposed { get; protected set; } = false;
 
 		/// <summary>
-		/// Release all unmanaged resources held by this class
+		/// Release all unmanaged resources held by this class. When overridden by a derived class, the disposition behavior can be modified.
 		/// </summary>
 		public virtual void Dispose()
 		{
@@ -88,34 +91,61 @@ namespace Althea
 		private static int CurrentApiIndex = -1;
 
 		private static readonly object apiChangeLock = new();
+		#endregion
+
+		#region enumerate
+		/// <summary>
+		/// An empty class only used as an API enumerable
+		/// </summary>
+		protected sealed class ApiEnumerableClass
+		{
+			/// <summary>
+			/// Get a <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind
+			/// </summary>
+			/// <returns>A new <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind</returns>
+			public ApiEnumerator GetEnumerator() => new();
+		}
 
 		/// <summary>
-		/// Get a <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind
+		/// Get the API enumerable of the APIs
 		/// </summary>
-		/// <returns>A new <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind</returns>
-		protected static ApiEnumerator GetApiEnumerator() => new();
+		protected static readonly ApiEnumerableClass ApiEnumerable = new();
 
 		/// <summary>
 		/// The enumerator used to enumerates through all API instances of <typeparamref name="TApi"/> kind
 		/// </summary>
-		protected ref struct ApiEnumerator
+		protected struct ApiEnumerator : IEnumerator<TApi>, IDisposable
 		{
-			private int current;
+			private int current = 0;
 
 			private readonly bool __locked = false;
+
+			private static int EndIndex => (CurrentApiIndex + 1) % APIs.Count;
 
 			/// <summary>
 			/// Get the current API instance
 			/// </summary>
 			public TApi Current => APIs[current];
 
+			object IEnumerator.Current => this.Current;
+
 			/// <summary>
 			/// The default constructor of <see cref="ApiEnumerator"/>
 			/// </summary>
 			public ApiEnumerator()
 			{
-				this.current = CurrentApiIndex;
+				this.Reset();
 				Monitor.Enter(apiChangeLock, ref this.__locked);
+			}
+
+			/// <summary>
+			/// Sets the API enumerator to its initial position, which is before the first API in the API collection.
+			/// </summary>
+			public void Reset()
+			{
+				this.current = CurrentApiIndex - 1;
+				if (this.current < 0)
+					this.current = APIs.Count - 1;
 			}
 
 			/// <summary>
@@ -128,38 +158,30 @@ namespace Althea
 			}
 
 			/// <summary>
-			/// Move the enumerator to the next API instance
+			/// Advances the API enumerator to the next API instance of the API collection.
 			/// </summary>
-			/// <returns>Whether there is a next API instance or not</returns>
+			/// <returns>true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
 			public bool MoveNext()
 			{
-				this.current++;
-				if (this.current == APIs.Count)
-					current = 0;
-				if (this.current == CurrentApiIndex)
-					return false;
-				if (Current.Disposed)
-					return MoveNext();
-				else
-					return true;
-			}
-
-			/// <summary>
-			/// Reset the enumerator to the initial status
-			/// </summary>
-			public void Reset()
-			{
-				current = CurrentApiIndex;
+				do
+				{
+					this.current++;
+					if (this.current == APIs.Count)
+						current = 0;
+					if (this.current == EndIndex)
+						return false;
+				} while (this.Current.Disposed);
+				return true;
 			}
 		}
 
 		/// <summary>
-		/// Set the current implementation in <see cref="APIs"/> to a given <paramref name="implementation"/>
+		/// Set the current API implementation among all to a given <paramref name="implementation"/>
 		/// </summary>
 		/// <param name="implementation">The implementation which implements <typeparamref name="TApi"/></param>
 		/// <exception cref="ArgumentException">If <paramref name="implementation"/> does not implements <typeparamref name="TApi"/> with empty constructor</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void SetImplementation(TApi implementation)
+		public static void SetImplementation(TApi implementation)
 		{
 			lock (apiChangeLock)
 			{

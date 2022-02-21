@@ -3,7 +3,7 @@
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Storage
@@ -53,7 +53,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
 		/// </summary>
-		public static DataType DataType => NativeType<T>.DataType;
+		public static DataType DataType => Unmanaged<T>.DataType;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="PureStorage{T, TP}"/> as a <see cref="CombinationOfLocations"/>
@@ -68,23 +68,23 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
-		public long Length => Pointer.LengthInBytes / NativeType<T>.Size;
+		public long Length => Pointer.LengthInBytes / Unmanaged<T>.Size;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose(bool invokedByUser)
+		private void Dispose()
 		{
 			if (this is ActualPureStorage<T, TP>)
 			{
-				MEM.Free(this.Pointer.Pointer, invokedByUser);
+				MEM.Free(this.Pointer.Pointer);
 			}
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose(invokedByUser);
+		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
 
 		/// <summary>
 		/// The deconstructor invoked by GC
 		/// </summary>
-		~PureStorage() => this.Dispose(false);
+		~PureStorage() => this.Dispose();
 
 		/// <summary>
 		/// Check whether this <see cref="PureStorage{T, TP}"/> is a valid one or not
@@ -205,9 +205,9 @@ namespace Althea.Storage
 		public static long operator -(PureStorage<T, TP> left, PureStorage<T, TP> right)
 		{
 			long diffBytes = IStorage<T, PureStorage<T, TP>>.StorageDiffBytes(left, right);
-			if (diffBytes % NativeType<T>.Size != 0)
+			if (diffBytes % Unmanaged<T>.Size != 0)
 				throw new InvalidOperationException(Other.CannotDivide);
-			return diffBytes / NativeType<T>.Size;
+			return diffBytes / Unmanaged<T>.Size;
 		}
 
 		/// <summary>
@@ -295,7 +295,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
 		public ReferencePureStorage(IStorage? storage, long offset = 0, long newLength = 0) :
-			base(storage is PureStorageBase<TP> p ? p.Pointer.MoveBy(offset * NativeType<T>.Size, newLength * NativeType<T>.Size) : default)
+			base(storage is PureStorageBase<TP> p ? p.Pointer.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size) : default)
 		{
 			var (reference, _, _) = IReferenceStorage<T, PureStorage<T, TP>>.Create<PureStorageBase<TP>>(storage, offset, newLength);
 			this.Reference = reference;

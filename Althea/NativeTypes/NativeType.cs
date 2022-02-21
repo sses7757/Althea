@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 
 namespace Althea.NativeTypes
@@ -29,10 +30,32 @@ namespace Althea.NativeTypes
 
 	#region native types
 	/// <summary>
-	/// The static class for primitive and custom native types' meta data
+	/// The static class for unmanaged primitive and custom number types' constant meta data
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	public static class Unmanaged<T> where T : unmanaged, INumber<T>
+	{
+		/// <summary>
+		/// Get the size of type <typeparamref name="T"/> (in bytes).
+		/// </summary>
+		public static unsafe int Size
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => sizeof(T);
+		}
+
+		/// <summary>
+		/// Get the <see cref="NativeTypes.DataType"/> of <typeparamref name="T"/>.
+		/// </summary>
+		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
+		public static DataType DataType => DataTypeExtension.ToDataType<T>();
+	}
+
+	/// <summary>
+	/// The static class for primitive and custom number types' meta data
 	/// </summary>
 	/// <typeparam name="T">An unmanaged struct which implements <see cref="INumber{TSelf}"/> as the number type</typeparam>
-	public static class NativeType<T> where T : unmanaged, INumber<T>
+	public static class NativeType<T> where T : INumber<T>
 	{
 		private static readonly Type? interfaceType = null;
 
@@ -123,21 +146,6 @@ namespace Althea.NativeTypes
 				return isComplex.Value;
 			}
 		}
-
-		/// <summary>
-		/// Get the size of type <typeparamref name="T"/> (in bytes).
-		/// </summary>
-		public static unsafe int Size
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => sizeof(T);
-		}
-
-		/// <summary>
-		/// Get the <see cref="NativeTypes.DataType"/> of <typeparamref name="T"/>.
-		/// </summary>
-		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
-		public static DataType DataType => DataTypeExtension.ToDataType<T>();
 	}
 	#endregion
 }

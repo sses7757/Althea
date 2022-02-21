@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 
 namespace Althea.NativeTypes
@@ -328,7 +329,7 @@ namespace Althea.NativeTypes
 		/// <typeparam name="T">The generic type to get its <see cref="DataType"/></typeparam>
 		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		internal static unsafe DataType ToDataType<T>() where T : INumber<T>
+		internal static DataType ToDataType<T>() where T : unmanaged, INumber<T>
 		{
 			return default(T) switch
 			{
@@ -359,7 +360,7 @@ namespace Althea.NativeTypes
 				ComplexInteger<ulong> => DataType.ComplexUInt64,
 				// otherwise
 				_ => NativeType<T>.Classification == 0 ? throw new NotSupportedException(Resources.Support.DataType) : 
-					MakeDataType(NativeType<T>.IsComplex, NativeType<T>.Classification, NativeType<T>.Size),
+					MakeDataType(NativeType<T>.IsComplex, NativeType<T>.Classification, Unmanaged<T>.Size),
 			};
 		}
 		#endregion
