@@ -127,6 +127,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -137,6 +142,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer<#=j#>.Pointer);
 <# } #>
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -150,7 +156,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, <#=pointerTypes#>}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, <#=pointerTypes#>}"/></returns>
-		public bool IsValid() => <# for (int j = 1; j < i; j++) { #>this.Pointer<#=j#>.IsValid() || <# } #>this.Pointer<#=i#>.IsValid();
+		public bool IsValid() => !this.Disposed && (<# for (int j = 1; j < i; j++) { #>this.Pointer<#=j#>.IsValid() || <# } #>this.Pointer<#=i#>.IsValid());
 		#endregion
 
 		#region reference

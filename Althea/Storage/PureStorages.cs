@@ -70,6 +70,11 @@ namespace Althea.Storage
 		/// </summary>
 		public long Length => Pointer.LengthInBytes / Unmanaged<T>.Size;
 
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
 		{
@@ -77,6 +82,7 @@ namespace Althea.Storage
 			{
 				MEM.Free(this.Pointer.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -90,7 +96,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="PureStorage{T, TP}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="PureStorage{T, TP}"/></returns>
-		public bool IsValid() => this.Pointer.IsValid();
+		public bool IsValid() => !this.Disposed && this.Pointer.IsValid();
 		#endregion
 
 		#region reference

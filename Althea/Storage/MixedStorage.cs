@@ -97,6 +97,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -106,6 +111,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer1.Pointer);
 				MEM.Free(this.Pointer2.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -119,7 +125,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid());
 		#endregion
 
 		#region reference
@@ -463,6 +469,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -473,6 +484,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer2.Pointer);
 				MEM.Free(this.Pointer3.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -486,7 +498,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid());
 		#endregion
 
 		#region reference
@@ -854,6 +866,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -865,6 +882,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer3.Pointer);
 				MEM.Free(this.Pointer4.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -878,7 +896,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid());
 		#endregion
 
 		#region reference
@@ -1270,6 +1288,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -1282,6 +1305,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer4.Pointer);
 				MEM.Free(this.Pointer5.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -1295,7 +1319,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid());
 		#endregion
 
 		#region reference
@@ -1711,6 +1735,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -1724,6 +1753,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer5.Pointer);
 				MEM.Free(this.Pointer6.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -1737,7 +1767,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid());
 		#endregion
 
 		#region reference
@@ -2177,6 +2207,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -2191,6 +2226,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer6.Pointer);
 				MEM.Free(this.Pointer7.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -2204,7 +2240,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid());
 		#endregion
 
 		#region reference
@@ -2668,6 +2704,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -2683,6 +2724,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer7.Pointer);
 				MEM.Free(this.Pointer8.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -2696,7 +2738,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid());
 		#endregion
 
 		#region reference
@@ -3184,6 +3226,11 @@ namespace Althea.Storage
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
 		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
@@ -3200,6 +3247,7 @@ namespace Althea.Storage
 				MEM.Free(this.Pointer8.Pointer);
 				MEM.Free(this.Pointer9.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -3213,7 +3261,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
-		public bool IsValid() => this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid() || this.Pointer9.IsValid();
+		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid() || this.Pointer9.IsValid());
 		#endregion
 
 		#region reference

@@ -347,6 +347,11 @@ namespace Althea.Storage
 		/// </summary>
 		public long Length => this.Memory.LengthInBytes / Unmanaged<T>.Size;
 
+		/// <summary>
+		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
+		/// </summary>
+		public bool Disposed { get; private set; } = false;
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Dispose()
 		{
@@ -355,6 +360,7 @@ namespace Althea.Storage
 				MEM.Free(this.Cache.Pointer);
 				MEM.Free(this.Memory.Pointer);
 			}
+			this.Disposed = true;
 		}
 
 		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
@@ -368,7 +374,7 @@ namespace Althea.Storage
 		/// Check whether this <see cref="CachedStorage{T, TS, TPh, TPl}"/> is a valid one or not
 		/// </summary>
 		/// <returns>The validness of this <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
-		public bool IsValid() => this.Memory.IsValid();
+		public bool IsValid() => !this.Disposed && this.Memory.IsValid();
 
 		/// <summary>
 		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.

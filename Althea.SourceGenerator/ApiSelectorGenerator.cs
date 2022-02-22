@@ -166,7 +166,7 @@ namespace {ns.Name}
 					string newParamsInvoke = string.Join(", ", newParams.Select(p => duplicateT && p.HasAttribute(nameof(DuplicateTParameterAttribute)) ? $"{p.Identifier} * Unmanaged<T>.Size" : p.Identifier.ToString()));
 					if (duplicateT)
 					{
-						methodMain = Regex.Replace(methodMain, @" *;$", $" => {method.Identifier}{orgTypeParams}({newParamsInvoke});");
+						methodMain = Regex.Replace(methodMain, @" *;$", $" => {method.Identifier}{orgTypeParams}({newParamsInvoke})" + (returnParam.HasAttribute(nameof(DuplicateTParameterAttribute)) ? " * Unmanaged<T>.Size;" : ";"));
 					}
 					else if (hasReturn)
 					{

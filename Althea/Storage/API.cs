@@ -99,7 +99,7 @@ namespace Althea.Storage
 
 		/// <summary>
 		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
-		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 1,бн,n; k = 1 + (i - 1)*<paramref name="incrementSource"/>, j = 1 + (i - 1)*<paramref name="incrementDestination"/></c>.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
@@ -213,16 +213,17 @@ namespace Althea.Storage
 		#endregion
 	}
 
-	/// <summary>
-	/// The API selector class for runtime memory API routines
-	/// </summary>
-	public sealed partial class ApiSelector : AbstractApiSelector<AbstractApi>
-	{
-		#region extensions
-		public static void MemoryCopy<T, TS>(TS source, TS destination) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
-		{
 
+	public partial interface IStorage<T, TSelf>
+	{
+		public virtual void CopyTo<TOut, TOther>(TOther other) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<T, TOther>
+		{
+			if (!this.IsValid())
+				throw new ObjectDisposedException(null);
+			if (!other.IsValid())
+				throw new ObjectDisposedException(nameof(other));
+			if (other is TSelf s && this.OverlapWith(s))
+				throw new InvalidOperationException(Resources.Storage.CannotCopyOverlap);
 		}
-		#endregion
 	}
 }

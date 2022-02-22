@@ -86,6 +86,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Print.resx</DependentUpon>
     </Compile>
+    <Compile Update="Resources\Storage.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Storage.resx</DependentUpon>
+    </Compile>
     <Compile Update="Resources\Support.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -118,6 +123,10 @@
     <EmbeddedResource Update="Resources\Print.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Print.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Storage.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Storage.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Support.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
