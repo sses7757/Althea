@@ -86,10 +86,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Print.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Storage.Designer.cs">
+    <Compile Update="Resources\StorageException.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Storage.resx</DependentUpon>
+      <DependentUpon>StorageException.resx</DependentUpon>
     </Compile>
     <Compile Update="Resources\Support.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -124,9 +124,9 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Print.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Storage.resx">
+    <EmbeddedResource Update="Resources\StorageException.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Storage.Designer.cs</LastGenOutput>
+      <LastGenOutput>StorageException.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Support.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

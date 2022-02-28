@@ -44,6 +44,36 @@ namespace Althea.Storage
 		/// When implemented by a derived class, statically get the description of the storage locations of this <see cref="IStorage"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		abstract static CombinationOfLocations LocationDescription { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, statically get the names of the pointers' getters in defined order.
+		/// </summary>
+		internal protected abstract static string[] PointerNames { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this storage is valid or not after moving <paramref name="offset"/> bytes and set length to <paramref name="newLength"/> bytes.
+		/// </summary>
+		/// <param name="offset">The offset to move in bytes, can be negative</param>
+		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
+		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
+		bool IsByteOffsetValid(long offset, long newLength = 0);
+
+		/// <summary>
+		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
+		/// </summary>
+		/// <param name="offset">The starting requesting byte offset compared to this storage</param>
+		/// <param name="length">The number of bytes requested</param>
+		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
+		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
+		/// <remarks>The default implementation simply returns 0 for performance issues, invoke <see cref="IsByteOffsetValid(long, long)"/> to check parameters if necessary.</remarks>
+		public virtual long Request(long offset, long length, bool intentWrite) => 0;
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		bool OverlapWith(IStorage other);
 	}
 
 	/// <summary>
@@ -51,20 +81,13 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public partial interface IStorage<T, TSelf> : IStorage,
+	public interface IStorage<T, TSelf> : IStorage,
 		IEqualityOperators<TSelf, TSelf>, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>,
 		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IStorage<T, TSelf>
 	{
-		/// <summary>
-		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> is valid or not after moving an <paramref name="offset"/> and set <see cref="Length"/> to <paramref name="newLength"/>
-		/// </summary>
-		/// <param name="offset">The offset to move in <typeparamref name="T"/></param>
-		/// <param name="newLength">The length to check in <typeparamref name="T"/>, default 0 means auto calculation by <paramref name="offset"/></param>
-		/// <returns>The validness of this <typeparamref name="TSelf"/> under <paramref name="offset"/> and <paramref name="newLength"/></returns>
-		/// <remarks>Default implementation utilizes <see cref="Length"/> and <see cref="IReferenceStorage{T, TStorage}.TotalOffset"/></remarks>
-		public virtual bool IsOffsetValid(long offset, long newLength = 0)
+		bool IStorage.IsByteOffsetValid(long offset, long newLength)
 		{
 			if (newLength < 0 || !this.IsValid())
 				return false;
@@ -72,32 +95,22 @@ namespace Althea.Storage
 			{
 				if (reference.Reference is null)
 					return false;
-				offset += reference.TotalOffset;
-				if (offset < 0 || offset >= reference.Reference.LengthInBytes / Unmanaged<T>.Size)
+				offset += reference.TotalOffsetInBytes;
+				if (offset < 0 || offset >= reference.Reference.LengthInBytes)
 					return false;
-				if (newLength > 0 && newLength + offset > reference.Reference.LengthInBytes / Unmanaged<T>.Size)
+				if (newLength > 0 && newLength + offset > reference.Reference.LengthInBytes)
 					return false;
 				return true;
 			}
 			else
 			{
-				if (offset < 0 || offset >= this.Length)
+				if (offset < 0 || offset >= this.LengthInBytes)
 					return false;
-				if (newLength > 0 && newLength + offset > this.Length)
+				if (newLength > 0 && newLength + offset > this.LengthInBytes)
 					return false;
 				return true;
 			}
 		}
-
-		/// <summary>
-		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
-		/// </summary>
-		/// <param name="offset">The starting requesting element offset compared to this storage</param>
-		/// <param name="length">The number of element(s) requested</param>
-		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
-		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
-		/// <remarks>The default implementation simply returns 0 for performance issues, invoke <see cref="IsOffsetValid(long, long)"/> to check parameters if necessary.</remarks>
-		public virtual long Request(long offset, long length, bool intentWrite) => 0;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> has same origin as the <paramref name="other"/> <typeparamref name="TSelf"/>.
@@ -124,12 +137,15 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		bool OverlapWith(TSelf other);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IStorage.OverlapWith(IStorage other) => other is TSelf s && this.OverlapWith(s);
+
 		TSelf ICloneable<TSelf>.Clone()
 		{
 			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
 			try
 			{
-				this.CopyTo<T, TSelf>(storage);
+				((TSelf)this).CopyTo(storage);
 				return storage;
 			}
 			catch (System.Exception)

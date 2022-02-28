@@ -1,9 +1,7 @@
-﻿using System.Numerics;
+﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 using Althea.Linq;
@@ -845,7 +843,7 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static TArr ApplyToAlike<TArr, T>(this TArr array, Action<TArr> action)
 			where TArr : Arrays.ValueArray<T>
-			where T : unmanaged, IFormattable, IEquatable<T>
+			where T : unmanaged, INumber<T>
 		{
 			var clone = array.NewArrayAlike();
 			try

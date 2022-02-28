@@ -120,4 +120,7 @@
   <data name="CannotCopyOverlap" xml:space="preserve">
     <value>Copying between overlapping storages is not allowed.</value>
   </data>
+  <data name="InvalidPointerName" xml:space="preserve">
+    <value>The given pointer's name is invalid.</value>
+  </data>
 </root>

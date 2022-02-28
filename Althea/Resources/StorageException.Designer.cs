@@ -22,14 +22,14 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Storage {
+    internal class StorageException {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Storage() {
+        internal StorageException() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Althea.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Storage", typeof(Storage).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.StorageException", typeof(StorageException).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -66,6 +66,15 @@ namespace Althea.Resources {
         internal static string CannotCopyOverlap {
             get {
                 return ResourceManager.GetString("CannotCopyOverlap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The given pointer&apos;s name is invalid. 的本地化字符串。
+        /// </summary>
+        internal static string InvalidPointerName {
+            get {
+                return ResourceManager.GetString("InvalidPointerName", resourceCulture);
             }
         }
     }

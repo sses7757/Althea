@@ -1,5 +1,10 @@
 using System;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Reflection.Metadata;
 
+using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.Resources;
 
@@ -214,16 +219,195 @@ namespace Althea.Storage
 	}
 
 
-	public partial interface IStorage<T, TSelf>
+	/// <summary>
+	/// The static class for extension methods for <see cref="IStorage"/> and <see cref="IStorage{T, TSelf}"/>
+	/// </summary>
+	public static class StorageExtension
 	{
-		public virtual void CopyTo<TOut, TOther>(TOther other) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<T, TOther>
+		#region method generators
+		private static Action<TS, T> GetFillMethod<TS, T>(int genericCount) where TS : class, IStorage where T : unmanaged
 		{
-			if (!this.IsValid())
-				throw new ObjectDisposedException(null);
-			if (!other.IsValid())
-				throw new ObjectDisposedException(nameof(other));
-			if (other is TSelf s && this.OverlapWith(s))
-				throw new InvalidOperationException(Resources.Storage.CannotCopyOverlap);
+			var type = typeof(TS);
+			var pointerGetters = TS.PointerNames.Select(n => type.GetProperty(n)?.GetAccessors(false)?.FirstOrDefault());
+			var requestMethod = type.GetMethod(nameof(IStorage.Request), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long), typeof(bool) }, null);
+			DynamicMethod method = new($"Filler of {type.GetGenericString()}", null, new[] { type, typeof(T) });
+			var IL = method.GetILGenerator();
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.Emit(OpCodes.Stloc_0); // long allOffset = 0;
+			foreach (var pg in pointerGetters)
+			{
+				if (pg is null || pg.ReturnType.GenericTypeArguments.Length != 1)
+					throw new InvalidOperationException(StorageException.InvalidPointerName);
+				var ptrLen = pg.ReturnType.GetProperty(nameof(PointerSegment<ManagedPointer>.LengthInBytes), BindingFlags.Public | BindingFlags.Instance)?.GetAccessors(false)?.FirstOrDefault();
+				if (ptrLen is null || ptrLen.ReturnType != typeof(long))
+					throw new InvalidOperationException(StorageException.InvalidPointerName);
+				var ptrMove = pg.ReturnType.GetMethod(nameof(PointerSegment<ManagedPointer>.MoveBy), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long) }, null);
+				if (ptrMove is null)
+					throw new InvalidOperationException(StorageException.InvalidPointerName);
+				var fillMethod = typeof(ApiSelector).GetMethod(nameof(ApiSelector.FillWithValue), genericCount, BindingFlags.Public | BindingFlags.Static, null, new[] { pg.ReturnType, typeof(T) }, null)?.MakeGenericMethod(pg.ReturnType.GenericTypeArguments[0]);
+				if (fillMethod is null)
+					throw new InvalidOperationException(StorageException.InvalidPointerName);
+
+				IL.Emit(OpCodes.Ldarg_0);
+				IL.Emit(OpCodes.Callvirt, pg);
+				IL.Emit(OpCodes.Stloc_1); // var pointerN = storage.PointerN;
+				if (requestMethod is not null)
+				{
+					Label loopStart = IL.DefineLabel(), loopEnd = IL.DefineLabel();
+					IL.Emit(OpCodes.Ldarg_0);
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Stloc_2); // long offset = 0;
+					IL.Emit(OpCodes.Ldloc_1);
+					IL.Emit(OpCodes.Calli, ptrLen);
+					IL.Emit(OpCodes.Stloc_3); // long length = pointerN.LengthInBytes;
+
+					IL.MarkLabel(loopStart);
+					IL.Emit(OpCodes.Ldarg_0);
+					IL.Emit(OpCodes.Ldloc_0);
+					IL.Emit(OpCodes.Ldloc_2);
+					IL.Emit(OpCodes.Add);
+					IL.Emit(OpCodes.Ldloc_3);
+					IL.Emit(OpCodes.Ldc_I4_1);
+					IL.Emit(OpCodes.Callvirt, requestMethod);
+					IL.Emit(OpCodes.Stloc_S, 4); // long actual = storage.Request(allOffset + offset, length, intentWrite: true);
+					IL.Emit(OpCodes.Ldloc_S, 4);
+					IL.Emit(OpCodes.Brfalse, loopEnd); // if (actual == 0) goto LOOP_END;
+
+					IL.Emit(OpCodes.Ldarg_0);
+					IL.Emit(OpCodes.Ldloc_0);
+					IL.Emit(OpCodes.Ldloc_2);
+					IL.Emit(OpCodes.Add);
+					IL.Emit(OpCodes.Ldloc_S, 4);
+					IL.Emit(OpCodes.Ldc_I4_1);
+					IL.Emit(OpCodes.Callvirt, requestMethod);
+					IL.Emit(OpCodes.Pop); // storage.Request(allOffset + offset, actual, intentWrite: true);
+					IL.Emit(OpCodes.Ldloc_1);
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Ldloc_S, 4);
+					IL.Emit(OpCodes.Calli, ptrMove);
+					IL.Emit(OpCodes.Ldarg_1);
+					IL.Emit(OpCodes.Call, fillMethod); // ApiSelector.FillWithValue(pointerN.MoveBy(0, actual), value);
+
+					IL.Emit(OpCodes.Ldloc_2);
+					IL.Emit(OpCodes.Ldloc_S, 4);
+					IL.Emit(OpCodes.Add);
+					IL.Emit(OpCodes.Stloc_2); // offset += actual;
+					IL.Emit(OpCodes.Ldloc_3);
+					IL.Emit(OpCodes.Ldloc_S, 4);
+					IL.Emit(OpCodes.Sub);
+					IL.Emit(OpCodes.Stloc_3); // length -= actual;
+					IL.Emit(OpCodes.Ldloc_1);
+					IL.Emit(OpCodes.Ldloc_3);
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Calli, ptrMove);
+					IL.Emit(OpCodes.Stloc_1); // pointerN = pointerN.MoveBy(actual);
+
+					IL.Emit(OpCodes.Br_S, loopStart); // goto LOOP_START;
+
+					IL.MarkLabel(loopEnd);
+				}
+				IL.Emit(OpCodes.Ldloc_1);
+				IL.Emit(OpCodes.Ldarg_1);
+				IL.Emit(OpCodes.Call, fillMethod); // ApiSelector.FillWithValue(pointerN, value);
+				IL.Emit(OpCodes.Ldloc_1);
+				IL.Emit(OpCodes.Calli, ptrLen);
+				IL.Emit(OpCodes.Ldloc_0);
+				IL.Emit(OpCodes.Add);
+				if (requestMethod is not null)
+				{
+					IL.Emit(OpCodes.Ldloc_2);
+					IL.Emit(OpCodes.Add);
+				}
+				IL.Emit(OpCodes.Stloc_0); // allOffset += pointerN.LengthInBytes[ + offset];
+			}
+			return method.CreateDelegate<Action<TS, T>>();
 		}
+
+		private static Func<TS1, TS2, long> GetCopyMethod<TS1, TS2>(int genericCount)
+		{
+
+		}
+		#endregion
+
+		#region extension methods
+		private static readonly Dictionary<RuntimeTypeHandle, Delegate> fillByteFunc = new();
+
+		/// <summary>
+		/// Fill the given <paramref name="storage"/> with given <paramref name="value"/> byte by byte.
+		/// </summary>
+		/// <typeparam name="TS">The storage class that implements <see cref="IStorage"/></typeparam>
+		/// <param name="storage">The storage to be filled with <paramref name="value"/></param>
+		/// <param name="value">The byte value to fill</param>
+		/// <exception cref="ObjectDisposedException">If <paramref name="storage"/> is invalid</exception>
+		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerNames"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+		public static void FillWith<TS>(this TS storage, byte value) where TS : class, IStorage
+		{
+			if (!storage.IsValid())
+				throw new ObjectDisposedException(nameof(storage));
+
+			var handle = typeof(TS).TypeHandle;
+			if (fillByteFunc.TryGetValue(handle, out var filler))
+				goto FINAL;
+			filler = GetFillMethod<TS, byte>(1);
+			fillByteFunc[handle] = filler;
+		FINAL:
+			((Action<TS, byte>)filler).Invoke(storage, value);
+		}
+
+		private static readonly Dictionary<RuntimeTypeHandle, Delegate> fillTFunc = new();
+
+		/// <summary>
+		/// Fill the given <paramref name="storage"/> with given <paramref name="value"/> <typeparamref name="T"/> by <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type of <typeparamref name="TS"/></typeparam>
+		/// <typeparam name="TS">The storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="storage">The storage to be filled with <paramref name="value"/></param>
+		/// <param name="value">The byte value to fill</param>
+		/// <exception cref="ObjectDisposedException">If <paramref name="storage"/> is invalid</exception>
+		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerNames"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+		public static void FillWith<T, TS>(this TS storage, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			if (!storage.IsValid())
+				throw new ObjectDisposedException(nameof(storage));
+
+			var handle = typeof(TS).TypeHandle;
+			if (fillTFunc.TryGetValue(handle, out var filler))
+				goto FINAL;
+			filler = GetFillMethod<TS, T>(2);
+			fillTFunc[handle] = filler;
+		FINAL:
+			((Action<TS, T>)filler).Invoke(storage, value);
+		}
+
+		private static readonly Dictionary<(RuntimeTypeHandle, RuntimeTypeHandle), Delegate> copyByteFunc = new();
+
+		/// <summary>
+		/// Copy the data from <paramref name="source"/> storage to <paramref name="destination"/> storage with copy length as the maximum of both <see cref="IStorage.LengthInBytes"/>.
+		/// </summary>
+		/// <typeparam name="TS1">The source storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The destination storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="source">The source storage</param>
+		/// <param name="destination">The destination storage</param>
+		/// <returns>Actual length in bytes copied.</returns>
+		/// <exception cref="ObjectDisposedException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerNames"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
+		public static long CopyTo<TS1, TS2>(this TS1 source, TS2 destination) where TS1 : class, IStorage where TS2 : class, IStorage
+		{
+			if (!source.IsValid())
+				throw new ObjectDisposedException(nameof(source));
+			if (!destination.IsValid())
+				throw new ObjectDisposedException(nameof(destination));
+			if (source.OverlapWith(destination))
+				throw new InvalidOperationException(StorageException.CannotCopyOverlap);
+
+			RuntimeTypeHandle handle1 = typeof(TS1).TypeHandle, handle2 = typeof(TS2).TypeHandle;
+			if (copyByteFunc.TryGetValue((handle1, handle2), out var copier))
+				goto FINAL;
+			copier = GetCopyMethod<TS1, TS2>(2);
+			copyByteFunc[(handle1, handle2)] = copier;
+		FINAL:
+			return ((Func<TS1, TS2, long>)copier).Invoke(source, destination);
+		}
+		#endregion
 	}
 }

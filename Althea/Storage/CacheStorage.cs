@@ -379,13 +379,12 @@ namespace Althea.Storage
 		/// <summary>
 		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
 		/// </summary>
-		/// <param name="offset">The starting requesting element offset compared to this storage</param>
-		/// <param name="length">The number of element(s) requested</param>
+		/// <param name="offset">The starting requesting byte offset compared to this storage</param>
+		/// <param name="length">The number of bytes requested</param>
 		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
 		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
 		public long Request(long offset, long length, bool intentWrite)
 		{
-			offset *= Unmanaged<T>.Size; length *= Unmanaged<T>.Size;
 			offset += this.Memory.OffsetInBytes;
 			long cacheIndex = offset / this.Strategy.CacheLineSize;
 			if (cacheIndex != (offset + length) / this.Strategy.CacheLineSize) // too large

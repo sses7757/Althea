@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.NativeTypes;
 using Althea.Resources;
 
 
