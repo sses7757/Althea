@@ -337,6 +337,8 @@ namespace Althea.Storage
 		/// </summary>
 		public static CombinationOfLocations LocationDescription => new(stackalloc bool[] { true, false }.CreateCombinationType(), stackalloc StorageLocation[] { TPh.Location, TPl.Location });
 
+		static string[] IStorage.PointerNames => new[] { nameof(Memory) };
+
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
 		/// </summary>

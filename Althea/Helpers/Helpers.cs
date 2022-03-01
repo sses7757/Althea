@@ -1,75 +1,14 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Text;
 
 using Althea.Linq;
-using Althea.NativeTypes;
 using Althea.Resources;
 
 
 namespace Althea.Helpers
 {
-	#region reflection helpers
-	/// <summary>
-	/// A static class that contains helper functions using reflections
-	/// </summary>
-	public static class ReflectionHelper
-	{
-		/// <summary>
-		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
-		/// </summary>
-		/// <param name="type">The given <see cref="Type"/> to get name</param>
-		/// <param name="full">Whether to use <see cref="Type.FullName"/> or only <see cref="MemberInfo.Name"/></param>
-		/// <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
-		public static string? GetGenericString(this Type type, bool full = false)
-		{
-			string? name = full ? type.FullName : type.Name;
-			if (name is null)
-				return null;
-			if (type.IsGenericType)
-			{
-				var args = type.GenericTypeArguments;
-				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString(full)).ToArray())}>";
-			}
-			return name;
-		}
-
-		internal static Type? GetTypeWithPostfix(this Type type, string postfix, int skipGeneric = 0)
-		{
-			Type[] generics = type.GenericTypeArguments;
-			string fullName = type.AssemblyQualifiedName ?? throw new ArgumentException(Parameter.UnexpectedValue, nameof(type));
-			int genericStart = fullName.IndexOf('`');
-			string postfixedName;
-			if (genericStart >= 0)
-			{
-				int genericEnd = fullName.IndexOf("]]");
-				if (genericEnd < 0)
-					throw new ArgumentException(Parameter.UnexpectedValue, nameof(type));
-				genericEnd += 2;
-				if (generics.Length > skipGeneric)
-				{
-					generics = generics[skipGeneric..];
-					var genericNames = generics.Select(static g => g.AssemblyQualifiedName).ToArray();
-					postfixedName = fullName[..genericStart] + $"`{generics.Length}[[{string.Join("],[", genericNames)}]]" + fullName[genericEnd..];
-				}
-				else
-				{
-					postfixedName = fullName[..genericStart] + fullName[genericEnd..];
-				}
-			}
-			else
-			{
-				postfixedName = fullName;
-			}
-			postfixedName += postfix;
-			// return
-			return Type.GetType(postfixedName) ?? throw new TypeAccessException();
-		}
-	}
-	#endregion
-
 	/// <summary>
 	/// A static class that contains general purposed extension helper methods
 	/// </summary>

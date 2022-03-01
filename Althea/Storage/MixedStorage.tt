@@ -117,11 +117,13 @@ namespace Althea.Storage
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, <#=pointerTypes#>}"/> as a <see cref="CombinationOfLocations"/>
 		/// </summary>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { <# for (int j = 1; j <= i; j++) { #>TP<#=j#>.Location, <# } #> });
+		
+		static string[] IStorage.PointerNames => new[] { <# for (int j = 1; j <= i; j++) { #>nameof(Pointer<#=j#>), <# } #> };
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
 		/// </summary>
-		public long LengthInBytes => <# for (int j = 1; j < i; j++) { #>Pointer<#=j#>.LengthInBytes + <# } #>Pointer<#=i#>.LengthInBytes;
+		public long LengthInBytes => <# for (int j = 1; j < i; j++) { #>this.Pointer<#=j#>.LengthInBytes + <# } #>this.Pointer<#=i#>.LengthInBytes;
 
 		/// <summary>
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
@@ -219,10 +221,7 @@ namespace Althea.Storage
 				throw new InvalidOperationException(Support.Location);
 			if (lengths.Any(static l => l <= 0))
 				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
-<# for (int j = 0; j < i; j++) { #>
-			TP<#=j+1#> pointer<#=j+1#> = MEM.Allocate<T, TP<#=j+1#>>(lengths[<#=j#>]);
-<# } #>
-			return new ActualMixedStorage<T, <#=pointerTypes#>>(<#=pointerInputs#>);
+			return new ActualMixedStorage<T, <#=pointerTypes#>>(<# for (int j = 0; j < i - 1; j++) { #>lengths[<#=j#>], <# } #> lengths[<#=i - 1#>]);
 		}
 
 		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.CreateAlike<TOut, TOther>(TOther storage)

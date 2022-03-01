@@ -323,8 +323,17 @@ namespace Althea.Storage
 			return method.CreateDelegate<Action<TS, T>>();
 		}
 
-		private static Func<TS1, TS2, long> GetCopyMethod<TS1, TS2>(int genericCount)
+		private static Func<TS1, TS2, long> GetCopyMethod<TS1, TS2>(int genericCount) where TS1 : class, IStorage where TS2 : class, IStorage
 		{
+			Type type1 = typeof(TS1), type2 = typeof(TS2);
+			var pointerGetters1 = TS1.PointerNames.Select(n => type1.GetProperty(n)?.GetAccessors(false)?.FirstOrDefault());
+			var pointerGetters2 = TS2.PointerNames.Select(n => type2.GetProperty(n)?.GetAccessors(false)?.FirstOrDefault());
+			var requestMethod1 = type1.GetMethod(nameof(IStorage.Request), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long), typeof(bool) }, null);
+			var requestMethod2 = type2.GetMethod(nameof(IStorage.Request), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long), typeof(bool) }, null);
+			DynamicMethod method = new($"Copier from {type1.GetGenericString()}", typeof(long), new[] { type1, type2 });
+			var IL = method.GetILGenerator();
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.Emit(OpCodes.Stloc_0); // long allOffset = 0;
 
 		}
 		#endregion

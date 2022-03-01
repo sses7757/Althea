@@ -60,15 +60,17 @@ namespace Althea.Storage
 		/// </summary>
 		public static CombinationOfLocations LocationDescription => new(TP.Location);
 
+		static string[] IStorage.PointerNames => new[] { nameof(Pointer) };
+
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
 		/// </summary>
-		public long LengthInBytes => Pointer.LengthInBytes;
+		public long LengthInBytes => this.Pointer.LengthInBytes;
 
 		/// <summary>
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
-		public long Length => Pointer.LengthInBytes / Unmanaged<T>.Size;
+		public long Length => this.Pointer.LengthInBytes / Unmanaged<T>.Size;
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not

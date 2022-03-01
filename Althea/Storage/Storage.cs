@@ -65,8 +65,8 @@ namespace Althea.Storage
 		/// <param name="length">The number of bytes requested</param>
 		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
 		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
-		/// <remarks>The default implementation simply returns 0 for performance issues, invoke <see cref="IsByteOffsetValid(long, long)"/> to check parameters if necessary.</remarks>
-		public virtual long Request(long offset, long length, bool intentWrite) => 0;
+		/// <remarks>The default implementation simply returns <see cref="long.MaxValue"/> for performance issues, invoke <see cref="IsByteOffsetValid(long, long)"/> to check parameters if necessary.</remarks>
+		public virtual long Request(long offset, long length, bool intentWrite) => long.MaxValue;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
